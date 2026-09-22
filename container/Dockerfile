@@ -93,8 +93,8 @@ RUN mkdir -p /etc/opencode \
 # Refuse 0: `sudo ./agent.sh` (a foreseeable fix when Docker is not in the caller's
 # group) forwards uid/gid 0 into the build. Without this check the "agent" account is
 # root, and the entrypoint's later drop from root to root is a no-op that leaves the
-# firewall capabilities in place. Requirement 1 needs an actual non-root user, not one
-# named "agent".
+# firewall capabilities in place. The sandbox needs an account that is actually
+# unprivileged, not one merely named "agent".
 RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
       echo "AGENT_UID/AGENT_GID must not be 0: the agent account would be root." >&2; \
       echo "Do not run agent.sh with sudo; add your user to the docker group instead." >&2; \
