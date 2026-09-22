@@ -1,0 +1,91 @@
+# Base runtime configuration for the agent sandbox, shared by every project that vendors
+# this kit. Every confinement setting lives here. container/entrypoint.sh is the one
+# exception and holds only the start-up firewall, because iptables rules are kernel state
+# in a network namespace that does not exist until the container runs. container/agent.sh
+# is a thin wrapper that adds only the per-run working directory and any extra mounts; it
+# sets nothing that confines the container.
+#
+# A project layers its own compose file over this one, at agent/compose.project.yml,
+# holding what varies per project: the Compose project name, the image name, the egress
+# allowlist, the resource limits and the Playwright version. container/agent.sh passes
+# both files to Compose, with --project-directory set to the project root, so every
+# relative path in either file resolves from there.
+
+services:
+  agent:
+    build:
+      # The context is the project root rather than this directory: the Dockerfile
+      # installs the project's own dependencies in order to get Playwright's system
+      # libraries at the version the project resolved, so it needs the project's
+      # package.json and package-lock.json in the context.
+      context: .
+      dockerfile: agent-kit/container/Dockerfile
+      args:
+        AGENT_UID: ${AGENT_UID:-1000}
+        AGENT_GID: ${AGENT_GID:-1000}
+    working_dir: /work
+    init: true
+    stdin_open: true
+    tty: true
+    # Chromium renders into shared memory; Docker's default 64M /dev/shm makes the
+    # visual tests flake with "Target closed". 1G matches Playwright's guidance.
+    shm_size: 1gb
+
+    # The root filesystem is read-only. The agent can write only the mounted working
+    # directory, its home volume, and the /tmp and /dev/shm scratch tmpfs (/dev/shm is
+    # sized by shm_size above). /run is a tmpfs too but stays root-owned.
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /run
+
+    # Every capability dropped except NET_ADMIN, which the entrypoint needs to install
+    # the firewall, and SETUID/SETGID, which it needs to drop from root to the agent
+    # user afterwards. The agent process ends up with an empty capability set, and
+    # no-new-privileges leaves it no way to regain one.
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_ADMIN
+      - SETUID
+      - SETGID
+    security_opt:
+      - no-new-privileges:true
+
+    pids_limit: 4096
+
+    # host.docker.internal resolves to the host on Linux only with this line.
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    environment:
+      # The project's compose file supplies ALLOWLIST: the reachable hosts and ranges,
+      # with everything else denied. It is project-owned because what a project needs to
+      # reach is what varies most between them.
+      #
+      # The local model server on the host, reached through the Docker gateway. Only
+      # this host and port are allowed, nothing else on the host.
+      MODEL_SERVER_HOST: host.docker.internal
+      MODEL_SERVER_PORT: "11434"
+      # The start-up self-check: this host must be blocked, that one must be reachable.
+      FIREWALL_CANARY: example.com
+      FIREWALL_PROBE: api.anthropic.com
+
+    volumes:
+      # Default working directory: the project root. container/agent.sh overrides the
+      # source with --workdir and adds extra mounts, both as `docker compose run -v`
+      # flags.
+      - .:/work
+      # The agent's home, the one writable place that survives a container. Holds both
+      # harnesses' credentials and state and the npm cache, so authentication happens
+      # once. One volume rather than one per harness: the read-only root filesystem
+      # already requires the home to be a volume.
+      - agent-home:/home/agent
+      # The developer's git identity, read-only, so commits from inside carry the same
+      # name and email as on the host. Mounted as the system git config, the lowest
+      # precedence, so the agent's own ~/.gitconfig stays writable. It is the only
+      # host dotfile mounted.
+      - ${HOME}/.gitconfig:/etc/gitconfig:ro
+
+volumes:
+  agent-home:
