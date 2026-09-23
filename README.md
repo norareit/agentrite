@@ -12,7 +12,7 @@ rather than once per project. Projects install its files with `install.sh` and k
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit               |
 | `scripts/`           | `check-changes.mjs`, which enforces the freeze on implemented units               |
 | `tests/`             | The kit's own unit tests, run by node's built-in test runner                      |
-| `container/`         | The agent sandbox: image, entrypoint, base Compose file and wrapper               |
+| `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
 | `install.sh`         | The installer, which copies the kit's files into a project                        |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
@@ -104,6 +104,43 @@ deliberate change to the project.
 Make the change here, in the kit repository, and commit it. The installed copy in a project is not a working copy of
 this repository and nothing in it reaches here: an improvement found while working in one project is made in the kit,
 and each project picks it up with `--update`.
+
+### Egress
+
+The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
+server's host and port, and HTTPS on port 443 to the hosts in the project's `ALLOWLIST`. Everything else is denied,
+whatever its port or address.
+
+The entrypoint redirects every outbound connection on port 443 to `container/egress-proxy.mjs`, which runs as its own
+unprivileged account. The proxy reads the hostname from the TLS ClientHello, where it travels in the clear, and
+admits the connection only if that host is allowlisted. It then resolves the host itself and connects there, never to
+the address the client asked for, so an allowlisted name sent to some other address does not reach that address. It
+terminates no TLS and installs no certificate: it forwards the connection's bytes unchanged, and the client validates
+the origin's own certificate. A refused client fails with a TLS `unrecognized_name` alert, and the proxy logs one
+line for each connection it allows or refuses to `/run/egress-proxy.log`, which the agent can read.
+
+What follows from that:
+
+* Another host served from the same address as an allowlisted one is refused. So is plain HTTP, and so is TLS on any
+  port but 443
+* Allowlist entries are hostnames, matched exactly. A subdomain needs its own entry, and an address or CIDR range is
+  refused at start-up
+* A host whose addresses rotate stays reachable, because the proxy resolves it per connection
+* Encrypted ClientHello is judged by its outer hostname, the one sent in the clear. Chromium sends the extension as
+  GREASE and puts the real hostname there, so it is checked like any other. A genuine ECH connection carries the
+  provider's public name there, and is refused unless that public name is itself allowlisted, in which case the real
+  hostname inside is not seen
+* If the proxy stops, egress stops. The redirect still points at its port and nothing else admits port 443
+
+It does not stop data leaving through a host that is allowlisted, or through DNS to the permitted resolvers.
+
+At start-up the entrypoint proves the boundary before it drops to the agent, and refuses to start if any check
+fails:
+
+* the canary host (`FIREWALL_CANARY`) cannot be reached on port 80
+* every allowlisted host, and the probe host (`FIREWALL_PROBE`), can be reached through the proxy
+* the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
+  is on the hostname and not the address
 
 ## Where to run it
 
