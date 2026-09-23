@@ -106,12 +106,21 @@ RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
     && mkdir -p /work \
     && chown "${AGENT_UID}:${AGENT_GID}" /work /home/agent
 
+# The egress proxy's own account. The firewall exempts this uid from the redirect to the
+# proxy and lets it alone connect out on 443, so it must be distinct from the agent.
+# Created after the agent, as a system account, so that useradd picks a uid nothing else
+# holds; Debian's existing "proxy" account is not used, because the agent is created
+# with -o and could have taken its uid.
+RUN useradd --system --no-create-home --home-dir /nonexistent --shell /usr/sbin/nologin egress-proxy \
+    && [ "$(id -u egress-proxy)" != "$(id -u agent)" ]
+
 WORKDIR /work
 
-# The container starts as root so the entrypoint can install the firewall; the
-# entrypoint drops to the agent user before running the command. Every confinement
-# setting other than the firewall lives in the compose files.
+# The container starts as root so the entrypoint can install the firewall and start the
+# egress proxy; the entrypoint drops to the agent user before running the command. Every
+# confinement setting other than the firewall lives in the compose files.
 COPY agent-kit/container/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY agent-kit/container/egress-proxy.mjs agent-kit/container/sni.mjs /usr/local/lib/egress-proxy/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]
