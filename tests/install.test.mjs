@@ -200,17 +200,32 @@ test('an install refuses a directory whose marker does not name a commit in the 
   });
 });
 
-test('an install refuses a directory whose marker names a kit commit but which holds more than the payload', () => {
+test('an install refuses a directory whose marker is a full hash of no commit in the kit clone', () => {
   withScratch(({ kit, older, project }) => {
     const target = project(older);
-    write(target, 'agent-kit/.installed-commit', `${older}\n`);
-    write(target, 'agent-kit/roles/planner.md', 'planner\n');
-    write(target, 'agent-kit/src/index.ts', 'somebody else\'s\n');
+    write(target, 'agent-kit/.installed-commit', `${'0'.repeat(40)}\n`);
+    write(target, 'agent-kit/notes.md', 'somebody else\'s\n');
     const before = snapshot(join(target, 'agent-kit'));
     const result = install(kit, target, 'agent-kit');
     assert.notEqual(result.status, 0);
     assert.match(result.stderr, /not a previous installation/);
     assert.deepEqual(snapshot(join(target, 'agent-kit')), before);
+  });
+});
+
+// What lands beside an installation, such as the .DS_Store macOS writes, does not stop it being one.
+test('an install replaces a previous installation that has gained a file at its top level', () => {
+  withScratch(({ kit, older, project }) => {
+    const target = project(older);
+    assert.equal(install(kit, target, 'agent-kit').status, 0);
+    write(target, 'agent-kit/.DS_Store', 'finder\n');
+    write(target, 'agent-kit/notes.md', 'an edit nobody should have made\n');
+    const result = install(kit, target, 'agent-kit');
+    assert.equal(result.status, 0, result.stderr);
+    const installed = snapshot(join(target, 'agent-kit'));
+    assert.equal(installed['.DS_Store'], undefined);
+    assert.equal(installed['notes.md'], undefined);
+    assert.equal(installed['.installed-commit'].content, `${older}\n`);
   });
 });
 

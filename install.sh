@@ -44,23 +44,14 @@ read_pin() {
 }
 
 # The directory is about to be deleted, and a mistyped target can hold a file of the
-# marker's name, so the marker alone is not enough: it has to name a commit in this
-# clone, and the directory can hold nothing at its top level that the payload does not.
+# marker's name, so the marker alone is not enough: it has to hold the full hash of a
+# commit in this clone, which only an install writes. What else the directory holds is
+# not checked, because an installation gains files beside it, such as a .DS_Store.
 is_installation() {
-  local directory="$1" installed entry name path
-  installed="$(cat "$directory/$marker" 2>/dev/null)" || return 1
+  local installed
+  installed="$(cat "$1/$marker" 2>/dev/null)" || return 1
   [[ "$installed" =~ ^[0-9a-f]{40}$ ]] || return 1
-  git -C "$kit" rev-parse --verify --quiet "$installed^{commit}" >/dev/null || return 1
-  for entry in "$directory"/* "$directory"/.*; do
-    name="${entry##*/}"
-    case "$name" in . | .. | "$marker") continue ;; esac
-    # An unmatched glob stays as the pattern itself.
-    [ -e "$entry" ] || continue
-    for path in "${payload[@]}"; do
-      [ "$name" = "${path%%/*}" ] && continue 2
-    done
-    return 1
-  done
+  git -C "$kit" rev-parse --verify --quiet "$installed^{commit}" >/dev/null
 }
 
 pin_file_text() {
