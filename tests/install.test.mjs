@@ -186,6 +186,34 @@ test('an install refuses a non-empty directory that holds no installation, and l
   });
 });
 
+// A marker file alone does not make a directory an installation: a mistyped target can hold a file of that name.
+test('an install refuses a directory whose marker does not name a commit in the kit clone, and leaves it untouched', () => {
+  withScratch(({ kit, older, project }) => {
+    const target = project(older);
+    write(target, 'agent-kit/.installed-commit', 'something else entirely\n');
+    write(target, 'agent-kit/notes.md', 'somebody else\'s\n');
+    const before = snapshot(join(target, 'agent-kit'));
+    const result = install(kit, target, 'agent-kit');
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /not a previous installation/);
+    assert.deepEqual(snapshot(join(target, 'agent-kit')), before);
+  });
+});
+
+test('an install refuses a directory whose marker names a kit commit but which holds more than the payload', () => {
+  withScratch(({ kit, older, project }) => {
+    const target = project(older);
+    write(target, 'agent-kit/.installed-commit', `${older}\n`);
+    write(target, 'agent-kit/roles/planner.md', 'planner\n');
+    write(target, 'agent-kit/src/index.ts', 'somebody else\'s\n');
+    const before = snapshot(join(target, 'agent-kit'));
+    const result = install(kit, target, 'agent-kit');
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /not a previous installation/);
+    assert.deepEqual(snapshot(join(target, 'agent-kit')), before);
+  });
+});
+
 test('an install into an existing empty directory succeeds', () => {
   withScratch(({ kit, older, project }) => {
     const target = project(older);

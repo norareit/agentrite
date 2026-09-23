@@ -43,6 +43,26 @@ read_pin() {
   awk 'NR == 1 && $0 != "---" { exit } NR == 2 && /^commit: [0-9a-f]+$/ && length($2) == 40 { print $2 } NR == 2 { exit }' "$1"
 }
 
+# The directory is about to be deleted, and a mistyped target can hold a file of the
+# marker's name, so the marker alone is not enough: it has to name a commit in this
+# clone, and the directory can hold nothing at its top level that the payload does not.
+is_installation() {
+  local directory="$1" installed entry name path
+  installed="$(cat "$directory/$marker" 2>/dev/null)" || return 1
+  [[ "$installed" =~ ^[0-9a-f]{40}$ ]] || return 1
+  git -C "$kit" rev-parse --verify --quiet "$installed^{commit}" >/dev/null || return 1
+  for entry in "$directory"/* "$directory"/.*; do
+    name="${entry##*/}"
+    case "$name" in . | .. | "$marker") continue ;; esac
+    # An unmatched glob stays as the pattern itself.
+    [ -e "$entry" ] || continue
+    for path in "${payload[@]}"; do
+      [ "$name" = "${path%%/*}" ] && continue 2
+    done
+    return 1
+  done
+}
+
 pin_file_text() {
   local commit="$1" directory="$2" source=""
   if source="$(git -C "$kit" remote get-url origin 2>/dev/null)"; then
@@ -106,8 +126,9 @@ fi
 if [ -e "$target" ] && [ ! -d "$target" ]; then
   fail "$target exists and is not a directory"
 fi
-if [ -d "$target" ] && [ -n "$(ls -A "$target")" ] && [ ! -f "$target/$marker" ]; then
-  fail "$target is not empty and holds no previous installation, so it is left untouched"
+if [ -d "$target" ] && [ -n "$(ls -A "$target")" ] && ! is_installation "$target"; then
+  fail "$target is not empty and is not a previous installation, so it is left untouched." \
+    "If it is one from a commit this kit clone lacks, pull the kit and install again"
 fi
 
 # A payload path the commit does not have is one added to the kit after it.
