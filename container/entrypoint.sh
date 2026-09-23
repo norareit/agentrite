@@ -136,9 +136,11 @@ setsid setpriv --reuid="$PROXY_USER" --regid="$PROXY_USER" --clear-groups -- \
   node /usr/local/lib/egress-proxy/egress-proxy.mjs "$PROXY_PORT" "${hosts[@]}" \
   >> "$PROXY_LOG" 2>&1 < /dev/null &
 proxy_pid=$!
+# Checked through /proc rather than kill -0: root here holds no CAP_KILL, so it cannot
+# signal a process of another uid, and kill -0 fails on a proxy that is running.
 for _ in $(seq 50); do
   grep -q '\[egress-proxy\] listening' "$PROXY_LOG" && break
-  kill -0 "$proxy_pid" 2>/dev/null || die "the egress proxy exited at start-up: $(cat "$PROXY_LOG")"
+  [ -d "/proc/$proxy_pid" ] || die "the egress proxy exited at start-up: $(cat "$PROXY_LOG")"
   sleep 0.1
 done
 grep -q '\[egress-proxy\] listening' "$PROXY_LOG" || die "the egress proxy did not start listening"
