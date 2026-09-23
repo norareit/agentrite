@@ -67,7 +67,6 @@ done
 log "installing default-deny egress firewall"
 iptables -F
 iptables -X 2>/dev/null || true
-iptables -t nat -F
 iptables -P INPUT DROP
 iptables -P FORWARD DROP
 iptables -P OUTPUT DROP
@@ -111,7 +110,9 @@ fi
 # allowlisted. The proxy's own onward connections are exempt from the redirect, and are
 # the only 443 traffic the filter admits. No rule admits an address because an
 # allowlisted host resolves there: a shared edge serves other names on other ports, and
-# plain HTTP by Host header, so any such rule would be a way around the proxy.
+# plain HTTP by Host header, so any such rule would be a way around the proxy. The nat
+# rules are appended, not flushed first: Docker's embedded resolver at 127.0.0.11 is
+# reached through nat rules of its own in this namespace.
 iptables -t nat -A OUTPUT -p tcp --dport 443 -m owner --uid-owner "$proxy_uid" -j RETURN
 iptables -t nat -A OUTPUT -p tcp --dport 443 -d 127.0.0.0/8 -j RETURN
 iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports "$PROXY_PORT"
