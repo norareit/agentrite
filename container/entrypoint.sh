@@ -116,6 +116,9 @@ fi
 iptables -t nat -A OUTPUT -p tcp --dport 443 -m owner --uid-owner "$proxy_uid" -j RETURN
 iptables -t nat -A OUTPUT -p tcp --dport 443 -d 127.0.0.0/8 -j RETURN
 iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports "$PROXY_PORT"
+# A redirected packet is rerouted to loopback, but the filter still sees the interface
+# it was first routed to, so the loopback rule above does not admit it. This does.
+iptables -A OUTPUT -p tcp -d 127.0.0.1 --dport "$PROXY_PORT" -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 443 -m owner --uid-owner "$proxy_uid" -j ACCEPT
 
 # The host gateway address, on the local model server's port only.
