@@ -1,7 +1,8 @@
 # agent-kit
 
 The shared instructions and tooling that coding agents work under, in one place so that an improvement is made once
-rather than once per project. Projects install its files with `install.sh` and keep only what is specific to them.
+rather than once per project. Projects install it as the npm package `@ritenoar/agent-kit` and keep only what is
+specific to them.
 
 ## What is here
 
@@ -13,7 +14,6 @@ rather than once per project. Projects install its files with `install.sh` and k
 | `scripts/`           | `check-changes.mjs`, which enforces the freeze on implemented units               |
 | `tests/`             | The kit's own unit tests, run by node's built-in test runner                      |
 | `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
-| `install.sh`         | The installer, which copies the kit's files into a project                        |
 | `infra/`             | The CDK app that serves release tarballs from `agent-kit.ritenoar.com`            |
 | `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit             |
 
@@ -22,44 +22,39 @@ project's own `AGENTS.md`, which links here for the rest.
 
 ## Installing it into a project
 
-The kit is installed at `agent-kit/`, not `.agent-kit/`: agents read these files constantly and some search tools
-skip dot directories. From a clone of this repository, with the project's root as the first argument:
+The kit is the npm package `@ritenoar/agent-kit`. It is served as a tarball from `agent-kit.ritenoar.com` rather than
+from a registry, so a project adds it by the URL of a release, which `deploy.sh` prints when it makes one:
 
 ```sh
-path/to/agent-kit/install.sh --update path/to/project agent-kit
+npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.0.0.tgz
 ```
 
-The installer copies in what a project needs, which is `process.md`, `roles/`, `templates/`,
-`scripts/check-changes.mjs` and `container/`, and nothing else: not this repository's `changes/`, `tests/`,
-`package.json` or this README. The list is `payload` in `install.sh`. It reads the files at a commit with
-`git archive`, so the clone it runs from is never checked out and its working tree does not matter.
-
-`--update` installs this clone's `master` and writes the project's `agent-kit.md`, whose first field is the commit
-it installed. That file is tracked in the project; the installed directory is not. The installer also records the
-commit inside the installed directory, in `.installed-commit`, so a project can tell a missing installation, a stale
-one and a correct one apart.
+npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
+`package-lock.json`. A project receives what `files` in this repository's `package.json` lists, which is
+`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs` and `container/`, plus the `package.json` and this
+README that npm always ships. It does not receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
 
 Then, in the project:
 
-* Add `agent-kit/` to `.gitignore`. An edit to an installed file is then never committed, and the next install
-  replaces it, which is what makes editing it visibly pointless rather than quietly harmful
-* Add a check, run ahead of the project's build and tests, that fails when `agent-kit/.installed-commit` is missing or
-  differs from the commit in `agent-kit.md`, and names the install command. It has to belong to the project, because
-  it runs when the kit may be entirely absent
-* Point `AGENTS.md` at `agent-kit/process.md` and the three files in `agent-kit/roles/`, and keep in it only what is
-  specific to the project
+* Point `AGENTS.md` at `node_modules/@ritenoar/agent-kit/process.md` and the three files in its `roles/`, and keep in
+  it only what is specific to the project
 * Point the harness wrappers at the kit's role files: `.claude/agents/*.md` for Claude Code, and the `agent` block in
   `opencode.json` for OpenCode
-* Wire the change check to a command of the project's own, running `agent-kit/scripts/check-changes.mjs`
-* Add `agent/compose.project.yml` and an `agent.sh` shim, as the sandbox section below describes
+* Wire the change check to a command of the project's own, running
+  `node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs`
+* Add `agent/compose.project.yml` and an `agent.sh` shim, and let the image build reach the kit, as the sandbox
+  section below describes
+
+A missing or altered kit is then npm's error, like any other dependency's, and needs no check of the project's own.
 
 ## Running the sandbox
 
 `container/agent.sh` layers a project's compose file over the kit's base and runs the container. A project gives it
 two files:
 
-* `agent.sh` at the project root, a shim that execs `agent-kit/container/agent.sh` so that the documented command
-  stays one command from the repository root
+* `agent.sh` at the project root, a shim that execs `node_modules/@ritenoar/agent-kit/container/agent.sh` with the
+  project root as its first argument, so that the documented command stays one command from the repository root.
+  The wrapper takes the root from its caller because how deep the kit sits under `node_modules` is npm's to decide
 * `agent/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
   allowlist, the resource limits and the `PLAYWRIGHT_VERSION` build argument
 
@@ -69,43 +64,42 @@ below, and rebuilding.
 
 The build context is the project root, not the kit directory, because the Dockerfile installs the project's own
 dependencies to get Playwright's system libraries at the version the project resolved. The wrapper passes
-`--project-directory` so that relative paths in both compose files resolve from the project root.
+`--project-directory` so that relative paths in both compose files resolve from the project root, and passes the
+kit's `container/` directory, relative to that root, as `AGENT_KIT_CONTAINER`, which the compose file and the
+Dockerfile use to find the kit's files. A project whose `.dockerignore` excludes `node_modules` must let that one
+directory back in:
 
-## Installing the pinned commit
-
-A fresh clone of a project has no `agent-kit/`. Without `--update`, the installer installs the commit the project's
-`agent-kit.md` pins and leaves that file alone:
-
-```sh
-path/to/agent-kit/install.sh path/to/project agent-kit
+```
+node_modules
+!node_modules/@ritenoar/agent-kit/container
 ```
 
-Run it again whenever the pin changes, after pulling the project. It replaces the installed directory whole, so
-nothing the pinned commit does not contain survives, and a second run with the same pin changes nothing. It refuses
-a directory that is neither empty nor a previous installation, so a mistyped target cannot destroy anything else.
+## Installing on a fresh clone
 
-The pin is authoritative. Installing the kit's latest on every run would mean two people cloning the same project on
-different days run agents under different instructions, with nothing in the project's history showing it. The pin
-makes a clone reproducible.
+A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
+release and integrity hash `package-lock.json` records, and fails rather than install anything else.
+
+The lockfile is authoritative. Installing the kit's latest on every run would mean two people cloning the same
+project on different days run agents under different instructions, with nothing in the project's history showing it.
+The lockfile makes a clone reproducible.
 
 ## Updating a project to a newer kit
 
-Pull this clone's `master`, then install with `--update`:
+Install the newer release by its URL:
 
 ```sh
-git -C path/to/agent-kit pull
-path/to/agent-kit/install.sh --update path/to/project agent-kit
+npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.1.0.tgz
 ```
 
-That rewrites only the commit in `agent-kit.md`, which the project commits like any other change. Every install
-reports how far this clone's `master` has moved past what it installed, and never acts on it: moving the pin is a
-deliberate change to the project.
+That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
+reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
+kit is a deliberate change to the project.
 
 ## Sending an improvement back
 
-Make the change here, in the kit repository, and commit it. The installed copy in a project is not a working copy of
-this repository and nothing in it reaches here: an improvement found while working in one project is made in the kit,
-and each project picks it up with `--update`.
+Make the change here, in the kit repository, and commit it. The installed copy under a project's `node_modules` is not
+a working copy of this repository and nothing in it reaches here: an improvement found while working in one project
+is made in the kit, released, and picked up by each project by updating to that release.
 
 ### Egress
 
@@ -151,13 +145,19 @@ URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront dist
 in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
 it looks up rather than owns. None of it ships to a project.
 
-`deploy.sh` makes a release, from the repository root and with AWS credentials for the account:
+A release starts with a version bump, then `deploy.sh`, from the repository root and with AWS credentials for the
+account:
 
 ```sh
+npm version patch   # or minor, or major
 ./deploy.sh
 ```
 
-It signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads the
+Pick the part to bump as semver means it; there is no rule of the kit's own. `npm version` updates `package.json` and
+`package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
+version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
+
+`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads the
 tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL with no
 credential and fails unless it is served, and prints the line to put in a project's `package.json`.
 
@@ -168,9 +168,11 @@ would delete versions that a project still installs.
 
 ## Where to run it
 
-The installer reads a clone of this repository, which the agent sandbox does not mount, so install and update on the
-host, outside the sandbox. A project's `agent.sh` needs the kit installed before the sandbox can start, and the
-project directory the sandbox mounts then holds it.
+Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike,
+provided the project's `ALLOWLIST` holds `agent-kit.ritenoar.com`. A project's `agent.sh` runs the wrapper from
+`node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can start.
+
+Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.
 
 ## The kit's own tests
 
