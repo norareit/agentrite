@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: implemented
 timestamp: 2026-09-24T23:33:39Z
 ---
 
@@ -35,3 +35,18 @@ keep naming Norareit's directories, because they record what was true in the pro
   the request names the units and the prefix, so the work is a copy with no decisions left open
 - 2026-09-24T23:33:39Z [human] set the number to 0001: this is the first unit of agent-kit's own. The `history-`
   directories are Norareit's numbering and do not count toward it
+- 2026-09-24T23:35:20Z [human] approved the unit, in the request to do the copying once the task existed
+- 2026-09-24T23:35:20Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  `in-progress`
+- 2026-09-24T23:35:20Z [Claude Code, anthropic/claude-opus-5-5] copied the eight units in 268a0a9. `diff -r` against
+  each directory in `../norareit/changes/` reported no differences
+- 2026-09-24T23:35:20Z [Claude Code, anthropic/claude-opus-5-5] ran `node scripts/check-changes.mjs` and `npm test`
+  on 268a0a9: the check exited 0, and the tests reported 67 passed, 0 failed. No review was run for this task. Moved
+  the status to `implemented`
+
+## Changes
+
+Added `changes/history-0030-role-instructions`, `history-0031-code-standards`, `history-0033-agent-sandbox-container`,
+`history-0035-shared-agent-kit`, `history-0036-install-the-agent-kit`, `history-0037-kit-as-an-npm-package`,
+`history-0038-agent-model-suggestions` and `history-0039-sni-filtering-proxy`, each a verbatim copy of the Norareit
+unit of the same name without the prefix.
