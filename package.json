@@ -1,8 +1,15 @@
 {
-  "name": "agent-kit",
-  "version": "0.1.0",
+  "name": "@ritenoar/agent-kit",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
+  "files": [
+    "process.md",
+    "roles",
+    "templates",
+    "scripts/check-changes.mjs",
+    "container"
+  ],
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "deploy": "./deploy.sh"

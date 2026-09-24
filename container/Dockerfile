@@ -119,8 +119,11 @@ WORKDIR /work
 # The container starts as root so the entrypoint can install the firewall and start the
 # egress proxy; the entrypoint drops to the agent user before running the command. Every
 # confinement setting other than the firewall lives in the compose files.
-COPY agent-kit/container/entrypoint.sh /usr/local/bin/entrypoint.sh
-COPY agent-kit/container/egress-proxy.mjs agent-kit/container/sni.mjs /usr/local/lib/egress-proxy/
+# KIT_CONTAINER is this directory relative to the build context, the project root. It
+# depends on where the kit is installed, so container/agent.sh supplies it.
+ARG KIT_CONTAINER
+COPY ${KIT_CONTAINER}/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY ${KIT_CONTAINER}/egress-proxy.mjs ${KIT_CONTAINER}/sni.mjs /usr/local/lib/egress-proxy/
 RUN chmod +x /usr/local/bin/entrypoint.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]

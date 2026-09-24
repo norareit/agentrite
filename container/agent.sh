@@ -12,8 +12,9 @@
 # either file resolves from there.
 #
 # Usage:
-#   ./agent.sh [--rebuild] [--workdir DIR] [--mount HOST[:ro]]... [COMMAND...]
+#   agent.sh PROJECT_ROOT [--rebuild] [--workdir DIR] [--mount HOST[:ro]]... [COMMAND...]
 #
+#   PROJECT_ROOT     the project's root, which the project's agent.sh shim passes
 #   --rebuild        build the image before running, even if it already exists
 #   --workdir DIR    mount DIR at /work instead of the project root
 #   --mount HOST     also mount HOST at /mnt/<basename>, read-write
@@ -22,8 +23,17 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# The kit is vendored at <project>/agent-kit, so the project root is two levels up.
-root="$(cd "$here/../.." && pwd)"
+
+# The caller names the project root. The kit is an installed package, and how deep it
+# sits under node_modules depends on the scope, on hoisting and on the package manager,
+# so counting directories up from here would be a guess.
+if [ $# -lt 1 ] || [ ! -d "$1" ]; then
+  echo "agent.sh: the first argument must be the project root." >&2
+  echo "A project's own agent.sh shim passes it; run that rather than this file." >&2
+  exit 2
+fi
+root="$(cd "$1" && pwd)"
+shift
 project_compose="$root/agent/compose.project.yml"
 
 if [ ! -f "$project_compose" ]; then
@@ -33,6 +43,19 @@ if [ ! -f "$project_compose" ]; then
   echo "the Playwright version. See the kit's README.md." >&2
   exit 2
 fi
+
+# The image is built from the project root, so the build can reach the kit's files only
+# when the kit is installed inside that root. Compose and the Dockerfile take its path
+# from here rather than naming it.
+case "$here" in
+  "$root"/*) ;;
+  *)
+    echo "agent.sh: the kit at $here is not inside the project root $root," >&2
+    echo "so the image build cannot reach it. Install it as the project's dependency." >&2
+    exit 2
+    ;;
+esac
+export AGENT_KIT_CONTAINER="${here#"$root"/}"
 
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 

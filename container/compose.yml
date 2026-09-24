@@ -19,8 +19,11 @@ services:
       # libraries at the version the project resolved, so it needs the project's
       # package.json and package-lock.json in the context.
       context: .
-      dockerfile: agent-kit/container/Dockerfile
+      # The kit's container directory relative to the project root, which
+      # container/agent.sh works out from where the kit is installed.
+      dockerfile: ${AGENT_KIT_CONTAINER:?run the sandbox through the project's agent.sh}/Dockerfile
       args:
+        KIT_CONTAINER: ${AGENT_KIT_CONTAINER}
         AGENT_UID: ${AGENT_UID:-1000}
         AGENT_GID: ${AGENT_GID:-1000}
     working_dir: /work
