@@ -14,6 +14,8 @@ rather than once per project. Projects install its files with `install.sh` and k
 | `tests/`             | The kit's own unit tests, run by node's built-in test runner                      |
 | `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
 | `install.sh`         | The installer, which copies the kit's files into a project                        |
+| `infra/`             | The CDK app that serves release tarballs from `agent-kit.ritenoar.com`            |
+| `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit             |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
 project's own `AGENTS.md`, which links here for the rest.
@@ -142,6 +144,28 @@ fails:
 * the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
   is on the hostname and not the address
 
+## Releasing
+
+A release is a tarball of the kit served from `https://agent-kit.ritenoar.com/`, which a project installs from its
+URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront distribution in front of it, a certificate
+in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
+it looks up rather than owns. None of it ships to a project.
+
+`deploy.sh` makes a release, from the repository root and with AWS credentials for the account:
+
+```sh
+./deploy.sh
+```
+
+It signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads the
+tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL with no
+credential and fails unless it is served, and prints the line to put in a project's `package.json`.
+
+A released tarball is never replaced or removed. Projects pin it by its integrity hash, and two projects may sit on
+different versions indefinitely, so the script refuses to upload over a name that already exists. It uploads with
+`aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
+would delete versions that a project still installs.
+
 ## Where to run it
 
 The installer reads a clone of this repository, which the agent sandbox does not mount, so install and update on the
@@ -154,4 +178,6 @@ project directory the sandbox mounts then holds it.
 npm test
 ```
 
-No dependencies and no install step: it runs node's built-in test runner over `tests/`.
+It runs node's built-in test runner over `tests/`, and the tests need no install. Releasing does: `infra/` needs
+`aws-cdk-lib` and the CDK CLI, which are the kit's devDependencies, so run `npm ci` first. `deploy.sh` does that
+itself.
