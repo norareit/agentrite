@@ -2,5 +2,9 @@
   "hosted-zone:account=887023619290:domainName=ritenoar.com:region=eu-west-1": {
     "Id": "/hostedzone/Z07400433RZ3H7E8TDOKT",
     "Name": "ritenoar.com."
+  },
+  "hosted-zone:account=887023619290:domainName=ritenoar.com:region=us-east-1": {
+    "Id": "/hostedzone/Z07400433RZ3H7E8TDOKT",
+    "Name": "ritenoar.com."
   }
 }
