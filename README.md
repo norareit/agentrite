@@ -157,7 +157,8 @@ Pick the part to bump as semver means it; there is no rule of the kit's own. `np
 `package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
 version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
 
-`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads the
+`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads
+the
 tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL with no
 credential and fails unless it is served, and prints the line to put in a project's `package.json`.
 
