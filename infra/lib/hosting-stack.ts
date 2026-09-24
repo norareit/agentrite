@@ -6,6 +6,7 @@ import * as route53 from 'aws-cdk-lib/aws-route53';
 import * as targets from 'aws-cdk-lib/aws-route53-targets';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import { recordNameFor } from './record-name.ts';
 
 interface HostingStackProps extends cdk.StackProps {
   /** Apex domain of the existing Route53 hosted zone, e.g. ritenoar.com */
@@ -23,11 +24,7 @@ export class HostingStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props: HostingStackProps) {
     super(scope, id, props);
 
-    if (!props.subdomain.endsWith(`.${props.hostedZoneDomain}`)) {
-      throw new Error(`subdomain ${props.subdomain} is not inside zone ${props.hostedZoneDomain}`);
-    }
-    // 'agent-kit.ritenoar.com' + zone 'ritenoar.com' -> record name 'agent-kit'
-    const recordName = props.subdomain.slice(0, -(props.hostedZoneDomain.length + 1));
+    const recordName = recordNameFor(props.subdomain, props.hostedZoneDomain);
 
     const hostedZone = route53.HostedZone.fromLookup(this, 'Zone', {
       domainName: props.hostedZoneDomain,
