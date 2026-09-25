@@ -61,26 +61,26 @@ renderers, and it is kept on one line, as in Norareit, because it is file conten
   present, `claude opencode` exits non-zero, names that file on standard error, and afterwards the directory holds
   that one file unchanged and no `.claude/` exists (R7); no arguments and `codex` each exit non-zero with the usage on
   standard error and create nothing (R3)
-- [ ] Implement `scripts/agent-kit-roles.mjs` as the approach describes, with the `#!/usr/bin/env node` line and the
+- [x] Implement `scripts/agent-kit-roles.mjs` as the approach describes, with the `#!/usr/bin/env node` line and the
   executable bit set, until `npm test` passes (R1 to R8)
-- [ ] Add the `bin` entry and the `files` entry to `package.json` (R1)
-- [ ] Rewrite the harness wrapper bullet of README's "Installing it into a project" to run
+- [x] Add the `bin` entry and the `files` entry to `package.json` (R1)
+- [x] Rewrite the harness wrapper bullet of README's "Installing it into a project" to run
   `npx agent-kit-roles claude opencode`, naming only the harnesses the project uses; say that the command refuses to
   overwrite and that a model per role goes in the project's own wrapper. Update the list of shipped files in that
   section and the `scripts/` row of "What is here" (R9)
 
 ## Verification
 
-- [ ] `npm test` passes, and its output includes the new tests (R10)
-- [ ] `npm pack --dry-run` lists `scripts/agent-kit-roles.mjs`, and the packed file keeps its executable bit (R1)
-- [ ] In a scratch directory, `npm install` of the packed tarball followed by `npx agent-kit-roles claude opencode`
+- [x] `npm test` passes, and its output includes the new tests (R10)
+- [x] `npm pack --dry-run` lists `scripts/agent-kit-roles.mjs`, and the packed file keeps its executable bit (R1)
+- [x] In a scratch directory, `npm install` of the packed tarball followed by `npx agent-kit-roles claude opencode`
   writes the six files, and a second run fails and changes nothing (R1, R7)
-- [ ] In that scratch directory, `opencode debug agent planner`, `implementer` and `reviewer` each report the Norareit
+- [x] In that scratch directory, `opencode debug agent planner`, `implementer` and `reviewer` each report the Norareit
   description, `mode` `subagent` and the pointer as the prompt (R5)
-- [ ] `diff -r` of the scratch directory's `.claude/agents/` against Norareit's at `610d564` reports nothing (R4)
-- [ ] `node scripts/check-changes.mjs` passes on the committed branch
+- [x] `diff -r` of the scratch directory's `.claude/agents/` against Norareit's at `610d564` reports nothing (R4)
+- [x] `node scripts/check-changes.mjs` passes on the committed branch
 
 ## Commit Points
 
-- [ ] `feature-0002` The fixtures and the failing tests
-- [ ] `feature-0002` The command, the `bin` entry, and the README
+- [x] `feature-0002` The fixtures and the failing tests
+- [x] `feature-0002` The command, the `bin` entry, and the README

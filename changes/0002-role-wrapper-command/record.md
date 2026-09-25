@@ -36,3 +36,17 @@ timestamp: 2026-09-24T23:44:22Z
   `in-progress`
 - 2026-09-25T14:23:34Z [opencode, ollama/qwen3.8:27b-128k] copied Norareit's `.claude/agents/` at `610d564` into
   `tests/fixtures/claude-agents/`, and `diff` of each fixture against Norareit's current file reports nothing
+- 2026-09-25T14:30:03Z [opencode, ollama/qwen3.8:27b-128k] wrote the unit tests, confirmed they fail, committed them
+  with the fixtures; then implemented `scripts/agent-kit-roles.mjs`, the `bin` and `files` entries, and the README,
+  and committed together
+- 2026-09-25T14:30:03Z [opencode, ollama/qwen3.8:27b-128k] found the entry-point guard silent when the command is run
+  through `node_modules/.bin/agent-kit-roles`, because node resolves that symlink and `import.meta.url` no longer
+  matches `process.argv[1]`; `isMain` now compares the canonical paths of both. A stale install under `/tmp/opencode`
+  from an earlier session had masked this, because its script was a different one
+- 2026-09-25T14:30:03Z [opencode, ollama/qwen3.8:27b-128k] ran the suites on the final tree: `npm test` reports 79
+  tests, all passing, and the new ones among them; the packed tarball lists `scripts/agent-kit-roles.mjs` at
+  `rwxr-xr-x`; a fresh scratch project's `npm install` and `npx agent-kit-roles claude opencode` write the six files
+  and a second run refuses, naming each on standard error and writing nothing; `opencode debug agent` reports the
+  Norareit description, `mode` `subagent` and the pointer body for all three roles; `diff -r` of the scratch
+  `.claude/agents/` against Norareit at `610d564` reports nothing; `node scripts/check-changes.mjs` passes on the
+  branch
