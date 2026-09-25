@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: implemented
 timestamp: 2026-09-25T00:35:00Z
 ---
 
@@ -25,3 +25,19 @@ as in a project.
 - 2026-09-25T00:35:00Z [Claude Code, anthropic/claude-opus-5-5] took the planner role. A task: one dependency and
   one README paragraph, with no decision left open. Checked in a scratch package named `@ritenoar/agent-kit` that
   npm installs the 1.0.1 tarball by URL into a package of the same name
+- 2026-09-25T00:35:39Z [human] approved the unit, in the same answer that asked for it
+- 2026-09-25T00:35:39Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  `in-progress`
+- 2026-09-25T00:35:39Z [Claude Code, anthropic/claude-opus-5-5] in 71a6436, ran `npm install --save-dev` with the
+  1.0.1 URL, which added it to `package.json` and `package-lock.json`, and added the README paragraph. It went in a
+  section of its own, "The kit's own copy of the kit", after the tests section rather than inside it, because it is
+  about the instructions and not the tests. `node_modules/@ritenoar/agent-kit/process.md` now exists, and is
+  identical to the root `process.md` at this commit
+- 2026-09-25T00:35:39Z [Claude Code, anthropic/claude-opus-5-5] ran `npm test` and `node scripts/check-changes.mjs`
+  on 71a6436: 67 tests passed, 0 failed, and the check exited 0. `deploy.sh` was not run. No review was run for this
+  task. Moved the status to `implemented`
+
+## Changes
+
+Added `@ritenoar/agent-kit` 1.0.1 by URL to the devDependencies, and the README section "The kit's own copy of the
+kit".
