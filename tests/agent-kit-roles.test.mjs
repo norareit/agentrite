@@ -1,6 +1,16 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  lstatSync,
+  mkdtempSync,
+  mkdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -26,6 +36,13 @@ test('parseHarnesses throws a usage error for an unknown harness', () => {
   assert.throws(() => parseHarnesses(['codex']), /claude/);
   assert.throws(() => parseHarnesses(['codex']), /opencode/);
   assert.throws(() => parseHarnesses(['claude', 'codex']), /codex/);
+});
+
+test('parseHarnesses rejects Object.prototype property names as unknown', () => {
+  for (const name of ['toString', 'constructor', '__proto__']) {
+    assert.throws(() => parseHarnesses([name]), new RegExp(name));
+  }
+  assert.throws(() => parseHarnesses(['claude', 'toString']), /toString/);
 });
 
 test('plannedFiles for claude returns exactly the three fixture files, byte for byte', () => {
@@ -161,4 +178,42 @@ test('an unknown harness exits non-zero with the usage on standard error and cre
   assert.match(result.stderr, /opencode/);
   assert.equal(exists(join(base, '.claude')), false);
   assert.equal(exists(join(base, '.opencode')), false);
+});
+
+test('a dangling wrapper symlink is named and written over nothing', (t) => {
+  const { base, run } = project(t);
+  const target = join(base, '.opencode', 'agents', 'reviewer.md');
+  mkdirSync(join(base, '.opencode', 'agents'), { recursive: true });
+  symlinkSync('/no/such/target/reviewer.md', target);
+  assert.equal(lstatSync(target).isSymbolicLink(), true);
+
+  const result = run('claude', 'opencode');
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, new RegExp(`reviewer\\.md`));
+  assert.doesNotMatch(result.stderr, /render is not a function|EEXIST|not a function/);
+  // Nothing was written: the pre-existing symlink stands alone, and the other harness tree was never created.
+  assert.equal(lstatSync(target).isSymbolicLink(), true);
+  assert.equal(exists(join(base, '.claude')), false);
+  for (const name of ['planner', 'implementer']) {
+    assert.equal(exists(join(base, `.opencode/agents/${name}.md`)), false);
+  }
+});
+
+test('the command runs through a node_modules bin symlink the way npx does', (t) => {
+  const { base } = project(t);
+  mkdirSync(join(base, 'node_modules', '@ritenoar', 'agent-kit', 'scripts'), { recursive: true });
+  mkdirSync(join(base, 'node_modules', '.bin'));
+  const bin = join(base, 'node_modules', '.bin', 'agent-kit-roles');
+  symlinkSync(script, bin);
+
+  const result = spawnSync(process.execPath, [bin, 'claude'], { cwd: base, encoding: 'utf-8' });
+
+  assert.equal(result.status, 0, result.stderr);
+  for (const name of ['planner', 'implementer', 'reviewer']) {
+    assert.equal(
+      readFileSync(join(base, '.claude', 'agents', `${name}.md`), 'utf-8'),
+      readFileSync(new URL(`./fixtures/claude-agents/${name}.md`, import.meta.url), 'utf-8'),
+    );
+  }
 });

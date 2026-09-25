@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { existsSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
+import { lstatSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
@@ -61,6 +61,17 @@ const HARNESSES = {
 };
 
 /**
+ * True when `name` is a harness registered in `HARNESSES`, using an own-property check
+ * so that inherited `Object.prototype` names such as `toString` are not accepted.
+ *
+ * @param {string} name
+ * @returns {boolean}
+ */
+function isKnownHarness(name) {
+  return Object.hasOwn(HARNESSES, name);
+}
+
+/**
  * @returns {string}
  */
 function usage() {
@@ -74,7 +85,7 @@ function usage() {
 export function parseHarnesses(args) {
   if (args.length === 0) throw new Error(usage());
 
-  const unknown = args.filter((arg) => HARNESSES[arg] === undefined);
+  const unknown = args.filter((name) => !isKnownHarness(name));
   if (unknown.length > 0) {
     throw new Error(`${unknown.map((name) => `unknown harness: ${name}`).join(', ')}\n${usage()}`);
   }
@@ -127,7 +138,14 @@ if (isMain()) {
     process.exit(2);
   }
 
-  const existing = files.filter((file) => existsSync(file.absolute));
+  const existing = files.filter((file) => {
+    try {
+      lstatSync(file.absolute);
+      return true;
+    } catch {
+      return false;
+    }
+  });
   if (existing.length > 0) {
     console.error(
       `refusing to overwrite an existing file:\n${existing.map((file) => `- ${file.absolute}`).join('\n')}`,
