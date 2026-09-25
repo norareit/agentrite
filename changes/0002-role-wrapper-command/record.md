@@ -50,3 +50,30 @@ timestamp: 2026-09-24T23:44:22Z
   Norareit description, `mode` `subagent` and the pointer body for all three roles; `diff -r` of the scratch
   `.claude/agents/` against Norareit at `610d564` reports nothing; `node scripts/check-changes.mjs` passes on the
   branch
+- 2026-09-25T18:13:37Z [OpenCode, openai/gpt-6-sol] reviewed unit 0002 in a full review of commit
+  `bb19d49a4d6ae0723ee0c36d0c973805398fd589`. Findings: S1, S2, P1 and C1. Saved the review in
+  `.reviews/0002-role-wrapper-command/review-bb19d49-20260925T1812Z.md`. The recorded packed-tarball installation
+  and `npx` run, and behavior on the sandbox's OpenCode 1.18.30, were not verified; `npm test`, the change check, the
+  package dry run and OpenCode 1.18.32 were checked on the reviewed tree.
+- 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] accepted finding S1 and corrected it: `parseHarnesses`
+  now checks membership with `Object.hasOwn(HARNESSES, name)`, so Object.prototype property names such as `toString`,
+  `constructor` and `__proto__` are reported as unknown harnesses instead of being accepted. A new unit test covers all
+  three. Verified: with `toString` and `__proto__` as the argument the CLI prints the usage to standard error and
+  exits 2, and writes nothing
+- 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] accepted finding S2 and corrected it: the preflight
+  existence check now uses `lstatSync` instead of `existsSync`, so a dangling wrapper symlink is named on standard
+  error and the run writes nothing, matching R7. A new test plants a dangling symlink at
+  `.opencode/agents/reviewer.md` and asserts the refusal, that it survived, and that no other file was created.
+  Verified by running the scenario directly: exit 1, the symlink named, and zero files written
+- 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] accepted finding C1 and corrected it: added a test that
+  executes the script through a `node_modules/.bin/agent-kit-roles` symlink, the path `npx` uses, so the `isMain`
+  entry-point guard is covered by a test rather than only the manual scratch run
+- 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] re-ran `npm test` after the corrections: 82 tests, all
+  passing. Left the status at `in-progress` because P1 remains open for the human
+- 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] on finding P1, proposed to decline it as a records fix but
+  need the human's call: the record was left at `draft` "for the human's approval", then moved straight to
+  `in-progress` with no `approved` entry. I did not write an approval entry myself, because that would put a recorded
+  decision where the human's belongs. Question: do you approve this unit, or hold it? If approved, the missing
+  transition is a records gap and the honest closure is to note in the record now that the implementation ran ahead of
+  its approval; if I am expected to record that, please say so and I will, keeping the existing log intact rather than
+  back-dating a timestamp. Either way the code findings S1, S2 and C1 are fixed and verified independently of this
