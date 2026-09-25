@@ -184,3 +184,11 @@ npm test
 It runs node's built-in test runner over `tests/`, and the tests need no install. Releasing does: `infra/` needs
 `aws-cdk-lib` and the CDK CLI, which are the kit's devDependencies, so run `npm ci` first. `deploy.sh` does that
 itself.
+
+## The kit's own copy of the kit
+
+The kit is also a devDependency of itself, installed from a release by its URL like in any project, so that
+`node_modules/@ritenoar/agent-kit/` exists here too. `AGENTS.md` sends agents to the process and roles there, which
+means work on the kit follows the released instructions rather than the working copy it may be changing. Changes are
+made at the repository root, never under `node_modules`, and the installed copy moves to a newer release only by a
+deliberate update, as described above.
