@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-09-24T23:44:22Z
 ---
 
@@ -32,3 +32,7 @@ timestamp: 2026-09-24T23:44:22Z
 - 2026-09-25T00:07:11Z [Claude Code, anthropic/claude-opus-5-5] narrowed requirement 9, reworded the `opencode.json`
   decision to leave deleting a leftover block to the project's own change, and dropped that advice from the plan's
   README task
+- 2026-09-25T14:23:34Z [opencode, ollama/qwen3.8:27b-128k] took the implementer role and set the status to
+  `in-progress`
+- 2026-09-25T14:23:34Z [opencode, ollama/qwen3.8:27b-128k] copied Norareit's `.claude/agents/` at `610d564` into
+  `tests/fixtures/claude-agents/`, and `diff` of each fixture against Norareit's current file reports nothing

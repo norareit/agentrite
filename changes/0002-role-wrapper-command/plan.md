@@ -48,7 +48,7 @@ renderers, and it is kept on one line, as in Norareit, because it is file conten
 
 ## Tasks
 
-- [ ] Copy Norareit's three `.claude/agents/*.md` at `610d564` into `tests/fixtures/claude-agents/` and confirm with
+- [x] Copy Norareit's three `.claude/agents/*.md` at `610d564` into `tests/fixtures/claude-agents/` and confirm with
   `diff` that they match (R4)
 - [ ] Write the unit tests, failing: `parseHarnesses` accepts `claude`, `opencode`, both in either order, and a
   repeated name once; it throws for no arguments and for an unknown name (R2, R3). `plannedFiles(['claude'])` returns
