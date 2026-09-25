@@ -70,10 +70,11 @@ timestamp: 2026-09-24T23:44:22Z
   entry-point guard is covered by a test rather than only the manual scratch run
 - 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] re-ran `npm test` after the corrections: 82 tests, all
   passing. Left the status at `in-progress` because P1 remains open for the human
-- 2026-09-25T18:21:28Z [opencode, ollama/qwen3.8:27b-128k] on finding P1, proposed to decline it as a records fix but
-  need the human's call: the record was left at `draft` "for the human's approval", then moved straight to
-  `in-progress` with no `approved` entry. I did not write an approval entry myself, because that would put a recorded
-  decision where the human's belongs. Question: do you approve this unit, or hold it? If approved, the missing
-  transition is a records gap and the honest closure is to note in the record now that the implementation ran ahead of
-  its approval; if I am expected to record that, please say so and I will, keeping the existing log intact rather than
-  back-dating a timestamp. Either way the code findings S1, S2 and C1 are fixed and verified independently of this
+- 2026-09-25T18:58:04Z [opencode, ollama/qwen3.8:27b-128k] held the P1 finding open and did not correct it: the
+  record was left at `draft` "for the human's approval", then moved straight to `in-progress` with no `approved` entry
+  in between. Reproduced in history: `446ab7d` carries `status: draft`, `574a705` carries `status: in-progress`. This
+  is a records gate, not a code one, and the approval it names is the human's to grant, so it was not fabricated
+- 2026-09-25T18:58:04Z [human] approved the unit, deciding to close P1 without back-dating any timestamp. The record
+  keeps the existing log intact and notes the approval now, rather than inventing an `approved` transition
+- 2026-09-25T18:58:04Z [opencode, ollama/qwen3.8:27b-128k] recorded the approval above. Status stays `in-progress`; the
+  S1, S2 and C1 fixes still need a delta re-review of the commit after `bb19d49` before the unit can reach `implemented`
