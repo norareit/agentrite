@@ -76,8 +76,16 @@ iptables -A OUTPUT -o lo -j ACCEPT
 iptables -A INPUT  -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# DNS to whatever resolvers the container was handed. Docker's embedded resolver sits
-# on loopback and is already covered; this also allows an explicit external nameserver.
+# DNS to whatever resolvers the container was handed, which allows an explicit external
+# nameserver. Docker's embedded resolver on 127.0.0.11 is reached over loopback, but
+# it forwards each query to its upstream from inside this network namespace, so the
+# forwarded query crosses this OUTPUT chain too. That upstream is not listed in
+# resolv.conf (Docker Desktop's is 192.168.65.7), so it is admitted by owner instead:
+# the forwarding socket belongs to the Docker daemon, uid 0. Nothing else here holds
+# uid 0 after the drop: the agent and the proxy are checked above to be neither root,
+# and no-new-privileges keeps setuid binaries from making them so.
+iptables -A OUTPUT -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT
+iptables -A OUTPUT -p tcp --dport 53 -m owner --uid-owner 0 -j ACCEPT
 while read -r _ ns _; do
   [ -n "${ns:-}" ] || continue
   iptables -A OUTPUT -p udp -d "$ns" --dport 53 -j ACCEPT
