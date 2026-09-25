@@ -74,6 +74,27 @@ node_modules
 !node_modules/@ritenoar/agent-kit/container
 ```
 
+### The home volume
+
+The agent's home, `/home/agent`, is a named volume in `container/compose.yml`, the one writable place that survives a
+container. It holds both harnesses' credentials and state and the npm cache, so authentication happens once.
+
+Docker fills a named volume from the image, ownership included, only the first time an empty volume is mounted, and
+never changes it afterwards. The agent is always the host user's uid, set when the image is built. So a volume first
+filled by an image whose agent had another uid stays owned by that uid, and the agent then cannot write its own home.
+The entrypoint checks the owner of `/home/agent` against the agent's uid before it drops to the agent, and when they
+differ it refuses to start, naming both uids and how to recover:
+
+```
+[entrypoint] FATAL: /home/agent is owned by uid 1000, but the agent is uid 501, so the agent cannot write its home.
+Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again:
+  docker volume rm <project>_agent-home
+```
+
+That is: the home volume was created by an image for a different user, and the agent cannot write it. Remove the
+volume and start again, which discards the harnesses' saved logins, and log in again. A mismatched home is a one-off
+state: once the volume is removed, the next start creates a new one owned by the agent.
+
 ## Installing on a fresh clone
 
 A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
