@@ -192,7 +192,6 @@ test('a dangling wrapper symlink is named and written over nothing', (t) => {
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, new RegExp(`reviewer\\.md`));
   assert.doesNotMatch(result.stderr, /render is not a function|EEXIST|not a function/);
-  // Nothing was written: the pre-existing symlink stands alone, and the other harness tree was never created.
   assert.equal(lstatSync(target).isSymbolicLink(), true);
   assert.equal(exists(join(base, '.claude')), false);
   for (const name of ['planner', 'implementer']) {

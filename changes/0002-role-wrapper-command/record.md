@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-09-24T23:44:22Z
 ---
 
@@ -78,3 +78,15 @@ timestamp: 2026-09-24T23:44:22Z
   keeps the existing log intact and notes the approval now, rather than inventing an `approved` transition
 - 2026-09-25T18:58:04Z [opencode, ollama/qwen3.8:27b-128k] recorded the approval above. Status stays `in-progress`; the
   S1, S2 and C1 fixes still need a delta re-review of the commit after `bb19d49` before the unit can reach `implemented`
+- 2026-09-25T19:02:03Z [OpenCode, openai/gpt-6-sol] reviewed unit 0002 in a delta review of commit
+  `2144d5f44049c297d3688ccc8df2a9d38139cd2a` from `bb19d49a4d6ae0723ee0c36d0c973805398fd589`.
+  Finding returned: C2. Saved the review in `.reviews/0002-role-wrapper-command/review-2144d5f-20260925T1901Z.md`.
+  The packed-tarball installation, `npx` run and OpenCode behavior were not rechecked; `npm test` and the change check
+  passed on the reviewed tree.
+- 2026-09-25T20:29:28Z [human] accepted the review, which returned no blocking findings, and asked for the unit to be
+  marked implemented and fast-forwarded to `master`
+- 2026-09-25T20:29:28Z [opencode, ollama/qwen3.8:27b-128k] closed C2 as a restating comment and removed it. On the
+  final tree, `npm test` reports 82 of 82 passing, `node scripts/check-changes.mjs` passes, and the delta re-review of
+  `bb19d49` reports no further findings. Every task in `plan.md` is ticked and the four prior findings are resolved
+  (S1, S2 and C1 fixed; P1 decided by the human above). Status `in-progress` to `implemented`; `spec.md` and `plan.md`
+  are frozen
