@@ -66,9 +66,8 @@ renderers, and it is kept on one line, as in Norareit, because it is file conten
 - [ ] Add the `bin` entry and the `files` entry to `package.json` (R1)
 - [ ] Rewrite the harness wrapper bullet of README's "Installing it into a project" to run
   `npx agent-kit-roles claude opencode`, naming only the harnesses the project uses; say that the command refuses to
-  overwrite and that a model per role goes in the project's own wrapper; and tell a project that has an `agent` block
-  for the three roles in `opencode.json` to delete it, since the markdown wrappers replace it. Update the list of
-  shipped files in that section and the `scripts/` row of "What is here" (R9)
+  overwrite and that a model per role goes in the project's own wrapper. Update the list of shipped files in that
+  section and the `scripts/` row of "What is here" (R9)
 
 ## Verification
 

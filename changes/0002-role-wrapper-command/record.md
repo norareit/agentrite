@@ -22,3 +22,13 @@ timestamp: 2026-09-24T23:44:22Z
 - 2026-09-24T23:44:22Z [Claude Code, anthropic/claude-opus-5-5] wrote `spec.md` and `plan.md`: ten requirements,
   ten decisions and seven non-goals; six tasks, six verification items and two commit points. Status left at `draft`
   for the human's approval
+- 2026-09-25T00:07:11Z [human] questioned whether OpenCode really cannot reference a role file from a markdown agent
+- 2026-09-25T00:07:11Z [Claude Code, anthropic/claude-opus-5-5] checked a `prompt: "{file:...}"` frontmatter key in
+  OpenCode 1.18.32: it is ignored, giving an empty prompt without a body and the body's text with one. The only
+  inclusion found is `{file:...}` in `opencode.json`, which the command would have to edit. The spec keeps the
+  pointer wrapper, which works as Claude Code's does and copies no role content
+- 2026-09-25T00:07:11Z [human] noted that projects do not read the kit's README, and agreed to narrow requirement 9
+  to keeping the README's installation section true, and to drop the advice about an existing `opencode.json` block
+- 2026-09-25T00:07:11Z [Claude Code, anthropic/claude-opus-5-5] narrowed requirement 9, reworded the `opencode.json`
+  decision to leave deleting a leftover block to the project's own change, and dropped that advice from the plan's
+  README task

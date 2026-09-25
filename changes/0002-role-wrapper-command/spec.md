@@ -42,8 +42,7 @@ What OpenCode 1.18.32, the local version one patch ahead of the sandbox's pinned
 7. If any file it would write already exists, it exits with a non-zero status, names every such file on standard
    error, and writes nothing at all, for any harness given. It never overwrites a file
 8. On success it prints each file it wrote, and exits with status zero
-9. The kit's README tells a project to run the command instead of writing the wrappers by hand, and says what to do
-   about an existing `agent` block in `opencode.json`
+9. The kit's README describes setting up the role wrappers with the command, in place of writing them by hand
 10. `npm test` covers requirements 2 to 8
 
 ## Decisions
@@ -71,7 +70,7 @@ What OpenCode 1.18.32, the local version one patch ahead of the sandbox's pinned
   how a project works rather than where its wrappers live, and is not asked for.
 * **`opencode.json` is not read or edited.** It may be JSONC, and a project's other settings share the file. The
   markdown wrapper wins over a same-named `agent` entry, so a leftover block is dead configuration rather than a
-  conflict. The README tells the reader to delete it, which is the one-time edit a migrating project needs.
+  conflict. Deleting it is part of moving a project onto the command, which is that project's own change.
 * **The current working directory is the target.** `npx` runs from where it is invoked, and the wrappers' paths into
   `node_modules` are relative to the project root, so the command is run from there. It does not search upward for a
   project root: a guess about which directory was meant is worse than writing where it was asked.
