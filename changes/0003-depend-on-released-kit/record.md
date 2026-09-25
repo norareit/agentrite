@@ -41,3 +41,11 @@ as in a project.
 
 Added `@ritenoar/agent-kit` 1.0.1 by URL to the devDependencies, and the README section "The kit's own copy of the
 kit".
+
+## Amendments
+
+- 2026-09-25T00:39:50Z [OpenCode, openai/gpt-6-sol] reviewed unit 0003 in a full review of commit
+  `49845fe4f6fe918e75795eaf05b3659db21a0058`. Findings: none. Saved the review in
+  `.reviews/0003-depend-on-released-kit/review-49845fe-20260925T0039Z.md`. The scratch-package experiment and the
+  command runs specifically claimed for `71a6436` could not be replayed; tests and the change check passed on the
+  reviewed tree.
