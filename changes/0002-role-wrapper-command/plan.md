@@ -50,12 +50,12 @@ renderers, and it is kept on one line, as in Norareit, because it is file conten
 
 - [x] Copy Norareit's three `.claude/agents/*.md` at `610d564` into `tests/fixtures/claude-agents/` and confirm with
   `diff` that they match (R4)
-- [ ] Write the unit tests, failing: `parseHarnesses` accepts `claude`, `opencode`, both in either order, and a
+- [x] Write the unit tests, failing: `parseHarnesses` accepts `claude`, `opencode`, both in either order, and a
   repeated name once; it throws for no arguments and for an unknown name (R2, R3). `plannedFiles(['claude'])` returns
   exactly the three fixture files under `.claude/agents/` (R4). `plannedFiles(['opencode'])` returns three files under
   `.opencode/agents/` whose frontmatter is `description` then `mode: subagent`, with each description equal to the
   Claude Code one and the body naming the role's file (R5). `plannedFiles(['claude', 'opencode'])` returns all six
-- [ ] Write the script tests, failing, each running the script with `spawnSync` and `cwd` set to a fresh temporary
+- [x] Write the script tests, failing, each running the script with `spawnSync` and `cwd` set to a fresh temporary
   directory: `claude opencode` writes the six files with the planned content, prints each path and exits 0 (R2, R8);
   an unrelated file already in `.claude/agents/` is left as it was (R6); with `.opencode/agents/reviewer.md` already
   present, `claude opencode` exits non-zero, names that file on standard error, and afterwards the directory holds
