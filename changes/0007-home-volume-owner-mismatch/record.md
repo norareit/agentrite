@@ -94,5 +94,21 @@ timestamp: 2026-09-25T01:02:43Z
   P5, P6 and C6, saved in
   `.reviews/0007-home-volume-owner-mismatch/2026-09-26T00-21-26Z-claude-opus-5-5-delta.md`. Not verified: the skip
   on macOS, and requirements 1 and 2 inside the real entrypoint, since the image was not built
+- 2026-09-26T00:34:51Z [Claude Code, anthropic/claude-opus-5-5] checked the unit on the MacBook where the bug was
+  found: macOS with Docker Desktop, Docker Engine 24.0.7. Each time the kit branch was packed with `npm pack`,
+  installed into Norareit with `npm install --no-save`, and the image rebuilt with `./agent.sh --rebuild`, so the
+  guard ran in the real entrypoint through Norareit's own `agent.sh`. At `5e8bee1`, against Norareit's real
+  `norareit-agent_agent-home`, `1000:1000` since 2026-09-22 with the agent uid 501: requirement 1, the sandbox refused
+  to start, exit 1, before the firewall and before the command, naming uid 1000, uid 501 and the recovery; the
+  recovery, with the human's approval, removed that volume, discarding its saved state; requirement 2, the next start
+  created a new volume owned `501:20`, the agent wrote to it, a second start on it passed, and `npm ci` inside
+  succeeded with its cache in `/home/agent/.npm`, where it had failed with `EACCES`. At `b8c7a24`, after the review
+  findings: the kit's `npm test` on macOS passes 67 and skips the two guard tests, "needs GNU stat, the guard runs in
+  the Linux container"; requirement 1, with the new volume set to `1000:1000` by `chown -R` from another container,
+  the sandbox refused to start, exit 1, with the message that explains `<project>` and points to `docker volume ls`;
+  requirement 2, with the volume set back to `501:20` (all 695 entries), the sandbox started and the agent wrote to
+  its home. Not checked at `b8c7a24`: a volume created new, which the guard treats as any volume the agent owns.
+  Norareit's `node_modules` was restored to release 1.0.2 afterwards; its sandbox image still carries this branch's
+  entrypoint until the next `./agent.sh --rebuild`
 
 ## Amendments
