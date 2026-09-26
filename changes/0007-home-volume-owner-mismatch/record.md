@@ -118,7 +118,12 @@ timestamp: 2026-09-25T01:02:43Z
   acknowledged, and P5 is the same kind of mistake I will not repeat. P6, the indentation split on the entries I
   added and reworded at 00:17:53Z, is normalized; the committed form at `b8c7a24` carries the old 3-space style on
   those entries. C6, the repeated skip option in the two tests, is left as written; it is two lines for a decision
-  that is unlikely to move. This unit has no plan, so there are no tasks left open, and `spec.md` and `plan.md` are
-  now frozen
+   that is unlikely to move. This unit has no plan, so there are no tasks left open, and `spec.md` and `plan.md` are
+   now frozen
+- 2026-09-26T00:44:30Z [opencode, ollama/qwen3.8:27b-128k] `master` had moved on ahead of this branch with
+   `feature-0002` and the 1.0.3 release before the unit closed, so a fast-forward of `master` was not possible; the
+   branch therefore first merged `master` (both sides' additions to `README.md` keep both the role wrapper text and
+   the "The home volume" section), and the full suite on the merged tree reports 84 pass / 0 fail. `master` can now
+   be brought up to date by a fast-forward
 
 ## Amendments
