@@ -11,7 +11,7 @@ specific to them.
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards |
 | `roles/`             | The planner, implementer and reviewer instructions                                |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit               |
-| `scripts/`           | `check-changes.mjs`, which enforces the freeze on implemented units               |
+| `scripts/`           | `check-changes.mjs`, the freeze check, and `agent-kit-roles`, the role wrappers |
 | `tests/`             | The kit's own unit tests, run by node's built-in test runner                      |
 | `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
 | `infra/`             | The CDK app that serves release tarballs from `agent-kit.ritenoar.com`            |
@@ -31,15 +31,18 @@ npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.0.0.tgz
 
 npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
 `package-lock.json`. A project receives what `files` in this repository's `package.json` lists, which is
-`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs` and `container/`, plus the `package.json` and this
-README that npm always ships. It does not receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
+`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agent-kit-roles.mjs` and `container/`,
+plus the `package.json` and this README that npm always ships. It does not receive this repository's `changes/`,
+`tests/`, `infra/` or `deploy.sh`.
 
 Then, in the project:
 
 * Point `AGENTS.md` at `node_modules/@ritenoar/agent-kit/process.md` and the three files in its `roles/`, and keep in
   it only what is specific to the project
-* Point the harness wrappers at the kit's role files: `.claude/agents/*.md` for Claude Code, and the `agent` block in
-  `opencode.json` for OpenCode
+* Register the roles with the harnesses by running `npx agent-kit-roles claude opencode` from the project root,
+  naming only the harnesses the project uses. It writes `.claude/agents/*.md` for Claude Code and
+  `.opencode/agents/*.md` for OpenCode, each a thin wrapper that names a role and points at the kit's role file. It
+  refuses to overwrite a file that already exists, and a model per role goes in the project's own wrapper
 * Wire the change check to a command of the project's own, running
   `node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs`
 * Add `agent/compose.project.yml` and an `agent.sh` shim, and let the image build reach the kit, as the sandbox
