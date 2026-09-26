@@ -51,9 +51,9 @@ proxy_uid="$(id -u "$PROXY_USER")" || die "the $PROXY_USER account is missing fr
 # whose agent had another uid stays owned by that uid, and the agent then cannot write
 # its own home: npm fails to create its cache and the harnesses cannot save their state,
 # with nothing inside naming the cause. The container's root holds no CAP_CHOWN, so this
-# entrypoint cannot repair it either. Comparing the top of the home is enough: a volume
-# filled by one image is owned throughout by one uid, and a mixed volume would need a
-# hand-made change. Fail loudly instead, before any of that happens.
+# entrypoint cannot repair it either. Fail loudly instead, before any of that happens.
+# Comparing only the top of the home is enough: a volume filled by one image is owned
+# throughout by one uid, and a mixed volume would need a hand-made change.
 check_home_owner() {
   local agent_uid="$1" home_path="$2"
   local home_owner
@@ -62,7 +62,7 @@ check_home_owner() {
     die "$home_path is owned by uid $home_owner, but the agent is uid $agent_uid, so the agent cannot write its home.
 Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
 The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
-agent/compose.project.yml (for example norareit-agent). List them with docker volume ls:
+agent/compose.project.yml. Find the exact name with docker volume ls, then:
   docker volume rm <project>_agent-home"
   fi
 }

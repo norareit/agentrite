@@ -48,7 +48,13 @@ function runGuard(t, agentUid) {
 }
 const realOwner = () => String(process.getuid());
 
-test('a home owned by another uid is refused, naming both uids and the recovery', (t) => {
+// The guard reads the owner with GNU stat -c %u, which is what the Linux container provides.
+// On a BSD host (macOS) the same option is illegal, so run the guard only on Linux.
+const offLinux = process.platform !== 'linux';
+
+test('a home owned by another uid is refused, naming both uids and the recovery', {
+  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
+}, (t) => {
   const owner = realOwner();
   const agentUid = Number(owner) === 1000 ? 501 : 1000;
   const { status, stderr } = runGuard(t, agentUid);
@@ -58,7 +64,9 @@ test('a home owned by another uid is refused, naming both uids and the recovery'
   assert.match(stderr, /docker volume rm <project>_agent-home/);
 });
 
-test('a home the agent owns passes the guard, including a new one it owns', (t) => {
+test('a home the agent owns passes the guard, including a new one it owns', {
+  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
+}, (t) => {
   const { status, stderr } = runGuard(t, realOwner());
   assert.equal(status, 0, stderr);
   assert.doesNotMatch(stderr, /is owned by uid/);
