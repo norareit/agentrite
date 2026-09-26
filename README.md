@@ -87,13 +87,17 @@ differ it refuses to start, naming both uids and how to recover:
 
 ```
 [entrypoint] FATAL: /home/agent is owned by uid 1000, but the agent is uid 501, so the agent cannot write its home.
-Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again:
+Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
+agent/compose.project.yml (for example norareit-agent). List them with docker volume ls:
   docker volume rm <project>_agent-home
 ```
 
-That is: the home volume was created by an image for a different user, and the agent cannot write it. Remove the
-volume and start again, which discards the harnesses' saved logins, and log in again. A mismatched home is a one-off
-state: once the volume is removed, the next start creates a new one owned by the agent.
+That is: the home volume was created by an image for a different user, and the agent cannot write it. `<project>`
+is not the repository's name but the Compose project's, the `name:` key in the project's own
+`agent/compose.project.yml`, and the volume Docker names after it. Find the exact name with `docker volume ls`, then
+remove it and start again, which discards the harnesses' saved logins, and log in again. A mismatched home is a
+one-off state: once the volume is removed, the next start creates a new one owned by the agent.
 
 ## Installing on a fresh clone
 

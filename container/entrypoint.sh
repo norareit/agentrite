@@ -13,28 +13,6 @@ export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 log() { printf '[entrypoint] %s\n' "$*" >&2; }
 die() { printf '[entrypoint] FATAL: %s\n' "$*" >&2; exit 1; }
 
-# The agent's home is a named volume, filled from the image only the first time it is
-# mounted. Docker never changes its owner afterwards, so a volume filled by an image
-# whose agent had another uid stays owned by that uid, and the agent then cannot write
-# its own home: npm fails to create its cache and the harnesses cannot save their state,
-# with nothing inside naming the cause. The container's root holds no CAP_CHOWN, so this
-# entrypoint cannot repair it either. Fail loudly instead, before any of that happens.
-# Comparing the top of the home is enough: a volume filled by one image is owned
-# throughout by one uid, and a mixed volume would need a hand-made change.
-#
-# The guard takes the agent uid and the home path as arguments, and is defined before
-# the root check below, so tests can run it in isolation before that check dies.
-check_home_owner() {
-  local agent_uid="$1" home_path="$2"
-  local home_owner
-  home_owner="$(stat -c %u "$home_path")"
-  if [ "$home_owner" -ne "$agent_uid" ]; then
-    die "$home_path is owned by uid $home_owner, but the agent is uid $agent_uid, so the agent cannot write its home.
-Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again:
-  docker volume rm <project>_agent-home"
-  fi
-}
-
 # Inputs, all declared in the compose files.
 #   ALLOWLIST         newline-separated hostnames; '#' comments and blank lines allowed
 #   MODEL_SERVER_HOST host gateway alias the local model server listens on
@@ -68,10 +46,26 @@ proxy_uid="$(id -u "$PROXY_USER")" || die "the $PROXY_USER account is missing fr
 [ "$proxy_uid" -ne 0 ] && [ "$proxy_uid" -ne "$agent_uid" ] \
   || die "the $PROXY_USER account is uid $proxy_uid; it must be neither root nor the agent"
 
-# The agent's home volume must be owned by the agent's uid. The volume is filled from
-# the image only the first time it is mounted, so an old volume that was filled by an
-# image for another uid keeps that uid, and the guard above refuses to start the
-# sandbox rather than leave the agent unable to write its own home.
+# The agent's home is a named volume, filled from the image only the first time it is
+# mounted. Docker never changes its owner afterwards, so a volume filled by an image
+# whose agent had another uid stays owned by that uid, and the agent then cannot write
+# its own home: npm fails to create its cache and the harnesses cannot save their state,
+# with nothing inside naming the cause. The container's root holds no CAP_CHOWN, so this
+# entrypoint cannot repair it either. Comparing the top of the home is enough: a volume
+# filled by one image is owned throughout by one uid, and a mixed volume would need a
+# hand-made change. Fail loudly instead, before any of that happens.
+check_home_owner() {
+  local agent_uid="$1" home_path="$2"
+  local home_owner
+  home_owner="$(stat -c %u "$home_path")"
+  if [ "$home_owner" -ne "$agent_uid" ]; then
+    die "$home_path is owned by uid $home_owner, but the agent is uid $agent_uid, so the agent cannot write its home.
+Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
+agent/compose.project.yml (for example norareit-agent). List them with docker volume ls:
+  docker volume rm <project>_agent-home"
+  fi
+}
 check_home_owner "$agent_uid" /home/agent
 
 # Every allowlist entry is a hostname, admitted by the proxy on 443 alone. A CIDR range
