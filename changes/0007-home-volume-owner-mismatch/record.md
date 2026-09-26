@@ -88,5 +88,11 @@ timestamp: 2026-09-25T01:02:43Z
    1.0.3 release, which would have taken the version from 1.0.3 back to 1.0.2. The stash is now gone
  - 2026-09-26T00:17:53Z [human] P1: the finding is declined. The missing `approved` log line between `draft` and
    `in-progress` is not required; the record stands as written
+- 2026-09-26T00:21:26Z [Claude Code, anthropic/claude-opus-5-5] took the reviewer role, standing in for the intended
+  reviewer, and reviewed the unit at `5b9e342`, a delta review against `e283df7`. This is the model that planned the
+  unit, so the spec has not been independently reviewed. Verified S3, P4, C4 and C5 against the diff. New findings
+  P5, P6 and C6, saved in
+  `.reviews/0007-home-volume-owner-mismatch/2026-09-26T00-21-26Z-claude-opus-5-5-delta.md`. Not verified: the skip
+  on macOS, and requirements 1 and 2 inside the real entrypoint, since the image was not built
 
 ## Amendments
