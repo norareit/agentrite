@@ -44,7 +44,18 @@ Then, in the project:
   `.opencode/agents/*.md` for OpenCode, each a thin wrapper that names a role and points at the kit's role file. It
   refuses to overwrite a file that already exists, and a model per role goes in the project's own wrapper
 * Wire the change check to a command of the project's own, running
-  `node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs`
+  `node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs` with `node`, for example as an npm script in the
+  project's `package.json`:
+
+  ```json
+  "scripts": {
+    "check-changes": "node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs"
+  }
+  ```
+
+  `npm run check-changes` then compares the committed work on the current branch with `master`, and exits non-zero
+  with a list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked
+  tasks. It takes the repository root as an optional argument and defaults to the working directory
 * Add `agent/compose.project.yml` and an `agent.sh` shim, and let the image build reach the kit, as the sandbox
   section below describes
 
@@ -211,6 +222,15 @@ npm test
 It runs node's built-in test runner over `tests/`, and the tests need no install. Releasing does: `infra/` needs
 `aws-cdk-lib` and the CDK CLI, which are the kit's devDependencies, so run `npm ci` first. `deploy.sh` does that
 itself.
+
+The kit's own `changes/` go through the change check like any project's, wired the same way:
+
+```sh
+npm run check-changes
+```
+
+It runs the check from the released kit in `node_modules`, not from this repository's `scripts/`, so it needs
+`npm ci` first.
 
 ## The kit's own copy of the kit
 
