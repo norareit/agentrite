@@ -16,6 +16,10 @@ expected to be added to this unit before it is implemented.
   an npm script as an example, and say what the check reports and that it takes an optional repository root
 * This repository follows the kit's own process but does not wire the change check itself. Add the same npm script to
   its `package.json`, so that the README example is the setup this repository uses
+* "Sending an improvement back" is a remnant of the kit's git subtree days, when it held the `git subtree push`
+  command. What is left of it is one point, that an improvement is made in the kit and not under `node_modules`,
+  which belongs with updating a project to a newer kit. Under it sits `### Egress`, which is about the sandbox. Fold
+  the section's text into "Updating a project to a newer kit", and move "Egress" under "Running the sandbox"
 
 ## Log
 
@@ -30,9 +34,17 @@ expected to be added to this unit before it is implemented.
 - 2026-09-27T22:30:21Z [Claude Code, anthropic/claude-opus-5-5] showed an npm script for the change check in the
   README's setup steps, added the same script to this repository's `package.json`, and documented it under the kit's
   own tests. `npm run check-changes` exited 0 and `npm test` passed 84 of 84. No review was run
+- 2026-09-27T22:58:28Z [human] pointed out that "Sending an improvement back" is a remnant of an earlier version of
+  the kit, and approved removing the section once its text is folded into "Updating a project to a newer kit", with
+  "Egress" moved under "Running the sandbox"
+- 2026-09-27T22:58:28Z [Claude Code, anthropic/claude-opus-5-5] folded the section into "Updating a project to a
+  newer kit" as a closing paragraph keeping each of its statements, and moved "Egress" unchanged to follow "The home
+  volume". No review was run
 
 ## Changes
 
 * `README.md`: the change check's setup step shows an npm script running it with `node`, what the check reports, and
   its optional repository root argument. The section on the kit's own tests shows `npm run check-changes`
+* `README.md`: "Sending an improvement back" is removed, its text now a paragraph closing "Updating a project to a
+  newer kit". "Egress" is a subsection of "Running the sandbox", after "The home volume"
 * `package.json`: a `check-changes` script running the check from the installed kit

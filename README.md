@@ -112,33 +112,6 @@ is not the repository's name but the Compose project's, the `name:` key in the p
 `agent/compose.project.yml`, and the volume Docker names after it. A mismatched home is a one-off state: once the
 volume is removed, the next start creates a new one owned by the agent.
 
-## Installing on a fresh clone
-
-A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
-release and integrity hash `package-lock.json` records, and fails rather than install anything else.
-
-The lockfile is authoritative. Installing the kit's latest on every run would mean two people cloning the same
-project on different days run agents under different instructions, with nothing in the project's history showing it.
-The lockfile makes a clone reproducible.
-
-## Updating a project to a newer kit
-
-Install the newer release by its URL:
-
-```sh
-npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.1.0.tgz
-```
-
-That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
-reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
-kit is a deliberate change to the project.
-
-## Sending an improvement back
-
-Make the change here, in the kit repository, and commit it. The installed copy under a project's `node_modules` is not
-a working copy of this repository and nothing in it reaches here: an improvement found while working in one project
-is made in the kit, released, and picked up by each project by updating to that release.
-
 ### Egress
 
 The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
@@ -175,6 +148,31 @@ fails:
 * every allowlisted host, and the probe host (`FIREWALL_PROBE`), can be reached through the proxy
 * the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
   is on the hostname and not the address
+
+## Installing on a fresh clone
+
+A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
+release and integrity hash `package-lock.json` records, and fails rather than install anything else.
+
+The lockfile is authoritative. Installing the kit's latest on every run would mean two people cloning the same
+project on different days run agents under different instructions, with nothing in the project's history showing it.
+The lockfile makes a clone reproducible.
+
+## Updating a project to a newer kit
+
+Install the newer release by its URL:
+
+```sh
+npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.1.0.tgz
+```
+
+That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
+reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
+kit is a deliberate change to the project.
+
+An improvement found while working in a project is made here, in the kit repository, and committed here. The
+installed copy under a project's `node_modules` is not a working copy of this repository, and nothing in it reaches
+here. The improvement reaches that project, and every other, as a new release that each one updates to as above.
 
 ## Releasing
 
