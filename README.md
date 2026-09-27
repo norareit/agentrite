@@ -61,6 +61,37 @@ Then, in the project:
 
 A missing or altered kit is then npm's error, like any other dependency's, and needs no check of the project's own.
 
+## Installing on a fresh clone
+
+A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
+release and integrity hash `package-lock.json` records, and fails rather than install anything else.
+
+The lockfile is authoritative. Installing the kit's latest on every run would mean two people cloning the same
+project on different days run agents under different instructions, with nothing in the project's history showing it.
+The lockfile makes a clone reproducible.
+
+## Updating a project to a newer kit
+
+Install the newer release by its URL:
+
+```sh
+npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.1.0.tgz
+```
+
+That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
+reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
+kit is a deliberate change to the project.
+
+An improvement found while working in a project is made here, in the kit repository, and committed here. The
+installed copy under a project's `node_modules` is not a working copy of this repository, and nothing in it reaches
+here. The improvement reaches that project, and every other, as a new release that each one updates to as above.
+
+## Where to run it
+
+Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike,
+provided the project's `ALLOWLIST` holds `agent-kit.ritenoar.com`. A project's `agent.sh` runs the wrapper from
+`node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can start.
+
 ## Running the sandbox
 
 `container/agent.sh` layers a project's compose file over the kit's base and runs the container. A project gives it
@@ -149,68 +180,6 @@ fails:
 * the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
   is on the hostname and not the address
 
-## Installing on a fresh clone
-
-A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
-release and integrity hash `package-lock.json` records, and fails rather than install anything else.
-
-The lockfile is authoritative. Installing the kit's latest on every run would mean two people cloning the same
-project on different days run agents under different instructions, with nothing in the project's history showing it.
-The lockfile makes a clone reproducible.
-
-## Updating a project to a newer kit
-
-Install the newer release by its URL:
-
-```sh
-npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.1.0.tgz
-```
-
-That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
-reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
-kit is a deliberate change to the project.
-
-An improvement found while working in a project is made here, in the kit repository, and committed here. The
-installed copy under a project's `node_modules` is not a working copy of this repository, and nothing in it reaches
-here. The improvement reaches that project, and every other, as a new release that each one updates to as above.
-
-## Releasing
-
-A release is a tarball of the kit served from `https://agent-kit.ritenoar.com/`, which a project installs from its
-URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront distribution in front of it, a certificate
-in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
-it looks up rather than owns. None of it ships to a project.
-
-A release starts with a version bump, then `deploy.sh`, from the repository root and with AWS credentials for the
-account:
-
-```sh
-npm version patch   # or minor, or major
-./deploy.sh
-```
-
-Pick the part to bump as semver means it; there is no rule of the kit's own. `npm version` updates `package.json` and
-`package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
-version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
-
-`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads
-the
-tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL with no
-credential and fails unless it is served, and prints the line to put in a project's `package.json`.
-
-A released tarball is never replaced or removed. Projects pin it by its integrity hash, and two projects may sit on
-different versions indefinitely, so the script refuses to upload over a name that already exists. It uploads with
-`aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
-would delete versions that a project still installs.
-
-## Where to run it
-
-Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike,
-provided the project's `ALLOWLIST` holds `agent-kit.ritenoar.com`. A project's `agent.sh` runs the wrapper from
-`node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can start.
-
-Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.
-
 ## The kit's own tests
 
 ```sh
@@ -237,3 +206,33 @@ The kit is also a devDependency of itself, installed from a release by its URL l
 means work on the kit follows the released instructions rather than the working copy it may be changing. Changes are
 made at the repository root, never under `node_modules`, and the installed copy moves to a newer release only by a
 deliberate update, as described above.
+
+## Releasing
+
+A release is a tarball of the kit served from `https://agent-kit.ritenoar.com/`, which a project installs from its
+URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront distribution in front of it, a certificate
+in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
+it looks up rather than owns. None of it ships to a project.
+
+A release starts with a version bump, then `deploy.sh`, from the repository root and with AWS credentials for the
+account:
+
+```sh
+npm version patch   # or minor, or major
+./deploy.sh
+```
+
+Pick the part to bump as semver means it; there is no rule of the kit's own. `npm version` updates `package.json` and
+`package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
+version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
+
+`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads
+the tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL with no
+credential and fails unless it is served, and prints the line to put in a project's `package.json`.
+
+A released tarball is never replaced or removed. Projects pin it by its integrity hash, and two projects may sit on
+different versions indefinitely, so the script refuses to upload over a name that already exists. It uploads with
+`aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
+would delete versions that a project still installs.
+
+Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.
