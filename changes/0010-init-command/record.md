@@ -16,3 +16,9 @@ timestamp: 2026-09-27T22:45:28Z
   all need decisions. The concern about releases is answered by keeping what every project needs in the kit, and
   having the wrapper check what only the project can supply. Making Playwright optional in the image is left as a
   non-goal. Status left at `draft` for approval
+- 2026-09-27T22:53:11Z [human] asked for `AGENTS.md` and `CLAUDE.md` to be written always, whatever the
+  harnesses, and, when `AGENTS.md` exists, for `init` to state clearly which of its sections, as in Norareit's, must
+  be pasted into it
+- 2026-09-27T22:53:11Z [Claude Code, anthropic/claude-opus-5-5] rewrote requirements 3 and 4 and added requirement 5
+  for the notices, renumbering the rest, and added the decision and the plan tasks that go with them. Status left at
+  `draft`

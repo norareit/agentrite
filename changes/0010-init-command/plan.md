@@ -29,30 +29,34 @@ so that most of it is tested without a file system. The entry point reads the fi
 
 - [ ] Write `tests/entrypoint-allowlist.test.mjs`: `parse_allowlist` over a kit list and a project list admits the
   hosts of both, lowercased, once each; accepts an empty or missing project list; still refuses an address, a CIDR
-  range and an allowlisted canary in either list (R10)
+  range and an allowlisted canary in either list (R11)
 - [ ] Move the parsing in `container/entrypoint.sh` into `parse_allowlist`, run it over `KIT_ALLOWLIST` and
-  `ALLOWLIST`, and add `KIT_ALLOWLIST` to its list of inputs and to `container/compose.yml` (R10)
+  `ALLOWLIST`, and add `KIT_ALLOWLIST` to its list of inputs and to `container/compose.yml` (R11)
 - [ ] Extend `tests/agent-wrapper.test.mjs`: the fake `docker` answers `config --format json`; a configuration
   without `PLAYWRIGHT_VERSION` exits non-zero naming `agent/compose.project.yml` and never calls `build` or `run`; one
-  with it proceeds as before (R11)
-- [ ] Add the check to `container/agent.sh`, ahead of the image query (R11)
+  with it proceeds as before (R12)
+- [ ] Add the check to `container/agent.sh`, ahead of the image query (R12)
 - [ ] Write `tests/agent-kit-init.test.mjs` for the pure functions: the usage errors (R1); the role wrappers equal
-  `plannedFiles` (R2); `AGENTS.md` names `process.md` and the three role files (R3); `CLAUDE.md` for `claude` only
-  (R4); the compose name and image from a scoped and an unscoped package name, reduced to the characters Compose
-  accepts, and the Playwright version from a lockfile resolving `playwright` directly and one resolving it through
-  `@playwright/test` (R6); none when the lockfile has no `playwright` (R7); `package.json` gains the script with key
-  order and indentation kept, and is unchanged when the script exists (R8, R12); `.dockerignore` created, appended to
-  when it excludes `node_modules` without the exception, and unchanged otherwise (R9, R12)
+  `plannedFiles` (R2); `AGENTS.md` holds the Development Guidelines, Roles and Changes in this project sections,
+  naming `process.md`, the three role files and `npm run check-changes` (R3); `CLAUDE.md` for every harness list,
+  importing `@AGENTS.md` (R4); the notice for an existing `AGENTS.md` names the three sections and holds their text
+  exactly as the generated `AGENTS.md` does, and the notice for an existing `CLAUDE.md` names `@AGENTS.md` (R5);
+  the compose name and image from a scoped and an unscoped package name, reduced to the characters Compose accepts,
+  and the Playwright version from a lockfile resolving `playwright` directly and one resolving it through
+  `@playwright/test` (R7); none when the lockfile has no `playwright` (R8); `package.json` gains the script with key
+  order and indentation kept, and is unchanged when the script exists (R9, R13); `.dockerignore` created, appended to
+  when it excludes `node_modules` without the exception, and unchanged otherwise (R10, R13)
 - [ ] Add end-to-end cases to the same file that run the executable in a temporary project: a fresh project gets
-  every file, `agent.sh` is executable and execs the kit's wrapper with its own directory (R5), and the output lists
-  each file written (R13); a project with some files already present gets the rest, and the present ones are named
-  as skipped and byte for byte unchanged (R12, R13); a project without Playwright gets everything but the compose
-  file and a non-zero exit (R7, R13)
-- [ ] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R9, R12,
-  R13)
+  every file, `agent.sh` is executable and execs the kit's wrapper with its own directory (R6), and the output lists
+  each file written (R14); a project with some files already present, among them `AGENTS.md` and `CLAUDE.md`, gets the
+  rest, the present ones are named as skipped and byte for byte unchanged, and the output holds the notices (R5, R13,
+  R14); a project without Playwright gets everything but the compose file and a non-zero exit (R8, R14)
+- [ ] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13,
+  R14)
 - [ ] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
-  is for, which the project may edit, and that the kit's own hosts need no listing. Add `KIT_ALLOWLIST` to the egress
-  section. Keep every other statement the section makes today (R14)
+  is for, which the project may edit, what to do with the notice for an existing `AGENTS.md`, and that the kit's own
+  hosts need no listing. Add `KIT_ALLOWLIST` to the egress section. Keep every other statement the section makes
+  today (R15)
 
 ## Verification
 
