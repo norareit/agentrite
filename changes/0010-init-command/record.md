@@ -22,3 +22,8 @@ timestamp: 2026-09-27T22:45:28Z
 - 2026-09-27T22:53:11Z [Claude Code, anthropic/claude-opus-5-5] rewrote requirements 3 and 4 and added requirement 5
   for the notices, renumbering the rest, and added the decision and the plan tasks that go with them. Status left at
   `draft`
+- 2026-09-27T22:55:11Z [human] agreed that what a project gets should live in template files in the kit rather
+  than in the script
+- 2026-09-27T22:55:11Z [Claude Code, anthropic/claude-opus-5-5] added requirement 15 for `templates/project/`, with
+  the notice's sections cut from the `AGENTS.md` template, renumbered the README and test requirements to 16 and 17,
+  and added the decision, the template task and the checks that go with it. Status left at `draft`

@@ -64,9 +64,14 @@ project's own lockfile, so the sandbox currently requires the project to depend 
     file it would create that already exists is left as it is and reported as skipped. A `check-changes` script that
     already exists is left as it is
 14. It prints each file it wrote, changed or skipped. It exits zero unless requirement 1 or 8 applies
-15. The README's "Installing it into a project" section describes setting a project up with `npx agent-kit init`,
-    what each generated file is for, and which of them the project may edit
-16. `npm test` covers requirements 1 to 14
+15. The content of `AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml` comes from template files of
+    the same names in the kit's `templates/project/`, which ship in the tarball. `init` only fills in their
+    placeholders, which are marked so that a template copied by hand shows plainly what is left to fill in. The
+    sections requirement 5 prints are cut from the `AGENTS.md` template by their headings, not stated a second time
+16. The README's "Installing it into a project" section describes setting a project up with `npx agent-kit init`,
+    what each generated file is for, and which of them the project may edit. It names `templates/project/` as the
+    source of those files, for a project set up or repaired by hand
+17. `npm test` covers requirements 1 to 15
 
 ## Decisions
 
@@ -89,6 +94,14 @@ project's own lockfile, so the sandbox currently requires the project to depend 
   that starts to. An existing `AGENTS.md` is prose the project wrote, with its own layout, so there is no place `init`
   could insert sections without guessing. Printing the sections that must be there, as written, leaves the merge to
   someone who can read the file, while still saying exactly what an agent would otherwise miss.
+* **What a project gets lives in template files, not in the script.** The kit already keeps the change documents'
+  starting points in `templates/changes/`, and `templates/project/` sits beside it. A change to what new projects
+  receive is then a diff of a Markdown or YAML file that a reviewer reads as the project will, and a project can be
+  set up or repaired by hand from the same files. Keeping the content as strings in `scripts/agent-kit.mjs`, the way
+  `agent-kit-roles.mjs` renders the role wrappers, was rejected for these files: they are long prose and
+  configuration, not a one-line pointer. Cutting the printed sections out of the template means the notice and the
+  generated file cannot drift apart. The price is that `init` depends on the template's section headings, which the
+  tests pin down. The role wrappers stay rendered by `agent-kit-roles.mjs`, which this unit does not change.
 * **One `agent-kit` command with subcommands.** `agent-kit init` leaves room for later subcommands under one name
   rather than an executable per task. `agent-kit-roles` stays as it is, so existing projects and instructions keep
   working.

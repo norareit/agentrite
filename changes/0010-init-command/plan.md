@@ -9,15 +9,19 @@ entrypoint the way `tests/entrypoint-home-owner.test.mjs` pulls out `check_home_
 configuration as JSON and reads the build argument with `node`, which a project has on the host already for `npm`.
 
 Then `init` as `scripts/agent-kit.mjs`, a dependency-free ESM executable like `agent-kit-roles.mjs`. It reuses
-`parseHarnesses` and `plannedFiles` from `agent-kit-roles.mjs` rather than restating the roles. Its logic is split
-into pure functions, one per generated file, that take the project's current file contents and return what to write,
-so that most of it is tested without a file system. The entry point reads the files, calls them, and writes.
+`parseHarnesses` and `plannedFiles` from `agent-kit-roles.mjs` rather than restating the roles. The content of
+`AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml` is in `templates/project/`, with placeholders
+written as `{{name}}`, which `init` replaces and which read as unfinished in a file copied by hand. Its logic is split
+into pure functions, one per generated file, that take the template and the project's current file contents and
+return what to write, so that most of it is tested without a file system. The entry point reads the templates from
+the kit's own directory and the files from the project, calls them, and writes.
 
 ## Files
 
 - `container/compose.yml`: `KIT_ALLOWLIST` with the probe host, `registry.npmjs.org` and `agent-kit.ritenoar.com`
 - `container/entrypoint.sh`: `parse_allowlist`, run over both lists; an empty merged list still dies
 - `container/agent.sh`: the `PLAYWRIGHT_VERSION` check before the build
+- `templates/project/AGENTS.md`, `CLAUDE.md`, `agent.sh`, `agent/compose.project.yml`: new, the templates
 - `scripts/agent-kit.mjs`: new, the `agent-kit` executable with its `init` subcommand
 - `package.json`: `agent-kit` under `bin`, `scripts/agent-kit.mjs` under `files`
 - `tests/entrypoint-allowlist.test.mjs`: new
@@ -36,6 +40,8 @@ so that most of it is tested without a file system. The entry point reads the fi
   without `PLAYWRIGHT_VERSION` exits non-zero naming `agent/compose.project.yml` and never calls `build` or `run`; one
   with it proceeds as before (R12)
 - [ ] Add the check to `container/agent.sh`, ahead of the image query (R12)
+- [ ] Write `templates/project/AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml`, modeled on
+  Norareit's files with what is specific to Norareit replaced by `{{name}}` placeholders (R3, R4, R6, R7, R15)
 - [ ] Write `tests/agent-kit-init.test.mjs` for the pure functions: the usage errors (R1); the role wrappers equal
   `plannedFiles` (R2); `AGENTS.md` holds the Development Guidelines, Roles and Changes in this project sections,
   naming `process.md`, the three role files and `npm run check-changes` (R3); `CLAUDE.md` for every harness list,
@@ -45,23 +51,25 @@ so that most of it is tested without a file system. The entry point reads the fi
   and the Playwright version from a lockfile resolving `playwright` directly and one resolving it through
   `@playwright/test` (R7); none when the lockfile has no `playwright` (R8); `package.json` gains the script with key
   order and indentation kept, and is unchanged when the script exists (R9, R13); `.dockerignore` created, appended to
-  when it excludes `node_modules` without the exception, and unchanged otherwise (R10, R13)
+  when it excludes `node_modules` without the exception, and unchanged otherwise (R10, R13); every generated
+  template has no `{{` left after filling, and the `AGENTS.md` template holds the three headings the notice cuts by
+  (R15)
 - [ ] Add end-to-end cases to the same file that run the executable in a temporary project: a fresh project gets
   every file, `agent.sh` is executable and execs the kit's wrapper with its own directory (R6), and the output lists
   each file written (R14); a project with some files already present, among them `AGENTS.md` and `CLAUDE.md`, gets the
   rest, the present ones are named as skipped and byte for byte unchanged, and the output holds the notices (R5, R13,
   R14); a project without Playwright gets everything but the compose file and a non-zero exit (R8, R14)
-- [ ] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13,
-  R14)
+- [ ] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13 to
+  R15)
 - [ ] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
   is for, which the project may edit, what to do with the notice for an existing `AGENTS.md`, and that the kit's own
-  hosts need no listing. Add `KIT_ALLOWLIST` to the egress section. Keep every other statement the section makes
-  today (R15)
+  hosts need no listing, and name `templates/project/` for a project set up or repaired by hand. Add `KIT_ALLOWLIST`
+  to the egress section. Keep every other statement the section makes today (R16)
 
 ## Verification
 
 - [ ] `npm test` passes
-- [ ] `npm pack --dry-run` lists `scripts/agent-kit.mjs`
+- [ ] `npm pack --dry-run` lists `scripts/agent-kit.mjs` and every file in `templates/project/`
 - [ ] In a scratch project with the packed kit installed and `playwright` in its lockfile, `npx agent-kit init claude`
   writes every file, and `./agent.sh true` builds the image and starts the container with an `ALLOWLIST` holding no
   host of the kit's
