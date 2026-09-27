@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-09-27T22:30:21Z
 ---
 
@@ -48,6 +48,15 @@ expected to be added to this unit before it is implemented.
 - 2026-09-27T23:01:45Z [Claude Code, anthropic/claude-opus-5-5] reordered the sections, moving each unchanged,
   split "Where to run it" so that its releasing sentence closes "Releasing", and rejoined the broken sentence. No
   review was run
+- 2026-09-27T23:02:59Z [OpenCode, openai/gpt-6-sol] reviewed unit 0009 at commit
+  `b113b2f46d7affb94d6e52da0b7f7f30cdee3f82` against merge base `c0e020ed2fd3a80d7b6c4ba65940c7a43a935bff` (full
+  review). No findings. Review saved in `.reviews/0009-readme-cleanup/review-b113b2f.md`. The tests and change check
+  passed on the working tree; an exact clean-checkout run of the reviewed commit was not verified because
+  `package.json` and `package-lock.json` had pre-existing uncommitted dependency updates
+- 2026-09-27T23:03:41Z [human] approved the unit as done, with the review returning no findings
+- 2026-09-27T23:03:41Z [Claude Code, anthropic/claude-opus-5-5] rewrapped the review entry at 120 characters
+  without changing its wording, and moved the status to `implemented`. The uncommitted update of the kit's own copy
+  to 1.0.3 in `package.json` and `package-lock.json` is not part of this unit
 
 ## Changes
 
