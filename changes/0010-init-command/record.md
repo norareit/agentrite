@@ -67,3 +67,7 @@ timestamp: 2026-09-27T22:45:28Z
 - 2026-09-30T10:46:46Z [Claude Code, anthropic/claude-opus-5-5] every task in `plan.md` is ticked. The unit is ready for
   review, and stays `in-progress` until the review's findings are decided. Open for the human: the proposal above on a
   `package.json` without a `name`
+- 2026-09-30T10:50:23Z [Claude Code, anthropic/claude-opus-5-5] reran `npm test` on the macOS host on `bd70e9e` with
+  Node 26.9.0, switched to with nvm at the human's request: 132 tests, 120 passed, 12 skipped, none failed, exit 0. The
+  `tests/record-name.test.mjs` failure logged above is Node 22.9's alone. The 12 skips are the same bash 4 and GNU
+  `stat` ones, which pass in the Linux container
