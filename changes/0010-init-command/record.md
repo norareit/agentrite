@@ -148,3 +148,15 @@ timestamp: 2026-09-27T22:45:28Z
   excludes the `node_modules` directory or everything in it, within requirement 10 as written; or amend requirement
   10 to append whenever a kit container file is excluded
 - 2026-09-30T12:30:23Z [human] chose the first: judge line by line, within requirement 10 as written
+- 2026-09-30T12:31:50Z [Claude Code, anthropic/claude-opus-5-5] applied S6 in `afae0c6`: whether a `.dockerignore`
+  excludes `node_modules` is judged line by line, by a pattern that is not an exception and, with trailing `/*` and
+  `/**` segments removed, matches `node_modules`. The unit case for `node_modules` followed by
+  `!node_modules/*/index.js` failed first. Against Docker 24 with BuildKit, seventeen ignore files were checked: for
+  fifteen, among them S6's, `node_modules/**/*` and `**`, `init` amends exactly when the build fails and every
+  amended file builds; the other two are S5's, which exclude the kit without excluding `node_modules` and are left
+  alone as requirement 10 says. Known limit: a pattern excluding every package by a character class, such as
+  `node_modules/[a-z]*`, does not count as excluding `node_modules`
+- 2026-09-30T12:31:50Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on `afae0c6`. `node --test
+  tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 137 of 137 passed. `npm test` on the macOS host
+  with Node 26.9.0: 125 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed.
+  Every task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
