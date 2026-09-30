@@ -73,7 +73,7 @@ the kit's own directory and the files from the project, calls them, and writes.
 - [x] Review S1: when the lockfile resolves no `playwright` and `agent/compose.project.yml` exists, report the file as
   skipped, still say on standard error that the sandbox requires Playwright, and exit non-zero, with an end-to-end
   case first (R8, R14)
-- [ ] Review S3: decide whether `.dockerignore` keeps the kit out by evaluating its patterns as Docker does, the last
+- [x] Review S3: decide whether `.dockerignore` keeps the kit out by evaluating its patterns as Docker does, the last
   matching one deciding and a pattern that matches a parent directory covering what is inside it, against a file in
   the kit's `container/`, rather than by recognizing literal `node_modules` lines. Unit cases first for
   `**/node_modules`, `node_modules/**`, `node_modules/*`, an exception placed before the exclusion, and a comment

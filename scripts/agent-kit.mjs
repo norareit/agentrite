@@ -1,11 +1,13 @@
 #!/usr/bin/env node
 import { chmodSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
+import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseHarnesses, plannedFiles } from './agent-kit-roles.mjs';
 
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
 const KIT_CONTAINER_EXCEPTION = '!node_modules/@ritenoar/agent-kit/container';
+// A file the image build copies from the kit, which the build context must hold.
+const KIT_CONTAINER_FILE = 'node_modules/@ritenoar/agent-kit/container/entrypoint.sh';
 const COMPOSE_FILE = 'agent/compose.project.yml';
 
 const DOCKERIGNORE =
@@ -208,17 +210,70 @@ export function withCheckChangesScript(packageJson) {
 }
 
 /**
+ * A `.dockerignore` pattern as a regular expression, following Docker's rules: `*` and `?` stay within one path
+ * segment, `**` spans any number of segments, including none, and the pattern is cleaned as a path first.
+ *
+ * @param {string} pattern
+ * @returns {RegExp}
+ */
+function dockerignoreRegex(pattern) {
+  const cleaned = posix.normalize(pattern).replace(/^\/+|\/+$/g, '');
+  let source = '';
+  for (let index = 0; index < cleaned.length; index += 1) {
+    const character = cleaned[index];
+    if (cleaned.startsWith('**/', index)) {
+      source += '(.*/)?';
+      index += 2;
+    } else if (cleaned.startsWith('**', index)) {
+      source += '.*';
+      index += 1;
+    } else if (character === '*') {
+      source += '[^/]*';
+    } else if (character === '?') {
+      source += '[^/]';
+    } else if (character === '\\' && index + 1 < cleaned.length) {
+      index += 1;
+      source += cleaned[index].replace(/[.*+?^${}()|[\]\\/]/g, '\\$&');
+    } else {
+      source += /[.+^${}()|/]/.test(character) ? `\\${character}` : character;
+    }
+  }
+  return new RegExp(`^${source}$`);
+}
+
+/**
+ * True when the `.dockerignore` text keeps `path` out of the build context. As in Docker, the last pattern that
+ * matches the path or one of its parent directories decides, and a pattern starting with `!` lets it back in.
+ *
+ * @param {string} ignore
+ * @param {string} path
+ * @returns {boolean}
+ */
+function dockerignoreExcludes(ignore, path) {
+  const segments = path.split('/');
+  const candidates = segments.map((_, index) => segments.slice(0, index + 1).join('/'));
+  let excluded = false;
+  for (const line of ignore.split('\n').map((text) => text.trim())) {
+    if (line === '' || line.startsWith('#')) continue;
+    const negated = line.startsWith('!');
+    const regex = dockerignoreRegex(negated ? line.slice(1).trim() : line);
+    if (candidates.some((candidate) => regex.test(candidate))) excluded = !negated;
+  }
+  return excluded;
+}
+
+/**
  * The `.dockerignore` to write: a new one when there is none, the existing one with the kit's exception appended
- * when it excludes `node_modules` without it, and otherwise `undefined`, for no change.
+ * when it keeps the kit's `container/` directory out of the build context, and otherwise `undefined`, for no change.
+ * Only an exclusion of `node_modules`, in whatever pattern, can keep the kit out, so this is the case requirement 10
+ * names.
  *
  * @param {string | undefined} existing
  * @returns {string | undefined}
  */
 export function dockerignore(existing) {
   if (existing === undefined) return DOCKERIGNORE;
-  const lines = existing.split('\n').map((line) => line.trim());
-  const excludesNodeModules = lines.some((line) => /^\/?node_modules\/?$/.test(line));
-  if (!excludesNodeModules || lines.includes(KIT_CONTAINER_EXCEPTION)) return undefined;
+  if (!dockerignoreExcludes(existing, KIT_CONTAINER_FILE)) return undefined;
   const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
   return `${existing}${separator}${KIT_CONTAINER_EXCEPTION}\n`;
 }

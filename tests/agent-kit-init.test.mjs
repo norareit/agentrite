@@ -254,9 +254,25 @@ test('.dockerignore that excludes node_modules without the exception gets it app
   assert.equal(dockerignore('/node_modules/'), `/node_modules/\n${EXCEPTION}\n`);
 });
 
+test('.dockerignore that excludes the kit by a wildcard, or before its exception, gets it appended', () => {
+  for (const existing of [
+    '**/node_modules\n',
+    'node_modules/**\n',
+    'node_modules/*\n',
+    './node_modules\n',
+    `${EXCEPTION}\nnode_modules\n`,
+  ]) {
+    const amended = dockerignore(existing);
+    assert.equal(amended, `${existing}${EXCEPTION}\n`, existing);
+    assert.equal(dockerignore(amended), undefined, `appending to ${existing} does not let the kit in`);
+  }
+});
+
 test('.dockerignore that holds the exception, or does not exclude node_modules, is left unchanged', () => {
   assert.equal(dockerignore(`node_modules\n${EXCEPTION}\n`), undefined);
   assert.equal(dockerignore('.git\n*/node_modules\n'), undefined);
+  assert.equal(dockerignore('node_modules_cache\n# node_modules\n'), undefined);
+  assert.equal(dockerignore('node_modules/**\n!node_modules/@ritenoar/agent-kit/container/**\n'), undefined);
   assert.equal(dockerignore(''), undefined);
 });
 
