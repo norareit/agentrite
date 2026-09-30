@@ -183,3 +183,15 @@ timestamp: 2026-09-27T22:45:28Z
   `!node_modules/@ritenoar/agent-kit/container`. In 17 ignore files, `!node_modules/@ritenoar/agent-kit/container/**`
   let the kit back in every time, and the directory form failed in three. Added a task to `plan.md`: the matcher
   follows BuildKit's rule, and `init` writes and appends the `/**` form
+- 2026-09-30T12:45:48Z [Claude Code, anthropic/claude-opus-5-5] implemented requirement 10 as amended in `e3b372c`,
+  whose changed unit cases for S5's and S7's files failed first, and matched `.dockerignore` as BuildKit does in
+  `268a255`, whose unit cases for a kit file excluded by name failed first. `init` now writes and appends
+  `!node_modules/@ritenoar/agent-kit/container/**`. Against Docker 24 with BuildKit, building an image that copies
+  `entrypoint.sh`, `egress-proxy.mjs` and `sni.mjs` as the kit's Dockerfile does, 25 ignore files were checked,
+  among them S4's to S7's and an empty one: `init` amends each exactly when that build fails, and each amended file
+  builds, with none disagreeing. A project whose `.dockerignore` holds the directory form after `node_modules`, as
+  Norareit's does, still builds and is left alone. The packed-kit sandbox build was not repeated with the new form
+- 2026-09-30T12:45:48Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on `268a255`. `node --test
+  tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 139 of 139 passed. `npm test` on the macOS host
+  with Node 26.9.0: 127 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed.
+  Every task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
