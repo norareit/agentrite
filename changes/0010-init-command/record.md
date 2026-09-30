@@ -81,3 +81,18 @@ timestamp: 2026-09-27T22:45:28Z
 - 2026-09-30T11:13:17Z [Claude Code, anthropic/claude-opus-5-5] accepted review findings S1, S3, P1 and P2. P1: added
   the ticked task for the refusal the human decided, which was built before it was planned. P2: the shared helper task
   now traces to R11. S1 and S3: added tasks to `plan.md` for the fixes, which follow
+- 2026-09-30T11:15:45Z [Claude Code, anthropic/claude-opus-5-5] applied review finding S1 in `555b5c0`: without
+  `playwright` in the lockfile, an existing `agent/compose.project.yml` is still skipped, but the run says why on
+  standard error and exits non-zero, with a regression test that failed first. Applied S3 in `782c380`: `init` decides
+  whether an existing `.dockerignore` keeps the kit out by evaluating its patterns as Docker does for a file in the
+  kit's `container/`, rather than by matching literal `node_modules` lines. Unit cases for `**/node_modules`,
+  `node_modules/**`, `node_modules/*`, `./node_modules` and an exception before the exclusion failed first. Eleven
+  ignore files were also checked against Docker 24 with BuildKit, building an image that copies the kit's
+  `container/entrypoint.sh`: for each, `init` amends the file exactly when that build fails, and the amended file
+  builds. The README describes both
+- 2026-09-30T11:15:45Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on `782c380`. `node --test
+  tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 134 of 134 passed, none skipped. `npm test` on
+  the macOS host with Node 26.9.0: 122 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run
+  check-changes` passed. The packed-kit sandbox build was not repeated: neither fix touches the container or the files
+  `init` generates. Every task in `plan.md` is ticked and every finding of the review is decided and applied, so the
+  unit is ready for a re-review; status stays `in-progress` until then
