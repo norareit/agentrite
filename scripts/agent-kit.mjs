@@ -8,9 +8,6 @@ const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-chang
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
 const KIT_CONTAINER = 'node_modules/@ritenoar/agent-kit/container';
 const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}`;
-// A file of some package other than the kit, standing for node_modules as a whole: an exclusion of node_modules
-// excludes it, while a pattern aimed at the kit, or at one package, does not.
-const NODE_MODULES_PROBE = 'node_modules/any-package/index.js';
 const COMPOSE_FILE = 'agent/compose.project.yml';
 
 const DOCKERIGNORE =
@@ -213,14 +210,32 @@ export function withCheckChangesScript(packageJson) {
 }
 
 /**
- * A `.dockerignore` pattern as a regular expression, following Docker's rules: `*` and `?` stay within one path
- * segment, `**` spans any number of segments, including none, and the pattern is cleaned as a path first.
+ * The patterns of a `.dockerignore`, in order, each cleaned as a path the way Docker cleans it, and marked when it
+ * starts with `!` and so lets back in what it matches.
  *
- * @param {string} pattern
+ * @param {string} ignore
+ * @returns {{ pattern: string, negated: boolean }[]}
+ */
+function dockerignorePatterns(ignore) {
+  return ignore
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '' && !line.startsWith('#'))
+    .map((line) => {
+      const negated = line.startsWith('!');
+      const pattern = posix.normalize(negated ? line.slice(1).trim() : line).replace(/^\/+|\/+$/g, '');
+      return { pattern, negated };
+    });
+}
+
+/**
+ * A cleaned `.dockerignore` pattern as a regular expression, following Docker's rules: `*` and `?` stay within one
+ * path segment, and `**` spans any number of segments, including none.
+ *
+ * @param {string} cleaned
  * @returns {RegExp}
  */
-function dockerignoreRegex(pattern) {
-  const cleaned = posix.normalize(pattern).replace(/^\/+|\/+$/g, '');
+function dockerignoreRegex(cleaned) {
   let source = '';
   for (let index = 0; index < cleaned.length; index += 1) {
     const character = cleaned[index];
@@ -256,13 +271,27 @@ function dockerignoreExcludes(ignore, path) {
   const segments = path.split('/');
   const candidates = segments.map((_, index) => segments.slice(0, index + 1).join('/'));
   let excluded = false;
-  for (const line of ignore.split('\n').map((text) => text.trim())) {
-    if (line === '' || line.startsWith('#')) continue;
-    const negated = line.startsWith('!');
-    const regex = dockerignoreRegex(negated ? line.slice(1).trim() : line);
+  for (const { pattern, negated } of dockerignorePatterns(ignore)) {
+    const regex = dockerignoreRegex(pattern);
     if (candidates.some((candidate) => regex.test(candidate))) excluded = !negated;
   }
   return excluded;
+}
+
+/**
+ * True when a line of the `.dockerignore` text excludes `node_modules` as a whole: a pattern that is not an exception
+ * and matches the `node_modules` directory itself, or everything in it, once its trailing `/*` and `/**` segments are
+ * removed. It is judged line by line, not by where some path inside ends up, because a later exception can let any
+ * one such path back in. A pattern that names part of `node_modules`, such as one scope or a character class of
+ * package names, does not count.
+ *
+ * @param {string} ignore
+ * @returns {boolean}
+ */
+function dockerignoreExcludesNodeModules(ignore) {
+  return dockerignorePatterns(ignore).some(
+    ({ pattern, negated }) => !negated && dockerignoreRegex(pattern.replace(/(\/\*\*?)+$/, '')).test('node_modules'),
+  );
 }
 
 /**
@@ -278,9 +307,8 @@ function dockerignoreExcludes(ignore, path) {
  */
 export function dockerignore(existing, containerFiles) {
   if (existing === undefined) return DOCKERIGNORE;
-  const excludesNodeModules = dockerignoreExcludes(existing, NODE_MODULES_PROBE);
   const keepsKitOut = containerFiles.some((name) => dockerignoreExcludes(existing, `${KIT_CONTAINER}/${name}`));
-  if (!excludesNodeModules || !keepsKitOut) return undefined;
+  if (!dockerignoreExcludesNodeModules(existing) || !keepsKitOut) return undefined;
   const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
   return `${existing}${separator}${KIT_CONTAINER_EXCEPTION}\n`;
 }

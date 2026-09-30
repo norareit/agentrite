@@ -277,6 +277,12 @@ test('.dockerignore that lets only one file of the kit container back in gets th
   assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`);
 });
 
+test('.dockerignore that excludes node_modules gets the exception whatever a later exception lets back in', () => {
+  for (const existing of ['node_modules\n!node_modules/*/index.js\n', 'node_modules/**/*\n', '**\n']) {
+    assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`, existing);
+  }
+});
+
 test('.dockerignore that excludes the kit without excluding node_modules as a whole is left unchanged', () => {
   assert.equal(ignore('node_modules/@ritenoar/agent-kit/container/sni.mjs\n'), undefined);
   assert.equal(ignore('node_modules/@ritenoar\n'), undefined);

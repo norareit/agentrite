@@ -97,10 +97,11 @@ holding `@AGENTS.md`.
   with a list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked
   tasks. It takes the repository root as an optional argument and defaults to the working directory. The npm script
   is one way to wire the check; a project may run the kit's script with `node` from a command of its own instead
-* `.dockerignore` is written when there is none. When it excludes `node_modules` without letting the kit's
-  `container/` directory back in, whether by `node_modules`, `**/node_modules`, `node_modules/**` or any other
-  pattern, that exception is appended, so that the image build can reach the kit. `init` decides this by Docker's own
-  rules, where the last matching pattern wins. Otherwise the file is left alone
+* `.dockerignore` is written when there is none. When a line of it excludes `node_modules` or everything in it, as
+  `node_modules`, `**/node_modules` and `node_modules/**` do, and the kit's `container/` files end up excluded by
+  Docker's own rules, where the last matching pattern wins, the exception is appended, so that the image build can
+  reach the kit. Otherwise the file is left alone, including one that excludes only part of `node_modules`, such as
+  the kit's own scope, which is the project's choice
 
 The sandbox requires the project to depend on Playwright, because the image takes Playwright's browsers at the version
 the project resolved. `init` takes that version from `package-lock.json`. When the lockfile resolves no `playwright`, it

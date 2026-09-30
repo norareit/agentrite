@@ -85,7 +85,7 @@ the kit's own directory and the files from the project, calls them, and writes.
   judged by a path to another package inside it, as well as a file of the kit's `container/`, so that a pattern aimed
   at the kit or at one package alone is left as it is. Unit cases first for an exclusion of one kit file and of
   `node_modules/@ritenoar` (R10)
-- [ ] Review S6: judge whether `.dockerignore` excludes `node_modules` line by line, by a pattern that is not an
+- [x] Review S6: judge whether `.dockerignore` excludes `node_modules` line by line, by a pattern that is not an
   exception and, with any trailing `/*` and `/**` segments removed, matches `node_modules` itself, rather than by one
   sample path that a later exception can let back in. Unit cases first for `node_modules` followed by
   `!node_modules/*/index.js`, and for `node_modules/**/*`. Patterns with character classes, such as
