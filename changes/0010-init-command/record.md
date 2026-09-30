@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-09-27T22:45:28Z
 ---
 
@@ -195,3 +195,12 @@ timestamp: 2026-09-27T22:45:28Z
   tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 139 of 139 passed. `npm test` on the macOS host
   with Node 26.9.0: 127 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed.
   Every task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
+- 2026-09-30T12:51:03Z [OpenCode, openai/gpt-6-sol] completed a delta review of `0010-init-command` at commit
+  `dcc2616b5ef4844930f27d2c4c9d0ad4048d0f20`, compared with the previous review's commit
+  `259712fb009d9ac66adf6efc428ed3da140de01c`, saved at
+  `.reviews/0010-init-command/delta-259712f-to-dcc2616.md`. Findings: none. Could not independently verify the
+  recorded 25 Docker/BuildKit builds, the historical test-failure claim or the packed-kit sandbox run; the macOS
+  and non-root Linux suites, change check and direct matcher probes ran
+- 2026-09-30T12:54:05Z [human] approved the unit after the delta review at `dcc2616` returned no findings, accepting the
+  applied corrections for S1, S3, S4, S5 and S6. S2 and S7 are settled by the decisions recorded above. Status
+  `implemented`
