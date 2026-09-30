@@ -279,27 +279,10 @@ function dockerignoreExcludes(ignore, path) {
 }
 
 /**
- * True when a line of the `.dockerignore` text excludes `node_modules` as a whole: a pattern that is not an exception
- * and matches the `node_modules` directory itself, or everything in it, once its trailing `/*` and `/**` segments are
- * removed. It is judged line by line, not by where some path inside ends up, because a later exception can let any
- * one such path back in. A pattern that names part of `node_modules`, such as one scope or a character class of
- * package names, does not count.
- *
- * @param {string} ignore
- * @returns {boolean}
- */
-function dockerignoreExcludesNodeModules(ignore) {
-  return dockerignorePatterns(ignore).some(
-    ({ pattern, negated }) => !negated && dockerignoreRegex(pattern.replace(/(\/\*\*?)+$/, '')).test('node_modules'),
-  );
-}
-
-/**
  * The `.dockerignore` to write: a new one when there is none, the existing one with the kit's exception appended
- * when it excludes `node_modules`, in whatever pattern, and keeps any of the kit's `container/` files out of the
- * build context with it, and otherwise `undefined`, for no change. A file that excludes the kit, or one package,
- * without excluding `node_modules` is the project's own choice and is left alone. Every container file is checked,
- * not one, because an exception may let a single file back in.
+ * when, by Docker's rules, it keeps any of the kit's `container/` files out of the build context, and otherwise
+ * `undefined`, for no change. Every container file is checked, not one, because an exception may let a single file
+ * back in.
  *
  * @param {string | undefined} existing
  * @param {string[]} containerFiles the names of the files in the kit's `container/` directory
@@ -308,7 +291,7 @@ function dockerignoreExcludesNodeModules(ignore) {
 export function dockerignore(existing, containerFiles) {
   if (existing === undefined) return DOCKERIGNORE;
   const keepsKitOut = containerFiles.some((name) => dockerignoreExcludes(existing, `${KIT_CONTAINER}/${name}`));
-  if (!dockerignoreExcludesNodeModules(existing) || !keepsKitOut) return undefined;
+  if (!keepsKitOut) return undefined;
   const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
   return `${existing}${separator}${KIT_CONTAINER_EXCEPTION}\n`;
 }

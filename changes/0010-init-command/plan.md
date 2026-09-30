@@ -90,10 +90,14 @@ the kit's own directory and the files from the project, calls them, and writes.
   sample path that a later exception can let back in. Unit cases first for `node_modules` followed by
   `!node_modules/*/index.js`, and for `node_modules/**/*`. Patterns with character classes, such as
   `node_modules/[a-m]*`, are a known limit (R10)
-- [ ] Requirement 10 as amended after review finding S7: append the exception whenever Docker's rules keep any file
+- [x] Requirement 10 as amended after review finding S7: append the exception whenever Docker's rules keep any file
   of the kit's `container/` out of the build context, and remove the check for whether `node_modules` is excluded.
   The unit cases for S5's files, which exclude the kit without excluding `node_modules`, and for S7's file change
   first to expect the exception (R10)
+- [ ] Match `.dockerignore` as BuildKit does, where an exception reaches into a directory only when the directory
+  was excluded at that point, and make the kit's exception `!node_modules/@ritenoar/agent-kit/container/**`, which
+  lets its files back in however they were excluded, in a new `.dockerignore`, in one amended and in the README.
+  Unit cases first for a kit file excluded by name, and by `container/*`, before and after the directory form (R10)
 - [x] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
   is for, which the project may edit, what to do with the notice for an existing `AGENTS.md`, and that the kit's own
   hosts need no listing, and name `templates/project/` for a project set up or repaired by hand. Add `KIT_ALLOWLIST`

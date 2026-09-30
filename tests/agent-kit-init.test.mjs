@@ -283,9 +283,14 @@ test('.dockerignore that excludes node_modules gets the exception whatever a lat
   }
 });
 
-test('.dockerignore that excludes the kit without excluding node_modules as a whole is left unchanged', () => {
-  assert.equal(ignore('node_modules/@ritenoar/agent-kit/container/sni.mjs\n'), undefined);
-  assert.equal(ignore('node_modules/@ritenoar\n'), undefined);
+test('.dockerignore that keeps the kit out without excluding node_modules also gets the exception', () => {
+  for (const existing of [
+    'node_modules/@ritenoar/agent-kit/container/sni.mjs\n',
+    'node_modules/@ritenoar\n',
+    'node_modules\n!node_modules\nnode_modules/@ritenoar\n',
+  ]) {
+    assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`, existing);
+  }
 });
 
 test('.dockerignore that holds the exception, or does not exclude node_modules, is left unchanged', () => {

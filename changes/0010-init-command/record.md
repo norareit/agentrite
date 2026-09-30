@@ -176,3 +176,10 @@ timestamp: 2026-09-27T22:45:28Z
   Docker's rules keep any file of the kit's `container/` out of the build context. This reverses S5: a project that
   keeps the kit out without excluding `node_modules` also gets the exception. The decision is added to the spec's
   Decisions
+- 2026-09-30T12:43:45Z [Claude Code, anthropic/claude-opus-5-5] found, checking the amended requirement 10 against
+  Docker 24 with BuildKit, that the matcher misreads BuildKit in one respect: an exception for a directory reaches
+  the files in it only when the directory was excluded at that point, so a file excluded by name, such as
+  `node_modules/@ritenoar/agent-kit/container/sni.mjs` or `container/*`, stays out after
+  `!node_modules/@ritenoar/agent-kit/container`. In 17 ignore files, `!node_modules/@ritenoar/agent-kit/container/**`
+  let the kit back in every time, and the directory form failed in three. Added a task to `plan.md`: the matcher
+  follows BuildKit's rule, and `init` writes and appends the `/**` form
