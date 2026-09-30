@@ -42,7 +42,8 @@ const CONTAINER_FILES = readdirSync(new URL('../container/', import.meta.url));
 const ignore = (existing) => dockerignore(existing, CONTAINER_FILES);
 const HARNESS_LISTS = [['claude'], ['opencode'], ['claude', 'opencode']];
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
-const EXCEPTION = '!node_modules/@ritenoar/agent-kit/container';
+const KIT_CONTAINER = 'node_modules/@ritenoar/agent-kit/container';
+const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
   return projectFiles({ templates, harnesses, packageName: 'my-app', playwrightVersion: '1.59.1', ...overrides });
@@ -281,6 +282,24 @@ test('.dockerignore that excludes node_modules gets the exception whatever a lat
   for (const existing of ['node_modules\n!node_modules/*/index.js\n', 'node_modules/**/*\n', '**\n']) {
     assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`, existing);
   }
+});
+
+// BuildKit lets an exception reach into a directory only when the directory was excluded at that point, so an
+// exception naming the directory does not bring back a file excluded by name.
+test('.dockerignore whose directory exception does not reach a file excluded by name gets the exception', () => {
+  for (const existing of [
+    `${KIT_CONTAINER}/sni.mjs\n!${KIT_CONTAINER}\n`,
+    `${KIT_CONTAINER}/*\n!${KIT_CONTAINER}\n`,
+    `node_modules\n!${KIT_CONTAINER}\n${KIT_CONTAINER}/sni.mjs\n`,
+  ]) {
+    const amended = ignore(existing);
+    assert.equal(amended, `${existing}${EXCEPTION}\n`, existing);
+    assert.equal(ignore(amended), undefined, `appending to ${existing} does not let the kit in`);
+  }
+});
+
+test('.dockerignore that excludes node_modules and lets the kit directory back in is left unchanged', () => {
+  assert.equal(ignore(`node_modules\n!${KIT_CONTAINER}\n`), undefined);
 });
 
 test('.dockerignore that keeps the kit out without excluding node_modules also gets the exception', () => {

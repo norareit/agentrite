@@ -7,7 +7,9 @@ import { parseHarnesses, plannedFiles } from './agent-kit-roles.mjs';
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
 const KIT_CONTAINER = 'node_modules/@ritenoar/agent-kit/container';
-const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}`;
+// Names the files, not only the directory: BuildKit would not let a directory's exception reach a file that a
+// pattern excluded by name.
+const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}/**`;
 const COMPOSE_FILE = 'agent/compose.project.yml';
 
 const DOCKERIGNORE =
@@ -260,22 +262,46 @@ function dockerignoreRegex(cleaned) {
 }
 
 /**
- * True when the `.dockerignore` text keeps `path` out of the build context. As in Docker, the last pattern that
- * matches the path or one of its parent directories decides, and a pattern starting with `!` lets it back in.
+ * Whether `path` is excluded, and which patterns matched it, given which matched its parent directory. As in
+ * BuildKit, a pattern matches a path it matches itself or whose parent it matched, the last match decides, and a
+ * pattern is tried only when it could change the outcome so far: an exclusion while the path is still included, an
+ * exception once it is excluded. So an exception reaches into a directory only when the directory was excluded.
+ *
+ * @param {{ regex: RegExp, negated: boolean }[]} patterns
+ * @param {string} path
+ * @param {boolean[]} parentMatched
+ * @returns {{ excluded: boolean, matched: boolean[] }}
+ */
+function dockerignoreMatch(patterns, path, parentMatched) {
+  let excluded = false;
+  const matched = patterns.map(() => false);
+  patterns.forEach(({ regex, negated }, index) => {
+    if (negated !== excluded) return;
+    matched[index] = regex.test(path) || parentMatched[index];
+    if (matched[index]) excluded = !negated;
+  });
+  return { excluded, matched };
+}
+
+/**
+ * True when the `.dockerignore` text keeps `path` out of the build context, deciding each directory on the way down
+ * to it in turn, as BuildKit walks the context.
  *
  * @param {string} ignore
  * @param {string} path
  * @returns {boolean}
  */
 function dockerignoreExcludes(ignore, path) {
+  const patterns = dockerignorePatterns(ignore).map(({ pattern, negated }) => ({
+    regex: dockerignoreRegex(pattern),
+    negated,
+  }));
   const segments = path.split('/');
-  const candidates = segments.map((_, index) => segments.slice(0, index + 1).join('/'));
-  let excluded = false;
-  for (const { pattern, negated } of dockerignorePatterns(ignore)) {
-    const regex = dockerignoreRegex(pattern);
-    if (candidates.some((candidate) => regex.test(candidate))) excluded = !negated;
+  let result = { excluded: false, matched: patterns.map(() => false) };
+  for (let depth = 1; depth <= segments.length; depth += 1) {
+    result = dockerignoreMatch(patterns, segments.slice(0, depth).join('/'), result.matched);
   }
-  return excluded;
+  return result.excluded;
 }
 
 /**

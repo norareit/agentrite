@@ -97,11 +97,9 @@ holding `@AGENTS.md`.
   with a list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked
   tasks. It takes the repository root as an optional argument and defaults to the working directory. The npm script
   is one way to wire the check; a project may run the kit's script with `node` from a command of its own instead
-* `.dockerignore` is written when there is none. When a line of it excludes `node_modules` or everything in it, as
-  `node_modules`, `**/node_modules` and `node_modules/**` do, and the kit's `container/` files end up excluded by
-  Docker's own rules, where the last matching pattern wins, the exception is appended, so that the image build can
-  reach the kit. Otherwise the file is left alone, including one that excludes only part of `node_modules`, such as
-  the kit's own scope, which is the project's choice
+* `.dockerignore` is written when there is none. When it keeps any file of the kit's `container/` directory out of
+  the build context, whatever its patterns, the exception is appended, so that the image build can reach the kit.
+  `init` decides this by the rules BuildKit applies. Otherwise the file is left alone
 
 The sandbox requires the project to depend on Playwright, because the image takes Playwright's browsers at the version
 the project resolved. `init` takes that version from `package-lock.json`. When the lockfile resolves no `playwright`, it
@@ -169,12 +167,16 @@ dependencies to get Playwright's system libraries at the version the project res
 `--project-directory` so that relative paths in both compose files resolve from the project root, and passes the
 kit's `container/` directory, relative to that root, as `AGENT_KIT_CONTAINER`, which the compose file and the
 Dockerfile use to find the kit's files. A project whose `.dockerignore` excludes `node_modules` must let that one
-directory back in:
+directory's files back in:
 
 ```
 node_modules
-!node_modules/@ritenoar/agent-kit/container
+!node_modules/@ritenoar/agent-kit/container/**
 ```
+
+The exception names the files rather than the directory. BuildKit lets an exception for a directory reach the files
+in it only when the directory itself was excluded, so `!node_modules/@ritenoar/agent-kit/container` alone does not
+bring back a kit file that a pattern excluded by name.
 
 ### The home volume
 

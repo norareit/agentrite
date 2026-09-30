@@ -94,7 +94,7 @@ the kit's own directory and the files from the project, calls them, and writes.
   of the kit's `container/` out of the build context, and remove the check for whether `node_modules` is excluded.
   The unit cases for S5's files, which exclude the kit without excluding `node_modules`, and for S7's file change
   first to expect the exception (R10)
-- [ ] Match `.dockerignore` as BuildKit does, where an exception reaches into a directory only when the directory
+- [x] Match `.dockerignore` as BuildKit does, where an exception reaches into a directory only when the directory
   was excluded at that point, and make the kit's exception `!node_modules/@ritenoar/agent-kit/container/**`, which
   lets its files back in however they were excluded, in a new `.dockerignore`, in one amended and in the README.
   Unit cases first for a kit file excluded by name, and by `container/*`, before and after the directory form (R10)
