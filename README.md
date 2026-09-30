@@ -6,16 +6,17 @@ specific to them.
 
 ## What is here
 
-| Path                 | What it holds                                                                     |
-|----------------------|-----------------------------------------------------------------------------------|
-| `process.md`         | How work is done: the changes process, the commit conventions, the code standards |
-| `roles/`             | The planner, implementer and reviewer instructions                                |
-| `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit               |
-| `scripts/`           | `check-changes.mjs`, the freeze check, and `agent-kit-roles`, the role wrappers |
-| `tests/`             | The kit's own unit tests, run by node's built-in test runner                      |
-| `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
-| `infra/`             | The CDK app that serves release tarballs from `agent-kit.ritenoar.com`            |
-| `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit             |
+| Path                 | What it holds                                                                             |
+|----------------------|-------------------------------------------------------------------------------------------|
+| `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
+| `roles/`             | The planner, implementer and reviewer instructions                                        |
+| `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
+| `templates/project/` | The files `agent-kit init` fills in and writes into a project                             |
+| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agent-kit` and `agent-kit-roles` commands |
+| `tests/`             | The kit's own unit tests, run by node's built-in test runner                              |
+| `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper         |
+| `infra/`             | The CDK app that serves release tarballs from `agent-kit.ritenoar.com`                    |
+| `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit                     |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
 project's own `AGENTS.md`, which links here for the rest.
@@ -31,21 +32,60 @@ npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.0.0.tgz
 
 npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
 `package-lock.json`. A project receives what `files` in this repository's `package.json` lists, which is
-`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agent-kit-roles.mjs` and `container/`,
-plus the `package.json` and this README that npm always ships. It does not receive this repository's `changes/`,
-`tests/`, `infra/` or `deploy.sh`.
+`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agent-kit-roles.mjs`,
+`scripts/agent-kit.mjs` and `container/`, plus the `package.json` and this README that npm always ships. It does not
+receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
 
-Then, in the project:
+The kit assumes npm: `init` reads `package-lock.json`, and the sandbox's image installs from it.
 
-* Point `AGENTS.md` at `node_modules/@ritenoar/agent-kit/process.md` and the three files in its `roles/`, and keep in
-  it only what is specific to the project
-* Register the roles with the harnesses by running `npx agent-kit-roles claude opencode` from the project root,
-  naming only the harnesses the project uses. It writes `.claude/agents/*.md` for Claude Code and
-  `.opencode/agents/*.md` for OpenCode, each a thin wrapper that names a role and points at the kit's role file. It
-  refuses to overwrite a file that already exists, and a model per role goes in the project's own wrapper
-* Wire the change check to a command of the project's own, running
-  `node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs` with `node`, for example as an npm script in the
-  project's `package.json`:
+Then set the project up from its root, naming only the harnesses it uses:
+
+```sh
+npx agent-kit init claude opencode
+```
+
+It prints each file it wrote, changed or skipped. It writes:
+
+| File                        | What it is for                                                                       |
+|-----------------------------|--------------------------------------------------------------------------------------|
+| `.claude/agents/*.md`       | For `claude`: a wrapper per role for Claude Code, pointing at the kit's role file    |
+| `.opencode/agents/*.md`     | For `opencode`: the same for OpenCode                                                |
+| `AGENTS.md`                 | The project's agent instructions, pointing at the kit's `process.md` and role files  |
+| `CLAUDE.md`                 | The bridge that imports `AGENTS.md` into Claude Code, written whatever the harnesses |
+| `agent.sh`                  | The shim that runs the kit's sandbox from the project root, as described below       |
+| `agent/compose.project.yml` | The project's half of the sandbox configuration                                      |
+
+The role wrappers are the ones `npx agent-kit-roles claude opencode` writes, which is still there for a project that
+wants only those. Unlike `init`, it refuses to overwrite a file that already exists. A model per role goes in the
+project's own wrapper.
+
+Every generated file is the project's own once written, and the project may edit any of them. `init` never
+regenerates one: a file it would create that already exists is left as it is and reported as skipped, so running it
+again only adds what is missing. What a kit release needs from every project is kept in the kit instead, where
+updating the kit delivers it. The files a project is expected to edit are these:
+
+* `AGENTS.md` has a marked section for what is specific to the project, such as its house style, its code rules and
+  how its tests run, and keeps only that: what holds for every project is in the kit. The three sections above it,
+  Development Guidelines, Roles and Changes in this project, are what make the kit's instructions reach an agent, and
+  are best kept
+* `agent/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
+  `package.json`, the `PLAYWRIGHT_VERSION` build argument, the memory and CPU limits, and the project's `ALLOWLIST`.
+  The allowlist lists only what the project needs beyond what the kit admits itself, which is the Anthropic API, the
+  npm registry and `agent-kit.ritenoar.com`; the kit's hosts need no listing. Add the API host of any other model
+  provider the project's agents use, and whatever its tools and tests reach
+* The role wrappers, to pin a model per role
+
+`CLAUDE.md` and `agent.sh` are best left as written.
+
+When `AGENTS.md` already exists, `init` leaves it untouched and prints the three sections it would have written,
+ready to be pasted in. An agent does not see the kit's instructions until the existing file holds them, so paste in
+whichever it lacks. When `CLAUDE.md` already exists, it is left untouched too, and must import `AGENTS.md` with a line
+holding `@AGENTS.md`.
+
+`init` also amends two files, adding only what is missing:
+
+* `package.json` gains a `check-changes` script, unless it has one, keeping every other key, their order and the
+  indentation:
 
   ```json
   "scripts": {
@@ -55,9 +95,20 @@ Then, in the project:
 
   `npm run check-changes` then compares the committed work on the current branch with `master`, and exits non-zero
   with a list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked
-  tasks. It takes the repository root as an optional argument and defaults to the working directory
-* Add `agent/compose.project.yml` and an `agent.sh` shim, and let the image build reach the kit, as the sandbox
-  section below describes
+  tasks. It takes the repository root as an optional argument and defaults to the working directory. The npm script
+  is one way to wire the check; a project may run the kit's script with `node` from a command of its own instead
+* `.dockerignore` is written when there is none, and when it excludes `node_modules` without letting the kit's
+  `container/` directory back in, that exception is appended, so that the image build can reach the kit. Otherwise it
+  is left alone
+
+The sandbox requires the project to depend on Playwright, because the image takes Playwright's browsers at the
+version the project resolved. `init` takes that version from `package-lock.json`. When the lockfile resolves no
+`playwright`, it writes everything else, but not `agent/compose.project.yml`, says why on standard error, and exits
+non-zero. It also refuses to run, writing nothing, when `package.json` has no `name`.
+
+`init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
+`node_modules/@ritenoar/agent-kit/templates/project/`. A project set up or repaired by hand starts from the same
+files, filling in each `{{placeholder}}` itself.
 
 A missing or altered kit is then npm's error, like any other dependency's, and needs no check of the project's own.
 
@@ -88,9 +139,10 @@ here. The improvement reaches that project, and every other, as a new release th
 
 ## Where to run it
 
-Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike,
-provided the project's `ALLOWLIST` holds `agent-kit.ritenoar.com`. A project's `agent.sh` runs the wrapper from
-`node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can start.
+Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike: the
+sandbox admits the npm registry and `agent-kit.ritenoar.com` itself, through the kit's `KIT_ALLOWLIST`. A project's
+`agent.sh` runs the wrapper from `node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox
+can start.
 
 ## Running the sandbox
 
@@ -101,7 +153,8 @@ two files:
   project root as its first argument, so that the documented command stays one command from the repository root.
   The wrapper takes the root from its caller because how deep the kit sits under `node_modules` is npm's to decide
 * `agent/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
-  allowlist, the resource limits and the `PLAYWRIGHT_VERSION` build argument
+  allowlist, the resource limits and the `PLAYWRIGHT_VERSION` build argument. The wrapper reads the merged
+  configuration before it builds, and refuses to go on without `PLAYWRIGHT_VERSION`, naming this file
 
 Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`. The harness
 versions are pinned in `container/Dockerfile`, so a project updates Claude Code and OpenCode by updating the kit, as
@@ -146,8 +199,14 @@ volume is removed, the next start creates a new one owned by the agent.
 ### Egress
 
 The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
-server's host and port, and HTTPS on port 443 to the hosts in the project's `ALLOWLIST`. Everything else is denied,
-whatever its port or address.
+server's host and port, and HTTPS on port 443 to the allowlisted hosts. Everything else is denied, whatever its port
+or address.
+
+The allowlist is two lists together. `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit
+itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, the npm registry and
+`agent-kit.ritenoar.com`. `ALLOWLIST`, in the project's `agent/compose.project.yml`, holds what the project needs
+besides, and may be empty or left out. Both are checked the same way, and a host in both is admitted once. A kit
+release that needs another host adds it to `KIT_ALLOWLIST`, with no change to any project.
 
 The entrypoint redirects every outbound connection on port 443 to `container/egress-proxy.mjs`, which runs as its own
 unprivileged account. The proxy reads the hostname from the TLS ClientHello, where it travels in the clear, and

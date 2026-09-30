@@ -66,7 +66,7 @@ the kit's own directory and the files from the project, calls them, and writes.
   R14); a project without Playwright gets everything but the compose file and a non-zero exit (R8, R14)
 - [x] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13 to
   R15)
-- [ ] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
+- [x] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
   is for, which the project may edit, what to do with the notice for an existing `AGENTS.md`, and that the kit's own
   hosts need no listing, and name `templates/project/` for a project set up or repaired by hand. Add `KIT_ALLOWLIST`
   to the egress section. Keep every other statement the section makes today (R16)
@@ -84,4 +84,4 @@ the kit's own directory and the files from the project, calls them, and writes.
 
 - [x] The kit supplies its own hosts, and the wrapper checks for `PLAYWRIGHT_VERSION`
 - [x] The `agent-kit init` command
-- [ ] The README describes setting a project up with `init`
+- [x] The README describes setting a project up with `init`
