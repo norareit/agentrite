@@ -136,3 +136,15 @@ timestamp: 2026-09-27T22:45:28Z
   tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 136 of 136 passed. `npm test` on the macOS host
   with Node 26.9.0: 124 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed.
   Every task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
+- 2026-09-30T12:09:16Z [OpenCode, openai/gpt-6-sol] completed a delta review of `0010-init-command` at commit
+  `2dbee3b6ca30309b0d9eff03c3472ab73acd5ffb`, compared with the previous review's commit
+  `9f02f9749fec2cc2ce1c43d0c9aa398d7ce3cef9`, saved at
+  `.reviews/0010-init-command/delta-9f02f97-to-2dbee3b.md`. Finding: S6. Could not independently verify the
+  recorded Docker/BuildKit cases or repeat the packed-kit sandbox run; the macOS and non-root Linux suites,
+  change check and direct matcher probes ran
+- 2026-09-30T12:30:23Z [Claude Code, anthropic/claude-opus-5-5] accepted delta review finding S6, the third in a row
+  from deciding whether `.dockerignore` excludes `node_modules` by one sample path, which some combination of
+  patterns can always get around. Proposed two ways out: judge it line by line, by a non-negated pattern that
+  excludes the `node_modules` directory or everything in it, within requirement 10 as written; or amend requirement
+  10 to append whenever a kit container file is excluded
+- 2026-09-30T12:30:23Z [human] chose the first: judge line by line, within requirement 10 as written
