@@ -75,12 +75,12 @@ the kit's own directory and the files from the project, calls them, and writes.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm pack --dry-run` lists `scripts/agent-kit.mjs` and every file in `templates/project/`
-- [ ] In a scratch project with the packed kit installed and `playwright` in its lockfile, `npx agent-kit init claude`
+- [x] `npm test` passes
+- [x] `npm pack --dry-run` lists `scripts/agent-kit.mjs` and every file in `templates/project/`
+- [x] In a scratch project with the packed kit installed and `playwright` in its lockfile, `npx agent-kit init claude`
   writes every file, and `./agent.sh true` builds the image and starts the container with an `ALLOWLIST` holding no
   host of the kit's
-- [ ] `npm run check-changes`, where task 0009 has wired it, or the script run directly with `node`, passes
+- [x] `npm run check-changes`, where task 0009 has wired it, or the script run directly with `node`, passes
 
 ## Commit Points
 

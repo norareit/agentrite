@@ -47,7 +47,23 @@ timestamp: 2026-09-27T22:45:28Z
   a proposal until the human decides it. `scripts/agent-kit.mjs` repeats `isMain` from `agent-kit-roles.mjs` rather than
   sharing it, because sharing would change `agent-kit-roles.mjs`, which the spec's decisions leave as it is. A later
   unit could move it into a module both import
-- 2026-09-30T10:46:00Z [Claude Code, anthropic/claude-opus-5-5] added a task to `plan.md` for a flaw the verification run found in
-  the R12 check: when Compose refused the project's file, for example with `args:` left empty, the wrapper still
-  piped Compose's empty output into `node`, which printed a JSON stack trace under Compose's error. The
+- 2026-09-30T10:46:00Z [Claude Code, anthropic/claude-opus-5-5] added a task to `plan.md` for a flaw the verification
+  run found in the R12 check: when Compose refused the project's file, for example with `args:` left empty, the wrapper
+  still piped Compose's empty output into `node`, which printed a JSON stack trace under Compose's error. The
   configuration is now captured before it is read. The regression test failed before the fix and passes after it
+- 2026-09-30T10:46:46Z [Claude Code, anthropic/claude-opus-5-5] ran the verification on `14d0976`. `node --test
+  tests/*.test.mjs` in the `node:22` image (Node 22.23.3, bash 5.2) passed 132 of 132 with none skipped. `npm test` on
+  the macOS host (Node 22.9.0, bash 3.2) passed 115, skipped 12 and failed 1: the skips are the allowlist and home-owner
+  tests, which need bash 4 and GNU `stat`, and the failure is `tests/record-name.test.mjs`, which imports a `.ts` file
+  that Node 22.9 cannot load and which failed the same way on `0f10ffc`, before the unit's code changes; this unit does
+  not touch it or `infra/`. `npm pack --dry-run` lists `scripts/agent-kit.mjs` and the four files in
+  `templates/project/`. In a scratch project with `playwright@1.59.1`, `npx agent-kit init claude` from the packed kit
+  wrote every file and exited 0, and its `ALLOWLIST` held comments only. For the build, the kit was unpacked into
+  `node_modules` rather than kept in the lockfile, because the image's `npm ci` cannot reach a local tarball path, which
+  a project installing by URL never has. `./agent.sh true` then built the image, the entrypoint verified the firewall
+  with only the kit's hosts listed, and `true` ran as the agent, exit 0. Against real Compose, a project file without
+  `PLAYWRIGHT_VERSION` stopped with the kit's message, exit 2. `npm run check-changes` passed. Not checked: OpenCode in
+  the sandbox, and `init` run through pnpm, Yarn or Bun
+- 2026-09-30T10:46:46Z [Claude Code, anthropic/claude-opus-5-5] every task in `plan.md` is ticked. The unit is ready for
+  review, and stays `in-progress` until the review's findings are decided. Open for the human: the proposal above on a
+  `package.json` without a `name`
