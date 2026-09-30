@@ -1,13 +1,13 @@
 #!/usr/bin/env node
-import { chmodSync, lstatSync, mkdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseHarnesses, plannedFiles } from './agent-kit-roles.mjs';
 
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
-const KIT_CONTAINER_EXCEPTION = '!node_modules/@ritenoar/agent-kit/container';
-// A file the image build copies from the kit, which the build context must hold.
-const KIT_CONTAINER_FILE = 'node_modules/@ritenoar/agent-kit/container/entrypoint.sh';
+// The kit's container/ directory as a project installs it, from which the image build copies its files.
+const KIT_CONTAINER = 'node_modules/@ritenoar/agent-kit/container';
+const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}`;
 const COMPOSE_FILE = 'agent/compose.project.yml';
 
 const DOCKERIGNORE =
@@ -264,16 +264,18 @@ function dockerignoreExcludes(ignore, path) {
 
 /**
  * The `.dockerignore` to write: a new one when there is none, the existing one with the kit's exception appended
- * when it keeps the kit's `container/` directory out of the build context, and otherwise `undefined`, for no change.
- * Only an exclusion of `node_modules`, in whatever pattern, can keep the kit out, so this is the case requirement 10
- * names.
+ * when it keeps any of the kit's `container/` files out of the build context, and otherwise `undefined`, for no
+ * change. Only an exclusion of `node_modules`, in whatever pattern, can keep the kit out, so this is the case
+ * requirement 10 names. Every file is checked, not one, because an exception may let a single file back in.
  *
  * @param {string | undefined} existing
+ * @param {string[]} containerFiles the names of the files in the kit's `container/` directory
  * @returns {string | undefined}
  */
-export function dockerignore(existing) {
+export function dockerignore(existing, containerFiles) {
   if (existing === undefined) return DOCKERIGNORE;
-  if (!dockerignoreExcludes(existing, KIT_CONTAINER_FILE)) return undefined;
+  const keepsKitOut = containerFiles.some((name) => dockerignoreExcludes(existing, `${KIT_CONTAINER}/${name}`));
+  if (!keepsKitOut) return undefined;
   const separator = existing === '' || existing.endsWith('\n') ? '' : '\n';
   return `${existing}${separator}${KIT_CONTAINER_EXCEPTION}\n`;
 }
@@ -389,7 +391,7 @@ function init(root, harnesses) {
 
   const ignorePath = resolve(root, '.dockerignore');
   const existingIgnore = readIfPresent(ignorePath);
-  const ignore = dockerignore(existingIgnore);
+  const ignore = dockerignore(existingIgnore, readdirSync(new URL('../container/', import.meta.url)));
   if (ignore === undefined) {
     console.log('skipped .dockerignore, which lets the kit into the build context or does not exclude node_modules');
   } else {

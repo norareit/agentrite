@@ -5,6 +5,7 @@ import {
   lstatSync,
   mkdirSync,
   mkdtempSync,
+  readdirSync,
   readFileSync,
   realpathSync,
   rmSync,
@@ -36,6 +37,9 @@ const templates = Object.fromEntries(
     readFileSync(new URL(`../templates/project/${path}`, import.meta.url), 'utf-8'),
   ]),
 );
+// The files of the kit's container/ directory, as a project's installed kit holds them.
+const CONTAINER_FILES = readdirSync(new URL('../container/', import.meta.url));
+const ignore = (existing) => dockerignore(existing, CONTAINER_FILES);
 const HARNESS_LISTS = [['claude'], ['opencode'], ['claude', 'opencode']];
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
 const EXCEPTION = '!node_modules/@ritenoar/agent-kit/container';
@@ -244,14 +248,14 @@ test('package.json with a check-changes script already is left unchanged', () =>
 // R10, R13
 
 test('.dockerignore is created keeping node_modules out except the kit container directory', () => {
-  const created = dockerignore(undefined);
+  const created = ignore(undefined);
   const lines = created.split('\n').filter((line) => line && !line.startsWith('#'));
   assert.deepEqual(lines, ['node_modules', EXCEPTION]);
 });
 
 test('.dockerignore that excludes node_modules without the exception gets it appended', () => {
-  assert.equal(dockerignore('.git\nnode_modules\n'), `.git\nnode_modules\n${EXCEPTION}\n`);
-  assert.equal(dockerignore('/node_modules/'), `/node_modules/\n${EXCEPTION}\n`);
+  assert.equal(ignore('.git\nnode_modules\n'), `.git\nnode_modules\n${EXCEPTION}\n`);
+  assert.equal(ignore('/node_modules/'), `/node_modules/\n${EXCEPTION}\n`);
 });
 
 test('.dockerignore that excludes the kit by a wildcard, or before its exception, gets it appended', () => {
@@ -262,18 +266,23 @@ test('.dockerignore that excludes the kit by a wildcard, or before its exception
     './node_modules\n',
     `${EXCEPTION}\nnode_modules\n`,
   ]) {
-    const amended = dockerignore(existing);
+    const amended = ignore(existing);
     assert.equal(amended, `${existing}${EXCEPTION}\n`, existing);
-    assert.equal(dockerignore(amended), undefined, `appending to ${existing} does not let the kit in`);
+    assert.equal(ignore(amended), undefined, `appending to ${existing} does not let the kit in`);
   }
 });
 
+test('.dockerignore that lets only one file of the kit container back in gets the directory exception', () => {
+  const existing = 'node_modules\n!node_modules/@ritenoar/agent-kit/container/entrypoint.sh\n';
+  assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`);
+});
+
 test('.dockerignore that holds the exception, or does not exclude node_modules, is left unchanged', () => {
-  assert.equal(dockerignore(`node_modules\n${EXCEPTION}\n`), undefined);
-  assert.equal(dockerignore('.git\n*/node_modules\n'), undefined);
-  assert.equal(dockerignore('node_modules_cache\n# node_modules\n'), undefined);
-  assert.equal(dockerignore('node_modules/**\n!node_modules/@ritenoar/agent-kit/container/**\n'), undefined);
-  assert.equal(dockerignore(''), undefined);
+  assert.equal(ignore(`node_modules\n${EXCEPTION}\n`), undefined);
+  assert.equal(ignore('.git\n*/node_modules\n'), undefined);
+  assert.equal(ignore('node_modules_cache\n# node_modules\n'), undefined);
+  assert.equal(ignore('node_modules/**\n!node_modules/@ritenoar/agent-kit/container/**\n'), undefined);
+  assert.equal(ignore(''), undefined);
 });
 
 // R15
@@ -340,7 +349,7 @@ test('a fresh project gets every file, listed as written, and exits 0', (t) => {
   assert.match(read('agent/compose.project.yml'), /^name: my-app-agent$/m);
   assert.equal(JSON.parse(read('package.json')).scripts['check-changes'], CHECK_CHANGES);
   assert.match(result.stdout, /^changed package\.json$/m);
-  assert.equal(read('.dockerignore'), dockerignore(undefined));
+  assert.equal(read('.dockerignore'), ignore(undefined));
   assert.match(result.stdout, /^wrote \.dockerignore$/m);
   assert.doesNotMatch(result.stdout, /skipped/);
   assert.notEqual(statSync(join(base, 'agent.sh')).mode & 0o111, 0);

@@ -78,7 +78,7 @@ the kit's own directory and the files from the project, calls them, and writes.
   the kit's `container/`, rather than by recognizing literal `node_modules` lines. Unit cases first for
   `**/node_modules`, `node_modules/**`, `node_modules/*`, an exception placed before the exclusion, and a comment
   (R10)
-- [ ] Review S4: decide the `.dockerignore` amendment by every file in the kit's `container/` directory, read from
+- [x] Review S4: decide the `.dockerignore` amendment by every file in the kit's `container/` directory, read from
   the installed kit, rather than by `entrypoint.sh` alone, so that an exception for one file does not pass for the
   directory. A unit case first for `node_modules` followed by an exception for `entrypoint.sh` only (R10)
 - [x] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
