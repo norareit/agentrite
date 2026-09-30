@@ -96,3 +96,12 @@ timestamp: 2026-09-27T22:45:28Z
   check-changes` passed. The packed-kit sandbox build was not repeated: neither fix touches the container or the files
   `init` generates. Every task in `plan.md` is ticked and every finding of the review is decided and applied, so the
   unit is ready for a re-review; status stays `in-progress` until then
+- 2026-09-30T11:24:00Z [OpenCode, openai/gpt-6-sol] completed a delta review of `0010-init-command` at commit
+  `135fe2cdddc39038b7de1b646175fb85176052b5`, compared with the prior review's commit
+  `185d9b6f46771884ff30ee3e262dd399f4ee7615`, saved at
+  `.reviews/0010-init-command/delta-185d9b6-to-135fe2c.md`. Finding: S4. Could not independently verify the
+  recorded eleven Docker/BuildKit builds or repeat the packed-kit sandbox build; the macOS and non-root Linux
+  suites, change check and direct S4 matcher probe ran
+- 2026-09-30T11:27:59Z [Claude Code, anthropic/claude-opus-5-5] accepted delta review finding S4 and added a task to
+  `plan.md` for it: the S3 matcher probed `entrypoint.sh` alone, so an ignore file letting only that file back in was
+  left unamended while `egress-proxy.mjs` and `sni.mjs`, which the image build also copies, stayed excluded
