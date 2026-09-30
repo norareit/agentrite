@@ -125,3 +125,14 @@ timestamp: 2026-09-27T22:45:28Z
   `plan.md` for it: the S4 fix appended the exception to a `.dockerignore` that excludes a kit file without excluding
   `node_modules`, which requirement 10 says to leave alone. The comment claiming only an exclusion of `node_modules`
   could keep the kit out was wrong, and goes with the fix
+- 2026-09-30T12:05:11Z [Claude Code, anthropic/claude-opus-5-5] applied S5 in `7cc4c0f`: `init` appends the
+  exception only when an existing `.dockerignore` excludes `node_modules` as a whole, judged by a file of another
+  package, and a kit container file with it. The unit cases for an exclusion of one kit file and of
+  `node_modules/@ritenoar` failed first. Against Docker 24 with BuildKit, the twelve ignore files checked for S4 still
+  agree, and for S5's two files `init` now leaves them alone, while Docker's build does exclude the kit. Residual,
+  as requirement 10 intends: a project that excludes the kit itself keeps a failing sandbox build, and `init` says
+  nothing about it
+- 2026-09-30T12:05:11Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on `7cc4c0f`. `node --test
+  tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 136 of 136 passed. `npm test` on the macOS host
+  with Node 26.9.0: 124 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed.
+  Every task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
