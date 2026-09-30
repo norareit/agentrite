@@ -71,3 +71,13 @@ timestamp: 2026-09-27T22:45:28Z
   Node 26.9.0, switched to with nvm at the human's request: 132 tests, 120 passed, 12 skipped, none failed, exit 0. The
   `tests/record-name.test.mjs` failure logged above is Node 22.9's alone. The 12 skips are the same bash 4 and GNU
   `stat` ones, which pass in the Linux container
+- 2026-09-30T11:08:21Z [OpenCode, openai/gpt-6-sol] completed a full review of `0010-init-command` at commit
+  `185d9b6f46771884ff30ee3e262dd399f4ee7615`, saved at `.reviews/0010-init-command/full-185d9b6.md`.
+  Findings: S1, S2, S3, P1, P2. Could not independently verify the recorded packed-kit scratch-project sandbox
+  build/run or OpenCode's actual start-up; the macOS and non-root Linux suites, pack listing and change check ran
+- 2026-09-30T11:13:17Z [human] decided review finding S2: `init` refuses a `package.json` without a `name`, as built and proposed
+  above, stopping before anything is written and exiting 1. This is a third non-zero exit beside those of
+  requirements 1 and 8
+- 2026-09-30T11:13:17Z [Claude Code, anthropic/claude-opus-5-5] accepted review findings S1, S3, P1 and P2. P1: added the ticked
+  task for the refusal the human decided, which was built before it was planned. P2: the shared helper task now
+  traces to R11. S1 and S3: added tasks to `plan.md` for the fixes, which follow

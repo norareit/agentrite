@@ -35,7 +35,7 @@ the kit's own directory and the files from the project, calls them, and writes.
 
 - [x] Move the extraction of a function from `container/entrypoint.sh`, now in
   `tests/entrypoint-home-owner.test.mjs`, into a helper shared with the new allowlist test, as a refactoring commit of
-  its own
+  its own (R11)
 - [x] Write `tests/entrypoint-allowlist.test.mjs`: `parse_allowlist` over a kit list and a project list admits the
   hosts of both, lowercased, once each; accepts an empty or missing project list; still refuses an address, a CIDR
   range and an allowlisted canary in either list (R11)
@@ -68,6 +68,16 @@ the kit's own directory and the files from the project, calls them, and writes.
   R14); a project without Playwright gets everything but the compose file and a non-zero exit (R8, R14)
 - [x] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13 to
   R15)
+- [x] Refuse a `package.json` that cannot be read or has no `name`, before anything is written, naming the file and
+  exiting 1, with an end-to-end case in `tests/agent-kit-init.test.mjs` (R7, and the human's decision in `record.md`)
+- [ ] Review S1: when the lockfile resolves no `playwright` and `agent/compose.project.yml` exists, report the file as
+  skipped, still say on standard error that the sandbox requires Playwright, and exit non-zero, with an end-to-end
+  case first (R8, R14)
+- [ ] Review S3: decide whether `.dockerignore` keeps the kit out by evaluating its patterns as Docker does, the last
+  matching one deciding and a pattern that matches a parent directory covering what is inside it, against a file in
+  the kit's `container/`, rather than by recognizing literal `node_modules` lines. Unit cases first for
+  `**/node_modules`, `node_modules/**`, `node_modules/*`, an exception placed before the exclusion, and a comment
+  (R10)
 - [x] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
   is for, which the project may edit, what to do with the notice for an existing `AGENTS.md`, and that the kit's own
   hosts need no listing, and name `templates/project/` for a project set up or repaired by hand. Add `KIT_ALLOWLIST`
