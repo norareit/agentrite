@@ -81,7 +81,7 @@ the kit's own directory and the files from the project, calls them, and writes.
 - [x] Review S4: decide the `.dockerignore` amendment by every file in the kit's `container/` directory, read from
   the installed kit, rather than by `entrypoint.sh` alone, so that an exception for one file does not pass for the
   directory. A unit case first for `node_modules` followed by an exception for `entrypoint.sh` only (R10)
-- [ ] Review S5: append the exception only when the existing `.dockerignore` excludes `node_modules` as a whole,
+- [x] Review S5: append the exception only when the existing `.dockerignore` excludes `node_modules` as a whole,
   judged by a path to another package inside it, as well as a file of the kit's `container/`, so that a pattern aimed
   at the kit or at one package alone is left as it is. Unit cases first for an exclusion of one kit file and of
   `node_modules/@ritenoar` (R10)

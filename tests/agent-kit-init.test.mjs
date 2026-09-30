@@ -277,6 +277,11 @@ test('.dockerignore that lets only one file of the kit container back in gets th
   assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`);
 });
 
+test('.dockerignore that excludes the kit without excluding node_modules as a whole is left unchanged', () => {
+  assert.equal(ignore('node_modules/@ritenoar/agent-kit/container/sni.mjs\n'), undefined);
+  assert.equal(ignore('node_modules/@ritenoar\n'), undefined);
+});
+
 test('.dockerignore that holds the exception, or does not exclude node_modules, is left unchanged', () => {
   assert.equal(ignore(`node_modules\n${EXCEPTION}\n`), undefined);
   assert.equal(ignore('.git\n*/node_modules\n'), undefined);
