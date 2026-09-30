@@ -33,18 +33,18 @@ the kit's own directory and the files from the project, calls them, and writes.
 
 ## Tasks
 
-- [ ] Move the extraction of a function from `container/entrypoint.sh`, now in
+- [x] Move the extraction of a function from `container/entrypoint.sh`, now in
   `tests/entrypoint-home-owner.test.mjs`, into a helper shared with the new allowlist test, as a refactoring commit of
   its own
-- [ ] Write `tests/entrypoint-allowlist.test.mjs`: `parse_allowlist` over a kit list and a project list admits the
+- [x] Write `tests/entrypoint-allowlist.test.mjs`: `parse_allowlist` over a kit list and a project list admits the
   hosts of both, lowercased, once each; accepts an empty or missing project list; still refuses an address, a CIDR
   range and an allowlisted canary in either list (R11)
-- [ ] Move the parsing in `container/entrypoint.sh` into `parse_allowlist`, run it over `KIT_ALLOWLIST` and
+- [x] Move the parsing in `container/entrypoint.sh` into `parse_allowlist`, run it over `KIT_ALLOWLIST` and
   `ALLOWLIST`, and add `KIT_ALLOWLIST` to its list of inputs and to `container/compose.yml` (R11)
-- [ ] Extend `tests/agent-wrapper.test.mjs`: the fake `docker` answers `config --format json`; a configuration
+- [x] Extend `tests/agent-wrapper.test.mjs`: the fake `docker` answers `config --format json`; a configuration
   without `PLAYWRIGHT_VERSION` exits non-zero naming `agent/compose.project.yml` and never calls `build` or `run`; one
   with it proceeds as before (R12)
-- [ ] Add the check to `container/agent.sh`, ahead of the image query (R12)
+- [x] Add the check to `container/agent.sh`, ahead of the image query (R12)
 - [ ] Write `templates/project/AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml`, modeled on
   Norareit's files with what is specific to Norareit replaced by `{{name}}` placeholders (R3, R4, R6, R7, R15)
 - [ ] Write `tests/agent-kit-init.test.mjs` for the pure functions: the usage errors (R1); the role wrappers equal
@@ -82,6 +82,6 @@ the kit's own directory and the files from the project, calls them, and writes.
 
 ## Commit Points
 
-- [ ] The kit supplies its own hosts, and the wrapper checks for `PLAYWRIGHT_VERSION`
+- [x] The kit supplies its own hosts, and the wrapper checks for `PLAYWRIGHT_VERSION`
 - [ ] The `agent-kit init` command
 - [ ] The README describes setting a project up with `init`

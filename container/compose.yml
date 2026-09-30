@@ -62,10 +62,20 @@ services:
       - "host.docker.internal:host-gateway"
 
     environment:
-      # The project's compose file supplies ALLOWLIST: the hostnames reachable over
-      # HTTPS on port 443, with everything else denied. Entries are hostnames only; the
-      # entrypoint refuses an address or a CIDR range. It is project-owned because what
-      # a project needs to reach is what varies most between them.
+      # The hostnames reachable over HTTPS on port 443, with everything else denied, are
+      # this KIT_ALLOWLIST together with the ALLOWLIST the project's compose file
+      # supplies, which may be empty or left out. Entries are hostnames only; the
+      # entrypoint refuses an address or a CIDR range. The hosts the kit itself needs
+      # are here, so that a kit release that needs another adds it without a change to
+      # any project, and a project's list holds only what the project needs besides,
+      # which is what varies most between them.
+      KIT_ALLOWLIST: |
+        # FIREWALL_PROBE below, and the Anthropic API that Claude Code uses
+        api.anthropic.com
+        # npm registry: npm ci inside the container
+        registry.npmjs.org
+        # The agent kit's release tarballs, which npm ci installs by URL
+        agent-kit.ritenoar.com
       #
       # The local model server on the host, reached through the Docker gateway. Only
       # this host and port are allowed, nothing else on the host.

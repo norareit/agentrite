@@ -111,6 +111,25 @@ if [ "$AGENT_UID" -eq 0 ] || [ "$AGENT_GID" -eq 0 ]; then
   exit 2
 fi
 
+# The Dockerfile's FROM line needs the project's Playwright version, and without it the
+# build fails with Docker's error, which does not say where the version belongs. Only the
+# project can supply it, so the kit checks for it here rather than writing it anywhere.
+# Compose merges both files and node reads the result; the host has node for npm already.
+playwright_version="$("${compose[@]}" config --format json | node -e '
+  let json = "";
+  process.stdin.on("data", (chunk) => (json += chunk));
+  process.stdin.on("end", () => {
+    const args = JSON.parse(json).services?.agent?.build?.args ?? {};
+    process.stdout.write(args.PLAYWRIGHT_VERSION ?? "");
+  });
+')"
+if [ -z "$playwright_version" ]; then
+  echo "agent.sh: the sandbox's configuration has no PLAYWRIGHT_VERSION build argument." >&2
+  echo "$project_compose must supply it, under services.agent.build.args, as the" >&2
+  echo "playwright version resolved in the project's package-lock.json." >&2
+  exit 2
+fi
+
 # The image name is the project's to choose, so ask Compose for it rather than
 # hard-coding one here.
 image="$("${compose[@]}" config --images | head -1)"

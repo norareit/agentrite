@@ -7,9 +7,19 @@ import { test } from 'node:test';
 
 const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
 
+// The merged configuration Compose reports for a project whose compose file supplies `buildArgs`.
+function composeConfig(buildArgs) {
+  return JSON.stringify({ name: 'project-agent', services: { agent: { image: 'image', build: { args: buildArgs } } } });
+}
+
 // A project with the kit's wrapper installed at `kitPath` under `root`, and a `docker` that records each call and
-// the AGENT_KIT_CONTAINER it saw, answering only the two queries the wrapper makes before running Compose.
-function setUp(t, kitPath = 'node_modules/@ritenoar/agent-kit/container') {
+// the AGENT_KIT_CONTAINER it saw, answering only the three queries the wrapper makes before running Compose. Its
+// merged configuration has the build arguments `buildArgs`.
+function setUp(
+  t,
+  kitPath = 'node_modules/@ritenoar/agent-kit/container',
+  buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
+) {
   const base = mkdtempSync(join(tmpdir(), 'agent-wrapper-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, 'project');
@@ -22,11 +32,14 @@ function setUp(t, kitPath = 'node_modules/@ritenoar/agent-kit/container') {
   const bin = join(base, 'bin');
   mkdirSync(bin);
   const calls = join(base, 'docker-calls');
+  const config = join(base, 'compose-config.json');
+  writeFileSync(config, composeConfig(buildArgs));
   writeFileSync(
     join(bin, 'docker'),
     `#!/usr/bin/env bash
 if [ "$1 $2" = "image inspect" ]; then exit 0; fi
 if [[ " $* " == *" config --images "* ]]; then echo image; exit 0; fi
+if [[ " $* " == *" config --format json "* ]]; then cat "${config}"; exit 0; fi
 echo "AGENT_KIT_CONTAINER=$AGENT_KIT_CONTAINER docker $*" >> "${calls}"
 `,
   );
@@ -84,3 +97,17 @@ test('the wrapper runs Compose from the project root with the kit located relati
     `${expectedPrefix} run --rm --volume ${root}:/work agent echo hi`,
   ]);
 });
+
+for (const [what, buildArgs] of [
+  ['no build arguments of the project', {}],
+  ['an empty PLAYWRIGHT_VERSION', { PLAYWRIGHT_VERSION: '' }],
+]) {
+  test(`the wrapper refuses a configuration with ${what}, naming the project's compose file, before building`, (t) => {
+    const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container', buildArgs);
+    const result = run(root, '--rebuild');
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /PLAYWRIGHT_VERSION/);
+    assert.match(result.stderr, new RegExp(`${root}/agent/compose\\.project\\.yml must supply`));
+    assert.deepEqual(dockerCalls(), []);
+  });
+}

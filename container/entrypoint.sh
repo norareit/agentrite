@@ -14,12 +14,14 @@ log() { printf '[entrypoint] %s\n' "$*" >&2; }
 die() { printf '[entrypoint] FATAL: %s\n' "$*" >&2; exit 1; }
 
 # Inputs, all declared in the compose files.
-#   ALLOWLIST         newline-separated hostnames; '#' comments and blank lines allowed
+#   KIT_ALLOWLIST     the hostnames the kit itself needs, in the kit's compose file
+#   ALLOWLIST         the hostnames the project needs besides, in the project's; may be
+#                     empty or missing. Both lists are newline-separated hostnames, with
+#                     '#' comments and blank lines allowed
 #   MODEL_SERVER_HOST host gateway alias the local model server listens on
 #   MODEL_SERVER_PORT its port
 #   FIREWALL_CANARY   a host that must stay unreachable, proving default-deny denies
 #   FIREWALL_PROBE    a host that must be reachable, proving the allowlist allows
-ALLOWLIST="${ALLOWLIST:-}"
 MODEL_SERVER_HOST="${MODEL_SERVER_HOST:-host.docker.internal}"
 MODEL_SERVER_PORT="${MODEL_SERVER_PORT:-11434}"
 FIREWALL_CANARY="${FIREWALL_CANARY:-example.com}"
@@ -70,21 +72,36 @@ check_home_owner "$agent_uid" /home/agent
 
 # Every allowlist entry is a hostname, admitted by the proxy on 443 alone. A CIDR range
 # is refused rather than ignored: there is no longer a rule that could admit one, and
-# silently dropping an entry would leave the allowlist saying more than it does.
-hosts=()
-while IFS= read -r line; do
-  line="${line%%#*}"
-  line="${line//[[:space:]]/}"
-  [ -n "$line" ] || continue
-  if [[ "$line" =~ ^[0-9]+(\.[0-9]+){3}(/[0-9]+)?$ ]]; then
-    die "ALLOWLIST entry $line is an address; egress is admitted by hostname only, so list the host"
-  fi
-  hosts+=("${line,,}")
-done <<< "$ALLOWLIST"
-[ "${#hosts[@]}" -gt 0 ] || die "ALLOWLIST has no hostnames"
-for host in "${hosts[@]}"; do
-  [ "$host" != "${FIREWALL_CANARY,,}" ] || die "the firewall canary $FIREWALL_CANARY is allowlisted"
-done
+# silently dropping an entry would leave the allowlist saying more than it does. A list
+# is named rather than passed, so that an error says which list holds the entry.
+# Appends the named list's hosts, lowercased, to hosts.
+read_allowlist() {
+  local name="$1" line
+  while IFS= read -r line; do
+    line="${line%%#*}"
+    line="${line//[[:space:]]/}"
+    [ -n "$line" ] || continue
+    [[ ! "$line" =~ ^[0-9]+(\.[0-9]+){3}(/[0-9]+)?$ ]] \
+      || die "$name entry $line is an address; egress is admitted by hostname only, so list the host"
+    [ "${line,,}" != "${FIREWALL_CANARY,,}" ] \
+      || die "the firewall canary $FIREWALL_CANARY is allowlisted in $name"
+    hosts+=("${line,,}")
+  done <<< "${!name:-}"
+}
+# Sets hosts to those of every named list together. A host in more than one list, or
+# listed twice, is admitted once.
+parse_allowlist() {
+  local name
+  hosts=()
+  for name in "$@"; do
+    read_allowlist "$name"
+  done
+  [ "${#hosts[@]}" -gt 0 ] || die "$* have no hostnames"
+  mapfile -t hosts < <(printf '%s\n' "${hosts[@]}" | awk '!seen[$0]++')
+}
+# The kit's hosts come from its own compose file and the project's from the project's,
+# so a project never lists a host the kit needs.
+parse_allowlist KIT_ALLOWLIST ALLOWLIST
 
 log "installing default-deny egress firewall"
 iptables -F
