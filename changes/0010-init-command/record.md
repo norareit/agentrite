@@ -115,3 +115,13 @@ timestamp: 2026-09-27T22:45:28Z
   tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 135 of 135 passed. `npm test` on the macOS host
   with Node 26.9.0: 123 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed. Every
   task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
+- 2026-09-30T11:39:29Z [OpenCode, openai/gpt-6-sol] completed a delta review of `0010-init-command` at commit
+  `9f02f9749fec2cc2ce1c43d0c9aa398d7ce3cef9`, compared with the previous review's commit
+  `135fe2cdddc39038b7de1b646175fb85176052b5`, saved at
+  `.reviews/0010-init-command/delta-135fe2c-to-9f02f97.md`. Finding: S5. Could not independently verify the
+  recorded twelve Docker/BuildKit builds or repeat the packed-kit sandbox run; the macOS and non-root Linux
+  suites, change check and direct matcher probes ran
+- 2026-09-30T12:04:06Z [Claude Code, anthropic/claude-opus-5-5] accepted delta review finding S5 and added a task to
+  `plan.md` for it: the S4 fix appended the exception to a `.dockerignore` that excludes a kit file without excluding
+  `node_modules`, which requirement 10 says to leave alone. The comment claiming only an exclusion of `node_modules`
+  could keep the kit out was wrong, and goes with the fix
