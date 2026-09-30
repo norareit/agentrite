@@ -160,3 +160,19 @@ timestamp: 2026-09-27T22:45:28Z
   tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 137 of 137 passed. `npm test` on the macOS host
   with Node 26.9.0: 125 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed.
   Every task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
+- 2026-09-30T12:37:41Z [OpenCode, openai/gpt-6-sol] completed a delta review of `0010-init-command` at commit
+  `259712fb009d9ac66adf6efc428ed3da140de01c`, compared with the previous review's commit
+  `2dbee3b6ca30309b0d9eff03c3472ab73acd5ffb`, saved at
+  `.reviews/0010-init-command/delta-2dbee3b-to-259712f.md`. Finding: S7. Could not independently verify the
+  recorded Docker/BuildKit cases or repeat the packed-kit sandbox run; the macOS and non-root Linux suites,
+  change check and direct matcher probes ran
+- 2026-09-30T12:41:39Z [Claude Code, anthropic/claude-opus-5-5] accepted delta review finding S7 as valid: a
+  `node_modules` line cancelled by a later `!node_modules` still counted under the line-by-line rule. Proposed not to
+  patch it, since it was the fourth finding against a rule for whether a `.dockerignore` excludes `node_modules`,
+  which has no exact meaning once patterns combine, but to amend requirement 10 to judge by whether Docker's rules
+  keep a kit container file out, which is exact
+- 2026-09-30T12:41:39Z [human] decided, with the implementer, to amend requirement 10 in `spec.md` that way, and
+  had the implementer make the change rather than hand it to a planner. `init` now appends the exception whenever
+  Docker's rules keep any file of the kit's `container/` out of the build context. This reverses S5: a project that
+  keeps the kit out without excluding `node_modules` also gets the exception. The decision is added to the spec's
+  Decisions

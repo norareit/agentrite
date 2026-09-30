@@ -52,8 +52,8 @@ project's own lockfile, so the sandbox currently requires the project to depend 
 9. It adds a `check-changes` script, `node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs`, to the
    project's `package.json`, keeping every other key, their order, and the file's indentation
 10. It writes a `.dockerignore` that keeps `node_modules` out of the build context except the kit's `container/`
-    directory. When a `.dockerignore` exists and excludes `node_modules` without that exception, it appends the
-    exception; otherwise it leaves the file alone
+    directory. When a `.dockerignore` exists and, by Docker's own rules, keeps any file of the kit's `container/`
+    directory out of the build context, it appends that exception; otherwise it leaves the file alone
 11. The sandbox admits the hosts the kit itself needs without the project listing them: the start-up probe host, the
     npm registry, and `agent-kit.ritenoar.com`. They are declared in the kit's `container/compose.yml`, and the
     entrypoint admits them together with the project's `ALLOWLIST`, applying the same validation to both. A project
@@ -89,6 +89,11 @@ project's own lockfile, so the sandbox currently requires the project to depend 
 * **`package.json` and `.dockerignore` are amended, not skipped.** Every project has a `package.json`, and many have
   a `.dockerignore`, so skipping them would leave the change check unwired and the build context unable to reach the
   kit. Each amendment only adds, and only what is missing.
+* **An existing `.dockerignore` is judged by whether Docker keeps the kit out, not by whether it excludes
+  `node_modules`.** Whether a file excludes `node_modules` has no exact meaning once patterns, wildcards and
+  exceptions combine, and every rule tried for it during review was defeated by some combination. Whether Docker's
+  rules keep a kit file out of the build context is exact. A project that keeps the kit out on purpose also gets the
+  exception, since its sandbox cannot be built without it.
 * **`AGENTS.md` and `CLAUDE.md` are always written, and never edited.** Both are written whatever the harnesses,
   since `CLAUDE.md` costs nothing to a project that does not use Claude Code and saves a second run of `init` for one
   that starts to. An existing `AGENTS.md` is prose the project wrote, with its own layout, so there is no place `init`
