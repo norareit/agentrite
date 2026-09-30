@@ -105,3 +105,13 @@ timestamp: 2026-09-27T22:45:28Z
 - 2026-09-30T11:27:59Z [Claude Code, anthropic/claude-opus-5-5] accepted delta review finding S4 and added a task to
   `plan.md` for it: the S3 matcher probed `entrypoint.sh` alone, so an ignore file letting only that file back in was
   left unamended while `egress-proxy.mjs` and `sni.mjs`, which the image build also copies, stayed excluded
+- 2026-09-30T11:29:26Z [Claude Code, anthropic/claude-opus-5-5] applied S4 in `0ee74d2`: `init` checks every file in the
+  installed kit's `container/` directory against an existing `.dockerignore`, and appends the directory's exception when
+  any is excluded. The unit case for an exception letting `entrypoint.sh` alone back in failed first. Against Docker 24
+  with BuildKit, building an image that copies `entrypoint.sh`, `egress-proxy.mjs` and `sni.mjs` as the kit's Dockerfile
+  does, twelve ignore files, S4's among them, agreed: `init` amends each exactly when that build fails, and each amended
+  file builds
+- 2026-09-30T11:29:26Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on `0ee74d2`. `node --test
+  tests/*.test.mjs` in the `node:22` image, as uid 1000 with no network: 135 of 135 passed. `npm test` on the macOS host
+  with Node 26.9.0: 123 passed, 12 skipped for bash 4 and GNU `stat`, none failed. `npm run check-changes` passed. Every
+  task in `plan.md` is ticked; the unit is ready for another delta review, and status stays `in-progress`
