@@ -45,9 +45,9 @@ the kit's own directory and the files from the project, calls them, and writes.
   without `PLAYWRIGHT_VERSION` exits non-zero naming `agent/compose.project.yml` and never calls `build` or `run`; one
   with it proceeds as before (R12)
 - [x] Add the check to `container/agent.sh`, ahead of the image query (R12)
-- [ ] Write `templates/project/AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml`, modeled on
+- [x] Write `templates/project/AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml`, modeled on
   Norareit's files with what is specific to Norareit replaced by `{{name}}` placeholders (R3, R4, R6, R7, R15)
-- [ ] Write `tests/agent-kit-init.test.mjs` for the pure functions: the usage errors (R1); the role wrappers equal
+- [x] Write `tests/agent-kit-init.test.mjs` for the pure functions: the usage errors (R1); the role wrappers equal
   `plannedFiles` (R2); `AGENTS.md` holds the Development Guidelines, Roles and Changes in this project sections,
   naming `process.md`, the three role files and `npm run check-changes` (R3); `CLAUDE.md` for every harness list,
   importing `@AGENTS.md` (R4); the notice for an existing `AGENTS.md` names the three sections and holds their text
@@ -59,12 +59,12 @@ the kit's own directory and the files from the project, calls them, and writes.
   when it excludes `node_modules` without the exception, and unchanged otherwise (R10, R13); every generated
   template has no `{{` left after filling, and the `AGENTS.md` template holds the three headings the notice cuts by
   (R15)
-- [ ] Add end-to-end cases to the same file that run the executable in a temporary project: a fresh project gets
+- [x] Add end-to-end cases to the same file that run the executable in a temporary project: a fresh project gets
   every file, `agent.sh` is executable and execs the kit's wrapper with its own directory (R6), and the output lists
   each file written (R14); a project with some files already present, among them `AGENTS.md` and `CLAUDE.md`, gets the
   rest, the present ones are named as skipped and byte for byte unchanged, and the output holds the notices (R5, R13,
   R14); a project without Playwright gets everything but the compose file and a non-zero exit (R8, R14)
-- [ ] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13 to
+- [x] Write `scripts/agent-kit.mjs` until both test files pass, and register it in `package.json` (R1 to R10, R13 to
   R15)
 - [ ] Rewrite "Installing it into a project" in `README.md` around `npx agent-kit init claude opencode`: what each file
   is for, which the project may edit, what to do with the notice for an existing `AGENTS.md`, and that the kit's own
@@ -83,5 +83,5 @@ the kit's own directory and the files from the project, calls them, and writes.
 ## Commit Points
 
 - [x] The kit supplies its own hosts, and the wrapper checks for `PLAYWRIGHT_VERSION`
-- [ ] The `agent-kit init` command
+- [x] The `agent-kit init` command
 - [ ] The README describes setting a project up with `init`
