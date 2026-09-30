@@ -115,7 +115,10 @@ fi
 # build fails with Docker's error, which does not say where the version belongs. Only the
 # project can supply it, so the kit checks for it here rather than writing it anywhere.
 # Compose merges both files and node reads the result; the host has node for npm already.
-playwright_version="$("${compose[@]}" config --format json | node -e '
+# The configuration is captured first, so that a file Compose refuses stops here with
+# Compose's own error rather than reaching node as empty input.
+config="$("${compose[@]}" config --format json)"
+playwright_version="$(printf '%s' "$config" | node -e '
   let json = "";
   process.stdin.on("data", (chunk) => (json += chunk));
   process.stdin.on("end", () => {

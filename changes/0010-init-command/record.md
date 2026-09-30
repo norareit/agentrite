@@ -47,3 +47,7 @@ timestamp: 2026-09-27T22:45:28Z
   a proposal until the human decides it. `scripts/agent-kit.mjs` repeats `isMain` from `agent-kit-roles.mjs` rather than
   sharing it, because sharing would change `agent-kit-roles.mjs`, which the spec's decisions leave as it is. A later
   unit could move it into a module both import
+- 2026-09-30T10:46:00Z [Claude Code, anthropic/claude-opus-5-5] added a task to `plan.md` for a flaw the verification run found in
+  the R12 check: when Compose refused the project's file, for example with `args:` left empty, the wrapper still
+  piped Compose's empty output into `node`, which printed a JSON stack trace under Compose's error. The
+  configuration is now captured before it is read. The regression test failed before the fix and passes after it

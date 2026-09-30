@@ -33,13 +33,17 @@ function setUp(
   mkdirSync(bin);
   const calls = join(base, 'docker-calls');
   const config = join(base, 'compose-config.json');
-  writeFileSync(config, composeConfig(buildArgs));
+  // Build arguments of `null` stand for a configuration Compose refuses, so the query fails.
+  writeFileSync(config, buildArgs === null ? '' : composeConfig(buildArgs));
   writeFileSync(
     join(bin, 'docker'),
     `#!/usr/bin/env bash
 if [ "$1 $2" = "image inspect" ]; then exit 0; fi
 if [[ " $* " == *" config --images "* ]]; then echo image; exit 0; fi
-if [[ " $* " == *" config --format json "* ]]; then cat "${config}"; exit 0; fi
+if [[ " $* " == *" config --format json "* ]]; then
+  [ -s "${config}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
+  cat "${config}"; exit 0
+fi
 echo "AGENT_KIT_CONTAINER=$AGENT_KIT_CONTAINER docker $*" >> "${calls}"
 `,
   );
@@ -111,3 +115,12 @@ for (const [what, buildArgs] of [
     assert.deepEqual(dockerCalls(), []);
   });
 }
+
+test("the wrapper stops with Compose's own error when Compose refuses the configuration", (t) => {
+  const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container', null);
+  const result = run(root, '--rebuild');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /validating compose\.project\.yml: invalid/);
+  assert.doesNotMatch(result.stderr, /SyntaxError|JSON/);
+  assert.deepEqual(dockerCalls(), []);
+});

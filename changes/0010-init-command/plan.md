@@ -45,6 +45,8 @@ the kit's own directory and the files from the project, calls them, and writes.
   without `PLAYWRIGHT_VERSION` exits non-zero naming `agent/compose.project.yml` and never calls `build` or `run`; one
   with it proceeds as before (R12)
 - [x] Add the check to `container/agent.sh`, ahead of the image query (R12)
+- [x] Stop with Compose's own error when Compose refuses the configuration, before the check reads it, with a
+  regression test in `tests/agent-wrapper.test.mjs` (R12)
 - [x] Write `templates/project/AGENTS.md`, `CLAUDE.md`, `agent.sh` and `agent/compose.project.yml`, modeled on
   Norareit's files with what is specific to Norareit replaced by `{{name}}` placeholders (R3, R4, R6, R7, R15)
 - [x] Write `tests/agent-kit-init.test.mjs` for the pure functions: the usage errors (R1); the role wrappers equal
