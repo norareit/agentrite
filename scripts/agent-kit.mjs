@@ -345,12 +345,13 @@ function init(root, harnesses) {
   for (const notice of notices) console.log(`\n${notice}`);
 
   if (version !== undefined) return 0;
-  if (exists(resolve(root, COMPOSE_FILE))) {
-    console.log(`skipped ${COMPOSE_FILE}, which exists`);
-    return 0;
-  }
+  // An existing compose file is kept, but its Playwright version does not save the build: the image installs
+  // Playwright's system libraries from the project's lockfile.
+  const composeExists = exists(resolve(root, COMPOSE_FILE));
+  if (composeExists) console.log(`skipped ${COMPOSE_FILE}, which exists`);
   console.error(
-    `agent-kit: ${COMPOSE_FILE} was not written, because package-lock.json resolves no playwright.\n` +
+    `agent-kit: package-lock.json resolves no playwright, so ${COMPOSE_FILE} ` +
+      `${composeExists ? 'was left as it is' : 'was not written'}.\n` +
       "The sandbox requires the project to depend on Playwright: the image takes Playwright's browsers at the\n" +
       'version the project resolved. Install it, then run init again.',
   );

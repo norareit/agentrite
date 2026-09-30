@@ -101,10 +101,12 @@ holding `@AGENTS.md`.
   `container/` directory back in, that exception is appended, so that the image build can reach the kit. Otherwise it
   is left alone
 
-The sandbox requires the project to depend on Playwright, because the image takes Playwright's browsers at the
-version the project resolved. `init` takes that version from `package-lock.json`. When the lockfile resolves no
-`playwright`, it writes everything else, but not `agent/compose.project.yml`, says why on standard error, and exits
-non-zero. It also refuses to run, writing nothing, when `package.json` has no `name`.
+The sandbox requires the project to depend on Playwright, because the image takes Playwright's browsers at the version
+the project resolved. `init` takes that version from `package-lock.json`. When the lockfile resolves no `playwright`, it
+writes everything else, but not `agent/compose.project.yml`, says why on standard error, and exits non-zero. An existing
+`agent/compose.project.yml` is left as it is, and the run still says why and exits non-zero, because the image build
+needs Playwright in the lockfile whatever version the file names. It also refuses to run, writing nothing, when
+`package.json` has no `name`.
 
 `init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
 `node_modules/@ritenoar/agent-kit/templates/project/`. A project set up or repaired by hand starts from the same

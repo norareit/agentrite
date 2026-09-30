@@ -403,6 +403,18 @@ test('a project without playwright gets everything but the compose file, and exi
   }
 });
 
+test('a project without playwright whose compose file exists keeps it, and still exits non-zero', (t) => {
+  const { base, run, read } = project(t, { lockfile: null });
+  mkdirSync(join(base, 'agent'));
+  writeFileSync(join(base, 'agent', 'compose.project.yml'), 'ours\n');
+  const result = run('init', 'claude');
+  assert.notEqual(result.status, 0);
+  assert.equal(read('agent/compose.project.yml'), 'ours\n');
+  assert.match(result.stdout, /^skipped agent\/compose\.project\.yml\b/m);
+  assert.match(result.stderr, /requires the project to depend on Playwright/);
+  assert.ok(exists(join(base, 'AGENTS.md')));
+});
+
 test('a usage error writes nothing and exits non-zero', (t) => {
   for (const args of [[], ['init'], ['init', 'codex'], ['setup', 'claude']]) {
     const { base, run, read } = project(t);

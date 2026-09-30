@@ -70,7 +70,7 @@ the kit's own directory and the files from the project, calls them, and writes.
   R15)
 - [x] Refuse a `package.json` that cannot be read or has no `name`, before anything is written, naming the file and
   exiting 1, with an end-to-end case in `tests/agent-kit-init.test.mjs` (R7, and the human's decision in `record.md`)
-- [ ] Review S1: when the lockfile resolves no `playwright` and `agent/compose.project.yml` exists, report the file as
+- [x] Review S1: when the lockfile resolves no `playwright` and `agent/compose.project.yml` exists, report the file as
   skipped, still say on standard error that the sandbox requires Playwright, and exit non-zero, with an end-to-end
   case first (R8, R14)
 - [ ] Review S3: decide whether `.dockerignore` keeps the kit out by evaluating its patterns as Docker does, the last
