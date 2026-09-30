@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-09-27T22:45:28Z
 ---
 
@@ -27,3 +27,9 @@ timestamp: 2026-09-27T22:45:28Z
 - 2026-09-27T22:55:11Z [Claude Code, anthropic/claude-opus-5-5] added requirement 15 for `templates/project/`, with
   the notice's sections cut from the `AGENTS.md` template, renumbered the README and test requirements to 16 and 17,
   and added the decision, the template task and the checks that go with it. Status left at `draft`
+- 2026-09-30T10:05:36Z [human] approved `spec.md` and `plan.md` as they stand at `1f9c89e`, and asked for the unit to
+  be implemented. Status `approved`
+- 2026-09-30T10:05:36Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role. Status `in-progress`
+- 2026-09-30T10:12:00Z [Claude Code, anthropic/claude-opus-5-5] added a task and two files to `plan.md`: the
+  allowlist test cuts `parse_allowlist` out of the shipped entrypoint exactly as the home-owner test cuts
+  `check_home_owner`, so that extraction moves into a shared test helper rather than being written twice

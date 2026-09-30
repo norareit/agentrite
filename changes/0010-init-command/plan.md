@@ -25,12 +25,17 @@ the kit's own directory and the files from the project, calls them, and writes.
 - `scripts/agent-kit.mjs`: new, the `agent-kit` executable with its `init` subcommand
 - `package.json`: `agent-kit` under `bin`, `scripts/agent-kit.mjs` under `files`
 - `tests/entrypoint-allowlist.test.mjs`: new
+- `tests/entrypoint-function.mjs`: new, the helper that cuts a function out of the shipped entrypoint
+- `tests/entrypoint-home-owner.test.mjs`: uses that helper
 - `tests/agent-wrapper.test.mjs`: the fake `docker` answers the configuration query; the new check's tests
 - `tests/agent-kit-init.test.mjs`: new
 - `README.md`: "Installing it into a project" rewritten around `init`; the sandbox section names `KIT_ALLOWLIST`
 
 ## Tasks
 
+- [ ] Move the extraction of a function from `container/entrypoint.sh`, now in
+  `tests/entrypoint-home-owner.test.mjs`, into a helper shared with the new allowlist test, as a refactoring commit of
+  its own
 - [ ] Write `tests/entrypoint-allowlist.test.mjs`: `parse_allowlist` over a kit list and a project list admits the
   hosts of both, lowercased, once each; accepts an empty or missing project list; still refuses an address, a CIDR
   range and an allowlisted canary in either list (R11)
