@@ -37,5 +37,19 @@ timestamp: 2026-10-02T14:01:59Z
   those of `agentrite-roles` exactly, which a list that marks them for `refresh` would not. So the refactoring cuts
   out only `shimFile`, what `agent.sh` is, and `kitOwnedFiles` is written with `refresh`, its one caller. The
   requirements are untouched
+- 2026-10-02T15:49:47Z [Claude Code, anthropic/claude-opus-5-5] wrote `tests/agentrite-refresh.test.mjs`, with the
+  unit tests of `refreshedWrapper` and the end-to-end tests of the command in one go, where the plan has them as two
+  steps, and saw the file fail on the missing export. Wrote `refreshedWrapper`, `kitOwnedFiles` and `refresh`. One
+  unit test then failed because of its own input: it pinned a model on the line straight after `description: >-`,
+  inside the folded text, which no YAML file holds; it now pins it ahead of the description. `npm test` passed, 170 of
+  170. The two commit points for the function and for the command are one commit, since the tests of both are in one
+  file. Beyond the plan's list, the tests also cover a folded description of other text being replaced whole, a second
+  refresh of a refreshed wrapper changing nothing, a shim with the right content that is not executable, a dangling
+  symbolic link, and the command run through a `node_modules/.bin` link
+- 2026-10-02T15:49:47Z [Claude Code, anthropic/claude-opus-5-5] two things the tests pin down that the spec leaves to
+  the implementation. A line in the frontmatter that is not a key line belongs to the key above it, which is a little
+  wider than the plan's wording of indented lines, list items and blank lines: it also keeps a comment with the key it
+  follows. And a shim whose content is right but which is not executable is reported as refreshed, not as up to date,
+  since requirement 6 has the command make it executable
 
 ## Amendments

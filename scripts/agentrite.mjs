@@ -168,6 +168,17 @@ function shimFile(templates) {
 }
 
 /**
+ * The generated files that hold nothing but what the kit put there, which refresh keeps as the release writes
+ * them: the role wrappers, whose frontmatter a project may have added keys to, and the shim.
+ *
+ * @param {{ templates: Record<string, string>, harnesses: string[] }} project
+ * @returns {{ path: string, content: string, executable?: boolean, keepsFrontmatter?: boolean }[]}
+ */
+function kitOwnedFiles({ templates, harnesses }) {
+  return [...plannedFiles(harnesses).map((file) => ({ ...file, keepsFrontmatter: true })), shimFile(templates)];
+}
+
+/**
  * The files init creates, filled from the templates. The compose file is left out without a Playwright version.
  *
  * @param {{
@@ -195,6 +206,59 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
     harness_hosts: harnessHosts(harnesses),
   });
   return [...files, { path: COMPOSE_FILE, content: compose }];
+}
+
+/**
+ * A wrapper as its frontmatter lines, between a first line of `---` and the next one, and the lines after them.
+ * Undefined for a text that does not open with such a block.
+ *
+ * @param {string} wrapper
+ * @returns {{ frontmatter: string[], rest: string[] } | undefined}
+ */
+function splitWrapper(wrapper) {
+  const lines = wrapper.split('\n');
+  const end = lines.indexOf('---', 1);
+  if (lines[0] !== '---' || end === -1) return undefined;
+  return { frontmatter: lines.slice(1, end), rest: lines.slice(end + 1) };
+}
+
+/**
+ * The frontmatter's keys, each with its lines: the line that names it at the left margin and every line up to the
+ * next key, which holds a value that runs on, such as a folded text, a nested map or a list.
+ *
+ * @param {string[]} frontmatter
+ * @returns {{ name: string, lines: string[] }[]}
+ */
+function keyBlocks(frontmatter) {
+  /** @type {{ name: string, lines: string[] }[]} */ const blocks = [];
+  for (const line of frontmatter) {
+    const key = line.match(/^([A-Za-z_][\w-]*):/);
+    if (key) blocks.push({ name: key[1], lines: [line] });
+    else blocks.at(-1)?.lines.push(line);
+  }
+  return blocks;
+}
+
+/**
+ * What to write over a wrapper a project already has: the wrapper as this release renders it, with every
+ * frontmatter key of the existing one that the release does not write kept after the release's own, in the order
+ * they had. That keeps a model the project pinned for the role. The keys the release writes and the whole body are
+ * the release's.
+ *
+ * @param {string} existing
+ * @param {string} rendered
+ * @returns {string}
+ */
+export function refreshedWrapper(existing, rendered) {
+  const current = splitWrapper(existing);
+  const release = splitWrapper(rendered);
+  if (current === undefined || release === undefined) return rendered;
+
+  const written = new Set(keyBlocks(release.frontmatter).map((block) => block.name));
+  const kept = keyBlocks(current.frontmatter)
+    .filter((block) => !written.has(block.name))
+    .flatMap((block) => block.lines);
+  return ['---', ...release.frontmatter, ...kept, '---', ...release.rest].join('\n');
 }
 
 /**
@@ -493,14 +557,51 @@ function init(root, harnesses) {
 }
 
 /**
- * Not written yet.
+ * What is at `path`: nothing, a regular file, or something a file must not be written over, such as a symbolic
+ * link, which could lead outside the project, or a directory.
  *
- * @param {string} _root
- * @param {string[]} _harnesses
+ * @param {string} path
+ * @returns {'missing' | 'file' | 'other'}
+ */
+function kindOf(path) {
+  if (!exists(path)) return 'missing';
+  return lstatSync(path).isFile() ? 'file' : 'other';
+}
+
+/**
+ * Makes the kit's own files in the project at `root` what this release writes, prints what it did to each, and
+ * returns the exit status.
+ *
+ * @param {string} root
+ * @param {string[]} harnesses
  * @returns {number}
  */
-function refresh(_root, _harnesses) {
-  throw new Error('refresh is not implemented');
+function refresh(root, harnesses) {
+  let status = 0;
+  for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses })) {
+    const absolute = resolve(root, file.path);
+    const kind = kindOf(absolute);
+    if (kind === 'other') {
+      console.error(`agentrite: left ${file.path}, which is not a regular file`);
+      status = 1;
+      continue;
+    }
+
+    const existing = kind === 'file' ? readFileSync(absolute, 'utf-8') : undefined;
+    const content =
+      existing !== undefined && file.keepsFrontmatter ? refreshedWrapper(existing, file.content) : file.content;
+    const executable = !file.executable || (kind === 'file' && (lstatSync(absolute).mode & 0o111) !== 0);
+    if (existing === content && executable) {
+      console.log(`up to date ${file.path}`);
+      continue;
+    }
+
+    mkdirSync(dirname(absolute), { recursive: true });
+    writeFileSync(absolute, content);
+    if (file.executable) chmodSync(absolute, 0o755);
+    console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${file.path}`);
+  }
+  return status;
 }
 
 /**

@@ -58,14 +58,14 @@ the ones 0011 and 0012 left.
   exiting through a stub that throws, until the parsing tests pass and every other `init` test still does (R1, R2)
 - [x] As a refactoring commit of its own, cut `shimFile(templates)` out of `projectFiles`, returning what
   `agent.sh` is, and have `projectFiles` call it. No test changes, and all pass (R6)
-- [ ] Write the unit tests of `refreshedWrapper` in `tests/agentrite-refresh.test.mjs`: an existing wrapper equal
+- [x] Write the unit tests of `refreshedWrapper` in `tests/agentrite-refresh.test.mjs`: an existing wrapper equal
   to the rendered one comes back unchanged; `model: x` added to either harness's frontmatter is kept, after the
   kit's keys; two added keys keep their order; a key with a nested value over several lines, and one holding a
   list, are kept whole; a changed `description`, and a changed `mode` or `name`, take the rendered value; a body
   with an older pointer line and an added paragraph becomes the rendered body; a file with no frontmatter becomes
   the rendered file. See them fail (R4, R5, R12)
-- [ ] Write `refreshedWrapper` until they pass (R4, R5)
-- [ ] Write the end-to-end tests in the same file, running the executable in a temporary project: wrappers
+- [x] Write `refreshedWrapper` until they pass (R4, R5)
+- [x] Write the end-to-end tests in the same file, running the executable in a temporary project: wrappers
   holding the old package's path and a pinned model, and an `agent.sh` with other content and no executable bit,
   are refreshed, the pin is kept, the output names each file as refreshed and the exit status is 0 (R3, R4, R6,
   R8); a second run names each as up to date and leaves every file's content and modification time as it was
@@ -76,7 +76,7 @@ the ones 0011 and 0012 left.
   target is unchanged, the other files are refreshed and the exit status is 1 (R9); a project with no
   `package.json` and no lockfile is refreshed (R10); no harness and an unknown one write nothing and exit 2 (R1).
   See them fail (R12)
-- [ ] Write `kitOwnedFiles({ templates, harnesses })`, returning the wrappers, marked as keeping their
+- [x] Write `kitOwnedFiles({ templates, harnesses })`, returning the wrappers, marked as keeping their
   frontmatter, and the shim, and write `refresh` over it until they pass (R3, R6, R7, R8, R9, R10)
 - [ ] Update `README.md`. In "Updating a project to a newer kit", after the install command: run
   `npx agentrite refresh claude opencode`, naming the project's harnesses, which rewrites the role wrappers and
@@ -100,6 +100,6 @@ the ones 0011 and 0012 left.
 
 - [x] The argument parsing for two commands
 - [x] The refactoring that names the shim
-- [ ] `refreshedWrapper` and its tests
-- [ ] The `refresh` command and its end-to-end tests
+- [x] `refreshedWrapper` and its tests
+- [x] The `refresh` command and its end-to-end tests
 - [ ] The README
