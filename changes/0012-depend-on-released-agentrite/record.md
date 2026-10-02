@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-10-02T10:06:16Z
 supersedes: 0004-generate-own-role-wrappers
 ---
@@ -99,5 +99,12 @@ old name any more.
   `tests/fixtures/claude-agents/`, which a change to the generator has to deal with in a unit of its own.
   `package-lock.json` holds five lines over 120 characters, which npm writes and which cannot be wrapped. `npm test`
   passed, 144 of 144
+- 2026-10-02T14:55:09Z [human] merged the branch into `master` by fast-forward at 8030272 and pushed it, with the unit
+  still `in-progress`. Decided to close it without a delta review of the wrapping that finding C1 led to, and asked
+  for that in one commit made on `master` itself, which is an exception to working on a branch
+- 2026-10-02T14:55:09Z [Claude Code, anthropic/claude-opus-5-5] ran `npm test` on 8030272, which passed, 144 of 144,
+  and `npm run check-changes`, which exited 0. The one review returned no blocking finding and C1, which the human
+  accepted and which is applied. The wrapping itself was not reviewed: 0014 writes the six wrappers again from the
+  generator, and its review covers them. Moved the status to `implemented`
 
 ## Amendments
