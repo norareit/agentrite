@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-09-25T01:02:43Z
 ---
 
@@ -50,5 +50,15 @@ timestamp: 2026-09-25T01:02:43Z
   0. `npm run check-changes` ran the installed kit, which is 1.0.1 here although `package.json` names 1.0.3. No test
   was added, as the spec decides there is no regression check. No review has been run, so the status stays
   `in-progress`
+
+- 2026-10-02T10:58:39Z [OpenCode, openai/gpt-6.1-sol] took the reviewer role and completed a full review of
+  `0008-shared-node-modules` at `fb29dcdaccc9de12d27bd6dddc92acb04ad8309f`, against merge base
+  `94b55d9b62d27fa1741d9e4cc01b7789b2a9b9a2` with `master`. Finding labels: none on all three axes. Complete review:
+  `.reviews/0008-shared-node-modules/2026-10-02T10-57-19Z-opencode-review.md`. Both change checks and the whitespace
+  check exited 0. Host `npm test` on Node 22.9.0 failed to load an existing TypeScript module; rerunning with Node
+  26.10.0 in `node:26-bookworm`, with the repository mounted read-only, passed all 139 tests without skips. Not
+  independently rerun: the Norareit reproduction, the scratch platform-switch experiment, a project's
+  `./agent.sh -- npm ci`, Playwright without `fsevents`, and operation on a Linux host. Command routing and the
+  shared mount were checked in the source
 
 ## Amendments
