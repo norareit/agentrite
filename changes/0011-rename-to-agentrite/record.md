@@ -119,3 +119,12 @@ timestamp: 2026-10-02T10:06:16Z
   `implemented`. The human steps from the merge onward are still to come, and 0012 waits for the release
 
 ## Amendments
+
+- 2026-10-02T13:30:51Z [human] did human steps 2 to 4 of the plan: merged the branch into `master`, released 2.0.0
+  with `npm version major` and `deploy.sh`, which created `AgentRiteCertStack` and `AgentRiteHostingStack`, pushed
+  `master` and the tag `v2.0.0`, and published the pointer packages `agentrite` and `agentrite-roles` 1.0.0 to npm.
+  Recorded as an amendment because the unit is frozen
+- 2026-10-02T13:30:51Z [Claude Code, anthropic/claude-opus-5-5] checked the release at the human's request.
+  `https://agentrite.ritenoar.com/ritenoar-agentrite-2.0.0.tgz` answers 200, and the tarball has the same checksum and
+  contents as `npm pack` of `master` at 5f0705d: 22 files, named `@ritenoar/agentrite` 2.0.0, still `private`. `npm
+  view` shows both pointer packages at 1.0.0. The old host still serves 1.0.3

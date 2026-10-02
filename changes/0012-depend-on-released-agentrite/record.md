@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: in-progress
 timestamp: 2026-10-02T10:06:16Z
 supersedes: 0004-generate-own-role-wrappers
 ---
@@ -43,5 +43,9 @@ This waits for two things: 0011 implemented, and the 2.0.0 release, which the hu
 - 2026-10-02T11:47:22Z [human] decided that 0004 is folded into this unit instead of being done before the rename
 - 2026-10-02T11:47:22Z [Claude Code, anthropic/claude-opus-5-5] added the role wrappers to the description and set
   `supersedes` to 0004. Still a task: one more command, with no decision left open
+- 2026-10-02T13:30:51Z [human] released 2.0.0, which this unit waited for, and handed it over to be done, which is its
+  approval
+- 2026-10-02T13:30:51Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  `in-progress`
 
 ## Amendments
