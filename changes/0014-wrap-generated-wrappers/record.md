@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-02T14:15:25Z
 ---
 
@@ -56,5 +56,9 @@ timestamp: 2026-10-02T14:15:25Z
   three roles as subagents; a fresh Claude Code 2.1.287 session returned their full descriptions. Did not verify
   the sandbox-pinned versions, actual subagent dispatch, the packed-kit scratch install, or historical test-first
   execution and deletion/regeneration commands. Task-tool delegation was unavailable; followed the workflow directly
+- 2026-10-02T15:44:52Z [human] read the review, which returned no finding on any axis, and approved the unit
+- 2026-10-02T15:44:52Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on 96ab4bf, the final tree: `npm test`
+  passed, 151 of 151, and `npx tsc -p infra` exited 0. No finding is open and every box in `plan.md` is ticked. Moved
+  the status to `implemented`. The versions the sandbox pins remain untried, as the review also notes
 
 ## Amendments
