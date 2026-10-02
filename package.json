@@ -18,11 +18,11 @@
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",
-    "check-changes": "node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs",
+    "check-changes": "node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs",
     "deploy": "./deploy.sh"
   },
   "devDependencies": {
-    "@ritenoar/agent-kit": "https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.0.3.tgz",
+    "@ritenoar/agentrite": "https://agentrite.ritenoar.com/ritenoar-agentrite-2.0.0.tgz",
     "aws-cdk": "^2.1143.0",
     "aws-cdk-lib": "^2.270.0",
     "constructs": "^10.8.1",
