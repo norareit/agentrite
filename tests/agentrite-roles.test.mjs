@@ -14,7 +14,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { parseHarnesses, plannedFiles } from '../scripts/agent-kit-roles.mjs';
+import { parseHarnesses, plannedFiles } from '../scripts/agentrite-roles.mjs';
 
 test('parseHarnesses accepts each harness and both in either order', () => {
   assert.deepEqual(parseHarnesses(['claude']), ['claude']);
@@ -78,7 +78,7 @@ test('plannedFiles for opencode carries the claude description, subagent mode an
     assert.ok(frontmatterBlock.includes('mode: subagent\n'));
     assert.ok(frontmatterBlock.indexOf('description:') < frontmatterBlock.indexOf('mode:'));
     assert.equal(body, fixtureBody);
-    assert.match(body, new RegExp('^Read `node_modules/@ritenoar/agent-kit/roles/.*\\.md`'));
+    assert.match(body, new RegExp('^Read `node_modules/@ritenoar/agentrite/roles/.*\\.md`'));
     assert.ok(file.content.endsWith('\n'));
     assert.equal(file.content, `${file.content.trimEnd()}\n`);
   }
@@ -92,10 +92,10 @@ test('plannedFiles for both harnesses returns all six files', () => {
   );
 });
 
-const script = join(import.meta.dirname, '..', 'scripts', 'agent-kit-roles.mjs');
+const script = join(import.meta.dirname, '..', 'scripts', 'agentrite-roles.mjs');
 
 function project(t) {
-  const base = mkdtempSync(join(tmpdir(), 'agent-kit-roles-'));
+  const base = mkdtempSync(join(tmpdir(), 'agentrite-roles-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
   return { base, run };
@@ -201,9 +201,9 @@ test('a dangling wrapper symlink is named and written over nothing', (t) => {
 
 test('the command runs through a node_modules bin symlink the way npx does', (t) => {
   const { base } = project(t);
-  mkdirSync(join(base, 'node_modules', '@ritenoar', 'agent-kit', 'scripts'), { recursive: true });
+  mkdirSync(join(base, 'node_modules', '@ritenoar', 'agentrite', 'scripts'), { recursive: true });
   mkdirSync(join(base, 'node_modules', '.bin'));
-  const bin = join(base, 'node_modules', '.bin', 'agent-kit-roles');
+  const bin = join(base, 'node_modules', '.bin', 'agentrite-roles');
   symlinkSync(script, bin);
 
   const result = spawnSync(process.execPath, [bin, 'claude'], { cwd: base, encoding: 'utf-8' });

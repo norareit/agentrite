@@ -97,11 +97,11 @@ The `README.md` of each says the same in a few lines, since it is what the packa
 
 ## Tasks
 
-- [ ] Rename the two test files with `git mv`, and in them, in `tests/agent-wrapper.test.mjs` and in the three
+- [x] Rename the two test files with `git mv`, and in them, in `tests/agent-wrapper.test.mjs` and in the three
   fixtures, change every expectation to the new package path, command names, usage lines, error prefix, temporary
   directory prefixes and `AGENTRITE_CONTAINER`, including `agentName('@ritenoar/agentrite')` giving
   `ritenoar-agentrite-agent`. Run `npm test` and see these fail (R2, R3, R4, R12)
-- [ ] Rename the two scripts with `git mv` and update them, `package.json`'s `name`, `bin` and `files`,
+- [x] Rename the two scripts with `git mv` and update them, `package.json`'s `name`, `bin` and `files`,
   `container/agent.sh`, the variable in `container/compose.yml`, and the four templates, until `npm test` passes.
   Regenerate the lockfile's root entry with `npm install --package-lock-only` and check that its diff touches
   nothing but the root entry's name and `bin` (R1, R2, R3, R4, R9)
@@ -229,7 +229,7 @@ this file.
 
 ## Commit Points
 
-- [ ] The package, the commands, the installed path and the environment variable
+- [x] The package, the commands, the installed path and the environment variable
 - [ ] The host, the stacks and `deploy.sh`
 - [ ] The README
 - [ ] The pointer packages

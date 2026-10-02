@@ -16,7 +16,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { plannedFiles } from '../scripts/agent-kit-roles.mjs';
+import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import {
   AGENTS_SECTIONS,
   agentName,
@@ -28,7 +28,7 @@ import {
   playwrightVersion,
   projectFiles,
   withCheckChangesScript,
-} from '../scripts/agent-kit.mjs';
+} from '../scripts/agentrite.mjs';
 
 const TEMPLATE_PATHS = ['AGENTS.md', 'CLAUDE.md', 'agent.sh', 'agent/compose.project.yml'];
 const templates = Object.fromEntries(
@@ -41,8 +41,8 @@ const templates = Object.fromEntries(
 const CONTAINER_FILES = readdirSync(new URL('../container/', import.meta.url));
 const ignore = (existing) => dockerignore(existing, CONTAINER_FILES);
 const HARNESS_LISTS = [['claude'], ['opencode'], ['claude', 'opencode']];
-const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
-const KIT_CONTAINER = 'node_modules/@ritenoar/agent-kit/container';
+const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
+const KIT_CONTAINER = 'node_modules/@ritenoar/agentrite/container';
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
@@ -56,7 +56,7 @@ function fileAt(list, path) {
 
 // R1
 
-test('parseInitArgs takes the harnesses after init, as agent-kit-roles does', () => {
+test('parseInitArgs takes the harnesses after init, as agentrite-roles does', () => {
   assert.deepEqual(parseInitArgs(['init', 'claude']), ['claude']);
   assert.deepEqual(parseInitArgs(['init', 'opencode', 'claude', 'claude']), ['opencode', 'claude']);
 });
@@ -64,8 +64,8 @@ test('parseInitArgs takes the harnesses after init, as agent-kit-roles does', ()
 test('parseInitArgs gives the init usage for no harness and for an unknown one, naming the harnesses', () => {
   for (const args of [['init'], ['init', 'codex'], ['init', 'claude', 'toString']]) {
     assert.throws(() => parseInitArgs(args), (error) => {
-      assert.match(error.message, /^usage: agent-kit init claude \| opencode$/m);
-      assert.doesNotMatch(error.message, /agent-kit-roles/);
+      assert.match(error.message, /^usage: agentrite init claude \| opencode$/m);
+      assert.doesNotMatch(error.message, /agentrite-roles/);
       return true;
     });
   }
@@ -73,14 +73,14 @@ test('parseInitArgs gives the init usage for no harness and for an unknown one, 
 });
 
 test('parseInitArgs gives the usage for no command and for a command other than init', () => {
-  assert.throws(() => parseInitArgs([]), { message: 'usage: agent-kit init claude | opencode' });
-  assert.throws(() => parseInitArgs(['claude']), /unknown command: claude\nusage: agent-kit init/);
+  assert.throws(() => parseInitArgs([]), { message: 'usage: agentrite init claude | opencode' });
+  assert.throws(() => parseInitArgs(['claude']), /unknown command: claude\nusage: agentrite init/);
   assert.throws(() => parseInitArgs(['setup', 'claude']), /unknown command: setup/);
 });
 
 // R2
 
-test('the role wrappers are exactly those agent-kit-roles writes', () => {
+test('the role wrappers are exactly those agentrite-roles writes', () => {
   for (const harnesses of HARNESS_LISTS) {
     const planned = files(harnesses);
     for (const wrapper of plannedFiles(harnesses)) assert.deepEqual(fileAt(planned, wrapper.path), wrapper);
@@ -95,12 +95,12 @@ test('AGENTS.md holds the three sections, naming process.md, the role files and 
   const headings = agents.split('\n').filter((line) => /^#{1,2} /.test(line));
   assert.deepEqual(headings.slice(0, 3), AGENTS_SECTIONS);
   assert.equal(agents.split('\n')[0], '# Development Guidelines');
-  assert.match(agents, /node_modules\/@ritenoar\/agent-kit\/process\.md.*\n?.*\*\*required reading\*\*/);
+  assert.match(agents, /node_modules\/@ritenoar\/agentrite\/process\.md.*\n?.*\*\*required reading\*\*/);
   assert.match(agents, /\[README\.md\]\(README\.md\)/);
   assert.match(agents, /`npm ci` installs it/);
   assert.match(agents, /never under\n?\s*`node_modules\/`/);
   for (const role of ['planner', 'implementer', 'reviewer']) {
-    assert.match(agents, new RegExp(`node_modules/@ritenoar/agent-kit/roles/${role}\\.md`));
+    assert.match(agents, new RegExp(`node_modules/@ritenoar/agentrite/roles/${role}\\.md`));
   }
   assert.match(agents, /`npm run check-changes`, which runs the kit's script/);
   assert.match(agents, /## Specific to this project/);
@@ -152,7 +152,7 @@ test('agent.sh is planned executable, and execs the kit wrapper with its own dir
   assert.equal(shim.executable, true);
   assert.match(
     shim.content,
-    /^exec "\$here\/node_modules\/@ritenoar\/agent-kit\/container\/agent\.sh" "\$here" "\$@"$/m,
+    /^exec "\$here\/node_modules\/@ritenoar\/agentrite\/container\/agent\.sh" "\$here" "\$@"$/m,
   );
 });
 
@@ -160,7 +160,7 @@ test('agent.sh is planned executable, and execs the kit wrapper with its own dir
 
 test('agentName derives the names from an unscoped and a scoped package name', () => {
   assert.equal(agentName('norareit'), 'norareit-agent');
-  assert.equal(agentName('@ritenoar/agent-kit'), 'ritenoar-agent-kit-agent');
+  assert.equal(agentName('@ritenoar/agentrite'), 'ritenoar-agentrite-agent');
 });
 
 test('agentName reduces a package name to the characters Compose accepts in a project name', () => {
@@ -274,7 +274,7 @@ test('.dockerignore that excludes the kit by a wildcard, or before its exception
 });
 
 test('.dockerignore that lets only one file of the kit container back in gets the directory exception', () => {
-  const existing = 'node_modules\n!node_modules/@ritenoar/agent-kit/container/entrypoint.sh\n';
+  const existing = 'node_modules\n!node_modules/@ritenoar/agentrite/container/entrypoint.sh\n';
   assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`);
 });
 
@@ -304,7 +304,7 @@ test('.dockerignore that excludes node_modules and lets the kit directory back i
 
 test('.dockerignore that keeps the kit out without excluding node_modules also gets the exception', () => {
   for (const existing of [
-    'node_modules/@ritenoar/agent-kit/container/sni.mjs\n',
+    'node_modules/@ritenoar/agentrite/container/sni.mjs\n',
     'node_modules/@ritenoar\n',
     'node_modules\n!node_modules\nnode_modules/@ritenoar\n',
   ]) {
@@ -316,7 +316,7 @@ test('.dockerignore that holds the exception, or does not exclude node_modules, 
   assert.equal(ignore(`node_modules\n${EXCEPTION}\n`), undefined);
   assert.equal(ignore('.git\n*/node_modules\n'), undefined);
   assert.equal(ignore('node_modules_cache\n# node_modules\n'), undefined);
-  assert.equal(ignore('node_modules/**\n!node_modules/@ritenoar/agent-kit/container/**\n'), undefined);
+  assert.equal(ignore('node_modules/**\n!node_modules/@ritenoar/agentrite/container/**\n'), undefined);
   assert.equal(ignore(''), undefined);
 });
 
@@ -346,12 +346,12 @@ test('fillTemplate replaces inline placeholders and indents or drops one alone o
 
 // End to end: the executable in a temporary project.
 
-const script = join(import.meta.dirname, '..', 'scripts', 'agent-kit.mjs');
+const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const LOCKFILE = JSON.stringify({ lockfileVersion: 3, packages: { 'node_modules/playwright': { version: '1.59.1' } } });
 
 // A lockfile of `null` leaves the project without one.
 function project(t, { lockfile = LOCKFILE } = {}) {
-  const base = mkdtempSync(join(tmpdir(), 'agent-kit-init-'));
+  const base = mkdtempSync(join(tmpdir(), 'agentrite-init-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   writeFileSync(
     join(base, 'package.json'),
@@ -393,7 +393,7 @@ test('a fresh project gets every file, listed as written, and exits 0', (t) => {
 test('the written agent.sh execs the kit wrapper with the project root and every other argument', (t) => {
   const { base, run } = project(t);
   assert.equal(run('init', 'claude').status, 0);
-  const kitContainer = join(base, 'node_modules', '@ritenoar', 'agent-kit', 'container');
+  const kitContainer = join(base, 'node_modules', '@ritenoar', 'agentrite', 'container');
   mkdirSync(kitContainer, { recursive: true });
   writeFileSync(join(kitContainer, 'agent.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$@"\n');
   chmodSync(join(kitContainer, 'agent.sh'), 0o755);
@@ -480,7 +480,7 @@ test('a usage error writes nothing and exits non-zero', (t) => {
     const { base, run, read } = project(t);
     const result = run(...args);
     assert.notEqual(result.status, 0, args.join(' '));
-    assert.match(result.stderr, /usage: agent-kit init/);
+    assert.match(result.stderr, /usage: agentrite init/);
     for (const path of ['AGENTS.md', 'CLAUDE.md', 'agent.sh', '.dockerignore', '.claude', 'agent']) {
       assert.equal(exists(join(base, path)), false, path);
     }
@@ -501,7 +501,7 @@ test('a package.json without a name is refused before anything is written', (t) 
 test('the command runs through a node_modules bin symlink the way npx does', (t) => {
   const { base, read } = project(t);
   mkdirSync(join(base, 'node_modules', '.bin'), { recursive: true });
-  const bin = join(base, 'node_modules', '.bin', 'agent-kit');
+  const bin = join(base, 'node_modules', '.bin', 'agentrite');
   symlinkSync(script, bin);
   const result = spawnSync(process.execPath, [bin, 'init', 'claude'], { cwd: base, encoding: 'utf-8' });
   assert.equal(result.status, 0, result.stderr);

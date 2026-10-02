@@ -55,7 +55,7 @@ case "$here" in
     exit 2
     ;;
 esac
-export AGENT_KIT_CONTAINER="${here#"$root"/}"
+export AGENTRITE_CONTAINER="${here#"$root"/}"
 
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 

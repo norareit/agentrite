@@ -1,5 +1,5 @@
 {
-  "name": "@ritenoar/agent-kit",
+  "name": "@ritenoar/agentrite",
   "version": "1.0.3",
   "private": true,
   "type": "module",
@@ -8,13 +8,13 @@
     "roles",
     "templates",
     "scripts/check-changes.mjs",
-    "scripts/agent-kit-roles.mjs",
-    "scripts/agent-kit.mjs",
+    "scripts/agentrite-roles.mjs",
+    "scripts/agentrite.mjs",
     "container"
   ],
   "bin": {
-    "agent-kit-roles": "scripts/agent-kit-roles.mjs",
-    "agent-kit": "scripts/agent-kit.mjs"
+    "agentrite-roles": "scripts/agentrite-roles.mjs",
+    "agentrite": "scripts/agentrite.mjs"
   },
   "scripts": {
     "test": "node --test tests/*.test.mjs",

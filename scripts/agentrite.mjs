@@ -2,18 +2,18 @@
 import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseHarnesses, plannedFiles } from './agent-kit-roles.mjs';
+import { parseHarnesses, plannedFiles } from './agentrite-roles.mjs';
 
-const CHECK_CHANGES = 'node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs';
+const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
-const KIT_CONTAINER = 'node_modules/@ritenoar/agent-kit/container';
+const KIT_CONTAINER = 'node_modules/@ritenoar/agentrite/container';
 // Names the files, not only the directory: BuildKit would not let a directory's exception reach a file that a
 // pattern excluded by name.
 const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}/**`;
 const COMPOSE_FILE = 'agent/compose.project.yml';
 
 const DOCKERIGNORE =
-  "# Keeps node_modules out of the image build context, except the agent kit's container/\n" +
+  "# Keeps node_modules out of the image build context, except AgentRite's container/\n" +
   '# directory, from which the image build copies the entrypoint and the egress proxy.\n' +
   `node_modules\n${KIT_CONTAINER_EXCEPTION}\n`;
 
@@ -31,13 +31,13 @@ const HARNESS_HOSTS = {
 };
 
 /**
- * agent-kit-roles words its usage for its own command. The harnesses it lists are the ones init takes.
+ * agentrite-roles words its usage for its own command. The harnesses it lists are the ones init takes.
  *
  * @param {string} message
  * @returns {string}
  */
 function forInit(message) {
-  return message.replace('usage: agent-kit-roles ', 'usage: agent-kit init ');
+  return message.replace('usage: agentrite-roles ', 'usage: agentrite init ');
 }
 
 /**
@@ -449,7 +449,7 @@ function init(root, harnesses) {
   const composeExists = exists(resolve(root, COMPOSE_FILE));
   if (composeExists) console.log(`skipped ${COMPOSE_FILE}, which exists`);
   console.error(
-    `agent-kit: package-lock.json resolves no playwright, so ${COMPOSE_FILE} ` +
+    `agentrite: package-lock.json resolves no playwright, so ${COMPOSE_FILE} ` +
       `${composeExists ? 'was left as it is' : 'was not written'}.\n` +
       "The sandbox requires the project to depend on Playwright: the image takes Playwright's browsers at the\n" +
       'version the project resolved. Install it, then run init again.',
@@ -482,7 +482,7 @@ if (isMain()) {
   try {
     process.exit(init(process.cwd(), harnesses));
   } catch (error) {
-    console.error(`agent-kit: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`agentrite: ${error instanceof Error ? error.message : String(error)}`);
     process.exit(1);
   }
 }

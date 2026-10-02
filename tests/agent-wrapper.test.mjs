@@ -13,11 +13,11 @@ function composeConfig(buildArgs) {
 }
 
 // A project with the kit's wrapper installed at `kitPath` under `root`, and a `docker` that records each call and
-// the AGENT_KIT_CONTAINER it saw, answering only the three queries the wrapper makes before running Compose. Its
+// the AGENTRITE_CONTAINER it saw, answering only the three queries the wrapper makes before running Compose. Its
 // merged configuration has the build arguments `buildArgs`.
 function setUp(
   t,
-  kitPath = 'node_modules/@ritenoar/agent-kit/container',
+  kitPath = 'node_modules/@ritenoar/agentrite/container',
   buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
 ) {
   const base = mkdtempSync(join(tmpdir(), 'agent-wrapper-'));
@@ -44,7 +44,7 @@ if [[ " $* " == *" config --format json "* ]]; then
   [ -s "${config}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
   cat "${config}"; exit 0
 fi
-echo "AGENT_KIT_CONTAINER=$AGENT_KIT_CONTAINER docker $*" >> "${calls}"
+echo "AGENTRITE_CONTAINER=$AGENTRITE_CONTAINER docker $*" >> "${calls}"
 `,
   );
   chmodSync(join(bin, 'docker'), 0o755);
@@ -64,7 +64,7 @@ echo "AGENT_KIT_CONTAINER=$AGENT_KIT_CONTAINER docker $*" >> "${calls}"
 }
 
 test('the wrapper refuses to run without a project root, naming the shim', (t) => {
-  const { run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container');
+  const { run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container');
   const result = run();
   assert.equal(result.status, 2);
   assert.match(result.stderr, /first argument must be the project root/);
@@ -73,7 +73,7 @@ test('the wrapper refuses to run without a project root, naming the shim', (t) =
 });
 
 test('the wrapper refuses a project root that is not a directory', (t) => {
-  const { base, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container');
+  const { base, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container');
   const result = run(join(base, 'no-such-directory'), '--rebuild');
   assert.equal(result.status, 2);
   assert.match(result.stderr, /first argument must be the project root/);
@@ -90,11 +90,11 @@ test('the wrapper refuses a kit outside the project root, which the build cannot
 });
 
 test('the wrapper runs Compose from the project root with the kit located relative to it', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container');
+  const { root, container, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container');
   const result = run(root, '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   const expectedPrefix =
-    'AGENT_KIT_CONTAINER=node_modules/@ritenoar/agent-kit/container docker compose ' +
+    'AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container docker compose ' +
     `--project-directory ${root} -f ${container}/compose.yml -f ${root}/agent/compose.project.yml`;
   assert.deepEqual(dockerCalls(), [
     `${expectedPrefix} build`,
@@ -107,7 +107,7 @@ for (const [what, buildArgs] of [
   ['an empty PLAYWRIGHT_VERSION', { PLAYWRIGHT_VERSION: '' }],
 ]) {
   test(`the wrapper refuses a configuration with ${what}, naming the project's compose file, before building`, (t) => {
-    const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container', buildArgs);
+    const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container', buildArgs);
     const result = run(root, '--rebuild');
     assert.equal(result.status, 2);
     assert.match(result.stderr, /PLAYWRIGHT_VERSION/);
@@ -117,7 +117,7 @@ for (const [what, buildArgs] of [
 }
 
 test("the wrapper stops with Compose's own error when Compose refuses the configuration", (t) => {
-  const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agent-kit/container', null);
+  const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container', null);
   const result = run(root, '--rebuild');
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /validating compose\.project\.yml: invalid/);

@@ -4,7 +4,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const BODY_LINE =
-  'Read `node_modules/@ritenoar/agent-kit/roles/{name}.md` in the project root and follow it. ' +
+  'Read `node_modules/@ritenoar/agentrite/roles/{name}.md` in the project root and follow it. ' +
   'It is your instruction; this file holds none of its own.';
 
 const PLANNER_DESCRIPTION =
@@ -75,7 +75,7 @@ function isKnownHarness(name) {
  * @returns {string}
  */
 function usage() {
-  return `usage: agent-kit-roles ${Object.keys(HARNESSES).join(' | ')}`;
+  return `usage: agentrite-roles ${Object.keys(HARNESSES).join(' | ')}`;
 }
 
 /**
