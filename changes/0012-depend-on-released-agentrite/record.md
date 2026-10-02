@@ -1,6 +1,6 @@
 ---
 kind: task
-status: implemented
+status: in-progress
 timestamp: 2026-10-02T10:06:16Z
 supersedes: 0004-generate-own-role-wrappers
 ---
@@ -59,6 +59,9 @@ This waits for two things: 0011 implemented, and the 2.0.0 release, which the hu
   ]?kit' -- . ':!changes'` prints nothing; `npm test` passed, 144 of 144; `npx tsc -p infra` exited 0; `npm run
   check-changes` exited 0, now running the check from the installed 2.0.0. Not checked: whether either harness picks
   the wrappers up, which takes a new session. No review was run for this task. Moved the status to `implemented`
+- 2026-10-02T13:37:16Z [Claude Code, anthropic/claude-opus-5-5] moved the status back to `in-progress`. Setting
+  `implemented` was premature: the human had not said so, and asked whether the unit needs a review. It waits for the
+  review and for the human's decision on what it returns. Nothing else changed, and the branch is not merged
 
 ## Changes
 
