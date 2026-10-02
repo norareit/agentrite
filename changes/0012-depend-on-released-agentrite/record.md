@@ -76,5 +76,15 @@ Replaced the devDependency on `@ritenoar/agent-kit` 1.0.3 with `@ritenoar/agentr
 the `check-changes` script, `AGENTS.md` and the README's section on the installed copy at it. Added the six role
 wrappers that `agentrite-roles` writes, which is what the draft 0004 was for. Nothing outside `changes/` holds the
 old name any more.
+- 2026-10-02T14:03:26Z [human] asked the implementer to read the review
+- 2026-10-02T14:03:26Z [Claude Code, anthropic/claude-opus-5-5] the review returned no blocking finding and one that
+  does not block, C1: the six wrappers hold lines longer than the 120 characters `AGENTS.md` sets, twelve in all, the
+  description and the pointer line of each. Proposed decline, for the human to decide. The wrappers are committed
+  exactly as the released command writes them, which the unit asks for and the reviewer confirmed byte for byte.
+  Wrapping them by hand would make them differ from the generator, and the refresh command drafted in 0013 would write
+  the long lines back. The same lines are already tracked in `tests/fixtures/claude-agents/`, and Norareit holds the
+  same files. If the human agrees, the outcome is an exception to the line limit for files a kit command generates,
+  recorded here; writing that exception into `AGENTS.md` as well, or having the generator emit shorter lines, would
+  each be work of its own
 
 ## Amendments
