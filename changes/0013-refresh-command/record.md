@@ -211,5 +211,7 @@ timestamp: 2026-10-02T14:01:59Z
   case of C3 at line 4 and left it byte for byte as it was, and refreshed a wrapper holding `2fa: true` and `tools:
   [read] # all`, keeping both lines. Every box in `plan.md` is ticked. The status stays `in-progress`: the amendment
   to requirement 13 awaits the human, and the rework since 26c8b8b awaits a delta review
+- 2026-10-02T18:16:33Z [human] confirmed the amendment to requirement 13: a bracketed list or map holds no `#`, and a
+  comment may follow a value that ends on its line. Added that the reading of frontmatter as a whole feels flaky
 
 ## Amendments
