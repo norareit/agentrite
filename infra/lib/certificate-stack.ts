@@ -6,7 +6,7 @@ import { Construct } from 'constructs';
 interface CertificateStackProps extends cdk.StackProps {
   /** Apex domain of the existing Route53 hosted zone, e.g. ritenoar.com */
   hostedZoneDomain: string;
-  /** Fully qualified host the certificate covers, e.g. agent-kit.ritenoar.com */
+  /** Fully qualified host the certificate covers, e.g. agentrite.ritenoar.com */
   subdomain: string;
 }
 

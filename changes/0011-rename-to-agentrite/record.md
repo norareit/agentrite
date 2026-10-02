@@ -53,5 +53,17 @@ timestamp: 2026-10-02T10:06:16Z
   that planned it, which is to stop wherever a step is the human's
 - 2026-10-02T11:49:25Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
   `in-progress`
+- 2026-10-02T11:50:28Z [Claude Code, anthropic/claude-opus-5-5] in 9a5cf95, renamed the package, the two commands, the
+  installed path and the container variable, with the two test files and the two scripts moved by `git mv`. The tests
+  failed first, three of them, on the missing scripts and the variable, and `npm test` then passed, 139 of 139. `npm
+  install --package-lock-only` changed only the root entry of the lockfile: its name, and its `bin`, which had held
+  only `agent-kit-roles` and now holds both commands
+- 2026-10-02T11:50:28Z [Claude Code, anthropic/claude-opus-5-5] changed the host, the stack names and the comments.
+  The three tests named in the plan did not fail after their expectations changed, contrary to what the plan expected:
+  each holds its own data, the allowlist test its own list, the deploy test its own stubs, the record-name test its
+  own arguments, and none reads the shipped `container/compose.yml`, `infra/bin/app.ts` or the stack names in
+  `deploy.sh`. So no test covers requirements 5 and 6 for those shipped values; they are checked by the search in the
+  last task and by `cdk synth` under Verification. `npm test` passed, 139 of 139, and `npx tsc -p infra` exited 0. No
+  test was added for this, the plan not having one; raised with the human instead
 
 ## Amendments

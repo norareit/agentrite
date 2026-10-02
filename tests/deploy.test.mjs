@@ -7,8 +7,8 @@ import { test } from 'node:test';
 
 const script = new URL('../deploy.sh', import.meta.url).pathname;
 const bucket = 'release-bucket';
-const baseUrl = 'https://agent-kit.example.test';
-const tarball = 'ritenoar-agent-kit-1.2.3.tgz';
+const baseUrl = 'https://agentrite.example.test';
+const tarball = 'ritenoar-agentrite-1.2.3.tgz';
 
 // Stubs for every command deploy.sh runs, each appending its arguments to one log. Their answers come from the
 // environment: STS_OK for the session check, HEAD for the existing-release check ("exists", "missing" or
@@ -34,7 +34,7 @@ esac`,
   npm: `
 if [ "$1" = pack ]; then
   touch "$3/${tarball}"
-  echo '[{"name":"@ritenoar/agent-kit","filename":"${tarball}"}]'
+  echo '[{"name":"@ritenoar/agentrite","filename":"${tarball}"}]'
 fi`,
   npx: '',
   curl: 'printf "%s" "$SERVED"',
@@ -74,7 +74,7 @@ test('an unreleased version is uploaded under its tarball name, immutable, and t
   assert.equal(uploads.length, 1);
   assert.match(uploads[0], new RegExp(`/${tarball} s3://${bucket}/${tarball} `));
   assert.match(uploads[0], /--cache-control public, max-age=31536000, immutable/);
-  assert.match(stdout, new RegExp(`"@ritenoar/agent-kit": "${baseUrl}/${tarball}"`));
+  assert.match(stdout, new RegExp(`"@ritenoar/agentrite": "${baseUrl}/${tarball}"`));
 });
 
 test('a version that is already released is refused, with no upload', (t) => {

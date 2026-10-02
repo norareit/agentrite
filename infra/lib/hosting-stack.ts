@@ -11,7 +11,7 @@ import { recordNameFor } from './record-name.ts';
 interface HostingStackProps extends cdk.StackProps {
   /** Apex domain of the existing Route53 hosted zone, e.g. ritenoar.com */
   hostedZoneDomain: string;
-  /** Fully qualified host the kit is served on, e.g. agent-kit.ritenoar.com */
+  /** Fully qualified host the kit is served on, e.g. agentrite.ritenoar.com */
   subdomain: string;
   certificate: acm.ICertificate;
 }

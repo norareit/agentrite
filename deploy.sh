@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Releases the kit: deploys the stacks that serve agent-kit.ritenoar.com, packs the
+# Releases the kit: deploys the stacks that serve agentrite.ritenoar.com, packs the
 # kit at the version in package.json, and uploads the tarball under that version's
 # name. A released name is never replaced, because consumers' lockfiles pin it by
 # integrity hash, so bump the version with `npm version` before every release.
@@ -11,8 +11,8 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export AWS_PAGER=""
 
 REGION="eu-west-1"
-CERT_STACK="AgentKitCertStack"
-HOSTING_STACK="AgentKitHostingStack"
+CERT_STACK="AgentRiteCertStack"
+HOSTING_STACK="AgentRiteHostingStack"
 
 if ! aws sts get-caller-identity &>/dev/null; then
   echo "▶ AWS SSO login"

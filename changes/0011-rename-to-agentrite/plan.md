@@ -105,10 +105,10 @@ The `README.md` of each says the same in a few lines, since it is what the packa
   `container/agent.sh`, the variable in `container/compose.yml`, and the four templates, until `npm test` passes.
   Regenerate the lockfile's root entry with `npm install --package-lock-only` and check that its diff touches
   nothing but the root entry's name and `bin` (R1, R2, R3, R4, R9)
-- [ ] Change the host in `tests/entrypoint-allowlist.test.mjs`, `tests/record-name.test.mjs` and
+- [x] Change the host in `tests/entrypoint-allowlist.test.mjs`, `tests/record-name.test.mjs` and
   `tests/deploy.test.mjs`, with the tarball and package names in the last, and see the allowlist test fail (R5, R6,
   R12)
-- [ ] Change the host in `KIT_ALLOWLIST` and its comment, the subdomain and the two stack ids in
+- [x] Change the host in `KIT_ALLOWLIST` and its comment, the subdomain and the two stack ids in
   `infra/bin/app.ts`, the comments in the three files under `infra/lib/`, and the stack names and header comment in
   `deploy.sh`, until `npm test` and `npx tsc -p infra` pass (R5, R6)
 - [ ] Rewrite the top of `README.md` as given under "The README's opening", and update every name, path, host and
@@ -230,7 +230,7 @@ this file.
 ## Commit Points
 
 - [x] The package, the commands, the installed path and the environment variable
-- [ ] The host, the stacks and `deploy.sh`
+- [x] The host, the stacks and `deploy.sh`
 - [ ] The README
 - [ ] The pointer packages
 - [ ] What the search turned up
