@@ -174,5 +174,16 @@ timestamp: 2026-10-02T14:01:59Z
   including the earlier 0014 claim, the original 40,000/30,000 random runs, and the original 41/53 replay stage or
   detailed in-session test chronology. The packed CLI smoke used extraction, local bin wiring and a synthetic
   lockfile, not a fresh npm or Playwright installation
+- 2026-10-02T18:10:06Z [human] asked the implementer to assess the new findings and to fix what needs fixing
+- 2026-10-02T18:10:06Z [Claude Code, anthropic/claude-opus-5-5] the delta review confirms S2 and C2 as corrected under
+  the amended spec, and returns S3 and C3, which block, and P1, which does not. All three are accepted. S3: the reader
+  asks a key's name to open with a letter or `_`, where requirement 13 allows any run of letters, digits, `_` and `-`,
+  so `2fa: true` is refused although it is in the form. C3: the check that a bracketed list closes on its line counts
+  a bracket inside a comment, so `tools: [read, # ]` passes as closed while the list runs on, the lines inside it are
+  read as keys, and the wrapper is rewritten broken, against requirements 13 and 14. P1: the task that says tests
+  first was ticked although the module was written before its unit tests, as the record already admitted; the task now
+  says so itself. The review also notes that the random comparison cannot be repeated, its scripts not being in the
+  repository, and C3 shows what it missed: none of its pieces put a comment inside brackets. Added three tasks to
+  `plan.md`, the third to keep that comparison in the repository and widen it
 
 ## Amendments

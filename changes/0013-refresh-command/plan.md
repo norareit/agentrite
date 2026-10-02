@@ -118,7 +118,9 @@ the ones 0011 and 0012 left.
   that expected quoted and spaced keys to be kept are replaced by these, and the guard whose value was not valid
   YAML is replaced by quoted values that are. End to end: a wrapper the command cannot read is byte for byte
   unchanged, named on standard error with its line, the others are refreshed, the exit status is 1, and a second
-  run does the same. See them fail (R4, R5, R13, R14)
+  run does the same. See them fail (R4, R5, R13, R14). As done, and as review finding P1 records: the module of the
+  next task was drafted before these unit tests, which therefore passed when first run and were not seen failing
+  against the code they were written for; only the end-to-end test failed first
 - [x] Rework `splitWrapper`, `keyBlocks` and `refreshedWrapper` to read exactly the form of requirement 13 and
   report anything else, taking back the recognition of quoted and spaced keys that the fix of S2 added, and have
   `refresh` leave and name a wrapper it cannot read. Until the tests pass (R4, R5, R13, R14)
@@ -131,6 +133,19 @@ the ones 0011 and 0012 left.
   pieces that are readable, unreadable and deliberately misleading, and for each one the command reads check that
   the result parses, that every added key has the value it had, that every kit key has the release's, and that a
   second refresh changes nothing. Turn each failure into a test in the suite before fixing it (R4, R5, R13, R14)
+- [ ] Review S3: read a key at the left margin whose name is any run of letters, digits, `_` and `-`, as
+  requirement 13 says, where the reader asked for a letter or `_` first. First the regression: `2fa: true`,
+  `9: nine` and `-x: 1` added to a wrapper are kept (R13)
+- [ ] Review C3: refuse a bracketed list or map that holds a `#`, since what follows a `#` may be a comment, and a
+  bracket in a comment closes nothing. First the regressions: the review's case, in the function and through the
+  command, is reported at the line that opens the list, the wrapper byte for byte unchanged and its modification
+  time with it, the exit status 1, the other files done, and the same on a second run; a bracketed list followed
+  by a comment on its line, and one with a `#` inside a word, are refused too (R13, R14)
+- [ ] Keep the comparison with a YAML parser in the repository, as `tests/manual/`, so that it can be run again
+  and its cases are not lost with a session: it needs Python with PyYAML, which the suite must not, so `npm test`
+  does not run it and the README says how to. Extend it to build frontmatter out of single tokens as well as
+  whole pieces, comments inside brackets among them, which the first version lacked and which is how C3 got past
+  it. Run it, and turn each failure into a test in the suite before fixing it (R4, R5, R13, R14)
 
 ## Verification
 
