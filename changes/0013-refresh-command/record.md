@@ -108,5 +108,15 @@ timestamp: 2026-10-02T14:01:59Z
   `.reviews/0013-refresh-command/20261002T161716Z-opencode-delta.md`. Not verified: macOS execution, either harness
   consuming refreshed wrappers (including the recorded 0014 harness-consumption claim), and the original
   in-session regression-first chronology. The prior packed smoke and broad init comparisons were not rerun
+- 2026-10-02T16:37:04Z [Claude Code, anthropic/claude-opus-5-5] read the delta review. It confirms S1 and C1 as
+  corrected and returns two blocking findings. S2 again, as incompletely corrected: the two forms logged above as
+  outside the line reading, a quoted key with an escape in its name and a key written with `?`, each make requirement
+  4 or 5 false, and the boundary proposed for them is not a decision until the human makes it. C2, a regression the
+  fix of S2 introduced: a line inside a quoted value that runs over several lines, when it looks like a quoted key, is
+  now taken for a key, which cuts the value and leaves frontmatter that is not valid YAML, where the code before the
+  fix kept it whole. The review also found that the guard test added with the fix uses a value that is not valid YAML.
+  Both findings come from the same cause, reading YAML line by line and guessing, and a third patch of the pattern
+  would invite a fourth finding. Not patched: what `refresh` does with frontmatter it cannot read safely is a question
+  for the spec, so it goes back to the human
 
 ## Amendments
