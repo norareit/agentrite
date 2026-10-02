@@ -31,5 +31,21 @@ timestamp: 2026-09-25T01:02:43Z
   branch's. Compose was run as the wrapper runs it, but with this repository's unchanged `container/compose.yml` as
   the base file. As the agent, uid 501, `stat` showed `/work` as `0:0` and `/work/.git` as `501:20`, no `GIT_CONFIG_*`
   variable was set, and `git -C /work status` exited 128 with "detected dubious ownership in repository at '/work'"
+- 2026-10-02T10:16:45Z [Claude Code, anthropic/claude-opus-5-5] in 1a18523, set `GIT_CONFIG_COUNT`,
+  `GIT_CONFIG_KEY_0` and `GIT_CONFIG_VALUE_0` in the `environment` block of `container/compose.yml`, giving
+  `safe.directory` the value `*`, with the comment requirement 4 asks for
+- 2026-10-02T10:16:45Z [Claude Code, anthropic/claude-opus-5-5] checked the requirements by hand on the same machine,
+  with the same command as the failing case and the `container/compose.yml` of 1a18523 as the base file, and this
+  repository also mounted at `/mnt/agent-kit` as `agent.sh --mount` would mount it. As the agent, uid 501, with
+  `/work` and `/mnt/agent-kit` both still `0:0`: the three variables were in the environment; `git -C /work status`
+  and `git -C /work rev-parse --short HEAD` exited 0 (requirement 1); `git -C /mnt/agent-kit status` exited 0
+  (requirement 2); and Norareit's `npm run check:changes`, on its `master`, exited 0 with no setup of its own
+  (requirement 3). Not checked: the sandbox started through a project's `./agent.sh`, which runs the installed
+  release and so cannot carry the fix until one is made; an image built from this tree, since the fix changes
+  nothing the image holds; a read-only `--mount`; Linux Docker Engine; and a project that sets `GIT_CONFIG_COUNT`
+  itself
+- 2026-10-02T10:16:45Z [Claude Code, anthropic/claude-opus-5-5] ran `npm test` and `node scripts/check-changes.mjs`
+  on 1a18523: 67 tests passed, 0 failed, and the check exited 0. No test was added, as the spec decides the
+  regression check is manual. No review has been run, so the status stays `in-progress`
 
 ## Amendments
