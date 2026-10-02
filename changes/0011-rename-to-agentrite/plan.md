@@ -122,7 +122,7 @@ The `README.md` of each says the same in a few lines, since it is what the packa
   names the package, `@ritenoar/agentrite` and the repository address; the two `pointer.mjs` files are identical.
   See it fail (R11)
 - [x] Write the two pointer packages as described under "The pointer packages", until the test passes (R11)
-- [ ] Search the tracked files for what is left, and resolve each hit that is not one of the four kept
+- [x] Search the tracked files for what is left, and resolve each hit that is not one of the four kept
   self-references (R8, R9, R10):
 
   ```sh
@@ -233,4 +233,4 @@ this file.
 - [x] The host, the stacks and `deploy.sh`
 - [x] The README
 - [x] The pointer packages
-- [ ] What the search turned up
+- [x] What the search turned up
