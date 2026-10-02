@@ -328,6 +328,16 @@ test('every filled template has no placeholder left, whatever the harnesses', ()
   }
 });
 
+test('no file init plans holds a line over 120 characters, whatever the harnesses', () => {
+  for (const harnesses of HARNESS_LISTS) {
+    for (const file of files(harnesses)) {
+      for (const line of file.content.split('\n')) {
+        assert.ok(line.length <= 120, `${file.path} holds a line of ${line.length} characters`);
+      }
+    }
+  }
+});
+
 test('every project template is filled from templates/project/', () => {
   for (const path of TEMPLATE_PATHS) assert.ok(files(['claude']).some((file) => file.path === path), path);
   assert.match(templates['agent/compose.project.yml'], /\{\{playwright_version\}\}/);
