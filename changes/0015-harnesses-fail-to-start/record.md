@@ -32,5 +32,9 @@ timestamp: 2026-10-02T21:19:59Z
   its release notes from it, and OpenCode its syntax highlighting queries, with the grammars on `github.com`.
   Neither harness needs it to start. `spec.md` holds the evidence and the decision, requirement 2 now excludes the
   host, requirement 4 expects its refusal, and `plan.md` follows. Status still `draft`
+- 2026-10-02T21:49:12Z [human] asked for the branch to be pushed
+- 2026-10-02T21:49:12Z [Claude Code, anthropic/claude-opus-5-5] committed the three documents in `6ed08f9`, which the
+  21:19:59Z entry describes as uncommitted, and pushed `bugfix-0015-harnesses-fail-to-start` to `origin`. The change
+  check reported nothing on that commit. Status still `draft`
 
 ## Amendments
