@@ -233,5 +233,13 @@ timestamp: 2026-10-02T14:01:59Z
   test` passed, 173 of 173. Rewrote the README's account of `refresh` to match and took out the check run by hand. The
   findings S2, C2, S3 and C3 of the three reviews were all about the reading of frontmatter, which is gone; S1, on
   CRLF, and C1, on the owner's execute bit, still hold and keep their tests
+- 2026-10-02T18:26:16Z [Claude Code, anthropic/claude-opus-5-5] verified on 74163ae: `npm test` passed, 173 of 173;
+  `npx tsc -p infra` exited 0; `npm run check-changes` exited 0; `npm pack --dry-run` lists 22 files and
+  `package.json` is as on `master`. In a scratch project set up by `init` from the packed working copy, with `model`
+  and `temperature` added to one wrapper and a line appended to `agent.sh`, `npx agentrite refresh claude opencode`
+  exited 0, reported that wrapper and `agent.sh` as refreshed and the other five as up to date, kept the model line,
+  dropped `temperature` and the appended line, and left the five files that are the project's byte for byte as they
+  were; a second run reported all seven as up to date. Every box in `plan.md` is ticked. The status stays
+  `in-progress` for a delta review from 26c8b8b, the commit the last review named
 
 ## Amendments
