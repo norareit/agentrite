@@ -69,5 +69,10 @@ timestamp: 2026-10-02T10:06:16Z
   renamed throughout. Compared the result with the old file with the names normalized in both: the only differences
   are the new title and tagline, the section "The name", the two example versions, now 2.0.0 and 2.1.0, and the two
   sentences added to "The kit's own copy of the kit", whose path stays `node_modules/@ritenoar/agent-kit/`
+- 2026-10-02T11:51:27Z [Claude Code, anthropic/claude-opus-5-5] wrote `tests/pointers.test.mjs`, saw its five tests
+  fail with no packages there, and wrote the two pointer packages under `pointers/`. `npm test` passed, 144 of 144.
+  `npm pack --dry-run` at the root names `ritenoar-agentrite-1.0.3.tgz` and lists nothing under `pointers/`, and in
+  `pointers/agentrite` it lists `README.md`, `package.json` and `pointer.mjs` and nothing else. Neither package was
+  published, which is the human's step, and `npx` against the registry was not tried
 
 ## Amendments

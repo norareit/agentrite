@@ -117,11 +117,11 @@ The `README.md` of each says the same in a few lines, since it is what the packa
   on disk until 0012, `node_modules/@ritenoar/agent-kit/`, and says in one sentence that the copy is still the last
   release under the old name. Check the result against the old file section by section, so that nothing but names
   changed below the opening (R7, R8)
-- [ ] Write `tests/pointers.test.mjs`: for each of the two packages, the `package.json` has the name, a `bin` of
+- [x] Write `tests/pointers.test.mjs`: for each of the two packages, the `package.json` has the name, a `bin` of
   that name, and no `dependencies`, `scripts` or `private`; running `pointer.mjs` exits 1 and its standard error
   names the package, `@ritenoar/agentrite` and the repository address; the two `pointer.mjs` files are identical.
   See it fail (R11)
-- [ ] Write the two pointer packages as described under "The pointer packages", until the test passes (R11)
+- [x] Write the two pointer packages as described under "The pointer packages", until the test passes (R11)
 - [ ] Search the tracked files for what is left, and resolve each hit that is not one of the four kept
   self-references (R8, R9, R10):
 
@@ -232,5 +232,5 @@ this file.
 - [x] The package, the commands, the installed path and the environment variable
 - [x] The host, the stacks and `deploy.sh`
 - [x] The README
-- [ ] The pointer packages
+- [x] The pointer packages
 - [ ] What the search turned up

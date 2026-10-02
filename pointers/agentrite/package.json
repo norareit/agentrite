@@ -1,0 +1,12 @@
+{
+  "name": "agentrite",
+  "version": "1.0.0",
+  "description": "Points to AgentRite, the package @ritenoar/agentrite, which is installed from a release URL",
+  "type": "module",
+  "bin": {
+    "agentrite": "pointer.mjs"
+  },
+  "files": [
+    "pointer.mjs"
+  ]
+}
