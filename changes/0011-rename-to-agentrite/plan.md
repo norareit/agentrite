@@ -111,7 +111,7 @@ The `README.md` of each says the same in a few lines, since it is what the packa
 - [x] Change the host in `KIT_ALLOWLIST` and its comment, the subdomain and the two stack ids in
   `infra/bin/app.ts`, the comments in the three files under `infra/lib/`, and the stack names and header comment in
   `deploy.sh`, until `npm test` and `npx tsc -p infra` pass (R5, R6)
-- [ ] Rewrite the top of `README.md` as given under "The README's opening", and update every name, path, host and
+- [x] Rewrite the top of `README.md` as given under "The README's opening", and update every name, path, host and
   command in the rest. The example release URLs become `ritenoar-agentrite-2.0.0.tgz` for installing and
   `ritenoar-agentrite-2.1.0.tgz` for updating. The section "The kit's own copy of the kit" names the path as it is
   on disk until 0012, `node_modules/@ritenoar/agent-kit/`, and says in one sentence that the copy is still the last
@@ -231,6 +231,6 @@ this file.
 
 - [x] The package, the commands, the installed path and the environment variable
 - [x] The host, the stacks and `deploy.sh`
-- [ ] The README
+- [x] The README
 - [ ] The pointer packages
 - [ ] What the search turned up

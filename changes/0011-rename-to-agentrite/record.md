@@ -65,5 +65,9 @@ timestamp: 2026-10-02T10:06:16Z
   `deploy.sh`. So no test covers requirements 5 and 6 for those shipped values; they are checked by the search in the
   last task and by `cdk synth` under Verification. `npm test` passed, 139 of 139, and `npx tsc -p infra` exited 0. No
   test was added for this, the plan not having one; raised with the human instead
+- 2026-10-02T11:50:50Z [Claude Code, anthropic/claude-opus-5-5] rewrote the README's opening as the plan gives it and
+  renamed throughout. Compared the result with the old file with the names normalized in both: the only differences
+  are the new title and tagline, the section "The name", the two example versions, now 2.0.0 and 2.1.0, and the two
+  sentences added to "The kit's own copy of the kit", whose path stays `node_modules/@ritenoar/agent-kit/`
 
 ## Amendments

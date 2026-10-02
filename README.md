@@ -1,8 +1,23 @@
-# agent-kit
+# AgentRite
+
+A kit for running coding agents by a fixed process.
 
 The shared instructions and tooling that coding agents work under, in one place so that an improvement is made once
-rather than once per project. Projects install it as the npm package `@ritenoar/agent-kit` and keep only what is
+rather than once per project. Projects install it as the npm package `@ritenoar/agentrite` and keep only what is
 specific to them.
+
+## The name
+
+A rite is a prescribed way of doing something, and that is what this kit is at its core. `process.md` lays down how
+a change is specified, planned, recorded and frozen, and the roles and the sandbox exist so that agents follow it.
+
+The name reads three ways, and all three are meant:
+
+* a **rite** for agents: the process they work by
+* agents done **right**
+* agents that **write**
+
+The "rite" is also Ritenoar's, whose projects carry it.
 
 ## What is here
 
@@ -11,11 +26,11 @@ specific to them.
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
 | `roles/`             | The planner, implementer and reviewer instructions                                        |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
-| `templates/project/` | The files `agent-kit init` fills in and writes into a project                             |
-| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agent-kit` and `agent-kit-roles` commands |
+| `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
+| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` and `agentrite-roles` commands |
 | `tests/`             | The kit's own unit tests, run by node's built-in test runner                              |
 | `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper         |
-| `infra/`             | The CDK app that serves release tarballs from `agent-kit.ritenoar.com`                    |
+| `infra/`             | The CDK app that serves release tarballs from `agentrite.ritenoar.com`                    |
 | `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit                     |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
@@ -23,17 +38,17 @@ project's own `AGENTS.md`, which links here for the rest.
 
 ## Installing it into a project
 
-The kit is the npm package `@ritenoar/agent-kit`. It is served as a tarball from `agent-kit.ritenoar.com` rather than
+The kit is the npm package `@ritenoar/agentrite`. It is served as a tarball from `agentrite.ritenoar.com` rather than
 from a registry, so a project adds it by the URL of a release, which `deploy.sh` prints when it makes one:
 
 ```sh
-npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.0.0.tgz
+npm install https://agentrite.ritenoar.com/ritenoar-agentrite-2.0.0.tgz
 ```
 
 npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
 `package-lock.json`. A project receives what `files` in this repository's `package.json` lists, which is
-`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agent-kit-roles.mjs`,
-`scripts/agent-kit.mjs` and `container/`, plus the `package.json` and this README that npm always ships. It does not
+`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agentrite-roles.mjs`,
+`scripts/agentrite.mjs` and `container/`, plus the `package.json` and this README that npm always ships. It does not
 receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
 
 The kit assumes npm: `init` reads `package-lock.json`, and the sandbox's image installs from it.
@@ -41,7 +56,7 @@ The kit assumes npm: `init` reads `package-lock.json`, and the sandbox's image i
 Then set the project up from its root, naming only the harnesses it uses:
 
 ```sh
-npx agent-kit init claude opencode
+npx agentrite init claude opencode
 ```
 
 It prints each file it wrote, changed or skipped. It writes:
@@ -55,7 +70,7 @@ It prints each file it wrote, changed or skipped. It writes:
 | `agent.sh`                  | The shim that runs the kit's sandbox from the project root, as described below       |
 | `agent/compose.project.yml` | The project's half of the sandbox configuration                                      |
 
-The role wrappers are the ones `npx agent-kit-roles claude opencode` writes, which is still there for a project that
+The role wrappers are the ones `npx agentrite-roles claude opencode` writes, which is still there for a project that
 wants only those. Unlike `init`, it refuses to overwrite a file that already exists. A model per role goes in the
 project's own wrapper.
 
@@ -71,7 +86,7 @@ updating the kit delivers it. The files a project is expected to edit are these:
 * `agent/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
   `package.json`, the `PLAYWRIGHT_VERSION` build argument, the memory and CPU limits, and the project's `ALLOWLIST`.
   The allowlist lists only what the project needs beyond what the kit admits itself, which is the Anthropic API, the
-  npm registry and `agent-kit.ritenoar.com`; the kit's hosts need no listing. Add the API host of any other model
+  npm registry and `agentrite.ritenoar.com`; the kit's hosts need no listing. Add the API host of any other model
   provider the project's agents use, and whatever its tools and tests reach
 * The role wrappers, to pin a model per role
 
@@ -89,7 +104,7 @@ holding `@AGENTS.md`.
 
   ```json
   "scripts": {
-    "check-changes": "node node_modules/@ritenoar/agent-kit/scripts/check-changes.mjs"
+    "check-changes": "node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs"
   }
   ```
 
@@ -109,7 +124,7 @@ needs Playwright in the lockfile whatever version the file names. It also refuse
 `package.json` has no `name`.
 
 `init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
-`node_modules/@ritenoar/agent-kit/templates/project/`. A project set up or repaired by hand starts from the same
+`node_modules/@ritenoar/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
 files, filling in each `{{placeholder}}` itself.
 
 A missing or altered kit is then npm's error, like any other dependency's, and needs no check of the project's own.
@@ -128,7 +143,7 @@ The lockfile makes a clone reproducible.
 Install the newer release by its URL:
 
 ```sh
-npm install https://agent-kit.ritenoar.com/ritenoar-agent-kit-1.1.0.tgz
+npm install https://agentrite.ritenoar.com/ritenoar-agentrite-2.1.0.tgz
 ```
 
 That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
@@ -142,7 +157,7 @@ here. The improvement reaches that project, and every other, as a new release th
 ## Where to run it
 
 Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike: the
-sandbox admits the npm registry and `agent-kit.ritenoar.com` itself, through the kit's `KIT_ALLOWLIST`. A project's
+sandbox admits the npm registry and `agentrite.ritenoar.com` itself, through the kit's `KIT_ALLOWLIST`. A project's
 `agent.sh` runs the wrapper from `node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox
 can start.
 
@@ -151,7 +166,7 @@ can start.
 `container/agent.sh` layers a project's compose file over the kit's base and runs the container. A project gives it
 two files:
 
-* `agent.sh` at the project root, a shim that execs `node_modules/@ritenoar/agent-kit/container/agent.sh` with the
+* `agent.sh` at the project root, a shim that execs `node_modules/@ritenoar/agentrite/container/agent.sh` with the
   project root as its first argument, so that the documented command stays one command from the repository root.
   The wrapper takes the root from its caller because how deep the kit sits under `node_modules` is npm's to decide
 * `agent/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
@@ -165,17 +180,17 @@ below, and rebuilding.
 The build context is the project root, not the kit directory, because the Dockerfile installs the project's own
 dependencies to get Playwright's system libraries at the version the project resolved. The wrapper passes
 `--project-directory` so that relative paths in both compose files resolve from the project root, and passes the
-kit's `container/` directory, relative to that root, as `AGENT_KIT_CONTAINER`, which the compose file and the
+kit's `container/` directory, relative to that root, as `AGENTRITE_CONTAINER`, which the compose file and the
 Dockerfile use to find the kit's files. A project whose `.dockerignore` excludes `node_modules` must let that one
 directory's files back in:
 
 ```
 node_modules
-!node_modules/@ritenoar/agent-kit/container/**
+!node_modules/@ritenoar/agentrite/container/**
 ```
 
 The exception names the files rather than the directory. BuildKit lets an exception for a directory reach the files
-in it only when the directory itself was excluded, so `!node_modules/@ritenoar/agent-kit/container` alone does not
+in it only when the directory itself was excluded, so `!node_modules/@ritenoar/agentrite/container` alone does not
 bring back a kit file that a pattern excluded by name.
 
 ### The shared `node_modules`
@@ -243,7 +258,7 @@ or address.
 
 The allowlist is two lists together. `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit
 itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, the npm registry and
-`agent-kit.ritenoar.com`. `ALLOWLIST`, in the project's `agent/compose.project.yml`, holds what the project needs
+`agentrite.ritenoar.com`. `ALLOWLIST`, in the project's `agent/compose.project.yml`, holds what the project needs
 besides, and may be empty or left out. Both are checked the same way, and a host in both is admitted once. A kit
 release that needs another host adds it to `KIT_ALLOWLIST`, with no change to any project.
 
@@ -305,9 +320,12 @@ means work on the kit follows the released instructions rather than the working 
 made at the repository root, never under `node_modules`, and the installed copy moves to a newer release only by a
 deliberate update, as described above.
 
+That copy is still 1.0.3, the last release under the kit's old name, `@ritenoar/agent-kit`, which is why its path
+carries that name. It moves once a release of AgentRite exists to move to.
+
 ## Releasing
 
-A release is a tarball of the kit served from `https://agent-kit.ritenoar.com/`, which a project installs from its
+A release is a tarball of the kit served from `https://agentrite.ritenoar.com/`, which a project installs from its
 URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront distribution in front of it, a certificate
 in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
 it looks up rather than owns. None of it ships to a project.
