@@ -101,5 +101,12 @@ timestamp: 2026-10-02T14:01:59Z
   reads frontmatter written as a block mapping, one key to a line at the left margin, plain or in quotes without
   escapes, and that complex keys, escaped names and comments between keys are outside what it supports. Without that
   boundary a later review can keep finding spellings of YAML that the line reading does not cover
+- 2026-10-02T16:20:41Z [OpenCode, openai/gpt-6.1-sol] completed a delta review of `0013-refresh-command` from the
+  previous reviewed commit `0111a17b383a30179ffb45585c852c06269e5e5b` to HEAD
+  `6c816a288f0b3ac556b101374452856f108e777c`, with `master` merge-base
+  `ecccb16f8681b1860cf42823853944cf97d49b0d`. Returned S2 and C2; complete findings are saved in
+  `.reviews/0013-refresh-command/20261002T161716Z-opencode-delta.md`. Not verified: macOS execution, either harness
+  consuming refreshed wrappers (including the recorded 0014 harness-consumption claim), and the original
+  in-session regression-first chronology. The prior packed smoke and broad init comparisons were not rerun
 
 ## Amendments
