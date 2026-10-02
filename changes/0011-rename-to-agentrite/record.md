@@ -74,5 +74,21 @@ timestamp: 2026-10-02T10:06:16Z
   `npm pack --dry-run` at the root names `ritenoar-agentrite-1.0.3.tgz` and lists nothing under `pointers/`, and in
   `pointers/agentrite` it lists `README.md`, `package.json` and `pointer.mjs` and nothing else. Neither package was
   published, which is the human's step, and `npx` against the registry was not tried
+- 2026-10-02T11:52:06Z [Claude Code, anthropic/claude-opus-5-5] ran the search for what is left of the old name
+  outside `changes/`. It finds only the kept self-references: `AGENTS.md`, the `check-changes` script and the
+  devDependency in `package.json`, the 1.0.3 entries in `package-lock.json`, and the two lines of the README section
+  on the installed copy. Nothing needed resolving
+- 2026-10-02T11:52:06Z [Claude Code, anthropic/claude-opus-5-5] verified on 440b192: `npm test` passed, 144 of 144;
+  `npx tsc -p infra` exited 0; `npm run check-changes` exited 0, running the check from the installed 1.0.3; `git diff
+  master -- changes/` shows this unit, 0012 and the record of 0004 only. `npx cdk list` in `infra/`, run in place of
+  `cdk synth` and synthesizing the same app from the cached hosted zone lookup, listed `AgentRiteCertStack` and
+  `AgentRiteHostingStack` and no other stack; nothing was deployed. In a scratch project with the packed kit and
+  `playwright` 1.59.1 installed, `npx agentrite init claude opencode` wrote all twelve files and exited 0, no file it
+  wrote holds the old name, and its `.dockerignore`, `check-changes` script, wrappers, `AGENTS.md`, `CLAUDE.md`,
+  `agent.sh` and compose file name `node_modules/@ritenoar/agentrite`. Not checked: the sandbox image was not built
+  from the renamed kit, and nothing was run against AWS or the npm registry
+- 2026-10-02T11:52:06Z [Claude Code, anthropic/claude-opus-5-5] every task and verification box is ticked. The status
+  stays `in-progress`: the unit has not been reviewed, and `implemented` is set only after the human has decided what
+  a review returns
 
 ## Amendments

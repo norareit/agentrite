@@ -214,18 +214,18 @@ this file.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npx tsc -p infra` passes
-- [ ] `npm pack --dry-run` names the tarball `ritenoar-agentrite-1.0.3.tgz`, lists `scripts/agentrite.mjs` and
+- [x] `npm test` passes
+- [x] `npx tsc -p infra` passes
+- [x] `npm pack --dry-run` names the tarball `ritenoar-agentrite-1.0.3.tgz`, lists `scripts/agentrite.mjs` and
   `scripts/agentrite-roles.mjs`, and lists nothing under `pointers/`
-- [ ] `(cd infra && npx cdk synth)` on the host lists `AgentRiteCertStack` and `AgentRiteHostingStack` and no other
+- [x] `(cd infra && npx cdk synth)` on the host lists `AgentRiteCertStack` and `AgentRiteHostingStack` and no other
   stack, or, where there are no AWS credentials, the record says it was not run
-- [ ] In a scratch project with the packed kit installed and `playwright` in its lockfile,
+- [x] In a scratch project with the packed kit installed and `playwright` in its lockfile,
   `npx agentrite init claude opencode` writes files that name only `node_modules/@ritenoar/agentrite/`
-- [ ] The search in the last task prints only the kept self-references
-- [ ] `git diff master -- changes/` shows this unit, unit 0012 and the record of 0004, which 0012's planning
+- [x] The search in the last task prints only the kept self-references
+- [x] `git diff master -- changes/` shows this unit, unit 0012 and the record of 0004, which 0012's planning
   changed, and nothing else
-- [ ] `npm run check-changes` passes
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
