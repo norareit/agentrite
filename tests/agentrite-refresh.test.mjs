@@ -146,6 +146,65 @@ test('refreshing what a refresh returned changes nothing', () => {
   assert.equal(refreshedWrapper(once, wrapper), once);
 });
 
+// Review S1
+
+test('a wrapper with CRLF line endings keeps its added keys, and is written with LF', () => {
+  const wrapper = rendered('opencode', 'reviewer');
+  const added = ['model: some/model', 'permission:', '  edit: deny'];
+  const stale = withFrontmatter(wrapper, 'mode:', added)
+    .replace('mode: subagent', 'mode: primary')
+    .replace('@ritenoar/agentrite', '@ritenoar/agent-kit');
+  const crlf = stale.replaceAll('\n', '\r\n');
+
+  const result = refreshedWrapper(crlf, wrapper);
+
+  assert.doesNotMatch(result, /\r/);
+  assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), ...added]);
+  assert.equal(result, withFrontmatter(wrapper, 'mode:', added));
+  assert.equal(refreshedWrapper(result, wrapper), result);
+  assert.equal(refreshedWrapper(result.replaceAll('\n', '\r\n'), wrapper), result);
+});
+
+// Review S2
+
+test('an added key written in quotes, or with space before its colon, is kept as it was written', () => {
+  const wrapper = rendered('opencode', 'reviewer');
+  for (const added of ['"model": some/model', "'model': some/model", 'model : some/model', 'model\t: some/model']) {
+    const result = refreshedWrapper(withFrontmatter(wrapper, 'mode:', [added]), wrapper);
+
+    assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), added], added);
+    assert.equal(refreshedWrapper(result, wrapper), result, added);
+  }
+});
+
+test('a kit key written in quotes, or with space before its colon, is replaced and not kept beside it', () => {
+  const opencode = rendered('opencode', 'implementer');
+  for (const spelling of ['"mode": primary', "'mode': primary", 'mode : primary']) {
+    const edited = opencode.replace('mode: subagent', `model: some/model\n${spelling}`);
+
+    const result = refreshedWrapper(edited, opencode);
+
+    assert.deepEqual(frontmatter(result), [...frontmatter(opencode), 'model: some/model'], spelling);
+  }
+
+  const claude = rendered('claude', 'planner');
+  const quoted = ['---', '"name": other', 'model: some/model', '"description": An older one.', '---', '', ''];
+  assert.deepEqual(frontmatter(refreshedWrapper(quoted.join('\n'), claude)), [
+    ...frontmatter(claude),
+    'model: some/model',
+  ]);
+});
+
+test('a value that holds a colon, and a line of a list, are not taken for keys', () => {
+  const wrapper = rendered('opencode', 'planner');
+  const added = ['notes: see https://example.com/a: b', 'tools:', '- read: no', '- "grep": yes'];
+
+  assert.deepEqual(frontmatter(refreshedWrapper(withFrontmatter(wrapper, 'mode:', added), wrapper)), [
+    ...frontmatter(wrapper),
+    ...added,
+  ]);
+});
+
 // End to end: the executable in a temporary project.
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
@@ -260,6 +319,35 @@ test('a shim with the right content that is not executable is made executable', 
   assert.equal(result.status, 0, result.stderr);
   assert.notEqual(statSync(join(base, 'agent.sh')).mode & 0o111, 0);
   assert.match(result.stdout, line('refreshed', 'agent.sh'));
+});
+
+// Review C1
+test('a shim only someone other than its owner may execute is made executable, and is then up to date', (t) => {
+  const { base, run, write } = project(t);
+  write('agent.sh', SHIM);
+  chmodSync(join(base, 'agent.sh'), 0o645);
+
+  const result = run('refresh', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, line('refreshed', 'agent.sh'));
+  assert.equal(statSync(join(base, 'agent.sh')).mode & 0o777, 0o755);
+  assert.match(run('refresh', 'claude').stdout, line('up to date', 'agent.sh'));
+});
+
+// Review S1
+test('a pinned model in a wrapper with CRLF line endings survives the command', (t) => {
+  const { run, read, write } = project(t);
+  const path = '.opencode/agents/reviewer.md';
+  const wrapper = rendered('opencode', 'reviewer');
+  write(path, withFrontmatter(wrapper, 'mode:', ['model: some/model']).replaceAll('\n', '\r\n'));
+
+  const result = run('refresh', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(path), withFrontmatter(wrapper, 'mode:', ['model: some/model']));
+  assert.match(result.stdout, line('refreshed', path));
+  assert.match(run('refresh', 'opencode').stdout, line('up to date', path));
 });
 
 test('the files that are the project own are byte for byte unchanged, and a missing one stays missing', (t) => {

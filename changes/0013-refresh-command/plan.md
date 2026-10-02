@@ -86,15 +86,15 @@ the ones 0011 and 0012 left.
   own and that `init` never regenerates one, add that the wrappers and `agent.sh` are the exception `refresh`
   keeps current, and reword "`CLAUDE.md` and `agent.sh` are best left as written" so that it says `agent.sh` is
   rewritten by `refresh`. Remove nothing else (R11)
-- [ ] Review S1: find the frontmatter of a wrapper whose lines end in CRLF, so that its added keys are kept. The
+- [x] Review S1: find the frontmatter of a wrapper whose lines end in CRLF, so that its added keys are kept. The
   result is written with LF, as the release writes it. First the regressions: in the unit tests, a CRLF wrapper
   with a pinned model and a nested key keeps both, takes the release's values and body, and is stable on a second
   refresh; end to end, a CRLF wrapper with a pinned model keeps the pin (R4, R5)
-- [ ] Review S2: recognize a key at the left margin that is written in double or single quotes, or with space
+- [x] Review S2: recognize a key at the left margin that is written in double or single quotes, or with space
   before its colon, and compare keys by their name, not their spelling. First the regressions: `"model"`,
   `'model'` and `model :` added to a wrapper are kept as written; a kit key written as `"mode"` after a kept key is
   replaced by the release's `mode`, leaving one mode key (R4, R5)
-- [ ] Review C1: count the shim as executable only when its owner may execute it. First the regression, end to
+- [x] Review C1: count the shim as executable only when its owner may execute it. First the regression, end to
   end: a shim with the release's content and mode 0645 is reported as refreshed and is then executable by its
   owner, and a second run reports it as up to date (R6)
 

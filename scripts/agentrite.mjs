@@ -216,10 +216,28 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
  * @returns {{ frontmatter: string[], rest: string[] } | undefined}
  */
 function splitWrapper(wrapper) {
-  const lines = wrapper.split('\n');
+  // A wrapper saved with CRLF is read as the same lines. What is written from them ends in LF, as the release's does.
+  const lines = wrapper.split(/\r?\n/);
   const end = lines.indexOf('---', 1);
   if (lines[0] !== '---' || end === -1) return undefined;
   return { frontmatter: lines.slice(1, end), rest: lines.slice(end + 1) };
+}
+
+// A key at the left margin, as YAML lets a block mapping write one: in double quotes, in single quotes or plain,
+// with any space before its colon, and the colon followed by space or by the end of the line. That last part is
+// what tells a key from a value that holds a colon. A line that opens with `-` is an item of a list, not a key.
+const KEY_LINE = /^(?:"([^"]*)"|'([^']*)'|([^\s"'#?:-][^:]*?))[ \t]*:(?:[ \t]|$)/;
+
+/**
+ * The name of the key `line` opens, without its quotes, so that `"mode"` and `mode` are one key. Undefined for a
+ * line that opens none.
+ *
+ * @param {string} line
+ * @returns {string | undefined}
+ */
+function keyName(line) {
+  const key = line.match(KEY_LINE);
+  return key ? (key[1] ?? key[2] ?? key[3]) : undefined;
 }
 
 /**
@@ -232,8 +250,8 @@ function splitWrapper(wrapper) {
 function keyBlocks(frontmatter) {
   /** @type {{ name: string, lines: string[] }[]} */ const blocks = [];
   for (const line of frontmatter) {
-    const key = line.match(/^([A-Za-z_][\w-]*):/);
-    if (key) blocks.push({ name: key[1], lines: [line] });
+    const name = keyName(line);
+    if (name !== undefined) blocks.push({ name, lines: [line] });
     else blocks.at(-1)?.lines.push(line);
   }
   return blocks;
@@ -590,7 +608,8 @@ function refresh(root, harnesses) {
     const existing = kind === 'file' ? readFileSync(absolute, 'utf-8') : undefined;
     const content =
       existing !== undefined && file.keepsFrontmatter ? refreshedWrapper(existing, file.content) : file.content;
-    const executable = !file.executable || (kind === 'file' && (lstatSync(absolute).mode & 0o111) !== 0);
+    // The owner's bit, which is the one that lets the project run its own shim and the one git records.
+    const executable = !file.executable || (kind === 'file' && (lstatSync(absolute).mode & 0o100) !== 0);
     if (existing === content && executable) {
       console.log(`up to date ${file.path}`);
       continue;

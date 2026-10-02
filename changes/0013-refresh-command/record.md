@@ -83,5 +83,23 @@ timestamp: 2026-10-02T14:01:59Z
   so an added one is dropped and a kit one is kept beside the release's, against requirements 4 and 5; C1, a shim
   whose only execute bit is not its owner's is taken as executable, against requirement 6. Added a task for each to
   `plan.md`, regression first
+- 2026-10-02T16:09:38Z [Claude Code, anthropic/claude-opus-5-5] applied S1, S2 and C1. Wrote the regressions first,
+  five of which failed: a CRLF wrapper losing its keys, in the function and through the command; an added key in
+  double quotes, in single quotes and with space or a tab before its colon; a kit key in those spellings kept beside
+  the release's; and a shim of mode 0645 taken as executable. A sixth, that a value holding a colon and the items of a
+  list are not taken for keys, passed before the change and guards it. Then: the frontmatter is found on lines split
+  at CRLF or LF, and the result is written with LF; a key is recognized in quotes or plain, with space before its
+  colon, and compared by its name; the shim counts as executable only by its owner's bit. `npm test` passed, 176 of
+  176, and `npx tsc -p infra` exited 0
+- 2026-10-02T16:09:38Z [Claude Code, anthropic/claude-opus-5-5] a limit that the fix of S2 does not remove, and a
+  proposed decision for the human, not taken here. The frontmatter is read line by line, without a YAML parser, the
+  kit having no dependencies. Probed after the fix: a key in quotes with an escape in its name, such as `"mo\x64e"`,
+  is taken as a different key from `mode` and kept beside the release's; a complex key, written with `?`, is not seen
+  as a key and is dropped with the kit key above it; a comment line above an added key is dropped when the key above
+  it is the kit's, while the key itself is kept; a flow mapping on one line is kept as written. The spec promises that
+  every key the release does not write is kept, and names no boundary. Proposed: record as a decision that `refresh`
+  reads frontmatter written as a block mapping, one key to a line at the left margin, plain or in quotes without
+  escapes, and that complex keys, escaped names and comments between keys are outside what it supports. Without that
+  boundary a later review can keep finding spellings of YAML that the line reading does not cover
 
 ## Amendments
