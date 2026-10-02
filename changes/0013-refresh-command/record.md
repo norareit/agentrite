@@ -213,5 +213,17 @@ timestamp: 2026-10-02T14:01:59Z
   to requirement 13 awaits the human, and the rework since 26c8b8b awaits a delta review
 - 2026-10-02T18:16:33Z [human] confirmed the amendment to requirement 13: a bracketed list or map holds no `#`, and a
   comment may follow a value that ends on its line. Added that the reading of frontmatter as a whole feels flaky
+- 2026-10-02T18:24:58Z [human] asked which file all this is about and what a project adds to it, and on hearing that
+  the README names one thing, a pinned model, on one line, decided that this is all `refresh` keeps. The wrappers are
+  tracked, so whatever was in one is in the git history; the worst case is that a refresh overwrites a value, which
+  the project sees in git and reports, and that is fixed then. No form of frontmatter, no refusal
+- 2026-10-02T18:24:58Z [Claude Code, anthropic/claude-opus-5-5] took the planner role for the amendment. Requirement 4
+  now keeps a line that opens with `model:`, as written; requirement 5 replaces everything else; requirements 13 and
+  14 are withdrawn, their numbers kept so that the reviews that cite them still point somewhere; requirement 11
+  follows. The decisions on the exact form, on comments and on `#` in brackets are replaced by one that records the
+  three reviews, the human's reasoning and the alternatives. Keeping every added key was the planner's own widening of
+  what the README invites, and it is what the reviews kept finding faults in. Added three tasks to `plan.md`, rewrote
+  its account of the one pure function, and opened the verification line on the pack again, which is back to 22 files.
+  Took the implementer role again
 
 ## Amendments

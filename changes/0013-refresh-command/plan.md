@@ -23,18 +23,15 @@ and `projectFiles` is not built from it: the list marks the wrappers as files wh
 `init` has no use for, and `init` writes `AGENTS.md` and `CLAUDE.md` between the wrappers and the shim.
 
 The one piece of new logic is pure: `refreshedWrapper(existing, rendered)` takes the wrapper as it is in the project
-and as this release renders it, and returns what to write. It splits each into its frontmatter and its body. The
-frontmatter is the lines between a first line of `---` and the next line of `---`. A key is a line that starts with
-a name and a colon at the left margin, and every line after it that is indented, starts with `-`, or is blank
-belongs to that key. The result is the rendered frontmatter, then each key block of the existing one whose name the
-rendered one does not have, in their order, then the rendered body. An existing file without frontmatter gives the
-rendered file unchanged. It knows nothing about any harness: the keys the kit writes are whatever the rendered file
-holds.
+and as this release renders it, and returns what to write. It finds the existing wrapper's frontmatter, the lines
+between a first line of `---` and the next one, takes from it every line that opens with `model:` at the left
+margin, and returns the rendered wrapper with those lines put in before the `---` that closes its frontmatter. It
+reads no YAML and knows nothing about any harness.
 
-After two reviews the reading of the frontmatter was reworked, as the spec's decision on it records: it checks
-every line against the form of requirement 13 and returns a problem instead of a guess. A text opened by `|` or
-`>` is skipped by its indentation, which is how the kit's own folded description, with its apostrophes, stays
-readable while a quote anywhere else has to close on its line.
+The unit took three reviews to get there, and the tasks below keep that history: they first built a function that
+kept every key a project added, then a reader of one stated form of frontmatter that refused the rest, in a module
+of its own with a comparison against a YAML parser beside it. The last tasks take all of that out again, by the
+human's decision in the spec.
 
 The entry point, `refresh(root, harnesses)`, reads each file's state with `lstatSync`, and writes, rewrites, leaves
 or refuses it. It reads neither `package.json` nor the lockfile.
@@ -44,13 +41,11 @@ the ones 0011 and 0012 left.
 
 ## Files
 
-- `scripts/agentrite.mjs`: `parseArgs` in place of `parseInitArgs`; `shimFile`; `kitOwnedFiles`; `refresh`; the
-  dispatch in the entry point
-- `scripts/wrapper-frontmatter.mjs`: new, `refreshedWrapper` and the reading of frontmatter behind it, a job of its
-  own since the rework after the delta review
-- `package.json`: the new script under `files`, so that it ships
-- `tests/manual/frontmatter-vs-yaml.py`, `tests/manual/refresh-cases.mjs`: new, the comparison with a YAML parser,
-  run by hand
+- `scripts/agentrite.mjs`: `parseArgs` in place of `parseInitArgs`; `shimFile`; `kitOwnedFiles`; `refreshedWrapper`;
+  `refresh`; the dispatch in the entry point
+- `scripts/wrapper-frontmatter.mjs`, `tests/manual/frontmatter-vs-yaml.py`, `tests/manual/refresh-cases.mjs`: added
+  during the reviews and removed again by the last tasks, with the entry for the first in `package.json`. The unit
+  leaves none of them, and `package.json` as it was
 - `tests/agentrite-init.test.mjs`: the parsing tests, for `parseArgs`
 - `tests/agentrite-refresh.test.mjs`: new, the unit tests of `refreshedWrapper` and the end-to-end tests of the
   command
@@ -148,12 +143,25 @@ the ones 0011 and 0012 left.
   does not run it and the README says how to. Extend it to build frontmatter out of single tokens as well as
   whole pieces, comments inside brackets among them, which the first version lacked and which is how C3 got past
   it. Run it, and turn each failure into a test in the suite before fixing it (R4, R5, R13, R14)
+- [ ] Keep only the pinned model, as the spec now has it in requirements 4 and 5, with 13 and 14 withdrawn. First
+  the tests, replacing those of the reader: a wrapper that is what the release writes comes back unchanged; a
+  `model:` line is kept after the kit's keys in both harnesses, wherever it stood, and as written, whatever its
+  value; several are kept in their order; a wrapper saved with CRLF keeps its model and is written with LF; another
+  key, a nested setting and a comment are not kept; a line that only starts like it, such as `models:`, an indented
+  `model:` and one in the body are not taken for a pin; the kit's keys and the body are the release's; a file with
+  no frontmatter, or with one never closed, becomes the release's wrapper; a second refresh changes nothing. End to
+  end, the tests of the refusal go, and the others stay as they are. See them fail (R4, R5, R12)
+- [ ] Write `refreshedWrapper` in `scripts/agentrite.mjs` as the Approach describes, returning the content, have
+  `refresh` use it without a refusal, and remove `scripts/wrapper-frontmatter.mjs`, its entry in `package.json`,
+  and `tests/manual/`. Until the tests pass (R3, R4, R5)
+- [ ] In the README, take out the description of the frontmatter `refresh` reads and of the check run by hand, and
+  say instead that a `model:` line is kept and everything else in a wrapper is replaced, which `git diff` shows
+  (R11)
 
 ## Verification
 
 - [x] `npm test` passes
-- [x] `npm pack --dry-run` lists `scripts/agentrite.mjs`, and one file more than before, 23 in all:
-  `scripts/wrapper-frontmatter.mjs`
+- [ ] `npm pack --dry-run` lists `scripts/agentrite.mjs` and the same 22 files as before the unit
 - [x] In a scratch project set up with `npx agentrite init claude opencode` from the packed kit, with a model
   pinned by hand in one wrapper, after the kit's keys, and a line appended to `agent.sh`,
   `npx agentrite refresh claude opencode` reports `agent.sh` as refreshed and the six wrappers as up to date, the
