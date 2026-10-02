@@ -225,5 +225,13 @@ timestamp: 2026-10-02T14:01:59Z
   what the README invites, and it is what the reviews kept finding faults in. Added three tasks to `plan.md`, rewrote
   its account of the one pure function, and opened the verification line on the pack again, which is back to 22 files.
   Took the implementer role again
+- 2026-10-02T18:26:15Z [Claude Code, anthropic/claude-opus-5-5] replaced the tests of the reader with ten for the
+  pinned model, and took out the two end-to-end tests of the refusal; the file failed as a whole on the export that
+  did not exist yet. Then wrote `refreshedWrapper` in `scripts/agentrite.mjs`, eleven lines that find the lines
+  opening with `model:` in the existing frontmatter and put them into the rendered wrapper, and removed
+  `scripts/wrapper-frontmatter.mjs`, its entry in `package.json`, the refusal in `refresh`, and `tests/manual/`. `npm
+  test` passed, 173 of 173. Rewrote the README's account of `refresh` to match and took out the check run by hand. The
+  findings S2, C2, S3 and C3 of the three reviews were all about the reading of frontmatter, which is gone; S1, on
+  CRLF, and C1, on the owner's execute bit, still hold and keep their tests
 
 ## Amendments

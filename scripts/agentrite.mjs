@@ -3,7 +3,6 @@ import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSyn
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseHarnesses, plannedFiles } from './agentrite-roles.mjs';
-import { refreshedWrapper } from './wrapper-frontmatter.mjs';
 
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -170,13 +169,13 @@ function shimFile(templates) {
 
 /**
  * The generated files that hold nothing but what the kit put there, which refresh keeps as the release writes
- * them: the role wrappers, whose frontmatter a project may have added keys to, and the shim.
+ * them: the role wrappers, in which a project may have pinned a model, and the shim.
  *
  * @param {{ templates: Record<string, string>, harnesses: string[] }} project
- * @returns {{ path: string, content: string, executable?: boolean, keepsFrontmatter?: boolean }[]}
+ * @returns {{ path: string, content: string, executable?: boolean, keepsModel?: boolean }[]}
  */
 function kitOwnedFiles({ templates, harnesses }) {
-  return [...plannedFiles(harnesses).map((file) => ({ ...file, keepsFrontmatter: true })), shimFile(templates)];
+  return [...plannedFiles(harnesses).map((file) => ({ ...file, keepsModel: true })), shimFile(templates)];
 }
 
 /**
@@ -207,6 +206,27 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
     harness_hosts: harnessHosts(harnesses),
   });
   return [...files, { path: COMPOSE_FILE, content: compose }];
+}
+
+/**
+ * What to write over a wrapper a project already has: the wrapper as this release renders it, with the lines of
+ * the existing one's frontmatter that pin a model put in after the release's own keys. A pin is a line that opens
+ * with `model:` at the left margin, kept as it is written. Nothing else of the existing wrapper is kept, and no
+ * YAML is read to find it: the wrappers are tracked files, so whatever else a project added shows in its diff.
+ *
+ * @param {string} existing
+ * @param {string} rendered
+ * @returns {string}
+ */
+export function refreshedWrapper(existing, rendered) {
+  // A wrapper saved with CRLF is read as the same lines. What is written ends its lines in LF, as the release does.
+  const lines = existing.split(/\r?\n/);
+  const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  const pins = lines.slice(1, Math.max(end, 1)).filter((line) => /^model:(?: |$)/.test(line));
+  if (pins.length === 0) return rendered;
+  // The rendered wrapper opens with `---`, so the first `---` after a line break is the one that closes it.
+  const closing = rendered.indexOf('\n---\n') + 1;
+  return `${rendered.slice(0, closing)}${pins.join('\n')}\n${rendered.slice(closing)}`;
 }
 
 /**
@@ -536,14 +556,8 @@ function refresh(root, harnesses) {
     }
 
     const existing = kind === 'file' ? readFileSync(absolute, 'utf-8') : undefined;
-    const wrapper =
-      existing !== undefined && file.keepsFrontmatter ? refreshedWrapper(existing, file.content) : undefined;
-    if (wrapper !== undefined && 'problem' in wrapper) {
-      console.error(`agentrite: left ${file.path}, whose frontmatter refresh does not read: ${wrapper.problem}`);
-      status = 1;
-      continue;
-    }
-    const content = wrapper === undefined ? file.content : wrapper.content;
+    const content =
+      existing !== undefined && file.keepsModel ? refreshedWrapper(existing, file.content) : file.content;
     // The owner's bit, which is the one that lets the project run its own shim and the one git records.
     const executable = !file.executable || (kind === 'file' && (lstatSync(absolute).mode & 0o100) !== 0);
     if (existing === content && executable) {

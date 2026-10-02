@@ -94,8 +94,8 @@ updating the kit delivers it. The files a project is expected to edit are these:
 
 The role wrappers and `agent.sh` are the exception to a generated file being the project's own. They hold nothing
 but what the kit put there, so `refresh`, described under "Updating a project to a newer kit", rewrites them as the
-installed release writes them. A key added to a wrapper's frontmatter, such as the pinned model, survives that.
-Anything else added to a wrapper, or to `agent.sh`, does not, so `agent.sh` is not a file to edit.
+installed release writes them. The model pinned in a wrapper survives that. Anything else added to a wrapper, or to
+`agent.sh`, does not, so `agent.sh` is not a file to edit.
 
 When `AGENTS.md` already exists, `init` leaves it untouched and prints the three sections it would have written,
 ready to be pasted in. An agent does not see the kit's instructions until the existing file holds them, so paste in
@@ -166,29 +166,15 @@ missing, and prints each file as written, refreshed or up to date. A release tha
 line that points at its role file, or the shim reaches a project this way; without it those copies stay as an older
 release wrote them, and nothing says so.
 
-* A key the project added to a wrapper's frontmatter is kept, with its value and the comments directly above it,
-  after the kit's own keys. That is how a pinned model survives. A key the kit writes takes the release's value
-* Everything else in a wrapper, and all of `agent.sh`, is replaced. `git diff` shows what a refresh changed
+* A model pinned in a wrapper survives: a line in its frontmatter that opens with `model:` is kept, as written,
+  after the kit's own keys
+* Everything else in a wrapper, and all of `agent.sh`, is replaced, other keys a project added to the frontmatter
+  among them. The wrappers are tracked files, so `git diff` shows what a refresh changed, and git has what it
+  replaced
 * `AGENTS.md`, `CLAUDE.md`, `agent/compose.project.yml`, `package.json` and `.dockerignore` are never touched, and
   never created
 * A path that holds something other than a regular file, such as a symbolic link, is left as it is and named on
   standard error. The other files are still refreshed, and the command exits non-zero
-
-`refresh` is not a YAML parser. It reads frontmatter written the plain way, and leaves a wrapper written any other
-way exactly as it is, naming it on standard error with the first line it did not read, and exits non-zero. It never
-guesses: a wrapper is either read in full or not touched. What it reads:
-
-* Keys at the left margin, each a plain name of letters, digits, `_` and `-` directly followed by a colon, such as
-  `model: some/model`. A key in quotes, or with a space before its colon, is not read
-* A value on the key's line, or on the indented lines and list items below it, which is how a harness's nested
-  settings are written
-* A text in quotes, or a list or map in brackets or braces, that starts and ends on one line. A bracketed one holds
-  no quote and no `#`
-* A text opened by `|` or `>`, which may hold anything
-* Any other text without a quote in it, and without an anchor or a tag
-* Comments, on lines of their own or after a value, and blank lines. Blank lines between keys are not carried over
-
-A wrapper it does not read is refreshed by rewriting that part of its frontmatter in the plain way, or by hand.
 
 An improvement found while working in a project is made here, in the kit repository, and committed here. The
 installed copy under a project's `node_modules` is not a working copy of this repository, and nothing in it reaches
@@ -351,16 +337,6 @@ npm run check-changes
 
 It runs the check from the released kit in `node_modules`, not from this repository's `scripts/`, so it needs
 `npm ci` first.
-
-One check is run by hand and is not part of `npm test`, because it needs Python 3 with PyYAML:
-
-```sh
-python3 tests/manual/frontmatter-vs-yaml.py
-```
-
-`refresh` reads a wrapper's frontmatter without a YAML parser, and this compares what it does with what a parser
-reads, over random frontmatter. It fails when `refresh` accepted a frontmatter and changed its meaning. Run it after
-any change to `scripts/wrapper-frontmatter.mjs`, and turn a case it finds into a test before fixing it.
 
 ## The kit's own copy of the kit
 

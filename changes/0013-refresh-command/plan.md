@@ -143,7 +143,7 @@ the ones 0011 and 0012 left.
   does not run it and the README says how to. Extend it to build frontmatter out of single tokens as well as
   whole pieces, comments inside brackets among them, which the first version lacked and which is how C3 got past
   it. Run it, and turn each failure into a test in the suite before fixing it (R4, R5, R13, R14)
-- [ ] Keep only the pinned model, as the spec now has it in requirements 4 and 5, with 13 and 14 withdrawn. First
+- [x] Keep only the pinned model, as the spec now has it in requirements 4 and 5, with 13 and 14 withdrawn. First
   the tests, replacing those of the reader: a wrapper that is what the release writes comes back unchanged; a
   `model:` line is kept after the kit's keys in both harnesses, wherever it stood, and as written, whatever its
   value; several are kept in their order; a wrapper saved with CRLF keeps its model and is written with LF; another
@@ -151,17 +151,17 @@ the ones 0011 and 0012 left.
   `model:` and one in the body are not taken for a pin; the kit's keys and the body are the release's; a file with
   no frontmatter, or with one never closed, becomes the release's wrapper; a second refresh changes nothing. End to
   end, the tests of the refusal go, and the others stay as they are. See them fail (R4, R5, R12)
-- [ ] Write `refreshedWrapper` in `scripts/agentrite.mjs` as the Approach describes, returning the content, have
+- [x] Write `refreshedWrapper` in `scripts/agentrite.mjs` as the Approach describes, returning the content, have
   `refresh` use it without a refusal, and remove `scripts/wrapper-frontmatter.mjs`, its entry in `package.json`,
   and `tests/manual/`. Until the tests pass (R3, R4, R5)
-- [ ] In the README, take out the description of the frontmatter `refresh` reads and of the check run by hand, and
+- [x] In the README, take out the description of the frontmatter `refresh` reads and of the check run by hand, and
   say instead that a `model:` line is kept and everything else in a wrapper is replaced, which `git diff` shows
   (R11)
 
 ## Verification
 
 - [x] `npm test` passes
-- [ ] `npm pack --dry-run` lists `scripts/agentrite.mjs` and the same 22 files as before the unit
+- [x] `npm pack --dry-run` lists `scripts/agentrite.mjs` and the same 22 files as before the unit
 - [x] In a scratch project set up with `npx agentrite init claude opencode` from the packed kit, with a model
   pinned by hand in one wrapper, after the kit's keys, and a line appended to `agent.sh`,
   `npx agentrite refresh claude opencode` reports `agent.sh` as refreshed and the six wrappers as up to date, the
