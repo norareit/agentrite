@@ -23,10 +23,12 @@ wrapper's frontmatter. Deleting a wrapper and writing it again loses that.
    commands and exits 2. `init` behaves as before in every other respect
 3. For each harness given, `refresh` makes each of its role wrappers what this release writes for that role, with
    one exception, requirement 4. A wrapper that does not exist is written
-4. A frontmatter key in an existing wrapper that this release does not write for that harness is kept, with its
-   value, including a value that runs over several lines. Kept keys follow the kit's own, in the order they had.
-   A key this release does write is given the release's value, whatever the wrapper held
-5. Everything else in an existing wrapper is replaced: the kit's own keys and the whole body below the frontmatter
+4. In an existing wrapper whose frontmatter `refresh` reads, by requirement 13, a key that this release does not
+   write for that harness is kept, with its value, including a value that runs over several lines, and with the
+   comment lines that stand directly above it. Kept keys follow the kit's own, in the order they had. A key this
+   release does write is given the release's value, whatever the wrapper held
+5. Everything else in such a wrapper is replaced: the kit's own keys and the whole body below the frontmatter. A
+   wrapper that does not open with a line of `---` has no frontmatter and is replaced whole
 6. `refresh` makes `agent.sh` what this release writes, and executable, whether or not it existed
 7. `refresh` creates and changes nothing else. `AGENTS.md`, `CLAUDE.md`, `agent/compose.project.yml`,
    `package.json` and `.dockerignore` are byte for byte what they were, and one that is missing stays missing
@@ -39,8 +41,25 @@ wrapper's frontmatter. Deleting a wrapper and writing it again loses that.
     neither file
 11. The README describes the command where it describes moving a project to a newer release, says which files it
     rewrites and which it never touches, and says that a key added to a wrapper's frontmatter survives while
-    anything else added to a wrapper or to `agent.sh` does not
+    anything else added to a wrapper or to `agent.sh` does not. It describes the frontmatter `refresh` reads and
+    what happens to a wrapper written otherwise
 12. The new logic is unit tested, and the command is tested end to end in a temporary project, as `init` is
+13. `refresh` reads frontmatter written as follows, and no other. Lines end in LF or in CRLF. The frontmatter is
+    closed by a line of `---`. Every line at the left margin is a key, an item of a list that is the value of the
+    key above it, a comment or a blank line. A key is a plain name of letters, digits, `_` and `-`, directly
+    followed by a colon. Its value is on the same line, after one space, or on the indented lines and list items
+    below it. Wherever a value stands, on the key's line or below it:
+    * a text in single or double quotes starts and ends on one line
+    * a list or a map in brackets or braces starts and ends on one line and holds no quote
+    * a text opened by `|` or `>` holds anything, on lines indented further than its key
+    * any other text holds no quote, and does not open with an anchor or a tag
+    * a nested key is plain, or a quoted text that starts and ends before its colon
+    * indentation is spaces
+14. A wrapper whose frontmatter is not written that way is left byte for byte as it is. `refresh` names it on
+    standard error with the number of the first line it did not read and why, still handles the other files, and
+    exits 1. That covers, among others, a key in quotes or with space before its colon, a key written with `?`, a
+    quoted text or a bracketed list that runs over several lines, an anchor, a tag, and frontmatter that is never
+    closed. A second run reports the same and changes nothing
 
 ## Decisions
 
@@ -60,6 +79,24 @@ wrapper's frontmatter. Deleting a wrapper and writing it again loses that.
   keys. Keeping additions to the body was rejected: the kit cannot tell a line a project added from a line an
   older release wrote, so it would have to keep stale text as well, which is the thing the command exists to
   remove. Git shows what a refresh replaced, and the command names each file it changed
+* **`refresh` reads one exact form of frontmatter and refuses the rest. It is not a YAML parser.** The human
+  decided this on 2026-10-02, after two reviews. The command reads the frontmatter line by line, the kit having no
+  dependency to parse YAML with. The first version took any line shaped like `name:` for a key, and the first
+  review showed keys it missed, in quotes or with space before the colon, which were dropped without a word. The
+  fix widened what counts as a key, and the second review showed the wider reading taking a line inside a quoted
+  value for a key and cutting the value in two, leaving frontmatter that no longer parses. Each widening guesses
+  at more of YAML and guesses wrong somewhere else. So the command does not guess: requirement 13 states the form
+  it reads, chosen so that a line it takes for a key cannot be the inside of a value, and requirement 14 has it
+  leave any other wrapper alone and say so. What it defends is a project's wrapper against being changed wrongly
+  in silence. What it does not promise is to accept every valid YAML file: a wrapper written in a form it does not
+  read is refused although it is valid, and is refreshed by hand or rewritten in the plain form. The supported
+  usage is a wrapper as the kit writes it, with keys added in the plain form, which is how a model is pinned and
+  how a harness's nested settings are written. A YAML parser as a dependency was rejected: it would be the kit's
+  first, installed into every project, for input that is rare. Overwriting the wrapper whole was rejected: it loses
+  the pinned model on every refresh. Stating the limits and still rewriting the wrappers outside them was
+  rejected: the second review's case left a broken file and reported success
+* **A comment belongs to the key below it.** A project that explains its pinned model does so on the line above.
+  Taken with the key above instead, that comment would be dropped whenever the key above is the kit's
 * **`refresh` is told the harnesses, like `init`.** Detecting them from the directories that exist was rejected:
   a project may keep a `.claude/` directory for other reasons, and an explicit list also writes the wrappers of a
   harness the project is adding

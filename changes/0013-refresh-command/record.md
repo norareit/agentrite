@@ -118,5 +118,20 @@ timestamp: 2026-10-02T14:01:59Z
   Both findings come from the same cause, reading YAML line by line and guessing, and a third patch of the pattern
   would invite a fourth finding. Not patched: what `refresh` does with frontmatter it cannot read safely is a question
   for the spec, so it goes back to the human
+- 2026-10-02T17:25:19Z [human] had the two findings and their cause explained, and decided how the command deals with
+  frontmatter: it reads a small, exact form and refuses anything else, leaving that wrapper untouched and saying so.
+  Asked for a fix that ends the going round in circles
+- 2026-10-02T17:25:19Z [Claude Code, anthropic/claude-opus-5-5] took the planner role for the amendment the human
+  approved, and changed `spec.md`, which is not frozen. Requirements 4 and 5 now hold for a wrapper whose frontmatter
+  the command reads; requirement 13 states that form and requirement 14 the refusal; requirement 11 has the README
+  describe both. Two decisions were added: the exact form and the refusal, with the two reviews that led to it, what
+  it defends and what it does not promise; and a comment belonging to the key below it. This replaces the boundary
+  proposed in the entry on the limit of the S2 fix, and takes back part of that fix: a key in quotes or with space
+  before its colon is refused, not recognized. Checked with PyYAML 6.0.1 before writing the form that a quoted text
+  and a bracketed list can be opened on an indented line and continued at the left margin, which is why the form
+  constrains values on indented lines too, and that a plain text cannot continue at the margin. Added four tasks to
+  `plan.md`
+- 2026-10-02T17:25:19Z [Claude Code, anthropic/claude-opus-5-5] S2 and C2 of the delta review: accepted, the human
+  having decided the way. Took the implementer role again
 
 ## Amendments

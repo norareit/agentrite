@@ -31,6 +31,11 @@ rendered one does not have, in their order, then the rendered body. An existing 
 rendered file unchanged. It knows nothing about any harness: the keys the kit writes are whatever the rendered file
 holds.
 
+After two reviews the reading of the frontmatter was reworked, as the spec's decision on it records: it checks
+every line against the form of requirement 13 and returns a problem instead of a guess. A text opened by `|` or
+`>` is skipped by its indentation, which is how the kit's own folded description, with its apostrophes, stays
+readable while a quote anywhere else has to close on its line.
+
 The entry point, `refresh(root, harnesses)`, reads each file's state with `lstatSync`, and writes, rewrites, leaves
 or refuses it. It reads neither `package.json` nor the lockfile.
 
@@ -97,6 +102,28 @@ the ones 0011 and 0012 left.
 - [x] Review C1: count the shim as executable only when its owner may execute it. First the regression, end to
   end: a shim with the release's content and mode 0645 is reported as refreshed and is then executable by its
   owner, and a second run reports it as up to date (R6)
+- [ ] Delta review S2 and C2, with the spec as amended by requirements 13 and 14: write the tests first, in
+  `tests/agentrite-refresh.test.mjs`. `refreshedWrapper` returns either the content to write or the problem that
+  kept it from reading the frontmatter, as the number of a line and a reason. Unreadable, each naming its line: a
+  key in double quotes, in single quotes, with space before its colon, and written with `?`; a single-quoted and a
+  double-quoted value that run over several lines, the review's case among them; a bracketed list that runs over
+  several lines; a quoted value and a bracketed list opened on an indented line; a value with an anchor and with a
+  tag; a tab in the indentation; a margin line that is neither key, list item, comment nor blank; an indented line
+  before any key; frontmatter never closed. Readable and kept whole: a comment above an added key, which comes with
+  it; a nested map with a quoted nested key; quoted values that hold a colon and a `#`; a bracketed list on one
+  line; a `|` text holding quotes and a line shaped like a key; a list at the left margin; blank lines. The tests
+  that expected quoted and spaced keys to be kept are replaced by these, and the guard whose value was not valid
+  YAML is replaced by quoted values that are. End to end: a wrapper the command cannot read is byte for byte
+  unchanged, named on standard error with its line, the others are refreshed, the exit status is 1, and a second
+  run does the same. See them fail (R4, R5, R13, R14)
+- [ ] Rework `splitWrapper`, `keyBlocks` and `refreshedWrapper` to read exactly the form of requirement 13 and
+  report anything else, taking back the recognition of quoted and spaced keys that the fix of S2 added, and have
+  `refresh` leave and name a wrapper it cannot read. Until the tests pass (R4, R5, R13, R14)
+- [ ] Check every frontmatter the new tests use with a YAML parser, outside the suite, which has no dependency to
+  parse with: each one the tests call readable parses, to the keys and values the test expects kept, and each one
+  they call unreadable is recorded as valid or as invalid YAML (R13, R14)
+- [ ] Add to the README, where it describes `refresh`: the form of frontmatter it reads, in a few lines, and that a
+  wrapper written otherwise is left as it is and named, with the exit status (R11)
 
 ## Verification
 
