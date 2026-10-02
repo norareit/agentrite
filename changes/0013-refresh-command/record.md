@@ -256,5 +256,12 @@ timestamp: 2026-10-02T14:01:59Z
   regressions first and saw two tests fail: the tab and the no-space forms in the function, and the tab form through
   the command, with LF and CRLF. The check is now the literal prefix, `line.startsWith('model:')`, and the lookalike
   test holds only lines that do not open with it. `npm test` passed, 174 of 174, and `npx tsc -p infra` exited 0
+- 2026-10-02T20:07:43Z [OpenCode, openai/gpt-6.1-sol] completed a delta review of `0013-refresh-command` from
+  previous reviewed commit `5c56afdb768e2fb0e2aef0bed3c6f2fe0182016e` to HEAD
+  `f94c09b060427dddd03ee7e61b812d020845fd0a`, with `master` merge-base
+  `ecccb16f8681b1860cf42823853944cf97d49b0d`. Returned no findings; complete report is saved in
+  `.reviews/0013-refresh-command/20261002T200451Z-opencode-delta.md`. Not verified: macOS, actual harness consumption
+  including the earlier 0014 claim, and original in-session test-authoring chronology. The earlier full packed
+  smoke and broad init comparisons were not repeated for this predicate-only delta
 
 ## Amendments
