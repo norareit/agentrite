@@ -3,7 +3,8 @@
 ## Approach
 
 A rename has no new behavior to design, so the work is ordered by what can be checked on its own. Each step changes
-the tests' expectations first, sees them fail, and then renames until they pass.
+the tests' expectations first, sees them fail, and then renames until they pass. The host and the stacks are the
+exception, as the task for them says: no test reads those shipped values, so changing the expectations fails nothing.
 
 First the package, the commands, the installed path and the environment variable, which the tests cover almost
 entirely. Then the host and the stacks. Then the README, then the pointer packages, which are new code and get tests
@@ -106,8 +107,10 @@ The `README.md` of each says the same in a few lines, since it is what the packa
   Regenerate the lockfile's root entry with `npm install --package-lock-only` and check that its diff touches
   nothing but the root entry's name and `bin` (R1, R2, R3, R4, R9)
 - [x] Change the host in `tests/entrypoint-allowlist.test.mjs`, `tests/record-name.test.mjs` and
-  `tests/deploy.test.mjs`, with the tarball and package names in the last, and see the allowlist test fail (R5, R6,
-  R12)
+  `tests/deploy.test.mjs`, with the tarball and package names in the last. These tests pass before and after the
+  next task: each supplies its own host list, arguments or stubs, and none reads the shipped `KIT_ALLOWLIST`, the
+  subdomain or the stack names. Those shipped values are checked by the search in the last task and by synthesizing
+  the stacks under Verification, not by the suite (R12)
 - [x] Change the host in `KIT_ALLOWLIST` and its comment, the subdomain and the two stack ids in
   `infra/bin/app.ts`, the comments in the three files under `infra/lib/`, and the stack names and header comment in
   `deploy.sh`, until `npm test` and `npx tsc -p infra` pass (R5, R6)

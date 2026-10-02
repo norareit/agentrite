@@ -99,5 +99,18 @@ timestamp: 2026-10-02T10:06:16Z
 - 2026-10-02T12:56:01Z [human] did the first of the human steps: created the npm user `trinorae`, with two-factor
   authentication on, and the free organisation `ritenoar` owned by it, which reserves `@ritenoar/`. Also created the
   organisation `norareit`, which this unit does not need
+- 2026-10-02T12:58:06Z [human] asked the implementer to read the review and decide whether its findings need work. It
+  returned no blocking finding and two that do not block, P1 and C1
+- 2026-10-02T12:58:06Z [Claude Code, anthropic/claude-opus-5-5] P1, accepted and applied. The task for the host tests
+  said to see the allowlist test fail, and was ticked although nothing failed. Its text now says what happened: those
+  tests supply their own data, pass before and after, and the shipped values are checked by the search and by
+  synthesis. The Approach names the exception, and the task traces to R12 only, since it proves nothing about R5 or
+  R6, which the next task still delivers
+- 2026-10-02T12:58:06Z [Claude Code, anthropic/claude-opus-5-5] C1, proposed decline, by the decision the human handed
+  over and theirs to overrule. The gap is real: no test reads the shipped host in `KIT_ALLOWLIST`, the subdomain or
+  the stack names. It is older than this unit, which adds no logic in those files, and the values on this commit were
+  confirmed by the search, by `cdk list` here and by the reviewer's own synthesis. Covering them is new test design,
+  such as asserting that the allowlist admits the host `infra/` serves and that `deploy.sh` names the stacks the app
+  defines, which the spec did not ask for and which belongs in a unit of its own if it is wanted
 
 ## Amendments
