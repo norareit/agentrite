@@ -86,5 +86,18 @@ old name any more.
   same files. If the human agrees, the outcome is an exception to the line limit for files a kit command generates,
   recorded here; writing that exception into `AGENTS.md` as well, or having the generator emit shorter lines, would
   each be work of its own
+- 2026-10-02T14:13:37Z [human] decided C1: accepted. No tracked file is to hold a line over 120 characters, whatever
+  wrote it, so the proposed decline is not taken
+- 2026-10-02T14:13:37Z [Claude Code, anthropic/claude-opus-5-5] applied C1. Rewrote the six wrappers so that no line
+  is over 120 characters: the description as a folded YAML scalar, `>-`, and the pointer sentence broken after a word.
+  Checked with a YAML parser that each wrapper's frontmatter parses to the same keys and values as before, and that
+  each body is the same words. Checked that the harnesses read the folded form, in a scratch project with one such
+  wrapper: `opencode agent list` listed it as a subagent, and a fresh `claude -p` session returned its description in
+  full. In this repository `opencode agent list` lists all three roles as subagents; Claude Code was not started here.
+  The wrappers now differ from what release 2.0.0 writes, so they are no longer what the description of this unit
+  says, on purpose: the generator still writes the long lines, and so do the fixtures in
+  `tests/fixtures/claude-agents/`, which a change to the generator has to deal with in a unit of its own.
+  `package-lock.json` holds five lines over 120 characters, which npm writes and which cannot be wrapped. `npm test`
+  passed, 144 of 144
 
 ## Amendments
