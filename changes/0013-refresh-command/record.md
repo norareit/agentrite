@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-02T14:01:59Z
 ---
 
@@ -263,5 +263,13 @@ timestamp: 2026-10-02T14:01:59Z
   `.reviews/0013-refresh-command/20261002T200451Z-opencode-delta.md`. Not verified: macOS, actual harness consumption
   including the earlier 0014 claim, and original in-session test-authoring chronology. The earlier full packed
   smoke and broad init comparisons were not repeated for this predicate-only delta
+- 2026-10-02T20:14:19Z [human] read the delta review of the S4 correction, which returned no finding, and said the
+  review has passed
+- 2026-10-02T20:14:19Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on 395e206, the final tree: `npm test`
+  passed, 174 of 174, and `npx tsc -p infra` exited 0. Across five reviews the unit returned S1, S2, C1, C2, S3, C3,
+  P1 and S4: S1, C1, P1 and S4 are corrected and confirmed by a later review; S2, C2, S3 and C3 concerned the reading
+  of frontmatter that the human had removed, and the reviews record them as superseded. No finding is open and every
+  box in `plan.md` is ticked. Moved the status to `implemented`. Still not verified by anyone: the command on macOS,
+  and either harness reading a wrapper after a refresh
 
 ## Amendments
