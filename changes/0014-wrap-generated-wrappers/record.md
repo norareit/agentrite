@@ -28,5 +28,21 @@ timestamp: 2026-10-02T14:15:25Z
   unchanged text. `npm test` then failed on `tests/agentrite-roles.test.mjs` as a whole, the file importing a function
   that did not exist yet, so the tests were not seen failing one by one. Wrote `wrapWords` and the folded rendering in
   `scripts/agentrite-roles.mjs`; `npm test` passed, 150 of 150
+- 2026-10-02T14:21:25Z [Claude Code, anthropic/claude-opus-5-5] added the test that no file `init` plans holds a line
+  over 120 characters. It passed at once: the templates already keep to it, and the wrappers do since the commit
+  before. Removed this repository's six wrappers and wrote them again with `node scripts/agentrite-roles.mjs claude
+  opencode` from the working copy; they now break at 120 characters where the hand wrapping of 0012 broke at 118, and
+  the three Claude ones equal the fixtures
+- 2026-10-02T14:21:25Z [Claude Code, anthropic/claude-opus-5-5] checked the harnesses in this repository, on the host
+  and not in a sandbox, which this repository does not have: with OpenCode 1.18.34, `opencode agent list` names
+  `planner`, `implementer` and `reviewer` as subagents; with Claude Code 2.1.287, a new `claude -p` session returned
+  the three descriptions, each equal to the kit's text in full. The versions the sandbox pins, OpenCode 1.18.30 and
+  Claude Code 2.1.266, were not tried
+- 2026-10-02T14:21:25Z [Claude Code, anthropic/claude-opus-5-5] verified on 4cf527d: `npm test` passed, 151 of 151; no
+  line over 120 characters in the fixtures or in this repository's wrappers; `npm run check-changes` exited 0. In a
+  scratch project with the packed working copy and `playwright` 1.59.1, `npx agentrite init claude opencode` exited 0
+  and wrote six wrappers that are byte for byte this repository's, and none of the files it wrote holds a line over
+  120 characters. Every box in `plan.md` is ticked. The status stays `in-progress` until the unit is reviewed and the
+  human has decided what the review returns
 
 ## Amendments

@@ -44,30 +44,30 @@ Start from `master` once 0012 is merged into it, since this repository's own wra
   line. See the fixture comparison and the new test fail (R1, R2, R3, R4, R7)
 - [x] Write `wrapWords` and use it in `claudeFile` and `opencodeFile`, until every test in the file and the whole of
   `npm test` passes (R1, R2, R3, R4, R9)
-- [ ] Add a test to `tests/agentrite-init.test.mjs` that, for each combination of harnesses and the package name
+- [x] Add a test to `tests/agentrite-init.test.mjs` that, for each combination of harnesses and the package name
   the other tests use, no file `projectFiles` returns holds a line over 120 characters. It passes at once if the
   templates already keep to it, and the record says so (R8)
-- [ ] Remove this repository's six wrappers and write them again with
+- [x] Remove this repository's six wrappers and write them again with
   `node scripts/agentrite-roles.mjs claude opencode`, from the working copy, not from the installed release. Check
   that no line in them is over 120 characters (R6)
-- [ ] Check the harnesses, in this repository: `opencode agent list` names `planner`, `implementer` and `reviewer`
+- [x] Check the harnesses, in this repository: `opencode agent list` names `planner`, `implementer` and `reviewer`
   as subagents, and a new `claude -p` session, asked for the description of each role's subagent, returns each in
   full. Do it inside the sandbox, where the versions are the pinned ones, or on the host with the versions written
   into the record (R5)
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] No line over 120 characters under `tests/fixtures/`, `.claude/agents/` and `.opencode/agents/`:
+- [x] `npm test` passes
+- [x] No line over 120 characters under `tests/fixtures/`, `.claude/agents/` and `.opencode/agents/`:
   `awk 'length($0) > 120 { print FILENAME ": " FNR }' tests/fixtures/claude-agents/*.md .claude/agents/*.md
   .opencode/agents/*.md` prints nothing
-- [ ] In a scratch project with the packed kit, `npx agentrite init claude opencode` writes six wrappers that are
+- [x] In a scratch project with the packed kit, `npx agentrite init claude opencode` writes six wrappers that are
   byte for byte this repository's
-- [ ] `npm run check-changes` passes
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
 - [x] `wrapWords`, the wrapped fixtures and the generator
-- [ ] The check on everything `init` writes
-- [ ] This repository's wrappers, written again
-- [ ] The record of the harness check
+- [x] The check on everything `init` writes
+- [x] This repository's wrappers, written again
+- [x] The record of the harness check
