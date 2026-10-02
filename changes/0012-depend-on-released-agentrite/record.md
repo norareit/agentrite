@@ -62,6 +62,13 @@ This waits for two things: 0011 implemented, and the 2.0.0 release, which the hu
 - 2026-10-02T13:37:16Z [Claude Code, anthropic/claude-opus-5-5] moved the status back to `in-progress`. Setting
   `implemented` was premature: the human had not said so, and asked whether the unit needs a review. It waits for the
   review and for the human's decision on what it returns. Nothing else changed, and the branch is not merged
+- 2026-10-02T13:43:54Z [OpenCode, openai/gpt-6.1-sol] took the reviewer role and performed a full review of
+  `0012-depend-on-released-agentrite` at `36fd76540ed38e83cae5ea9feee8d1c479170cdc`, against merge base
+  `5f0705d10ff7e71a97ce77d2c1b007d6171e0ac6`. Returned C1. Findings saved in
+  `.reviews/0012-depend-on-released-agentrite/review-20261002T134143Z-36fd765-gpt-6.1-sol.md`.
+  Ran `npm test`, `npm run check-changes`, `npx --no-install tsc -p infra`, diff/search checks, release integrity
+  verification and generated-wrapper comparisons. Not verified: fresh-session harness discovery, historical host
+  command execution, and the AWS deployment/pointer publication actions recorded in 0011
 
 ## Changes
 

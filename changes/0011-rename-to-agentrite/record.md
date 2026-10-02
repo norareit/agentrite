@@ -128,3 +128,11 @@ timestamp: 2026-10-02T10:06:16Z
   `https://agentrite.ritenoar.com/ritenoar-agentrite-2.0.0.tgz` answers 200, and the tarball has the same checksum and
   contents as `npm pack` of `master` at 5f0705d: 22 files, named `@ritenoar/agentrite` 2.0.0, still `private`. `npm
   view` shows both pointer packages at 1.0.0. The old host still serves 1.0.3
+- 2026-10-02T13:50:58Z [Claude Code, anthropic/claude-opus-5-5] human step 6 of the plan, moving Norareit, misses one
+  thing and overstates another. Norareit's `agent/compose.project.yml` lists `agent-kit.ritenoar.com` in its
+  `ALLOWLIST`, and the entrypoint refuses to start when a listed host cannot be reached, so that line has to go before
+  step 7 destroys the old host, or Norareit's sandbox stops starting. The new host needs no entry there, the kit
+  supplying it through `KIT_ALLOWLIST`. And the human decided how the files are treated: the six wrappers and
+  `agent.sh` are deleted and written again, by `npx agentrite init claude opencode`, while `AGENTS.md`, `CLAUDE.md`
+  and `agent/compose.project.yml` are kept and edited in place. Norareit names its check `check:changes`, so `init`
+  adds a second script, `check-changes`, and one of the two is removed. The plan is frozen and is left as written
