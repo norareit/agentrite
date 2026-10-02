@@ -44,5 +44,8 @@ timestamp: 2026-10-02T14:15:25Z
   and wrote six wrappers that are byte for byte this repository's, and none of the files it wrote holds a line over
   120 characters. Every box in `plan.md` is ticked. The status stays `in-progress` until the unit is reviewed and the
   human has decided what the review returns
+- 2026-10-02T14:55:18Z [Claude Code, anthropic/claude-opus-5-5] rebased the branch onto `master` at 356f407, where
+  0012 was closed, so the commit named in the entry above no longer exists under that name; the tree it describes is
+  the one at 7d465e5 apart from 0012's record. Ran `npm test` again on 7d465e5: 151 of 151 passed
 
 ## Amendments
