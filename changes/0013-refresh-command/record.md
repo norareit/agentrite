@@ -241,5 +241,12 @@ timestamp: 2026-10-02T14:01:59Z
   dropped `temperature` and the appended line, and left the five files that are the project's byte for byte as they
   were; a second run reported all seven as up to date. Every box in `plan.md` is ticked. The status stays
   `in-progress` for a delta review from 26c8b8b, the commit the last review named
+- 2026-10-02T18:44:05Z [OpenCode, openai/gpt-6.1-sol] completed a delta review of `0013-refresh-command` from
+  previous reviewed commit `26c8b8b821247315ca6cf69949456184f3b8bf49` to HEAD
+  `5c56afdb768e2fb0e2aef0bed3c6f2fe0182016e`, with `master` merge-base
+  `ecccb16f8681b1860cf42823853944cf97d49b0d`. Returned S4; complete findings are saved in
+  `.reviews/0013-refresh-command/20261002T184041Z-opencode-delta.md`. Not verified: macOS, actual harness consumption
+  including the earlier 0014 claim, and detailed original in-session test-authoring chronology. The packed CLI
+  smoke used extraction, local bin wiring and a synthetic lockfile, not a fresh dependency installation or deployment
 
 ## Amendments
