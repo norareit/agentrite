@@ -222,7 +222,7 @@ export function refreshedWrapper(existing, rendered) {
   // A wrapper saved with CRLF is read as the same lines. What is written ends its lines in LF, as the release does.
   const lines = existing.split(/\r?\n/);
   const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
-  const pins = lines.slice(1, Math.max(end, 1)).filter((line) => /^model:(?: |$)/.test(line));
+  const pins = lines.slice(1, Math.max(end, 1)).filter((line) => line.startsWith('model:'));
   if (pins.length === 0) return rendered;
   // The rendered wrapper opens with `---`, so the first `---` after a line break is the one that closes it.
   const closing = rendered.indexOf('\n---\n') + 1;

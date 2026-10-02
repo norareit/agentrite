@@ -157,6 +157,10 @@ the ones 0011 and 0012 left.
 - [x] In the README, take out the description of the frontmatter `refresh` reads and of the check run by hand, and
   say instead that a `model:` line is kept and everything else in a wrapper is replaced, which `git diff` shows
   (R11)
+- [x] Review S4: keep every line that opens with `model:` at the left margin, as requirement 4 says, where the
+  code also asked for a space or the end of the line after the colon. First the regressions: a model set off by a
+  tab, and one with nothing between colon and value, are kept as written and are stable on a second refresh; the
+  tab case also through the command, with LF and with CRLF (R4)
 
 ## Verification
 

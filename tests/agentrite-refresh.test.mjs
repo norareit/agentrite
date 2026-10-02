@@ -72,8 +72,13 @@ test('a pinned model is kept, after the keys the kit writes, wherever it stood',
 
 test('the model line is kept as it is written, whatever its value', () => {
   const wrapper = rendered('opencode', 'reviewer');
-  for (const line of ['model: "some/model"', "model:   'a b'  # cheaper", 'model: [not, a, name]', 'model:']) {
-    assert.deepEqual(frontmatter(refreshedWrapper(withAdded([line]), wrapper)), [...frontmatter(wrapper), line]);
+  const lines = ['model: "some/model"', "model:   'a b'  # cheaper", 'model: [not, a, name]', 'model:'];
+  // Review S4: what follows the colon is not looked at, a tab and no space at all included.
+  for (const line of [...lines, 'model:\tsome/model', 'model:some/model']) {
+    const result = refreshedWrapper(withAdded([line]), wrapper);
+
+    assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), line]);
+    assert.equal(refreshedWrapper(result, wrapper), result);
   }
 });
 
@@ -97,7 +102,7 @@ test('nothing else a project added to the frontmatter is kept', () => {
 
 test('a line that only looks like a pin is not taken for one', () => {
   const wrapper = rendered('opencode', 'reviewer');
-  const lookalikes = ['models: a/b', 'model : a/b', 'model:a/b', '"model": a/b', 'options:', '  model: a/b'];
+  const lookalikes = ['models: a/b', 'model : a/b', 'Model: a/b', '"model": a/b', 'options:', '  model: a/b'];
   assert.equal(refreshedWrapper(withAdded(lookalikes), wrapper), wrapper);
 
   const inTheBody = `${wrapper}\nmodel: a/b\n`;
@@ -293,6 +298,27 @@ test('a pinned model in a wrapper with CRLF line endings survives the command', 
   assert.equal(read(path), withFrontmatter(wrapper, 'mode:', ['model: some/model']));
   assert.match(result.stdout, line('refreshed', path));
   assert.match(run('refresh', 'opencode').stdout, line('up to date', path));
+});
+
+// Review S4
+test('a model set off from its colon by a tab survives the command, in LF and in CRLF', (t) => {
+  for (const [harness, ending] of [
+    ['opencode', '\n'],
+    ['claude', '\r\n'],
+  ]) {
+    const { run, read, write } = project(t);
+    const path = `.${harness}/agents/reviewer.md`;
+    const wrapper = rendered(harness, 'reviewer');
+    const pinned = wrapper.replace('\n---\n\n', '\nmodel:\tsome/model\n---\n\n');
+    write(path, pinned.replace('@ritenoar/agentrite', '@ritenoar/agent-kit').replaceAll('\n', ending));
+
+    const result = run('refresh', harness);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read(path), pinned, harness);
+    assert.match(result.stdout, line('refreshed', path));
+    assert.match(run('refresh', harness).stdout, line('up to date', path));
+  }
 });
 
 test('the files that are the project own are byte for byte unchanged, and a missing one stays missing', (t) => {

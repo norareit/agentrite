@@ -248,5 +248,13 @@ timestamp: 2026-10-02T14:01:59Z
   `.reviews/0013-refresh-command/20261002T184041Z-opencode-delta.md`. Not verified: macOS, actual harness consumption
   including the earlier 0014 claim, and detailed original in-session test-authoring chronology. The packed CLI
   smoke used extraction, local bin wiring and a synthetic lockfile, not a fresh dependency installation or deployment
+- 2026-10-02T19:02:41Z [human] asked the implementer to check the latest review
+- 2026-10-02T19:02:41Z [Claude Code, anthropic/claude-opus-5-5] the delta review confirms the simplification, treats
+  S3 and C3 as superseded with the code they were about, and P1 as corrected, and returns one blocking finding, S4,
+  accepted. Requirement 4 keeps a line that opens with `model:`; the code also asked for a space or the end of the
+  line after the colon, so a model set off by a tab was dropped, and a test listed `model:a/b` as not a pin. Wrote the
+  regressions first and saw two tests fail: the tab and the no-space forms in the function, and the tab form through
+  the command, with LF and CRLF. The check is now the literal prefix, `line.startsWith('model:')`, and the lookalike
+  test holds only lines that do not open with it. `npm test` passed, 174 of 174, and `npx tsc -p infra` exited 0
 
 ## Amendments
