@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-10-02T14:15:25Z
 ---
 
@@ -19,5 +19,9 @@ timestamp: 2026-10-02T14:15:25Z
   `package-lock.json`, one in the frozen plan of 0002 and 41 in five historical records. Written on a branch from
   `master` at 5f0705d, which holds neither 0012 nor 0013; the plan says to start once 0012 is merged. Left out, and
   the human's to add if wanted: rewrapping the historical records, and a check that fails on any long line
+- 2026-10-02T14:19:55Z [human] merged 0012 into `master` and asked for this unit to be implemented first, rebased on
+  `master`, which is its approval as written
+- 2026-10-02T14:19:55Z [Claude Code, anthropic/claude-opus-5-5] rebased the branch onto `master` at 8030272, took the
+  implementer role and moved the status to `in-progress`
 
 ## Amendments
