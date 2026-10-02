@@ -78,7 +78,7 @@ the ones 0011 and 0012 left.
   See them fail (R12)
 - [x] Write `kitOwnedFiles({ templates, harnesses })`, returning the wrappers, marked as keeping their
   frontmatter, and the shim, and write `refresh` over it until they pass (R3, R6, R7, R8, R9, R10)
-- [ ] Update `README.md`. In "Updating a project to a newer kit", after the install command: run
+- [x] Update `README.md`. In "Updating a project to a newer kit", after the install command: run
   `npx agentrite refresh claude opencode`, naming the project's harnesses, which rewrites the role wrappers and
   `agent.sh` as the new release writes them and prints what it did; a key the project added to a wrapper's
   frontmatter, such as a pinned model, is kept, and anything else added to those files is replaced, which
@@ -102,4 +102,4 @@ the ones 0011 and 0012 left.
 - [x] The refactoring that names the shim
 - [x] `refreshedWrapper` and its tests
 - [x] The `refresh` command and its end-to-end tests
-- [ ] The README
+- [x] The README

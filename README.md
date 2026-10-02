@@ -90,7 +90,12 @@ updating the kit delivers it. The files a project is expected to edit are these:
   provider the project's agents use, and whatever its tools and tests reach
 * The role wrappers, to pin a model per role
 
-`CLAUDE.md` and `agent.sh` are best left as written.
+`CLAUDE.md` is best left as written.
+
+The role wrappers and `agent.sh` are the exception to a generated file being the project's own. They hold nothing
+but what the kit put there, so `refresh`, described under "Updating a project to a newer kit", rewrites them as the
+installed release writes them. A key added to a wrapper's frontmatter, such as the pinned model, survives that.
+Anything else added to a wrapper, or to `agent.sh`, does not, so `agent.sh` is not a file to edit.
 
 When `AGENTS.md` already exists, `init` leaves it untouched and prints the three sections it would have written,
 ready to be pasted in. An agent does not see the kit's instructions until the existing file holds them, so paste in
@@ -149,6 +154,25 @@ npm install https://agentrite.ritenoar.com/ritenoar-agentrite-2.1.0.tgz
 That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
 reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
 kit is a deliberate change to the project.
+
+Then bring the kit's own files in the project up to date, from the project root, naming the harnesses it uses:
+
+```sh
+npx agentrite refresh claude opencode
+```
+
+It rewrites the role wrappers of those harnesses and `agent.sh` as the new release writes them, writes any that are
+missing, and prints each file as written, refreshed or up to date. A release that changes a role's description, the
+line that points at its role file, or the shim reaches a project this way; without it those copies stay as an older
+release wrote them, and nothing says so.
+
+* A key the project added to a wrapper's frontmatter is kept, with its value, after the kit's own keys. That is how a
+  pinned model survives. A key the kit writes takes the release's value
+* Everything else in a wrapper, and all of `agent.sh`, is replaced. `git diff` shows what a refresh changed
+* `AGENTS.md`, `CLAUDE.md`, `agent/compose.project.yml`, `package.json` and `.dockerignore` are never touched, and
+  never created
+* A path that holds something other than a regular file, such as a symbolic link, is left as it is and named on
+  standard error. The other files are still refreshed, and the command exits non-zero
 
 An improvement found while working in a project is made here, in the kit repository, and committed here. The
 installed copy under a project's `node_modules` is not a working copy of this repository, and nothing in it reaches
