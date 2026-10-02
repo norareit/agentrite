@@ -44,8 +44,11 @@ the ones 0011 and 0012 left.
 
 ## Files
 
-- `scripts/agentrite.mjs`: `parseArgs` in place of `parseInitArgs`; `shimFile`; `kitOwnedFiles`; `refreshedWrapper`;
-  `refresh`; the dispatch in the entry point
+- `scripts/agentrite.mjs`: `parseArgs` in place of `parseInitArgs`; `shimFile`; `kitOwnedFiles`; `refresh`; the
+  dispatch in the entry point
+- `scripts/wrapper-frontmatter.mjs`: new, `refreshedWrapper` and the reading of frontmatter behind it, a job of its
+  own since the rework after the delta review
+- `package.json`: the new script under `files`, so that it ships
 - `tests/agentrite-init.test.mjs`: the parsing tests, for `parseArgs`
 - `tests/agentrite-refresh.test.mjs`: new, the unit tests of `refreshedWrapper` and the end-to-end tests of the
   command
@@ -102,7 +105,7 @@ the ones 0011 and 0012 left.
 - [x] Review C1: count the shim as executable only when its owner may execute it. First the regression, end to
   end: a shim with the release's content and mode 0645 is reported as refreshed and is then executable by its
   owner, and a second run reports it as up to date (R6)
-- [ ] Delta review S2 and C2, with the spec as amended by requirements 13 and 14: write the tests first, in
+- [x] Delta review S2 and C2, with the spec as amended by requirements 13 and 14: write the tests first, in
   `tests/agentrite-refresh.test.mjs`. `refreshedWrapper` returns either the content to write or the problem that
   kept it from reading the frontmatter, as the number of a line and a reason. Unreadable, each naming its line: a
   key in double quotes, in single quotes, with space before its colon, and written with `?`; a single-quoted and a
@@ -116,19 +119,24 @@ the ones 0011 and 0012 left.
   YAML is replaced by quoted values that are. End to end: a wrapper the command cannot read is byte for byte
   unchanged, named on standard error with its line, the others are refreshed, the exit status is 1, and a second
   run does the same. See them fail (R4, R5, R13, R14)
-- [ ] Rework `splitWrapper`, `keyBlocks` and `refreshedWrapper` to read exactly the form of requirement 13 and
+- [x] Rework `splitWrapper`, `keyBlocks` and `refreshedWrapper` to read exactly the form of requirement 13 and
   report anything else, taking back the recognition of quoted and spaced keys that the fix of S2 added, and have
   `refresh` leave and name a wrapper it cannot read. Until the tests pass (R4, R5, R13, R14)
-- [ ] Check every frontmatter the new tests use with a YAML parser, outside the suite, which has no dependency to
+- [x] Check every frontmatter the new tests use with a YAML parser, outside the suite, which has no dependency to
   parse with: each one the tests call readable parses, to the keys and values the test expects kept, and each one
   they call unreadable is recorded as valid or as invalid YAML (R13, R14)
-- [ ] Add to the README, where it describes `refresh`: the form of frontmatter it reads, in a few lines, and that a
+- [x] Add to the README, where it describes `refresh`: the form of frontmatter it reads, in a few lines, and that a
   wrapper written otherwise is left as it is and named, with the exit status (R11)
+- [x] Compare the reader with a YAML parser on random frontmatter, outside the suite: build frontmatters from
+  pieces that are readable, unreadable and deliberately misleading, and for each one the command reads check that
+  the result parses, that every added key has the value it had, that every kit key has the release's, and that a
+  second refresh changes nothing. Turn each failure into a test in the suite before fixing it (R4, R5, R13, R14)
 
 ## Verification
 
 - [x] `npm test` passes
-- [x] `npm pack --dry-run` still lists `scripts/agentrite.mjs` and nothing new
+- [x] `npm pack --dry-run` lists `scripts/agentrite.mjs`, and one file more than before, 23 in all:
+  `scripts/wrapper-frontmatter.mjs`
 - [x] In a scratch project set up with `npx agentrite init claude opencode` from the packed kit, with a model
   pinned by hand in one wrapper, after the kit's keys, and a line appended to `agent.sh`,
   `npx agentrite refresh claude opencode` reports `agent.sh` as refreshed and the six wrappers as up to date, the

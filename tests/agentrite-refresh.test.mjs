@@ -16,7 +16,7 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
-import { refreshedWrapper } from '../scripts/agentrite.mjs';
+import { refreshedWrapper } from '../scripts/wrapper-frontmatter.mjs';
 
 const SHIM = readFileSync(new URL('../templates/project/agent.sh', import.meta.url), 'utf-8');
 
@@ -39,12 +39,31 @@ function frontmatter(wrapper) {
   return lines.slice(1, lines.indexOf('---', 1));
 }
 
+// What a refresh writes over `existing`, which the command must have been able to read.
+function refreshed(existing, release) {
+  const result = refreshedWrapper(existing, release);
+  assert.equal(result.problem, undefined);
+  return result.content;
+}
+
+// The OpenCode reviewer wrapper with `lines` added at the end of its frontmatter.
+function withAdded(lines) {
+  return withFrontmatter(rendered('opencode', 'reviewer'), 'mode:', lines);
+}
+
+// The number of the line of `wrapper` that is `line`, counted from one as an editor counts.
+function lineNumber(wrapper, line) {
+  const index = wrapper.split('\n').indexOf(line);
+  assert.notEqual(index, -1, `the wrapper has no line ${line}`);
+  return index + 1;
+}
+
 // R4, R5: what a refreshed wrapper keeps and what it replaces.
 
 test('a wrapper that is what the release writes comes back unchanged', () => {
   for (const harness of ['claude', 'opencode']) {
     const wrapper = rendered(harness, 'planner');
-    assert.equal(refreshedWrapper(wrapper, wrapper), wrapper);
+    assert.equal(refreshed(wrapper, wrapper), wrapper);
   }
 });
 
@@ -57,7 +76,7 @@ test('a model pinned in the frontmatter is kept, after the keys the kit writes',
     const wrapper = rendered(harness, 'reviewer');
     const pinned = withFrontmatter(wrapper, before, ['model: some/model']);
 
-    const result = refreshedWrapper(pinned, wrapper);
+    const result = refreshed(pinned, wrapper);
 
     assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), 'model: some/model']);
     assert.equal(result.slice(result.lastIndexOf('---\n')), wrapper.slice(wrapper.lastIndexOf('---\n')));
@@ -68,19 +87,11 @@ test('two added keys keep the order they had', () => {
   const wrapper = rendered('opencode', 'planner');
   const edited = withFrontmatter(withFrontmatter(wrapper, 'mode:', ['temperature: 0.1']), '---', ['model: a/b']);
 
-  assert.deepEqual(frontmatter(refreshedWrapper(edited, wrapper)), [
+  assert.deepEqual(frontmatter(refreshed(edited, wrapper)), [
     ...frontmatter(wrapper),
     'model: a/b',
     'temperature: 0.1',
   ]);
-});
-
-test('an added key with a nested value, and one holding a list, are kept whole', () => {
-  const wrapper = rendered('opencode', 'reviewer');
-  const added = ['permission:', '  edit: deny', '  bash:', '    "git push": deny', 'tools:', '- read', '- grep'];
-  const edited = withFrontmatter(wrapper, 'mode:', added);
-
-  assert.deepEqual(frontmatter(refreshedWrapper(edited, wrapper)), [...frontmatter(wrapper), ...added]);
 });
 
 test('a key the kit writes takes the value the release writes, whatever the wrapper held', () => {
@@ -95,23 +106,24 @@ test('a key the kit writes takes the value the release writes, whatever the wrap
     'An older body.',
     '',
   ].join('\n');
-  assert.deepEqual(frontmatter(refreshedWrapper(stale, claude)), [...frontmatter(claude), 'model: some/model']);
+  assert.deepEqual(frontmatter(refreshed(stale, claude)), [...frontmatter(claude), 'model: some/model']);
 
   const opencode = rendered('opencode', 'implementer');
   const primary = opencode.replace('mode: subagent', 'mode: primary');
-  assert.equal(refreshedWrapper(primary, opencode), opencode);
+  assert.equal(refreshed(primary, opencode), opencode);
 });
 
-test('a folded description of other text, of more or fewer lines, is replaced whole', () => {
+test('a folded description of other text, quotes and all, is replaced whole', () => {
   const wrapper = rendered('claude', 'planner');
   const stale = [
     '---',
     'name: planner',
     'description: >-',
     '  An older description that was folded',
-    '  over more lines',
-    '  than the one the release writes',
-    '  and said something else.',
+    "  over more lines, and isn't",
+    '  the one the release writes: "it said',
+    '  mode: something else.',
+    '',
     '  It leaves nothing behind.',
     'model: some/model',
     '---',
@@ -120,7 +132,7 @@ test('a folded description of other text, of more or fewer lines, is replaced wh
     '',
   ].join('\n');
 
-  assert.deepEqual(frontmatter(refreshedWrapper(stale, wrapper)), [...frontmatter(wrapper), 'model: some/model']);
+  assert.deepEqual(frontmatter(refreshed(stale, wrapper)), [...frontmatter(wrapper), 'model: some/model']);
 });
 
 test('the body becomes the body the release writes, whatever was added to it', () => {
@@ -128,22 +140,122 @@ test('the body becomes the body the release writes, whatever was added to it', (
   const stale =
     wrapper.replace('@ritenoar/agentrite', '@ritenoar/agent-kit') + '\nAlways answer in rhyme.\n\nAnd in French.\n';
 
-  assert.equal(refreshedWrapper(stale, wrapper), wrapper);
+  assert.equal(refreshed(stale, wrapper), wrapper);
 });
 
-test('a file without frontmatter becomes the wrapper the release writes', () => {
+test('a file that does not open with frontmatter becomes the wrapper the release writes', () => {
   const wrapper = rendered('opencode', 'planner');
-  for (const existing of ['', 'Read the planner role.\n', '---\nmodel: some/model\nnever closed\n']) {
-    assert.equal(refreshedWrapper(existing, wrapper), wrapper);
+  for (const existing of ['', 'Read the planner role.\n', 'model: some/model\n---\n']) {
+    assert.equal(refreshed(existing, wrapper), wrapper);
   }
 });
 
 test('refreshing what a refresh returned changes nothing', () => {
   const wrapper = rendered('opencode', 'reviewer');
-  const edited = withFrontmatter(wrapper, 'mode:', ['model: a/b', '', 'permission:', '  edit: deny', '']);
-  const once = refreshedWrapper(edited, wrapper);
+  const once = refreshed(withAdded(['model: a/b', '', 'permission:', '  edit: deny', '']), wrapper);
 
-  assert.equal(refreshedWrapper(once, wrapper), once);
+  assert.equal(refreshed(once, wrapper), once);
+});
+
+// R13: the values a kept key may have, each kept whole.
+
+const READABLE = {
+  'a nested map, with a nested key in quotes': [
+    'permission:',
+    '  edit: deny',
+    '  bash:',
+    '    "git push": deny',
+    "    'rm *': ask",
+    '    git status: allow',
+  ],
+  'a list, indented and at the left margin': ['tools:', '  - read', 'skills:', '- grep', '- "glob"', '-'],
+  'quoted texts that hold a colon, a # and a quote': [
+    'notes: "see https://example.com/a: b # not a comment"',
+    "title: 'it''s: fine'",
+    'label: "say \\"mode: primary\\""  # a comment',
+  ],
+  'a bracketed list and map on one line': ['tools: [read, grep]', 'limits: {steps: 5, depth: [1, 2]}'],
+  'a text opened by | that holds quotes and a line shaped like a key': [
+    'prompt: |',
+    "  Don't stop.",
+    '  "mode": primary',
+    "  model: 'x",
+    '',
+    '  [unclosed',
+    'model: a/b',
+  ],
+  'a nested text opened by >, and what follows it at its own depth': [
+    'options:',
+    '  note: >-',
+    "    it's",
+    "    mode: 'x",
+    '  depth: 2',
+    'steps:',
+    '  - list: |+',
+    '      "a',
+    '    after: 1',
+  ],
+  'a plain text that runs on, indented': ['notes: first', '  second', '  third'],
+  'a comment inside a nested map, and a blank line in it': [
+    'permission:',
+    '  edit: deny',
+    '',
+    '  # shell commands',
+    '  bash: ask',
+    '  # nothing after this',
+    'model: a/b',
+  ],
+  'a key with no value': ['model:', 'fallback: null'],
+};
+
+for (const [what, added] of Object.entries(READABLE)) {
+  test(`${what} is read, and kept whole`, () => {
+    const wrapper = rendered('opencode', 'reviewer');
+
+    const result = refreshed(withAdded(added), wrapper);
+
+    assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), ...added]);
+    assert.equal(refreshed(result, wrapper), result);
+  });
+}
+
+test('a comment goes with the key below it: kept above an added key, dropped above a kit key', () => {
+  const wrapper = rendered('opencode', 'reviewer');
+  const kept = ['# cheaper for reviews', '# and quick', 'model: a/b', '# said last'];
+  const edited = withFrontmatter(withAdded(kept), 'description: >-', []).replace(
+    'mode: subagent',
+    '# about the mode\nmode: subagent',
+  );
+
+  assert.deepEqual(frontmatter(refreshed(edited, wrapper)), [...frontmatter(wrapper), ...kept]);
+});
+
+test('blank lines between keys are not carried along, so that none lands inside the folded description', () => {
+  // The Claude wrapper ends its own keys with the folded description, which takes in any blank or indented line
+  // that follows it.
+  const wrapper = rendered('claude', 'reviewer');
+  const existing = ['---', '', 'model: a/b', '', '# why', '', 'steps: 5', '', '---', '', 'Old body.', ''].join('\n');
+
+  const result = refreshed(existing, wrapper);
+
+  assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), 'model: a/b', '# why', 'steps: 5']);
+  assert.equal(refreshed(result, wrapper), result);
+});
+
+test('an indented comment with no key above it is not read', () => {
+  const result = refreshedWrapper('---\n  # stray\nmodel: a/b\n---\n\nBody.\n', rendered('claude', 'reviewer'));
+
+  assert.equal(result.content, undefined);
+  assert.match(result.problem, /^line 2: .*no key above/);
+});
+
+test('frontmatter that holds only a comment keeps it', () => {
+  const wrapper = rendered('opencode', 'reviewer');
+
+  const result = refreshed('---\n# nothing set yet\n---\n\nOld body.\n', wrapper);
+
+  assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), '# nothing set yet']);
+  assert.equal(refreshed(result, wrapper), result);
 });
 
 // Review S1
@@ -151,58 +263,118 @@ test('refreshing what a refresh returned changes nothing', () => {
 test('a wrapper with CRLF line endings keeps its added keys, and is written with LF', () => {
   const wrapper = rendered('opencode', 'reviewer');
   const added = ['model: some/model', 'permission:', '  edit: deny'];
-  const stale = withFrontmatter(wrapper, 'mode:', added)
+  const stale = withAdded(added)
     .replace('mode: subagent', 'mode: primary')
     .replace('@ritenoar/agentrite', '@ritenoar/agent-kit');
-  const crlf = stale.replaceAll('\n', '\r\n');
 
-  const result = refreshedWrapper(crlf, wrapper);
+  const result = refreshed(stale.replaceAll('\n', '\r\n'), wrapper);
 
   assert.doesNotMatch(result, /\r/);
-  assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), ...added]);
-  assert.equal(result, withFrontmatter(wrapper, 'mode:', added));
-  assert.equal(refreshedWrapper(result, wrapper), result);
-  assert.equal(refreshedWrapper(result.replaceAll('\n', '\r\n'), wrapper), result);
+  assert.equal(result, withAdded(added));
+  assert.equal(refreshed(result.replaceAll('\n', '\r\n'), wrapper), result);
 });
 
-// Review S2
+// R14, and the delta review's S2 and C2: what is not read is reported by its line, never guessed at.
 
-test('an added key written in quotes, or with space before its colon, is kept as it was written', () => {
+const UNREADABLE = [
+  { what: 'a key in double quotes', added: ['"model": a/b'], at: '"model": a/b', why: /plain key/ },
+  { what: 'a key in single quotes', added: ["'model': a/b"], at: "'model': a/b", why: /plain key/ },
+  { what: 'a key with space before its colon', added: ['model : a/b'], at: 'model : a/b', why: /plain key/ },
+  { what: 'a key written with ?', added: ['? model', ': a/b'], at: '? model', why: /plain key/ },
+  { what: 'a key with no space after its colon', added: ['model:a/b'], at: 'model:a/b', why: /plain key/ },
+  { what: 'a map in braces at the margin', added: ['{model: a/b}'], at: '{model: a/b}', why: /plain key/ },
+  {
+    what: 'a single-quoted value that runs over several lines',
+    added: ["notes: 'first", '"mode": primary', "last'"],
+    at: "notes: 'first",
+    why: /quoted text/,
+  },
+  {
+    what: 'a double-quoted value that runs over several lines',
+    added: ['notes: "first', 'mode: primary"'],
+    at: 'notes: "first',
+    why: /quoted text/,
+  },
+  {
+    what: 'a double-quoted value whose last quote is escaped',
+    added: ['notes: "first\\"', 'mode: primary"'],
+    at: 'notes: "first\\"',
+    why: /quoted text/,
+  },
+  {
+    what: 'a bracketed list that runs over several lines',
+    added: ['tools: [read,', 'mode: b]'],
+    at: 'tools: [read,',
+    why: /bracketed/,
+  },
+  {
+    what: 'a bracketed list that holds a quote',
+    added: ['tools: [read, "]"]'],
+    at: 'tools: [read, "]"]',
+    why: /bracketed/,
+  },
+  {
+    what: 'a quoted value opened on an indented line',
+    added: ['permission:', "  note: 'first", "mode: b'"],
+    at: "  note: 'first",
+    why: /quoted text/,
+  },
+  {
+    what: 'a quoted item of a list that is not closed',
+    added: ['tools:', "- 'read", "mode: b'"],
+    at: "- 'read",
+    why: /quoted text/,
+  },
+  {
+    what: 'a bracketed list opened on an indented line',
+    added: ['permission:', '  tools: [a,', 'mode: b]'],
+    at: '  tools: [a,',
+    why: /bracketed/,
+  },
+  {
+    what: 'a nested key with a quote in it ahead of an open quote',
+    added: ['permission:', "  it's: 'first", "mode: b'"],
+    at: "  it's: 'first",
+    why: /quote in a text/,
+  },
+  {
+    what: 'a quote in a text that is not quoted',
+    added: ["notes: it's fine"],
+    at: "notes: it's fine",
+    why: /quote in a text/,
+  },
+  {
+    what: 'a value with an anchor',
+    added: ['base: &base [a,', 'mode: b]'],
+    at: 'base: &base [a,',
+    why: /anchor or a tag/,
+  },
+  { what: 'a value with a tag', added: ['kind: !!seq [a,', 'mode: b]'], at: 'kind: !!seq [a,', why: /anchor or a tag/ },
+  { what: 'a tab in the indentation', added: ['permission:', '\tedit: deny'], at: '\tedit: deny', why: /tab/ },
+];
+
+for (const { what, added, at, why } of UNREADABLE) {
+  test(`${what} is not read: the wrapper is reported by that line, with no content to write`, () => {
+    const existing = withAdded(added);
+
+    const result = refreshedWrapper(existing, rendered('opencode', 'reviewer'));
+
+    assert.equal(result.content, undefined);
+    assert.match(result.problem, new RegExp(`^line ${lineNumber(existing, at)}: `));
+    assert.match(result.problem, why);
+  });
+}
+
+test('an indented line with no key above it, and frontmatter never closed, are not read', () => {
   const wrapper = rendered('opencode', 'reviewer');
-  for (const added of ['"model": some/model', "'model': some/model", 'model : some/model', 'model\t: some/model']) {
-    const result = refreshedWrapper(withFrontmatter(wrapper, 'mode:', [added]), wrapper);
 
-    assert.deepEqual(frontmatter(result), [...frontmatter(wrapper), added], added);
-    assert.equal(refreshedWrapper(result, wrapper), result, added);
-  }
-});
+  const indented = refreshedWrapper('---\n  stray: 1\nmode: subagent\n---\n\nBody.\n', wrapper);
+  assert.equal(indented.content, undefined);
+  assert.match(indented.problem, /^line 2: .*no key above/);
 
-test('a kit key written in quotes, or with space before its colon, is replaced and not kept beside it', () => {
-  const opencode = rendered('opencode', 'implementer');
-  for (const spelling of ['"mode": primary', "'mode': primary", 'mode : primary']) {
-    const edited = opencode.replace('mode: subagent', `model: some/model\n${spelling}`);
-
-    const result = refreshedWrapper(edited, opencode);
-
-    assert.deepEqual(frontmatter(result), [...frontmatter(opencode), 'model: some/model'], spelling);
-  }
-
-  const claude = rendered('claude', 'planner');
-  const quoted = ['---', '"name": other', 'model: some/model', '"description": An older one.', '---', '', ''];
-  assert.deepEqual(frontmatter(refreshedWrapper(quoted.join('\n'), claude)), [
-    ...frontmatter(claude),
-    'model: some/model',
-  ]);
-});
-
-test('a value that holds a colon, and a line of a list, are not taken for keys', () => {
-  const wrapper = rendered('opencode', 'planner');
-  const added = ['notes: see https://example.com/a: b', 'tools:', '- read: no', '- "grep": yes'];
-
-  assert.deepEqual(frontmatter(refreshedWrapper(withFrontmatter(wrapper, 'mode:', added), wrapper)), [
-    ...frontmatter(wrapper),
-    ...added,
-  ]);
+  const open = refreshedWrapper('---\nmodel: some/model\nnever closed\n', wrapper);
+  assert.equal(open.content, undefined);
+  assert.match(open.problem, /^line 1: .*not closed/);
 });
 
 // End to end: the executable in a temporary project.
@@ -333,6 +505,26 @@ test('a shim only someone other than its owner may execute is made executable, a
   assert.match(result.stdout, line('refreshed', 'agent.sh'));
   assert.equal(statSync(join(base, 'agent.sh')).mode & 0o777, 0o755);
   assert.match(run('refresh', 'claude').stdout, line('up to date', 'agent.sh'));
+});
+
+// R14
+test('a wrapper the command does not read is left byte for byte, named with its line, and the rest is done', (t) => {
+  const { run, read, write } = staleProject(t);
+  const path = '.opencode/agents/planner.md';
+  const unreadable = withFrontmatter(read(path), 'mode:', ["notes: 'first", '"mode": primary', "last'"]);
+  write(path, unreadable);
+
+  for (const round of ['first', 'second']) {
+    const result = run('refresh', 'claude', 'opencode');
+
+    assert.equal(result.status, 1, round);
+    assert.equal(read(path), unreadable, round);
+    const named = new RegExp(`${path.replaceAll('.', '\\.')}.*line ${lineNumber(unreadable, "notes: 'first")}: `);
+    assert.match(result.stderr, named, round);
+    assert.doesNotMatch(result.stdout, new RegExp(` ${path.replaceAll('.', '\\.')}$`, 'm'));
+    assert.equal(read('.opencode/agents/implementer.md'), rendered('opencode', 'implementer'), round);
+    assert.equal(read('agent.sh'), SHIM, round);
+  }
 });
 
 // Review S1

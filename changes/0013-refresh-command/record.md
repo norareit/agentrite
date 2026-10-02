@@ -133,5 +133,31 @@ timestamp: 2026-10-02T14:01:59Z
   `plan.md`
 - 2026-10-02T17:25:19Z [Claude Code, anthropic/claude-opus-5-5] S2 and C2 of the delta review: accepted, the human
   having decided the way. Took the implementer role again
+- 2026-10-02T17:32:26Z [Claude Code, anthropic/claude-opus-5-5] reworked the reading of frontmatter into a module of
+  its own, `scripts/wrapper-frontmatter.mjs`, which checks every line against the form of requirement 13 and returns a
+  problem with its line number for anything else; `refresh` leaves such a wrapper as it is, names it on standard error
+  and exits 1. The recognition of quoted and spaced keys added for S2 is gone: those are refused. Out of order with
+  the plan, the module was drafted before the tests, so the new unit tests passed when first run; replayed against the
+  implementation before the rework, 41 of the 53 tests in the file failed. The end-to-end test of the refusal failed
+  until the command used the module. Added the module to `files` in `package.json`, so the pack holds 23 files, one
+  more than before, and corrected the verification line that said nothing new
+- 2026-10-02T17:32:26Z [Claude Code, anthropic/claude-opus-5-5] checked the frontmatter the tests use with PyYAML
+  6.0.1, outside the suite. Three of the nine the tests called readable were not valid YAML and were replaced: a list
+  item after keys at one depth, a plain text continued with a colon in it, and an alias to an anchor that did not
+  exist. All nine now parse, and after a refresh every added key has the value it had and every kit key the release's.
+  Of the nineteen the tests call unreadable, sixteen are valid YAML that the command refuses by design, and three are
+  not valid YAML
+- 2026-10-02T17:32:26Z [Claude Code, anthropic/claude-opus-5-5] added a task and did it: a comparison with PyYAML on
+  random frontmatter, built from readable, unreadable and misleading pieces, in two runs, one of 40,000 cases mixing
+  all pieces and one of 30,000 from pieces the command reads, for both harnesses. It found two faults before either
+  was reviewed, both now tests in the suite. A comment or blank line carried along with a kept key could land straight
+  after the folded description of the Claude wrapper, which took an indented comment into its text and a blank line as
+  its own, so that a second refresh changed the file. Now an indented comment stays in the value above it, or is
+  refused when no key is above it, and blank lines between keys are not carried along. And comments after the last key
+  were dropped on the second refresh; they are now kept as lines of their own. After the fixes: no case where the
+  command read the frontmatter and the result did not parse, changed the value of an added key, kept a kit key beside
+  the release's, or changed on a second refresh. The scripts for both checks are not in the repository
+- 2026-10-02T17:32:26Z [Claude Code, anthropic/claude-opus-5-5] updated the README with the form `refresh` reads and
+  what it does with a wrapper written otherwise
 
 ## Amendments

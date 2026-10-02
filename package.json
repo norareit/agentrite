@@ -10,6 +10,7 @@
     "scripts/check-changes.mjs",
     "scripts/agentrite-roles.mjs",
     "scripts/agentrite.mjs",
+    "scripts/wrapper-frontmatter.mjs",
     "container"
   ],
   "bin": {

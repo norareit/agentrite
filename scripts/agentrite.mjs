@@ -3,6 +3,7 @@ import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSyn
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseHarnesses, plannedFiles } from './agentrite-roles.mjs';
+import { refreshedWrapper } from './wrapper-frontmatter.mjs';
 
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -206,77 +207,6 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
     harness_hosts: harnessHosts(harnesses),
   });
   return [...files, { path: COMPOSE_FILE, content: compose }];
-}
-
-/**
- * A wrapper as its frontmatter lines, between a first line of `---` and the next one, and the lines after them.
- * Undefined for a text that does not open with such a block.
- *
- * @param {string} wrapper
- * @returns {{ frontmatter: string[], rest: string[] } | undefined}
- */
-function splitWrapper(wrapper) {
-  // A wrapper saved with CRLF is read as the same lines. What is written from them ends in LF, as the release's does.
-  const lines = wrapper.split(/\r?\n/);
-  const end = lines.indexOf('---', 1);
-  if (lines[0] !== '---' || end === -1) return undefined;
-  return { frontmatter: lines.slice(1, end), rest: lines.slice(end + 1) };
-}
-
-// A key at the left margin, as YAML lets a block mapping write one: in double quotes, in single quotes or plain,
-// with any space before its colon, and the colon followed by space or by the end of the line. That last part is
-// what tells a key from a value that holds a colon. A line that opens with `-` is an item of a list, not a key.
-const KEY_LINE = /^(?:"([^"]*)"|'([^']*)'|([^\s"'#?:-][^:]*?))[ \t]*:(?:[ \t]|$)/;
-
-/**
- * The name of the key `line` opens, without its quotes, so that `"mode"` and `mode` are one key. Undefined for a
- * line that opens none.
- *
- * @param {string} line
- * @returns {string | undefined}
- */
-function keyName(line) {
-  const key = line.match(KEY_LINE);
-  return key ? (key[1] ?? key[2] ?? key[3]) : undefined;
-}
-
-/**
- * The frontmatter's keys, each with its lines: the line that names it at the left margin and every line up to the
- * next key, which holds a value that runs on, such as a folded text, a nested map or a list.
- *
- * @param {string[]} frontmatter
- * @returns {{ name: string, lines: string[] }[]}
- */
-function keyBlocks(frontmatter) {
-  /** @type {{ name: string, lines: string[] }[]} */ const blocks = [];
-  for (const line of frontmatter) {
-    const name = keyName(line);
-    if (name !== undefined) blocks.push({ name, lines: [line] });
-    else blocks.at(-1)?.lines.push(line);
-  }
-  return blocks;
-}
-
-/**
- * What to write over a wrapper a project already has: the wrapper as this release renders it, with every
- * frontmatter key of the existing one that the release does not write kept after the release's own, in the order
- * they had. That keeps a model the project pinned for the role. The keys the release writes and the whole body are
- * the release's.
- *
- * @param {string} existing
- * @param {string} rendered
- * @returns {string}
- */
-export function refreshedWrapper(existing, rendered) {
-  const current = splitWrapper(existing);
-  const release = splitWrapper(rendered);
-  if (current === undefined || release === undefined) return rendered;
-
-  const written = new Set(keyBlocks(release.frontmatter).map((block) => block.name));
-  const kept = keyBlocks(current.frontmatter)
-    .filter((block) => !written.has(block.name))
-    .flatMap((block) => block.lines);
-  return ['---', ...release.frontmatter, ...kept, '---', ...release.rest].join('\n');
 }
 
 /**
@@ -606,8 +536,14 @@ function refresh(root, harnesses) {
     }
 
     const existing = kind === 'file' ? readFileSync(absolute, 'utf-8') : undefined;
-    const content =
-      existing !== undefined && file.keepsFrontmatter ? refreshedWrapper(existing, file.content) : file.content;
+    const wrapper =
+      existing !== undefined && file.keepsFrontmatter ? refreshedWrapper(existing, file.content) : undefined;
+    if (wrapper !== undefined && 'problem' in wrapper) {
+      console.error(`agentrite: left ${file.path}, whose frontmatter refresh does not read: ${wrapper.problem}`);
+      status = 1;
+      continue;
+    }
+    const content = wrapper === undefined ? file.content : wrapper.content;
     // The owner's bit, which is the one that lets the project run its own shim and the one git records.
     const executable = !file.executable || (kind === 'file' && (lstatSync(absolute).mode & 0o100) !== 0);
     if (existing === content && executable) {
