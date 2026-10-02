@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-02T10:06:16Z
 ---
 
@@ -112,5 +112,10 @@ timestamp: 2026-10-02T10:06:16Z
   confirmed by the search, by `cdk list` here and by the reviewer's own synthesis. Covering them is new test design,
   such as asserting that the allowlist admits the host `infra/` serves and that `deploy.sh` names the stacks the app
   defines, which the spec did not ask for and which belongs in a unit of its own if it is wanted
+- 2026-10-02T12:59:23Z [human] decided C1: declined for this unit, as proposed. Approved the unit
+- 2026-10-02T12:59:23Z [Claude Code, anthropic/claude-opus-5-5] ran the suites on 2913eba, the final tree: `npm test`
+  passed, 144 of 144, `npx tsc -p infra` exited 0 and `npm run check-changes` exited 0. The review returned no
+  blocking finding, P1 is applied, C1 is decided, and every box in `plan.md` is ticked. Moved the status to
+  `implemented`. The human steps from the merge onward are still to come, and 0012 waits for the release
 
 ## Amendments
