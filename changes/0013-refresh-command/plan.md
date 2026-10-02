@@ -56,7 +56,7 @@ the ones 0011 and 0012 left.
   after `unknown command: <name>`. See them fail (R1, R2)
 - [x] Replace `parseInitArgs` with `parseArgs` and dispatch on the command in the entry point, with `refresh`
   exiting through a stub that throws, until the parsing tests pass and every other `init` test still does (R1, R2)
-- [ ] As a refactoring commit of its own, cut `shimFile(templates)` out of `projectFiles`, returning what
+- [x] As a refactoring commit of its own, cut `shimFile(templates)` out of `projectFiles`, returning what
   `agent.sh` is, and have `projectFiles` call it. No test changes, and all pass (R6)
 - [ ] Write the unit tests of `refreshedWrapper` in `tests/agentrite-refresh.test.mjs`: an existing wrapper equal
   to the rendered one comes back unchanged; `model: x` added to either harness's frontmatter is kept, after the
@@ -99,7 +99,7 @@ the ones 0011 and 0012 left.
 ## Commit Points
 
 - [x] The argument parsing for two commands
-- [ ] The refactoring that names the shim
+- [x] The refactoring that names the shim
 - [ ] `refreshedWrapper` and its tests
 - [ ] The `refresh` command and its end-to-end tests
 - [ ] The README
