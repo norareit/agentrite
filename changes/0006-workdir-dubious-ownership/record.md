@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-09-25T01:02:43Z
 ---
 
@@ -47,5 +47,15 @@ timestamp: 2026-09-25T01:02:43Z
 - 2026-10-02T10:16:45Z [Claude Code, anthropic/claude-opus-5-5] ran `npm test` and `node scripts/check-changes.mjs`
   on 1a18523: 67 tests passed, 0 failed, and the check exited 0. No test was added, as the spec decides the
   regression check is manual. No review has been run, so the status stays `in-progress`
+- 2026-10-02T10:29:58Z [OpenCode, openai/gpt-6.1-sol] fully reviewed unit `0006-workdir-dubious-ownership` at commit
+  `ae3c42853771b01eb329272595c6b06e9ef4adbf`, against merge base `1f59e6adb3444b69e7a61a12e2f813a54ec544ce`.
+  Returned finding C1; complete findings and verification details are in
+  `.reviews/0006-workdir-dubious-ownership/2026-10-02T102717Z-gpt-6-1-sol-full.md`. Independently ran all 67 tests
+  successfully with Node 26.9.0, the change check and the diff whitespace check. The initial Node 22.9.0 test run
+  could not load an existing TypeScript import. On Docker Desktop with Engine 24.0.7, using the reviewed Compose
+  file and the existing arm64 image, confirmed Git's ownership failure without the setting and successful status
+  and revision lookup with it in `/work` and an extra mount, successful status in a read-only mount, and both
+  repositories' change checks passing as uid 501. Not verified: Linux Docker Engine, the release-installed wrapper
+  carrying this fix, a newly rebuilt image, or a project-supplied `GIT_CONFIG_COUNT` override.
 
 ## Amendments
