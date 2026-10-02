@@ -84,6 +84,24 @@ services:
       # The start-up self-check: this host must be blocked, that one must be reachable.
       FIREWALL_CANARY: example.com
       FIREWALL_PROBE: api.anthropic.com
+      # Git's ownership check, switched off for every process in the container. Git
+      # refuses a repository whose top directory another user owns unless
+      # safe.directory names it, and Docker Desktop for macOS shows the root of every
+      # bind mount as owned by root, 0:0, while everything inside it keeps the host
+      # user's uid, which is the agent's. Git would therefore refuse /work and every
+      # `agent.sh --mount` path. The check guards a user against a repository that
+      # someone else controls, whose configuration could run commands. It protects
+      # nothing here: the only user that writes to a mounted repository is the agent,
+      # which can already change that repository's .git/config, and the mounts are the
+      # developer's own. "*" covers /work and every mount without the wrapper having to
+      # list them. It is set through the environment because git honors safe.directory
+      # only in protected configuration, which this is, and neither config file will
+      # do: /etc/gitconfig is the developer's own, mounted below, and the agent's
+      # ~/.gitconfig lives in the home volume, which a new volume starts without. A
+      # project that sets GIT_CONFIG_COUNT itself overrides this.
+      GIT_CONFIG_COUNT: "1"
+      GIT_CONFIG_KEY_0: safe.directory
+      GIT_CONFIG_VALUE_0: "*"
 
     volumes:
       # Default working directory: the project root. container/agent.sh overrides the

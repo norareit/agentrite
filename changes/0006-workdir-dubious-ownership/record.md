@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: in-progress
 timestamp: 2026-09-25T01:02:43Z
 ---
 
@@ -20,5 +20,16 @@ timestamp: 2026-09-25T01:02:43Z
   the review does not say how
 - 2026-09-25T01:02:43Z [Claude Code, anthropic/claude-opus-5-5] took the planner role. `spec.md` written, status
   `draft`; a single-commit fix, so no `plan.md`. Four requirements, three decisions and two non-goals
+- 2026-10-02T10:15:40Z [human] asked for the bugfix to be implemented as the spec stands. No separate approval was
+  given: the request to implement the drafted unit is recorded here as its approval
+- 2026-10-02T10:15:40Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  `in-progress`. The branch is one commit ahead of `1f59e6a` and has not been brought up to `master`, which has since
+  changed `container/compose.yml` in the same `environment` block, in lines this fix does not touch
+- 2026-10-02T10:15:40Z [Claude Code, anthropic/claude-opus-5-5] confirmed the failing case before the fix, on macOS
+  with Docker Desktop, Docker Engine 24.0.7, with Norareit as the project and its existing `norareit-agent` image.
+  The image was built from kit 1.0.3, whose installed `container/` directory `diff -q` reports as identical to this
+  branch's. Compose was run as the wrapper runs it, but with this repository's unchanged `container/compose.yml` as
+  the base file. As the agent, uid 501, `stat` showed `/work` as `0:0` and `/work/.git` as `501:20`, no `GIT_CONFIG_*`
+  variable was set, and `git -C /work status` exited 128 with "detected dubious ownership in repository at '/work'"
 
 ## Amendments
