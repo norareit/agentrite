@@ -166,5 +166,13 @@ timestamp: 2026-10-02T14:01:59Z
   byte as it was, and reported the first, with its comment and pin, and the other five files as up to date. Every box
   in `plan.md` is ticked. The status stays `in-progress` for the delta review of the rework, from 6c816a2, the commit
   the last review named
+- 2026-10-02T17:59:44Z [OpenCode, openai/gpt-6.1-sol] completed a delta review of `0013-refresh-command` from
+  previous reviewed commit `6c816a288f0b3ac556b101374452856f108e777c` to HEAD
+  `26c8b8b821247315ca6cf69949456184f3b8bf49`, with `master` merge-base
+  `ecccb16f8681b1860cf42823853944cf97d49b0d`. Returned S3, P1 and C3; complete findings are saved in
+  `.reviews/0013-refresh-command/20261002T175527Z-opencode-delta.md`. Not verified: macOS, actual harness consumption
+  including the earlier 0014 claim, the original 40,000/30,000 random runs, and the original 41/53 replay stage or
+  detailed in-session test chronology. The packed CLI smoke used extraction, local bin wiring and a synthetic
+  lockfile, not a fresh npm or Playwright installation
 
 ## Amendments
