@@ -32,17 +32,17 @@ Start from `master` once 0012 is merged into it, since this repository's own wra
 
 ## Tasks
 
-- [ ] Write unit tests of `wrapWords` in `tests/agentrite-roles.test.mjs`: a text shorter than the width is one
+- [x] Write unit tests of `wrapWords` in `tests/agentrite-roles.test.mjs`: a text shorter than the width is one
   line; a longer one breaks at the last space that fits, and no line is longer than the width; the indent starts
   every line and counts toward the width; a word longer than the width stays whole on a line of its own; the lines
   joined by single spaces, without the indent, are the text. See them fail (R1, R2, R3)
-- [ ] Rewrite the three fixtures in the wrapped form: `description: >-`, the description on lines indented by two
+- [x] Rewrite the three fixtures in the wrapped form: `description: >-`, the description on lines indented by two
   spaces, and the pointer sentence over two lines, each line holding as many words as fit in 120 characters. Change
   the OpenCode test to read the description from the fixture's folded block and to compare the two as unfolded
   text. Add a test that, for both harnesses and every role, no line of the planned wrapper is over 120 characters,
   the folded block under `description: >-` unfolds to the role's description, and the role file's path is on one
   line. See the fixture comparison and the new test fail (R1, R2, R3, R4, R7)
-- [ ] Write `wrapWords` and use it in `claudeFile` and `opencodeFile`, until every test in the file and the whole of
+- [x] Write `wrapWords` and use it in `claudeFile` and `opencodeFile`, until every test in the file and the whole of
   `npm test` passes (R1, R2, R3, R4, R9)
 - [ ] Add a test to `tests/agentrite-init.test.mjs` that, for each combination of harnesses and the package name
   the other tests use, no file `projectFiles` returns holds a line over 120 characters. It passes at once if the
@@ -67,7 +67,7 @@ Start from `master` once 0012 is merged into it, since this repository's own wra
 
 ## Commit Points
 
-- [ ] `wrapWords`, the wrapped fixtures and the generator
+- [x] `wrapWords`, the wrapped fixtures and the generator
 - [ ] The check on everything `init` writes
 - [ ] This repository's wrappers, written again
 - [ ] The record of the harness check

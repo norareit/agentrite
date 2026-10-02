@@ -29,17 +29,58 @@ const ROLES = [
   { name: 'reviewer', description: REVIEWER_DESCRIPTION },
 ];
 
+// The longest line a wrapper holds, so that a project wrapping its text at 120 characters can commit the wrappers
+// as they are written.
+const LINE_WIDTH = 120;
+
+/**
+ * `text` as lines that each start with `indent` and hold as many whole words as fit in `width` characters, the
+ * indent included. A word is never broken, so one longer than the width is a line of its own.
+ *
+ * @param {string} text
+ * @param {number} width
+ * @param {string} indent
+ * @returns {string[]}
+ */
+export function wrapWords(text, width, indent) {
+  /** @type {string[]} */ const lines = [];
+  let line = '';
+  for (const word of text.split(' ')) {
+    if (line !== '' && `${indent}${line} ${word}`.length > width) {
+      lines.push(indent + line);
+      line = word;
+    } else {
+      line = line === '' ? word : `${line} ${word}`;
+    }
+  }
+  return [...lines, indent + line];
+}
+
+/**
+ * The description as a folded block scalar, which YAML reads as the one line it is written from: the breaks fold
+ * to spaces and `-` drops the final newline.
+ *
+ * @param {string} description
+ * @returns {string}
+ */
+function descriptionBlock(description) {
+  return `description: >-\n${wrapWords(description, LINE_WIDTH, '  ').join('\n')}\n`;
+}
+
+/**
+ * @param {string} name
+ * @returns {string}
+ */
+function body(name) {
+  return `${wrapWords(BODY_LINE.replaceAll('{name}', name), LINE_WIDTH, '').join('\n')}\n`;
+}
+
 /**
  * @param {{ name: string, description: string }} role
  * @returns {string}
  */
 function claudeFile(role) {
-  return (
-    '---\n' +
-    `name: ${role.name}\n` +
-    `description: ${role.description}\n` +
-    `---\n\n${BODY_LINE.replaceAll('{name}', role.name)}\n`
-  );
+  return `---\nname: ${role.name}\n${descriptionBlock(role.description)}---\n\n${body(role.name)}`;
 }
 
 /**
@@ -47,12 +88,7 @@ function claudeFile(role) {
  * @returns {string}
  */
 function opencodeFile(role) {
-  return (
-    '---\n' +
-    `description: ${role.description}\n` +
-    'mode: subagent\n' +
-    `---\n\n${BODY_LINE.replaceAll('{name}', role.name)}\n`
-  );
+  return `---\n${descriptionBlock(role.description)}mode: subagent\n---\n\n${body(role.name)}`;
 }
 
 const HARNESSES = {
