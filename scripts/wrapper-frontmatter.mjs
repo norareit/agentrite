@@ -7,14 +7,15 @@
 // first two must start and end on one line here, and the third is told by its indentation. So a line read as a key
 // is a key.
 
-// A key at the left margin: a plain name, its colon, and a value after one space or none at all.
-const TOP_KEY = /^([A-Za-z_][\w-]*):(?: (.*))?$/;
+// A key at the left margin: a plain name of letters, digits, `_` and `-`, its colon, and a value after one space or
+// none at all. A lone `-` followed by a space opens an item of a list, and is tried before this.
+const TOP_KEY = /^([A-Za-z0-9_-]+):(?: (.*))?$/;
 // A key anywhere below one: plain, without a character that could open something else, or a quoted text that ends
 // before its colon.
 const NESTED_KEY = /^(?:[^\s'"[\]{}:#,&*!|>%@`?-][^'"[\]{}:#]*|"(?:[^"\\]|\\.)*"|'(?:[^']|'')*'):(?: (.*))?$/;
 const LIST_ITEM = /^-(?: +|$)/;
-const DOUBLE_QUOTED = /^"(?:[^"\\]|\\.)*"(?: +#.*)?$/;
-const SINGLE_QUOTED = /^'(?:[^']|'')*'(?: +#.*)?$/;
+const DOUBLE_QUOTED = /^"(?:[^"\\]|\\.)*"(?:[ \t]+#.*)?$/;
+const SINGLE_QUOTED = /^'(?:[^']|'')*'(?:[ \t]+#.*)?$/;
 // `|` or `>`, with the indicators YAML allows after it, and nothing else on the line but a comment.
 const BLOCK_TEXT = /^[|>](?:[1-9][+-]?|[+-][1-9]?)?(?: +#.*)?$/;
 /** @type {Record<string, string>} */
@@ -28,22 +29,27 @@ function indentOf(line) {
   return line.length - line.trimStart().length;
 }
 
+// What may follow a value that ends on its line: nothing, or a comment, which YAML sets off with a space.
+const NOTHING_OR_A_COMMENT = /^(?:[ \t]+#.*)?$/;
+
 /**
- * True for a bracketed list or map that opens with the first character of `value`, closes with its last and holds
- * no quote, which is what lets brackets be counted without reading what is between them.
+ * True for a bracketed list or map that opens with the first character of `value`, closes on this line, holds
+ * neither a quote nor a `#`, and is followed by nothing but a comment. Holding neither is what lets its brackets
+ * be counted without reading what is between them: a bracket inside a quoted text, or after the `#` of a comment,
+ * closes nothing.
  *
  * @param {string} value
  * @returns {boolean}
  */
 function closesOnItsLine(value) {
-  if (/['"]/.test(value)) return false;
   /** @type {string[]} */ const open = [];
   for (let index = 0; index < value.length; index += 1) {
     const character = value[index];
+    if (character === "'" || character === '"' || character === '#') return false;
     if (Object.hasOwn(CLOSERS, character)) open.push(CLOSERS[character]);
     else if (character === ']' || character === '}') {
       if (open.pop() !== character) return false;
-      if (open.length === 0) return index === value.length - 1;
+      if (open.length === 0) return NOTHING_OR_A_COMMENT.test(value.slice(index + 1));
     }
   }
   return false;
@@ -64,10 +70,12 @@ function valueProblem(value) {
   if (value.startsWith('[') || value.startsWith('{')) {
     return closesOnItsLine(value)
       ? undefined
-      : 'a bracketed list or map that does not start and end on this line, or holds a quote';
+      : 'a bracketed list or map that does not start and end on this line, or holds a quote or a #';
   }
   if (value.startsWith('&') || value.startsWith('!')) return 'an anchor or a tag';
-  return /['"]/.test(value) ? 'a quote in a text that is not quoted' : undefined;
+  // A comment after the text is not the text, and may hold a quote.
+  const text = value.startsWith('#') ? '' : value.split(/[ \t]#/)[0];
+  return /['"]/.test(text) ? 'a quote in a text that is not quoted' : undefined;
 }
 
 /**

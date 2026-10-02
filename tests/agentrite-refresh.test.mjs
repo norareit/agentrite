@@ -175,6 +175,11 @@ const READABLE = {
     'label: "say \\"mode: primary\\""  # a comment',
   ],
   'a bracketed list and map on one line': ['tools: [read, grep]', 'limits: {steps: 5, depth: [1, 2]}'],
+  'a bracketed list followed by a comment that holds brackets and quotes': [
+    'tools: [read, grep]  # all ] of [ "them',
+    'permission:',
+    "  bash: {ls: allow} # it's }",
+  ],
   'a text opened by | that holds quotes and a line shaped like a key': [
     'prompt: |',
     "  Don't stop.",
@@ -206,6 +211,8 @@ const READABLE = {
     'model: a/b',
   ],
   'a key with no value': ['model:', 'fallback: null'],
+  // Review S3
+  'a name that opens with a digit or a dash': ['2fa: true', '9: nine', '-x: 1', '_y: 2'],
 };
 
 for (const [what, added] of Object.entries(READABLE)) {
@@ -351,6 +358,26 @@ const UNREADABLE = [
   },
   { what: 'a value with a tag', added: ['kind: !!seq [a,', 'mode: b]'], at: 'kind: !!seq [a,', why: /anchor or a tag/ },
   { what: 'a tab in the indentation', added: ['permission:', '\tedit: deny'], at: '\tedit: deny', why: /tab/ },
+  // Review C3
+  {
+    what: 'a bracketed list whose only closing bracket is in a comment',
+    added: ['tools: [read, # ]', 'mode: primary', '  ]'],
+    at: 'tools: [read, # ]',
+    why: /bracketed/,
+  },
+  {
+    what: 'a nested bracketed map whose closing brace is in a comment',
+    added: ['permission:', '  bash: {ls: allow, # }', 'mode: primary}'],
+    at: '  bash: {ls: allow, # }',
+    why: /bracketed/,
+  },
+  {
+    what: 'a bracketed list with text after it that is not a comment',
+    added: ['tools: [read]#all'],
+    at: 'tools: [read]#all',
+    why: /bracketed/,
+  },
+  { what: 'a bracketed list with a # in a word', added: ['tools: [a#b]'], at: 'tools: [a#b]', why: /bracketed/ },
 ];
 
 for (const { what, added, at, why } of UNREADABLE) {
@@ -523,6 +550,29 @@ test('a wrapper the command does not read is left byte for byte, named with its 
     assert.match(result.stderr, named, round);
     assert.doesNotMatch(result.stdout, new RegExp(` ${path.replaceAll('.', '\\.')}$`, 'm'));
     assert.equal(read('.opencode/agents/implementer.md'), rendered('opencode', 'implementer'), round);
+    assert.equal(read('agent.sh'), SHIM, round);
+  }
+});
+
+// Review C3
+test('a list closed only inside a comment is refused by the command, twice, with nothing written', (t) => {
+  const { base, run, read, write } = staleProject(t);
+  const path = '.opencode/agents/planner.md';
+  const unreadable = ['---', 'description: old', 'mode: subagent', 'tools: [read, # ]', 'mode: primary', '  ]', '---']
+    .concat(['', 'Old body.', ''])
+    .join('\n');
+  write(path, unreadable);
+  const longAgo = new Date('2020-01-01T00:00:00Z');
+  utimesSync(join(base, path), longAgo, longAgo);
+
+  for (const round of ['first', 'second']) {
+    const result = run('refresh', 'claude', 'opencode');
+
+    assert.equal(result.status, 1, round);
+    assert.match(result.stderr, new RegExp(`${path.replaceAll('.', '\\.')}.*line 4: .*bracketed`), round);
+    assert.equal(read(path), unreadable, round);
+    assert.equal(statSync(join(base, path)).mtimeMs, longAgo.getTime(), round);
+    assert.equal(read('.opencode/agents/reviewer.md'), withAdded(['model: some/model']), round);
     assert.equal(read('agent.sh'), SHIM, round);
   }
 });

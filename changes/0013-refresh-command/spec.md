@@ -50,11 +50,12 @@ wrapper's frontmatter. Deleting a wrapper and writing it again loses that.
     followed by a colon. Its value is on the same line, after one space, or on the indented lines and list items
     below it. Wherever a value stands, on the key's line or below it:
     * a text in single or double quotes starts and ends on one line
-    * a list or a map in brackets or braces starts and ends on one line and holds no quote
+    * a list or a map in brackets or braces starts and ends on one line and holds no quote and no `#`
     * a text opened by `|` or `>` holds anything, on lines indented further than its key
     * any other text holds no quote, and does not open with an anchor or a tag
     * a nested key is plain, or a quoted text that starts and ends before its colon
     * indentation is spaces
+    * a comment may follow a value that ends on its line, set off from it by a space
 14. A wrapper whose frontmatter is not written that way is left byte for byte as it is. `refresh` names it on
     standard error with the number of the first line it did not read and why, still handles the other files, and
     exits 1. That covers, among others, a key in quotes or with space before its colon, a key written with `?`, a
@@ -95,6 +96,11 @@ wrapper's frontmatter. Deleting a wrapper and writing it again loses that.
   first, installed into every project, for input that is rare. Overwriting the wrapper whole was rejected: it loses
   the pinned model on every refresh. Stating the limits and still rewriting the wrappers outside them was
   rejected: the second review's case left a broken file and reported success
+* **A bracketed list or map holds no `#`.** The third review showed `tools: [read, # ]` passing as closed, because
+  the closing bracket inside the comment was counted. Where a `#` starts a comment inside brackets depends on what
+  stands before it, and parsers differ at the edges, so telling a comment from a `#` inside a word would be a guess
+  again. Refusing every `#` between the brackets needs none. After the closing bracket a comment is no risk and is
+  allowed, as it is after a quoted text
 * **A comment belongs to the key below it.** A project that explains its pinned model does so on the line above.
   Taken with the key above instead, that comment would be dropped whenever the key above is the kit's
 * **`refresh` is told the harnesses, like `init`.** Detecting them from the directories that exist was rejected:

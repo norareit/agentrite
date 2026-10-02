@@ -185,5 +185,23 @@ timestamp: 2026-10-02T14:01:59Z
   says so itself. The review also notes that the random comparison cannot be repeated, its scripts not being in the
   repository, and C3 shows what it missed: none of its pieces put a comment inside brackets. Added three tasks to
   `plan.md`, the third to keep that comparison in the repository and widen it
+- 2026-10-02T18:13:57Z [Claude Code, anthropic/claude-opus-5-5] applied S3 and C3, each regression first. Five tests
+  failed before the change: names opening with a digit or a dash being refused; the review's list closed only in a
+  comment, in the function and through the command; the same in a nested map; and a `#` inside a word in brackets
+  being read. Then: a key's name is any run of letters, digits, `_` and `-`; a bracketed list or map that holds a `#`
+  is refused. A sixth test, written before its change and seen failing, allows a comment after a bracketed value that
+  has closed, which the reader had refused although requirement 13 has such a value in the form; a comment after a
+  plain text may now hold a quote, for the same reason
+- 2026-10-02T18:13:57Z [Claude Code, anthropic/claude-opus-5-5] took the planner role for a small amendment to
+  requirement 13, which follows from C3 and which the human has not yet confirmed: a bracketed list or map holds no
+  `#`, and a comment may follow a value that ends on its line. The reason is recorded as a decision in `spec.md`.
+  Without it the reader, refusing every `#` in brackets, would again be narrower than the form the spec states, which
+  is what S3 was
+- 2026-10-02T18:13:57Z [Claude Code, anthropic/claude-opus-5-5] put the comparison with a YAML parser in the
+  repository, as `tests/manual/frontmatter-vs-yaml.py` with its node half, and described it in the README. It now also
+  builds frontmatter from single tokens, and from pieces with a comment inside and after brackets. With the fix of C3
+  taken out, a run of 80,000 refreshes reports 810 failures, the first of them the kind C3 is. With it in: three runs
+  of 200,000 refreshes each, seeds 1, 2 and 3, about 31,000 read in each and about 24,000 of those valid YAML to
+  compare, 0 failures. PyYAML 6.0.1, Node 24.14.1
 
 ## Amendments

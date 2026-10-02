@@ -49,6 +49,8 @@ the ones 0011 and 0012 left.
 - `scripts/wrapper-frontmatter.mjs`: new, `refreshedWrapper` and the reading of frontmatter behind it, a job of its
   own since the rework after the delta review
 - `package.json`: the new script under `files`, so that it ships
+- `tests/manual/frontmatter-vs-yaml.py`, `tests/manual/refresh-cases.mjs`: new, the comparison with a YAML parser,
+  run by hand
 - `tests/agentrite-init.test.mjs`: the parsing tests, for `parseArgs`
 - `tests/agentrite-refresh.test.mjs`: new, the unit tests of `refreshedWrapper` and the end-to-end tests of the
   command
@@ -133,15 +135,15 @@ the ones 0011 and 0012 left.
   pieces that are readable, unreadable and deliberately misleading, and for each one the command reads check that
   the result parses, that every added key has the value it had, that every kit key has the release's, and that a
   second refresh changes nothing. Turn each failure into a test in the suite before fixing it (R4, R5, R13, R14)
-- [ ] Review S3: read a key at the left margin whose name is any run of letters, digits, `_` and `-`, as
+- [x] Review S3: read a key at the left margin whose name is any run of letters, digits, `_` and `-`, as
   requirement 13 says, where the reader asked for a letter or `_` first. First the regression: `2fa: true`,
   `9: nine` and `-x: 1` added to a wrapper are kept (R13)
-- [ ] Review C3: refuse a bracketed list or map that holds a `#`, since what follows a `#` may be a comment, and a
+- [x] Review C3: refuse a bracketed list or map that holds a `#`, since what follows a `#` may be a comment, and a
   bracket in a comment closes nothing. First the regressions: the review's case, in the function and through the
   command, is reported at the line that opens the list, the wrapper byte for byte unchanged and its modification
   time with it, the exit status 1, the other files done, and the same on a second run; a bracketed list followed
   by a comment on its line, and one with a `#` inside a word, are refused too (R13, R14)
-- [ ] Keep the comparison with a YAML parser in the repository, as `tests/manual/`, so that it can be run again
+- [x] Keep the comparison with a YAML parser in the repository, as `tests/manual/`, so that it can be run again
   and its cases are not lost with a session: it needs Python with PyYAML, which the suite must not, so `npm test`
   does not run it and the README says how to. Extend it to build frontmatter out of single tokens as well as
   whole pieces, comments inside brackets among them, which the first version lacked and which is how C3 got past

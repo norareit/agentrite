@@ -183,10 +183,10 @@ guesses: a wrapper is either read in full or not touched. What it reads:
 * A value on the key's line, or on the indented lines and list items below it, which is how a harness's nested
   settings are written
 * A text in quotes, or a list or map in brackets or braces, that starts and ends on one line. A bracketed one holds
-  no quotes
+  no quote and no `#`
 * A text opened by `|` or `>`, which may hold anything
 * Any other text without a quote in it, and without an anchor or a tag
-* Comments and blank lines. Blank lines between keys are not carried over
+* Comments, on lines of their own or after a value, and blank lines. Blank lines between keys are not carried over
 
 A wrapper it does not read is refreshed by rewriting that part of its frontmatter in the plain way, or by hand.
 
@@ -351,6 +351,16 @@ npm run check-changes
 
 It runs the check from the released kit in `node_modules`, not from this repository's `scripts/`, so it needs
 `npm ci` first.
+
+One check is run by hand and is not part of `npm test`, because it needs Python 3 with PyYAML:
+
+```sh
+python3 tests/manual/frontmatter-vs-yaml.py
+```
+
+`refresh` reads a wrapper's frontmatter without a YAML parser, and this compares what it does with what a parser
+reads, over random frontmatter. It fails when `refresh` accepted a frontmatter and changed its meaning. Run it after
+any change to `scripts/wrapper-frontmatter.mjs`, and turn a case it finds into a test before fixing it.
 
 ## The kit's own copy of the kit
 
