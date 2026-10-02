@@ -158,6 +158,16 @@ function harnessHosts(harnesses) {
 }
 
 /**
+ * The shim that runs the kit's sandbox from the project root.
+ *
+ * @param {Record<string, string>} templates
+ * @returns {{ path: string, content: string, executable: boolean }}
+ */
+function shimFile(templates) {
+  return { path: 'agent.sh', content: fillTemplate(templates['agent.sh'], {}), executable: true };
+}
+
+/**
  * The files init creates, filled from the templates. The compose file is left out without a Playwright version.
  *
  * @param {{
@@ -176,7 +186,7 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
       content: fillTemplate(templates['AGENTS.md'], { role_wrapper_directories: roleWrapperDirectories(harnesses) }),
     },
     { path: 'CLAUDE.md', content: fillTemplate(templates['CLAUDE.md'], {}) },
-    { path: 'agent.sh', content: fillTemplate(templates['agent.sh'], {}), executable: true },
+    shimFile(templates),
   ];
   if (playwrightVersion === undefined) return files;
   const compose = fillTemplate(templates[COMPOSE_FILE], {
