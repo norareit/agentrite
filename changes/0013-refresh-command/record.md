@@ -74,5 +74,14 @@ timestamp: 2026-10-02T14:01:59Z
   consuming refreshed wrappers (including the recorded 0014 harness-consumption claim), and the original
   within-session test-first chronology. The packed CLI smoke used an extracted tarball, a local bin symlink and
   a synthetic lockfile, not a fresh npm dependency or Playwright installation
+- 2026-10-02T16:08:37Z [human] asked the implementer to read the review and to make the changes it calls for where
+  they are needed
+- 2026-10-02T16:08:37Z [Claude Code, anthropic/claude-opus-5-5] the review returned three blocking findings, S1, S2
+  and C1, and reproduced each. All three are accepted, the human having left that to the implementer, and each is a
+  requirement that is false for an input a project may plainly have: S1, a wrapper with CRLF line endings loses its
+  added keys, against requirement 4; S2, a key written in quotes or with space before its colon is not seen as a key,
+  so an added one is dropped and a kit one is kept beside the release's, against requirements 4 and 5; C1, a shim
+  whose only execute bit is not its owner's is taken as executable, against requirement 6. Added a task for each to
+  `plan.md`, regression first
 
 ## Amendments
