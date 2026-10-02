@@ -25,5 +25,11 @@ timestamp: 2026-10-02T14:01:59Z
   holds 0012 and 0014, took the implementer role and moved the status to `in-progress`. Since 0014 the wrappers hold a
   folded description, whose indented lines `refreshedWrapper` has to treat as part of the key, as the plan of 0014
   notes
+- 2026-10-02T15:47:32Z [Claude Code, anthropic/claude-opus-5-5] rewrote the parsing tests for `parseArgs` and saw the
+  file fail on the missing export. Replaced `parseInitArgs` with `parseArgs`, which returns the command and the
+  harnesses, and dispatched on the command through a registry, `COMMANDS`, with `refresh` a stub that throws. One of
+  the new tests then failed for a reason of its own: it matched a pattern against the error where `assert.throws`
+  matches against the error with its `Error: ` prefix, and was corrected to compare the message. `npm test` passed,
+  151 of 151
 
 ## Amendments

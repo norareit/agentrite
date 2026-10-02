@@ -31,27 +31,52 @@ const HARNESS_HOSTS = {
 };
 
 /**
- * agentrite-roles words its usage for its own command. The harnesses it lists are the ones init takes.
+ * @param {unknown} error
+ * @returns {string}
+ */
+function messageOf(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * agentrite-roles words its usage for its own command. The harnesses it lists are the ones each command here takes.
  *
+ * @param {string} command
  * @param {string} message
  * @returns {string}
  */
-function forInit(message) {
-  return message.replace('usage: agentrite-roles ', 'usage: agentrite init ');
+function forCommand(command, message) {
+  return message.replace('usage: agentrite-roles ', `usage: agentrite ${command} `);
+}
+
+/**
+ * The usage of every command, one to a line, the lines after the first indented to start under the command's name.
+ *
+ * @returns {string}
+ */
+function usage() {
+  try {
+    // With no harnesses, parseHarnesses throws its usage alone.
+    parseHarnesses([]);
+  } catch (error) {
+    const lines = Object.keys(COMMANDS).map((command) => forCommand(command, messageOf(error)));
+    return lines.join('\n').replaceAll('\nusage: ', '\n       ');
+  }
+  throw new Error('parseHarnesses accepted an empty list of harnesses');
 }
 
 /**
  * @param {string[]} args
- * @returns {string[]}
+ * @returns {{ command: string, harnesses: string[] }}
  */
-export function parseInitArgs(args) {
+export function parseArgs(args) {
   const [command, ...names] = args;
+  if (command === undefined) throw new Error(usage());
+  if (!Object.hasOwn(COMMANDS, command)) throw new Error(`unknown command: ${command}\n${usage()}`);
   try {
-    // With no harnesses, parseHarnesses throws the usage alone, which is what a missing or unknown command needs.
-    return parseHarnesses(command === 'init' ? names : []);
+    return { command, harnesses: parseHarnesses(names) };
   } catch (error) {
-    const unknownCommand = command === undefined || command === 'init' ? '' : `unknown command: ${command}\n`;
-    throw new Error(unknownCommand + forInit(error instanceof Error ? error.message : String(error)));
+    throw new Error(forCommand(command, messageOf(error)));
   }
 }
 
@@ -458,6 +483,25 @@ function init(root, harnesses) {
 }
 
 /**
+ * Not written yet.
+ *
+ * @param {string} _root
+ * @param {string[]} _harnesses
+ * @returns {number}
+ */
+function refresh(_root, _harnesses) {
+  throw new Error('refresh is not implemented');
+}
+
+/**
+ * The commands, by the name each is run with. Each takes the project root and the harnesses, and returns the exit
+ * status.
+ *
+ * @type {Record<string, (root: string, harnesses: string[]) => number>}
+ */
+const COMMANDS = { init, refresh };
+
+/**
  * True when this file is the entry point, even when it is executed through a
  * `node_modules/.bin` symlink whose target is this file, so the guard below
  * fires no matter which side node resolved.
@@ -472,17 +516,17 @@ function isMain() {
 }
 
 if (isMain()) {
-  let harnesses;
+  let parsed;
   try {
-    harnesses = parseInitArgs(process.argv.slice(2));
+    parsed = parseArgs(process.argv.slice(2));
   } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
+    console.error(messageOf(error));
     process.exit(2);
   }
   try {
-    process.exit(init(process.cwd(), harnesses));
+    process.exit(COMMANDS[parsed.command](process.cwd(), parsed.harnesses));
   } catch (error) {
-    console.error(`agentrite: ${error instanceof Error ? error.message : String(error)}`);
+    console.error(`agentrite: ${messageOf(error)}`);
     process.exit(1);
   }
 }

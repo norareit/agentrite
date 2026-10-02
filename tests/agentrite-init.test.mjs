@@ -24,7 +24,7 @@ import {
   CLAUDE_NOTICE,
   dockerignore,
   fillTemplate,
-  parseInitArgs,
+  parseArgs,
   playwrightVersion,
   projectFiles,
   withCheckChangesScript,
@@ -56,26 +56,40 @@ function fileAt(list, path) {
 
 // R1
 
-test('parseInitArgs takes the harnesses after init, as agentrite-roles does', () => {
-  assert.deepEqual(parseInitArgs(['init', 'claude']), ['claude']);
-  assert.deepEqual(parseInitArgs(['init', 'opencode', 'claude', 'claude']), ['opencode', 'claude']);
+test('parseArgs takes the command and the harnesses after it, as agentrite-roles takes them', () => {
+  assert.deepEqual(parseArgs(['init', 'claude']), { command: 'init', harnesses: ['claude'] });
+  assert.deepEqual(parseArgs(['init', 'opencode', 'claude', 'claude']), {
+    command: 'init',
+    harnesses: ['opencode', 'claude'],
+  });
+  assert.deepEqual(parseArgs(['refresh', 'claude', 'opencode']), {
+    command: 'refresh',
+    harnesses: ['claude', 'opencode'],
+  });
 });
 
-test('parseInitArgs gives the init usage for no harness and for an unknown one, naming the harnesses', () => {
-  for (const args of [['init'], ['init', 'codex'], ['init', 'claude', 'toString']]) {
-    assert.throws(() => parseInitArgs(args), (error) => {
-      assert.match(error.message, /^usage: agentrite init claude \| opencode$/m);
-      assert.doesNotMatch(error.message, /agentrite-roles/);
-      return true;
-    });
+test('parseArgs gives the usage of the command alone for no harness and for an unknown one', () => {
+  for (const [command, other] of [
+    ['init', 'refresh'],
+    ['refresh', 'init'],
+  ]) {
+    for (const args of [[command], [command, 'codex'], [command, 'claude', 'toString']]) {
+      assert.throws(() => parseArgs(args), (error) => {
+        assert.match(error.message, new RegExp(`^usage: agentrite ${command} claude \\| opencode$`, 'm'));
+        assert.doesNotMatch(error.message, new RegExp(`agentrite ${other}`));
+        assert.doesNotMatch(error.message, /agentrite-roles/);
+        return true;
+      });
+    }
+    assert.throws(() => parseArgs([command, 'codex']), /unknown harness: codex/);
   }
-  assert.throws(() => parseInitArgs(['init', 'codex']), /unknown harness: codex/);
 });
 
-test('parseInitArgs gives the usage for no command and for a command other than init', () => {
-  assert.throws(() => parseInitArgs([]), { message: 'usage: agentrite init claude | opencode' });
-  assert.throws(() => parseInitArgs(['claude']), /unknown command: claude\nusage: agentrite init/);
-  assert.throws(() => parseInitArgs(['setup', 'claude']), /unknown command: setup/);
+test('parseArgs gives the usage of both commands for no command and for one that is neither', () => {
+  const usage = 'usage: agentrite init claude | opencode\n       agentrite refresh claude | opencode';
+  assert.throws(() => parseArgs([]), { message: usage });
+  assert.throws(() => parseArgs(['claude']), { message: `unknown command: claude\n${usage}` });
+  assert.throws(() => parseArgs(['setup', 'claude']), { message: `unknown command: setup\n${usage}` });
 });
 
 // R2

@@ -48,11 +48,11 @@ the ones 0011 and 0012 left.
 
 ## Tasks
 
-- [ ] In `tests/agentrite-init.test.mjs`, rewrite the parsing tests for `parseArgs`: `init` with harnesses gives
+- [x] In `tests/agentrite-init.test.mjs`, rewrite the parsing tests for `parseArgs`: `init` with harnesses gives
   `{ command: 'init', harnesses }`, and `refresh` the same with its own name; no harness or an unknown one gives
   that command's usage line alone; no command, and a command that is neither, gives both usage lines, the second
   after `unknown command: <name>`. See them fail (R1, R2)
-- [ ] Replace `parseInitArgs` with `parseArgs` and dispatch on the command in the entry point, with `refresh`
+- [x] Replace `parseInitArgs` with `parseArgs` and dispatch on the command in the entry point, with `refresh`
   exiting through a stub that throws, until the parsing tests pass and every other `init` test still does (R1, R2)
 - [ ] As a refactoring commit of its own, cut `kitOwnedFiles({ templates, harnesses })` out of `projectFiles`,
   returning the wrappers and `agent.sh`, and build `projectFiles` from it in the order it had. No test changes,
@@ -96,7 +96,7 @@ the ones 0011 and 0012 left.
 
 ## Commit Points
 
-- [ ] The argument parsing for two commands
+- [x] The argument parsing for two commands
 - [ ] The refactoring that names the kit's own files
 - [ ] `refreshedWrapper` and its tests
 - [ ] The `refresh` command and its end-to-end tests
