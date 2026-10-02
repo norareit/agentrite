@@ -178,6 +178,39 @@ The exception names the files rather than the directory. BuildKit lets an except
 in it only when the directory itself was excluded, so `!node_modules/@ritenoar/agent-kit/container` alone does not
 bring back a kit file that a pattern excluded by name.
 
+### The shared `node_modules`
+
+The sandbox mounts the project at `/work` as it is on the host, `node_modules` included. The host and the sandbox
+therefore share one `node_modules`: an install on either side writes into the same directory, and the container has
+none of its own.
+
+npm installs a package that is limited to some platforms only on those platforms, and `npm ci` removes `node_modules`
+before it installs. So an install on either side installs for that side's platform and removes what only the other
+side's platform used, and nothing reports it. On a Linux host both sides are the same platform and nothing is lost.
+A macOS host is the case where it matters:
+
+* After an install in the sandbox, the host's macOS-only packages are gone. `fsevents`, which Playwright uses to watch
+  files, is one. Playwright still runs without it, so the loss goes unnoticed
+* After an install on the host, the sandbox's Linux-only packages are gone in the same way
+* A package that ships a native binary per platform, as a bundler may, then fails on the side that did not install
+  last, because the binary it finds is the other platform's
+
+`npm ci` on the side about to be used restores that side. On the host:
+
+```sh
+npm ci
+```
+
+And for the sandbox:
+
+```sh
+./agent.sh -- npm ci
+```
+
+Use `npm ci` rather than `npm install`. `npm install` swaps the platform-limited packages but leaves every package
+that is already installed as the other side left it, including a binary that one of them set up for the other
+platform.
+
 ### The home volume
 
 The agent's home, `/home/agent`, is a named volume in `container/compose.yml`, the one writable place that survives a

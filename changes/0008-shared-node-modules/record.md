@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: in-progress
 timestamp: 2026-09-25T01:02:43Z
 ---
 
@@ -20,5 +20,11 @@ timestamp: 2026-09-25T01:02:43Z
   `draft`; a single-commit fix, so no `plan.md`. Three requirements, three decisions and three non-goals. The fix is
   documentation. The spec's first decision, documenting instead of giving the container its own `node_modules`, is
   the one approval most needs to confirm, since it keeps the behavior and only makes it known
+- 2026-10-02T10:49:09Z [human] asked for the bugfix to be implemented as the spec stands. No separate approval was
+  given, and the spec's first decision was not discussed: the request to implement the drafted unit is recorded here
+  as its approval, that decision included
+- 2026-10-02T10:49:09Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  `in-progress`. Rebased the branch's one commit from `1f59e6a` onto `master` at `94b55d9` first, because `master`
+  has since rewritten the README this unit changes. The rebased branch is not pushed
 
 ## Amendments
