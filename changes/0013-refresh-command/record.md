@@ -159,5 +159,12 @@ timestamp: 2026-10-02T14:01:59Z
   the release's, or changed on a second refresh. The scripts for both checks are not in the repository
 - 2026-10-02T17:32:26Z [Claude Code, anthropic/claude-opus-5-5] updated the README with the form `refresh` reads and
   what it does with a wrapper written otherwise
+- 2026-10-02T17:32:27Z [Claude Code, anthropic/claude-opus-5-5] verified on 38a8f4d: `npm test` passed, 206 of 206;
+  `npx tsc -p infra` exited 0; `npm run check-changes` exited 0. In a scratch project set up by `init` from the packed
+  working copy, with a comment and a pinned model added to one wrapper and the delta review's case C2 written into
+  another, `npx agentrite refresh claude opencode` exited 1, named the second wrapper with line 6 and left it byte for
+  byte as it was, and reported the first, with its comment and pin, and the other five files as up to date. Every box
+  in `plan.md` is ticked. The status stays `in-progress` for the delta review of the rework, from 6c816a2, the commit
+  the last review named
 
 ## Amendments
