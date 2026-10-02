@@ -67,5 +67,12 @@ timestamp: 2026-10-02T14:01:59Z
   after a refresh, which 0014 checked for the same generated content, and the command on macOS
 - 2026-10-02T15:50:32Z [Claude Code, anthropic/claude-opus-5-5] every box in `plan.md` is ticked. The status stays
   `in-progress` until the unit is reviewed and the human has decided what the review returns
+- 2026-10-02T16:05:02Z [OpenCode, openai/gpt-6.1-sol] completed a full first review of `0013-refresh-command` at
+  commit `0111a17b383a30179ffb45585c852c06269e5e5b`, against the `master` merge-base
+  `ecccb16f8681b1860cf42823853944cf97d49b0d`. Returned S1, S2 and C1; complete findings are saved in
+  `.reviews/0013-refresh-command/20261002T160215Z-opencode-full.md`. Not verified: macOS execution, either harness
+  consuming refreshed wrappers (including the recorded 0014 harness-consumption claim), and the original
+  within-session test-first chronology. The packed CLI smoke used an extracted tarball, a local bin symlink and
+  a synthetic lockfile, not a fresh npm dependency or Playwright installation
 
 ## Amendments
