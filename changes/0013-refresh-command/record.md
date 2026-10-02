@@ -203,5 +203,13 @@ timestamp: 2026-10-02T14:01:59Z
   taken out, a run of 80,000 refreshes reports 810 failures, the first of them the kind C3 is. With it in: three runs
   of 200,000 refreshes each, seeds 1, 2 and 3, about 31,000 read in each and about 24,000 of those valid YAML to
   compare, 0 failures. PyYAML 6.0.1, Node 24.14.1
+- 2026-10-02T18:14:11Z [Claude Code, anthropic/claude-opus-5-5] verified on 0d03cdf: `npm test` passed, 213 of 213;
+  `npx tsc -p infra` exited 0; `npm run check-changes` exited 0; `npm pack` holds 23 files and nothing of
+  `tests/manual/`. The frontmatter the tests use was checked with PyYAML again: the eleven called readable parse and
+  keep their meaning through a refresh, and of the twenty-three called unreadable twenty are valid YAML. From the
+  packed working copy in a scratch project, `npx agentrite refresh opencode` exited 1, named the wrapper holding the
+  case of C3 at line 4 and left it byte for byte as it was, and refreshed a wrapper holding `2fa: true` and `tools:
+  [read] # all`, keeping both lines. Every box in `plan.md` is ticked. The status stays `in-progress`: the amendment
+  to requirement 13 awaits the human, and the rework since 26c8b8b awaits a delta review
 
 ## Amendments
