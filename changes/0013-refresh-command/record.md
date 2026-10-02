@@ -31,5 +31,11 @@ timestamp: 2026-10-02T14:01:59Z
   the new tests then failed for a reason of its own: it matched a pattern against the error where `assert.throws`
   matches against the error with its `Error: ` prefix, and was corrected to compare the message. `npm test` passed,
   151 of 151
+- 2026-10-02T15:48:06Z [Claude Code, anthropic/claude-opus-5-5] changed the plan before the refactoring, for a reason
+  found in the code. The plan had `projectFiles` built from `kitOwnedFiles`. But `init` writes `AGENTS.md` and
+  `CLAUDE.md` between the wrappers and the shim, and an existing test requires the wrappers `init` plans to equal
+  those of `agentrite-roles` exactly, which a list that marks them for `refresh` would not. So the refactoring cuts
+  out only `shimFile`, what `agent.sh` is, and `kitOwnedFiles` is written with `refresh`, its one caller. The
+  requirements are untouched
 
 ## Amendments

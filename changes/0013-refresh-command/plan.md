@@ -16,9 +16,11 @@ usage: agentrite init claude | opencode
 
 A usage error inside a command still prints that command's line alone.
 
-The list of files the kit owns is cut out of `projectFiles` into a function of its own, `kitOwnedFiles`, which
-returns the wrappers and `agent.sh`, and `projectFiles` is built from it. That is a refactoring commit: `init`
-writes the same files before and after.
+What `agent.sh` is, is cut out of `projectFiles` into a function of its own, `shimFile`, which `projectFiles` then
+calls. That is a refactoring commit: `init` writes the same files, in the same order, before and after. The list of
+files the kit owns, `kitOwnedFiles`, is the wrappers and that shim. It is written with `refresh`, its one caller,
+and `projectFiles` is not built from it: the list marks the wrappers as files whose frontmatter is kept, which
+`init` has no use for, and `init` writes `AGENTS.md` and `CLAUDE.md` between the wrappers and the shim.
 
 The one piece of new logic is pure: `refreshedWrapper(existing, rendered)` takes the wrapper as it is in the project
 and as this release renders it, and returns what to write. It splits each into its frontmatter and its body. The
@@ -37,7 +39,7 @@ the ones 0011 and 0012 left.
 
 ## Files
 
-- `scripts/agentrite.mjs`: `parseArgs` in place of `parseInitArgs`; `kitOwnedFiles`; `refreshedWrapper`;
+- `scripts/agentrite.mjs`: `parseArgs` in place of `parseInitArgs`; `shimFile`; `kitOwnedFiles`; `refreshedWrapper`;
   `refresh`; the dispatch in the entry point
 - `tests/agentrite-init.test.mjs`: the parsing tests, for `parseArgs`
 - `tests/agentrite-refresh.test.mjs`: new, the unit tests of `refreshedWrapper` and the end-to-end tests of the
@@ -54,9 +56,8 @@ the ones 0011 and 0012 left.
   after `unknown command: <name>`. See them fail (R1, R2)
 - [x] Replace `parseInitArgs` with `parseArgs` and dispatch on the command in the entry point, with `refresh`
   exiting through a stub that throws, until the parsing tests pass and every other `init` test still does (R1, R2)
-- [ ] As a refactoring commit of its own, cut `kitOwnedFiles({ templates, harnesses })` out of `projectFiles`,
-  returning the wrappers and `agent.sh`, and build `projectFiles` from it in the order it had. No test changes,
-  and all pass (R3, R6)
+- [ ] As a refactoring commit of its own, cut `shimFile(templates)` out of `projectFiles`, returning what
+  `agent.sh` is, and have `projectFiles` call it. No test changes, and all pass (R6)
 - [ ] Write the unit tests of `refreshedWrapper` in `tests/agentrite-refresh.test.mjs`: an existing wrapper equal
   to the rendered one comes back unchanged; `model: x` added to either harness's frontmatter is kept, after the
   kit's keys; two added keys keep their order; a key with a nested value over several lines, and one holding a
@@ -75,7 +76,8 @@ the ones 0011 and 0012 left.
   target is unchanged, the other files are refreshed and the exit status is 1 (R9); a project with no
   `package.json` and no lockfile is refreshed (R10); no harness and an unknown one write nothing and exit 2 (R1).
   See them fail (R12)
-- [ ] Write `refresh` until they pass (R3, R6, R7, R8, R9, R10)
+- [ ] Write `kitOwnedFiles({ templates, harnesses })`, returning the wrappers, marked as keeping their
+  frontmatter, and the shim, and write `refresh` over it until they pass (R3, R6, R7, R8, R9, R10)
 - [ ] Update `README.md`. In "Updating a project to a newer kit", after the install command: run
   `npx agentrite refresh claude opencode`, naming the project's harnesses, which rewrites the role wrappers and
   `agent.sh` as the new release writes them and prints what it did; a key the project added to a wrapper's
@@ -97,7 +99,7 @@ the ones 0011 and 0012 left.
 ## Commit Points
 
 - [x] The argument parsing for two commands
-- [ ] The refactoring that names the kit's own files
+- [ ] The refactoring that names the shim
 - [ ] `refreshedWrapper` and its tests
 - [ ] The `refresh` command and its end-to-end tests
 - [ ] The README
