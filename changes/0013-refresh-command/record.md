@@ -51,5 +51,21 @@ timestamp: 2026-10-02T14:01:59Z
   wider than the plan's wording of indented lines, list items and blank lines: it also keeps a comment with the key it
   follows. And a shim whose content is right but which is not executable is reported as refreshed, not as up to date,
   since requirement 6 has the command make it executable
+- 2026-10-02T15:50:32Z [Claude Code, anthropic/claude-opus-5-5] updated the README: the command under "Updating a
+  project to a newer kit", and under "Installing it into a project" the wrappers and `agent.sh` as the exception to a
+  generated file being the project's own. The one existing line that changed is "`CLAUDE.md` and `agent.sh` are best
+  left as written", which now names `CLAUDE.md` alone; nothing else was removed
+- 2026-10-02T15:50:32Z [Claude Code, anthropic/claude-opus-5-5] verified on 6ea8885: `npm test` passed, 170 of 170;
+  `npx tsc -p infra` exited 0; `npm run check-changes` exited 0; `npm pack --dry-run` lists the same 22 files,
+  `scripts/agentrite.mjs` among them. In a scratch project set up by `init` from the packed working copy, with a model
+  pinned in `.opencode/agents/reviewer.md` and a line appended to `agent.sh`, `npx agentrite refresh claude opencode`
+  exited 0, reported `agent.sh` as refreshed and the six wrappers as up to date, kept the pin, removed the appended
+  line, and left `AGENTS.md`, `CLAUDE.md`, `agent/compose.project.yml`, `package.json` and `.dockerignore` byte for
+  byte as they were; a second run reported all seven as up to date. The plan had expected the pinned wrapper to be
+  reported as refreshed, which was wrong: a wrapper that differs only by a key added after the kit's own is already
+  what a refresh writes. The verification line was corrected to say so. Not checked: either harness reading a wrapper
+  after a refresh, which 0014 checked for the same generated content, and the command on macOS
+- 2026-10-02T15:50:32Z [Claude Code, anthropic/claude-opus-5-5] every box in `plan.md` is ticked. The status stays
+  `in-progress` until the unit is reviewed and the human has decided what the review returns
 
 ## Amendments

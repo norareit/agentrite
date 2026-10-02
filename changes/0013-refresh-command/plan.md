@@ -89,12 +89,14 @@ the ones 0011 and 0012 left.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm pack --dry-run` still lists `scripts/agentrite.mjs` and nothing new
-- [ ] In a scratch project set up with `npx agentrite init claude opencode` from the packed kit, with a model
-  pinned by hand in one wrapper and a line appended to `agent.sh`, `npx agentrite refresh claude opencode` reports
-  those two as refreshed and the other five as up to date, the pin is still there and the appended line is gone
-- [ ] `npm run check-changes` passes
+- [x] `npm test` passes
+- [x] `npm pack --dry-run` still lists `scripts/agentrite.mjs` and nothing new
+- [x] In a scratch project set up with `npx agentrite init claude opencode` from the packed kit, with a model
+  pinned by hand in one wrapper, after the kit's keys, and a line appended to `agent.sh`,
+  `npx agentrite refresh claude opencode` reports `agent.sh` as refreshed and the six wrappers as up to date, the
+  one with the pin among them since a pin after the kit's keys is already what a refresh writes. The pin is still
+  there, the appended line is gone, and the five files that are the project's are byte for byte unchanged
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
