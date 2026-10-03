@@ -50,5 +50,8 @@ Afterwards `npm test` and `npm run check-changes` pass, the second now running t
   passed, 174 of 174, on the tree with the new dependency. `npm run check-changes` is run after the commit, because it
   reads committed content, and its result is logged next. No review was run for this task. The status stays
   `in-progress`
+- 2026-10-03T11:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] `npm run check-changes` exited 0 on the commit
+  `task-0016 Depend on AgentRite 2.1.0`, now running the check from the installed 2.1.0. Not done: a review, and so the
+  status is still `in-progress`, until the human decides whether the task needs one
 
 ## Amendments
