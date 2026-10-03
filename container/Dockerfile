@@ -10,31 +10,24 @@
 ARG CLAUDE_CODE_VERSION=2.1.266
 ARG OPENCODE_VERSION=1.18.30
 
-# Playwright's browser bundle is copied from its official image at this version, which
-# must match the playwright version resolved in the project's package-lock.json so the
-# project's committed *-chromium-linux.png baselines still compare. The version varies
-# per project, so it has no default here: the project's compose file supplies it as a
-# build argument, and a build without one fails at the FROM below.
+# The browser is in the image only when the project's compose file gives this build
+# argument, as the playwright version resolved in the project's package-lock.json, so the
+# project's committed *-chromium-linux.png baselines still compare. It has no default:
+# absent or empty, the image is built without a browser, and nothing of Playwright's is
+# pulled or read.
 ARG PLAYWRIGHT_VERSION
 
 # The browser bundle source. A stage of its own so the version ARG can be interpolated
 # into the image reference, which `COPY --from` cannot do on its own. Firefox and WebKit
-# are dropped here: only chromium is used.
+# are dropped here: only chromium is used. Nothing is built from this stage, and its base
+# image is never pulled, unless the last stage builds from base-with-browsers.
 FROM mcr.microsoft.com/playwright:v${PLAYWRIGHT_VERSION}-jammy AS playwright
 RUN rm -rf /ms-playwright/firefox-* /ms-playwright/webkit-*
 
 # node:26 is Debian (bookworm). Alpine cannot run Playwright's glibc-linked Chromium,
 # which the committed *-chromium-linux.png baselines were rendered with. Multi-arch:
 # this tag has linux/amd64 and linux/arm64, so no --platform is needed on either machine.
-FROM node:26-bookworm
-
-ARG CLAUDE_CODE_VERSION
-ARG OPENCODE_VERSION
-
-# The developer's uid and gid on the host, so a Linux bind mount of the working
-# directory stays writable from inside without changing ownership on the host.
-ARG AGENT_UID=1000
-ARG AGENT_GID=1000
+FROM node:26-bookworm AS base
 
 ENV DEBIAN_FRONTEND=noninteractive
 
@@ -49,6 +42,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       iptables \
       jq \
     && rm -rf /var/lib/apt/lists/*
+
+# The same image with Playwright's browser. Built from only when PLAYWRIGHT_VERSION is
+# given, which the last stage's FROM decides.
+FROM base AS base-with-browsers
 
 # Playwright's own Chromium build, baked in at a fixed path so no browser download
 # happens at run time. Copied from the official Playwright image rather than downloaded
@@ -65,6 +62,19 @@ RUN cd /opt/pw \
     && npx playwright install-deps chromium \
     && cd / \
     && rm -rf /opt/pw /root/.npm
+
+# The image the build produces: base, or base-with-browsers when PLAYWRIGHT_VERSION is
+# given. The expansion is empty for an absent or empty argument, and BuildKit then runs
+# neither the playwright stage nor base-with-browsers.
+FROM base${PLAYWRIGHT_VERSION:+-with-browsers}
+
+ARG CLAUDE_CODE_VERSION
+ARG OPENCODE_VERSION
+
+# The developer's uid and gid on the host, so a Linux bind mount of the working
+# directory stays writable from inside without changing ownership on the host.
+ARG AGENT_UID=1000
+ARG AGENT_GID=1000
 
 # Both harness CLIs, pinned and installed globally as root. Nothing self-updates, so a
 # read-only root filesystem can protect the install. Auto-update is disabled explicitly
