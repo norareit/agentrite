@@ -66,5 +66,14 @@ Left out, in the unit's own terms, as beyond the request:
   are still not moved to the new template. Checked after the merge that the three places the description names
   exist: the bullet on non-goals in `roles/planner.md`, the section "Non-goals" in `templates/changes/spec.md`, and
   the sentence in `process.md` that lists what `spec.md` states
+- 2026-10-03T20:20:39Z [Claude Code, anthropic/claude-opus-5-5] made the three edits as implementer, with the wording
+  the description gives and its line breaks, no line over 120 characters: the bullet in `roles/planner.md` after the
+  one on non-goals, the section "Beyond the request" in `templates/changes/spec.md` after "Non-goals", and the
+  sentence in `process.md`, rewrapped. On `d78389a`, on the host: `npm test` exited 0 with 178 passing and 0 failing
+  or skipped, `npm run check-changes` exited 0 and printed nothing, and `git diff --check master...HEAD` reported
+  nothing. Only this record changes after that commit. Not checked: that a planner following the new bullet writes
+  the section, since no test reads the wording; and the copy under `node_modules/@ritenoar/agentrite/`, which is
+  release 2.2.1 and gets the wording with the release that holds it. `check-changes` runs from that installed copy.
+  The status stays in-progress until the review and the human's decision
 
 ## Amendments
