@@ -1,7 +1,7 @@
 ---
 kind: task
 status: in-progress
-timestamp: 2026-10-03T14:00:00Z
+timestamp: 2026-10-03T12:37:28Z
 ---
 
 # 0018 A sandbox for the kit's own repository
@@ -36,7 +36,7 @@ check above still holds, since it runs `npm`.
   one dependency, one command and one allowlist entry, with no decision left open. Blocked on 0017 and on its
   release, as 0012 was on the release of 0011. Checked before writing that this repository has no `agent.sh`, no
   `agent/` directory and no `.dockerignore`
-- 2026-10-03T14:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role and moved the status to
+- 2026-10-03T12:37:28Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role and moved the status to
   in-progress, the human having released 2.2.0, which holds 0017 (the tarball is served: HTTP 200)
 - 2026-10-03T12:49:57Z [Claude Code, anthropic/claude-opus-5-5] logged where the implementation stands and what blocks
   it. Done in the working tree and not committed: the devDependency moved to 2.2.0, `npx agentrite init claude
@@ -59,5 +59,25 @@ check above still holds, since it runs `npm`.
   either harness in the sandbox, which is 0015's subject; whether `api.openai.com` suffices for the reviewer under
   OpenCode, beyond the entrypoint finding the host reachable at start-up; `npx agentrite refresh`, which the description
   does not ask for, so the role wrappers are as an earlier release wrote them
+
+- 2026-10-03T13:56:05Z [OpenCode, openai/gpt-6.1-sol] reviewed `0018-sandbox-for-this-repository` at
+  `16db87fbbd267bce53cf1c6fada88d1ace498506`, a full review against the merge base with master,
+  `5e079eaab64ba5f2166d5243c8f30f35bc01ebf1`. Returned C1 and C2. Complete findings are saved in
+  `.reviews/0018-sandbox-for-this-repository/20261003T135141Z-full-16db87f-opencode.md`.
+  Independently ran the host `npm test` (178 passing, 0 failing or skipped), `npm run check-changes`,
+  `git diff --check master...HEAD`, shell syntax checks, shim/template comparison and read-only Compose
+  configuration validation. Not independently verified: real sandbox rebuild/install/test exits; historical
+  init/check execution and timing; clean-install release availability and tarball bytes/integrity; human
+  authorization before implementation; interactive harness startup and OpenCode reviewer API flows; Node 26
+  execution in the image, macOS/arm64 and other Docker versions. No install, build, container run or fix was made
+- 2026-10-03T14:21:42Z [human] accepted C1 and C2, and confirmed that asking the implementer to follow up with 0018, and
+  then to continue with it once 2.2.0 was released, was the approval of this task
+- 2026-10-03T14:21:42Z [Claude Code, anthropic/claude-opus-5-5] applied both findings in this record. C1: the unit went
+  from draft to in-progress without an entry for `approved`. The human approved it as the entry above says, before the
+  implementation began, and the implementer did not log it at the time, so the status never read `approved` in a commit.
+  C2: the entry that begins the implementation, and the frontmatter, said `2026-10-03T14:00:00Z`, which was not read
+  from a clock and was later than the entries after it. Both now say `2026-10-03T12:37:28Z`, the time of the commit that
+  made that entry, `c6c8372`, which is the best evidence of when it happened; the exact moment was not recorded. No file
+  other than this record changed, so no suite was rerun
 
 ## Amendments
