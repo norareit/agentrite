@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: in-progress
 timestamp: 2026-10-03T11:29:12Z
 ---
 
@@ -36,5 +36,19 @@ Afterwards `npm test` and `npm run check-changes` pass, the second now running t
   `agent.sh` and no `agent/compose.project.yml`, and `package.json` names 2.0.0. Leaving `refresh` out is the
   planner's call, for the reason the description gives; that `refresh` writes a shim into a project without a
   sandbox may be worth a unit of its own in the kit, and is not done here
+- 2026-10-03T11:31:11Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role and moved the status to
+  `in-progress`. The human approved the install and runs `npm install` themselves, as the harness blocked it
+- 2026-10-03T11:45:00Z [Claude Code, anthropic/claude-sonnet-5-5] the human ran the `npm install --save-dev` with the
+  2.1.0 URL, because the harness blocked it. The diff of `package.json` is that one URL. The diff of
+  `package-lock.json` is the kit's entry only: version 2.1.0, its URL and its integrity hash. The installed
+  `node_modules/@ritenoar/agentrite/package.json` says 2.1.0. Its `process.md` and the three files in `roles/` are
+  identical to the ones at the commit `v2.1.0` (77b1b29), checked with `git show` and `diff`. `agentrite refresh` was
+  not run, as the description says
+- 2026-10-03T11:45:00Z [Claude Code, anthropic/claude-sonnet-5-5] ran the installed `scripts/agentrite-roles.mjs claude
+  opencode` with `node`, rather than through `node_modules/.bin`, in an empty scratch directory. It wrote six files, and
+  `diff` found each identical to the wrapper committed under `.claude/agents/` and `.opencode/agents/`. `npm test`
+  passed, 174 of 174, on the tree with the new dependency. `npm run check-changes` is run after the commit, because it
+  reads committed content, and its result is logged next. No review was run for this task. The status stays
+  `in-progress`
 
 ## Amendments
