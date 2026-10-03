@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: in-progress
-timestamp: 2026-10-03T12:53:39Z
+status: implemented
+timestamp: 2026-10-03T13:21:26Z
 ---
 
 # 0020 The sandbox refuses to run anything from `/tmp`
@@ -54,5 +54,8 @@ timestamp: 2026-10-03T12:53:39Z
   say "the kit's base Compose file", and the observed behavior names the failing tests by what they test. No
   requirement, decision, command or piece of evidence changed in meaning, and the plan, which already names every file,
   is unchanged. No code or test changed, so the suites were not rerun for this edit
+- 2026-10-03T13:21:26Z [human] asked for the unit to be marked implemented
+- 2026-10-03T13:21:26Z [Claude Code, anthropic/claude-opus-5-5] set the status to implemented: every task in
+  `plan.md` is ticked, and P1, the one finding the review returned, was accepted and applied
 
 ## Amendments
