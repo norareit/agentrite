@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-10-03T11:29:12Z
 ---
 
@@ -53,5 +53,20 @@ Afterwards `npm test` and `npm run check-changes` pass, the second now running t
 - 2026-10-03T11:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] `npm run check-changes` exited 0 on the commit
   `task-0016 Depend on AgentRite 2.1.0`, now running the check from the installed 2.1.0. Not done: a review, and so the
   status is still `in-progress`, until the human decides whether the task needs one
+- 2026-10-03T11:42:35Z [OpenCode, openai/gpt-6.1-sol] reviewed `0016-depend-on-agentrite-2-1-0` at commit
+  `9c19a1dfb2a9166404e38aac4062f8eb84641243` as a full review against merge base
+  `5e079eaab64ba5f2166d5243c8f30f35bc01ebf1`. Returned C1. Historical verification invocations and their exact
+  execution times could not be independently reconstructed. Reran `npm test` (174/174) and
+  `npm run check-changes` (exit 0); the installed process and roles match `v2.1.0`, and all six wrappers match the
+  installed generator's output through its bin symlink. Findings saved in
+  `.reviews/0016-depend-on-agentrite-2-1-0/2026-10-03T113827Z-full.md`.
+- 2026-10-03T11:44:26Z [Claude Code, anthropic/claude-sonnet-5-5] the human reported that the review came back with no
+  meaningful remarks, and asked for the unit to be completed. The review returned no blocking finding and C1, which
+  does not block. C1 is right: I wrote the times 11:45:00Z and 11:50:00Z into the two verification entries above
+  without reading a clock, and the commits that hold them are dated 11:31:45Z and 11:31:49Z. Those two times are
+  wrong, and the checks they describe ran between 11:31Z and 11:32Z. No other time was invented. Not changing the
+  entries, which the log keeps as written. The suites were not run again for this entry, which changes no code: the
+  reviewer reran `npm test`, 174 of 174, and `npm run check-changes`, exit 0, at 9c19a1d. Moved the status to
+  `implemented`
 
 ## Amendments
