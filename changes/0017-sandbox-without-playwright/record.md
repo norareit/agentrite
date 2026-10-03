@@ -62,4 +62,22 @@ timestamp: 2026-10-03T12:00:00Z
     given to a project without Playwright; starting either harness interactively
   * `npm test` reported 175 passing and 0 failing, and `npm pack --dry-run` lists 22 files, on `1cc7200`
 
+- 2026-10-03T12:18:44Z [OpenCode, openai/gpt-6.1-sol] reviewed 0017 at
+  `88a2118740d44ca5cfa8d8ad490e896c2efba001`, a full review against merge base
+  `5e079eaab64ba5f2166d5243c8f30f35bc01ebf1`. Resumed after interruption: the complete saved review covers the
+  unchanged current commit; confirmed the tracked tree is unchanged and checked P1's source locations. Returned P1.
+  Complete findings and verification results are saved in
+  `.reviews/0017-sandbox-without-playwright/20261003T121255Z-opencode-openai-gpt-6.1-sol-full.md`. Not independently
+  verified: consumer screenshot baselines, Docker Desktop for macOS, arm64, Docker Engine 24.0.7, interactive
+  harness startup, the full packed-kit installation and project-root shim workflow, a version supplied to a project
+  without Playwright, and the provenance or timing of the implementer's earlier checks and cleanup.
+
+- 2026-10-03T13:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] applied P1, which the reviewer rated nonblocking and
+  I accepted as correct: the new wrapper tests all passed `--rebuild`, so the automatic build of a missing image
+  without the argument was untested. The fake `docker` in `tests/agent-wrapper.test.mjs` can now fail `image inspect`,
+  and two new tests run the wrapper without `--rebuild` for an absent and an empty `PLAYWRIGHT_VERSION`, asserting
+  `build` then `run`. The plan already promised this case, so it is unchanged. Checked that the new tests fail when
+  the image is made to exist. `npm test` reported 177 passing and 0 failing on the commit that follows this entry's
+  parent; the status stays `in-progress` for the human to move
+
 ## Amendments
