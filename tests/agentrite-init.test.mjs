@@ -228,10 +228,21 @@ test('playwrightVersion is undefined for a lockfile without playwright and for n
   assert.equal(playwrightVersion(undefined), undefined);
 });
 
-test('no compose file is planned without a Playwright version', () => {
-  const planned = files(['claude'], { playwrightVersion: undefined });
-  assert.equal(planned.some((file) => file.path === 'agent/compose.project.yml'), false);
-  assert.ok(planned.some((file) => file.path === 'agent.sh'));
+test('the compose file without a Playwright version has the names, the limits and no build arguments', () => {
+  const compose = fileAt(files(['claude'], { playwrightVersion: undefined }), 'agent/compose.project.yml').content;
+  assert.match(compose, /^name: my-app-agent$/m);
+  assert.match(compose, /^ {4}image: my-app-agent$/m);
+  assert.match(compose, /^ {4}mem_limit: \$\{AGENT_MEM_LIMIT:-8g\}$/m);
+  assert.match(compose, /^ {6}ALLOWLIST: \|$/m);
+  assert.doesNotMatch(compose, /^\s*build:/m);
+  assert.doesNotMatch(compose, /PLAYWRIGHT_VERSION/);
+  assert.doesNotMatch(compose, /\{\{/);
+});
+
+test('the compose file with a Playwright version holds the build block under the image', () => {
+  const compose = fileAt(files(['claude']), 'agent/compose.project.yml').content;
+  const block = /^ {4}image: my-app-agent\n {4}build:\n {6}args:\n(?: {8}#.*\n)+ {8}PLAYWRIGHT_VERSION: 1\.59\.1\n/m;
+  assert.match(compose, block);
 });
 
 // R9, R13
@@ -354,7 +365,7 @@ test('no file init plans holds a line over 120 characters, whatever the harnesse
 
 test('every project template is filled from templates/project/', () => {
   for (const path of TEMPLATE_PATHS) assert.ok(files(['claude']).some((file) => file.path === path), path);
-  assert.match(templates['agent/compose.project.yml'], /\{\{playwright_version\}\}/);
+  assert.match(templates['agent/compose.project.yml'], /^ {4}\{\{playwright_build\}\}$/m);
 });
 
 test('the AGENTS.md template holds the three headings the notice cuts by', () => {
@@ -473,13 +484,14 @@ test('a dangling symlink where a file would go is skipped, not written through',
   assert.match(result.stdout, /^skipped CLAUDE\.md\b/m);
 });
 
-test('a project without playwright gets everything but the compose file, and exits non-zero', (t) => {
+test('a project without playwright gets every file, the compose file without the build argument, and exits 0', (t) => {
   for (const lockfile of [JSON.stringify({ lockfileVersion: 3, packages: {} }), null]) {
-    const { base, run } = project(t, { lockfile });
+    const { base, run, read } = project(t, { lockfile });
     const result = run('init', 'claude');
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /requires the project to depend on Playwright/);
-    assert.equal(exists(join(base, 'agent', 'compose.project.yml')), false);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.match(result.stdout, /^wrote agent\/compose\.project\.yml$/m);
+    assert.doesNotMatch(read('agent/compose.project.yml'), /PLAYWRIGHT_VERSION|build:/);
     for (const path of ['AGENTS.md', 'CLAUDE.md', 'agent.sh', '.dockerignore', '.claude/agents/planner.md']) {
       assert.ok(exists(join(base, path)), path);
     }
@@ -487,15 +499,15 @@ test('a project without playwright gets everything but the compose file, and exi
   }
 });
 
-test('a project without playwright whose compose file exists keeps it, and still exits non-zero', (t) => {
+test('a project without playwright whose compose file exists keeps it, and exits 0', (t) => {
   const { base, run, read } = project(t, { lockfile: null });
   mkdirSync(join(base, 'agent'));
   writeFileSync(join(base, 'agent', 'compose.project.yml'), 'ours\n');
   const result = run('init', 'claude');
-  assert.notEqual(result.status, 0);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
   assert.equal(read('agent/compose.project.yml'), 'ours\n');
   assert.match(result.stdout, /^skipped agent\/compose\.project\.yml\b/m);
-  assert.match(result.stderr, /requires the project to depend on Playwright/);
   assert.ok(exists(join(base, 'AGENTS.md')));
 });
 
