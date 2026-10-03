@@ -2,8 +2,8 @@
 
 ## Context
 
-The sandbox's root filesystem is read-only, and `container/compose.yml` gives the agent `/tmp` as scratch space, a
-tmpfs. Docker mounts a tmpfs listed that way with `noexec`, so nothing written to `/tmp` can be run. Writing a
+The sandbox's root filesystem is read-only, and the kit's base Compose file gives the agent `/tmp` as scratch
+space, a tmpfs. Docker mounts a tmpfs listed that way with `noexec`, so nothing written to `/tmp` can be run. Writing a
 script or a binary to the temporary directory and running it is ordinary: test suites do it, and so do build tools
 and installers. A project should not have to change its code to run its own suite in the sandbox.
 
@@ -19,9 +19,9 @@ bash: line 1: /tmp/probe: Permission denied
 ```
 
 with exit status 126. In this repository, `./agent.sh npm test` reports 162 passing and 15 failing, where the same
-tree on the host reports 177 passing. The 15 are the tests of `tests/agent-wrapper.test.mjs` and
-`tests/deploy.test.mjs` and one of `tests/agentrite-init.test.mjs` that copy or write a script under
-`os.tmpdir()` and run it. They fail with an exit status of `null`, since the script was never started.
+tree on the host reports 177 passing. The 15 are the tests of the sandbox wrapper and of the release script, and
+one of the `init` command, that copy or write a script under the temporary directory and run it. They fail with an
+exit status of `null`, since the script was never started.
 
 ## Expected behavior
 
@@ -39,7 +39,7 @@ In a project with the kit at 2.2.0 and a built sandbox:
 
 Reproduced on Linux with Docker Engine 28.4.0 and Compose 2.39.2, with the kit at 2.2.0, in this repository.
 
-`container/compose.yml` lists `/tmp` under `tmpfs:` with no options. Inside the container the mount is
+The kit's base Compose file lists `/tmp` under `tmpfs:` with no options. Inside the container the mount is
 `rw,nosuid,nodev,noexec,relatime`: Docker adds `nosuid`, `nodev` and `noexec` to a tmpfs given this way, and only
 an explicit `exec` takes `noexec` away. Nothing in the kit asks for `noexec`. No spec, comment or README text
 mentions it, so it is Docker's default and not a decision of the kit's.
@@ -60,7 +60,7 @@ mount was `rw,nosuid,nodev,relatime` and `npm test` in the sandbox reported 177 
 
 ## Fix description
 
-`container/compose.yml` mounts `/tmp` with `exec`. The comment above the `tmpfs:` list says so and why.
+The kit's base Compose file mounts `/tmp` with `exec`, and says beside the mount that it does and why.
 
 ## Requirements
 
@@ -68,7 +68,7 @@ mount was `rw,nosuid,nodev,relatime` and `npm test` in the sandbox reported 177 
 2. `/tmp` stays a tmpfs mounted `nosuid` and `nodev`, on a root filesystem that stays read-only. No other mount, and
    no other confinement setting, changes
 3. A regression test in the suite fails on the tree before the fix and passes after it. The suite runs no Docker,
-   so the test reads `container/compose.yml` and holds that the agent's `tmpfs` list is `/tmp` with the `exec`
+   so the test reads the kit's base Compose file and holds that the agent's `tmpfs` list is `/tmp` with the `exec`
    option, and `/run` without it
 4. The behavior is checked for real on a host with Docker, with the working copy's compose file: the probe of the
    steps above exits 0, the mount options of `/tmp` are as R2 says, and this repository's `npm test` exits 0 in the
