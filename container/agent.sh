@@ -40,7 +40,7 @@ if [ ! -f "$project_compose" ]; then
   echo "agent.sh: $project_compose not found." >&2
   echo "Each project supplies its own compose file at that path, holding the Compose" >&2
   echo "project name, the image name, the egress allowlist, the resource limits and" >&2
-  echo "the Playwright version. See the kit's README.md." >&2
+  echo "the Playwright version, if it has one. See the kit's README.md." >&2
   exit 2
 fi
 
@@ -108,28 +108,6 @@ if [ "$AGENT_UID" -eq 0 ] || [ "$AGENT_GID" -eq 0 ]; then
   echo "The sandbox's 'agent' user would then be root, defeating the sandbox." >&2
   echo "If Docker needs elevated permissions, add your user to the docker group" >&2
   echo "instead of running this with sudo." >&2
-  exit 2
-fi
-
-# The Dockerfile's FROM line needs the project's Playwright version, and without it the
-# build fails with Docker's error, which does not say where the version belongs. Only the
-# project can supply it, so the kit checks for it here rather than writing it anywhere.
-# Compose merges both files and node reads the result; the host has node for npm already.
-# The configuration is captured first, so that a file Compose refuses stops here with
-# Compose's own error rather than reaching node as empty input.
-config="$("${compose[@]}" config --format json)"
-playwright_version="$(printf '%s' "$config" | node -e '
-  let json = "";
-  process.stdin.on("data", (chunk) => (json += chunk));
-  process.stdin.on("end", () => {
-    const args = JSON.parse(json).services?.agent?.build?.args ?? {};
-    process.stdout.write(args.PLAYWRIGHT_VERSION ?? "");
-  });
-')"
-if [ -z "$playwright_version" ]; then
-  echo "agent.sh: the sandbox's configuration has no PLAYWRIGHT_VERSION build argument." >&2
-  echo "$project_compose must supply it, under services.agent.build.args, as the" >&2
-  echo "playwright version resolved in the project's package-lock.json." >&2
   exit 2
 fi
 
