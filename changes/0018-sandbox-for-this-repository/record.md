@@ -46,5 +46,18 @@ check above still holds, since it runs `npm`.
   directory. The human decided that the fix belongs in the kit and not in these tests, which is bug 0020. This unit
   now also waits for 0020 implemented and for a release that holds it, to which the dependency moves instead of
   2.2.0. The README change is not made yet
+- 2026-10-03T13:38:49Z [human] released 2.2.1, which holds 0020
+- 2026-10-03T13:38:49Z [Claude Code, anthropic/claude-opus-5-5] finished the task as implementer. Changes made: the
+  devDependency on `@ritenoar/agentrite` moved to the 2.2.1 release by its URL, in `package.json` and
+  `package-lock.json`, and not to 2.2.0 as first tried, since the suite needs 0020; `agent.sh`,
+  `agent/compose.project.yml` and `.dockerignore` as `npx agentrite init claude opencode` wrote them, the compose file
+  with no Playwright version; `api.openai.com` added to `ALLOWLIST`, beside `models.dev`, which `init` supplies for
+  OpenCode; and a paragraph in the README's section "The kit's own copy of the kit". `init` skipped the six role
+  wrappers, `AGENTS.md`, `CLAUDE.md` and `package.json`, as the description expected. Checked on Linux with Docker
+  Engine 28.4.0 and Compose 2.39.2, with the installed 2.2.1: `./agent.sh --rebuild npm ci` exited 0, and `./agent.sh
+  npm test` exited 0 with 178 passing and 0 failing. On the host `npm test` reported the same. Not checked: starting
+  either harness in the sandbox, which is 0015's subject; whether `api.openai.com` suffices for the reviewer under
+  OpenCode, beyond the entrypoint finding the host reachable at start-up; `npx agentrite refresh`, which the description
+  does not ask for, so the role wrappers are as an earlier release wrote them
 
 ## Amendments
