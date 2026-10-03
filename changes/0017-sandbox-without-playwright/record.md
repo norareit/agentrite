@@ -24,5 +24,13 @@ timestamp: 2026-10-03T11:40:32Z
   `container/compose.yml` and does not touch what this unit changes, apart from one comment in that file. Wrote
   0018 as a draft task that gives this repository its sandbox once a release holds this unit. Written on a branch
   from `master` at 5e079ea, which holds neither 0015 nor 0016
+- 2026-10-03T11:47:15Z [human] read the draft and struck the check that the build argument and the lockfile agree, as
+  too complicated and premature: a version passed means a browser, none passed means none
+- 2026-10-03T11:47:15Z [Claude Code, anthropic/claude-opus-5-5] took the check out, still as planner on an unapproved
+  draft. The wrapper now only loses the check 0010 gave it; it reads no lockfile and imports nothing from `scripts/`.
+  The two requirements on the check became one, that the wrapper no longer refuses a configuration without the
+  argument, and the requirements after it were renumbered, which no review or implementation had cited yet. The
+  decision records what the planner first proposed and why the human struck it. The plan lost the fixture changes, the
+  cases of the check and the task that tried the refusals for real
 
 ## Amendments

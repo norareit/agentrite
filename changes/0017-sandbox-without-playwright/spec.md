@@ -31,16 +31,13 @@ other things, run on the developer's host, which is what the sandbox exists to p
    that build argument, reports it as written, and exits 0. With `playwright` in the lockfile it writes the file as
    before
 6. `init` no longer exits non-zero for want of Playwright, whether or not `agent/compose.project.yml` exists
-7. The wrapper refuses to build or run, exiting 2 and naming `agent/compose.project.yml`, when the build argument
-   and the lockfile disagree, and says which way: the lockfile resolves `playwright` and the argument is absent or
-   empty, or the argument is given and the lockfile resolves none. It reads the lockfile of the directory it is
-   building from. When they agree, either way, it goes on
-8. The wrapper and `init` decide whether a lockfile resolves `playwright` by one rule, written once
-9. The README no longer says that the sandbox requires Playwright. It says that the browser is there when the
-   project uses Playwright and not otherwise, how the build argument decides it, what the wrapper refuses, and what
-   a project does when it starts or stops using Playwright
-10. The new logic is unit tested. Both kinds of image are built for real, on a host with Docker, and what was
-    checked in each is in the record
+7. The wrapper no longer refuses to start when the merged Compose configuration has no `PLAYWRIGHT_VERSION` build
+   argument. It builds and runs what the configuration says
+8. The README no longer says that the sandbox requires Playwright. It says that the browser is there when the
+   project's compose file gives `PLAYWRIGHT_VERSION` and not otherwise, and what a project does when it starts or
+   stops using Playwright
+9. The new logic is unit tested. Both kinds of image are built for real, on a host with Docker, and what was
+   checked in each is in the record
 
 ## Decisions
 
@@ -55,28 +52,26 @@ other things, run on the developer's host, which is what the sandbox exists to p
   version that does not exist failed on that image. A `RUN` that tests the argument and skips the installation was
   rejected: the `COPY` from Playwright's image cannot be skipped that way, and the image would have to be pulled
   for nothing
-* **The wrapper checks that the argument and the lockfile agree, both ways.** Unit 0010 had it refuse a missing
-  argument, because the build then failed with an error that named nothing. A missing argument now builds, so the
-  old check would be wrong for a project without Playwright, and no check at all would give a project with
-  Playwright a sandbox without a browser, whose tests then fail saying the browser is not installed. The lockfile
-  says which case it is. The other disagreement, a version given and no Playwright in the lockfile, would fail
-  inside the build, and is refused for the same reason
+* **The wrapper checks nothing about Playwright.** Unit 0010 had it refuse a missing argument, because the build
+  then failed with an error that named nothing. A missing argument now builds an image without a browser, so that
+  check goes. The planner first replaced it with a check that the argument and the project's lockfile agree, and
+  the human struck it on 2026-10-03 as premature: a version passed means a browser, none passed means none, and
+  that is the whole rule. A project with Playwright whose compose file has lost the argument gets a sandbox whose
+  browser tests fail saying the browser is not installed, which points at the cause, and is dealt with if it ever
+  happens. A version given to a project without Playwright fails in the build, where the browser's libraries are
+  installed from the project's dependencies
 * **A project that starts using Playwright adds the argument by hand.** `init` never rewrites a file that exists,
-  and `refresh` does not touch `agent/compose.project.yml`, which is the project's own. The wrapper's refusal names
-  the file and the argument, so the step is not left to be found out
+  and `refresh` does not touch `agent/compose.project.yml`, which is the project's own. The README says so
 * **`init` writes a compose file without the argument and says nothing more.** The file is complete and the sandbox
   works. A notice that there is no browser would tell a project without browser tests what it already knows
-* **The rule for "resolves `playwright`" stays in `scripts/agentrite.mjs`, and the wrapper calls it.** The wrapper
-  is a shell script that already runs `node` to read Compose's configuration. Writing the rule a second time in the
-  wrapper was rejected: two places that must agree about a lockfile are how the two would come to disagree
 
 ## Non-goals
 
 * Giving the kit's own repository a sandbox. That needs a release holding this unit, since the repository runs the
   kit it installs, and is unit 0018
 * Other browsers, or a browser at a version other than the lockfile's
-* A sandbox for a project that does not use npm, or has no `package-lock.json`. The wrapper treats a missing
-  lockfile as one that resolves no `playwright`
+* A check that a project's compose file and its lockfile agree about Playwright
+* A sandbox for a project that does not use npm
 * The image's other contents, the harness versions and the confinement. Unit 0015, on its own branch, is about the
   harnesses failing to start in a new sandbox and changes `container/compose.yml`; this unit leaves what it fixes
   alone

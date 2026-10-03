@@ -13,12 +13,9 @@ drops when its value is empty and indents when it is not. `projectFiles` fills i
 when the lockfile resolves `playwright`, and with nothing otherwise, and always returns the compose file. `init`
 loses the branch that reports the missing Playwright and returns 1.
 
-**The wrapper.** `container/agent.sh` already asks Compose for the merged configuration and reads the build argument
-from it with `node`. It now also asks whether the project's lockfile resolves `playwright`, by importing
-`playwrightVersion` from the kit's `scripts/agentrite.mjs`, which sits beside `container/` in the installed package,
-and passing it the parsed `package-lock.json` of the project root, the directory the image is built from. A missing
-lockfile counts as one that resolves none. The two answers are compared, and a disagreement stops the wrapper
-before any build, with a message for each direction.
+**The wrapper.** `container/agent.sh` asks Compose for the merged configuration, reads `PLAYWRIGHT_VERSION` from it
+with `node`, and exits 2 when it is empty. That whole block goes, with its comment. Nothing replaces it: the wrapper
+goes straight from the refusal to run as root to asking Compose for the image name.
 
 **The Dockerfile.** The stages become:
 
@@ -43,8 +40,8 @@ of the two is merged second is rebased onto the other.
 - `templates/project/agent/compose.project.yml`: the `build:` block as a placeholder; the opening comment
 - `scripts/agentrite.mjs`: `projectFiles` always plans the compose file; `init` without the refusal
 - `tests/agentrite-init.test.mjs`: the compose file with and without Playwright; `init` exiting 0 without it
-- `container/agent.sh`: the check that the argument and the lockfile agree, in place of the check for the argument
-- `tests/agent-wrapper.test.mjs`: the fixture gains a lockfile and the kit's `scripts/`; the cases of the check
+- `container/agent.sh`: the check for the argument, removed
+- `tests/agent-wrapper.test.mjs`: the tests of that check, replaced by one that the wrapper goes on without it
 - `container/Dockerfile`: the stages, and the comments on them
 - `container/compose.yml`: the comment on why the build context is the project root
 - `README.md`: the paragraphs on Playwright under "Installing it into a project" and "Running the sandbox"
@@ -61,15 +58,12 @@ of the two is merged second is rebased onto the other.
 - [ ] Turn the `build:` block of the template into the placeholder, fill it in `projectFiles`, and take the
   refusal out of `init`, until the tests pass. Reword the template's opening comment so that it does not promise a
   Playwright version (R5, R6)
-- [ ] In `tests/agent-wrapper.test.mjs`, give the fixture a `package-lock.json` in the project root and the kit's
-  `scripts/` beside `container/`, and write the cases: the argument given and `playwright` in the lockfile goes on
-  to Compose, as today; no argument and no `playwright` goes on; no argument, or an empty one, with `playwright` in
-  the lockfile exits 2, names `agent/compose.project.yml` and `PLAYWRIGHT_VERSION`, says that the lockfile resolves
-  `playwright`, and calls neither `build` nor `run`; the argument given with no `playwright` in the lockfile exits
-  2 and says that the lockfile resolves none; `playwright` resolved only through `@playwright/test` counts; no
-  lockfile at all counts as none; with `--workdir` naming another directory, the lockfile read is still the project
-  root's. See them fail (R7, R8)
-- [ ] Replace the check in `container/agent.sh` as the Approach describes, until they pass (R7, R8)
+- [ ] In `tests/agent-wrapper.test.mjs`, replace the tests that a configuration without `PLAYWRIGHT_VERSION`, or
+  with an empty one, exits 2: such a configuration now goes on to Compose exactly as one with the argument does,
+  building when the image is missing and running the command. Keep the test that a configuration Compose refuses
+  stops with Compose's own error, if the wrapper still asks Compose for anything that can fail that way, and
+  otherwise remove it and say so in the record. See the new test fail (R7)
+- [ ] Remove the check from `container/agent.sh`, until it passes (R7)
 - [ ] Restructure `container/Dockerfile` into the stages of the Approach, moving nothing else, and rewrite the
   comments that say the version has no default and that a build without one fails. Update the comment in
   `container/compose.yml` on the build context: it is the project root because the build copies the kit's files
@@ -79,34 +73,32 @@ of the two is merged second is rebased onto the other.
   command. Record: that the build output names no image of Playwright; that the entrypoint's checks pass; that
   `/opt/playwright` does not exist in the container; that `claude --version` and `opencode --version` print the
   pinned versions; and that `git status` works in `/work`. Starting either harness interactively is not part of
-  this: unit 0015 is about that failing in any new sandbox (R1, R2, R4, R10)
+  this: unit 0015 is about that failing in any new sandbox (R1, R2, R4, R9)
 - [ ] Build and start a sandbox with Playwright: in a scratch project with the packed kit and `playwright` at the
   version Norareit uses, do the same. Record: that `/opt/playwright` holds Chromium and no other browser; that a
   script launching Chromium through Playwright and closing it exits 0; and that the list of installed Debian
   packages and the listing of `/opt/playwright` are the same as in an image built for the same project from the
-  Dockerfile on `master` (R3, R4, R10)
-- [ ] Check the wrapper's refusals on those two projects, for real: remove the argument from the compose file of
-  the project with Playwright, and add one to the project without, and see each refused with its message and
-  nothing built. Then remove the two scratch projects' images and home volumes (R7, R10)
+  Dockerfile on `master` (R3, R4, R9)
+- [ ] Remove the two scratch projects' images and home volumes (R9)
 - [ ] Update `README.md`: under "Installing it into a project", replace the paragraph that says the sandbox
   requires Playwright with what `init` does now; under "Running the sandbox", say that the browser is in the image
-  when the project's compose file gives `PLAYWRIGHT_VERSION` and not otherwise, that the wrapper refuses a compose
-  file and a lockfile that disagree, and that a project which starts using Playwright adds the argument under
-  `services.agent.build.args`, and one that stops removes it, and rebuilds. Correct the sentence on why the build
-  context is the project root. Remove nothing else (R9)
+  when the project's compose file gives `PLAYWRIGHT_VERSION` and not otherwise, and that a project which starts
+  using Playwright adds the argument under `services.agent.build.args`, and one that stops removes it, and
+  rebuilds. Take out the sentence that the wrapper refuses to go on without the argument. Correct the sentence on
+  why the build context is the project root. Remove nothing else (R8)
 
 ## Verification
 
 - [ ] `npm test` passes
 - [ ] `npm pack --dry-run` lists the same 22 files
-- [ ] The three tasks that build and run real images are done on a host with Docker, and the record names the
+- [ ] The two tasks that build and run real images are done on a host with Docker, and the record names the
   Docker version and what each check showed
 - [ ] `npm run check-changes` passes
 
 ## Commit Points
 
 - [ ] `init` writes a compose file for a project without Playwright
-- [ ] The wrapper checks that the build argument and the lockfile agree
+- [ ] The wrapper no longer asks for the build argument
 - [ ] The Dockerfile builds with and without the browser
 - [ ] The README
 - [ ] The record of the real builds
