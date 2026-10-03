@@ -32,11 +32,11 @@ this repository's own sandbox with the working copy's Compose file, the way 0020
 
 ## Verification
 
-- [ ] `npm test` passes on the host
-- [ ] `npm pack --dry-run` lists the same files as on `master`
-- [ ] `npm run check-changes` passes
-- [ ] No line of a changed file is over 120 characters, and none holds an em dash
-- [ ] The real run, in this repository's sandbox with the working copy's `container/compose.yml` and a home volume
+- [x] `npm test` passes on the host
+- [x] `npm pack --dry-run` lists the same files as on `master`
+- [x] `npm run check-changes` passes
+- [x] No line of a changed file is over 120 characters, and none holds an em dash
+- [x] The real run, in this repository's sandbox with the working copy's `container/compose.yml` and a home volume
       that holds no login for Claude Code, such as a new one: `claude` reaches its first-run screen (R1). After
       `claude` and `opencode` have each been started, `grep 'not allowlisted' /run/egress-proxy.log` names neither
       `platform.claude.com` nor `models.opencode.ai` (R2). What each check showed is in the record, with the Docker
@@ -46,6 +46,6 @@ this repository's own sandbox with the working copy's Compose file, the way 0020
 
 ## Commit Points
 
-- [ ] The regression test and the fix
-- [ ] The README and the template
-- [ ] The record of the real run
+- [x] The regression test and the fix
+- [x] The README and the template
+- [x] The record of the real run

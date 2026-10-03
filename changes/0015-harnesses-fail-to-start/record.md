@@ -1,7 +1,7 @@
 ---
 kind: bug
 status: in-progress
-timestamp: 2026-10-03T23:41:00Z
+timestamp: 2026-10-03T23:45:26Z
 ---
 
 # 0015 The sandbox refuses two hosts its harnesses need
@@ -71,5 +71,36 @@ timestamp: 2026-10-03T23:41:00Z
   implemented
 - 2026-10-03T23:41:00Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
   in-progress
+- 2026-10-03T23:45:26Z [Claude Code, anthropic/claude-opus-5-5] implemented the plan's four tasks in two commits,
+  `3ec078a` with the regression test and the fix and `ae51d7c` with the README and the template. The unit stays
+  in-progress: the plan's last verification task is the human's and is open, and no review has been made. What was
+  verified:
+  * `tests/compose-allowlist.test.mjs` failed on the tree before the fix, naming `platform.claude.com` and
+    `models.opencode.ai` as the two hosts missing from `KIT_ALLOWLIST`, and passes after it
+  * On the host, on `ae51d7c`: `npm test` reported 179 passing and 0 failing. `npm pack --dry-run` lists 22 files,
+    the same list as in an export of `master`. No line of a file changed against `master` is over 120 characters
+    and none holds an em dash. `npm run check-changes` exited 0 on the commit that holds this entry
+  * The real run, on Linux with Docker Engine 28.4.0 and Compose 2.39.2, with the working copy's
+    `container/compose.yml`, this repository's `agent/compose.project.yml` and its existing image, which was not
+    rebuilt and holds Claude Code 2.1.266 and OpenCode 1.18.30. A third Compose file, outside the repository, gave
+    the run a new and empty home volume, removed afterwards. The container was started detached, and each harness
+    was started in it with `docker exec` as the `agent` user on a pseudo-terminal, not from the shell `agent.sh`
+    opens. `claude` reached its first-run screen, "Let's get started", with the choice of text style (R1).
+    `opencode` reached its prompt, "Ask anything". After both, `grep 'not allowlisted' /run/egress-proxy.log`
+    showed two lines, `example.com`, which is the start-up check's canary, and `raw.githubusercontent.com`, and the
+    log holds `allowed platform.claude.com` and `allowed models.opencode.ai` once each after start-up (R2). Each
+    harness ran for 25 to 30 seconds and was then interrupted
+  * Seen in that run and not asked for: OpenCode, holding no copy of its catalog, fetched one. The new home volume
+    held a `models.json` of 5,312,495 bytes under `.cache/opencode` afterwards. That is one case of what the spec
+    lists as not established, the fetch with no copy held and the host admitted
+  * Not checked: the plan's human task, a login to Claude Code and a prompt in each harness; Docker Desktop for
+    macOS, where the bug was found; an image rebuilt on this branch, since the fix changes no file the image holds
+- 2026-10-03T23:45:26Z [Claude Code, anthropic/claude-opus-5-5] two things noticed and left alone, as outside the plan:
+  * The proxy's log of the real run holds 88 lines `refused: the connection closed before its ClientHello was
+    complete`, all but one of them among OpenCode's connections to `registry.npmjs.org`, of which 35 were allowed.
+    What closes those connections was not looked into, and nothing was seen to fail
+  * This repository's own `agent/compose.project.yml` carries the same comment listing the kit's hosts as the
+    template, and still admits `models.dev` for OpenCode. `init` wrote it once and `refresh` does not touch it, and
+    the plan does not name it, so it is unchanged
 
 ## Amendments
