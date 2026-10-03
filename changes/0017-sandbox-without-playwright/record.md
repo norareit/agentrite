@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: draft
-timestamp: 2026-10-03T11:40:32Z
+status: in-progress
+timestamp: 2026-10-03T12:00:00Z
 ---
 
 # 0017 A sandbox for a project that does not use Playwright
@@ -32,5 +32,8 @@ timestamp: 2026-10-03T11:40:32Z
   argument, and the requirements after it were renumbered, which no review or implementation had cited yet. The
   decision records what the planner first proposed and why the human struck it. The plan lost the fixture changes, the
   cases of the check and the task that tried the refusals for real
+- 2026-10-03T12:00:00Z [human] approved the draft by asking the implementer to build it
+- 2026-10-03T12:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role, moved the status to
+  in-progress and began the plan on branch `feature-0017-sandbox-without-playwright`
 
 ## Amendments
