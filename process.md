@@ -68,8 +68,8 @@ findable.
 Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`. Start from the kit's
 `templates/changes/`.
 
-* `spec.md` states what should be true: context, requirements, decisions with rationale, and non-goals. It has no file
-  paths or task order
+* `spec.md` states what should be true: context, requirements, decisions with rationale, non-goals, and what the
+  planner left out as beyond the request. It has no file paths or task order
 * `plan.md` states how the work will be done: approach, files, ordered tasks, tests first, and commit points
 * `record.md` states what happened: frontmatter, timestamped status transitions, and amendments. Every log and
   amendment entry opens with the same UTC timestamp format as the frontmatter, then names the harness and

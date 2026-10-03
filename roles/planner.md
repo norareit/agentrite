@@ -39,6 +39,11 @@ The spec is the contract the reviewer later judges against, so write it to be ch
   the implementation was never agreed
 * Use non-goals to fence the work. Name what a reasonable reader would expect the unit to cover and it does not, so
   that leaving it out is visibly a decision rather than an oversight
+* Write as requirements only what the request needs. A check against a mistake nobody has made, support for a
+  case nobody has, and the general form of a specific wish are not requirements. Put each under "Beyond the
+  request" instead, with what it would cost and what happens without it, and leave it out of the unit unless the
+  human takes it. What happens without it is the test: when that is a failure someone would see and could recover
+  from cheaply, such as a clear error or a change to a tracked file, it is fixed when it happens and not before
 * A unit that claims to be safe, isolated or secure states its adversary and its supported usage. Name who or what
   the unit defends against, what it does not defend against, and the usage it is built for. Without that boundary a
   reviewer cannot tell a real hole from a hostile input the unit never promised to survive, and the review drifts
