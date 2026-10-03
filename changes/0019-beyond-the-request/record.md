@@ -1,7 +1,7 @@
 ---
 kind: task
-status: draft
-timestamp: 2026-10-03T11:53:53Z
+status: approved
+timestamp: 2026-10-03T20:20:19Z
 ---
 
 # 0019 Keep what the request does not need out of the requirements
@@ -57,5 +57,8 @@ Left out, in the unit's own terms, as beyond the request:
   `roles/planner.md`, since it is about writing a spec; `process.md` already has its counterpart for code, "Build
   what the spec asks for and nothing more". Numbered 0019 because 0015, 0017 and 0018 are on branches of their own.
   It reaches other projects with the release that holds it
+- 2026-10-03T20:20:19Z [human] asked for the unit to be implemented, in the words "Implement 0019 as the
+  @implementer", which approves it as written. Nothing more explicit was said, and the instruction reached the
+  implementer through the session that dispatched it
 
 ## Amendments
