@@ -2,7 +2,7 @@
 # at node_modules/@ritenoar/agentrite/container/compose.yml, which holds everything
 # that confines the container and is the same for every project. Here is only what
 # varies with the project: its names, what it is allowed to reach, how much of the host
-# it may use, and the Playwright version its visual baselines were rendered with.
+# it may use, and, when it has browser tests, the Playwright version they were rendered with.
 #
 # The kit's container/agent.sh passes both files to Compose with --project-directory set
 # to this repository, so relative paths resolve from the repository root.
@@ -11,11 +11,7 @@ name: {{agent_name}}
 services:
   agent:
     image: {{agent_name}}
-    build:
-      args:
-        # Must match the playwright version resolved in package-lock.json, so that
-        # screenshots taken in the sandbox compare with the committed ones.
-        PLAYWRIGHT_VERSION: {{playwright_version}}
+    {{playwright_build}}
 
     # Leave the host usable. Overridable from the environment for a heavier run.
     mem_limit: ${AGENT_MEM_LIMIT:-8g}
