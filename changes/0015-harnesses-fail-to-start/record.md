@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: draft
-timestamp: 2026-10-03T23:37:11Z
+status: approved
+timestamp: 2026-10-03T23:38:33Z
 ---
 
 # 0015 The sandbox refuses two hosts its harnesses need
@@ -63,5 +63,9 @@ timestamp: 2026-10-03T23:37:11Z
   copy two days old it did not. The runs used an image built from kit 2.1.0, not one built from 2.2.1. The commit
   the 21:49:12Z entry names as `6ed08f9` is `a139507` since the history was rewritten for the repository's new
   name. These changes are uncommitted, since the session was not asked to commit. Status still `draft`
+- 2026-10-03T23:38:33Z [human] approved the spec and the plan as rewritten, and asked for the branch to be pushed
+- 2026-10-03T23:38:33Z [Claude Code, anthropic/claude-opus-5-5] set the status to `approved`. The rewritten documents,
+  which the entry before describes as uncommitted, are committed in `fc0c775`, and the branch is pushed with this
+  entry. Nothing is implemented yet
 
 ## Amendments
