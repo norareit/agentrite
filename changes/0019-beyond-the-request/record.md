@@ -1,7 +1,7 @@
 ---
 kind: task
-status: approved
-timestamp: 2026-10-03T20:20:19Z
+status: in-progress
+timestamp: 2026-10-03T20:20:25Z
 ---
 
 # 0019 Keep what the request does not need out of the requirements
@@ -60,5 +60,11 @@ Left out, in the unit's own terms, as beyond the request:
 - 2026-10-03T20:20:19Z [human] asked for the unit to be implemented, in the words "Implement 0019 as the
   @implementer", which approves it as written. Nothing more explicit was said, and the instruction reached the
   implementer through the session that dispatched it
+- 2026-10-03T20:20:25Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  in-progress. Before that, merged `master` into the branch, which was 29 commits behind it, as 0007 did: 0017, 0018
+  and 0020 are implemented and merged there, so the two drafts the description leaves out are no longer open, and
+  are still not moved to the new template. Checked after the merge that the three places the description names
+  exist: the bullet on non-goals in `roles/planner.md`, the section "Non-goals" in `templates/changes/spec.md`, and
+  the sentence in `process.md` that lists what `spec.md` states
 
 ## Amendments
