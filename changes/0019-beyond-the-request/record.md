@@ -75,5 +75,13 @@ Left out, in the unit's own terms, as beyond the request:
   the section, since no test reads the wording; and the copy under `node_modules/@ritenoar/agentrite/`, which is
   release 2.2.1 and gets the wording with the release that holds it. `check-changes` runs from that installed copy.
   The status stays in-progress until the review and the human's decision
+- 2026-10-03T22:34:45Z [OpenCode, openai/gpt-6.1-sol] took the reviewer role and performed a full review of
+  0019-beyond-the-request at commit `a7720f5cd04e7031ae16ed97f39e2b30c27a4da3`, against merge base
+  `5c4cad9ae701c12f981e570b4cf0ba0d8c2733a0`. Findings saved in
+  `.reviews/0019-beyond-the-request/2026-10-03T22-33-29Z-opencode-full.md`. Returned no finding labels.
+  Independently ran `npm test` (178 passed, none failed or skipped), `npm run check-changes`, and
+  `git diff --check master...HEAD`; all exited 0. Read-only assertions verified approved wording, placement,
+  preserved task description, diff scope and 120-character wrapping. Not verified: future planner compliance with
+  the prose, publication or downstream adoption, and the human-only conversations represented in the log.
 
 ## Amendments
