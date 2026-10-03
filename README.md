@@ -202,6 +202,10 @@ Everything that confines the container is in `container/compose.yml` and `contai
 versions are pinned in `container/Dockerfile`, so a project updates Claude Code and OpenCode by updating the kit, as
 below, and rebuilding.
 
+The container's root filesystem is read-only. The agent writes the working directory, its home volume and `/tmp`.
+`/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
+that runs what it writes to the temporary directory works as on the host.
+
 The browser is in the image when the project's compose file gives `PLAYWRIGHT_VERSION` under
 `services.agent.build.args`, and not otherwise: the build argument alone decides. A project that starts using
 Playwright adds the argument by hand, as the version its `package-lock.json` resolves, and one that stops removes it,
