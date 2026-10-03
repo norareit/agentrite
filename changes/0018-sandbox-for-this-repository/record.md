@@ -1,7 +1,7 @@
 ---
 kind: task
-status: draft
-timestamp: 2026-10-03T11:40:32Z
+status: in-progress
+timestamp: 2026-10-03T14:00:00Z
 ---
 
 # 0018 A sandbox for the kit's own repository
@@ -36,5 +36,7 @@ check above still holds, since it runs `npm`.
   one dependency, one command and one allowlist entry, with no decision left open. Blocked on 0017 and on its
   release, as 0012 was on the release of 0011. Checked before writing that this repository has no `agent.sh`, no
   `agent/` directory and no `.dockerignore`
+- 2026-10-03T14:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role and moved the status to
+  in-progress, the human having released 2.2.0, which holds 0017 (the tarball is served: HTTP 200)
 
 ## Amendments
