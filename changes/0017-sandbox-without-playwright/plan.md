@@ -89,16 +89,16 @@ of the two is merged second is rebased onto the other.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm pack --dry-run` lists the same 22 files
-- [ ] The two tasks that build and run real images are done on a host with Docker, and the record names the
+- [x] `npm test` passes
+- [x] `npm pack --dry-run` lists the same 22 files
+- [x] The two tasks that build and run real images are done on a host with Docker, and the record names the
   Docker version and what each check showed
-- [ ] `npm run check-changes` passes
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
-- [ ] `init` writes a compose file for a project without Playwright
-- [ ] The wrapper no longer asks for the build argument
-- [ ] The Dockerfile builds with and without the browser
-- [ ] The README
-- [ ] The record of the real builds
+- [x] `init` writes a compose file for a project without Playwright
+- [x] The wrapper no longer asks for the build argument
+- [x] The Dockerfile builds with and without the browser
+- [x] The README
+- [x] The record of the real builds
