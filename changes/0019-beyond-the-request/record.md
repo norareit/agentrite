@@ -1,7 +1,7 @@
 ---
 kind: task
-status: in-progress
-timestamp: 2026-10-03T20:20:25Z
+status: implemented
+timestamp: 2026-10-03T22:37:23Z
 ---
 
 # 0019 Keep what the request does not need out of the requirements
@@ -83,5 +83,8 @@ Left out, in the unit's own terms, as beyond the request:
   `git diff --check master...HEAD`; all exited 0. Read-only assertions verified approved wording, placement,
   preserved task description, diff scope and 120-character wrapping. Not verified: future planner compliance with
   the prose, publication or downstream adoption, and the human-only conversations represented in the log.
+- 2026-10-03T22:37:23Z [human] said that no review remarks came back and asked for the unit to be marked implemented
+- 2026-10-03T22:37:23Z [Claude Code, anthropic/claude-opus-5-5] set the status to implemented: the task has no plan, the
+  work its description lists is done, and the review returned no findings, so there was none for the human to decide
 
 ## Amendments
