@@ -38,9 +38,14 @@ services:
     # The root filesystem is read-only. The agent can write only the mounted working
     # directory, its home volume, and the /tmp and /dev/shm scratch tmpfs (/dev/shm is
     # sized by shm_size above). /run is a tmpfs too but stays root-owned.
+    #
+    # Docker mounts a tmpfs noexec unless told otherwise. /tmp is given exec because test
+    # suites and tools run what they write to the temporary directory, and because the
+    # agent can already run what it writes to /work and to its home, so noexec there
+    # confined nothing. /tmp keeps nosuid and nodev.
     read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec
       - /run
 
     # Every capability dropped except NET_ADMIN, which the entrypoint needs to install
