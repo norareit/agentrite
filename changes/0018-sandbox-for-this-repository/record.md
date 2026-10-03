@@ -1,7 +1,7 @@
 ---
 kind: task
-status: in-progress
-timestamp: 2026-10-03T12:37:28Z
+status: implemented
+timestamp: 2026-10-03T14:26:05Z
 ---
 
 # 0018 A sandbox for the kit's own repository
@@ -79,5 +79,8 @@ check above still holds, since it runs `npm`.
   from a clock and was later than the entries after it. Both now say `2026-10-03T12:37:28Z`, the time of the commit that
   made that entry, `c6c8372`, which is the best evidence of when it happened; the exact moment was not recorded. No file
   other than this record changed, so no suite was rerun
+- 2026-10-03T14:26:05Z [human] asked for the unit to be marked implemented
+- 2026-10-03T14:26:05Z [Claude Code, anthropic/claude-opus-5-5] set the status to implemented: the task has no plan, the
+  work its description lists is done, and C1 and C2, the findings the review returned, were accepted and applied
 
 ## Amendments
