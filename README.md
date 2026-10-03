@@ -356,6 +356,10 @@ means work on the kit follows the released instructions rather than the working 
 made at the repository root, never under `node_modules`, and the installed copy moves to a newer release only by a
 deliberate update, as described above.
 
+The repository also runs the kit's sandbox, from the installed release, with `./agent.sh`, as any project does. Work
+on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's.
+`./deploy.sh` stays on the host: releasing needs AWS credentials and hosts the sandbox does not reach.
+
 ## Releasing
 
 A release is a tarball of the kit served from `https://agentrite.ritenoar.com/`, which a project installs from its
