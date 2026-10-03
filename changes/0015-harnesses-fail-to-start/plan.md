@@ -25,9 +25,9 @@ this repository's own sandbox with the working copy's Compose file, the way 0020
 - [x] In `container/compose.yml`, add to `KIT_ALLOWLIST`: `platform.claude.com`, under a comment that Claude Code
       contacts it at start-up when it holds no saved login, and `models.opencode.ai`, under a comment that OpenCode
       fetches its model catalog from it. See the test pass (R1, R2, R3)
-- [ ] In `README.md`, add the two hosts to the two sentences that list what the kit admits itself, removing nothing
+- [x] In `README.md`, add the two hosts to the two sentences that list what the kit admits itself, removing nothing
       (R6)
-- [ ] In `templates/project/agent/compose.project.yml`, add the two hosts to the comment that lists what the kit
+- [x] In `templates/project/agent/compose.project.yml`, add the two hosts to the comment that lists what the kit
       admits itself, and run the `init` tests, which hold the lines of that file to 120 characters (R6)
 
 ## Verification

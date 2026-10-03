@@ -86,9 +86,10 @@ updating the kit delivers it. The files a project is expected to edit are these:
 * `agent/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
   `package.json`, the `PLAYWRIGHT_VERSION` build argument when the project has Playwright, the memory and CPU limits,
   and the project's `ALLOWLIST`.
-  The allowlist lists only what the project needs beyond what the kit admits itself, which is the Anthropic API, the
-  npm registry and `agentrite.ritenoar.com`; the kit's hosts need no listing. Add the API host of any other model
-  provider the project's agents use, and whatever its tools and tests reach
+  The allowlist lists only what the project needs beyond what the kit admits itself, which is the Anthropic API,
+  `platform.claude.com`, `models.opencode.ai`, the npm registry and `agentrite.ritenoar.com`; the kit's hosts need no
+  listing. Add the API host of any other model provider the project's agents use, and whatever its tools and tests
+  reach
 * The role wrappers, to pin a model per role
 
 `CLAUDE.md` is best left as written.
@@ -293,10 +294,12 @@ server's host and port, and HTTPS on port 443 to the allowlisted hosts. Everythi
 or address.
 
 The allowlist is two lists together. `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit
-itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, the npm registry and
-`agentrite.ritenoar.com`. `ALLOWLIST`, in the project's `agent/compose.project.yml`, holds what the project needs
-besides, and may be empty or left out. Both are checked the same way, and a host in both is admitted once. A kit
-release that needs another host adds it to `KIT_ALLOWLIST`, with no change to any project.
+itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, `platform.claude.com`, which
+Claude Code contacts at start-up when it holds no saved login, `models.opencode.ai`, from which OpenCode fetches its
+model catalog, the npm registry and `agentrite.ritenoar.com`. `ALLOWLIST`, in the project's
+`agent/compose.project.yml`, holds what the project needs besides, and may be empty or left out. Both are checked the
+same way, and a host in both is admitted once. A kit release that needs another host adds it to `KIT_ALLOWLIST`, with
+no change to any project.
 
 The entrypoint redirects every outbound connection on port 443 to `container/egress-proxy.mjs`, which runs as its own
 unprivileged account. The proxy reads the hostname from the TLS ClientHello, where it travels in the clear, and
