@@ -26,5 +26,18 @@ timestamp: 2026-10-03T12:53:39Z
 - 2026-10-03T12:53:39Z [human] approved the spec and the plan and asked for the implementation
 - 2026-10-03T12:53:39Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
   in-progress
+- 2026-10-03T12:54:15Z [Claude Code, anthropic/claude-opus-5-5] implemented the plan in three commits: the regression test with
+  the fix, the README, and this record. What was verified:
+  * `tests/compose-tmpfs.test.mjs` failed on the tree before the fix, with `/tmp` where `/tmp:exec` was expected,
+    and passes after it
+  * The real run, on Linux with Docker Engine 28.4.0 and Compose 2.39.2, used the working copy's
+    `container/compose.yml` with this repository's `agent/compose.project.yml` and the image built for 0018, which
+    are in the working tree and not committed. The probe of the spec's steps printed `ran` and exited 0. The mount
+    options of `/tmp` were `rw,nosuid,nodev,relatime,inode64`, with no `noexec`. Those of `/` opened with `ro`.
+    `npm test` in the sandbox exited 0, with 178 passing and 0 failing
+  * On the host, on `61da397`: `npm test` reported 178 passing and 0 failing, and `npm pack --dry-run` lists 22
+    files
+  * Not checked: Docker Desktop for macOS and Docker Engine 24.0.7, which the spec names as non-goals; the image
+    was not rebuilt, since the fix changes no file the image holds
 
 ## Amendments

@@ -36,32 +36,32 @@ commit and 0018. `master` holds none of them yet.
 
 ## Tasks
 
-- [ ] Write `tests/compose-tmpfs.test.mjs` as the Approach describes, asserting that the agent's `tmpfs` list is
+- [x] Write `tests/compose-tmpfs.test.mjs` as the Approach describes, asserting that the agent's `tmpfs` list is
   exactly `/tmp:exec` and `/run`. Run `npm test` on the host and see this one test fail, with `/tmp` where
   `/tmp:exec` is expected (R3)
-- [ ] In `container/compose.yml`, change the entry to `/tmp:exec`, and extend the comment above `read_only`: Docker
+- [x] In `container/compose.yml`, change the entry to `/tmp:exec`, and extend the comment above `read_only`: Docker
   mounts a tmpfs `noexec` unless told otherwise; `/tmp` is given `exec` because test suites and tools run what they
   write there, and because the agent can already run what it writes to `/work` and to its home, so `noexec` there
   confined nothing; `/tmp` keeps `nosuid` and `nodev`. Change nothing else in the file. See the test pass (R1, R2,
   R3)
-- [ ] On a host with Docker, with the working copy's compose file as the Approach describes, run and record: the
+- [x] On a host with Docker, with the working copy's compose file as the Approach describes, run and record: the
   probe of the spec's steps to reproduce, which exits 0 and prints `ran`; `findmnt -no OPTIONS /tmp`, which holds
   `nosuid` and `nodev` and no `noexec`; `findmnt -no OPTIONS /`, which holds `ro`; and `npm test`, which exits 0
   with no failing test. Record the Docker and Compose versions (R1, R2, R4)
-- [ ] In `README.md`, under "Running the sandbox", after the paragraph that says where the confinement lives, add
+- [x] In `README.md`, under "Running the sandbox", after the paragraph that says where the confinement lives, add
   a paragraph: the root filesystem is read-only; the agent writes the working directory, its home volume and
   `/tmp`; `/tmp` is in memory, is emptied when the container stops, and files in it can be run, so a test suite or
   a tool that runs what it writes to the temporary directory works as on the host. Remove nothing (R5)
 
 ## Verification
 
-- [ ] `npm test` passes on the host
-- [ ] `npm pack --dry-run` lists the same 22 files
-- [ ] The real run is in the record, with the Docker and Compose versions and what each check showed
-- [ ] `npm run check-changes` passes
+- [x] `npm test` passes on the host
+- [x] `npm pack --dry-run` lists the same 22 files
+- [x] The real run is in the record, with the Docker and Compose versions and what each check showed
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
-- [ ] The regression test and the fix
-- [ ] The README
-- [ ] The record of the real run
+- [x] The regression test and the fix
+- [x] The README
+- [x] The record of the real run
