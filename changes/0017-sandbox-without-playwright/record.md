@@ -35,5 +35,31 @@ timestamp: 2026-10-03T12:00:00Z
 - 2026-10-03T12:00:00Z [human] approved the draft by asking the implementer to build it
 - 2026-10-03T12:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role, moved the status to
   in-progress and began the plan on branch `feature-0017-sandbox-without-playwright`
+- 2026-10-03T12:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] implemented the plan in four commits after the
+  approval: `init`, the wrapper, the Dockerfile with the comment in `container/compose.yml`, and the README. Deviations
+  and what was verified:
+  * The test of the wrapper stopping with Compose's own error was kept. The wrapper still asks Compose for the image
+    name, and under `pipefail` a configuration Compose refuses stops there with Compose's error. The fake `docker` in
+    the test now fails that query instead of the removed `config --format json` one
+  * The last stage's `FROM` is `base${PLAYWRIGHT_VERSION:+-with-browsers}`, as planned. No `ARG` is repeated in
+    `base-with-browsers`, which does not use the version in any instruction
+  * Without Playwright, on Docker 28.4.0 with the kit packed as 2.1.0 from this branch: `init claude opencode` wrote
+    the compose file with no `build:` key, and `./agent.sh --rebuild` built it. The build log names no Playwright image
+    (the only match for "playwright" in the log is the `ls` error below). The entrypoint's checks passed. `ls
+    /opt/playwright` in the container failed with "No such file or directory". `claude --version` printed 2.1.266 and
+    `opencode --version` printed 1.18.30, and `git status` in `/work` exited 0
+  * With Playwright, same Docker, `playwright@1.59.1` in the scratch project: the build pulled
+    `mcr.microsoft.com/playwright` and `/opt/playwright` held `chromium-1217`, `chromium_headless_shell-1217` and
+    `ffmpeg-1011`, with no Firefox or WebKit. A script that launches Chromium through Playwright, sets content and
+    closes it printed its text and exited 0. The 506 installed Debian packages with their versions, and the listing of
+    `/opt/playwright`, are identical to those of an image built from the Dockerfile on `master` with the same build
+    arguments and context
+  * The scratch project's lockfile had to leave out the kit: with the kit installed from a local tarball the lockfile
+    names a path that `npm ci` in the image cannot resolve. That is the same on `master` and not part of this unit. The
+    kit was installed without saving it
+  * The images, home volumes and networks of the two scratch projects and of the `master` image were removed
+  * Not checked: Docker Desktop for macOS and Docker Engine 24.0.7, as the planner noted; a build with a version
+    given to a project without Playwright; starting either harness interactively
+  * `npm test` reported 175 passing and 0 failing, and `npm pack --dry-run` lists 22 files, on `1cc7200`
 
 ## Amendments
