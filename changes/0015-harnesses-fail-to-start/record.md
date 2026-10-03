@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: approved
-timestamp: 2026-10-03T23:38:33Z
+status: in-progress
+timestamp: 2026-10-03T23:41:00Z
 ---
 
 # 0015 The sandbox refuses two hosts its harnesses need
@@ -67,5 +67,9 @@ timestamp: 2026-10-03T23:38:33Z
 - 2026-10-03T23:38:33Z [Claude Code, anthropic/claude-opus-5-5] set the status to `approved`. The rewritten documents,
   which the entry before describes as uncommitted, are committed in `fc0c775`, and the branch is pushed with this
   entry. Nothing is implemented yet
+- 2026-10-03T23:41:00Z [human] asked, in a session in this repository on Linux, for the rewritten unit to be pulled and
+  implemented
+- 2026-10-03T23:41:00Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  in-progress
 
 ## Amendments
