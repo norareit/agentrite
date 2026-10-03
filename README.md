@@ -84,7 +84,8 @@ updating the kit delivers it. The files a project is expected to edit are these:
   Development Guidelines, Roles and Changes in this project, are what make the kit's instructions reach an agent, and
   are best kept
 * `agent/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
-  `package.json`, the `PLAYWRIGHT_VERSION` build argument, the memory and CPU limits, and the project's `ALLOWLIST`.
+  `package.json`, the `PLAYWRIGHT_VERSION` build argument when the project has Playwright, the memory and CPU limits,
+  and the project's `ALLOWLIST`.
   The allowlist lists only what the project needs beyond what the kit admits itself, which is the Anthropic API, the
   npm registry and `agentrite.ritenoar.com`; the kit's hosts need no listing. Add the API host of any other model
   provider the project's agents use, and whatever its tools and tests reach
@@ -121,12 +122,11 @@ holding `@AGENTS.md`.
   the build context, whatever its patterns, the exception is appended, so that the image build can reach the kit.
   `init` decides this by the rules BuildKit applies. Otherwise the file is left alone
 
-The sandbox requires the project to depend on Playwright, because the image takes Playwright's browsers at the version
-the project resolved. `init` takes that version from `package-lock.json`. When the lockfile resolves no `playwright`, it
-writes everything else, but not `agent/compose.project.yml`, says why on standard error, and exits non-zero. An existing
-`agent/compose.project.yml` is left as it is, and the run still says why and exits non-zero, because the image build
-needs Playwright in the lockfile whatever version the file names. It also refuses to run, writing nothing, when
-`package.json` has no `name`.
+A project that depends on Playwright gets a sandbox with its browser: `init` takes the version from
+`package-lock.json` and writes it into `agent/compose.project.yml` as the `PLAYWRIGHT_VERSION` build argument. When the
+lockfile resolves no `playwright`, `init` writes the compose file without the argument, and the sandbox is built
+without a browser. `init` exits 0 either way. An existing `agent/compose.project.yml` is left as it is. `init` refuses
+to run, writing nothing, when `package.json` has no `name`.
 
 `init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
 `node_modules/@ritenoar/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
@@ -196,15 +196,25 @@ two files:
   project root as its first argument, so that the documented command stays one command from the repository root.
   The wrapper takes the root from its caller because how deep the kit sits under `node_modules` is npm's to decide
 * `agent/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
-  allowlist, the resource limits and the `PLAYWRIGHT_VERSION` build argument. The wrapper reads the merged
-  configuration before it builds, and refuses to go on without `PLAYWRIGHT_VERSION`, naming this file
+  allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
 
 Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`. The harness
 versions are pinned in `container/Dockerfile`, so a project updates Claude Code and OpenCode by updating the kit, as
 below, and rebuilding.
 
-The build context is the project root, not the kit directory, because the Dockerfile installs the project's own
-dependencies to get Playwright's system libraries at the version the project resolved. The wrapper passes
+The container's root filesystem is read-only. The agent writes the working directory, its home volume and `/tmp`.
+`/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
+that runs what it writes to the temporary directory works as on the host.
+
+The browser is in the image when the project's compose file gives `PLAYWRIGHT_VERSION` under
+`services.agent.build.args`, and not otherwise: the build argument alone decides. A project that starts using
+Playwright adds the argument by hand, as the version its `package-lock.json` resolves, and one that stops removes it,
+and both rebuild with `./agent.sh --rebuild`. `init` and `refresh` never rewrite `agent/compose.project.yml`, which is
+the project's own.
+
+The build context is the project root, not the kit directory, because the Dockerfile copies the kit's files from under
+it and, for a project with Playwright, installs the project's own dependencies to get Playwright's system libraries at
+the version the project resolved. The wrapper passes
 `--project-directory` so that relative paths in both compose files resolve from the project root, and passes the
 kit's `container/` directory, relative to that root, as `AGENTRITE_CONTAINER`, which the compose file and the
 Dockerfile use to find the kit's files. A project whose `.dockerignore` excludes `node_modules` must let that one
@@ -345,6 +355,10 @@ The kit is also a devDependency of itself, installed from a release by its URL l
 means work on the kit follows the released instructions rather than the working copy it may be changing. Changes are
 made at the repository root, never under `node_modules`, and the installed copy moves to a newer release only by a
 deliberate update, as described above.
+
+The repository also runs the kit's sandbox, from the installed release, with `./agent.sh`, as any project does. Work
+on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's.
+`./deploy.sh` stays on the host: releasing needs AWS credentials and hosts the sandbox does not reach.
 
 ## Releasing
 

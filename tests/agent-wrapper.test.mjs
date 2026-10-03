@@ -13,12 +13,14 @@ function composeConfig(buildArgs) {
 }
 
 // A project with the kit's wrapper installed at `kitPath` under `root`, and a `docker` that records each call and
-// the AGENTRITE_CONTAINER it saw, answering only the three queries the wrapper makes before running Compose. Its
-// merged configuration has the build arguments `buildArgs`.
+// the AGENTRITE_CONTAINER it saw, answering only the two queries the wrapper makes before running Compose. Its
+// merged configuration has the build arguments `buildArgs`, and the image it is asked about exists unless
+// `imageExists` is false.
 function setUp(
   t,
   kitPath = 'node_modules/@ritenoar/agentrite/container',
   buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
+  imageExists = true,
 ) {
   const base = mkdtempSync(join(tmpdir(), 'agent-wrapper-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
@@ -38,11 +40,10 @@ function setUp(
   writeFileSync(
     join(bin, 'docker'),
     `#!/usr/bin/env bash
-if [ "$1 $2" = "image inspect" ]; then exit 0; fi
-if [[ " $* " == *" config --images "* ]]; then echo image; exit 0; fi
-if [[ " $* " == *" config --format json "* ]]; then
+if [ "$1 $2" = "image inspect" ]; then exit ${imageExists ? 0 : 1}; fi
+if [[ " $* " == *" config --images "* ]]; then
   [ -s "${config}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
-  cat "${config}"; exit 0
+  echo image; exit 0
 fi
 echo "AGENTRITE_CONTAINER=$AGENTRITE_CONTAINER docker $*" >> "${calls}"
 `,
@@ -106,13 +107,32 @@ for (const [what, buildArgs] of [
   ['no build arguments of the project', {}],
   ['an empty PLAYWRIGHT_VERSION', { PLAYWRIGHT_VERSION: '' }],
 ]) {
-  test(`the wrapper refuses a configuration with ${what}, naming the project's compose file, before building`, (t) => {
-    const { root, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container', buildArgs);
-    const result = run(root, '--rebuild');
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, /PLAYWRIGHT_VERSION/);
-    assert.match(result.stderr, new RegExp(`${root}/agent/compose\\.project\\.yml must supply`));
-    assert.deepEqual(dockerCalls(), []);
+  test(`the wrapper goes on to build and run with ${what}`, (t) => {
+    const kitPath = 'project/node_modules/@ritenoar/agentrite/container';
+    const { root, container, run, dockerCalls } = setUp(t, kitPath, buildArgs);
+    const result = run(root, '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const expectedPrefix =
+      'AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container docker compose ' +
+      `--project-directory ${root} -f ${container}/compose.yml -f ${root}/agent/compose.project.yml`;
+    assert.deepEqual(dockerCalls(), [
+      `${expectedPrefix} build`,
+      `${expectedPrefix} run --rm --volume ${root}:/work agent echo hi`,
+    ]);
+  });
+
+  test(`the wrapper builds the missing image without --rebuild with ${what}`, (t) => {
+    const kitPath = 'project/node_modules/@ritenoar/agentrite/container';
+    const { root, container, run, dockerCalls } = setUp(t, kitPath, buildArgs, false);
+    const result = run(root, 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const expectedPrefix =
+      'AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container docker compose ' +
+      `--project-directory ${root} -f ${container}/compose.yml -f ${root}/agent/compose.project.yml`;
+    assert.deepEqual(dockerCalls(), [
+      `${expectedPrefix} build`,
+      `${expectedPrefix} run --rm --volume ${root}:/work agent echo hi`,
+    ]);
   });
 }
 

@@ -179,7 +179,24 @@ function kitOwnedFiles({ templates, harnesses }) {
 }
 
 /**
- * The files init creates, filled from the templates. The compose file is left out without a Playwright version.
+ * The `build:` block of the compose file that gives the image the browser at `version`.
+ *
+ * @param {string} version
+ * @returns {string}
+ */
+function playwrightBuildBlock(version) {
+  return [
+    'build:',
+    '  args:',
+    '    # Must match the playwright version resolved in package-lock.json, so that',
+    '    # screenshots taken in the sandbox compare with the committed ones.',
+    `    PLAYWRIGHT_VERSION: ${version}`,
+  ].join('\n');
+}
+
+/**
+ * The files init creates, filled from the templates. The compose file names the Playwright version only when the
+ * project has one.
  *
  * @param {{
  *   templates: Record<string, string>,
@@ -199,10 +216,9 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
     { path: 'CLAUDE.md', content: fillTemplate(templates['CLAUDE.md'], {}) },
     shimFile(templates),
   ];
-  if (playwrightVersion === undefined) return files;
   const compose = fillTemplate(templates[COMPOSE_FILE], {
     agent_name: agentName(packageName),
-    playwright_version: playwrightVersion,
+    playwright_build: playwrightVersion === undefined ? '' : playwrightBuildBlock(playwrightVersion),
     harness_hosts: harnessHosts(harnesses),
   });
   return [...files, { path: COMPOSE_FILE, content: compose }];
@@ -467,12 +483,11 @@ function readTemplates() {
  */
 function init(root, harnesses) {
   const manifest = readPackageJson(root);
-  const version = playwrightVersion(readLockfile(root));
   const files = projectFiles({
     templates: readTemplates(),
     harnesses,
     packageName: manifest.name,
-    playwrightVersion: version,
+    playwrightVersion: playwrightVersion(readLockfile(root)),
   });
   /** @type {string[]} */ const notices = [];
 
@@ -510,18 +525,7 @@ function init(root, harnesses) {
 
   for (const notice of notices) console.log(`\n${notice}`);
 
-  if (version !== undefined) return 0;
-  // An existing compose file is kept, but its Playwright version does not save the build: the image installs
-  // Playwright's system libraries from the project's lockfile.
-  const composeExists = exists(resolve(root, COMPOSE_FILE));
-  if (composeExists) console.log(`skipped ${COMPOSE_FILE}, which exists`);
-  console.error(
-    `agentrite: package-lock.json resolves no playwright, so ${COMPOSE_FILE} ` +
-      `${composeExists ? 'was left as it is' : 'was not written'}.\n` +
-      "The sandbox requires the project to depend on Playwright: the image takes Playwright's browsers at the\n" +
-      'version the project resolved. Install it, then run init again.',
-  );
-  return 1;
+  return 0;
 }
 
 /**

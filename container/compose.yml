@@ -7,14 +7,15 @@
 #
 # A project layers its own compose file over this one, at agent/compose.project.yml,
 # holding what varies per project: the Compose project name, the image name, the egress
-# allowlist, the resource limits and the Playwright version. container/agent.sh passes
-# both files to Compose, with --project-directory set to the project root, so every
-# relative path in either file resolves from there.
+# allowlist, the resource limits and, if it has browser tests, the Playwright version.
+# container/agent.sh passes both files to Compose, with --project-directory set to the
+# project root, so every relative path in either file resolves from there.
 
 services:
   agent:
     build:
       # The context is the project root rather than this directory: the Dockerfile
+      # copies the kit's entrypoint from under it and, for a project with Playwright,
       # installs the project's own dependencies in order to get Playwright's system
       # libraries at the version the project resolved, so it needs the project's
       # package.json and package-lock.json in the context.
@@ -37,9 +38,14 @@ services:
     # The root filesystem is read-only. The agent can write only the mounted working
     # directory, its home volume, and the /tmp and /dev/shm scratch tmpfs (/dev/shm is
     # sized by shm_size above). /run is a tmpfs too but stays root-owned.
+    #
+    # Docker mounts a tmpfs noexec unless told otherwise. /tmp is given exec because test
+    # suites and tools run what they write to the temporary directory, and because the
+    # agent can already run what it writes to /work and to its home, so noexec there
+    # confined nothing. /tmp keeps nosuid and nodev.
     read_only: true
     tmpfs:
-      - /tmp
+      - /tmp:exec
       - /run
 
     # Every capability dropped except NET_ADMIN, which the entrypoint needs to install
