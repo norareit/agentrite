@@ -38,5 +38,13 @@ check above still holds, since it runs `npm`.
   `agent/` directory and no `.dockerignore`
 - 2026-10-03T14:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] took the implementer role and moved the status to
   in-progress, the human having released 2.2.0, which holds 0017 (the tarball is served: HTTP 200)
+- 2026-10-03T12:49:57Z [Claude Code, anthropic/claude-opus-5-5] logged where the implementation stands and what blocks
+  it. Done in the working tree and not committed: the devDependency moved to 2.2.0, `npx agentrite init claude
+  opencode` run, which wrote `agent.sh`, `agent/compose.project.yml` and `.dockerignore`, and `api.openai.com` added
+  to `ALLOWLIST`. `./agent.sh --rebuild npm ci` exited 0. `./agent.sh npm test` exited 1, with 162 passing and 15
+  failing: the sandbox mounts `/tmp` with `noexec`, and those tests run scripts they write under the temporary
+  directory. The human decided that the fix belongs in the kit and not in these tests, which is bug 0020. This unit
+  now also waits for 0020 implemented and for a release that holds it, to which the dependency moves instead of
+  2.2.0. The README change is not made yet
 
 ## Amendments
