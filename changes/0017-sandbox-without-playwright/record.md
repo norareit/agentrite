@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-03T12:00:00Z
+status: implemented
+timestamp: 2026-10-03T13:20:00Z
 ---
 
 # 0017 A sandbox for a project that does not use Playwright
@@ -79,5 +79,19 @@ timestamp: 2026-10-03T12:00:00Z
   `build` then `run`. The plan already promised this case, so it is unchanged. Checked that the new tests fail when
   the image is made to exist. `npm test` reported 177 passing and 0 failing on the commit that follows this entry's
   parent; the status stays `in-progress` for the human to move
+
+- 2026-10-03T12:29:17Z [OpenCode, openai/gpt-6.1-sol] reviewed `0017-sandbox-without-playwright` at
+  `f04af969cc214a314d2152f53247aa46c725c183`, a delta from
+  `88a2118740d44ca5cfa8d8ad490e896c2efba001`. Rechecked prior P1; returned no new findings. Complete findings and
+  check results are saved in
+  `.reviews/0017-sandbox-without-playwright/20261003T122710Z-opencode-openai-gpt-6.1-sol-delta.md`. This delta used fake
+  Docker for wrapper invocation checks; real Docker/Compose runtime and packaging checks were not repeated because
+  shipped files are unchanged. The negative-control result was independently reproduced, but its original timing
+  and provenance could not be verified. Prior screenshot, platform, interactive-harness, installed-kit/shim,
+  argument/lockfile-disagreement and historical cleanup/test-sequence limitations remain as in the saved full review,
+  with no new evidence to reopen them. No Task/subagent tool was available; performed the review directly
+- 2026-10-03T13:20:00Z [human] accepted the review outcome and asked for the unit to be marked implemented
+- 2026-10-03T13:20:00Z [Claude Code, anthropic/claude-sonnet-5-5] set the status to implemented: every task in
+  `plan.md` is ticked and the review returned no blocking finding
 
 ## Amendments
