@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: draft
-timestamp: 2026-10-03T12:49:57Z
+status: in-progress
+timestamp: 2026-10-03T12:53:39Z
 ---
 
 # 0020 The sandbox refuses to run anything from `/tmp`
@@ -23,5 +23,8 @@ timestamp: 2026-10-03T12:49:57Z
   tmpfs given this way is what was observed here and what reports in Docker's issue tracker say; the engine's
   source was not read. Written on the branch `feature-0017-sandbox-without-playwright`, which holds 0017, the 2.2.0
   release commit and 0018, none of which `master` holds yet
+- 2026-10-03T12:53:39Z [human] approved the spec and the plan and asked for the implementation
+- 2026-10-03T12:53:39Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role and moved the status to
+  in-progress
 
 ## Amendments
