@@ -78,6 +78,10 @@ services:
       KIT_ALLOWLIST: |
         # FIREWALL_PROBE below, and the Anthropic API that Claude Code uses
         api.anthropic.com
+        # Claude Code contacts it at start-up when it holds no saved login
+        platform.claude.com
+        # OpenCode fetches its model catalog from it
+        models.opencode.ai
         # npm registry: npm ci inside the container
         registry.npmjs.org
         # AgentRite's release tarballs, which npm ci installs by URL

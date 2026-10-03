@@ -18,11 +18,11 @@ this repository's own sandbox with the working copy's Compose file, the way 0020
 
 ## Tasks
 
-- [ ] Add `tests/compose-allowlist.test.mjs`, reading `container/compose.yml` as text. It takes the lines of the
+- [x] Add `tests/compose-allowlist.test.mjs`, reading `container/compose.yml` as text. It takes the lines of the
       `KIT_ALLOWLIST` block by their indentation, drops comments and blank lines, and holds that the hosts include
       `platform.claude.com` and `models.opencode.ai`, and still include `api.anthropic.com`, `registry.npmjs.org`
       and `agentrite.ritenoar.com`. Run it and see it fail for want of the two (R4)
-- [ ] In `container/compose.yml`, add to `KIT_ALLOWLIST`: `platform.claude.com`, under a comment that Claude Code
+- [x] In `container/compose.yml`, add to `KIT_ALLOWLIST`: `platform.claude.com`, under a comment that Claude Code
       contacts it at start-up when it holds no saved login, and `models.opencode.ai`, under a comment that OpenCode
       fetches its model catalog from it. See the test pass (R1, R2, R3)
 - [ ] In `README.md`, add the two hosts to the two sentences that list what the kit admits itself, removing nothing
