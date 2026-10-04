@@ -62,12 +62,46 @@ test('the Dockerfile installs the packages the wrapper asks the registry about, 
   }
 });
 
-// A search for a version written after a name of either harness, of its package or of its build argument. It
-// cannot find a version written with no such name before it. The versions the README holds are examples and are
-// not searched.
+// A version written after a name of either harness, of its package or of its build argument, with or without
+// quotes around the name or the version. It cannot find a version written with no such name before it.
+const versionOfAHarness = /(claude[-_ ]?code|opencode)[-_a-z]*["']?[ @=:]+["']?v?\d+\.\d+\.\d+/i;
+
+test('the search for a version of a harness finds one in the forms a file may write it in', () => {
+  for (const text of [
+    'ARG CLAUDE_CODE_VERSION=2.1.266',
+    'ARG OPENCODE_VERSION="1.18.30"',
+    'OPENCODE_VERSION: 1.2.3',
+    'OPENCODE_VERSION: "1.2.3"',
+    "CLAUDE_CODE_VERSION: '2.3.4'",
+    '{"OPENCODE_VERSION": "1.2.3"}',
+    '{ "CLAUDE_CODE_VERSION":"2.3.4" }',
+    '"@anthropic-ai/claude-code@2.1.289"',
+    'opencode-ai@1.18.34',
+    'the kit pins Claude Code 2.1.288',
+    'OPENCODE_VERSION: 0.0.0-dev-202610030456',
+  ]) {
+    assert.match(text, versionOfAHarness);
+  }
+});
+
+test('the search for a version of a harness passes by an argument with no version, and an address', () => {
+  for (const text of [
+    'ARG CLAUDE_CODE_VERSION',
+    'ARG OPENCODE_VERSION',
+    "CLAUDE_CODE_VERSION: ${AGENT_CLAUDE_CODE_VERSION:?run the sandbox through the project's agent.sh}",
+    '"opencode-ai@${OPENCODE_VERSION}"',
+    'com.ritenoar.agentrite.opencode-version="${OPENCODE_VERSION}"',
+    'OpenCode fetches its model catalog from it',
+    "Docker's embedded resolver on 127.0.0.11 is reached over loopback",
+    'listening on 127.0.0.1:15443',
+  ]) {
+    assert.doesNotMatch(text, versionOfAHarness);
+  }
+});
+
+// The versions the README holds are examples and are not searched.
 test('no file under container/ or templates/ names a version of either harness', () => {
   const searched = [...filesUnder(join(repository, 'container')), ...filesUnder(join(repository, 'templates'))];
-  const versionOfAHarness = /(claude[-_ ]?code|opencode)[-_a-z]*[ @=:]+v?\d+\.\d+\.\d+/i;
   const holding = searched
     .filter((file) => versionOfAHarness.test(readFileSync(file, 'utf-8')))
     .map((file) => relative(repository, file));
