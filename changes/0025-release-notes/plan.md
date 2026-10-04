@@ -99,12 +99,14 @@ When asked to write the release notes:
   `git describe --tags --abbrev=0`
 * The units of the release are those whose `record.md` says `implemented` now and did not at that tag.
   `git diff <tag> HEAD --stat -- changes/` shows which units moved, and
-  `git grep '^status:' <tag> -- 'changes/*/record.md'` gives the statuses at the tag. Read the spec and the record
-  of each, not its title: what a release changes for a project is in the decisions, in the paragraph that states a
-  unit's boundary, and in what the record says was not established
+  `git grep '^status:' <tag> -- 'changes/*/record.md'` gives the statuses at the tag. Read the documents each has,
+  the spec where there is one and the record, not its title: what a release changes for a project is in the
+  decisions, in the paragraph that states a unit's boundary, and in what the record says was not established
 * Read the diff of what ships since the tag: `git diff <tag> HEAD` over `README.md`, `package.json` and every path
-  in `files` of `package.json`. Every change in it belongs to a unit. Name one that does not to the human, and write
-  it in the section without a number. A consequence nobody wrote down is found only here
+  in `files` of `package.json`. Every change in it belongs to a unit of the release. Name one that belongs to no
+  unit to the human, and write it in the section without a number. Name one whose unit is not `implemented` to the
+  human as well: whether the release waits for that unit is theirs to decide. A consequence nobody wrote down is
+  found only here
 * Write the section at the top of `CHANGELOG.md`, above the last release's, headed `## <version>` with the version
   you propose and nothing else on the line. It has two parts:
     * `### What changed`: a line for each change a project gets, ending with the numbers of its units in
