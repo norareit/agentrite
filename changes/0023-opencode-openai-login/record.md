@@ -122,5 +122,20 @@ timestamp: 2026-10-04T01:39:18Z
     until a review has been made. No file but the plan and this record changed since `699dc40`, on which the
     suite reported 188 passing and 0 failing, so it was not run again. `npm run check-changes` exited 0 on the
     commit that holds this entry
+- 2026-10-04T01:49:20Z [OpenCode, openai/gpt-6.1-sol] reviewed `0023-opencode-openai-login` at commit
+  `b17b00a8ec322bb6aaa1813b7e799d18015a17f5`. Full review, with no previous review, against the merge base with
+  master, `afb0b0ec1d8d2846819f7667667c75a7760c264d`. Returned C1 (code quality, blocking); spec conformance and
+  plan fidelity have no findings. Complete findings:
+  `.reviews/0023-opencode-openai-login/review-20261004T014701Z-b17b00a-openai-gpt-6.1-sol.md`.
+  Independently ran `npm test` on the reviewed tree: 188 passing, 0 failing, 0 skipped, including end-to-end cases;
+  the targeted allowlist/init suites: 46 passing; and `npm run check-changes`: exit 0. Verified the regression's
+  expected failure against pre-fix Compose content, the two-host-only merged Compose change with no ports, the
+  23-file package filename set and the changed files' wrapping. Could not independently verify R1-R3's original
+  clean-home run, human login, answered prompt and proxy observations, or R8's historical host inventory: no dev
+  container remains and the transient log is unavailable. The original test-first sequence and historical suite
+  run also cannot be independently established. No fresh sandbox or authentication was started. Account/workspace
+  eligibility, token refresh, further prompts and their hosts, macOS, API-key login, the original browser refusal's
+  cause, manual callback delivery and the released sandbox after a future release remain unverified. The complete
+  report distinguishes these limits from the settled allowlist/security decisions. No finding outcome is recorded
 
 ## Amendments
