@@ -160,10 +160,11 @@ removed here.
   touch, so it prints that line and no other
 
 **For the release notes, later.** What a project that updates should know, which requirement 11 holds: no edit
-is needed; on a host that has both harnesses nothing changes; on a host without one, the sandbox keeps the
-version the kit pinned until `./agent.sh --rebuild`, which then installs the latest published one, and from then
-on every build does; the kit no longer says of any harness version that it was checked; and a build on such a
-host runs `npm view` on the host.
+is needed; an image of release 2.3.0 records no versions, so the first start after the update builds it again;
+on a host that has both harnesses that build installs the host's versions; on a host without one it installs the
+latest published version of that harness, as every later build does, and the sandbox keeps it until
+`./agent.sh --rebuild`; the kit no longer says of any harness version that it was checked; and a build on such a
+host runs `npm view` on the host, so it needs `npm` and the registry, and stops without them.
 
 ## Files
 

@@ -258,5 +258,28 @@ timestamp: 2026-10-04T20:13:06Z
   Open for the human: requirement 11's sentence on an image of an earlier release, given what P1 showed; the
   lines of the wrapper that are longer than 120 characters as printed; and the time limit on the question to the
   registry
+- 2026-10-04T21:54:34Z [human] decided what the check left open about requirement 11. Told what P1 and P2 showed,
+  that the main session would have the planner correct the sentence to what was seen, and that the alternative is
+  to change the behaviour so that an image with no labels is kept, which is more code for a transition made once:
+  "Yes, let the planner correct 11". So the behaviour stays as built, and an image that records no version is
+  built again. The time of this entry is when the words reached the planner, through the dispatching session
+- 2026-10-04T21:54:34Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the branch at `114a6dc`, corrected
+  the spec and the plan for that. No behaviour, code, test, README or file under `container/` is changed. What
+  changed:
+  * R11 no longer says that an image of an earlier release records exact versions. It says what was seen: an
+    image of release 2.3.0 records none and is built again at the first start after the update; on a host with
+    both harnesses that build takes the host's versions; on a host without one it takes the latest and needs
+    `npm` and the registry, and stops without them; an image whose labels record versions is kept until it is
+    built again
+  * The decision "An image from an earlier release is left as it is" is now about an image whose labels record
+    versions, and says what it got wrong as first written
+  * A decision is added as the human's: an image that records no version is built again, with the alternative and
+    why it was not taken
+  * The plan's paragraph for the release notes carried the same premise and is corrected to match
+  "Not established" in the spec does not carry the premise and is as it was. Looked for the sentence elsewhere:
+  the README's "The harness versions" already says that an image built by a release that did not write the labels
+  is built again at the first start, and that the sandbox does not start when that build fails; the comments in
+  `container/agent.sh` say that the wrapper builds when the image records no version. Neither repeats the untrue
+  sentence, and the implementer's notes for the release, above, follow what was seen. Status stays `in-progress`
 
 ## Amendments

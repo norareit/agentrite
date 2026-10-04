@@ -140,9 +140,14 @@ The versions:
 
 A project that updates:
 
-11. A project needs no edit to a file of its own. An image built by an earlier release records exact versions and
-    is used as it is: where the host has a harness nothing changes, and where it does not, the sandbox keeps the
-    version the kit pinned until the image is built again, for example with `./agent.sh --rebuild`
+11. A project needs no edit to a file of its own. What its image becomes follows from requirements 5 and 10, and
+    from what the image records:
+    * An image of release 2.3.0 records no version of either harness, so the first start after the update builds
+      it again. On a host that has both harnesses that build installs the host's versions. On a host without a
+      harness it installs the latest published version of it, and so needs `npm` on the host and the registry in
+      reach: without them that first start stops, as requirement 7 says, although an image exists
+    * An image whose labels record versions is used as it is. For a harness the host does not have, the sandbox
+      keeps the recorded version until the image is built again, for example with `./agent.sh --rebuild`
 
 The documents:
 
@@ -242,10 +247,20 @@ The tests and the check:
 * **The host needs `npm`, which it has.** The kit is an npm package, the wrapper already runs `node`, and `npm`
   comes with it. The output is checked for the shape of a version before it becomes part of an install that runs
   as root in the build, as the host's own version is
-* **An image from an earlier release is left as it is.** Its labels are exact versions. For a harness the host
-  has, nothing changes. For one it does not, the wrapper has no way to tell a pinned version from one the
-  registry gave last month, and needs none: both are what the image holds until it is built again. The release
-  notes say that `--rebuild` moves such a sandbox to the latest
+* **An image whose labels record versions is left as it is.** For a harness the host has, nothing changes. For
+  one it does not, the wrapper has no way to tell a version the kit once pinned from one the registry gave last
+  month, and needs none: both are what the image holds until it is built again. As first written, this decision
+  and requirement 11 said that of every image of an earlier release. That was wrong: the labels are 0027's, and
+  0027 is in no release
+* **An image that records no version is built again, also on a host without the harness. The human's decision,
+  after the check for real.** The check showed that the image of release 2.3.0 has neither label. The wrapper
+  cannot know what such an image holds, so by requirement 5 it builds, and on a host without a harness that
+  build takes the latest and needs `npm` and the registry. With the registry out of reach the first start after
+  the update stops with exit 2, although an image exists. The alternative was to change the behaviour so that an
+  image with no labels is kept for a harness that has no source. It is more code and more cases in the tests for
+  a transition each sandbox makes once, and it would keep, unseen, a version the wrapper cannot name. Told both,
+  the human had the sentence corrected to what was seen and the behaviour left as built, in the words the record
+  has. The release notes say that the first start after the update builds, and what that build needs
 * **The README names no version as checked. The planner's.** The kit could say which versions it was last seen
   working with, and 0028's record has such a pair. Written in the README it would be a pin again in all but
   name: a number that is stale unless somebody bumps and checks it. So the README says plainly that the four
