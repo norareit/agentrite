@@ -119,5 +119,12 @@ timestamp: 2026-10-04T00:01:00Z
   entry. The sandbox was not run again, since nothing it uses changed. The human has not said whether C1 is
   accepted; it was applied on the implementer's agreement with it. The plan's human task is still open, so the
   status stays in-progress
+- 2026-10-04T00:06:12Z [OpenCode, openai/gpt-6.1-sol] as reviewer, made a delta review of unit 0015 at commit
+  `32dc2b1f11b2d8be4c1b37e7c29812a72781df7a`, from the previously reviewed commit
+  `e4e3cbfd59c4e32ac359f87f99d081855bad7f81`. Verified the correction for C1 and returned no new findings.
+  Complete findings and verification evidence are saved in
+  `.reviews/0015-harnesses-fail-to-start/2026-10-04T000528Z-delta-32dc2b1-opencode.md`.
+  Could not verify the pending human login-and-prompt task or the chronology of the implementer's original
+  uncommitted regression-test run
 
 ## Amendments
