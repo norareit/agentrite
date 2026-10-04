@@ -108,9 +108,9 @@ timestamp: 2026-10-04T15:31:37Z
   One thing seen that the documents do not say: the wrapper removes a clone and leaves the directories above it,
   `agentrite/<Compose project>`, empty
 - 2026-10-04T22:53:42Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the plan's verification on
-  `cf4bcfd`: `npm test` reported 282 tests, 282 passing; `npm run check-changes` exited 0; no file changed since `master`
-  holds an em dash, and none a line over 120 characters but this record, whose long lines the commits after it rewrap; the
-  search for `git -C "$clone"` and `cd "$clone"` in `container/agent.sh` and `container/unit-clone.sh` found
+  `cf4bcfd`: `npm test` reported 282 tests, 282 passing; `npm run check-changes` exited 0; no file changed since
+  `master` holds an em dash, and none a line over 120 characters but this record, whose long lines the commits after it
+  rewrap; the search for `git -C "$clone"` and `cd "$clone"` in `container/agent.sh` and `container/unit-clone.sh` found
   nothing; and `git status --short` showed only the untracked tarball. The commits after it change `plan.md` and
   `record.md` only. Every task is ticked. The status stays `in-progress`: the unit has not been reviewed
 
