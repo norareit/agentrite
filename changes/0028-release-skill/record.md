@@ -215,8 +215,8 @@ timestamp: 2026-10-04T18:20:11Z
   with 232 tests, 232 passing. The script itself was not run: the suite runs a copy of it against commands of its
   own. Also corrected in this record: the time of the entry on 0027, which was written ahead of the clock, is now
   that of its commit, and a line that was 123 characters long is wrapped
-- 2026-10-04T18:38:53Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the check of step 2 by hand, once, on
-  the host, from this checkout on the tree of `b27c3dc`. Linux, Docker Engine 28.4.0, node 24.14.1. The host has
+- 2026-10-04T18:38:53Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the check of step 2 by hand, once,
+  on the host, from this checkout on the tree of `b27c3dc`. Linux, Docker Engine 28.4.0, node 24.14.1. The host has
   Claude Code 2.1.289 and OpenCode 1.18.34, and `npm view` printed the same two as the latest, so on this day the
   host's versions and the bumped pins are equal. The branch was this unit's and not `master`, so step 1 would
   have stopped: the trial is of step 2 alone. The two pins were set in the working tree to 2.1.289 and 1.18.34,
