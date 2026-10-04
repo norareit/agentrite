@@ -85,5 +85,154 @@ timestamp: 2026-10-04T20:13:06Z
   fake host's versions `99.1.0` and `98.2.0`. `npm test` on `8abd2a0`: 230 tests, 230 passing, exit 0.
   The plan against what `master` now holds: its steps stand. `RELEASING.md`, the release skill and `AGENTS.md`
   name no harness version and no pin, checked with `grep`, and are not touched by this unit
+- 2026-10-04T21:32:31Z [Claude Code, anthropic/claude-opus-5-5] as implementer, what was built, in the commits
+  `19758d9` (the tests), `494d397` (the wrapper), `c1986ff` (the Dockerfile and the Compose comment) and `fc26d58`
+  (the README).
+  The tests first: on `19758d9`, with the wrapper and the Dockerfile as they were, 57 of 246 tests failed and 189
+  passed. The 57 are the new and changed cases and also every other test that runs the wrapper, because the fixture
+  no longer links `sed` and no longer puts the Dockerfile beside the wrapper, both of which the old wrapper needed.
+  On `494d397` 2 failed, the two that read the Dockerfile. One of those, the search of `container/` and
+  `templates/`, failed there for a mistake of mine, a helper removed in `19758d9`, and not for the pins; with the
+  helper back it was run against the Dockerfile with the pins and failed, and it passes without them. On `c1986ff`
+  and `fc26d58`: 246 tests, 246 passing.
+  Where the work differs from the plan's wording, each now under "Adjusted while implementing" in the plan:
+  * Both harnesses are asked of the registry before either line of requirement 6 is printed. Otherwise a line would
+    say what the image is built with, and the wrapper would then stop for the other harness and build nothing
+  * The variables for Compose hold the version the image is built with, the project's included. The plan's step 7
+    exports them after the versions are settled, and the base Compose file refuses an empty one, which a host
+    without the harness would otherwise give for a harness the project holds
+  * The tests no longer put the Dockerfile beside the wrapper, which is how they hold that it reads no version
+    from it, and `sed` left the fixture
+  * The test of where a pin is written became a search for a version of either harness under `container/` and
+    `templates/`, because requirement 16 holds requirement 2 by reading the files. It is a search by name: it finds
+    a version written after a name of a harness, its package or its build argument, and no other
+  * The plan's `grep` for `pin` in the three files matches "Alpine" in a comment this unit does not touch
+  * The lines of requirements 6 and 7 are 125 to 136 characters as printed. Requirement 12 wants the README's
+    examples to be the lines the wrapper prints, and the project wraps at 120. The examples are the wrapper's words
+    wrapped, with "wrapped here" beside each. The human may prefer shorter lines in the wrapper, which would be a
+    change to the plan's three lines
+  Not handled, and not tried: a project's file that gives an empty value for a version. Under 0027 the build then
+  installed whatever npm takes an empty version for and the label was empty. Now, on a host without that harness,
+  the variable handed to Compose is empty and Compose refuses with the base file's message. The README asks for an
+  exact version there.
+  Not run under bash 3.2: the additions use `[[ =~ ]]`, `local`, here-strings and `${x:+y}`, which the wrapper
+  already used, and were run under the host's bash only.
+  The README's "The harness versions", paragraph by paragraph against 0027's:
+  * The opening sentence and the list: kept, the third item removed, since there is no pin
+  * New after the list: what happens with neither source, the line for the latest, that the sandbox keeps it until
+    the image is built again, `--rebuild`, that `npm` on the host is needed and when the registry is asked; then
+    the latest that cannot be found, its two lines and the two ways past it (requirement 12)
+  * "A project holds a version by adding the build argument", its YAML example and "Give an exact version": kept
+    as they were
+  * "The host's version is what `claude --version` and `opencode --version` print": changed. A harness that is
+    absent or behind an alias counts as not installed, with no "gets the kit's version", and so does one that
+    prints no version, with the wrapper's new line in place of the old example
+  * "At each start the wrapper compares" and its two example lines: kept
+  * "So no flag is needed": kept, with a sentence added on a harness with neither source, which has nothing to
+    compare. "An image built by a release that did not write the labels" and the failed build: kept
+  * "To see what an image holds" and its commands: kept
+  * "What follows from that": kept, with one bullet added, that on a host without a harness the version is the
+    latest of the day the image was last built
+  * "The kit promises less for a version it did not pin": changed to what the kit promises for a harness version,
+    now that it checks none. The bullet for any version is kept, with "the order above names" as "the rules above
+    name". The bullet "For the pinned versions only" became "For no version", with the same four things. "What a
+    developer sees" is kept, with "another version" as "a version". "To recover" holds "a version that works" in
+    place of "the version the kit pins, or any that works", and its last sentence is kept
+  Elsewhere in the README: the sentence on the login's label says "the one OpenCode used when this was written",
+  and the bullet on `./agent-dev.sh` says that it builds on every start and so asks the registry at every start on
+  a host without a harness. `grep -n -i 'pin' README.md` shows the three kinds of line the plan names, and
+  "keeping" on the line about `package.json`. `RELEASING.md` is not touched and names no harness version
+- 2026-10-04T21:32:31Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the check for real, on the host: Linux,
+  Docker Engine 28.4.0, Compose 2.39.2, node 24.14.1, npm 11.11.0, Claude Code 2.1.289 at `~/.local/bin/claude`,
+  OpenCode 1.18.34 at `~/.opencode/bin/opencode`. `npm view` gave 2.1.289 and 1.18.34 as the latest of the two
+  packages. Every step ran the working copy's `container/agent.sh` with the repository as the project root and
+  `AGENT_PROJECT_NAME=ritenoar-agentrite-agent-check0030`, with standard input from `/dev/null` and
+  `bash -c 'claude --version; opencode --version'` as the command, unless it says otherwise. "No registry" is
+  `npm_config_registry=http://127.0.0.1:9/` in the wrapper's environment. The `PATH`s: "no version" is a `claude`
+  and an `opencode` that exit 1, first; "neither" is `/usr/bin:/bin` and a directory with only `node` and `npm`.
+  The exit codes are the wrapper's own.
+  * A, no version, no image: exit 0. The two lines of requirement 8, then the two of requirement 6 with 2.1.289
+    and 1.18.34, then the build. The sandbox printed `2.1.289 (Claude Code)` and `1.18.34`, and the labels are
+    `2.1.289` and `1.18.34`
+  * B, the same again: exit 0, the two lines of requirement 8 and nothing built. With no registry: the same
+  * C, `--rebuild` with no registry: exit 2 in under a second, with the lines of requirement 8 and the two lines of
+    requirement 7 for Claude Code, nothing on standard output, and the image's id as before
+  * D1, neither, with `CLAUDE_CODE_VERSION: 2.1.266` and `OPENCODE_VERSION: 1.18.30` in
+    `agent/compose.project.yml`, not committed, and no registry: exit 0, "the image holds Claude Code 2.1.289 and
+    2.1.266 is wanted, from the project's compose file. Rebuilding." and the same for OpenCode, the sandbox on
+    2.1.266 and 1.18.30 and the labels likewise. So a project's versions need no registry. The file was then
+    restored with `git checkout`
+  * D2, neither, the file restored, no registry: exit 0, nothing said, nothing built, the sandbox still on 2.1.266
+    and 1.18.30. This is requirement 5
+  * D3, the same with `--rebuild` and the registry: exit 0, the two lines of requirement 6, the sandbox on 2.1.289
+    and 1.18.34 and the labels likewise. The install step was `CACHED`: its command line, with those two exact
+    versions, is the one step A had built minutes before. So requirement 17's "does not take the install from the
+    cache" was not seen for the latest itself, and cannot be on a host that has built the latest before. What it
+    stands for was seen: the image did not keep the older versions' layer
+  * D4, neither, with only `CLAUDE_CODE_VERSION: 2.1.287` in the project's file, not committed: exit 0, the line
+    of the difference for Claude Code from the project's compose file and the line of requirement 6 for OpenCode,
+    and an install that ran, in 7 seconds, for a command line this host had not built: 2.1.287 with 1.18.34. The
+    sandbox printed `2.1.287 (Claude Code)` and `1.18.34`. This is the exact version from the registry reaching
+    an install that is not cached, which the spec lists as not established. The file was restored with
+    `git checkout`
+  * E, the host's own `PATH`, with both harnesses, no registry throughout: a start on the image of D4 printed "the
+    image holds Claude Code 2.1.287 and 2.1.289 is wanted, from the host. Rebuilding.", built, and ran on 2.1.289
+    and 1.18.34; a second start built nothing and said nothing; `--rebuild` built and said nothing. All exit 0. So
+    a host with both harnesses never asks the registry, and behaves as 0027's record has it
+  * F, no `npm` on the `PATH` and neither harness: `--rebuild` exits 2 with the two lines of requirement 7 and the
+    image as it was; a start without `--rebuild` exits 0 and builds nothing. With `claude` alone on the `PATH`
+    and no registry, `--rebuild` exits 2 and the two lines name OpenCode, `opencode-ai` and `OPENCODE_VERSION`
+  * P1, an image built by release 2.3.0's wrapper, the one in `node_modules`, under the check's name: it holds
+    2.1.266 and 1.18.30 and has neither version label, because release 2.3.0 is from before 0027. The working
+    copy's wrapper then, with neither harness: exit 0, the two lines of requirement 6, a build, and the sandbox
+    on 2.1.289 and 1.18.34. With neither and no registry: exit 2 with the lines of requirement 7, and the sandbox
+    does not start although the image exists. With both harnesses and no registry: exit 0, "the image records no
+    Claude Code version and 2.1.289 is wanted, from the host. Rebuilding." and the same for OpenCode
+  * P2, an image built by `master`'s wrapper, which is 0027's and is in no release, in a scratch project, with
+    neither harness: labels 2.1.266 and 1.18.30, the pins. The working copy's wrapper then, with neither and no
+    registry: exit 0, nothing said, nothing built, the sandbox on 2.1.266 and 1.18.30. With `--rebuild`: the two
+    lines of requirement 6 and the sandbox on 2.1.289 and 1.18.34
+  **What P1 shows about requirement 11.** It says that an image built by an earlier release records exact
+  versions, so that on a host without a harness the sandbox keeps the pinned version until `--rebuild`. That
+  holds for an image built by `master`'s wrapper, as P2 shows. No release has that wrapper: 0027 is not released,
+  and the image of release 2.3.0 records no version. So a project that updates from 2.3.0, on a host without a
+  harness, gets the latest published version at its first start, by a build, and that start needs the registry.
+  The wrapper does what requirements 5 and 11 ask in both cases, and nothing was built differently for it. The
+  spec's sentence is the human's to correct or keep, and the release notes below follow what was seen.
+  Seen in the build's output and not this unit's: npm in the image warns that the two packages have install
+  scripts "not yet covered by allowScripts". Both harnesses printed their versions in the sandbox.
+  Removed afterwards: the check's volume, network and image, and the four untagged images its rebuilds left, each
+  carrying the check's Compose project label. The lists of image ids, of image names with ids, of volumes, of
+  networks and of containers, taken before and after, are the same, compared with `diff`.
+  `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`.
+  `./agent-dev.sh` was not run. Nothing was logged in to. The build cache keeps the layers of the check.
+  Not tried: a start at a terminal, since standard input was `/dev/null` in every step; a login, a prompt, the
+  status line and self-update in a sandbox on the latest versions, which are the four things the README now
+  promises for no version; a registry that swallows the connection, which the planner measured at over two
+  minutes for `npm view`; Docker Desktop for macOS and bash 3.2; a project with Playwright.
+  For the human, at a terminal, when wanted: `./agent.sh` after the kit is released and installed, on this host,
+  should print the two "records no ... version ... from the host. Rebuilding." lines once, since the image
+  `ritenoar-agentrite-agent` is from release 2.3.0, and open a shell in which `claude --version` prints the
+  host's version; a second `./agent.sh` should build nothing
+- 2026-10-04T21:32:31Z [Claude Code, anthropic/claude-opus-5-5] as implementer, for the release notes, which are
+  written at the release and not here. What a project that updates the kit will notice:
+  * No edit to a file of the project's is needed
+  * The kit pins no version of Claude Code or OpenCode any more, and says of no version that it was checked. The
+    README's four version-dependent promises are made for no version, and the recovery is a version that works,
+    held in the project's `agent/compose.project.yml`
+  * On a host that has both harnesses nothing changes beyond what 0027 brings: the sandbox follows the host
+  * On a host without a harness, or with one whose command prints no version, that harness in the sandbox is the
+    latest published version on the day the image is built, where release 2.3.0 gave 2.1.266 and 1.18.30. The
+    wrapper names it in a line. It stays until the image is built again: `./agent.sh --rebuild` brings a newer one
+  * Updating from 2.3.0, the first start builds the image again, because that release's image records no
+    versions, and on such a host that build installs the latest. Seen in the check, P1
+  * A build on such a host runs `npm view <package> version` on the host, so it needs `npm` on the `PATH` and the
+    registry in reach. When it has neither, the start stops with two lines and does not fall back to the image
+    that exists. A version in the project's file, or the harness on the host, gets past it. A start that builds
+    nothing asks the registry nothing
+  * Not tested: macOS, and what a harness version nobody tried does in the sandbox
+  Recommended by the main session and not taken up by the human, so not built: a time limit on the question to
+  the registry. Without it a start on a host without a harness, with a network that swallows the connection,
+  hangs at `npm view` until it is interrupted
 
 ## Amendments

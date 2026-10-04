@@ -132,6 +132,33 @@ that 0027's requirements 1, 3 and 4, its decisions "The pins stay where they are
 the part of its boundary on the pinned versions are changed by it; and that its tests of the pins were changed or
 removed here.
 
+**Adjusted while implementing.** Each is logged in the record with its reason, and none changes the spec:
+
+* The wrapper asks the registry for every harness that needs it before it prints a line of requirement 6, so that
+  no line names a version for an image that is then not built because the other harness's latest was not found
+* The two variables the wrapper hands Compose hold the version the image is built with, the project's included.
+  Under 0027 they held the host's or the pin, never the project's. Compose does not use the variable where the
+  project's file gives the argument, so the build is the same, and the tests of a project's version expect the
+  project's value in the recorded calls
+* `tests/agent-wrapper.test.mjs` no longer puts the Dockerfile beside the wrapper, and one test holds that the
+  wrapper runs with nothing beside it, which is how the suite holds "reads no version from it". `sed` is no longer
+  among the commands the fake host links, because nothing runs it any more
+* The last test of `tests/harness-versions.test.mjs` is changed and not removed: requirement 16 holds requirement
+  2 by reading the files, so it searches `container/` and `templates/` for a version written after a name of
+  either harness, its package or its build argument. A test beside it holds that the Dockerfile installs the two
+  packages the wrapper asks the registry about
+* Cases beyond the table: a pre-release version in a label is kept; a label of two numbers builds; a harness that
+  prints no version gets the latest at a build; `npm` that prints a version with a command after it stops; the
+  caller's environment is not a source for a harness with no other; with the project giving both versions and
+  the host neither, `--rebuild` asks `npm` nothing; and no build due needs no `npm` on the `PATH`
+* In the README the line of requirement 6 and the second line of requirement 7 are longer than 120 characters as
+  printed, so each example is wrapped and the text beside it says so
+* The check for real has steps of its own besides requirement 17's: a version from the project for one harness
+  with the latest for the other, no `npm` on the `PATH`, a host with one harness, an image built by release
+  2.3.0's wrapper, and one built by `master`'s wrapper with the pins
+* The first grep of the Verification also matches "Alpine" in a comment of the Dockerfile that this unit does not
+  touch, so it prints that line and no other
+
 **For the release notes, later.** What a project that updates should know, which requirement 11 holds: no edit
 is needed; on a host that has both harnesses nothing changes; on a host without one, the sandbox keeps the
 version the kit pinned until `./agent.sh --rebuild`, which then installs the latest published one, and from then
@@ -167,33 +194,33 @@ host runs `npm view` on the host.
   the wrapper, and correct the sentence on the login's label and the bullet on `./agent-dev.sh`. Go through
   0027's subsection paragraph by paragraph and record, for each, that it is kept, changed or removed, and why
   (R12, R13, R14)
-- [ ] On the host, check the wrapper for real, as requirement 17 lists it, under the Compose project
+- [x] On the host, check the wrapper for real, as requirement 17 lists it, under the Compose project
   `ritenoar-agentrite-agent-check0030`, with `container/agent.sh "$PWD"` from the working copy and
   `AGENT_PROJECT_NAME` set to that name. Take the lists of images, volumes, networks and containers before and
   after and compare them. Touch no other image, volume or container, and log in to nothing. Restore
   `agent/compose.project.yml` with `git checkout` after the step that edits it. Record what each step showed, and
   the versions of Docker, Compose, npm and the host's harnesses. When the session may not run Docker, record that
   and leave the task to the human (R11, R17)
-- [ ] Add the amendment to 0027's record (R15)
-- [ ] Record what the release notes should say of this unit, from the Approach's last paragraph, corrected for
+- [x] Add the amendment to 0027's record (R15)
+- [x] Record what the release notes should say of this unit, from the Approach's last paragraph, corrected for
   what the check showed (R11)
 
 ## Verification
 
 - [ ] `npm test` passes on the host
-- [ ] `bash -n container/agent.sh` passes
-- [ ] `grep -n -i -E 'pin|kit.s (claude|opencode|version)' container/agent.sh container/Dockerfile
-  container/compose.yml` prints nothing
-- [ ] `npm pack --dry-run` lists the same files as on `master`
+- [x] `bash -n container/agent.sh` passes
+- [x] `grep -n -i -E 'pin|kit.s (claude|opencode|version)' container/agent.sh container/Dockerfile
+  container/compose.yml` prints only the Dockerfile's line on Alpine, which matches `pin` inside a word
+- [x] `npm pack --dry-run` lists the same files as on `master`
 - [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
 - [ ] `npm run check-changes` passes: 0027's `spec.md` and `plan.md` are untouched
-- [ ] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
+- [x] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
   `ritenoar-agentrite-agent-check0030`
 
 ## Commit Points
 
-- [ ] The tests
-- [ ] The wrapper
-- [ ] The Dockerfile and the Compose comment
-- [ ] The README
+- [x] The tests
+- [x] The wrapper
+- [x] The Dockerfile and the Compose comment
+- [x] The README
 - [ ] The record of the check, and the amendment to 0027's record
