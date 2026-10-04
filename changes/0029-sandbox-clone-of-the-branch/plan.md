@@ -200,7 +200,7 @@ changes, so no rebuild is needed for the change itself.
   the working directory, the extra mounts and the harness versions, and the one over `- .:/work`, which says the
   wrapper overrides the source with `--workdir`. Both now also name the clone of a unit run and the `.reviews`
   mount. No setting changes (R19)
-- [ ] In `README.md` (R19):
+- [x] In `README.md` (R19):
     - "Starting it": the command is `./agent.sh <unit>` or `./agent.sh --in-place`, and what each mounts. The
       examples `./agent.sh claude` and `./agent.sh npm test` become `./agent.sh 0029 claude` and
       `./agent.sh --in-place npm test`, and `--rebuild` is described as an option of either form
@@ -255,5 +255,5 @@ changes, so no rebuild is needed for the change itself.
   and the named run
 - [x] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of
   `container/compose.yml`
-- [ ] `feature-0029` the README
+- [x] `feature-0029` the README
 - [ ] `feature-0029` the record of the real check

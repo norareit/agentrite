@@ -217,8 +217,8 @@ that runs what it writes to the temporary directory works as on the host.
 The browser is in the image when the project's compose file gives `PLAYWRIGHT_VERSION` under
 `services.agent.build.args`, and not otherwise: the build argument alone decides. A project that starts using
 Playwright adds the argument by hand, as the version its `package-lock.json` resolves, and one that stops removes it,
-and both rebuild with `./agent.sh --rebuild`. `init` and `refresh` never rewrite `agent/compose.project.yml`, which is
-the project's own.
+and both rebuild with `./agent.sh --in-place --rebuild`. `init` and `refresh` never rewrite
+`agent/compose.project.yml`, which is the project's own.
 
 The build context is the project root, not the kit directory, because the Dockerfile copies the kit's files from under
 it and, for a project with Playwright, installs the project's own dependencies to get Playwright's system libraries at
@@ -239,33 +239,114 @@ bring back a kit file that a pattern excluded by name.
 
 ### Starting it
 
-The host needs Docker: Desktop on macOS, Engine on Linux. From the project root:
+The host needs Docker: Desktop on macOS, Engine on Linux. A run says what it mounts at `/work`, and there is no
+default. From the project root, one of:
 
 ```sh
-./agent.sh
+./agent.sh 0029
+./agent.sh --in-place
 ```
 
-This builds the image on first use and opens a shell in the container, with the project mounted read-write at
-`/work`. Nothing else of the host is reachable, with three exceptions: the developer's `~/.gitconfig`, mounted
-read-only so that commits from inside carry the same name and email as on the host, the developer's Claude Code
-status line script, as "The status line" below describes, and the local model server's port, as "The local model
-server" below describes. A command appended to it runs instead of the shell, as in `./agent.sh claude` and
-`./agent.sh npm test`. `./agent.sh --rebuild` builds the image again before running.
+The first names a unit, by its number or by its branch, and mounts a clone of that unit's branch, as "Working on a
+clone" below describes. It is the way to implement and to review a unit. The second mounts the project as it is on
+the host, so the agent works in the developer's own checkout, `.git` and `node_modules` included. It is the way to
+run something on the tree as it is, such as the suite. A command that says neither, and gives no `--workdir`
+either, starts nothing and names the forms.
+
+Either builds the image on first use and opens a shell in the container, with the clone or the project mounted
+read-write at `/work`. Nothing else of the host is reachable, with three exceptions: the developer's `~/.gitconfig`,
+mounted read-only so that commits from inside carry the same name and email as on the host, the developer's Claude
+Code status line script, as "The status line" below describes, and the local model server's port, as "The local
+model server" below describes. A unit run also mounts the project's `.reviews` directory. A command appended to it
+runs instead of the shell, as in `./agent.sh 0029 claude` and `./agent.sh --in-place npm test`. `--rebuild` is an
+option of either form and builds the image again before running, as in `./agent.sh --in-place --rebuild`.
 
 Never run it with `sudo`. The wrapper refuses to run with uid or gid 0, because the agent inside the sandbox would
 then be root too. When Docker needs elevated permissions on the machine, add the user to the `docker` group instead.
 
+### Working on a clone
+
+Planning is done on the host: the planner makes the unit's branch and commits its documents there. The sandbox is
+for the implementer and the reviewer, and a unit run gives them a copy of that branch to work on, not the
+developer's checkout:
+
+```sh
+./agent.sh 0029 claude
+./agent.sh feature-0029-sandbox-clone-of-the-branch claude
+```
+
+The unit is a local branch, named outright or by a number that its name holds as a whole number: `0029` names
+`feature-0029-sandbox-clone-of-the-branch`, and `29` and `002` name nothing. When a number names several branches
+the wrapper lists them and asks for one by its name, and when it names none it says so. The wrapper never makes a
+branch.
+
+Before the container starts, the wrapper clones the repository, with that branch checked out at the commit the
+host's branch is at:
+
+* The clone holds what is committed and nothing else. Uncommitted work, ignored files such as a `.env`, and
+  `node_modules` stay on the host. So the first command in a new clone is `npm ci`, without which the role files
+  under `node_modules` are not found and the suite does not run
+* The host's other branches are in the clone as `origin/*`, `origin/master` among them, which is the base the
+  change check compares with
+* The clone is at `~/.local/state/agentrite/<Compose project>/<branch>`, or under `$XDG_STATE_HOME` when that is
+  set: outside the project, and in a directory that a restart does not empty
+* The host's `.reviews` directory is mounted at `/work/.reviews`, so what the reviewer writes there is on the host
+  as it is written
+* The image, the allowlist, the limits and the harness versions are those of the checkout the command is run
+  from, on whatever branch that is, and not those of the clone. A unit that changes `agent/compose.project.yml`
+  runs without its own change until that is checked out on the host
+
+When the container exits, whatever its exit code, the wrapper brings the work back:
+
+* It fetches the clone's branch into the host's repository as `sandbox/<branch>`. Only that branch is fetched
+* It fast-forwards the host's branch to it, whether or not that branch is checked out, and removes
+  `sandbox/<branch>`. When the host's branch moved meanwhile and cannot be fast-forwarded, it is left as it is,
+  the commits wait at `sandbox/<branch>`, and the wrapper names the command that merges them:
+  `git merge sandbox/<branch>`
+* It removes the clone when nothing in it would be lost. A clone that holds a file that is not committed, apart
+  from ignored files, or a commit on another branch or in a stash, is kept, and the wrapper says where it is and
+  what it holds
+
+A clone that was kept is resumed by the same command, as it is: it is not updated from the host's branch. After a
+crash of the container, the wrapper or the host, the clone is still there and nothing has been fetched;
+`./agent.sh <unit> true` resumes it, runs nothing of note and brings its commits back. To discard a clone, remove
+its directory with `rm -rf`. A new run is refused while `sandbox/<branch>` holds commits the branch does not have,
+so that an earlier run's commits are not overwritten: merge it or delete it first.
+
+Two units run side by side, each on its own clone, in its own container, and each container has the full memory
+and CPU limits of the project's compose file. Two runs never work on one branch: the container is named after the
+Compose project and the branch, and a second run for a branch whose container is running is refused. Two checkouts
+of one project on one host share a branch's clone.
+
+What the clone protects, and what it does not. A unit run defends the host's repository against an agent that was
+misled, for example by an instruction injected through a dependency, and that writes whatever it likes under
+`/work`, the clone's `.git` included. Against that agent, nothing it writes is run on the host by the wrapper, and
+nothing reaches the host's repository but the commits of the unit's branch and the files under `.reviews`. A git
+hook, a line in `.git/config` and a file in `node_modules` stay in the clone. It does not defend against:
+
+* what a commit contains. A script in a commit runs on the host once the developer checks it out and runs it. The
+  commit is in a diff the developer can read first
+* what a review file says, to a human or to an agent that reads it on the host
+* a run with `--in-place` or `--workdir`, which mounts a directory as it is
+* a flaw in git's handling of a fetch from a hostile repository, or in Docker
+* anything the sandbox did not defend against before: the saved logins in the home volume, and data leaving
+  through an allowlisted host or through DNS
+
+The supported usage is one developer, one host, branches made on the host, and a clone that only the wrapper and
+the sandbox touch. Submodules and Git LFS are as plain `git clone` leaves them, and a push to a remote from inside
+a clone does not work: its `origin` is the host's path, which the container cannot reach.
+
 ### Another working directory
 
-`--workdir DIR` mounts `DIR` at `/work` in place of the project root:
+`--workdir DIR` mounts `DIR` at `/work`, as it is, in place of a clone or the project root:
 
 ```sh
 ./agent.sh --workdir /path/to/other/clone
 ```
 
 The container works on a full checkout on a branch, not a `git worktree`: a worktree's `.git` points at an absolute
-path on the host that does not resolve inside the container. To isolate the work further, mount a separate clone and
-push branches back from it.
+path on the host that does not resolve inside the container. To isolate the work further, run the unit on a clone,
+as "Working on a clone" above describes, which makes the clone and brings its commits back.
 
 ### Extra directories
 
@@ -273,14 +354,15 @@ push branches back from it.
 The option may be repeated:
 
 ```sh
-./agent.sh --mount ~/reference:ro --mount ~/scratch
+./agent.sh --in-place --mount ~/reference:ro --mount ~/scratch
 ```
 
 ### The shared `node_modules`
 
-The sandbox mounts the project at `/work` as it is on the host, `node_modules` included. The host and the sandbox
-therefore share one `node_modules`: an install on either side writes into the same directory, and the container has
-none of its own.
+This applies to a run with `--in-place` or `--workdir`. A unit run has a clone with a `node_modules` of its own,
+which the host never installs into. In place, the sandbox mounts the project at `/work` as it is on the host,
+`node_modules` included. The host and the sandbox therefore share one `node_modules`: an install on either side
+writes into the same directory, and the container has none of its own.
 
 npm installs a package that is limited to some platforms only on those platforms, and `npm ci` removes `node_modules`
 before it installs. So an install on either side installs for that side's platform and removes what only the other
@@ -302,7 +384,7 @@ npm ci
 And for the sandbox:
 
 ```sh
-./agent.sh -- npm ci
+./agent.sh --in-place -- npm ci
 ```
 
 Use `npm ci` rather than `npm install`. `npm install` swaps the platform-limited packages but leaves every package
@@ -349,10 +431,10 @@ published, 1.18.34.
 ```
 
 The sandbox then keeps that version until the image is built again, whatever is published in the meantime.
-`./agent.sh --rebuild` builds it again, and is how such a sandbox gets a newer one. A build for another reason,
-such as an update of the other harness on the host, brings the latest too. The wrapper finds the latest with
-`npm view <package> version` on the host, so the build needs `npm` on the host for this. It asks only when it is
-about to build: a start that builds nothing asks the registry nothing, and neither does a build for which the
+`./agent.sh --in-place --rebuild` builds it again, and is how such a sandbox gets a newer one. A build for another
+reason, such as an update of the other harness on the host, brings the latest too. The wrapper finds the latest
+with `npm view <package> version` on the host, so the build needs `npm` on the host for this. It asks only when it
+is about to build: a start that builds nothing asks the registry nothing, and neither does a build for which the
 project or the host gives both versions.
 
 When the latest cannot be found, because the registry is not reached, `npm` is not on the `PATH`, or its answer is
@@ -409,8 +491,12 @@ To see what an image holds, read its labels, where `<image>` is the `image:` of 
 
 ```sh
 docker image inspect --format '{{ json .Config.Labels }}' <image>
-./agent.sh claude --version
+./agent.sh --in-place claude --version
 ```
+
+The versions and the image are worked out from the checkout the command is run from, also for a unit run: a
+version that a unit's branch gives in its `agent/compose.project.yml` counts once that branch is checked out on
+the host.
 
 What follows from that:
 
@@ -574,7 +660,7 @@ reach.
 
 `./agent-dev.sh` runs the sandbox from the working copy: `container/agent.sh`, `container/compose.yml`, the
 Dockerfile, the entrypoint and the proxy as they are in the working tree, with the repository's
-`agent/compose.project.yml`. It takes what `./agent.sh` takes, for example `./agent-dev.sh npm test`.
+`agent/compose.project.yml`. It takes what `./agent.sh` takes, for example `./agent-dev.sh --in-place npm test`.
 
 * It is this repository's own file. It is not in the package, and `init` and `refresh` do not write it
 * It builds the image on every start, so a change is in the sandbox that starts
@@ -583,6 +669,8 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
 * It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
   `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
   and the saved logins of `./agent.sh` are not touched, and both sandboxes can run at once
+* A unit run of it has clones of its own, under its own Compose project name:
+  `~/.local/state/agentrite/ritenoar-agentrite-agent-dev/<branch>`
 * It runs on the host. A sandbox has no Docker, so an agent working inside one cannot run it
 * The home starts empty and lasts. To empty it again: `docker volume rm ritenoar-agentrite-agent-dev_agent-home`
 * To remove everything it created: that volume, `docker network rm ritenoar-agentrite-agent-dev_default` and

@@ -54,12 +54,12 @@ timestamp: 2026-10-04T15:31:37Z
   goes on every existing run that gets past the first three refusals, not only on those with a command; the
   comments of `container/compose.yml` and five more commands in the README are in the tasks, three of which the
   first plan had missed and two of which 0027 and 0030 added
-- 2026-10-04T22:44:03Z [human] approved the spec and the plan as revised at `1eaca00`, the planner's two new decisions among
-  them, and asked for the unit to be implemented. Status `approved`
-- 2026-10-04T22:44:03Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main checkout on the unit's
-  branch, which holds `master` at `897a5fc`. Status `in-progress`
-- 2026-10-04T22:50:10Z [Claude Code, anthropic/claude-opus-5-5] as implementer, built the wrapper's part of the plan, up to
-  and including the comments of `container/compose.yml`. Each set of tests was written first and seen failing: 4 of
+- 2026-10-04T22:44:03Z [human] approved the spec and the plan as revised at `1eaca00`, the planner's two new
+  decisions among them, and asked for the unit to be implemented. Status `approved`
+- 2026-10-04T22:44:03Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main checkout on the
+  unit's branch, which holds `master` at `897a5fc`. Status `in-progress`
+- 2026-10-04T22:50:10Z [Claude Code, anthropic/claude-opus-5-5] as implementer, built the wrapper's part of the plan,
+  up to and including the comments of `container/compose.yml`. Each set of tests was written first and seen failing: 4 of
   the 5 for the required choice, all 14 of resolving and starting, and all 15 of landing. `npm test` on the tree of
   this commit reported 282 tests, 282 passing. Nothing was run against Docker yet. Added to the plan as the work
   showed it:
