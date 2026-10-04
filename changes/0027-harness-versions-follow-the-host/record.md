@@ -311,16 +311,16 @@ timestamp: 2026-10-04T18:15:36Z
   written as 2.1.266 and 1.18.30, are 0.1.0 and 0.2.0, named once. Nothing that ships changed. The decision is
   the dispatching session's of 0028 and not a sentence of the human's, and is in that unit's record
 - 2026-10-04T21:32:31Z [Claude Code, anthropic/claude-opus-5-5] as implementer of 0030,
-  `changes/0030-no-kit-harness-versions/`, which the human approved on 2026-10-04: that unit took the kit's pin
-  away. The kit names no version of either harness any more, and a harness that neither the project nor the host
-  gives a version of keeps the version the image records, and gets the latest published one, which the wrapper
-  asks `npm` for on the host, when the image is built. What it changes of this unit: requirement 1, whose third
-  source is gone; requirement 3, where a harness that is absent or prints no version no longer gets the kit's pin,
-  and the line for the second names no pin; requirement 4, since no pin is written anywhere; the decisions "The pins stay where they are" and "What the pin is
-  for"; and the part of the boundary paragraph on the pinned versions, since the four things promised there for the
-  pinned versions only are now promised for no version. The README says so under "The harness versions". This
-  unit's tests of the pins were changed or removed there: that the Dockerfile pins each harness once, that no other
-  file holds a pin, that the wrapper refuses a Dockerfile with no pin, and every case in which the wrapper took a
-  pin. The variables the wrapper hands Compose now hold the version the image is built with, the project's
-  included, where this unit's log says they hold the host's or the kit's. Everything else this unit built stands.
-  This unit's `spec.md` and `plan.md` are not edited
+  `changes/0030-no-kit-harness-versions/`, which the human approved on 2026-10-04: that unit took the kit's pin away.
+  The kit names no version of either harness any more, and a harness that neither the project nor the host gives a
+  version of keeps the version the image records, and gets the latest published one, which the wrapper asks `npm` for
+  on the host, when the image is built. What it changes of this unit: requirement 1, whose third source is gone;
+  requirement 3, where a harness that is absent or prints no version no longer gets the kit's pin, and the line for
+  the second names no pin; requirement 4, since no pin is written anywhere; the decisions "The pins stay where they
+  are" and "What the pin is for"; and the part of the boundary paragraph on the pinned versions, since the four things
+  promised there for the pinned versions only are now promised for no version. The README says so under "The harness
+  versions". This unit's tests of the pins were changed or removed there: that the Dockerfile pins each harness once,
+  that no other file holds a pin, that the wrapper refuses a Dockerfile with no pin, and every case in which the
+  wrapper took a pin. The variables the wrapper hands Compose now hold the version the image is built with, the
+  project's included, where this unit's log says they hold the host's or the kit's. Everything else this unit built
+  stands. This unit's `spec.md` and `plan.md` are not edited

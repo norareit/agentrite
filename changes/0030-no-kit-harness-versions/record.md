@@ -234,7 +234,7 @@ timestamp: 2026-10-04T20:13:06Z
   Recommended by the main session and not taken up by the human, so not built: a time limit on the question to
   the registry. Without it a start on a host without a harness, with a network that swallows the connection,
   hangs at `npm view` until it is interrupted
-- 2026-10-04T21:36:00Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the plan's Verification, on `6044e07`,
+- 2026-10-04T21:34:23Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the plan's Verification, on `6044e07`,
   on the host, outside any sandbox:
   * `npm test`: 246 tests, 246 passing, 0 failing, exit 0
   * `npm run check-changes`: exit 0, with no output of its own. Against `master`, of 0027 only `record.md`
@@ -247,13 +247,13 @@ timestamp: 2026-10-04T20:13:06Z
   * `npm pack --dry-run --json`: the same 24 paths as in a tree of `master` at `32004d6` taken with `git archive`,
     compared with `diff`
   * No line over 120 characters and no em dash in the files this unit changed, checked with `awk` and `grep`. One
-    line of the amendment in 0027's record was 158 characters in `6044e07` and is rewrapped in the commit that
-    holds this entry
+    line of the amendment in 0027's record was 158 characters in `6044e07` and again, after a rewrap that went
+    wrong, in `c498aaa`. The commit after that one rewraps the whole amendment, and corrects this sentence
   * `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
     `ritenoar-agentrite-agent-check0030`
-  Every task of the plan is ticked. The commit that holds this entry changes only this record, the ticks in the
-  plan and the wrapping of the amendment, and the suite and the change check are run on it once more, with the
-  result in the implementer's report to the dispatching session.
+  Every task of the plan is ticked. The two commits after `6044e07` change only this record, the ticks in the plan
+  and the wrapping of the amendment, and the suite and the change check are run on the last of them once more,
+  with the result in the implementer's report to the dispatching session.
   Status stays `in-progress`: the unit waits for a review and for the human. Not pushed, not merged into `master`.
   Open for the human: requirement 11's sentence on an image of an earlier release, given what P1 showed; the
   lines of the wrapper that are longer than 120 characters as printed; and the time limit on the question to the
