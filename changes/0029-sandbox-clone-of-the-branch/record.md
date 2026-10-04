@@ -60,9 +60,9 @@ timestamp: 2026-10-04T15:31:37Z
   unit's branch, which holds `master` at `897a5fc`. Status `in-progress`
 - 2026-10-04T22:50:10Z [Claude Code, anthropic/claude-opus-5-5] as implementer, built the wrapper's part of the plan,
   up to and including the comments of `container/compose.yml`. Each set of tests was written first and seen
-  failing: 4 of the 5 for the required choice, all 14 of resolving and starting, and all 15 of landing. `npm test` on the tree of
-  this commit reported 282 tests, 282 passing. Nothing was run against Docker yet. Added to the plan as the work
-  showed it:
+  failing: 4 of the 5 for the required choice, all 14 of resolving and starting, and all 15 of landing. `npm test`
+  on the tree of this commit reported 282 tests, 282 passing. Nothing was run against Docker yet. Added to the
+  plan as the work showed it:
   * `chmod` among the fixture's linked commands, for the agent script that writes hooks
   * The three signals are trapped by a handler that does nothing, not ignored: a child inherits an ignored signal,
     so `docker compose run` would have started with them ignored. The wrapper does not act on them either way,
@@ -107,11 +107,11 @@ timestamp: 2026-10-04T15:31:37Z
   two starts for one branch within the same moment.
   One thing seen that the documents do not say: the wrapper removes a clone and leaves the directories above it,
   `agentrite/<Compose project>`, empty
-- 2026-10-04T22:53:42Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the plan's verification on `cf4bcfd`:
-  `npm test` reported 282 tests, 282 passing; `npm run check-changes` exited 0; no file changed since `master`
-  holds an em dash, and none a line over 120 characters but this record, in one line that this commit rewraps; the
+- 2026-10-04T22:53:42Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the plan's verification on
+  `cf4bcfd`: `npm test` reported 282 tests, 282 passing; `npm run check-changes` exited 0; no file changed since `master`
+  holds an em dash, and none a line over 120 characters but this record, whose long lines the commits after it rewrap; the
   search for `git -C "$clone"` and `cd "$clone"` in `container/agent.sh` and `container/unit-clone.sh` found
-  nothing; and `git status --short` showed only the untracked tarball. This commit changes `plan.md` and
+  nothing; and `git status --short` showed only the untracked tarball. The commits after it change `plan.md` and
   `record.md` only. Every task is ticked. The status stays `in-progress`: the unit has not been reviewed
 
 ## Amendments
