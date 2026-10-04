@@ -16,7 +16,7 @@ The four texts below are for the human to read and correct before approving.
 name: release
 description: >-
   Makes a release of the kit, on the host: bumps the pinned harness versions and checks them in a sandbox, drafts the
-  release notes, and on the human's word commits both and runs npm version.
+  release notes, on the human's word commits both, and names the commands the human runs to finish it.
 disable-model-invocation: true
 ---
 
@@ -39,12 +39,12 @@ A release is made on the host, on `master`, from the repository root, in this or
 2. The harness versions: the pins in `container/Dockerfile` are moved to the latest and checked
 3. The release notes: a section is added to `CHANGELOG.md`
 4. The human reads, corrects and picks the version
-5. The commits and `npm version`
-6. `./deploy.sh`, which the human runs
+5. The commits
+6. What the human runs: `npm version`, `./deploy.sh` and the push
 
-An agent runs steps 1 to 3, stops at step 4, and on the human's word runs step 5. It never runs step 6. An agent
-asked only for the release notes runs step 3, stops at step 4, and on the human's word commits the section as step 5
-gives it and nothing else.
+An agent runs steps 1 to 3, stops at step 4, and on the human's word runs step 5. It runs nothing of step 6: it
+ends by telling the human its three commands. An agent asked only for the release notes runs step 3, stops at
+step 4, and on the human's word commits the section as step 5 gives it and nothing else.
 
 ## 1. Before anything else
 
@@ -169,7 +169,7 @@ Anything that does not hold is a finding. Then:
 
 ## 4. The human reads
 
-Stop there. Commit nothing before the human's word, and do not run `npm version` before it. In your answer:
+Stop there. Commit nothing before the human's word. In your answer:
 
 * Propose major, minor or patch, with the reason. Pick the part to bump as semver means it; there is no rule of
   the kit's own
@@ -180,7 +180,7 @@ Stop there. Commit nothing before the human's word, and do not run `npm version`
 The human reads the section, corrects it and picks the version, changing the heading when the pick differs from the
 proposal.
 
-## 5. The commits and the version
+## 5. The commits
 
 A release is not a unit and has no directory in `changes/`. Its commits are made on `master`, with no unit prefix,
 which is this project's exception to working on a branch. On the human's word, with the version the human picked:
@@ -188,23 +188,32 @@ which is this project's exception to working on a branch. On the human's word, w
 1. Make sure the section is headed `## <version>` with that version
 2. When the pins were bumped, commit `container/Dockerfile` as `Harness pins for <version>`
 3. Commit `CHANGELOG.md` as `Release notes for <version>`
-4. `npm version patch`, or `minor`, or `major`, whichever gives that version
-5. Check that `package.json` holds the version of the heading. When it does not, stop and tell the human
 
-The pins and the notes are committed first because `npm version` refuses a working tree that is not clean, and so
-the tree the tag names holds both and the tarball does too. `npm version` updates `package.json` and
+Commit nothing else, and push nothing. The pins and the notes are committed first because `npm version` refuses a
+working tree that is not clean, and so the tree the tag names holds both and the tarball does too.
+
+Then end by telling the human what is left, as the three commands of step 6, with the part and the version filled
+in, in that order. Do not run `npm version` or `./deploy.sh`.
+
+## 6. What the human runs
+
+From the repository root, on `master`, with AWS credentials for the account:
+
+```sh
+npm version <patch|minor|major>
+./deploy.sh
+git push origin master v<version>
+```
+
+An agent runs none of the three. `./deploy.sh` publishes, and what it publishes is never replaced.
+
+`npm version`, with the part that gives the version of the section's heading, updates `package.json` and
 `package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
 version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
 
-Then tell the human that the release is ready for `./deploy.sh`.
-
-## 6. `./deploy.sh`
-
-The human runs it, from the repository root, with AWS credentials for the account. An agent does not: it publishes,
-and what it publishes is never replaced.
-
-`deploy.sh` refuses, before it does anything else, a version whose section is missing from `CHANGELOG.md`; then
-write the notes, commit them, move the tag with `git tag -f v<version>` and run it again.
+`deploy.sh` refuses, before it does anything else, a version whose section is missing from `CHANGELOG.md`, which is
+also what a wrong part gives; then write the notes, commit them, move the tag with `git tag -f v<version>` and run
+it again.
 
 `deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and
 uploads the tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL
@@ -214,18 +223,24 @@ A released tarball is never replaced or removed. Projects pin it by its integrit
 different versions indefinitely, so the script refuses to upload over a name that already exists. It uploads with
 `aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
 would delete versions that a project still installs.
+
+The push comes last, and pushes `master` and the release's tag by name. A tag that is not pushed yet can still be
+moved, which is what a refusal by `deploy.sh` asks for.
 ````
 
 What differs in steps 3 to 6 from the two texts they are moved from, and nothing else does:
 
 * `AGENTS.md` said "Stop there. [...] Do not commit it before that, and do not run `npm version` or `./deploy.sh`".
-  Step 4 keeps the stop, and step 5 has the agent run `npm version` on the human's word. `./deploy.sh` stays the
-  human's, in step 6
+  Step 4 keeps the stop, and step 5 keeps both prohibitions. What is new is that the agent ends by naming the
+  commands
 * `AGENTS.md` said "In your answer, propose major, minor or patch, with the reason, and name every change in the
   shipped diff that has no unit". It is in step 4, with the pins added
 * `AGENTS.md` said "On the human's word, commit the section on `master` as `Release notes for <version>`, with no
   unit prefix". It is in step 5, with the commit of the pins ahead of it
-* The README said "both commits are made on `master`". There are three now, so step 5 says "its commits"
+* The README said "both commits are made on `master`". There are three now, two of them the agent's, so step 5
+  says "its commits"
+* The README gave `npm version` and `./deploy.sh` as list items 3 and 4. They are step 6, with the push after
+  them, which the README did not have
 * The README said "The notes are committed first". Step 5 says "The pins and the notes"
 * The bullet on the bump in step 3 is new
 * The paragraph of `AGENTS.md` that opens the "Release notes" section stays in `AGENTS.md`, as below, and its first
@@ -261,8 +276,8 @@ file holds every step, and a human, or an agent in another harness, follows it d
 
 In short: the versions of Claude Code and OpenCode pinned in `container/Dockerfile` are moved to the latest
 published ones and checked in a sandbox built from the working copy; an agent drafts the release notes in
-`CHANGELOG.md`; the human reads them, corrects them and picks the version; the pins and the notes are committed and
-`npm version` is run; and the human runs `./deploy.sh`.
+`CHANGELOG.md`; the human reads them, corrects them and picks the version; the agent commits the pins and the
+notes; and the human runs `npm version` and `./deploy.sh`, and pushes `master` and the tag.
 
 Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox. It needs Docker as
 well, which a sandbox does not have.
@@ -276,13 +291,13 @@ Where each paragraph of today's "Releasing" ends up:
 | "A release is made on `master`, from the repository"    | `RELEASING.md`, the opening and its list of six         |
 | List item 1, an agent is asked to write the notes       | `RELEASING.md`, step 3                                  |
 | List item 2, the human reads, corrects and picks        | `RELEASING.md`, step 4 and step 5, item 3               |
-| List item 3, `npm version patch`, or `minor`, or        | `RELEASING.md`, step 5, item 4                          |
+| List item 3, `npm version patch`, or `minor`, or        | `RELEASING.md`, step 6                                  |
 | List item 4, `./deploy.sh`, with AWS credentials        | `RELEASING.md`, step 6                                  |
 | "The notes are committed first because", first sentence | `RELEASING.md`, step 5, with the pins added             |
 | "A release has no unit in `changes/`"                   | `RELEASING.md`, step 5, opening                         |
 | "`deploy.sh` refuses, before it does anything else"     | `RELEASING.md`, step 6                                  |
 | "Pick the part to bump as semver means it"              | `RELEASING.md`, step 4                                  |
-| "`npm version` updates `package.json`" to "fails"       | `RELEASING.md`, step 5                                  |
+| "`npm version` updates `package.json`" to "fails"       | `RELEASING.md`, step 6                                  |
 | "`deploy.sh` signs in with `aws sso login`"             | `RELEASING.md`, step 6                                  |
 | "A released tarball is never replaced or removed"       | `RELEASING.md`, step 6                                  |
 | "Releasing runs on the host only"                       | The README, with a sentence added, and step 1           |
@@ -337,8 +352,8 @@ it. Record what was changed and why.
   characters. If `master` holds 0027, adapt the run command of step 2 as the Approach says (R2, R6, R7, R8, R9,
   R10, R11, R12, R13, R14)
 - [ ] Add `.claude/skills/release/SKILL.md` with the text the Approach gives. See the skill's tests pass. See that
-  `npm pack --dry-run` still lists the 24 files it lists on `master`, and that nothing was added under `.opencode/`
-  (R1, R3, R4)
+  `npm pack --dry-run` lists the same files as it does on `master`, comparing the two lists and not their length,
+  and that nothing was added under `.opencode/` (R1, R3, R4)
 - [ ] Replace the "Release notes" section of `AGENTS.md` with the "Releasing" section the Approach gives. Compare
   the removed bullets with step 3 to step 5 of `RELEASING.md`, one by one, and record that each is there and what
   differs, which must be only what the Approach lists (R5)
@@ -364,7 +379,7 @@ it. Record what was changed and why.
 ## Verification
 
 - [ ] `npm test` passes on the host, with the new tests among them
-- [ ] `npm pack --dry-run` lists 24 files, the same list as on `master` (R3)
+- [ ] `npm pack --dry-run` lists the same files as on `master`, compared as lists, whatever their number (R3)
 - [ ] `git diff master -- process.md roles templates scripts container .opencode` is empty (R4)
 - [ ] `bash -n deploy.sh` passes
 - [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
@@ -372,8 +387,8 @@ it. Record what was changed and why.
 - [ ] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
   `ritenoar-agentrite-agent-release`, and the images and volumes of `ritenoar-agentrite-agent` and
   `ritenoar-agentrite-agent-dev` are as they were before the unit
-- [ ] The record says what was not run: step 5 with a real version, and `./deploy.sh`, which are the next
-  release's and the human's
+- [ ] The record says what was not run: step 5 with a real version, and the three commands of step 6, which are
+  the next release's and the human's
 
 ## Commit Points
 

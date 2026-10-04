@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: draft
-timestamp: 2026-10-04T13:24:41Z
+timestamp: 2026-10-04T14:01:08Z
 ---
 
 # 0028 A release skill
@@ -60,5 +60,38 @@ timestamp: 2026-10-04T13:24:41Z
   commit on `master` with no unit; whether the agent runs `npm version`; whether the skill should run
   `./deploy.sh` as well; and what under "Beyond the request" is taken. Status left at `draft` for the human's
   approval
+- 2026-10-04T14:01:08Z [human] having heard the planner's report of the first draft, and before reading the spec and
+  the plan, gave these remarks and decisions, and said the documents are read and approved after they are handled:
+  * Against a requirement that holds the package to 24 files: "Im not sure if checking a hard 'only 24 files' is
+    a good idea. This will easily go beyond 24 soon."
+  * The notes steps move to `RELEASING.md`, with a small pointer in `AGENTS.md`: yes
+  * A clean bump of the pins as a commit on `master` with no unit: yes
+  * The agent running `npm version`: "NO. I still want to do the npm version myself. It should simply tell me to
+    do."
+  * The skill running `./deploy.sh`: "same: I will do the deploy myself."
+  * The names: "seems fine to me"
+  * Pushing: "pushing master and the tag should be what the skil lsays at the end. Basically: run npm version
+    [with the correct type], run ./deploy.sh and push master with tags."
+- 2026-10-04T14:01:08Z [Claude Code, anthropic/claude-opus-5-5] took the planner role, in the session that dispatched
+  the first planner, and changed `spec.md` and `plan.md` for those remarks, on the branch in the main checkout,
+  the first planner's worktree being removed. What changed:
+  * R3, the plan's third task and its verification compare the package's list of files with `master`'s and name
+    no number. The decision says why
+  * R13 ends at the agent's two commits. R14 has the agent run neither `npm version` nor `./deploy.sh`, push
+    nothing, and end by telling the human three commands in order: `npm version` with the part that gives the
+    picked version, `./deploy.sh`, and the push of `master` with the release's tag. The requirement that the agent
+    checks `package.json` afterwards is gone with the command: a wrong part gives a version that has no section,
+    which `./deploy.sh` refuses, as 0025 built
+  * In the plan's texts: the skill's description, the list of steps and steps 5 and 6 of `RELEASING.md`, the
+    README's summary sentence, the list of what differs from the moved texts, and two rows of the table of
+    paragraphs. Step 6 is now "What the human runs", with the three commands, and says why the push comes last
+  * The push is written as `git push origin master v<version>`, naming the one tag, where the human said "push
+    master with tags". That choice of command is the planner's, for the human to change on reading
+  * The decisions record each of the human's as the human's. The non-goal on pushing now says only that the agent
+    pushes nothing. Under "Beyond the request", the skill running `./deploy.sh` and the push as a last step are
+    gone, the first declined and the second taken as an instruction to the human. The other items there stand,
+    undecided, and so left out
+  Nothing was run for this revision. What the spec lists as not established still is, except whether `./deploy.sh`
+  runs from an agent's shell, which no longer matters. Status left at `draft` for the human's reading and approval
 
 ## Amendments

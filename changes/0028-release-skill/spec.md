@@ -27,6 +27,22 @@ The human also heard, as a starting point, what the implementer proposed the rel
 the human to read, pick the version and run `npm version` and `./deploy.sh`. The decisions below say where that is
 kept and where it is changed.
 
+After reading the planner's report of the first draft, on the same day, the human decided further, and this spec
+was changed for it:
+
+* The steps for writing the notes move out of `AGENTS.md` into `RELEASING.md`, with a small pointer left in
+  `AGENTS.md`: "Yes. It moves to releasing.md with a small pointer in agents."
+* A bump of the pins with a clean check may be a commit on `master` with no unit: "yes"
+* The agent does not run `npm version`: "NO. I still want to do the npm version myself. It should simply tell me
+  to do."
+* The agent does not run `./deploy.sh` either: "same: I will do the deploy myself."
+* The release ends with the agent telling the human what to run: "pushing master and the tag should be what the
+  skill says at the end. Basically: run npm version [with the correct type], run ./deploy.sh and push master with
+  tags."
+* The names are fine as proposed
+* No requirement holds the package to a number of files: "Im not sure if checking a hard 'only 24 files' is a good
+  idea. This will easily go beyond 24 soon."
+
 ### What was found while planning
 
 On `master` at `aa4b8b3`, which holds 0025, on Linux with npm 11.11.0, node 24.14.1, Claude Code 2.1.289 on the host
@@ -98,9 +114,8 @@ needs the host as well, for the AWS account.
   ones 0015, 0022 and 0023 recorded as having worked, under another Compose project name. The plan has a task that
   runs the check once for real
 * That Claude Code 2.1.289 and OpenCode 1.18.34 pass the check. Finding that out is the first release's
-* What `npm version` does with files that are not tracked. 0025 tried only a changed tracked file
-* Whether `./deploy.sh` runs to its end from an agent's shell, which has no terminal for `aws sso login` or for a
-  question from `cdk deploy`
+* What `npm version` does with files that are not tracked. 0025 tried only a changed tracked file. The human runs
+  it, and sees it
 
 ### What is assumed about 0027
 
@@ -130,16 +145,17 @@ The skill and the file it points at:
    `RELEASING.md` in the repository root and says that the skill holds no instruction of its own. Typing `/release`
    in a Claude Code session in this repository starts it
 2. `RELEASING.md`, at the repository root, holds the whole release in order: what is checked before anything else,
-   the harness versions, the release notes, the human's reading, the commits and the version, and `./deploy.sh`. It
-   needs no feature of one harness to be followed, and names the skill only as one way to arrive at it
-3. Neither file is in the package: `npm pack --dry-run` lists the same 24 files as on `master`
+   the harness versions, the release notes, the human's reading, the commits, and what the human runs to finish it.
+   It needs no feature of one harness to be followed, and names the skill only as one way to arrive at it
+3. Neither file is in the package: `npm pack --dry-run` lists the same files as it does on `master`, whatever their
+   number
 4. There is no OpenCode command for a release, and `.opencode/` is unchanged. `process.md`, `roles/`, `templates/`,
    `scripts/` and `container/` are unchanged by this unit. The pins themselves move at a release, not in this unit
 5. `AGENTS.md` keeps what holds for every agent in this repository: that `CHANGELOG.md` has one section per release,
    written when the release is made and never by a unit, with the reason. It sends an agent that is asked to make a
    release, or to write the release notes, to `RELEASING.md`, and says that an agent starts neither unasked. The
    steps for writing the notes, which 0025 put in `AGENTS.md`, are in `RELEASING.md`, with their meaning, their
-   exact commands and their strength kept, apart from what requirements 11 to 14 change
+   exact commands and their strength kept, apart from what requirements 11 to 14 add
 
 Before anything else:
 
@@ -186,19 +202,21 @@ The human's reading, the commits and the version:
     pins, the old and new versions and what the check showed and did not establish
 13. On the human's word, with the version the human picked, the agent makes sure the section's heading is that
     version, and then, on `master` and in this order: commits `container/Dockerfile` as `Harness pins for
-    <version>` when the pins were bumped; commits `CHANGELOG.md` as `Release notes for <version>`; and runs `npm
-    version` with the part that gives that version. It then checks that `package.json` holds the version of the
-    heading. Neither commit has a unit prefix
-14. The agent does not run `./deploy.sh`. It tells the human that the release is ready for it, and the command.
-    `RELEASING.md` says what `./deploy.sh` does, what it refuses and what to do then, as the README does today
+    <version>` when the pins were bumped, and commits `CHANGELOG.md` as `Release notes for <version>`. Neither
+    commit has a unit prefix. It commits nothing else
+14. The agent runs neither `npm version` nor `./deploy.sh`, and pushes nothing. After its commits it ends by telling
+    the human what is left, as three commands in this order, ready to run: `npm version` with the part, patch,
+    minor or major, that gives the version of the heading; `./deploy.sh`; and the push of `master` together with
+    the release's tag. `RELEASING.md` says what `npm version` and `./deploy.sh` do, what `./deploy.sh` refuses and
+    what to do then, as the README does today, and why the push comes last
 
 The README and the script:
 
 15. The README's "Releasing" says what a release is and what serves it, as today; that a release is made with the
     `/release` skill in a Claude Code session on the host, which follows `RELEASING.md`, and that a human or an
     agent in another harness follows that file directly; and, in a sentence, what a release does, the bump of the
-    pins included. Everything else the section says today is in `RELEASING.md`, with its exact commands and its
-    strength. "What is here" has a row for `RELEASING.md`
+    pins and what the human runs at the end included. Everything else the section says today is in
+    `RELEASING.md`, with its exact commands and its strength. "What is here" has a row for `RELEASING.md`
 16. The message `./deploy.sh` prints when it refuses a version with no section sends the reader to `RELEASING.md`,
     and no longer to a section of `AGENTS.md` that is not there. The script does what it did otherwise
 
@@ -220,7 +238,7 @@ The tests:
 * **The skill is `release`, typed as `/release`.** It is what the human called it: creating the release. The
   directory gives the name and the frontmatter states it too, so that a renamed directory does not rename the
   command unseen
-* **`disable-model-invocation: true`.** A release commits on `master` and tags. It starts when the human types
+* **`disable-model-invocation: true`.** A release commits on `master`. It starts when the human types
   `/release` and at no other time, and a session that discusses a release, as the one planning this unit did, does
   not set one off. `AGENTS.md` says the same to an agent in any harness, which has no such switch
 * **No `allowed-tools`.** It would let the release's commands run without a permission prompt. Which commands an
@@ -233,12 +251,11 @@ The tests:
     needs
   * A file of its own at the root. Taken. `RELEASING.md` is the name a human looks for, it is beside `README.md`
     and `CHANGELOG.md`, and it is not packed because `files` does not list it
-* **This keeps the human's decision for 0025 and changes where the steps sit.** That decision was that the rule is
-  this repository's own and does not go in `process.md`. It still is and does not. `AGENTS.md` still tells every
-  agent what every agent has to know, that a unit never writes the changelog, and where the rest is. The steps
-  move, whole. 0025's spec and plan are frozen and say `AGENTS.md`; this unit's record is where the move is found.
-  Moving documentation needs the human's approval by the kit's documentation rule, and approving this unit is that
-  approval
+* **This keeps the human's decision for 0025 and changes where the steps sit. The human agreed to the move.** That
+  decision was that the rule is this repository's own and does not go in `process.md`. It still is and does not.
+  `AGENTS.md` still tells every agent what every agent has to know, that a unit never writes the changelog, and
+  where the rest is. The steps move, whole. 0025's spec and plan are frozen and say `AGENTS.md`; this unit's record
+  is where the move is found
 * **The skill's body is the role wrappers' sentence, for another file.** One line, and a statement that the file
   holds no instruction of its own, so that nobody adds a step to the wrapper where an agent in another harness
   would not see it
@@ -260,10 +277,10 @@ The tests:
   documented login and the status line are what 0015, 0023 and 0022 rest on. It is not a review of what a harness
   version does, and it sends no prompt to a model, which needs a login. A unit that comes to depend on something
   else a harness does adds its check to `RELEASING.md`
-* **A clean bump needs no unit; a finding is one.** The kit's process sends every change through `changes/`, on a
-  branch. A bump with a clean check is two lines whose description and diff say the same, decided by nobody: the
-  latest version, checked. It is made as part of the release, on `master`, as a third commit beside the two 0025
-  excepted. That widens this project's exception to working on a branch by one commit, and the human is asked. A
+* **A clean bump needs no unit; a finding is one. The human agreed.** The kit's process sends every change through
+  `changes/`, on a branch. A bump with a clean check is two lines whose description and diff say the same, decided
+  by nobody: the latest version, checked. It is made as part of the release, on `master`, as a third commit beside
+  the two 0025 excepted. That widens this project's exception to working on a branch by one commit. A
   bump that needs anything else, a host, a reworded README, a changed wrapper, has a decision in it, and by 0015's
   rule that is a new unit. The release does not make it
 * **The alternative, a task unit for every bump, is not taken.** It would give the bump a number in the release
@@ -281,19 +298,25 @@ The tests:
   stop, a release that is abandoned leaves two changed files in the working tree and nothing on `master`. The
   notes' diff of what ships is taken against `HEAD`, as 0025's rule gives it, so the bump is not in it; the agent
   knows the bump from having made it, and the file says so
-* **Three commits, in the order pins, notes, version.** The pins are a commit of their own so that it can be read
-  and reverted alone. It comes before the notes and the notes before `npm version`, so that the tag names a tree
-  that holds all three, which 0025 decided for the notes
-* **The agent runs `npm version`, after the human's pick. Changed from 0025 and from the proposal.** 0025's rule
-  has the agent stop before it, and the proposal kept that. The human then asked for creating the release as a
-  skill. `npm version` changes two files, commits and tags, all in the local repository, and can be undone until
-  it is pushed. The agent runs it only on the human's word and with the human's version. The human is asked
-  whether that is wanted
-* **The human runs `./deploy.sh`. Kept.** It publishes, and a released tarball is never replaced. It signs in to
-  AWS through a browser when the session has lapsed, and `cdk deploy` asks at a terminal before it widens a
-  permission; an agent's shell has no terminal for either, which was not tried. In Claude Code the human can run
-  it from the session by typing `! ./deploy.sh`. The skill running it is under "Beyond the request", and the human
-  is asked
+* **Three commits, in the order pins, notes, version, the last one the human's.** The pins are a commit of their
+  own so that it can be read and reverted alone. It comes before the notes and both before `npm version`, so that
+  the tag names a tree that holds all three, which 0025 decided for the notes
+* **The human runs `npm version`, `./deploy.sh` and the push, and the agent ends by naming them. The human's
+  decision.** The first draft had the agent run `npm version` after the human's pick, and left the push out as
+  something nothing documents. The human decided otherwise on all three: "I still want to do the npm version
+  myself. It should simply tell me to do", "I will do the deploy myself", and the skill ends by saying: "run npm
+  version [with the correct type], run ./deploy.sh and push master with tags." So the agent's last act is its two
+  commits, and its last words are the three commands with the part filled in. That is 0025's rule for `npm
+  version` and `./deploy.sh`, kept
+* **The agent does not check afterwards that `npm version` gave the heading's version.** It no longer runs it.
+  The wrong part gives a version with no section in `CHANGELOG.md`, and `./deploy.sh` refuses that before it does
+  anything, which 0025 built
+* **The push comes last, after `./deploy.sh`, and names the tag.** When `./deploy.sh` refuses, the recovery 0025
+  gives moves the tag, which is harmless while the tag is on the human's machine only. The command pushes `master`
+  and the one tag of the release by name, not every tag the repository holds
+* **The package is compared with `master`'s, not counted. The human's remark.** The first draft required 24 files.
+  The number moves with every unit that ships a file, so a requirement that names it is wrong as soon as another
+  unit lands first. What this unit promises is that it adds nothing to the package
 * **The README keeps what a release is and loses how one is made.** The first is of use to a project that wonders
   where its tarball comes from. The second is of use to whoever releases, who is sent to the file. The human asked
   for the simplification. The plan lists every paragraph of today's section and where it ends up
@@ -317,13 +340,10 @@ The tests:
 * The release check on Docker Desktop for macOS. It was planned on Linux, and the release is made on the human's
   host
 * A rule for when a release is due, or for major, minor and patch
-* Pushing `master` or the tag. The README does not say when that happens today, and this unit does not either
+* The agent pushing anything. The file tells the human the command
 
 ## Beyond the request
 
-* **The skill running `./deploy.sh` after a second go.** It would make the skill the whole release. It costs
-  finding out what `aws sso login` and a question from `cdk deploy` do in a shell with no terminal, and it puts the
-  one step that cannot be undone in the agent's hands. Without it the human types one command
 * **A script for the check**, which builds, starts the harnesses, and prints the captures and the proxy's log. It
   would make the check the same at every release. It costs a script and its tests, and it fixes the shape of
   screens that change with the version. Without it the agent runs the commands the file gives, and a command that
@@ -340,5 +360,3 @@ The tests:
   human answers the prompts, or sets the permissions on their own host
 * **A test that `files` in `package.json` names neither `RELEASING.md` nor anything under `.claude/`.** It guards
   against a mistake nobody has made. Without it the plan's verification runs `npm pack --dry-run` once
-* **Pushing `master` and the tag as the release's last step.** Nothing documents it today. Without it the human
-  pushes as they do now
