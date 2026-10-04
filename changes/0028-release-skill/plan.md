@@ -334,10 +334,10 @@ The first seven were done before the bump was withdrawn, against the texts of th
 - [x] Replace `RELEASING.md` with the text the Approach gives, written out of this plan and not retyped. See that
   nothing of the bump is left in it: `grep -n -i -E 'docker|dockerfile|claude-code|opencode|ARG ' RELEASING.md`
   prints nothing (R2, R6, R12, R13, R14)
-- [ ] In the README's "Releasing", replace the paragraph that opens "In short" and the last paragraph with the
+- [x] In the README's "Releasing", replace the paragraph that opens "In short" and the last paragraph with the
   Approach's. See that the last paragraph is `master`'s again: `git diff master -- README.md` no longer shows it
   (R15)
-- [ ] See that nothing else is left of the bump: `git diff master --stat -- container` is empty, `AGENTS.md` and
+- [x] See that nothing else is left of the bump: `git diff master --stat -- container` is empty, `AGENTS.md` and
   `deploy.sh` are as they were at `45e349f`, and the three test files of requirement 18 are as they were at
   `45e349f`, which `git diff 45e349f -- tests/harness-versions.test.mjs tests/wrapper-fixture.mjs
   tests/agent-wrapper.test.mjs` shows by printing nothing (R4, R18)
@@ -375,5 +375,5 @@ Each was ticked before the revision and is open again, to be seen on the tree th
 - [x] The record of the check's trial by hand, with the corrections to `RELEASING.md` it caused
 - [x] The test and the skill's description
 - [x] `RELEASING.md` cut down
-- [ ] The README
+- [x] The README
 - [ ] The record of the trial of `/release`, with any correction to `RELEASING.md` it caused

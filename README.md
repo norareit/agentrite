@@ -572,10 +572,8 @@ A release is made with the `/release` skill, in a Claude Code session on the hos
 `.claude/skills/release/SKILL.md`, which holds one line that sends the agent to [`RELEASING.md`](RELEASING.md). That
 file holds every step, and a human, or an agent in another harness, follows it directly.
 
-In short: the versions of Claude Code and OpenCode pinned in `container/Dockerfile` are moved to the latest
-published ones and checked in a sandbox built from the working copy; an agent drafts the release notes in
-`CHANGELOG.md`; the human reads them, corrects them and picks the version; the agent commits the pins and the
-notes; and the human runs `npm version` and `./deploy.sh`, and pushes `master` and the tag.
+In short: an agent sees that the suite passes and drafts the release notes in `CHANGELOG.md`; the human reads them,
+corrects them and picks the version; the agent commits the notes; and the human runs `npm version` and
+`./deploy.sh`, and pushes `master` and the tag.
 
-Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox. It needs Docker as
-well, which a sandbox does not have.
+Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.
