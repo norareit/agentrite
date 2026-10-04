@@ -150,5 +150,34 @@ timestamp: 2026-10-04T18:20:11Z
     `./agent-dev.sh` runs the host's versions, agree with the check as written and change nothing in it
   * After 0027 nothing on this host runs the pinned pair, as its record says. So the check of step 2 is the only
     thing that does, and it is made only when the pins move
+- 2026-10-04T18:27:05Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the tests, `RELEASING.md`, the skill and
+  `AGENTS.md`.
+  * `tests/release.test.mjs` holds eight tests, and the three refusal tests of `tests/deploy.test.mjs` gained the
+    assertion. Before anything else of the unit existed, `npm test` exited 1 with 232 tests, 221 passing and 11
+    failing: the eight new ones and those three. The 221 are the suite of the merged tree less the three
+  * `RELEASING.md` and `.claude/skills/release/SKILL.md` are the plan's texts, written out of `plan.md` by a script
+    and not retyped. The skill's test, the two of the pins and the two of `RELEASING.md` then passed
+  * `npm pack --dry-run --json` lists 24 paths here and 24 in an export of `master` at `94099e9`, and the two
+    sorted lists are the same, compared with `diff`. None is `RELEASING.md` or under `.claude/`. Nothing was added
+    under `.opencode/`: `git ls-files .opencode` shows the three role wrappers
+  * `AGENTS.md`: "Release notes" is replaced by the plan's "Releasing". The nine bullets it loses, against
+    `RELEASING.md`, compared by a script for the ones said to be word for word:
+    * "Build the section from the repository", "The units of the release", "Read the diff of what ships", "Write
+      the section at the top" with its two parts, "Write for a reader", and "A section of an earlier release": each
+      is in step 3 word for word, commands included
+    * "In your answer, propose major, minor or patch, with the reason, and name every change in the shipped diff
+      that has no unit": step 4, as two bullets, with the pins added as a third
+    * "Stop there. The human reads the section, corrects it and picks the version. Do not commit it before that,
+      and do not run `npm version` or `./deploy.sh`": the stop, the human's reading and "Commit nothing before the
+      human's word" are in step 4, and "Do not run `npm version` or `./deploy.sh`" closes step 5
+    * "A release is not a unit and has no directory in `changes/`. On the human's word, commit the section on
+      `master` as `Release notes for <version>`, with no unit prefix": step 5, with the commit of the pins before it
+    * The line that opened the list, "When asked to write the release notes:", is the pointer's "Read it when asked
+      to make a release or to write the release notes", and the opening of `RELEASING.md` says which steps an agent
+      asked only for the notes runs
+    What differs is what the plan lists, and one thing it does not list: the opening paragraph of the section
+    stays in `AGENTS.md` without its last sentence, "The order of a release is in the README, under "Releasing"."
+    The plan's text for `AGENTS.md` leaves it out, and the pointer to `RELEASING.md`, which now holds the order,
+    stands in its place
 
 ## Amendments

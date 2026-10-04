@@ -388,7 +388,7 @@ version, and neither does `RELEASING.md`.
 - [x] Add `.claude/skills/release/SKILL.md` with the text the Approach gives. See the skill's tests pass. See that
   `npm pack --dry-run` lists the same files as it does on `master`, comparing the two lists and not their length,
   and that nothing was added under `.opencode/` (R1, R3, R4)
-- [ ] Replace the "Release notes" section of `AGENTS.md` with the "Releasing" section the Approach gives. Compare
+- [x] Replace the "Release notes" section of `AGENTS.md` with the "Releasing" section the Approach gives. Compare
   the removed bullets with step 3 to step 5 of `RELEASING.md`, one by one, and record that each is there and what
   differs, which must be only what the Approach lists (R5)
 - [ ] Replace the README's "Releasing" with the text the Approach gives and add the row to "What is here". Go
@@ -428,7 +428,7 @@ version, and neither does `RELEASING.md`.
 
 - [x] The tests
 - [x] `RELEASING.md` and the skill
-- [ ] `AGENTS.md`
+- [x] `AGENTS.md`
 - [ ] The README
 - [ ] `deploy.sh`
 - [ ] The record of the two trials, with any correction to `RELEASING.md` they caused
