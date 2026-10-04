@@ -172,7 +172,7 @@ process of release 2.3.0; this unit was planned under it.
 
 ## Tasks
 
-- [ ] In `tests/deploy.test.mjs`, have `release()` write `package.json` with version `1.2.3` and a `CHANGELOG.md`
+- [x] In `tests/deploy.test.mjs`, have `release()` write `package.json` with version `1.2.3` and a `CHANGELOG.md`
   holding a `## 1.2.3` section into the `kit` directory, with a `changelog` option that replaces the content and
   writes no file when it is `null`. Run `npm test` and see all 188 tests pass, since `deploy.sh` does not read
   either file yet (R8, R9)
@@ -214,7 +214,7 @@ process of release 2.3.0; this unit was planned under it.
 
 ## Commit Points
 
-- [ ] The fixture files in the deploy test
+- [x] The fixture files in the deploy test
 - [ ] The tests and the check in `deploy.sh`
 - [ ] The changelog, its test and `files`
 - [ ] The rule in `AGENTS.md`

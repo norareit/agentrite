@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: draft
-timestamp: 2026-10-04T11:19:40Z
+status: in-progress
+timestamp: 2026-10-04T11:31:30Z
 ---
 
 # 0025 Release notes with every release
@@ -51,3 +51,18 @@ timestamp: 2026-10-04T11:19:40Z
   approach; whether releases before 2.3.0 are backfilled too; whether `npm version` should also refuse a missing
   section; and whether committing the notes on `master` with no unit is acceptable. Status left at `draft` for the
   human's approval
+- 2026-10-04T11:31:30Z [human] after the planner's report was put to them, with its questions on backfilling earlier
+  releases, on a check in `npm version`, on committing the notes on `master` and on the other things left out,
+  asked for the unit to be implemented. The human answered none of those questions separately, and did not say
+  whether the texts in the plan's Approach had been read
+- 2026-10-04T11:31:30Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a session on the host,
+  on Linux. Took the human's request as the approval of the spec and the plan as they are written, with everything
+  under "Beyond the request" left out and the changelog and the rule in the wording the plan gives, as the human
+  let the same reading stand for 0021, 0022 and 0023. That reading is the implementer's, and the human is told of
+  it. The work is done in the planner's worktree, because the main checkout holds another branch,
+  `task-0026-document-running-the-sandbox`, which is not this session's. The branch was first rebased onto
+  `master` at `ab02eae`, which now holds 0024, without conflict, and `npm ci` installed release 2.3.0 there. The
+  planner's commit is `b8e5b01` since. This record had no `## Amendments` heading, which the template has, and
+  gets it with this entry
+
+## Amendments

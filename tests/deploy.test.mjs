@@ -8,7 +8,10 @@ import { test } from 'node:test';
 const script = new URL('../deploy.sh', import.meta.url).pathname;
 const bucket = 'release-bucket';
 const baseUrl = 'https://agentrite.example.test';
-const tarball = 'ritenoar-agentrite-1.2.3.tgz';
+const version = '1.2.3';
+const tarball = `ritenoar-agentrite-${version}.tgz`;
+// A changelog with a section for the version under release, which is what deploy.sh asks for before anything else.
+const releasedChangelog = `# Changelog\n\n## ${version}\n\n### What changed\n\n* Something\n`;
 
 // Stubs for every command deploy.sh runs, each appending its arguments to one log. Their answers come from the
 // environment: STS_OK for the session check, HEAD for the existing-release check ("exists", "missing" or
@@ -40,12 +43,16 @@ fi`,
   curl: 'printf "%s" "$SERVED"',
 };
 
-function release(t, { stsOk = true, head = 'missing', served = '200' } = {}) {
+// Runs a copy of deploy.sh in a kit that holds only a package.json at the version under release and a
+// CHANGELOG.md with the content `changelog`, or no changelog when that is null.
+function release(t, { stsOk = true, head = 'missing', served = '200', changelog = releasedChangelog } = {}) {
   const base = mkdtempSync(join(tmpdir(), 'deploy-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, 'kit');
   mkdirSync(join(root, 'infra'), { recursive: true });
   copyFileSync(script, join(root, 'deploy.sh'));
+  writeFileSync(join(root, 'package.json'), JSON.stringify({ version }));
+  if (changelog !== null) writeFileSync(join(root, 'CHANGELOG.md'), changelog);
   const bin = join(base, 'bin');
   mkdirSync(bin);
   const log = join(base, 'calls');
