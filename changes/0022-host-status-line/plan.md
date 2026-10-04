@@ -105,7 +105,7 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 - [x] In `README.md`, add "### The status line" under "Running the sandbox", after "The home volume", saying
   everything R8 lists, and that the settings file is the kit's `container/claude-managed-settings.json`. Remove
   nothing (R8)
-- [ ] Do the real run with `./agent-dev.sh` as the Approach describes, and record, with the Docker and Compose
+- [x] Do the real run with `./agent-dev.sh` as the Approach describes, and record, with the Docker and Compose
   versions: the script's line as the terminal showed it; that appending to each of the two files in the sandbox
   fails with `Read-only file system`; that `findmnt -no OPTIONS /` opens with `ro`; and, for the run without a
   host script, that `/etc/claude-code` does not exist in the container and no `.claude` directory appeared in the
@@ -113,15 +113,15 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with the new tests among them
-- [ ] `npm pack --dry-run` lists 23 files, `container/claude-managed-settings.json` among them
-- [ ] `git diff master -- container/Dockerfile container/entrypoint.sh` is empty
-- [ ] The real run is in the record, with what each check showed and what was not checked
-- [ ] `npm run check-changes` passes
+- [x] `npm test` passes on the host, with the new tests among them
+- [x] `npm pack --dry-run` lists 23 files, `container/claude-managed-settings.json` among them
+- [x] `git diff master -- container/Dockerfile container/entrypoint.sh` is empty
+- [x] The real run is in the record, with what each check showed and what was not checked
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
 - [x] The `HOME` per run in the wrapper's tests
 - [x] The tests, the settings file and the wrapper
 - [x] The Compose comment and the README
-- [ ] The record of the real run
+- [x] The record of the real run

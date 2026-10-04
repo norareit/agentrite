@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-04T01:09:49Z
+timestamp: 2026-10-04T01:12:22Z
 ---
 
 # 0022 The developer's Claude Code status line in the sandbox
@@ -70,5 +70,38 @@ timestamp: 2026-10-04T01:09:49Z
     which runs the working copy's wrapper under an image and a home volume of its own, so the real run uses that:
     it is the wrapper R7 asks for, with nothing to pack or install. The dev home volume is removed afterwards, so
     that it is empty again
+- 2026-10-04T01:12:22Z [Claude Code, anthropic/claude-opus-5-5] implemented the plan in three commits: `e83b9bf`
+  with a home of their own for the wrapper's tests, `323c461` with the tests, the settings file and the wrapper,
+  and `a11214c` with the Compose comment and the README. Every task of the plan is ticked. The unit stays
+  in-progress, since no review has been made. One task was added to `plan.md` before it was done:
+  `tests/agent-dev.test.mjs`, which 0021 added after the plan was written, runs the wrapper with the runner's
+  environment too, so its `setUp` gets a `HOME` of its own as well, in `e83b9bf`. What was verified:
+  * With the `HOME` change alone the suite reported 184 passing and 0 failing, on this machine, whose real home
+    holds a status line script
+  * Of the four new tests, two failed before the wrapper and the settings file changed: the mounts with a script
+    present, and the content of a settings file that was not there. The two for an absent script and for a
+    directory in its place passed already, as the plan foresaw, since they hold what the wrapper does today
+  * On the host, on `a11214c`: `npm test` reported 188 passing and 0 failing. `npm pack --dry-run` lists 23 files,
+    `container/claude-managed-settings.json` among them. `git diff master -- container/Dockerfile
+    container/entrypoint.sh` is empty. No line of a file changed against `master` is over 120 characters and none
+    holds an em dash. `npm run check-changes` exited 0 on the commit that holds this entry
+  * The real run (R7), on Linux with Docker Engine 28.4.0 and Compose 2.39.2, with `./agent-dev.sh`, so through
+    the working copy's wrapper, and with the host's own `~/.claude/statusline-command.sh`. In the sandbox
+    `/etc/claude-code` held the two files and nothing else, each mounted `ro`. Appending to either, and creating
+    a file beside them, failed with `Read-only file system`, and `findmnt -no OPTIONS /` opened with `ro`. The
+    dev home held no `.claude` directory and no settings. With the made-up API key and the seeded
+    `~/.claude.json` the plan describes, `claude` ran for 25 seconds under `script`, and its terminal showed
+    `/work (feature-0022-host-status-line) | Opus 5 (1M context)`, which is the host script's line (R1, R2, R3,
+    R5). The image was the one `./agent-dev.sh` builds from the working copy, whose Dockerfile and entrypoint
+    this unit does not change
+  * The run without a host script (R4): the wrapper was given a `HOME` that held only an empty `.gitconfig`, and
+    `DOCKER_CONFIG` pointing at the real one. In the sandbox `/etc/claude-code` did not exist, and afterwards the
+    scratch home still held only `.gitconfig`. The host's real script was unchanged, by size and time
+  * Afterwards the dev home volume was removed, with the seeded file in it, and the scratch files with it. The
+    release image's id and the release home volume's creation time are what they were before
+  * Not checked: Docker Desktop for macOS; a logged-in session, so the `Ctx`, `Sess` and `Week` parts of the line
+    were not seen; a status line set inside the sandbox being replaced, which the planner saw with `docker run`
+    and this run did not repeat; a symbolic link at the host path, likewise; `./agent.sh` itself, which runs the
+    released wrapper and gets the change only with a release; an organization's managed settings
 
 ## Amendments
