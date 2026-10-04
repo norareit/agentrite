@@ -1,7 +1,7 @@
 ---
 kind: bug
 status: in-progress
-timestamp: 2026-10-04T01:30:02Z
+timestamp: 2026-10-04T01:33:00Z
 ---
 
 # 0023 OpenCode cannot log in to OpenAI in the sandbox
