@@ -100,5 +100,19 @@ timestamp: 2026-10-04T11:34:59Z
     `npm run check-changes` exited 0 on that commit
   * Not run: `./deploy.sh` itself, which needs the AWS account and a release. Its first real use is the next
     release, the human's. The refusal is held by the suite's stubs only
+- 2026-10-04T12:19:39Z [OpenCode, openai/gpt-6.1-sol] as reviewer, performed the first full review of
+  `0025-release-notes` at commit `ea70ee9c7c931606e5552699308f9b1a80c0bba2`, against the merge base with master,
+  `ab02eae43f4385b1cc035efc242e0ad25cb719bb`. No previous review was found; no delta base applies. Returned no
+  finding labels on spec conformance, plan fidelity or code quality. Complete findings and verification evidence:
+  `.reviews/0025-release-notes/2026-10-04T121732Z-full-ea70ee9-opencode.md`. Independently ran `npm test` twice,
+  each with 192 passing and none failing or skipped, the targeted deploy/changelog tests with nine passing,
+  `npm run check-changes`, packaging with 24 files including the changelog, shell syntax, the infrastructure type
+  check, whitespace and scope checks. Cross-checked the backfill against the two tags, and reproduced the new tests'
+  expected failures against historical content without editing reviewed files. Could not independently reconstruct
+  the original test-first chronology, fixture-only suite run, removed fresh-agent trial, scratch `npm version`
+  trial or human-only conversations. Checked npm's dirty-tree guard in memory, not through a real version command.
+  No real AWS release, consuming-project install, live blocked-network sandbox, authentication, interactive status
+  line or macOS check was performed, and `npm ci` was not rerun. The Task/subagent tool was unavailable, so the review
+  was performed directly under the reviewer role
 
 ## Amendments
