@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: draft
-timestamp: 2026-10-04T14:01:08Z
+timestamp: 2026-10-04T14:13:07Z
 ---
 
 # 0028 A release skill
@@ -93,5 +93,10 @@ timestamp: 2026-10-04T14:01:08Z
     undecided, and so left out
   Nothing was run for this revision. What the spec lists as not established still is, except whether `./deploy.sh`
   runs from an agent's shell, which no longer matters. Status left at `draft` for the human's reading and approval
+- 2026-10-04T14:13:07Z [human] on the push command: "I want it to be --folow-tags"
+- 2026-10-04T14:13:07Z [Claude Code, anthropic/claude-opus-5-5] as planner, changed the push in step 6 of the plan's
+  `RELEASING.md` text to `git push --follow-tags origin master`, with its explanation, and the spec's decision on
+  the push to match. Checked: `git cat-file -t v2.3.0` prints `tag`, so the tags `npm version` makes here are
+  annotated, which is what `--follow-tags` pushes. The push itself was not run. Status still `draft`
 
 ## Amendments

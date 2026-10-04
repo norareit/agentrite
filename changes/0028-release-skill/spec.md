@@ -311,9 +311,11 @@ The tests:
 * **The agent does not check afterwards that `npm version` gave the heading's version.** It no longer runs it.
   The wrong part gives a version with no section in `CHANGELOG.md`, and `./deploy.sh` refuses that before it does
   anything, which 0025 built
-* **The push comes last, after `./deploy.sh`, and names the tag.** When `./deploy.sh` refuses, the recovery 0025
-  gives moves the tag, which is harmless while the tag is on the human's machine only. The command pushes `master`
-  and the one tag of the release by name, not every tag the repository holds
+* **The push comes last, after `./deploy.sh`, with `--follow-tags`. The flag is the human's choice.** When
+  `./deploy.sh` refuses, the recovery 0025 gives moves the tag, which is harmless while the tag is on the human's
+  machine only. `git push --follow-tags origin master` pushes `master` and, with it, the annotated tags that point
+  into what is pushed, which is the tag `npm version` made: its tags are annotated, as `git cat-file -t v2.3.0`
+  shows. The first revision named the tag in the command, and the human asked for the flag
 * **The package is compared with `master`'s, not counted. The human's remark.** The first draft required 24 files.
   The number moves with every unit that ships a file, so a requirement that names it is wrong as soon as another
   unit lands first. What this unit promises is that it adds nothing to the package

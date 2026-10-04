@@ -202,7 +202,7 @@ From the repository root, on `master`, with AWS credentials for the account:
 ```sh
 npm version <patch|minor|major>
 ./deploy.sh
-git push origin master v<version>
+git push --follow-tags origin master
 ```
 
 An agent runs none of the three. `./deploy.sh` publishes, and what it publishes is never replaced.
@@ -224,8 +224,8 @@ different versions indefinitely, so the script refuses to upload over a name tha
 `aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
 would delete versions that a project still installs.
 
-The push comes last, and pushes `master` and the release's tag by name. A tag that is not pushed yet can still be
-moved, which is what a refusal by `deploy.sh` asks for.
+The push comes last. `--follow-tags` pushes `master` and, with it, the annotated tag `npm version` made. A tag that
+is not pushed yet can still be moved, which is what a refusal by `deploy.sh` asks for.
 ````
 
 What differs in steps 3 to 6 from the two texts they are moved from, and nothing else does:
