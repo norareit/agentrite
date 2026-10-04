@@ -207,13 +207,13 @@ host runs `npm view` on the host.
 
 ## Verification
 
-- [ ] `npm test` passes on the host
+- [x] `npm test` passes on the host
 - [x] `bash -n container/agent.sh` passes
 - [x] `grep -n -i -E 'pin|kit.s (claude|opencode|version)' container/agent.sh container/Dockerfile
   container/compose.yml` prints only the Dockerfile's line on Alpine, which matches `pin` inside a word
 - [x] `npm pack --dry-run` lists the same files as on `master`
-- [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
-- [ ] `npm run check-changes` passes: 0027's `spec.md` and `plan.md` are untouched
+- [x] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
+- [x] `npm run check-changes` passes: 0027's `spec.md` and `plan.md` are untouched
 - [x] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
   `ritenoar-agentrite-agent-check0030`
 
@@ -223,4 +223,4 @@ host runs `npm view` on the host.
 - [x] The wrapper
 - [x] The Dockerfile and the Compose comment
 - [x] The README
-- [ ] The record of the check, and the amendment to 0027's record
+- [x] The record of the check, and the amendment to 0027's record

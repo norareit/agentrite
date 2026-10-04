@@ -314,9 +314,9 @@ timestamp: 2026-10-04T18:15:36Z
   `changes/0030-no-kit-harness-versions/`, which the human approved on 2026-10-04: that unit took the kit's pin
   away. The kit names no version of either harness any more, and a harness that neither the project nor the host
   gives a version of keeps the version the image records, and gets the latest published one, which the wrapper
-  asks `npm` for on the host, when the image is built. What it changes of this unit: requirement 1, whose third source is gone; requirement 3, where a harness
-  that is absent or prints no version no longer gets the kit's pin, and the line for the second names no pin;
-  requirement 4, since no pin is written anywhere; the decisions "The pins stay where they are" and "What the pin is
+  asks `npm` for on the host, when the image is built. What it changes of this unit: requirement 1, whose third
+  source is gone; requirement 3, where a harness that is absent or prints no version no longer gets the kit's pin,
+  and the line for the second names no pin; requirement 4, since no pin is written anywhere; the decisions "The pins stay where they are" and "What the pin is
   for"; and the part of the boundary paragraph on the pinned versions, since the four things promised there for the
   pinned versions only are now promised for no version. The README says so under "The harness versions". This
   unit's tests of the pins were changed or removed there: that the Dockerfile pins each harness once, that no other
