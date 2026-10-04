@@ -240,11 +240,11 @@ changes, so no rebuild is needed for the change itself.
 
 ## Verification
 
-- [ ] `npm test` exits 0 on the host
-- [ ] `npm run check-changes` exits 0 on the committed branch
-- [ ] No line of a changed file is over 120 characters, and none holds an em dash
-- [ ] `grep -n 'git -C "\$clone"\|cd "\$clone"' container/agent.sh container/unit-clone.sh` finds nothing
-- [ ] `git status --short` shows nothing left of the real check, and the state directory holds no clone of the
+- [x] `npm test` exits 0 on the host
+- [x] `npm run check-changes` exits 0 on the committed branch
+- [x] No line of a changed file is over 120 characters, and none holds an em dash
+- [x] `grep -n 'git -C "\$clone"\|cd "\$clone"' container/agent.sh container/unit-clone.sh` finds nothing
+- [x] `git status --short` shows nothing left of the real check, and the state directory holds no clone of the
   throwaway branches
 
 ## Commit Points
