@@ -1,7 +1,7 @@
 ---
 kind: task
-status: draft
-timestamp: 2026-10-04T11:04:21Z
+status: in-progress
+timestamp: 2026-10-04T11:05:16Z
 ---
 
 # 0024 Depend on AgentRite 2.3.0
@@ -49,5 +49,8 @@ with the command the README gives, and moving any other project to 2.3.0.
   this repository has had a sandbox and its shim since 0018. Not checked: that `refresh` reports every file up to
   date, which is what the description expects and the implementer sees. Status left at `draft` for the human's
   approval
+- 2026-10-04T11:05:16Z [human] shown the task, asked for it to be implemented, which is its approval
+- 2026-10-04T11:05:16Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a session on the host,
+  on Linux, and moved the status through approved to in-progress
 
 ## Amendments
