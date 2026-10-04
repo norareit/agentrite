@@ -281,5 +281,16 @@ timestamp: 2026-10-04T20:13:06Z
   is built again at the first start, and that the sandbox does not start when that build fails; the comments in
   `container/agent.sh` say that the wrapper builds when the image records no version. Neither repeats the untrue
   sentence, and the implementer's notes for the release, above, follow what was seen. Status stays `in-progress`
+- 2026-10-04T22:06:34Z [OpenCode, openai/gpt-6.1-sol] as reviewer, reviewed 0030 at commit
+  `e630e7617412474862489bcb60bffac4362f4377`. Full first review, against the merge base with `master`,
+  `32004d6c3e60e9a24307ad17b32fb21a8219758c`; no earlier review found and no delta base. Returned S1 and C1;
+  no independent plan-fidelity findings. Complete findings saved in
+  `.reviews/0030-no-kit-harness-versions/2026-10-04-opencode-gpt-6.1-sol-full-e630e76.md`.
+  Ran `npm test`: 246 tests, 246 passing, exit 0; `npm run check-changes`, `bash -n container/agent.sh` and
+  `git diff --check` passed. The dry-run package's 24 paths match the merge base. Docker was available; used only
+  read-only configuration, image inspection and inventory checks. Could not independently verify the historical
+  live-build/cache matrix, registry-failure trials, timings, before/after cleanup comparisons or intermediate
+  red-run counts within the review's permitted writes. No macOS/bash 3.2, Playwright-bearing project or interactive
+  harness checks were run. Changed no work under review, updated no snapshot and left the untracked tarball alone
 
 ## Amendments
