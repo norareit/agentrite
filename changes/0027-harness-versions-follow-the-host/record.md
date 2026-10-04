@@ -231,5 +231,36 @@ timestamp: 2026-10-04T15:49:32Z
 - 2026-10-04T18:13:43Z [human] on the second review, which returned no new findings, said: "No nwe findings! I'll
   check manually after my dinner xD". The time of this entry is when the words reached the implementer, through
   the dispatching session
+- 2026-10-04T18:15:34Z [human] made the last check of requirement 12 by hand, on 2026-10-04. This entry is written by the
+  implementer [Claude Code, anthropic/claude-opus-5-5] from what the dispatching session relayed, which had it from
+  a screenshot and from the human's words. The implementer saw none of it. Linux, Docker Engine 28.4.0, Compose
+  2.39.2, with Claude Code 2.1.289 and OpenCode 1.18.34 on the host.
+  * Started with `AGENT_PROJECT_NAME=agentrite-0027-check container/agent.sh "$PWD"` from the main checkout on
+    this branch, so under a Compose project, an image and an empty home volume of the check's own. The branch then
+    held the wrapper as corrected for S1
+  * In the sandbox, `claude --version` printed `2.1.289 (Claude Code)` and `opencode --version` printed `1.18.34`
+  * `claude` came up to its onboarding screen, with "Welcome to Claude Code v2.1.289", "Let's get started." and
+    the choice of a text style, and was left with Ctrl-C. Nothing was logged in to
+  * `opencode` was then started and left. Its screen is not in the screenshot. The human said: "yeh opencode came
+    up normally"
+  * `grep 'not allowlisted' /run/egress-proxy.log` in the same shell printed exactly three lines:
+    `[egress-proxy] refused example.com: not allowlisted` once, and
+    `[egress-proxy] refused raw.githubusercontent.com: not allowlisted` twice
+  * The dispatching session's reading of that, and not the human's: `example.com` is the entrypoint's
+    `FIREWALL_CANARY`, and `raw.githubusercontent.com` is the host 0015 decided not to admit, which Claude Code
+    contacts at start-up. The log does not say which harness made which of the two requests. No host is refused
+    that was not known before, so nothing calls for the new unit the spec's non-goals name
+  * Limits: this repository's `ALLOWLIST` adds `models.dev` and `api.openai.com` to the kit's, so this says
+    nothing about the kit's allowlist alone. Neither harness was logged in or given a prompt
+  * Cleanup: the human removed what the check created, and the dispatching session did not see the commands. It
+    checked afterwards that no image, volume, network or container with `0027` in its name exists, and that
+    `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`
+- 2026-10-04T18:15:34Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the plan's three open boxes again and
+  ticked them. The task for requirement 12: every item it lists was tried, the first five by the implementer on
+  `13c770f` and the last by the human, and what each check created is removed. That every requirement is met by a
+  ticked task, and that what requirement 12 found is in the record: the two refused hosts are above, and neither
+  is one the spec does not expect. The commit point of the real check's record: this commit completes it. What
+  holds less than the boxes may suggest: the first five items were not repeated on the wrapper as corrected for S1,
+  and a real failing build, bash 3.2 and Docker Desktop for macOS were tried by nobody
 
 ## Amendments

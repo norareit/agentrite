@@ -191,7 +191,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
       version of OpenCode the kit pins uses, and another version may name it differently
     * under "Trying the working copy's sandbox", one bullet: it takes the harness versions as `./agent.sh` does,
       so on a host with the harnesses it runs the host's and not the pinned ones
-- [ ] Check it for real on a host with Docker, as requirement 12 lists, under the name `agentrite-0027-check`, and
+- [x] Check it for real on a host with Docker, as requirement 12 lists, under the name `agentrite-0027-check`, and
   log what was seen with the Docker and Compose versions and the host's harness versions. Note the ids of the images
   `ritenoar-agentrite-agent` and `ritenoar-agentrite-agent-dev` before and after, which must be the same. The fake
   `claude` is a script in a temporary directory put first on the `PATH` for that one command. The image built
@@ -210,7 +210,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 - [x] No line of a changed file is over 120 characters, and none holds an em dash
 - [x] `git status --short` shows nothing left of the real check's temporary edits, and `docker image ls`,
   `docker volume ls` and `docker network ls` show nothing named `agentrite-0027-check`
-- [ ] Each requirement of the spec is met by a ticked task above, and anything requirement 12 found that the spec
+- [x] Each requirement of the spec is met by a ticked task above, and anything requirement 12 found that the spec
   does not expect is in the record, named to the human
 
 ## Commit Points
@@ -219,4 +219,4 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 - [x] `feature-0027` the tests, the labels, the build arguments and the wrapper
 - [x] `feature-0027` the comments in `container/`
 - [x] `feature-0027` the README
-- [ ] `feature-0027` the record of the real check
+- [x] `feature-0027` the record of the real check
