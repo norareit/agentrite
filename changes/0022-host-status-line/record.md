@@ -104,4 +104,17 @@ timestamp: 2026-10-04T01:12:22Z
     and this run did not repeat; a symbolic link at the host path, likewise; `./agent.sh` itself, which runs the
     released wrapper and gets the change only with a release; an organization's managed settings
 
+- 2026-10-04T01:22:06Z [OpenCode, openai/gpt-6.1-sol] reviewed 0022 at
+  `2cf87297e59ac34026673adc9fdb79d47a0887a5`, a full review against the merge base with `master`,
+  `48f239b38f5a1834a7715cbde834e2d5a07cfafb`. Returned no spec-conformance, plan-fidelity or code-quality findings.
+  Findings and verification: `.reviews/0022-host-status-line/2026-10-04T01-20-15Z-opencode.md`.
+  Independently ran `npm test` (188 passing, 0 failing), `npm run check-changes`, `npm pack --dry-run` (23 files),
+  the diff and shell syntax checks, and the present/absent real runs through `./agent-dev.sh`, with Docker Engine
+  28.4.0 and Compose 2.39.2. The host line displayed, both mounts rejected append-open with `EROFS`, the root was
+  read-only, and the absent case exposed neither target, created no host `.claude`, and showed the sandbox's own
+  status line. No login was made. The dev home volume and scratch home created for the checks were removed.
+  Not independently verified: Docker Desktop for macOS, subscription usage percentages, organization-managed
+  settings, symbolic-link mounting, managed override with both lines configured together, or the historical
+  pre-implementation red-test runs. The complete review records these limits.
+
 ## Amendments
