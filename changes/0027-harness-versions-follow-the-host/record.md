@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: draft
-timestamp: 2026-10-04T13:26:44Z
+status: in-progress
+timestamp: 2026-10-04T15:50:10Z
 ---
 
 # 0027 The sandbox's harness versions follow the host
@@ -62,5 +62,13 @@ timestamp: 2026-10-04T13:26:44Z
   * The README sentence that the versions are pinned in the Dockerfile is replaced, not kept, on the spec's
     authority. 0026 adds text to the same README section on another branch. The two do not contradict each other
   Status left at `draft` for the human's approval
+- 2026-10-04T15:50:10Z [human] approved the spec and the plan as written, in the session that dispatched the
+  implementer, with the words: "Implement feature 0027 as the @implementer". Nothing was said about the six items
+  under "Beyond the request", and no decision the planner settled was corrected, so none of the six is in scope and
+  the spec is built as it stands. Status `approved`. The time of this entry is when the words reached the
+  implementer, not when they were said
+- 2026-10-04T15:50:10Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a worktree of its own
+  at `/home/stef/projects/agentrite-0027`, because the main checkout is on the branch of 0029 with work in progress.
+  Working under the process of release 2.3.0, read from the main checkout's `node_modules`. Status `in-progress`
 
 ## Amendments
