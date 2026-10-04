@@ -156,6 +156,12 @@ removed here.
 * The check for real has steps of its own besides requirement 17's: a version from the project for one harness
   with the latest for the other, no `npm` on the `PATH`, a host with one harness, an image built by release
   2.3.0's wrapper, and one built by `master`'s wrapper with the pins
+* After the review, for its S1: one more trial under the same Compose project, in which an `npm` of the check's
+  own, first on the `PATH`, answers what the latest is with an exact published pair this host had not built, so
+  that the install of the "latest" is seen to run and not to come from the cache. The tick of the task for the
+  check rests on that trial together with the planner's rewording of requirement 17
+* After the review, for its C1: the search for a version of a harness also finds a quoted one and the JSON form,
+  and two tests hold the matcher to examples that must match and that must not
 * The first grep of the Verification also matches "Alpine" in a comment of the Dockerfile that this unit does not
   touch, so it prints that line and no other
 

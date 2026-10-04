@@ -292,5 +292,61 @@ timestamp: 2026-10-04T20:13:06Z
   live-build/cache matrix, registry-failure trials, timings, before/after cleanup comparisons or intermediate
   red-run counts within the review's permitted writes. No macOS/bash 3.2, Playwright-bearing project or interactive
   harness checks were run. Changed no work under review, updated no snapshot and left the untracked tarball alone
+- 2026-10-04T22:11:36Z [human] on the review, in the main session, by the dispatching session's account on
+  2026-10-05 of the human's calendar: "The reviewer is done reviewing; can you check the remarks and take the
+  necessary actions or discuss if required?" The time of this entry is when the words reached the implementer
+- 2026-10-04T22:11:36Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the outcome of the review's two
+  findings. Under the human's words above, the main session accepted both, and chose the corrections. The
+  acceptance and the corrections are the main session's, under that delegation, reported to the human and open to
+  their correction. The reviewer's entry was committed as written, in `e65d235`.
+  **C1, accepted, applied in `95da010`.** The search of `container/` and `templates/` for a version of a harness
+  now also finds a version in single or double quotes and in the JSON form. Two tests hold the matcher: eleven
+  examples that must match, and eight that must not, among them the bare argument, the `${...}` forms of
+  `container/compose.yml` and the Dockerfile, and two addresses. Test first: with the examples added and the old
+  matcher, the test of the examples that must match failed, exit 1, at `ARG OPENCODE_VERSION="1.18.30"`, and the
+  old matcher, asked by hand, missed five of them: that one, `OPENCODE_VERSION: "1.2.3"`,
+  `CLAUDE_CODE_VERSION: '2.3.4'`, `{"OPENCODE_VERSION": "1.2.3"}` and `{ "CLAUDE_CODE_VERSION":"2.3.4" }`. With the
+  new matcher `npm test`: 248 tests, 248 passing, exit 0. It is still a search by name: a version written with no
+  name of a harness before it is not found.
+  **S1, accepted. Two corrections, of which the first is here and the second is the planner's.** The main
+  session's reading of what the criterion is for: the wrapper hands the build an exact version, the install
+  step's cache key holds it, so a version this machine has not built is installed afresh, and one it has built
+  may come from the cache, which is that same version. The wording of requirement 17 is with the planner, and
+  `spec.md` is not edited here.
+  The observation, obtained on the host, with Docker Engine 28.4.0, Compose 2.39.2 and npm 11.11.0, under the
+  Compose project `ritenoar-agentrite-agent-check0030`, through the working copy's wrapper, with neither harness
+  on the `PATH`. What it is: the real wrapper, the real Docker build and the real install from the registry, with
+  the answer to "what is the latest" supplied by a stand-in. The stand-in is an `npm` of the check's own, first
+  on the `PATH`, that answers `view @anthropic-ai/claude-code version` with `2.1.286` and `view opencode-ai
+  version` with `1.18.32`, and hands every other call to the real npm. It was needed because the true latest
+  pair, 2.1.289 and 1.18.34, is in this machine's build cache: with the true latest the install was `CACHED`, as
+  D3 above has it. The real `npm view <package>@<version> version` confirmed that both versions are published,
+  exit 0 each. No record names that pair as built here; the build cache's own listing does not show the versions
+  of a step, so that it was not cached was known only from the build's output.
+  * S1a, with `CLAUDE_CODE_VERSION: 2.1.266` and `OPENCODE_VERSION: 1.18.30` in `agent/compose.project.yml`, not
+    committed, and no image: exit 0, a build whose install step was `CACHED`, the sandbox on
+    `2.1.266 (Claude Code)` and `1.18.30`, the labels likewise. The file was then restored with `git checkout`
+  * S1b, the file restored, no `--rebuild`: exit 0, nothing said, nothing built, the stand-in not called, the
+    sandbox still on 2.1.266 and 1.18.30
+  * S1c, `--rebuild`: exit 0. The wrapper printed "agent.sh: neither the project nor the host gives a version of
+    Claude Code, so the image is built with the latest published, 2.1.286." and the same for OpenCode with
+    1.18.32. The stand-in recorded two calls, `npm view @anthropic-ai/claude-code version --fetch-retries=0` and
+    `npm view opencode-ai version --fetch-retries=0`. In the build's output the step
+    `RUN npm install -g ... "@anthropic-ai/claude-code@2.1.286" "opencode-ai@1.18.32"` ran: "added 5 packages in
+    6s" and `#10 DONE 6.9s`, not `CACHED`, and the seven steps after it ran too. The sandbox printed
+    `2.1.286 (Claude Code)` and `1.18.32`, and the labels are `2.1.286` and `1.18.32`
+  * S1d, `--rebuild` once more: exit 0, the same two lines, two more calls to the stand-in, and the install step
+    `CACHED`, with the image's id the same as after S1c. So a second build of the same exact pair takes the
+    install from the cache, and holds that pair
+  Removed afterwards: the check's volume, network and image, and the one untagged image the rebuild left, which
+  carried the check's Compose project label. The lists of image ids, of image names with ids, of volumes, of
+  networks and of containers, taken before and after, are the same, compared with `diff`.
+  `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`.
+  No tracked file is changed. Nothing was logged in to. The build cache keeps the layers of the trial.
+  Not shown, and not showable on this machine without removing its build cache: an install that runs for the
+  pair the real registry calls the latest.
+  The plan's task for the check does not quote the criterion. Its tick stays, and rests on this trial together
+  with the planner's rewording, which the plan now says under "Adjusted while implementing".
+  Status stays `in-progress`
 
 ## Amendments
