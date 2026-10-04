@@ -341,13 +341,6 @@ The first seven were done before the bump was withdrawn, against the texts of th
   `deploy.sh` are as they were at `45e349f`, and the three test files of requirement 18 are as they were at
   `45e349f`, which `git diff 45e349f -- tests/harness-versions.test.mjs tests/wrapper-fixture.mjs
   tests/agent-wrapper.test.mjs` shows by printing nothing (R4, R18)
-- [ ] Try the file once without releasing. Make a throwaway clone of the repository on the host, with this branch
-  checked out under the name `master`, and in a fresh Claude Code session there type `/release`. Tell it nothing
-  else, except, when it asks or stops for it, that this is a trial that ends at step 3. Record whether the skill
-  started and sent the session to `RELEASING.md`; whether it ran the suite and went through step 1; whether it
-  drafted a section; and what it reported at step 3. Then have it restore the tree, commit nothing, and remove
-  the clone. The trial needs no Docker. When the wording of `RELEASING.md` has to change for it to work, change
-  it, and in the plan's Approach alike, and say so in the record (R1, R2, R6, R12)
 
 ## Verification
 
@@ -376,4 +369,3 @@ Each was ticked before the revision and is open again, to be seen on the tree th
 - [x] The test and the skill's description
 - [x] `RELEASING.md` cut down
 - [x] The README
-- [ ] The record of the trial of `/release`, with any correction to `RELEASING.md` it caused

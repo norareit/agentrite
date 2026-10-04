@@ -570,5 +570,34 @@ timestamp: 2026-10-04T18:20:11Z
   Open, so the status stays `in-progress`: that trial; the review; and the two choices of the revision the human
   has not read, the suite as a condition of step 1 and the condition on Docker dropped, which are built as the
   plan has them. Not pushed, not merged into `master`
+- 2026-10-04T20:28:47Z [human] decided that the trial of `/release` is not made as a task of this unit: the first real
+  release is the trial. On the trial left open: "Im going to need a release after 0030 and 0029... So maybe I can
+  just test it then?" The main session laid out two ways. Drop the trial's task now, with the reason recorded, so
+  that the unit can be reviewed and marked `implemented` before that release, with what the release then finds
+  becoming amendments or a new unit. Or leave the unit `in-progress` until the release, which collides with the
+  release notes being built from the units that are `implemented`. It recommended the first and named the risk:
+  nobody has typed `/release`, so it is not established that it starts the skill, and if it does not,
+  `RELEASING.md` can still be followed by asking an agent to read it, and the wiring is fixed afterwards. The
+  human: "Ill accept the risk. Note it like that. I'll let the reviewer check this". The time of this entry is
+  when the words reached the implementer, through the dispatching session
+- 2026-10-04T20:28:47Z [Claude Code, anthropic/claude-opus-5-5] as implementer, removed from `plan.md` the task "Try the
+  file once without releasing" and the commit point "The record of the trial of `/release`", which existed only
+  for it, as the process prescribes for a task that will not be done. No other task or verification item refers
+  to that trial: the two that say "trial" are about the withdrawn check's, which was made. No box in the plan is
+  open now. The risk the human accepted, as it stands:
+  * Not established: that typing `/release` in a session in this repository starts the skill. The skill's text is
+    held by a test, and nothing has run it
+  * Nobody, human or agent, has followed `RELEASING.md` as it is since the cut-down, from step 1 to step 3
+  * Step 4, the commit of the notes by the file, and the three commands of step 5 have never been run
+  * All of it is first exercised at the release the human makes after 0030 and 0029. If `/release` does not start
+    the skill, the file can be followed by asking an agent to read it
+  The steps of the trial in the entry of 20:15:20Z above stay as written, and are not done. They remain a way to
+  check it before that release.
+  `spec.md` has no requirement that the trial be made, and the implementer does not edit it. Three things in it
+  bear on this, for the reviewer and the human to see: requirement 1 ends "Typing `/release` in a Claude Code
+  session in this repository starts it", which nothing has shown; under "Not established" it says of that "The
+  plan has a task for it", and the decision "The tests hold the wiring, not the release" says "The release itself
+  is tried once by the plan, by an agent that has only the file", and the plan no longer has either.
+  Status stays `in-progress`: the review comes first
 
 ## Amendments
