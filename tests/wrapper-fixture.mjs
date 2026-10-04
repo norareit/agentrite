@@ -4,13 +4,17 @@ import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileS
 import { delimiter, join } from 'node:path';
 
 // What the fake harnesses print, in the two forms the real commands use. The versions are ones no release of either
-// harness has, so that no pin comes to equal them: the tests tell the host's version and the kit's pin apart by
-// their values, and a release moves the pins.
+// harness has, so that no test comes to depend on what the registry holds.
 export const hostVersions = { claude: '99.1.0', opencode: '98.2.0' };
 
-// The commands the wrapper, the dev shim and the fakes below run, besides `docker` and the harnesses. A node's own
-// directory cannot be put on the PATH instead, because a harness installed with `npm install -g` sits in it.
-const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'id', 'sed'];
+// What the fake `npm` gives as the latest published version of each harness's package. They differ from
+// `hostVersions`, so that the tests tell the two sources apart by their values.
+export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
+
+// The commands the wrapper, the dev shim and the fakes below run, besides `docker`, `npm` and the harnesses. A
+// node's own directory cannot be put on the PATH instead, because a harness installed with `npm install -g` sits
+// in it, and so does the real `npm`.
+const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'id'];
 
 function findOnPath(command) {
   for (const directory of (process.env.PATH ?? '').split(delimiter)) {
@@ -38,6 +42,10 @@ export function writeCommand(bin, name, script) {
 //     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
 //       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image
 //   A `build` is recorded and then fails when the file `buildFails` is there
+// * an `npm` that records each call, which `npmCalls` reads, and answers `view <package> version` with the
+//   package's version of `latestVersions`. It prints the content of the file `npmPrints` instead when that is
+//   there, and fails, as the real one does with no registry to reach, when the file `npmFails` is. A test that
+//   wants a host without `npm` removes its file
 export function fakeHost(base, recorded) {
   const bin = join(base, 'bin');
   mkdirSync(bin);
@@ -79,12 +87,31 @@ echo "${record} docker $*" >> "${calls}"
 if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi`,
   );
 
-  const dockerCalls = () => {
+  const npmRecord = join(base, 'npm-calls');
+  const npmPrints = join(base, 'npm-prints');
+  const npmFails = join(base, 'npm-fails');
+  writeCommand(
+    bin,
+    'npm',
+    `echo "npm $*" >> "${npmRecord}"
+if [ -f "${npmFails}" ]; then echo "npm error code ECONNREFUSED" >&2; exit 1; fi
+if [ -f "${npmPrints}" ]; then cat "${npmPrints}"; exit 0; fi
+[ "$1 $3" = "view version" ] || exit 64
+case "$2" in
+  @anthropic-ai/claude-code) echo '${latestVersions.claude}' ;;
+  opencode-ai) echo '${latestVersions.opencode}' ;;
+  *) echo "npm error code E404" >&2; exit 1 ;;
+esac`,
+  );
+
+  const linesOf = (file) => () => {
     try {
-      return readFileSync(calls, 'utf-8').trim().split('\n');
+      return readFileSync(file, 'utf-8').trim().split('\n');
     } catch {
       return [];
     }
   };
-  return { bin, projectBuildArgs, imageLabels, buildFails, dockerCalls };
+  const dockerCalls = linesOf(calls);
+  const npmCalls = linesOf(npmRecord);
+  return { bin, projectBuildArgs, imageLabels, buildFails, dockerCalls, npmPrints, npmFails, npmCalls };
 }

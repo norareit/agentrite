@@ -7,35 +7,24 @@ const repository = new URL('..', import.meta.url).pathname;
 const dockerfile = readFileSync(join(repository, 'container', 'Dockerfile'), 'utf-8');
 const compose = readFileSync(join(repository, 'container', 'compose.yml'), 'utf-8');
 
-// Three numbers separated by dots, optionally followed by a hyphen and a pre-release part.
-const version = /^\d+\.\d+\.\d+(-[0-9A-Za-z.-]+)?$/;
-
 const harnesses = [
-  { argument: 'CLAUDE_CODE_VERSION', label: 'com.ritenoar.agentrite.claude-code-version' },
-  { argument: 'OPENCODE_VERSION', label: 'com.ritenoar.agentrite.opencode-version' },
+  {
+    argument: 'CLAUDE_CODE_VERSION',
+    label: 'com.ritenoar.agentrite.claude-code-version',
+    npmPackage: '@anthropic-ai/claude-code',
+  },
+  { argument: 'OPENCODE_VERSION', label: 'com.ritenoar.agentrite.opencode-version', npmPackage: 'opencode-ai' },
 ];
 
-// What follows `ARG <argument>=` on each line that starts with it. The wrapper reads the kit's pin from these
-// lines, and a release bumps them, so there is one of each and it holds a version and nothing else.
-function pins(argument) {
-  const opening = `ARG ${argument}=`;
-  return dockerfile
-    .split('\n')
-    .filter((line) => line.startsWith(opening))
-    .map((line) => line.slice(opening.length));
-}
-
-function filesUnder(directory) {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
-    entry.isDirectory() ? filesUnder(join(directory, entry.name)) : [join(directory, entry.name)],
-  );
-}
-
-test('the Dockerfile pins each harness once, as the default of its build argument', () => {
+test('the Dockerfile gives neither harness a version: no line gives its build argument a default', () => {
+  const lines = dockerfile.split('\n');
+  const lastStage = dockerfile.slice(dockerfile.lastIndexOf('\nFROM ')).split('\n');
   for (const { argument } of harnesses) {
-    const found = pins(argument);
-    assert.equal(found.length, 1, `one line starts with ARG ${argument}=`);
-    assert.match(found[0], version);
+    assert.deepEqual(
+      lines.filter((line) => line.trim().startsWith(`ARG ${argument}=`)),
+      [],
+    );
+    assert.equal(lastStage.filter((line) => line === `ARG ${argument}`).length, 1, `the last stage declares it`);
   }
 });
 
@@ -59,18 +48,22 @@ test("the base Compose file gives both build arguments from the wrapper's own va
   }
 });
 
-// The README ships too and is not searched: every version in it is an example, and an example that a later pin
-// happens to equal is no second place to bump.
-test('no file under container/ or templates/ holds a pinned version but the Dockerfile', () => {
-  const pinned = harnesses.map(({ argument }) => pins(argument)[0]);
+// The wrapper asks the registry for the latest version of a package by its name, which the tests of the wrapper
+// hold it to. These are the packages the Dockerfile installs.
+test('the Dockerfile installs the packages the wrapper asks the registry about, each at its build argument', () => {
+  for (const { argument, npmPackage } of harnesses) {
+    assert.ok(dockerfile.includes(`"${npmPackage}@\${${argument}}"`), `the Dockerfile installs ${npmPackage}`);
+  }
+});
+
+// A search for a version written after a name of either harness, of its package or of its build argument. It
+// cannot find a version written with no such name before it. The versions the README holds are examples and are
+// not searched.
+test('no file under container/ or templates/ names a version of either harness', () => {
   const searched = [...filesUnder(join(repository, 'container')), ...filesUnder(join(repository, 'templates'))];
+  const versionOfAHarness = /(claude[-_ ]?code|opencode)[-_a-z]*[ @=:]+v?\d+\.\d+\.\d+/i;
   const holding = searched
-    .filter((file) => file !== join(repository, 'container', 'Dockerfile'))
-    .filter((file) => pinned.some((pin) => readFileSync(file, 'utf-8').includes(pin)))
+    .filter((file) => versionOfAHarness.test(readFileSync(file, 'utf-8')))
     .map((file) => relative(repository, file));
   assert.deepEqual(holding, []);
-  const lines = dockerfile.split('\n');
-  for (const pin of pinned) {
-    assert.equal(lines.filter((line) => line.includes(pin)).length, 1, `${pin} is written once in the Dockerfile`);
-  }
 });
