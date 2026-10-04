@@ -27,9 +27,9 @@ const sandboxRef = `refs/remotes/sandbox/${branch}`;
 // A project that is a git repository, with the kit's wrapper and its unit-clone.sh installed under its ignored
 // `node_modules`, and the host of `fakeHost`, whose Compose project is `project-agent`. The repository is on
 // `master` and has three more branches, of which `task-0026-doc` is one commit ahead of `master`. It ignores
-// `node_modules` and `.reviews`, and holds a file that is not committed, `draft.txt`. The home has a git identity
-// and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run` runs
-// the wrapper with the project root and `args`, and `git` runs the real git in the repository.
+// `node_modules`, `.reviews` and `.env`, and holds a file that is not committed, `draft.txt`. The home has a git
+// identity and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run`
+// runs the wrapper with the project root and `args`, and `git` runs the real git in the repository.
 function setUp(t, { imageExists = true } = {}) {
   const base = mkdtempSync(join(tmpdir(), 'agent-unit-run-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
@@ -40,7 +40,7 @@ function setUp(t, { imageExists = true } = {}) {
   chmodSync(join(container, 'agent.sh'), 0o755);
   mkdirSync(join(root, 'agent'));
   writeFileSync(join(root, 'agent', 'compose.project.yml'), '');
-  writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n');
+  writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\n');
   const home = join(base, 'home');
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
@@ -397,4 +397,71 @@ test("the wrapper leaves the host's configuration, hooks and other branches as t
   assert.equal(result.status, 0, result.stderr);
   assert.equal(subjectOf(git, branch), 'work');
   assert.deepEqual(read(), before);
+});
+
+// What the review of 4da86cd found.
+
+// Git overwrites an ignored file with a tracked one of a merge unless told not to.
+test("the wrapper leaves a checked-out branch whose fast-forward would overwrite the host's ignored file", (t) => {
+  const { root, run, git, agent } = setUp(t);
+  git('checkout', '--quiet', branch);
+  const before = git('rev-parse', branch);
+  writeFileSync(join(root, '.env'), 'local-secret\n');
+  agent('echo sandbox-copy > .env\ngit add --force .env\ngit commit --quiet --message work');
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(root, '.env'), 'utf-8'), 'local-secret\n');
+  assert.equal(git('rev-parse', branch), before);
+  assert.equal(subjectOf(git, sandboxRef), 'work');
+  assert.ok(result.stderr.includes(`git merge sandbox/${branch}`), result.stderr);
+});
+
+test('the wrapper starts nothing when Docker cannot say whether the container is running', (t) => {
+  const { state, run, psFails, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+  writeFileSync(psFails, '');
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /agent\.sh: could not ask Docker whether/);
+  assert.ok(result.stderr.includes(containerName), result.stderr);
+  assert.deepEqual(dockerCalls(), []);
+  assert.deepEqual(npmCalls(), []);
+  assert.equal(existsSync(state), false);
+});
+
+test('the wrapper fetches and removes nothing when Docker cannot say whether the container has stopped', (t) => {
+  const { clone, run, git, agent, psFails } = setUp(t);
+  const before = git('rev-parse', branch);
+  agent(`${commitWork}\necho > "${psFails}"`);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /agent\.sh: could not ask Docker whether/);
+  assert.ok(result.stderr.includes(clone), result.stderr);
+  assert.equal(git('rev-parse', branch), before);
+  assert.equal(hasRef(git, sandboxRef), false);
+  assert.equal(existsSync(join(clone, 'work.txt')), true);
+});
+
+// The agent leaves an ignored directory that cannot be emptied. What is left of a clone whose removal fails is
+// not a clone any more, so it must not be where the next run looks for one.
+test('the wrapper says that removing the clone failed, exits non-zero, and does not resume what is left', (t) => {
+  const { clone, run, agent } = setUp(t);
+  const left = join(clone, '..', `.discarded-${branch}`);
+  const locked = join(left, 'node_modules', 'locked');
+  agent('mkdir -p node_modules/locked\necho kept > node_modules/locked/file.txt\nchmod 555 node_modules/locked');
+  try {
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /agent\.sh: removing the clone failed/);
+    assert.ok(result.stderr.includes(join(left)), result.stderr);
+    assert.equal(existsSync(clone), false);
+    assert.equal(existsSync(locked), true);
+
+    agent('echo kept > kept.txt');
+    const next = run([branch, 'echo', 'hi']);
+    assert.doesNotMatch(next.stderr, /resuming the clone/);
+    assert.equal(readFileSync(join(clone, 'unit.md'), 'utf-8'), 'the unit\n');
+  } finally {
+    // So that the test's own directory can be removed.
+    if (existsSync(locked)) chmodSync(locked, 0o755);
+  }
 });

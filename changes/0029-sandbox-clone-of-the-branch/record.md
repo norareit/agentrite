@@ -122,5 +122,32 @@ timestamp: 2026-10-04T15:31:37Z
   and test-writing order. Did not replay real-Docker behavior, Docker Desktop for macOS, interactive terminal
   interruption, stopped-container recovery or same-moment starts. The saved review names the checks run and their
   results, including the three targeted reproductions with real git and a Docker stand-in
+- 2026-10-04T23:10:55Z [Claude Code, anthropic/claude-opus-5-5] as implementer, on the human's request to see to the review's
+  findings, read the review of `4da86cd` and accepted all four. None is declined, so none waits for a decision.
+  The work was added to the plan first. The four tests were written before the corrections and seen failing, 4 of
+  4, with the 282 others passing; after the corrections `npm test` reported 286 tests, 286 passing, on the tree of
+  this commit. Nothing of it was run against Docker. The outcomes:
+  * S1, accepted and corrected. The merge of a checked-out branch takes `--no-overwrite-ignore`, so a commit that
+    adds a file where the host has an ignored one is not fast-forwarded: the host's file keeps its content, and
+    the commits wait at `sandbox/<branch>` with the merge named, as for a branch that moved. The test is the
+    reviewer's case, with an ignored `.env`. A branch that is not checked out has no working tree to overwrite
+  * S2, accepted and corrected. The wrapper tells a `docker ps` that failed from one that found nothing. Before
+    the run it then starts nothing and exits 2. After the run it fetches and removes nothing, says that the
+    container may still be running and where the clone is, and exits non-zero. Two tests, on a stand-in whose `ps`
+    fails; no real daemon was made to fail
+  * C1, accepted and corrected. A clone that holds nothing the host lacks is moved aside before it is removed, to
+    `.discarded-<branch>` beside it, a name no branch can have, and a removal that fails is said, with where the
+    remains are, and makes the wrapper exit non-zero. The next run then finds no directory to take for a clone.
+    The test is the reviewer's case, a directory of mode 555 under an ignored `node_modules`, and has a second run
+    make a new clone. Not corrected, and for the human to weigh: the wrapper does not change the permissions of
+    such a directory to get it removed, so a tool that leaves read-only directories among ignored files makes
+    every removal fail until the remains are removed by hand
+  * P1, accepted and corrected in the plan: the README task now says that "Working on a clone" follows "Starting
+    it" and comes before "Another working directory", which is where it was put and what the first plan meant by
+    "after it", before the revision put two bullets in between
+  The README's "Working on a clone" gained the three cases. The plan's commit points for the findings were one for
+  each, and are one for all: the corrections share the fixture and the two shell files. While seeing the tests
+  fail, the failing test of C1 left a temporary directory it could not remove, `/tmp/agent-unit-run-jsQ1pm`, which
+  was removed by hand. The status stays `in-progress`
 
 ## Amendments

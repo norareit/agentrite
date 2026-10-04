@@ -15,7 +15,20 @@ export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
 // those a unit run and the scripts that play its agent run: `git` and what follows it. A node's own directory
 // cannot be put on the PATH instead, because a harness installed with `npm install -g` sits in it, and so does the
 // real `npm`.
-const linkedCommands = ['bash', 'basename', 'cat', 'chmod', 'dirname', 'id', 'git', 'grep', 'mkdir', 'mktemp', 'rm'];
+const linkedCommands = [
+  'bash',
+  'basename',
+  'cat',
+  'chmod',
+  'dirname',
+  'id',
+  'git',
+  'grep',
+  'mkdir',
+  'mktemp',
+  'mv',
+  'rm',
+];
 
 function findOnPath(command) {
   for (const directory of (process.env.PATH ?? '').split(delimiter)) {
@@ -43,7 +56,8 @@ export function writeCommand(bin, name, script) {
 //     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
 //       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image
 //     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
-//       running under the name the file holds, and with nothing otherwise
+//       running under the name the file holds, and with nothing otherwise. It fails instead, as it does with no
+//       daemon to ask, when the file `psFails` is there
 //   A `build` is recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does
 //   nothing. A `run` is recorded and then plays the agent when the file `agentScript` is there: it runs that file
 //   with `bash` in the directory the call mounts at `/work`, and exits with its status
@@ -65,6 +79,7 @@ export function fakeHost(base, recorded) {
   const buildFails = join(base, 'build-fails');
   const runningContainer = join(base, 'running-container');
   const agentScript = join(base, 'agent-script');
+  const psFails = join(base, 'ps-fails');
   writeFileSync(projectBuildArgs, '{}');
   writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
   const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
@@ -76,6 +91,7 @@ export function fakeHost(base, recorded) {
   cat "${imageLabels}"; exit 0
 fi
 if [ "$1" = "ps" ]; then
+  if [ -f "${psFails}" ]; then echo "Cannot connect to the Docker daemon" >&2; exit 1; fi
   [ ! -f "${runningContainer}" ] || cat "${runningContainer}"
   exit 0
 fi
@@ -137,6 +153,7 @@ esac`,
     buildFails,
     runningContainer,
     agentScript,
+    psFails,
     dockerCalls,
     npmPrints,
     npmFails,

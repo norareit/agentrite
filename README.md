@@ -302,10 +302,13 @@ When the container exits, whatever its exit code, the wrapper brings the work ba
 * It fast-forwards the host's branch to it, whether or not that branch is checked out, and removes
   `sandbox/<branch>`. When the host's branch moved meanwhile and cannot be fast-forwarded, it is left as it is,
   the commits wait at `sandbox/<branch>`, and the wrapper names the command that merges them:
-  `git merge sandbox/<branch>`
+  `git merge sandbox/<branch>`. The same happens when the branch is checked out and the commits add a file where
+  the host has an ignored one, which a fast-forward would overwrite
+* It does neither while the container is still running, or when Docker cannot say whether it is
 * It removes the clone when nothing in it would be lost. A clone that holds a file that is not committed, apart
   from ignored files, or a commit on another branch or in a stash, is kept, and the wrapper says where it is and
-  what it holds
+  what it holds. When the removal itself fails, for example on a directory the agent made read-only, the wrapper
+  says so and where the remains are, beside the clone's place as `.discarded-<branch>`, to be removed by hand
 
 A clone that was kept is resumed by the same command, as it is: it is not updated from the host's branch. After a
 crash of the container, the wrapper or the host, the clone is still there and nothing has been fetched;

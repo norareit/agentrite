@@ -66,14 +66,16 @@ prepare_clone() {
 
 # Moves the host's branch to sandbox/<branch> when that is a fast-forward, and removes
 # sandbox/<branch> then. A branch that is checked out is moved by a merge, because git
-# refuses to fetch into it, and its working tree follows. Fails when the branch cannot
-# be fast-forwarded, and leaves both as they are.
+# refuses to fetch into it, and its working tree follows. The merge is told not to
+# overwrite an ignored file of the host with a file the commits add at its path, which
+# git otherwise does without a word. Fails when the branch cannot be fast-forwarded,
+# and leaves both as they are.
 fast_forward_branch() {
   local root="$1" branch="$2"
   local ref="refs/remotes/sandbox/$branch"
   if ! git -C "$root" merge-base --is-ancestor "$ref" "refs/heads/$branch"; then
     if [ "$(git -C "$root" symbolic-ref --quiet HEAD || true)" = "refs/heads/$branch" ]; then
-      git -C "$root" merge --quiet --ff-only "$ref" || return 1
+      git -C "$root" merge --quiet --ff-only --no-overwrite-ignore "$ref" || return 1
     else
       git -C "$root" fetch --quiet . "$ref:refs/heads/$branch" 2>/dev/null || return 1
     fi
@@ -109,6 +111,27 @@ clone_unfetched_refs() {
   done <<< "$refs"
 }
 
+# Removes a clone that holds nothing the host lacks. The clone is first moved aside, to
+# a name beside it that no branch can have, because a part of a branch's name does not
+# start with a dot. A removal that fails half way then leaves its remains there, and
+# not where the next run would take them for a clone to resume. Fails, saying where the
+# remains are, when the clone cannot be moved or removed.
+discard_clone() {
+  local clone="$1" aside
+  aside="$(dirname "$clone")/.discarded-$(basename "$clone")"
+  rm -rf "$aside" 2>/dev/null || true
+  if [ -e "$aside" ] || ! mv "$clone" "$aside"; then
+    echo "agent.sh: removing the clone failed: $aside, the remains of an earlier one, is in the way." >&2
+    echo "The clone is at $clone and holds nothing the host lacks. Remove both by hand." >&2
+    return 1
+  fi
+  if ! rm -rf "$aside"; then
+    echo "agent.sh: removing the clone failed. It held nothing the host lacks." >&2
+    echo "Its remains are at $aside. Remove them by hand." >&2
+    return 1
+  fi
+}
+
 # Brings the work of a run back: fetches the clone's branch as sandbox/<branch>,
 # fast-forwards the host's branch when that is possible, and removes the clone when
 # nothing in it would be lost. Only the unit's branch is fetched, and no tag and no
@@ -135,8 +158,8 @@ land_clone() {
     return 1
   fi
   if [ -z "$files$refs" ]; then
-    rm -rf "$clone"
-    return 0
+    discard_clone "$clone"
+    return
   fi
   echo "agent.sh: the clone is kept at $clone, because it holds what the host does not." >&2
   if [ -n "$files" ]; then

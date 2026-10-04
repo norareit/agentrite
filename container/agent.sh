@@ -274,9 +274,16 @@ needs_build() {
   differs_from_image "$harness" "$held" "$wanted" "$origin"
 }
 
-# Whether Docker has a container running under the unit run's name.
+# Whether Docker has a container running under the unit run's name. Fails with 2, and
+# says so, when Docker could not be asked: that says nothing of the container, which
+# may be running.
 unit_container_running() {
-  [ -n "$(docker ps --quiet --filter "name=^/$container_name\$")" ]
+  local found
+  if ! found="$(docker ps --quiet --filter "name=^/$container_name\$")"; then
+    echo "agent.sh: could not ask Docker whether the container $container_name is running." >&2
+    return 2
+  fi
+  [ -n "$found" ]
 }
 
 claude_code_host="$(installed_version claude "Claude Code")"
@@ -318,9 +325,15 @@ if [ -n "$branch" ]; then
   container_name="$project-$branch"
   container_name="${container_name//[^A-Za-z0-9_.-]/-}"
   clone="${XDG_STATE_HOME:-${HOME:?}/.local/state}/agentrite/$project/$branch"
-  if unit_container_running; then
+  running=0
+  unit_container_running || running=$?
+  if [ "$running" -eq 0 ]; then
     echo "agent.sh: the container $container_name is running, so a run for $branch is under way." >&2
     echo "Two runs never work on one branch. Wait for it, or stop it with 'docker stop $container_name'." >&2
+    exit 2
+  fi
+  if [ "$running" -eq 2 ]; then
+    echo "Nothing was started." >&2
     exit 2
   fi
   refuse_unlanded "$root" "$branch" "$clone" || exit 2
@@ -434,10 +447,19 @@ status=0
   agent "$@" || status=$?
 
 # A container that outlived its `run`, as one does whose terminal was closed, still
-# writes the clone, so nothing is fetched or removed under it.
-if unit_container_running; then
+# writes the clone, so nothing is fetched or removed under it, and neither when Docker
+# cannot say whether it stopped.
+running=0
+unit_container_running || running=$?
+if [ "$running" -eq 0 ]; then
   echo "agent.sh: the container $container_name is still running, so nothing was fetched." >&2
   echo "Its clone is at $clone. Once it has stopped, the same command resumes the clone." >&2
+  exit "$status"
+fi
+if [ "$running" -eq 2 ]; then
+  echo "It may still be running, so nothing was fetched. Its clone is at $clone," >&2
+  echo "and the same command resumes it." >&2
+  [ "$status" -ne 0 ] || status=1
   exit "$status"
 fi
 

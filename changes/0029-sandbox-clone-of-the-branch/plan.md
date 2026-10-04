@@ -212,8 +212,9 @@ changes, so no rebuild is needed for the change itself.
     - "The harness versions" gains a sentence: the versions and the image are worked out from the checkout the
       command is run from, also for a unit run, as the spec's "The sandbox is configured from the host's checkout"
       states it
-    - a new subsection after it, "Working on a clone": planning on the host and the sandbox for implementing and
-      reviewing; the unit by ID or branch and what happens when an ID names several; only committed work goes in;
+    - a new subsection after "Starting it" and before "Another working directory", "Working on a clone": planning
+      on the host and the sandbox for implementing and reviewing; the unit by ID or branch and what happens when an
+      ID names several; only committed work goes in;
       `npm ci` first in a new clone; where the clones are; what happens when the container exits, with
       `sandbox/<branch>` and the merge; a kept clone and how it is resumed, landed with `./agent.sh <unit> true`
       or discarded with `rm -rf`; two units side by side and that each container has the full memory and CPU
@@ -238,6 +239,25 @@ changes, so no rebuild is needed for the change itself.
     - remove the throwaway branches, the kept clone and the `seen` file, and log that nothing is left
 - [x] Log in the record that Docker Desktop for macOS was not tried, unless it was (R18)
 
+After the review of `4da86cd`, whose findings are S1, S2, P1 and C1. Each test is written first and seen failing:
+
+- [x] S1: a test with the unit's branch checked out on the host, an ignored file there, and a commit of the agent
+  that adds a file at that path: the host's file keeps its content, the branch is left, `sandbox/<branch>` holds
+  the commit and the wrapper names the merge. Then the merge of a checked-out branch takes
+  `--no-overwrite-ignore` (R11, R16)
+- [x] S2: the fixture's `docker` fails `ps` when the file `psFails` is there. Two tests: with it there from the
+  start, on a host where a build is due, the wrapper refuses, and asks Docker and npm nothing more; with the agent
+  making it during the run, after a commit, nothing is fetched, the clone stays, and the wrapper says that it
+  could not ask and exits non-zero. Then the wrapper tells a query that failed from a container that is not
+  running (R4, R13, R14)
+- [x] C1: the fixture links `mv`. A test in which the agent leaves an ignored directory that cannot be removed:
+  the wrapper says that removing the clone failed and where what is left of it is, exits non-zero, and the next
+  run makes a new clone and does not resume what was left. Then the clone is moved aside, to a name no branch can
+  have, before it is removed, and a removal that fails is reported (R12, R14)
+- [x] The README's "Working on a clone" says what the three corrections changed for a developer: a fast-forward
+  that would overwrite an ignored file, a container Docker cannot be asked about, and a removal that fails (R19)
+- [x] P1: the README task above names where "Working on a clone" is, which this entry's commit corrects
+
 ## Verification
 
 - [x] `npm test` exits 0 on the host
@@ -257,3 +277,5 @@ changes, so no rebuild is needed for the change itself.
   `container/compose.yml`
 - [x] `feature-0029` the README
 - [x] `feature-0029` the record of the real check
+- [x] `feature-0029` the review's S1, S2, C1 and P1, with their tests, the README's lines on them and the record
+  of their outcomes, as one commit: the three corrections share the fixture and the two shell files
