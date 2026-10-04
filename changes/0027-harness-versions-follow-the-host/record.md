@@ -191,5 +191,30 @@ timestamp: 2026-10-04T15:49:32Z
   entry of 16:01:38Z says the move to the main checkout was refused. Since then it was made: on the human's word,
   "Yes bring it back", the dispatching session removed the worktree and switched `/home/stef/projects/agentrite`
   to this branch at `6aea4cb`, after the implementer's report. The work goes on there, with its `node_modules`
+- 2026-10-04T16:35:55Z [Claude Code, anthropic/claude-opus-5-5] as implementer, applied both findings in `93752a4`.
+  * S1, accepted. The wrapper now asks Compose for the merged configuration with a marker in place of the two
+    versions, in that one call's own environment. A marker that comes back says the project gives no version, and
+    anything else is the project's value, whatever it equals. This is the approach the dispatching session
+    suggested, taken because it keeps one Compose call and needs nothing of the project's file. The marker is not
+    empty, so the `:?` in `container/compose.yml` is satisfied, and the build and the run see the real versions.
+    The plan's steps 3 and 4 are corrected in place, since the fault was the plan's
+  * Before the change, the three tests added for it failed and the other 221 passed: a project's value equal to
+    the host's, for Claude Code and for OpenCode, and one equal to the kit's pin with neither harness on the
+    `PATH`. Each got `from the host` or `from the kit` where it expects `from the project's compose file`. After
+    the change the suite reported 224 tests, all passing
+  * Checked with real Compose merging by the reviewer's reproduction, with its build and run calls and its image
+    labels simulated, and its mock extended to print the two variables and the real merged arguments at the build.
+    With both versions held at the host's, 2.1.289 and 1.18.34: both lines name `the project's compose file`. With
+    no override: both name `the host`. With only OpenCode held, at the pin: the build's merged arguments are
+    2.1.289 and 1.18.30. In all three the build and the run saw the real versions in the variables, not the marker.
+    No image was built and no container run for this, and `ritenoar-agentrite-agent` is still `143d91ec452a` and
+    `ritenoar-agentrite-agent-dev` still `d11961d8abb8`
+  * Not handled, and not tried: a project's file that itself refers to one of the wrapper's two variables. Alone as
+    the whole value it gets the marker back and counts as no override, which gives the host's or the kit's version.
+    Inside a longer value the marker would become part of the wanted version. The real trials of requirement 12
+    were not repeated on the changed wrapper
+  * P1, accepted. The plan's task now says 24 files, which is what `npm pack --dry-run` lists here and on `master`
+  Status stays `in-progress`: the last item of requirement 12 is the human's, and whether the fix to a blocking
+  finding gets a second review is the human's to say
 
 ## Amendments
