@@ -1,7 +1,7 @@
 ---
 kind: task
-status: draft
-timestamp: 2026-10-04T11:29:49Z
+status: in-progress
+timestamp: 2026-10-04T14:19:52Z
 ---
 
 # 0026 Document running the sandbox
@@ -69,5 +69,9 @@ Not in this task:
   options and the root refusal are as `container/agent.sh` has them, and the model server's defaults as
   `container/compose.yml` has them. Not checked: the two statements the description names as untried. Status left
   at `draft` for the human's approval
+- 2026-10-04T14:19:52Z [human] asked for change 0026 to be implemented, with the record as the planner left it
+- 2026-10-04T14:19:52Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role. The status was `draft`, and
+  the human's request to implement is taken here as the approval, so it moves through `approved` to `in-progress`
+  in this one entry. That reading is the implementer's, not something the human said in those words
 
 ## Amendments
