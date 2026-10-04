@@ -84,7 +84,7 @@ after, are the same, compared with `diff`. `ritenoar-agentrite-agent` is still `
   and `npm view` by hand. The plan has a task that checks the built wrapper for real
 * That an exact version, found by the wrapper and handed to the build, installs afresh when it differs from the
   cached one. It is how a changed pin and a changed host version behave under 0027, whose record has it, and was
-  not tried again here
+  not tried again here. It was seen later, in the check for real, which the record has
 * Docker Desktop for macOS, and a host whose `npm` is not the one beside its `node`
 * What a developer sees in a sandbox whose harness is a version nobody tried. It cannot be established: it is
   what this unit accepts
@@ -188,7 +188,11 @@ The tests and the check:
     * `--rebuild` with the registry unreachable stops as requirement 7 says, and the image is as it was
     * with an older exact version of each harness in the image, put there by a version in the project's Compose
       file that is not committed and is then taken out again, a start without `--rebuild` keeps the older
-      versions, and one with `--rebuild` installs the latest and does not take the install from the cache
+      versions, and one with `--rebuild` installs the exact versions the registry's answer gives, which the
+      sandbox and the labels then hold. When the machine has not built that pair before, the install runs and
+      is not taken from the cache. When it has, the install may come from the cache, which holds that same pair.
+      Where the true latest pair is already in the machine's build cache, the check shows the first of the two
+      with an `npm` of its own, first on the `PATH`, that answers with a published pair the machine has not built
     * with the host's own harnesses on the `PATH`, a start behaves as 0027's record has it
 
 ## Decisions
@@ -219,6 +223,19 @@ The tests and the check:
   what the sandbox runs. It costs one `npm view` per harness, about a third of a second each, at a build.
   Rejected as well: an argument that breaks the cache, such as the date, with `latest` kept. It would still
   record nothing, and a label written by the build cannot take the output of a command
+* **What the check shows of the cache is that the version decides it, not that a build never uses it. The main
+  session's, under the human's delegation, on the review's finding S1, and open to the human's correction.**
+  Requirement 17 first asked that `--rebuild` "installs the latest and does not take the install from the cache".
+  That asked for more than the unit is for, and for something a machine cannot always show: the cache is keyed
+  by the install's command line, so a pair the machine has built before is answered from the cache, and rightly,
+  since the cached layer holds exactly that pair. The check's own earlier case had built the latest pair, and the
+  case for this criterion was then `CACHED`, which the reviewer found. What the exact version is for is the
+  other half: a version the machine has not built is installed afresh, where `latest` never was. The reviewer
+  offered two corrections, an observation with a cold cache or a criterion that permits the reuse, and both were
+  taken: the requirement says both halves, and the check shows the first with a stand-in for the registry's
+  answer, because the true latest cannot be shown uncached on a machine that has built it without removing its
+  build cache. The stand-in answers with a real published pair, so the install itself is real. The delegation
+  and the outcome are in the record, in the entries of 2026-10-04T22:11:36Z
 * **The registry is asked only at a build, and a sandbox keeps its version between builds. The planner's.** The
   request says "at build time". Asking at every start would make the sandbox follow the registry as it follows
   the host, and it would put a network call in front of every start on a host without the harness: a third of a

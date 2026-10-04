@@ -348,5 +348,24 @@ timestamp: 2026-10-04T20:13:06Z
   The plan's task for the check does not quote the criterion. Its tick stays, and rests on this trial together
   with the planner's rewording, which the plan now says under "Adjusted while implementing".
   Status stays `in-progress`
+- 2026-10-04T22:12:39Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the branch at `2b9768a`, reworded
+  requirement 17's criterion on the cache for the review's S1, which the main session accepted under the human's
+  delegation, as the entries of 22:11:36Z above have it. Read for it: those entries with the trial S1a to S1d, and
+  the findings in `.reviews/0030-no-kit-harness-versions/2026-10-04-opencode-gpt-6.1-sol-full-e630e76.md`. Only
+  `spec.md` and this record are changed, and no behaviour. What changed:
+  * R17's bullet on `--rebuild` from older versions no longer says "installs the latest and does not take the
+    install from the cache". It says that `--rebuild` installs the exact versions the registry's answer gives,
+    which the sandbox and the labels then hold; that a pair the machine has not built is installed and not taken
+    from the cache; that a pair it has built may come from the cache, which holds that same pair; and that the
+    check may supply the registry's answer through an `npm` of its own when the true latest is already in the
+    machine's build cache
+  * A decision is added, as the main session's under the human's delegation and open to the human's correction:
+    what the check shows of the cache, why the first wording asked too much, and that both of the reviewer's
+    corrections were taken
+  * "Not established" said that an exact version installing afresh was not tried again. It now adds that the
+    check for real saw it
+  The decision on the exact version in place of `latest` argues from the cache key changing with the version,
+  which agrees with the new wording and is as it was. The plan's line on the trial after the review says the
+  same as the requirement now does and is not changed. Status stays `in-progress`
 
 ## Amendments
