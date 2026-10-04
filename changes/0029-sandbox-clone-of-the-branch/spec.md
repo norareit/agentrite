@@ -29,6 +29,12 @@ cleaned up afterwards. The decisions below were made in that conversation:
 Docker Sandboxes has the same idea as its clone mode: the repository is mounted read-only, the agent works on a
 private clone inside the sandbox, and the host fetches from it as a git remote.
 
+Units 0027 and 0030 landed after this spec was first written, and the wrapper now does more before it runs the
+container. At each start it asks the host's `claude` and `opencode` for their versions, reads the image's labels,
+and builds the image again when they differ. When neither the project nor the host gives a version and a build is
+due, it asks the npm registry for the latest one, and stops when it gets none. A build can take minutes and can
+fail. Requirements 1, 3, 4, 5 and 6 say where a unit run stands relative to that.
+
 ### What was found while planning
 
 On Linux with git 2.43.0, Docker Engine 28.4.0 and Compose 2.39.2, in scratch repositories and with a Compose
@@ -67,24 +73,29 @@ project named `agentrite-0029-plan`. Everything created was removed afterwards.
 Starting a run:
 
 1. The wrapper starts a container only when told what to mount: a unit as the first argument after its options, or
-   `--in-place`, or `--workdir DIR`. Given none of them, it starts nothing, exits non-zero and names the three forms
+   `--in-place`, or `--workdir DIR`. Given none of them, it starts nothing, exits non-zero and names the three
+   forms. It has then asked Docker and the npm registry nothing, and built nothing
 2. `--in-place` mounts the project root at `/work` as the wrapper does today, and `--workdir DIR` mounts `DIR` as
    it does today. Neither makes a clone, fetches anything or removes anything, and every argument after the options
    is the command
 3. The unit is a local branch. An argument that is the name of a local branch is that branch. Otherwise an argument
    of digits only is the branch whose name holds it as a whole number, when exactly one does. When several do, the
    wrapper lists them and asks for one by name. When none does, it says so, and says that the branch is made on the
-   host when the unit is planned. In both cases it starts nothing and exits non-zero
+   host when the unit is planned. In both cases it starts nothing and exits non-zero, having asked Docker and the
+   npm registry nothing and built nothing
 4. While a run for a branch has its container running, a second run for that branch is refused. The refusal names
-   the running container, and the second run changes neither the clone nor the repository
+   the running container, and the second run changes neither the clone nor the repository. It is refused before
+   the image is built and before the registry is asked
 5. A run does not start on a new clone while `sandbox/<branch>` holds commits that the host's branch does not. The
-   wrapper says to merge or delete it first, so that an earlier run's commits are not overwritten
+   wrapper says to merge or delete it first, so that an earlier run's commits are not overwritten. It says so
+   before the image is built and before the registry is asked
 
 The clone:
 
 6. A unit run mounts at `/work` a clone of the host repository with the branch checked out at the commit the
    host's branch is at. The clone has the host's `master` as `origin/master`. It shares no file with the host
-   repository. It holds nothing the host has not committed, and no ignored file
+   repository. It holds nothing the host has not committed, and no ignored file. It is made after the image is
+   built, so that a build that fails, or a registry that gives no version, leaves no clone behind
 7. The clone is in the developer's state directory, outside the project root and outside any directory the system
    empties at a restart, so that it outlives a crash of the container, of the wrapper and of the host
 8. When a clone made for the branch is still there, the run mounts it as it is, without cloning again, and says so
@@ -144,12 +155,24 @@ Proof and documentation:
       The commit is in a diff the developer can read first, which the hook was not
     * what a review file says, to a human or to an agent that reads it on the host
     * a run with `--in-place` or `--workdir`, which mounts a directory as it is
+    * a change to the sandbox's own configuration. See "The sandbox is configured from the host's checkout"
     * a flaw in git's handling of a fetch from a hostile repository, or in Docker
     * anything the sandbox did not defend against before: the saved logins in the home volume, and data leaving
       through an allowlisted host or through DNS
 
   The supported usage is one developer, one host, branches made on the host, and a clone that only the wrapper and
   the sandbox touch
+* **The sandbox is configured from the host's checkout, not from the clone.** The wrapper, the image's build
+  context, `agent/compose.project.yml` with its allowlist, its limits and a harness version it holds, and
+  `package-lock.json` for Playwright are those of the project root the command was run from, on whatever branch
+  that checkout is. So a unit run of a branch that changes one of them runs without the change, and an agent that
+  edits the allowlist in the clone has not widened its own sandbox. The change takes effect once its commit is
+  checked out on the host, which is "what a commit contains" above. Rejected: reading them from the clone, which
+  would let the agent set what confines it
+* **Refusals come before the build, and the clone after it.** A run that will be refused should not first spend
+  minutes on a build or fail on a registry it did not need, so the choice, the branch, the lock and the unmerged
+  `sandbox/<branch>` are checked first. The clone is made last, because a new clone left behind by a failed build
+  would be resumed by the next run as if it held work, at a commit the host's branch may have left
 * **No hard links.** The clone copies the objects. A hard-linked object is one file in both repositories, which
   the agent owns and can rewrite. The cost is a copy of the object store for each run, 11 MB for this repository
 * **The clone is compared from the host's side.** Requirement 12 needs to know whether the clone holds
@@ -172,8 +195,10 @@ Proof and documentation:
   by default as part of the home
 * **A positional unit, and no default.** `./agent.sh 0029` is the common command, so it is the short one. With no
   default, `./agent.sh claude` no longer starts a sandbox: it looks for a branch named `claude` and fails with the
-  three forms. That is a change for every project that updates, and belongs in the release's "Worth knowing when
-  you update"
+  three forms. A command with options only fails too, `./agent.sh` and `./agent.sh --mount DIR` among them, and so
+  does `./agent.sh --rebuild`, which is how a sandbox whose harness has no version from the project or the host
+  gets a newer one: each now also says what to mount, as in `./agent.sh --in-place --rebuild`. That is a change
+  for every project that updates, and belongs in the release's "Worth knowing when you update"
 * **The wrapper never makes a branch.** Planning is done on the host, where the planner has the web and the
   developer's review, and it leaves the branch with the unit's documents committed. A run for a branch that does
   not exist is a mistake to report, not a branch to create. This also keeps the numbering of units on the host,

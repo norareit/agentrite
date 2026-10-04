@@ -7,12 +7,31 @@ today, ending in the same `exec docker compose run`. With a unit it resolves the
 the container under a name, and then lands the work. It can no longer `exec` in that case, because it has work to
 do after the container.
 
-The git work goes in a new file beside it, `container/unit-clone.sh`, which the wrapper sources. It holds
-functions and no top-level code, so the wrapper stays the one place that orders the steps and talks to Docker:
+The git work goes in a new file beside it, `container/unit-clone.sh`, which the wrapper sources when it is given
+a unit, and not for `--in-place` or `--workdir`: those runs stay what they are today, and the tests that install
+the wrapper with nothing else of the kit beside it stay as they are. The file holds functions and no top-level
+code, so the wrapper stays the one place that orders the steps and talks to Docker:
 
 * `resolve_unit_branch ROOT UNIT` prints the branch or fails with the message of requirement 3
-* `prepare_clone ROOT BRANCH CLONE` makes the clone or reports a resumed one, after the check of requirement 5
+* `refuse_unlanded ROOT BRANCH CLONE` fails with the message of requirement 5 when there is no clone and
+  `sandbox/<branch>` holds commits the branch lacks
+* `prepare_clone ROOT BRANCH CLONE` makes the clone or reports a resumed one
 * `land_clone ROOT BRANCH CLONE` fetches, fast-forwards, compares and removes, and reports what it kept
+
+Since 0027 and 0030 the wrapper works out the harness versions, reads the image's labels, may ask npm and may
+build, all before it runs the container. A unit run fits into that in this order, which the spec's requirements 1
+and 3 to 6 fix:
+
+1. The options are parsed, `--in-place` among them. With no `--in-place`, no `--workdir` and no argument left, the
+   wrapper refuses (R1). This comes before `installed_version` and before any call of Docker or npm
+2. Given a unit, the wrapper sources `container/unit-clone.sh` and resolves the branch, with git alone (R3)
+3. The host's versions and the merged configuration, as today. The node script that reads the image name from the
+   configuration prints its `name` too, which is the Compose project's name. No second query is made
+4. For a unit run: the container's name and the clone's path, the refusal when `docker ps` shows the name running
+   (R4), and `refuse_unlanded` (R5)
+5. The image's labels, the registry and the build, as today
+6. For a unit run: `prepare_clone`, the two `.reviews` directories, `docker rm` of a stopped container under the
+   name, the named `docker compose run` without `exec`, and `land_clone`. Otherwise the `exec` of today
 
 Where things are:
 
@@ -21,8 +40,9 @@ Where things are:
 * The container is named `<compose project>-<branch>`, with every character outside `[A-Za-z0-9_.-]` replaced by
   `-`. Two branches that differ only in such a character share a name, and the second is refused while the first
   runs
-* The Compose project's name is the `name:` line of `docker compose config`, asked for once, next to the existing
-  query for the image
+* The Compose project's name is the `name` of the merged configuration the wrapper already asks Compose for with
+  `config --format json`
+* The character replacement is bash's own, `${name//[^A-Za-z0-9_.-]/-}`, so that it needs no command on the `PATH`
 
 The commands, as tried while planning:
 
@@ -53,9 +73,22 @@ git -C "$root" ls-remote "$clone"    # each commit named must pass: git -C "$roo
 No `git -C "$clone"` and no `cd "$clone"` followed by git appears anywhere on the host side. That is requirement 15,
 and a reviewer can check it by reading.
 
-The tests drive the real wrapper with a stand-in `docker` on the `PATH`, as `tests/agent-wrapper.test.mjs` does, and
-with real git in temporary repositories. For a unit run the stand-in also plays the agent: when a test gives it a
-script, it runs that script in the directory mounted at `/work` and exits with the script's status.
+The tests drive the real wrapper on the host of `fakeHost` in `tests/wrapper-fixture.mjs`, which 0027 added and
+both wrapper tests share: a `bin` directory that is the whole `PATH`, with a stand-in `docker`, a stand-in `npm`
+and fake harnesses. The unit run's tests use real git in temporary repositories. For a unit run the stand-in
+`docker` also plays the agent: when a test gives it a script, it runs that script in the directory mounted at
+`/work` and exits with the script's status.
+
+Two things follow from that `PATH`, both tried while revising the plan, with only `bash`, `basename`, `cat`,
+`dirname`, `id` and `git` linked and an empty home:
+
+* `git clone`, `git fetch` from the clone, `git ls-remote` and the fast-forward by `git fetch .` all work once
+  `git` is linked. `grep`, `mktemp`, `mkdir` and `rm` are not found. Every command `container/unit-clone.sh`, the
+  unit run in the wrapper and the agent scripts of the tests use is therefore added to the fixture's
+  `linkedCommands`
+* `git commit` fails with "Author identity unknown", because the wrapper runs with an empty home. The setup of the
+  unit run's tests writes a `.gitconfig` with a name and an email into that home, which serves the commits it
+  makes itself and those of the agent scripts
 
 This repository's own `./agent.sh` runs the released wrapper, so the change is tried with `./agent-dev.sh`, on the
 host.
@@ -64,43 +97,60 @@ host.
 
 - `container/agent.sh`: the `--in-place` option, the required choice, the unit run, and a header comment that says
   what the wrapper now does
-- `container/unit-clone.sh`: new, the three functions above
-- `tests/agent-wrapper-setup.mjs`: new, the `setUp` that `tests/agent-wrapper.test.mjs` has today, moved so that
-  two test files share it, with the stand-in `docker` extended
-- `tests/agent-wrapper.test.mjs`: imports `setUp`; its runs gain `--in-place`; new tests for the required choice
-- `tests/agent-unit-run.test.mjs`: new, the unit run
-- `tests/agent-dev.test.mjs`: its runs gain `--in-place` where they run a command
-- `README.md`: "Running the sandbox" and its subsections, and the example under "Trying the working copy's sandbox"
+- `container/unit-clone.sh`: new, the four functions above
+- `container/compose.yml`: two comments that say what the wrapper mounts
+- `tests/wrapper-fixture.mjs`: more linked commands, and the stand-in `docker` extended
+- `tests/agent-wrapper.test.mjs`: its runs gain `--in-place`; new tests for the required choice
+- `tests/agent-unit-run.test.mjs`: new, the unit run, with a setup of its own
+- `tests/agent-dev.test.mjs`: its runs gain `--in-place`
+- `README.md`: "Running the sandbox" and its subsections, "The harness versions" among them, and the example under
+  "Trying the working copy's sandbox"
 - `changes/0029-sandbox-clone-of-the-branch/record.md`: the log, and the real check
 
-`templates/project/agent.sh`, `agent.sh` and `agent-dev.sh` pass their arguments on and do not change. Nothing in
-the image changes, so no rebuild is needed for the change itself.
+`templates/project/agent.sh`, `agent.sh` and `agent-dev.sh` pass their arguments on and do not change.
+`RELEASING.md` runs no sandbox and does not change. `tests/harness-versions.test.mjs` searches every file under
+`container/` for a version of a harness, the new file among them, and needs no change. Nothing in the image
+changes, so no rebuild is needed for the change itself.
 
 ## Tasks
 
-- [ ] Move `setUp` from `tests/agent-wrapper.test.mjs` to `tests/agent-wrapper-setup.mjs` and import it. No test
-  changes and the suite passes as before. This is a refactoring and is committed on its own (R17)
-- [ ] Extend the stand-in `docker` in `tests/agent-wrapper-setup.mjs`, with no test depending on it yet: it answers
-  `compose ... config` with a `name:` line, answers `ps` with the container name when the test says a container is
-  running, accepts `rm`, and on `compose ... run` runs the test's script, if any, in the directory mounted at
-  `/work` and exits with its status. `setUp` gives the wrapper an `XDG_STATE_HOME` of its own and returns its path.
-  The suite still passes (R17)
+- [ ] Extend `fakeHost` in `tests/wrapper-fixture.mjs`, with no test depending on it yet, and say each addition in
+  its comment. The suite still passes, and this is committed on its own (R17):
+    - `linkedCommands` gains `git`, `grep`, `mkdir`, `mktemp` and `rm`
+    - the stand-in `docker` answers `ps` without recording it, as it does its other two questions: with the content
+      of the file `runningContainer` when that is there, and with nothing otherwise
+    - it records `rm` and exits 0
+    - on `compose ... run`, after recording the call, it runs the file `agentScript` with `bash`, when that is
+      there, in the directory the call mounts at `/work`, and exits with its status
+    - `fakeHost` returns the paths of the two files
+  The configuration it answers with has `name: "project-agent"` already
 - [ ] In `tests/agent-wrapper.test.mjs`, write the tests of the required choice and see them fail (R1, R2, R17):
-    - with no unit, no `--in-place` and no `--workdir`, the wrapper exits non-zero, names the three forms and
-      makes no Docker call
+    - with the project root alone, with `--rebuild` alone and with `--mount DIR` alone, on a host whose image is
+      missing, the wrapper exits non-zero, names the three forms, and `dockerCalls()` and `npmCalls()` are empty
     - `--in-place echo hi` makes exactly the Docker calls today's `echo hi` makes
-    - `--workdir DIR echo hi` mounts `DIR` at `/work` and makes no clone
-- [ ] Add `--in-place` to the runs of the existing tests in `tests/agent-wrapper.test.mjs` and
-  `tests/agent-dev.test.mjs` that run a command, and implement the option and the required choice in
-  `container/agent.sh`. The check comes before any Docker call. The suite passes (R1, R2)
-- [ ] In `tests/agent-unit-run.test.mjs`, write the tests of resolving and starting, in a temporary repository
-  with the branches `master`, `feature-0010-init`, `feature-0010-init2` and `task-0026-doc`, and see them fail
-  (R3, R4, R5, R6, R7, R8, R9, R17):
+    - `--workdir DIR echo hi` mounts `DIR` at `/work`, and the home holds no `.local/state`
+- [ ] Add `--in-place` to every run of the existing tests in `tests/agent-wrapper.test.mjs` and
+  `tests/agent-dev.test.mjs` that gets past the wrapper's first three refusals, which are the missing project root,
+  the missing project Compose file and the kit outside the root. That is every run that expects a container, with
+  or without a command, and the runs that expect a refusal by Compose, by the build or by the registry. The run of
+  the dev shim's test that gives `--workdir` needs none. Implement the option and the required choice in
+  `container/agent.sh`, as step 1 of the order above. The suite passes (R1, R2)
+- [ ] In `tests/agent-unit-run.test.mjs`, write the tests of resolving and starting and see them fail (R3, R4, R5,
+  R6, R7, R8, R9, R17). Its setup is its own, on `fakeHost`: the project root is a git repository with the
+  branches `master`, `feature-0010-init`, `feature-0010-init2` and `task-0026-doc`, a `.gitignore` that names
+  `node_modules` and `.reviews`, and the wrapper and `container/unit-clone.sh` copied under its `node_modules`. The
+  home holds a `.gitconfig` with a name and an email. The run sets no `XDG_STATE_HOME`, so the state directory is
+  `.local/state` in that home, except in the one test that sets it:
     - `task-0026-doc` and `0026` both run the branch `task-0026-doc`
-    - `0010` lists both branches, exits non-zero and makes no `run` call; `026`, `0099` and `claude` name no
-      branch, exit non-zero and say the branch is made on the host
+    - `0010` lists both branches and exits non-zero; `026`, `0099` and `claude` name no branch, exit non-zero and
+      say the branch is made on the host. In each case `dockerCalls()` and `npmCalls()` are empty, on a host whose
+      image is missing
     - with the stand-in reporting the container running, the run is refused naming the container, and the clone
-      directory and the repository's refs are as before
+      directory and the repository's refs are as before. On a host whose image is missing, no `build` is recorded
+      and `npmCalls()` is empty
+    - with `XDG_STATE_HOME` set, the clone is under it and the home holds no `.local/state`
+    - with the image missing and the file `buildFails` there, the wrapper exits with the build's status and the
+      state directory holds no clone
     - a new run mounts `<state>/agentrite/project-agent/task-0026-doc` at `/work` under the name
       `project-agent-task-0026-doc`. In it the branch is checked out at the host's commit, `origin/master` is the
       host's `master`, an object file's inode differs from the host's, and a file the host had uncommitted and an
@@ -108,13 +158,17 @@ the image changes, so no rebuild is needed for the change itself.
     - a clone directory already there is mounted as it is, a file left in it still there, and the output says it
       was resumed
     - with `refs/remotes/sandbox/task-0026-doc` ahead of the branch and no clone, the run is refused with a
-      message naming the ref
+      message naming the ref, and on a host whose image is missing no `build` is recorded
+    - `--rebuild` and `--mount DIR` before the unit are taken as options: the image is built, and `DIR` is mounted
+      beside the clone
     - the `run` call mounts the host's `.reviews` at `/work/.reviews`, and both directories exist before the call,
       owned by the caller. The stand-in mounts nothing, so a file written there reaching the host is left to the
       real check
-- [ ] Add `container/unit-clone.sh` with `resolve_unit_branch` and `prepare_clone`, and the unit run in
-  `container/agent.sh` up to and including the named `docker compose run`. A stopped container under the name is
-  removed with `docker rm` before the run. The tests of the previous task pass (R3 to R9)
+- [ ] Add `container/unit-clone.sh` with `resolve_unit_branch`, `refuse_unlanded` and `prepare_clone`, and the unit
+  run in `container/agent.sh` up to and including the named `docker compose run`, in the order of the approach. A
+  stopped container under the name is removed with `docker rm` before the run. The tests of the previous task
+  pass, and so do those of `tests/agent-wrapper.test.mjs` and `tests/agent-dev.test.mjs`, whose setups copy no
+  `unit-clone.sh` (R3 to R9)
 - [ ] In `tests/agent-unit-run.test.mjs`, write the tests of landing and see them fail (R10 to R17). The script
   the stand-in runs is the agent:
     - a commit on the branch: afterwards the host's branch is at it, checked out or not, `sandbox/<branch>` is
@@ -136,11 +190,23 @@ the image changes, so no rebuild is needed for the change itself.
 - [ ] Add `land_clone` to `container/unit-clone.sh` and call it from `container/agent.sh` after the container,
   with the three signals ignored for the duration of the run. The suite passes (R10 to R16)
 - [ ] Update the header comment of `container/agent.sh`: the usage, the two ways to run, and that the wrapper
-  still sets nothing that confines the container (R19)
+  still sets nothing that confines the container. The paragraph on the harness versions stays as it is (R19)
+- [ ] In `container/compose.yml`, bring two comments in line: the one at the top, which says the wrapper adds only
+  the working directory, the extra mounts and the harness versions, and the one over `- .:/work`, which says the
+  wrapper overrides the source with `--workdir`. Both now also name the clone of a unit run and the `.reviews`
+  mount. No setting changes (R19)
 - [ ] In `README.md` (R19):
     - "Starting it": the command is `./agent.sh <unit>` or `./agent.sh --in-place`, and what each mounts. The
       examples `./agent.sh claude` and `./agent.sh npm test` become `./agent.sh 0029 claude` and
-      `./agent.sh --in-place npm test`
+      `./agent.sh --in-place npm test`, and `--rebuild` is described as an option of either form
+    - every other command the README gives that names nothing to mount gains what it mounts, with its sentence
+      otherwise as it is: `./agent.sh --rebuild` under "Running the sandbox" and under "The harness versions",
+      `./agent.sh --mount ~/reference:ro --mount ~/scratch` under "Extra directories", `./agent.sh -- npm ci` under
+      "The shared `node_modules`", and `./agent.sh claude --version` under "The harness versions". Afterwards
+      `grep -n 'agent\(-dev\)\?\.sh' README.md` shows no command that the wrapper would refuse
+    - "The harness versions" gains a sentence: the versions and the image are worked out from the checkout the
+      command is run from, also for a unit run, as the spec's "The sandbox is configured from the host's checkout"
+      states it
     - a new subsection after it, "Working on a clone": planning on the host and the sandbox for implementing and
       reviewing; the unit by ID or branch and what happens when an ID names several; only committed work goes in;
       `npm ci` first in a new clone; where the clones are; what happens when the container exits, with
@@ -178,9 +244,11 @@ the image changes, so no rebuild is needed for the change itself.
 
 ## Commit Points
 
-- [ ] `feature-0029` the shared `setUp`, as a refactoring
-- [ ] `feature-0029` the extended stand-in, the tests of the required choice, `--in-place` and the updated runs
-- [ ] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `prepare_clone` and the named run
-- [ ] `feature-0029` the tests of landing, `land_clone` and the header comment
+- [ ] `feature-0029` the extended fixture, with no behavior changed
+- [ ] `feature-0029` the tests of the required choice, `--in-place` and the updated runs
+- [ ] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `refuse_unlanded`, `prepare_clone`
+  and the named run
+- [ ] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of
+  `container/compose.yml`
 - [ ] `feature-0029` the README
 - [ ] `feature-0029` the record of the real check

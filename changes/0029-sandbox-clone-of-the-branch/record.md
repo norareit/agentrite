@@ -30,5 +30,29 @@ timestamp: 2026-10-04T15:31:37Z
   `tests/agent-wrapper.test.mjs` that this plan moves and extends, and its queries of the image join the ones the
   stand-in `docker` answers; 0028 adds `RELEASING.md`, whose check runs the working copy's sandbox with a command and so
   needs `--in-place` once this unit requires a choice, which puts that file in this plan's list
+- 2026-10-04T22:41:04Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the human's word, checked the spec and
+  the plan against `master`, which by then held 0027, 0028 and 0030, all `implemented`, and revised both. The branch
+  was rebased onto `master` at `897a5fc`, without conflict, as the entry above foresaw; the log names no commit of
+  this unit, so no id in it went stale. The suite reported 248 tests passing on the rebased tree. The status stays
+  `draft`.
+  One thing the entry above says no longer holds: 0028 withdrew the bump of the harness versions and its check, so
+  `RELEASING.md` runs no sandbox and is not in the plan's files. 0030, which that entry does not know, took the
+  pins out of the Dockerfile and gave the fixture a stand-in `npm`.
+  In the spec, with no requirement added or removed: the context says what the wrapper does before a run since
+  0027 and 0030; requirements 1 and 3 to 6 say that a refusal comes before the build and the registry and that
+  the clone is made after the build; two decisions are new, "The sandbox is configured from the host's checkout,
+  not from the clone", which is also named under "The boundary", and "Refusals come before the build, and the
+  clone after it"; and "A positional unit, and no default" names `./agent.sh --rebuild` among the commands that
+  stop working, which 0030's README gives as the way to a newer harness. The two new decisions are the planner's,
+  for the human to approve or change.
+  In the plan: the stand-in `docker` is extended in `tests/wrapper-fixture.mjs`, which 0027 added, and the task
+  that moved `setUp` to a file of its own is removed, because that fixture already is the shared part; the
+  fixture's `PATH` is its own `bin`, so the commands the unit run needs are linked into it, and the tests' home
+  gets a git identity, both tried with a `PATH` of that kind; the Compose project's name is read from the JSON
+  configuration the wrapper already asks for; a fourth function, `refuse_unlanded`, carries requirement 5 so that
+  it can run before the build; the wrapper sources `container/unit-clone.sh` only for a unit run; `--in-place`
+  goes on every existing run that gets past the first three refusals, not only on those with a command; the
+  comments of `container/compose.yml` and five more commands in the README are in the tasks, three of which the
+  first plan had missed and two of which 0027 and 0030 added
 
 ## Amendments
