@@ -123,5 +123,14 @@ Not in this task:
   tests, 188 passed and 0 failed, and `npm run check-changes` exited 0. No line of `README.md` is longer than 120
   characters and it holds no em dash. The review returned no blocking finding. Status stays `in-progress` until the
   human says to mark it
+- 2026-10-04T14:57:09Z [OpenCode, openai/gpt-6.1-sol] reviewed 0026 at
+  `6cea5b8979dba51d91c0aca695000310c06e6633`, delta review from
+  `bb29b6684215cf6f128b275c4bfb22c2f159d8e3`. Prior accepted finding checked: C1; new finding labels: none.
+  Saved report: `.reviews/0026-document-running-the-sandbox/2026-10-04T14-55-09Z-delta-6cea5b8979db.md`.
+  Verification limitations from the full review remain: norareit's source at `63662ff` (access denied), the removed
+  worktree trial and macOS behavior, ufw causality and firewall remediation, and exhaustive host access are unverified.
+  No fresh build/rebuild, live repeated mounts, root execution, alternate checkout, merged-master test or release
+  was performed. No new live sandbox check was run. `npm test` and `npm run check-changes` were rerun on reviewed HEAD;
+  results and the delta-specific checks are in the report
 
 ## Amendments
