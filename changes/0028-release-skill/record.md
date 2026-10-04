@@ -468,5 +468,61 @@ timestamp: 2026-10-04T18:20:11Z
     and that 0027 was not approved. The trial and the merge of `master` have since moved each. They are under a
     heading that dates them and this record has what was established, so they stand as written
   Nothing was run in Docker for this revision. Status stays `in-progress`
+- 2026-10-04T20:03:00Z [human] withdrew the bump of the harness versions, which was the human's own request in the
+  first entry of this log, and with it the check. Shown what step 2 of `RELEASING.md` had become, the two pins
+  bumped, the suite run, and a check of some 90 lines that needs a `claude` and an `opencode` that report no
+  version on the `PATH` for the wrapper to use the pins at all, and that since 0027 a pin is only what a host
+  without the harness gets, the human said: "Regarding the pins we really need to take a few steps back, because
+  this feels like something is getting very complicated while it should be easy." and then: "Mmm I have a hard
+  time finding a good solution. Because no check doesn't feel right either. Maybe it just doesn't make sense
+  anymore to have a kit version? Maybe we only need : host version OR pinned version in compose.project.yml".
+  The main session laid out three answers to what a sandbox gets when the project holds no version and the host
+  does not have that harness: the latest from npm at build time; that harness left out of the image; or a stop
+  with a message. It recommended the first, said that this takes a new unit because 0027 is frozen, and that step
+  2 comes out of this unit while a run of `npm test` before `npm version` is worth keeping as a small step. The
+  human: "Yes, Go ahead". So the human's are that the kit has no version of its own, and the go-ahead for the
+  proposal. The latest as what a sandbox then gets, and keeping the suite's run, are the main session's
+  recommendations, which the go-ahead covers and the human may correct on reading. This also sets aside the
+  human's two decisions of 19:44:26Z as requirements: the known refusals were the check's, and the suite ran for
+  the bumped pins. The point left open there, how the check takes the pins, is gone with the check. The time of
+  this entry is when the words reached the planner, through the dispatching session
+- 2026-10-04T20:03:00Z [Claude Code, anthropic/claude-opus-5-5] as planner, in the main checkout on the branch at
+  `45e349f`, revised `spec.md` and `plan.md` for that. Nothing that is built was changed: `RELEASING.md`, the
+  skill, the README and the tests still hold the bump, and cutting them down is the implementer's, by the plan's
+  new tasks. Nothing was run in Docker. What the documents now require:
+  * R7 to R11 are withdrawn and their numbers are not used again, so that what this record cites by number is
+    still what it was. The spec as it stood with them is the file at `45e349f`
+  * R2: the file holds the release without a step for the harness versions, and names no harness version
+  * R4 no longer says that the pins move at a release. `container/` is unchanged by this unit, as before
+  * R5 cites requirements 12 to 14, where it cited 11 to 14
+  * R6: the agent stops when the branch is not `master`, when a tracked file has a change, or when `npm test`
+    does not pass. The condition on Docker is gone
+  * R12: the report at the stop has the proposed version and the shipped changes with no unit, and nothing on pins
+  * R13: one commit, `Release notes for <version>`. R14: "after its commit"
+  * R15: the README's sentence of what a release does has no bump
+  * R17 loses the test of the two `ARG` lines
+  * R18 is new: the two changes this branch made to 0027's tests stay as they are at `45e349f`
+  * Decisions: eleven that existed only for the bump and the check are gone, two of them the ones added at
+    19:46:12Z. Three are reworded for a release without pins. Seven are new, each saying whose it is
+  * Non-goals and "Beyond the request" lose what referred to the check. Of the latter, `allowed-tools` and the
+    test of `files` stand, undecided and so left out
+  * The plan: a paragraph at the head of the Approach says what the implementer removes and what stays. The text
+    of `RELEASING.md` is the file without step 2, its steps numbered 1 to 5. The skill's description, the README's
+    summary and last paragraph, the list of what differs, the table of paragraphs and the tests' description are
+    changed to match. The done tasks stand, with the withdrawn requirements named as that. Six tasks are new, one
+    of them ticked for what requirement 18 holds, and the task of the trial of `/release` is adjusted to the
+    shorter file. The verification is unticked, to be seen again on the tree the cut-down leaves
+  Decided by the planner, where the human said nothing:
+  * The suite is a third condition of step 1, "Before anything else", and not a step before the commit. An agent
+    asked only for the notes does not run it
+  * The condition on Docker goes with the check, and the README's sentence on Docker with it. Nothing then stops
+    an agent in a sandbox from drafting the notes and committing them. The file and the README still say a
+    release is made on the host, which `./deploy.sh` needs and the human runs
+  * The test of the two `ARG` lines is removed in this unit and not left for 0030
+  * The changes to 0027's three test files stay, as the main session expects. The spec says why
+  * The withdrawn requirements keep their numbers
+  * In the spec's context, three findings that served only the check are replaced by a pointer to `45e349f`
+  Not established: that `/release` starts the skill, as before; and nothing of the shorter file has been followed
+  by anyone, since it exists only as the plan's text. Status stays `in-progress`
 
 ## Amendments

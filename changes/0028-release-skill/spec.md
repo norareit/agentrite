@@ -52,6 +52,26 @@ seen:
   seem like something we should care about."
 * The release runs `npm test` with the bumped pins, before anything is committed: "2) YES"
 
+Later the same day the human withdrew the bump, and with it the check, and this spec was changed for it a fourth
+time. The human had been shown what the step had become: the two pins bumped, the suite run, and then a check of
+some 90 lines of `RELEASING.md`, which needs a `claude` and an `opencode` that report no version on the `PATH` for
+the wrapper to use the pins at all, since under 0027 a pin is only what a host without the harness gets. The
+human's words:
+
+* "Regarding the pins we really need to take a few steps back, because this feels like something is getting very
+  complicated while it should be easy."
+* "Mmm I have a hard time finding a good solution. Because no check doesn't feel right either. Maybe it just
+  doesn't make sense anymore to have a kit version? Maybe we only need : host version OR pinned version in
+  compose.project.yml"
+* On the main session's proposal: that the kit stops naming versions of its own, in a new unit because 0027 is
+  frozen; that the bump and the check come out of this unit; and that a run of `npm test` before `npm version` is
+  kept as a small step: "Yes, Go ahead"
+
+So of what is listed above, three things no longer hold: the bump as a step of the release, in the first list; the
+bump as a commit on `master` with no unit, in the second; and both decisions of the third, on the known refusals
+and on the suite's run with the bumped pins. The kit's versions themselves are unit 0030's. The record has what
+the trial of the check saw, and the spec as it stood with the bump and the check is this file at `45e349f`.
+
 ### What was found while planning
 
 On `master` at `aa4b8b3`, which holds 0025, on Linux with npm 11.11.0, node 24.14.1, Claude Code 2.1.289 on the host
@@ -83,69 +103,31 @@ repository root is packed only when `files` lists it, as 0025 found for `CHANGEL
 file holds none of its own." `tests/agentrite-roles.test.mjs` compares the generated wrappers with fixtures, byte
 for byte.
 
-**What a check of a harness version has to look at.** What a harness does changes with its version, and three units
-rest on what the pinned versions do:
+**The host.** `./deploy.sh` needs the host, for the AWS account.
 
-* 0015: the hosts a harness contacts at start-up. Its check started `claude` and `opencode` in a sandbox whose home
-  held no login, then read `grep 'not allowlisted' /run/egress-proxy.log`, expecting the canary `example.com` and
-  `raw.githubusercontent.com`, which 0015 refuses by decision. Its rule: a host found there is a new unit
-* 0023: the login the README gives, `opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"`. The label is
-  OpenCode 1.18.30's. Started on a pseudo-terminal it prints a device address and a code and logs in to nothing
-* 0022: the status line, which relies on Claude Code honouring `statusLine` from
-  `/etc/claude-code/managed-settings.json`. Its check got Claude Code to its prompt with no login, by a made-up API
-  key and a seeded `~/.claude.json`
-
-Each of those runs drove the harness under `script -qec <command> <logfile>` and `timeout`, because a harness wants
-a terminal, and read the screen from the capture.
-
-**The dev sandbox's home may hold a login.** `./agent-dev.sh` uses the Compose project
-`ritenoar-agentrite-agent-dev`, whose home volume "starts empty and lasts". The human logged in to OpenAI in it for
-0023, and the volume exists on this host. A check that needs a home with no login cannot assume that one, and
-emptying it discards the human's login. `agent/compose.project.yml` names the project and the image after
-`AGENT_PROJECT_NAME`, and `./agent-dev.sh` sets that variable over whatever the caller gave, so a third name is
-reached by running `container/agent.sh` directly, as `./agent-dev.sh` does.
-
-**This repository admits two hosts of its own.** `agent/compose.project.yml` lists `models.dev` and
-`api.openai.com` in the project's `ALLOWLIST`. A sandbox of this repository therefore admits them, and a harness
-version that needs one of them is not refused here, while it is in a project that does not list it. Looking only
-for refusals misses that. The proxy logs a line for each connection it allows as well, so the hosts a harness
-reached can be read too.
-
-**Docker is on the host only.** A sandbox has none, so the release runs in a session on the host. `./deploy.sh`
-needs the host as well, for the AWS account.
+**Found for the check, and withdrawn with it.** How 0015, 0022 and 0023 each checked a harness in a sandbox, that
+the dev sandbox's home may hold a login, and that this repository's own allowlist admits two hosts the kit's does
+not. They are in this file at `45e349f`, and what the check saw when it was run is in the record.
 
 **Not established.**
 
 * That typing `/release` in a session in this repository runs a skill written as this unit describes. It is read
   from the documentation, through a fetch that summarises the page, and was not tried: the session's guard refused
   the trial in a scratch directory. The plan has a task for it
-* That the check runs as described when an agent drives it. No Docker was run while planning. The commands are the
-  ones 0015, 0022 and 0023 recorded as having worked, under another Compose project name. The plan has a task that
-  runs the check once for real
-* That Claude Code 2.1.289 and OpenCode 1.18.34 pass the check. Finding that out is the first release's
 * What `npm version` does with files that are not tracked. 0025 tried only a changed tracked file. The human runs
   it, and sees it
 
-### What is assumed about 0027
+### What is left to other units
 
-Unit 0027 is being planned at the same time and is not approved. Its proposed shape: a sandbox's harness versions
-come from the project's own override in its Compose file, else from the versions installed on the developer's host,
-else from the kit's pins in `container/Dockerfile`. The pins then stop being what most sandboxes run and become the
-tested fallback.
-
-This unit assumes only that the pins exist in `container/Dockerfile` as the two `ARG` defaults, which is true today
-and stays true in that shape. It holds whichever unit lands first:
-
-* The check verifies inside the sandbox that the versions it runs are the pins. Under 0027 a build on the host may
-  take the host's versions instead; the check then fails on that line, visibly, and the step is corrected to build
-  the fallback by whatever 0027 provides for it. If 0027 is on `master` when this unit is implemented, the
-  implementer writes the step that way from the start
-* What a bump means for a project is worded from what the README says of the pins at the time of the release, not
-  fixed here: today every sandbox runs them after a rebuild, under 0027 they are the fallback
-* If 0027 lands in another shape, with the pins somewhere else or gone, requirement 17's test of the two `ARG`
-  lines fails, which is the signal that the release's step has to be rewritten in that unit or a new one
+0027 is on `master` and is implemented: a sandbox's harness versions come from the project's Compose file, else
+from the host, else from the kit's two pins in `container/Dockerfile`. Unit 0030 takes the pins away. This unit
+changes nothing under `container/` and no longer reads or edits the pins. What it holds of 0027's is in
+requirement 18: two changes to 0027's tests, made on this unit's branch while the bump was still part of it.
 
 ## Requirements
+
+Requirements 7 to 11 held the bump of the harness versions and its check. They are withdrawn, and their numbers
+are not used again, so that a number the record cites still means what it meant there.
 
 The skill and the file it points at:
 
@@ -154,70 +136,33 @@ The skill and the file it points at:
    `RELEASING.md` in the repository root and says that the skill holds no instruction of its own. Typing `/release`
    in a Claude Code session in this repository starts it
 2. `RELEASING.md`, at the repository root, holds the whole release in order: what is checked before anything else,
-   the harness versions, the release notes, the human's reading, the commits, and what the human runs to finish it.
-   It needs no feature of one harness to be followed, and names the skill only as one way to arrive at it
+   the release notes, the human's reading, the commit, and what the human runs to finish it. It needs no feature
+   of one harness to be followed, and names the skill only as one way to arrive at it. It names no harness version
+   and has no step for one
 3. Neither file is in the package: `npm pack --dry-run` lists the same files as it does on `master`, whatever their
    number
 4. There is no OpenCode command for a release, and `.opencode/` is unchanged. `process.md`, `roles/`, `templates/`,
-   `scripts/` and `container/` are unchanged by this unit. The pins themselves move at a release, not in this unit
+   `scripts/` and `container/` are unchanged by this unit
 5. `AGENTS.md` keeps what holds for every agent in this repository: that `CHANGELOG.md` has one section per release,
    written when the release is made and never by a unit, with the reason. It sends an agent that is asked to make a
    release, or to write the release notes, to `RELEASING.md`, and says that an agent starts neither unasked. The
    steps for writing the notes, which 0025 put in `AGENTS.md`, are in `RELEASING.md`, with their meaning, their
-   exact commands and their strength kept, apart from what requirements 11 to 14 add
+   exact commands and their strength kept, apart from what requirements 12 to 14 add
 
 Before anything else:
 
-6. `RELEASING.md` has the agent stop, saying why and changing nothing, when Docker does not answer, which is the
-   case inside a sandbox; when the branch is not `master`; or when a tracked file has an uncommitted change
+6. `RELEASING.md` has the agent stop, saying why and changing nothing, when the branch is not `master`; when a
+   tracked file has an uncommitted change; or when the suite, `npm test`, does not pass, in which case it says
+   which test failed and what it printed. It repairs none of the three
 
-The harness versions:
-
-7. The release sets the two pins in `container/Dockerfile` to the versions `npm view @anthropic-ai/claude-code
-   version` and `npm view opencode-ai version` print. With the pins set, and before the check of requirements 8
-   and 9, it runs the suite, `npm test`. When both pins already equal them, the step is skipped whole, suite and
-   check included, and the agent says so
-8. The check runs the sandbox of the working copy under a Compose project of its own, named
-   `ritenoar-agentrite-agent-release`, with an image and a home volume of that name. It does not touch the image,
-   the home volume or a container of `./agent.sh` or of `./agent-dev.sh`. What it created is removed when the check
-   is over, whatever its outcome, and nothing is logged in to
-9. The check establishes, and the agent reports for each, what was seen:
-   * the image builds, and `claude --version` and `opencode --version` inside the sandbox print the two pins
-   * with a home that holds no login, `claude` reaches its first-run screen and `opencode` its prompt
-   * every host the egress proxy's log shows a harness to have contacted, admitted or refused, is on the kit's own
-     allowlist, `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal the file lists as known. Those are
-     `raw.githubusercontent.com`, `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com`, and
-     the kit admits none of the four. A host admitted only because this repository's own
-     `agent/compose.project.yml` lists it is not on the kit's allowlist
-   * the login command the README gives under "Logging in to a model provider", run as it is written there, prints
-     an address and a code. It is stopped there
-   * when the host has `~/.claude/statusline-command.sh`: Claude Code, brought to its prompt without a login, shows
-     that script's line. When the host has no such file, the agent says this was not checked
-10. Anything in requirement 9 that does not hold is a finding, and so is a test that fails in the suite of
-    requirement 7, after which the check is not run. On a finding the agent restores `container/Dockerfile`
-    to what `master` holds, removes what the check created, tells the human what was seen, and stops. It fixes
-    nothing: it adds no host to an allowlist and changes no README. The human then decides whether the release goes
-    out with the pins as they were, or waits for a unit in `changes/` that deals with the finding. A release that
-    goes out with the pins as they were continues from the release notes
-
-The release notes:
-
-11. A bump of the pins is a line of "What changed" that gives each harness's old and new version and no unit number.
-    "Worth knowing when you update" then says what a project does to get them, and names anything of requirement 9
-    that was not checked. The bump is not named to the human as a change that belongs to no unit: it is the
-    release's own
-
-The human's reading, the commits and the version:
+The human's reading, the commit and the version:
 
 12. The agent commits nothing before the human's word. With the notes drafted it stops and reports: the version it
-    proposes, as major, minor or patch with the reason; every shipped change that belongs to no unit; and, for the
-    pins, the old and new versions, that the suite passed with them, and what the check showed and did not
-    establish
+    proposes, as major, minor or patch with the reason; and every shipped change that belongs to no unit
 13. On the human's word, with the version the human picked, the agent makes sure the section's heading is that
-    version, and then, on `master` and in this order: commits `container/Dockerfile` as `Harness pins for
-    <version>` when the pins were bumped, and commits `CHANGELOG.md` as `Release notes for <version>`. Neither
-    commit has a unit prefix. It commits nothing else
-14. The agent runs neither `npm version` nor `./deploy.sh`, and pushes nothing. After its commits it ends by telling
+    version, and then, on `master`, commits `CHANGELOG.md` as `Release notes for <version>`, with no unit prefix.
+    It commits nothing else
+14. The agent runs neither `npm version` nor `./deploy.sh`, and pushes nothing. After its commit it ends by telling
     the human what is left, as three commands in this order, ready to run: `npm version` with the part, patch,
     minor or major, that gives the version of the heading; `./deploy.sh`; and the push of `master` together with
     the release's tag. `RELEASING.md` says what `npm version` and `./deploy.sh` do, what `./deploy.sh` refuses and
@@ -227,9 +172,9 @@ The README and the script:
 
 15. The README's "Releasing" says what a release is and what serves it, as today; that a release is made with the
     `/release` skill in a Claude Code session on the host, which follows `RELEASING.md`, and that a human or an
-    agent in another harness follows that file directly; and, in a sentence, what a release does, the bump of the
-    pins and what the human runs at the end included. Everything else the section says today is in
-    `RELEASING.md`, with its exact commands and its strength. "What is here" has a row for `RELEASING.md`
+    agent in another harness follows that file directly; and, in a sentence, what a release does, what the human
+    runs at the end included. Everything else the section says today is in `RELEASING.md`, with its exact commands
+    and its strength. "What is here" has a row for `RELEASING.md`
 16. The message `./deploy.sh` prints when it refuses a version with no section sends the reader to `RELEASING.md`,
     and no longer to a section of `AGENTS.md` that is not there. The script does what it did otherwise
 
@@ -238,10 +183,11 @@ The tests:
 17. The suite, which runs without Docker and without a network, holds tests that:
     * the skill's frontmatter and body are what requirement 1 says
     * `RELEASING.md` exists, and the skill, `AGENTS.md`, the README and `deploy.sh` each name it
-    * `container/Dockerfile` holds exactly one line `ARG CLAUDE_CODE_VERSION=<version>` and one
-      `ARG OPENCODE_VERSION=<version>`, each a plain three-part version, and `RELEASING.md` names both arguments
-      and both npm packages as the Dockerfile's install line has them
     * the refusal of `./deploy.sh` names `RELEASING.md`
+18. Two things this unit's branch changed in 0027's tests are as the branch has them at `45e349f`: the test of
+    where a pin is written searches `container/` and `templates/` and not `README.md`, and the versions the
+    wrapper's tests give their fake host and an image built earlier are ones no pin equals. Nothing else of 0027's
+    is changed
 
 ## Decisions
 
@@ -258,8 +204,8 @@ The tests:
   agent may run unasked on the human's host is the human's own setting, and a skill in the repository would grant
   it for everyone who clones it. It is under "Beyond the request"
 * **The steps are in `RELEASING.md`, at the root, and not in `AGENTS.md`.** Three places were weighed:
-  * `AGENTS.md`, where 0025 put the notes rule. It is read into every session of every agent, and the release with
-    its check is long and is of use to one session in many. The roles are kept out of it for the same reason
+  * `AGENTS.md`, where 0025 put the notes rule. It is read into every session of every agent, and the release is long
+    and is of use to one session in many. The roles are kept out of it for the same reason
   * A file under `roles/` or `templates/`. Both ship in the package, and a release of the kit is nothing a project
     needs
   * A file of its own at the root. Taken. `RELEASING.md` is the name a human looks for, it is beside `README.md`
@@ -272,79 +218,12 @@ The tests:
 * **The skill's body is the role wrappers' sentence, for another file.** One line, and a statement that the file
   holds no instruction of its own, so that nobody adds a step to the wrapper where an agent in another harness
   would not see it
-* **The check has its own Compose project, not the dev sandbox's. Changed from the proposal.** The proposal was
-  `./agent-dev.sh`. Its home volume lasts and may hold a login, the human's among them, and the first thing the
-  check needs is a home with none. Emptying the dev volume would discard that login. The check therefore runs
-  `container/agent.sh` from the working copy, which is all `./agent-dev.sh` does, under a third name. The image is
-  built from the same Dockerfile, so Docker's build cache is shared and the cost is a name
-* **The check reads the hosts a harness reached, not only the ones refused. Added while planning.** This
-  repository's own allowlist admits `models.dev` and `api.openai.com`. A harness version that began to need either
-  would start here and fail in a project that does not list it. So a host that was admitted, and is not the kit's
-  own, is a finding like a refusal. The alternative, a project Compose file for the check with an empty allowlist,
-  needs the wrapper to take another file and is under "Beyond the request"
-* **The check is described, not scripted.** What it reads is a terminal's screen: whether a harness reached its
-  prompt, whether a login printed an address and a code, whether a line is the status line. Those change shape
-  with the version, which is the reason for the check, and reading them is what an agent is for. A script is under
-  "Beyond the request"
-* **The check is what the units that depend on a harness's behaviour need, and no more.** Start-up, hosts, the
-  documented login and the status line are what 0015, 0023 and 0022 rest on. It is not a review of what a harness
-  version does, and it sends no prompt to a model, which needs a login. A unit that comes to depend on something
-  else a harness does adds its check to `RELEASING.md`. The suite of requirement 7 goes beyond this, and is not
-  part of the check: it runs before it and for a reason of its own, which the next decision gives
-* **The suite runs with the bumped pins, before the check and before anything is committed. The human's decision,
-  made while the unit was implemented.** The suite reads the pins from `container/Dockerfile`, so a test can pass
-  with the pins of today and fail with those of the release. Nothing in the release ran it before `./deploy.sh`,
-  which runs it after `npm version` has committed and tagged, and that is late to learn it. It was found by
-  trying: with the pins set to the latest of that day, two of 0027's tests failed, one on the README's example
-  versions and one on the versions of the test fixture's fake host, each of which had come to equal a pin. Both are
-  corrected on this unit's branch, and the record has what was changed and on whose word. Asked whether step 2
-  runs `npm test` with the bumped pins, the human said: "YES". It runs before the check because it needs no Docker
-  and takes about a second, so a release that would fail on it stops before a build. A test that fails is handled
-  as a finding of the check is, by the same reasoning: the release does not repair a test, the pins go back, and
-  the human decides
-* **Three hosts refused once Claude Code is at its prompt are refusals the check knows, and none is admitted. The
-  human's decision, made while the unit was implemented.** The check, run once for real, saw the proxy refuse
-  `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com` in the run that brings Claude Code
-  to its prompt for the status line. They were refused with the pinned versions and with the latest alike, and
-  Claude Code showed its prompt and the status line without them. By requirement 9 as it stood, which knew
-  `raw.githubusercontent.com` alone, the check of every release would have ended in a finding. Three ways were
-  laid out: to list the three as known refusals, as 0015 did for `raw.githubusercontent.com`; to compare hosts
-  only in the run with an empty home, as 0015's own check did; or a unit that admits a host. The human took the
-  first: "list them as known refusals. None of these seem like something we should care about." So the kit's
-  allowlist is unchanged, and the hosts of both runs are still compared, so that a host a later version contacts
-  at its prompt is a finding. The four are named in the requirement and in the file by host and not by version: a
-  fifth is a finding whichever version brings it, and making it a known refusal is a decision, not the release's
-* **A clean bump needs no unit; a finding is one. The human agreed.** The kit's process sends every change through
-  `changes/`, on a branch. A bump with a clean check is two lines whose description and diff say the same, decided
-  by nobody: the latest version, checked. It is made as part of the release, on `master`, as a third commit beside
-  the two 0025 excepted. That widens this project's exception to working on a branch by one commit. A
-  bump that needs anything else, a host, a reworded README, a changed wrapper, has a decision in it, and by 0015's
-  rule that is a new unit. The release does not make it
-* **The alternative, a task unit for every bump, is not taken.** It would give the bump a number in the release
-  notes and keep the process whole. It costs a directory, a branch and a merge at every release for two lines, and
-  the human asked for the bump to be part of creating the release
-* **On a finding both pins go back, and the human decides.** The check tested the pair. Which harness caused a
-  finding is usually plain, and the human may say to bump the other alone; the check then runs again for that
-  pair, since that pair is what would ship. The file says so and does not do it unasked
-* **When the pins are the latest already, the check is skipped too.** The pins were checked when they were set. A
-  host can change what it serves without a new version, and that is not what a release guards against. Running the
-  check at every release whatever the pins is under "Beyond the request". The suite of requirement 7 is skipped
-  with it: it is run there for the sake of new pins, and there are none
-* **"Latest" is npm's `latest` tag, as `npm view <package> version` prints it.** It is what a developer gets from
-  an install today. A minimum age for a version is under "Beyond the request"
-* **Nothing is committed before the human's word, the bump included.** 0025 decided it for the notes. With one
-  stop, a release that is abandoned leaves two changed files in the working tree and nothing on `master`. The
-  notes' diff of what ships is taken against `HEAD`, as 0025's rule gives it, so the bump is not in it; the agent
-  knows the bump from having made it, and the file says so
-* **Three commits, in the order pins, notes, version, the last one the human's.** The pins are a commit of their
-  own so that it can be read and reverted alone. It comes before the notes and both before `npm version`, so that
-  the tag names a tree that holds all three, which 0025 decided for the notes
 * **The human runs `npm version`, `./deploy.sh` and the push, and the agent ends by naming them. The human's
   decision.** The first draft had the agent run `npm version` after the human's pick, and left the push out as
   something nothing documents. The human decided otherwise on all three: "I still want to do the npm version
   myself. It should simply tell me to do", "I will do the deploy myself", and the skill ends by saying: "run npm
-  version [with the correct type], run ./deploy.sh and push master with tags." So the agent's last act is its two
-  commits, and its last words are the three commands with the part filled in. That is 0025's rule for `npm
+  version [with the correct type], run ./deploy.sh and push master with tags." So the agent's last act is its
+  commit, and its last words are the three commands with the part filled in. That is 0025's rule for `npm
   version` and `./deploy.sh`, kept
 * **The agent does not check afterwards that `npm version` gave the heading's version.** It no longer runs it.
   The wrong part gives a version with no section in `CHANGELOG.md`, and `./deploy.sh` refuses that before it does
@@ -362,41 +241,74 @@ The tests:
   for the simplification. The plan lists every paragraph of today's section and where it ends up
 * **`deploy.sh` changes by its message only.** It names "Release notes" in `AGENTS.md`, which this unit moves. A
   message that sends the reader to a section that is gone is the kind of thing found on the day of a release
-* **The tests hold the wiring, not the release.** The suite runs no Docker and no network, so it cannot hold the
-  check. It holds what breaks silently: a wrapper that grew a second instruction, a pointer to a file that was
-  renamed, and pins that are no longer where the release edits them. The release itself is tried twice by the
-  plan, once by hand and once by an agent that has only the file
+* **The bump of the harness versions, and its check, are withdrawn. The human's decision, made while the unit was
+  implemented.** The bump was the human's own request, and the check came with it: a version nobody tried should
+  not become the kit's. Built, it was the largest part of the release: two edits, a run of the suite, two runs of
+  a sandbox under a Compose project of its own, a comparison of the proxy's log with two lists of hosts, and a
+  `claude` and an `opencode` that report no version, put on the `PATH` so that the wrapper takes the pins at all.
+  And since 0027 it guarded little: a pin is what a sandbox gets only on a host that does not have the harness.
+  The human: "this feels like something is getting very complicated while it should be easy", and then "Maybe it
+  just doesn't make sense anymore to have a kit version?" With no version of the kit's own there is nothing for a
+  release to bump and nothing to check, so both leave this unit whole, and the kit's versions leave the kit in
+  unit 0030. Weighed and not taken: the bump without the check, of which the human said "no check doesn't feel
+  right either"; and the check as built
+* **What the trial of the check saw is in the record, and is nobody's requirement now.** Three hosts the proxy
+  refuses once Claude Code is at its prompt, some ninety connections of OpenCode's that end before they name a
+  host, and that both harnesses started and the README's login printed a code with the versions of that day. The
+  human's decision that the three hosts are refusals nobody need care about stands as a statement about those
+  hosts. What the kit promises for a harness version it did not check is 0030's to say
+* **The suite is run before anything else, and a failure stops the release.** `./deploy.sh` runs `npm test`, but
+  only after `npm version` has committed and tagged, and a failure there is undone by hand. It was found by
+  trying, with the pins bumped, and the reason holds without the pins: any test may fail on `master` on the day of
+  a release. Keeping the run is the main session's recommendation, which the human's "Yes, Go ahead" covers, and
+  is open to the human's correction on reading. That it is one of the conditions of the first step, and not a step
+  before the commit, is the planner's: there it stops the release before anything is written, it costs about a
+  second, and the one file the release changes afterwards is `CHANGELOG.md`, with `./deploy.sh` running the
+  suite once more after it. An agent asked only for the release notes does not run it
+* **Nothing checks for Docker any more. The planner's.** The first step stopped when Docker did not answer, because
+  the check needed it, and that also told a session in a sandbox that it was in the wrong place. The agent's part
+  now needs no Docker. What needs the host is `./deploy.sh`, for the AWS credentials, and the human runs it. The
+  file and the README still say that a release is made on the host, and the README loses the sentence on Docker
+  that this unit gave it. Kept as a stand-in for "not in a sandbox", the condition would be a check with no reason
+  of its own
+* **The test of the two `ARG` lines goes, in this unit and not in 0030. The planner's.** It held that the Dockerfile
+  has each pin on one line as a plain three-part version and that `RELEASING.md` names what the release edits. The
+  release edits neither line now. Left for 0030, the test would sit on `master` holding a file to a form that
+  0030 exists to change, and 0030, planned from `master`, would have to delete a test from a file its own branch
+  does not have. 0027's own test that each pin is written once in the Dockerfile is on `master` and is 0030's
+* **Nothing is committed before the human's word.** 0025 decided it for the notes, and it is kept. A release that
+  is abandoned leaves one changed file in the working tree and nothing on `master`
+* **Two commits, in the order notes, version, the second one the human's.** The notes come before `npm version` so
+  that the tag names a tree that holds them, which 0025 decided
+* **The two changes to 0027's tests stay as this branch has them.** They were made so that the suite survives a
+  bump: the README left the test of where a pin is written, on the human's decision, "Okay no readme it is", and
+  the fake host of the wrapper's tests got versions no pin equals, on the word of the dispatching session, which
+  the human has not corrected. With no bump their reason is weaker, and it is not gone: until 0030 the pins exist,
+  the README's examples are still versions a pin could be set to, and both changes are test-only. Taking them
+  back would be a second change to the same lines, shortly before 0030 rewrites those tests for a kit with no pins.
+  That they stay is what the main session expects, and the planner agrees. 0030 is planned from `master` and
+  says how it meets them
+* **The tests hold the wiring, not the release.** The suite holds what breaks silently: a wrapper that grew a
+  second instruction, and a pointer to a file that was renamed. The release itself is tried once by the plan, by
+  an agent that has only the file
+* **The withdrawn requirements keep their numbers. The planner's.** The record cites requirements 7 to 12 by number
+  in many places, as what was built and tried. Renumbering would make each of those point at something else.
+  With the gap, only the plan's tasks had citations to correct
 * **The texts are in the plan.** The requirements say what `RELEASING.md`, the skill, `AGENTS.md` and the README
   must hold. Their wording is in the plan's approach, for the human to read with it
 
 ## Non-goals
 
 * An OpenCode command, or a command for any other harness. The human excluded it
-* Bumping the pins in this unit. They move at the next release, which is the human's
-* Fixing what the suite or the check finds. A test that fails with the new pins, a refused host that is not a
-  known one, a renamed login label and a build that fails are each a new unit
-* Where a sandbox takes its harness versions from, which is 0027's
+* Bumping or checking a harness version at a release. Withdrawn by the human
+* Which versions of the harnesses a sandbox gets, and whether the kit names any. That is 0027's, and 0030's
 * Any change to what ships: the package, `process.md`, the roles, the templates, the scripts, the sandbox
-* A check that sends a prompt to a model or completes a login
-* The release check on Docker Desktop for macOS. It was planned on Linux, and the release is made on the human's
-  host
+* Repairing a test that fails on the day of a release. The release stops, and the repair is a unit
 * A rule for when a release is due, or for major, minor and patch
 * The agent pushing anything. The file tells the human the command
 
 ## Beyond the request
 
-* **A script for the check**, which builds, starts the harnesses, and prints the captures and the proxy's log. It
-  would make the check the same at every release. It costs a script and its tests, and it fixes the shape of
-  screens that change with the version. Without it the agent runs the commands the file gives, and a command that
-  no longer works is seen and corrected in the file
-* **A project Compose file for the check with an empty allowlist**, so that a host the kit does not admit is
-  refused instead of read from the log. It costs an option in `container/agent.sh`, which ships, and its tests.
-  Without it the agent compares the hosts the log shows with the kit's list
-* **Running the check at every release, also when the pins did not move.** It would catch a host that changed
-  what a pinned version needs. It costs a build and some minutes at every release. Without it such a change is
-  found by whoever starts a sandbox, as 0015 was
-* **A minimum age for a version**, so that a release does not pin one published the same day. It costs a rule and
-  a date to look up. Without it the human sees the versions before the go and can say no
 * **`allowed-tools` in the skill**, so that the release's commands run without a permission prompt. Without it the
   human answers the prompts, or sets the permissions on their own host
 * **A test that `files` in `package.json` names neither `RELEASING.md` nor anything under `.claude/`.** It guards
