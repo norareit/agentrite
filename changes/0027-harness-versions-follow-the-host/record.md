@@ -216,5 +216,20 @@ timestamp: 2026-10-04T15:49:32Z
   * P1, accepted. The plan's task now says 24 files, which is what `npm pack --dry-run` lists here and on `master`
   Status stays `in-progress`: the last item of requirement 12 is the human's, and whether the fix to a blocking
   finding gets a second review is the human's to say
+- 2026-10-04T17:36:53Z [OpenCode, openai/gpt-6.1-sol] as reviewer, delta review of 0027 at
+  `1d2060aa8bf940de591cb83eba83bd8fd0ec8b2c`, from the previous reviewed commit
+  `6aea4cb369e1d9399e02fa3c27b24c970f792fcb`. Verified the corrections of S1 and P1; returned no new findings on
+  spec conformance, plan fidelity or code quality. Complete findings saved in
+  `.reviews/0027-harness-versions-follow-the-host/2026-10-04T17-35-47Z-opencode-delta-review.md`.
+  Ran `npm test`: 224 tests passing; `npm run check-changes`: exit 0; `npm pack --dry-run --json`: 24 entries;
+  and the diff, line-length and wrapper syntax checks. Checked real Compose merging for equal-valued overrides,
+  no overrides and a mixed host/project case, with image labels and build/run operations simulated; those calls
+  received the real versions. Did not independently replay the historical real trials, their cleanup or the
+  historical failing-test run, or verify the R12 interactive harness startup and refused-host list. Project values
+  interpolating the wrapper's private version variables were not exercised. Earlier platform and harness
+  compatibility verification limits remain; details are in the findings file
+- 2026-10-04T18:13:43Z [human] on the second review, which returned no new findings, said: "No nwe findings! I'll
+  check manually after my dinner xD". The time of this entry is when the words reached the implementer, through
+  the dispatching session
 
 ## Amendments
