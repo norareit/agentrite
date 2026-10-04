@@ -397,5 +397,41 @@ timestamp: 2026-10-04T18:20:11Z
     for a version
   0027's plan names the fake host's two versions, so its record has an amendment. Status stays `in-progress`.
   The other open points are untouched
+- 2026-10-04T19:44:26Z [human] decided two of the open points, after the three options for the refused hosts and the
+  question on the suite were laid out: "for 1) list them as known refusals. None of these seem like something we
+  should care about. 2) YES". So `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com` are
+  refusals the check knows, nothing is admitted, and step 2 runs `npm test` with the bumped pins. How the check
+  takes the pins is still open. The time of this entry is when the words reached the implementer, through the
+  dispatching session
+- 2026-10-04T19:44:26Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for the two decisions, in
+  `RELEASING.md` and in the plan's text of it alike, which a script found to be the same afterwards:
+  * Step 2 has a part "The suite", before "The check": `npm test` with the two lines edited. A test that fails
+    is a finding, handled as one of the check's is: the pins are restored, the human is told which test and what
+    it printed, and the release stops there, with nothing committed and the check not run. Before the check, as
+    the dispatching session suggested, because it needs no Docker and takes about a second. Step 4 has the agent
+    report that the suite passed with the new pins
+  * The line on the hosts in "What has to hold" lists four known refusals, none of them admitted:
+    `raw.githubusercontent.com` as before, and the three, with where they were seen, that it was with the pinned
+    and the latest versions alike, and that Claude Code showed its prompt and its status line without them. The
+    file names no version number for it, so that it stays without one
+  * No allowlist changed, and nothing that ships
+  * No test was added. `tests/release.test.mjs` holds the wiring, the names the release edits and the pointers,
+    and not the file's steps, by the spec's decision "The tests hold the wiring, not the release"
+  `spec.md` is not changed, and now says less than the file does. The dispatching session asked the implementer
+  to bring it in line. The implementer's role file says "Never change `spec.md`", with no exception for a unit
+  that is not frozen, so the change is left for the planner, as the two earlier revisions of this spec were made.
+  What it has to say, as built:
+  * Requirement 9, on the hosts: the refusals the file lists as known are `raw.githubusercontent.com`,
+    `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com`, where it says "which today is
+    `raw.githubusercontent.com`"
+  * A requirement between 7 and 8, or a clause of 7: with the pins edited and before the check, the release runs
+    `npm test`
+  * Requirement 10: a failing test is a finding like one of requirement 9, where it says "Anything in requirement
+    9 that does not hold is a finding"
+  * Requirement 12: the report at the stop says that the suite passed
+  * The decision "The check is what the units that depend on a harness's behaviour need, and no more", which the
+    suite's run goes beyond, and a decision each for the two, as the human's
+  Until then the plan and `RELEASING.md` go beyond the spec in these two things, on the human's words above.
+  Nothing was run in Docker for this. Status stays `in-progress`
 
 ## Amendments

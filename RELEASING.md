@@ -38,6 +38,15 @@ the working copy, that what the kit and its README rely on still holds for them.
   print. When both are the pins already, there is nothing to bump: skip the rest of this step and say so
 * Otherwise edit the two lines. Commit nothing
 
+### The suite
+
+Run `npm test` with the two lines edited, before the check: it needs no Docker and takes about a second. The suite
+reads the pins from `container/Dockerfile`, and `./deploy.sh` runs it too, which is after `npm version` has made its
+commit and its tag, and late to learn that a test does not hold for the new pins.
+
+A test that fails is a finding, and is handled as a finding of the check is, below: restore the pins, tell the
+human which test failed and what it printed, and stop. The check is then not run.
+
 ### The check
 
 The check has a Compose project of its own, with its own image and home volume, so that its home holds no login and
@@ -107,11 +116,16 @@ What has to hold:
   `agent/compose.project.yml` stands above the pin, and is one way that happens
 * `claude` reaches its first-run screen and `opencode` its prompt
 * Every host on the proxy's lines after start-up, allowed or refused, is on the kit's own allowlist,
-  `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal known here: `raw.githubusercontent.com`, which the
-  kit refuses by decision (0015). A host that was allowed because this repository's own `agent/compose.project.yml`
-  lists it, such as `models.dev`, is not on the kit's allowlist: a project that does not list it refuses it. A
-  line that names no host, `refused: the connection closed before its ClientHello was complete`, has nothing to
-  compare: say how many there were. OpenCode's start leaves many of them
+  `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal known here. A host that was allowed because this
+  repository's own `agent/compose.project.yml` lists it, such as `models.dev`, is not on the kit's allowlist: a
+  project that does not list it refuses it. A line that names no host,
+  `refused: the connection closed before its ClientHello was complete`, has nothing to compare: say how many there
+  were. OpenCode's start leaves many of them. The refusals known here, none of which the kit admits:
+    * `raw.githubusercontent.com`, which Claude Code contacts at start-up and the kit refuses by decision (0015)
+    * `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com`, which Claude Code contacts once
+      it is at its prompt, as in the second run. They were refused there with the versions pinned when this was
+      written and with the latest of that day alike, and Claude Code showed its prompt and the status line without
+      them. The kit refuses them by the human's decision (0028)
 * The login prints an address and a code
 * In the second run, Claude Code shows the line of the host's script. With no such file on the host this is not
   checked: say so
@@ -170,8 +184,8 @@ Stop there. Commit nothing before the human's word. In your answer:
 * Propose major, minor or patch, with the reason. Pick the part to bump as semver means it; there is no rule of
   the kit's own
 * Name every change in the shipped diff that has no unit
-* For the pins: the old and the new versions, what the check showed, and what it did not establish. Or that they
-  were the latest already
+* For the pins: the old and the new versions, that the suite passed with them, what the check showed, and what it
+  did not establish. Or that they were the latest already
 
 The human reads the section, corrects it and picks the version, changing the heading when the pick differs from the
 proposal.
