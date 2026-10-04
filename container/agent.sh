@@ -198,12 +198,17 @@ export AGENT_CLAUDE_CODE_VERSION AGENT_OPENCODE_VERSION
 AGENT_CLAUDE_CODE_VERSION="${claude_code% *}"
 AGENT_OPENCODE_VERSION="${opencode% *}"
 
-# The image name and the two versions the image is to hold are in the configuration
-# Compose merges from both files, and only there: the name is the project's to choose,
-# and a version the project's file gives replaces the one handed over above. Captured
-# first, so that a configuration Compose refuses stops here with Compose's own error.
-# node reads the result; the host has node for npm already.
-config="$("${compose[@]}" config --format json)"
+# The image name is in the configuration Compose merges from both files, and so is a
+# version the project's file gives, which stands above the one handed over above. For
+# this one question Compose is handed a marker in place of the two versions: a marker
+# that comes back says the project gives none, and anything else is the project's own
+# value, also when it equals the host's or the kit's. Comparing the merged value with
+# the exported one cannot tell those two apart. Captured first, so that a configuration
+# Compose refuses stops here with Compose's own error. node reads the result; the host
+# has node for npm already.
+unheld="agent.sh/no-version-from-the-project"
+config="$(AGENT_CLAUDE_CODE_VERSION="$unheld" AGENT_OPENCODE_VERSION="$unheld" \
+  "${compose[@]}" config --format json)"
 merged="$(node -e '
   let json = "";
   process.stdin.on("data", (chunk) => (json += chunk));
@@ -218,10 +223,14 @@ merged="$(node -e '
   read -r claude_code_wanted
   read -r opencode_wanted
 } <<< "$merged"
-if [ "$claude_code_wanted" != "$AGENT_CLAUDE_CODE_VERSION" ]; then
+if [ "$claude_code_wanted" = "$unheld" ]; then
+  claude_code_wanted="$AGENT_CLAUDE_CODE_VERSION"
+else
   claude_code_origin="the project's compose file"
 fi
-if [ "$opencode_wanted" != "$AGENT_OPENCODE_VERSION" ]; then
+if [ "$opencode_wanted" = "$unheld" ]; then
+  opencode_wanted="$AGENT_OPENCODE_VERSION"
+else
   opencode_origin="the project's compose file"
 fi
 

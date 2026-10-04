@@ -36,10 +36,13 @@ A project's file that names either argument replaces that one value in the merge
 3. Ask Compose once for the merged configuration, capturing it first so that a configuration Compose refuses stops
    the wrapper with Compose's own error, as today: `config="$("${compose[@]}" config --format json)"`. Then have
    `node` print three lines from it, `services.agent.image` and the two values under `services.agent.build.args`.
-   This replaces the `config --images` call
-4. A version in the merged configuration that differs from what the wrapper exported comes from the project's
-   file. That is the only way the wrapper learns of an override, and it is all it needs: the version to compare is
-   always the merged one
+   This replaces the `config --images` call. For this one call, and for no other, the two variables hold a marker
+   that is no version, set in the call's own environment
+4. A marker that comes back in the merged configuration says the project's file gives no version, and the version
+   to compare is the one the wrapper exported. Anything else comes from the project's file and is the version to
+   compare, also when it equals the host's version or the kit's pin. Corrected in place after the review's S1:
+   this step first took a merged version that differs from the exported one as the project's, which names the
+   wrong source for a project that holds the very version the host or the kit has
 5. Unless `--rebuild` was given, read the image's two labels in one
    `docker image inspect --format '{{ index .Config.Labels "<label>" }}|{{ index .Config.Labels "<label>" }}'`. A
    non-zero exit is a missing image, and builds as today. Otherwise compare each label with the merged version,
@@ -136,6 +139,8 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
     * the project's value for one harness in the merged configuration: with the image holding that value and the
       host's for the other, no build; with the image holding the host's for both, one line naming
       `the project's compose file`, then `build` (R1, R6)
+    * added for the review's S1: the project's value equal to the host's version, for each harness, and equal to
+      the kit's pin with neither harness on the `PATH`: the line names `the project's compose file` (R1, R6)
     * neither harness on the `PATH` and an image labelled with other versions than the pins: two lines naming
       `the kit`, then `build` (R1, R6)
     * `--rebuild` with labels that match: `build`, then `run`, and no line (R8)
@@ -154,7 +159,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
   harness CLIs, pinned", the wrapper's header, and the base Compose file's sentence on what the wrapper adds. Search
   what ships and the README for `pinned`, `pin` and both version numbers, and leave nothing that says the kit alone
   decides the versions (R14)
-- [x] `npm pack --dry-run` lists the same 23 files as on `master`, and
+- [x] `npm pack --dry-run` lists the same 24 files as on `master`, and
   `git diff master -- templates scripts agent agent-dev.sh package.json CHANGELOG.md` is empty (R10)
 - [x] In `README.md` (R13, R14):
     * under "Running the sandbox", replace the sentence "The harness versions are pinned in `container/Dockerfile`,

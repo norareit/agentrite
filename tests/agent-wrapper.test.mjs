@@ -314,6 +314,39 @@ test("the wrapper rebuilds for the project's version, whatever the host has, and
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
+// A project may hold the very version the host has, or the one the kit pins. The value is the same and the source
+// is not: the project's file stands first.
+for (const [harness, argument, held, labels] of [
+  ['Claude Code', 'CLAUDE_CODE_VERSION', hostVersions.claude, `2.1.266|${hostVersions.opencode}\n`],
+  ['OpenCode', 'OPENCODE_VERSION', hostVersions.opencode, `${hostVersions.claude}|1.18.30\n`],
+]) {
+  test(`the wrapper names the project's file for a version of ${harness} it gives that equals the host's`, (t) => {
+    const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath, { [argument]: held });
+    writeFileSync(imageLabels, labels);
+    const result = run(root, 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const inImage = harness === 'Claude Code' ? '2.1.266' : '1.18.30';
+    assert.equal(result.stderr, holdsLine(harness, inImage, held, "the project's compose file"));
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+  });
+}
+
+test("the wrapper names the project's file for a version it gives that equals the kit's pin", (t) => {
+  const buildArgs = { CLAUDE_CODE_VERSION: pins.claude };
+  const { root, container, bin, imageLabels, run, dockerCalls } = setUp(t, kitPath, buildArgs);
+  rmSync(join(bin, 'claude'));
+  rmSync(join(bin, 'opencode'));
+  writeFileSync(imageLabels, '0.0.1|0.0.2\n');
+  const result = run(root, 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    result.stderr,
+    holdsLine('Claude Code', '0.0.1', pins.claude, "the project's compose file") +
+      holdsLine('OpenCode', '0.0.2', pins.opencode, 'the kit'),
+  );
+  assert.deepEqual(dockerCalls(), buildAndRun(root, container, pins));
+});
+
 test("the wrapper rebuilds for the kit's pins when the host has neither harness, and names the kit", (t) => {
   const { root, container, bin, run, dockerCalls } = setUp(t, kitPath);
   rmSync(join(bin, 'claude'));
