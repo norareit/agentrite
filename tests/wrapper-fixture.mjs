@@ -11,10 +11,11 @@ export const hostVersions = { claude: '99.1.0', opencode: '98.2.0' };
 // `hostVersions`, so that the tests tell the two sources apart by their values.
 export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
 
-// The commands the wrapper, the dev shim and the fakes below run, besides `docker`, `npm` and the harnesses. A
-// node's own directory cannot be put on the PATH instead, because a harness installed with `npm install -g` sits
-// in it, and so does the real `npm`.
-const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'id'];
+// The commands the wrapper, the dev shim and the fakes below run, besides `docker`, `npm` and the harnesses, and
+// those a unit run and the scripts that play its agent run: `git` and what follows it. A node's own directory
+// cannot be put on the PATH instead, because a harness installed with `npm install -g` sits in it, and so does the
+// real `npm`.
+const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'id', 'git', 'grep', 'mkdir', 'mktemp', 'rm'];
 
 function findOnPath(command) {
   for (const directory of (process.env.PATH ?? '').split(delimiter)) {
@@ -33,7 +34,7 @@ export function writeCommand(bin, name, script) {
 //
 // * `claude` and `opencode` that print `hostVersions`. A test that wants a harness absent removes its file, and
 //   one that wants it to misbehave rewrites it with `writeCommand`
-// * a `docker` that records each call in `calls`, opened by the variables named in `recorded` as it saw them. Two
+// * a `docker` that records each call in `calls`, opened by the variables named in `recorded` as it saw them. Three
 //   questions it answers without recording them:
 //     * `config --format json`, with the merged configuration: the image name, and the build arguments the base
 //       Compose file takes from the wrapper's two variables with the JSON object in `projectBuildArgs` over them,
@@ -41,7 +42,11 @@ export function writeCommand(bin, name, script) {
 //       refuses
 //     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
 //       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image
-//   A `build` is recorded and then fails when the file `buildFails` is there
+//     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
+//       running under the name the file holds, and with nothing otherwise
+//   A `build` is recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does
+//   nothing. A `run` is recorded and then plays the agent when the file `agentScript` is there: it runs that file
+//   with `bash` in the directory the call mounts at `/work`, and exits with its status
 // * an `npm` that records each call, which `npmCalls` reads, and answers `view <package> version` with the
 //   package's version of `latestVersions`. It prints the content of the file `npmPrints` instead when that is
 //   there, and fails, as the real one does with no registry to reach, when the file `npmFails` is. A test that
@@ -58,6 +63,8 @@ export function fakeHost(base, recorded) {
   const projectBuildArgs = join(base, 'project-build-args.json');
   const imageLabels = join(base, 'image-labels');
   const buildFails = join(base, 'build-fails');
+  const runningContainer = join(base, 'running-container');
+  const agentScript = join(base, 'agent-script');
   writeFileSync(projectBuildArgs, '{}');
   writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
   const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
@@ -67,6 +74,10 @@ export function fakeHost(base, recorded) {
     `if [ "$1 $2" = "image inspect" ]; then
   [ -f "${imageLabels}" ] || exit 1
   cat "${imageLabels}"; exit 0
+fi
+if [ "$1" = "ps" ]; then
+  [ ! -f "${runningContainer}" ] || cat "${runningContainer}"
+  exit 0
 fi
 if [[ " $* " == *" config --format json "* ]]; then
   [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
@@ -84,7 +95,13 @@ if [[ " $* " == *" config --format json "* ]]; then
   ' < "${projectBuildArgs}"
 fi
 echo "${record} docker $*" >> "${calls}"
-if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi`,
+if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi
+if [[ " $* " == *" run "* ]] && [ -f "${agentScript}" ]; then
+  for argument in "$@"; do
+    case "$argument" in *:/work) work="\${argument%:/work}" ;; esac
+  done
+  cd "$work" && exec bash "${agentScript}"
+fi`,
   );
 
   const npmRecord = join(base, 'npm-calls');
@@ -113,5 +130,16 @@ esac`,
   };
   const dockerCalls = linesOf(calls);
   const npmCalls = linesOf(npmRecord);
-  return { bin, projectBuildArgs, imageLabels, buildFails, dockerCalls, npmPrints, npmFails, npmCalls };
+  return {
+    bin,
+    projectBuildArgs,
+    imageLabels,
+    buildFails,
+    runningContainer,
+    agentScript,
+    dockerCalls,
+    npmPrints,
+    npmFails,
+    npmCalls,
+  };
 }

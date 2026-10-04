@@ -114,7 +114,7 @@ changes, so no rebuild is needed for the change itself.
 
 ## Tasks
 
-- [ ] Extend `fakeHost` in `tests/wrapper-fixture.mjs`, with no test depending on it yet, and say each addition in
+- [x] Extend `fakeHost` in `tests/wrapper-fixture.mjs`, with no test depending on it yet, and say each addition in
   its comment. The suite still passes, and this is committed on its own (R17):
     - `linkedCommands` gains `git`, `grep`, `mkdir`, `mktemp` and `rm`
     - the stand-in `docker` answers `ps` without recording it, as it does its other two questions: with the content
@@ -244,7 +244,7 @@ changes, so no rebuild is needed for the change itself.
 
 ## Commit Points
 
-- [ ] `feature-0029` the extended fixture, with no behavior changed
+- [x] `feature-0029` the extended fixture, with no behavior changed
 - [ ] `feature-0029` the tests of the required choice, `--in-place` and the updated runs
 - [ ] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `refuse_unlanded`, `prepare_clone`
   and the named run
