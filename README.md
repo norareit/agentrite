@@ -236,6 +236,42 @@ The exception names the files rather than the directory. BuildKit lets an except
 in it only when the directory itself was excluded, so `!node_modules/@ritenoar/agentrite/container` alone does not
 bring back a kit file that a pattern excluded by name.
 
+### Starting it
+
+The host needs Docker: Desktop on macOS, Engine on Linux. From the project root:
+
+```sh
+./agent.sh
+```
+
+This builds the image on first use and opens a shell in the container, with the project mounted read-write at
+`/work` and nothing else of the host reachable. A command appended to it runs instead of the shell, as in
+`./agent.sh claude` and `./agent.sh npm test`. `./agent.sh --rebuild` builds the image again before running.
+
+Never run it with `sudo`. The wrapper refuses to run with uid or gid 0, because the agent inside the sandbox would
+then be root too. When Docker needs elevated permissions on the machine, add the user to the `docker` group instead.
+
+### Another working directory
+
+`--workdir DIR` mounts `DIR` at `/work` in place of the project root:
+
+```sh
+./agent.sh --workdir /path/to/other/clone
+```
+
+The container works on a full checkout on a branch, not a `git worktree`: a worktree's `.git` points at an absolute
+path on the host that does not resolve inside the container. To isolate the work further, mount a separate clone and
+push branches back from it.
+
+### Extra directories
+
+`--mount HOST` mounts a host directory at `/mnt/<basename>`, read-write, and `--mount HOST:ro` mounts it read-only.
+The option may be repeated:
+
+```sh
+./agent.sh --mount ~/reference:ro --mount ~/scratch
+```
+
 ### The shared `node_modules`
 
 The sandbox mounts the project at `/work` as it is on the host, `node_modules` included. The host and the sandbox
@@ -340,7 +376,7 @@ When a login or a prompt fails for a host that is not on the allowlist, the refu
 
 The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
 server's host and port, and HTTPS on port 443 to the allowlisted hosts. Everything else is denied, whatever its port
-or address.
+or address. "The local model server" below says where that host and port are set.
 
 The allowlist is two lists together. `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit
 itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, `platform.claude.com`, which
@@ -381,6 +417,14 @@ fails:
 * every allowlisted host, and the probe host (`FIREWALL_PROBE`), can be reached through the proxy
 * the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
   is on the hostname and not the address
+
+### The local model server
+
+The sandbox reaches one host and port outside the allowlist: `MODEL_SERVER_HOST` on `MODEL_SERVER_PORT`, which
+`container/compose.yml` sets to `host.docker.internal` and `11434`, and nothing else on the host.
+
+On a Linux host whose firewall denies incoming traffic by default, `ufw` for example, allow the Docker bridge subnets
+to that port on the host, or the container cannot reach the model.
 
 ## The kit's own tests
 
