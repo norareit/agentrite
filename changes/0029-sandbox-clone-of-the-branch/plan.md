@@ -224,7 +224,7 @@ changes, so no rebuild is needed for the change itself.
     - "Trying the working copy's sandbox": the example becomes `./agent-dev.sh --in-place npm test`, and a line
       says that a unit run of the dev sandbox has clones of its own, under its own Compose project name
     - check that every sentence removed or moved is accounted for, as the process asks of a documentation change
-- [ ] Check it for real on a host with Docker, with `./agent-dev.sh`, on a throwaway branch made for the purpose,
+- [x] Check it for real on a host with Docker, with `./agent-dev.sh`, on a throwaway branch made for the purpose,
   and log what was seen with the Docker and Compose versions (R18):
     - `./agent-dev.sh <branch> sh -c 'echo x > f && git add f && git commit -m try'`: the host's branch has the
       commit, `git branch -r` shows no `sandbox/` ref, and the clone directory is gone
@@ -236,7 +236,7 @@ changes, so no rebuild is needed for the change itself.
     - `docker kill` of the container from another terminal after a commit inside: the commit lands
     - `npm ci && npm run check-changes` inside a new clone exits 0
     - remove the throwaway branches, the kept clone and the `seen` file, and log that nothing is left
-- [ ] Log in the record that Docker Desktop for macOS was not tried, unless it was (R18)
+- [x] Log in the record that Docker Desktop for macOS was not tried, unless it was (R18)
 
 ## Verification
 
@@ -256,4 +256,4 @@ changes, so no rebuild is needed for the change itself.
 - [x] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of
   `container/compose.yml`
 - [x] `feature-0029` the README
-- [ ] `feature-0029` the record of the real check
+- [x] `feature-0029` the record of the real check

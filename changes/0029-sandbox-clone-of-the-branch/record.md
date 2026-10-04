@@ -79,5 +79,33 @@ timestamp: 2026-10-04T15:31:37Z
   * `--in-place` and `--workdir` given together: the later one decides. The spec does not say
   * The clone's tree is compared with the fetched commit, as requirement 12 says. A change the agent staged and
     then took out of the working tree again is in the clone's index only and is not seen. Not tested
+- 2026-10-04T22:53:28Z [Claude Code, anthropic/claude-opus-5-5] as implementer, wrote the README's part at `1c962bf` and
+  then checked the behavior for real, on the Linux host, with Docker Engine 28.4.0, Compose 2.39.2 and git 2.43.0,
+  through `./agent-dev.sh`, on two throwaway branches made from `1c962bf`, `try-0029-a` and `try-0029-b`. The
+  commands were run from the agent's shell, which has no terminal, with their input closed. What was seen:
+  * `./agent-dev.sh try-0029-a sh -c 'echo x > f && git add f && git commit -m try'` exited 0 and said
+    "try-0029-a is now at 1101401". The host's branch was at that commit, `git branch -r` showed no `sandbox/` ref,
+    and the clone's directory was gone
+  * The same with `echo y > g` and no commit: the wrapper said the clone was kept, where, and named `g`.
+    `./agent-dev.sh try-0029-a ls` said it resumed the clone and listed `f` and `g`
+  * With a run for `try-0029-b` under way, a commit followed by `sleep 300`, a second
+    `./agent-dev.sh try-0029-b ls` exited 2 and named the container `ritenoar-agentrite-agent-dev-try-0029-b`. A
+    background run stood in for the plan's "shell left open in one terminal"
+  * During that run, `./agent-dev.sh try-0029-a sh -c 'echo side by side'` ran and printed its line, and the
+    other container was still running afterwards
+  * `touch /work/.reviews/seen-0029` inside a run: the file was in the host's `.reviews`, owned by the developer
+  * `docker kill` of that running container, after its commit: the wrapper exited 137 and said "try-0029-b is now
+    at cce77fa", and the host's branch was at that commit, "killed"
+  * In a new clone of `try-0029-b`, `npm ci` exited 0 and `npm run check-changes` exited 0. The clone, which then
+    held a `node_modules`, was removed after the run
+  Removed afterwards: both branches, the kept clone of `try-0029-a`, the two files written to `.reviews`, and the
+  two empty directories the wrapper had left above the clones. `git status --short` showed only the untracked
+  `ritenoar-agent-kit-1.0.3.tgz` that was there before, no container of either branch was left, and
+  `~/.local/state/agentrite` was gone.
+  Not tried: Docker Desktop for macOS; an interactive shell on a terminal, and an interrupt typed into one, which
+  the suite covers only by signals sent to the wrapper; a stopped container left under the name by a crash; and
+  two starts for one branch within the same moment.
+  One thing seen that the documents do not say: the wrapper removes a clone and leaves the directories above it,
+  `agentrite/<Compose project>`, empty
 
 ## Amendments
