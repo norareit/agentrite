@@ -46,9 +46,9 @@ with `refused auth.openai.com: not allowlisted` in the proxy's log.
 
 ## Expected behavior
 
-A project that has chosen OpenAI as a provider can log OpenCode in to it in the sandbox, with a ChatGPT account or
-with an API key, by following what the kit's documentation says, and can then send a prompt to an OpenAI model. This
-repository's own sandbox is such a project.
+In the sandbox of any project on the kit, OpenCode can be logged in to OpenAI with a ChatGPT account by following
+what the kit's documentation says, with no change to a file of the project's own, and can then send a prompt to an
+OpenAI model. This repository's own sandbox is where that is checked.
 
 ## Steps to reproduce
 
@@ -127,10 +127,10 @@ start-up check's canary, and nothing listened on port 1455. The login was stoppe
 
 ## Fix description
 
-The kit's documentation says how a provider login works in the sandbox: that a login which sends the browser back
-to a port on `localhost` cannot complete there, and, for OpenAI in OpenCode, which method to use and which hosts each
-kind of login needs. The comment in the Compose file `init` writes for a project says the same in short. This
-repository's own allowlist gains `auth.openai.com` and `chatgpt.com`. Nothing that confines the sandbox changes.
+The kit's own allowlist gains `auth.openai.com` and `chatgpt.com`, and each place that lists the hosts the kit
+admits itself names them. The kit's documentation says how a provider login works in the sandbox: that a login
+which sends the browser back to a port on `localhost` cannot complete there, and, for OpenAI in OpenCode with a
+ChatGPT account, which method to use. Nothing else that confines the sandbox changes.
 
 ## Requirements
 
@@ -141,16 +141,17 @@ repository's own allowlist gains `auth.openai.com` and `chatgpt.com`. Nothing th
    sandbox names OpenAI, and one prompt to an OpenAI model in OpenCode is answered
 3. After requirements 1 and 2, the egress proxy's log records no refusal of `auth.openai.com` or of `chatgpt.com`
 4. A regression test in the suite fails on the tree before the fix and passes after it. The suite runs no Docker,
-   so the test reads this repository's project Compose file and holds that its allowlist includes `auth.openai.com`
-   and `chatgpt.com`, and still includes `api.openai.com`
+   so the test reads the kit's base Compose file and holds that the kit's own allowlist includes `auth.openai.com`
+   and `chatgpt.com`, besides the hosts it held before
 5. The README says that a provider login which redirects the browser to a port on `localhost` cannot complete in
-   the sandbox, and why. For OpenAI in OpenCode it gives the command of requirement 1, and names the hosts a project
-   adds to its allowlist: `auth.openai.com` and `chatgpt.com` for a ChatGPT account, `api.openai.com` for an API key
-6. The comment that opens the allowlist in the Compose file `init` writes for a project says that a provider's login
-   may need hosts besides its API host, and names the two a ChatGPT account needs. This repository's own copy of that
-   comment says the same
+   the sandbox, and why. For OpenAI in OpenCode with a ChatGPT account it gives the command of requirement 1, and
+   says that the kit admits the two hosts that login needs, so that a project adds nothing for it. It says that a
+   login with an API key needs `api.openai.com` in the project's own allowlist
+6. Each place where the kit's documentation, or a file it generates for a project, lists the hosts the kit admits
+   itself names these two as well. This repository's own copy of the generated Compose file's comment lists the
+   same hosts as the generated one
 7. The sandbox publishes no port, and the entrypoint's firewall admits no inbound connection it did not admit
-   before. The kit's own allowlist is unchanged
+   before. Of what confines the sandbox, only the kit's own allowlist changes, by these two hosts
 8. Requirements 1 to 3 are checked for real on a host with Docker, the login and the prompt by the human. What was
    seen is in the record, with the Docker and Compose versions, and with every host the proxy refused for want of an
    allowlist entry during the login and the prompt
@@ -167,37 +168,42 @@ repository's own allowlist gains `auth.openai.com` and `chatgpt.com`. Nothing th
   `docker exec <container> curl '<the address the browser was sent to>'` would probably reach it. It was not tried
   with a real code. It needs the container's name, the address copied from a browser's error page and all of it
   inside five minutes, and it buys nothing the headless method does not give
-* **Both hosts go in the project's allowlist, not the kit's.** 0015 put the hosts the pinned harnesses need in the
-  kit's own list, and left a model provider to the project, whose allowlist `init` and the README already tell it to
-  extend. OpenAI is a provider a project chooses. A project on Anthropic alone would otherwise admit `chatgpt.com`,
-  which serves far more than an API, for nothing
-* **`init` writes neither host.** It takes harnesses, not providers, and OpenCode does not imply OpenAI. So the fix
-  for other projects is what the documentation and the generated comment tell them, and an existing project, whose
-  Compose file `init` and `refresh` never rewrite, learns it from the README of the release
+* **Both hosts go in the kit's own allowlist. This is the human's decision, against the first draft.** The first
+  draft of this unit put them in the project's allowlist, here in this repository's, and gave other projects
+  documentation: 0015 left a model provider to the project, OpenAI is a provider a project chooses, and a project
+  on Anthropic alone would otherwise admit `chatgpt.com`, which serves far more than an API, for nothing. The
+  implementer of 0015, asked, recommended the same. The human decided otherwise, on 2026-10-04: "Add it to the kits
+  allowlist. If someone opposes this, they'll have to complain about it then and we'll see from there.
+  PRAGMATISM." What that buys is that every project, new and existing, gets a working ChatGPT login with the
+  release and no edit to a file of its own, where the documentation route needs a hand edit in each. The price is
+  the one the first draft named: every project's sandbox admits both hosts, whether or not it uses OpenAI. The
+  decision is revisited when someone objects, and taking the two hosts out again is then one edit and a release
+* **`init` is not changed.** It writes harness hosts into a project's allowlist, and these two are now the kit's
 * **`api.openai.com` stays in this repository's allowlist.** A login with an API key uses it, and whether a ChatGPT
   login still does is not established. Taking out a host is not what was asked
-* **The regression test reads this repository's project Compose file as text.** The suite runs no Docker and the kit
-  has no YAML parser among its dependencies, which is how 0020 and 0015 decided the same question. It guards this
-  repository's sandbox, which is where the bug was found. What the kit gives other projects here is prose, and a
-  test that a sentence exists would hold the wording and not the behavior, so requirements 5 and 6 are checked by
-  the reviewer reading them
+* **The regression test reads the kit's base Compose file as text.** The suite runs no Docker and the kit has no
+  YAML parser among its dependencies, which is how 0020 and 0015 decided the same question, and 0015 already has a
+  test of the kit's own allowlist to extend. A test that a sentence exists would hold the wording and not the
+  behavior, so requirements 5 and 6 are checked by the reviewer reading them
 * **The README names OpenCode's method by its label and its command.** The label is a string of the pinned
   version, and a later version may rename it. The pin is the kit's, so the instruction is the kit's to keep true,
   and a project gets both by the same release
 
-This unit loosens a sandbox, so its boundary is stated. The adversary and the supported usage are those of
+This unit loosens the sandbox, so its boundary is stated. The adversary and the supported usage are those of
 `history-0039-sni-filtering-proxy`, unchanged: the agent itself, and whatever it is tricked into running, which
-reaches only the allowlisted hosts. This unit admits two more hosts in this repository's sandbox and in no other,
-and tells other projects that they may do the same. `auth.openai.com` serves OpenAI's sign-in. `chatgpt.com` serves
-the whole of ChatGPT, not only the address OpenCode posts to, and after a login the home volume holds a token for
-the human's ChatGPT account, which the agent can read. So an agent in a sandbox that admits these hosts can act as
-that account towards `chatgpt.com`, and data can leave through it, as the README already says of every allowlisted
-host. That is the price of running an agent on that account at all, and it is the project's to accept by listing
-the hosts. Nothing inbound is opened, and the unit defends against nothing new.
+reaches only the allowlisted hosts. This unit admits two more hosts in the sandbox of every project on the kit.
+`auth.openai.com` serves OpenAI's sign-in. `chatgpt.com` serves the whole of ChatGPT, not only the address OpenCode
+posts to. In a sandbox where OpenCode was logged in with a ChatGPT account, the home volume holds a token for that
+account, which the agent can read, so the agent can act as that account towards `chatgpt.com`. In every sandbox,
+logged in or not, data can leave through both hosts, as the README already says of every allowlisted host. The
+human accepted `chatgpt.com` on those terms. Nothing inbound is opened, and the unit defends against nothing new.
 
 ## Non-goals
 
-* Publishing a port from the sandbox, or any change to the firewall, the proxy or the base Compose file
+* Publishing a port from the sandbox, or any change to the firewall, the proxy or the base Compose file other than
+  the two hosts in the kit's own allowlist
+* A login with an API key. The human uses a ChatGPT account. `api.openai.com` stays where it is, in the allowlist
+  of a project that wants it
 * A login to any other provider, or in Claude Code, whose own login the human carried out in the sandbox under 0015
 * The other hosts the proxy refused in the human's session: `mcp-proxy.anthropic.com`,
   `http-intake.logs.us5.datadoghq.com`, `downloads.claude.ai`, `github.com` and `raw.githubusercontent.com`. Claude
@@ -209,13 +215,13 @@ the hosts. Nothing inbound is opened, and the unit defends against nothing new.
 
 ## Beyond the request
 
-* **A provider argument to `init`**, so that a project naming OpenAI gets the hosts written for it. It would cost a
-  new argument, a table of providers and their hosts to keep true, and tests. Without it a project adds two lines by
-  hand, from the README
 * **A wrapper command that delivers a browser callback into the container.** It would make the browser method work
   with no port. It would cost a new command in the wrapper and its tests, for a login that the headless method
   already completes if requirement 2 holds. If it does not hold, this is the next thing to try, in a new unit
 * **Taking `api.openai.com` out of this repository's allowlist** once a ChatGPT login is seen not to use it. It
-  would cost one more traced session. Without it the sandbox admits one host more than it may need
+  would cost one more traced session. Without it this repository's sandbox admits one host more than it may need
+* **Moving `api.openai.com` into the kit's allowlist as well**, so that a login with an API key also needs no edit.
+  It costs one more line. Nobody asked for it, and the human's rule from 0015 is that a host is admitted once it is
+  known to be necessary
 * **A start-up warning when OpenCode's port 1455 is listening**, or any other detection of a login that cannot
   complete. Nothing in the sandbox watches the agent's processes today, and the README now says what happens
