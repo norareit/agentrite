@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: draft
-timestamp: 2026-10-04T00:41:26Z
+status: in-progress
+timestamp: 2026-10-04T01:09:49Z
 ---
 
 # 0022 The developer's Claude Code status line in the sandbox
@@ -53,5 +53,22 @@ timestamp: 2026-10-04T00:41:26Z
   '/etc/gitconfig': Is a directory`. Seen with `docker run` in a scratch directory standing in for the home. Left
   to the human as a bug of its own. Every container, the image and the scratch files made for the checks were
   removed. The status stays at draft
+- 2026-10-04T01:09:49Z [human] after the planner's report was put to them, with its questions on the override of a
+  status line set inside the sandbox, on the fixed path and on scripts that are not bash, asked for the unit to be
+  implemented. The human answered none of those questions separately
+- 2026-10-04T01:09:49Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a session on the host,
+  on Linux. Took the human's request as the approval of the spec and the plan as they are written, with the two
+  things beyond the request left out, as the human let the same reading stand for 0021, and moved the status
+  through approved to in-progress. That reading is the implementer's, and the human is told of it. Before any
+  edit:
+  * The branch was checked out in the planner's worktree, which was clean and was removed so that the main
+    checkout could take the branch. The branch was then rebased onto `master` at `48f239b`, which now holds 0015
+    and 0021, without conflict. The planner's commit is `1e765ae` since. The suite there reports 184 passing and
+    0 failing, where the plan's first task says 178, and `npm pack --dry-run` lists 22 files
+  * `plan.md` is changed in one place, the real run. It was planned in a scratch project packed from the branch,
+    because this repository had no way to run the working copy's sandbox. 0021 has since added `./agent-dev.sh`,
+    which runs the working copy's wrapper under an image and a home volume of its own, so the real run uses that:
+    it is the wrapper R7 asks for, with nothing to pack or install. The dev home volume is removed afterwards, so
+    that it is empty again
 
 ## Amendments

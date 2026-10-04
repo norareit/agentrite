@@ -43,10 +43,9 @@ on the human's machine the existing tests would see the human's real script and 
 it. That change comes first and on its own, since it changes no behavior.
 
 **The real run.** This repository's `./agent.sh` runs the released kit from `node_modules`, and its Compose project
-owns the human's image and home volume, which must not be touched. Do the run in a scratch project instead, as
-0017 did: pack the kit from this branch with `npm pack`, install the tarball in an empty project with a
-`package.json` of another name, run `npx agentrite init claude`, and start that project's `./agent.sh`. It has its
-own image and its own empty home volume. Remove the project, its image and its volume afterwards.
+owns the human's image and home volume, which must not be touched. Do the run with `./agent-dev.sh` instead, which
+0021 added after this plan was first written: it runs the working copy's wrapper, under an image and a home volume
+of its own. Remove that home volume afterwards with the command the README gives, so that it is empty again.
 
 Claude Code shows no status line until it is past the login screen, and no login is made. Planning used a made-up
 API key instead, which the implementer repeats inside the scratch sandbox:
@@ -103,11 +102,11 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 - [ ] In `README.md`, add "### The status line" under "Running the sandbox", after "The home volume", saying
   everything R8 lists, and that the settings file is the kit's `container/claude-managed-settings.json`. Remove
   nothing (R8)
-- [ ] Do the real run in a scratch project as the Approach describes, and record, with the Docker and Compose
+- [ ] Do the real run with `./agent-dev.sh` as the Approach describes, and record, with the Docker and Compose
   versions: the script's line as the terminal showed it; that appending to each of the two files in the sandbox
   fails with `Read-only file system`; that `findmnt -no OPTIONS /` opens with `ro`; and, for the run without a
   host script, that `/etc/claude-code` does not exist in the container and no `.claude` directory appeared in the
-  scratch home. Remove the scratch project, its image and its volume, and say so (R1, R2, R4, R5, R7)
+  scratch home. Remove the dev home volume, and say so (R1, R2, R4, R5, R7)
 
 ## Verification
 
