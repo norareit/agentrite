@@ -303,3 +303,10 @@ timestamp: 2026-10-04T18:15:36Z
   container/ or templates/ holds a pinned version but the Dockerfile". Requirement 4 says the pin is written
   "nowhere else in what ships", and the README ships: nothing in the suite holds that for the README any more,
   which the human accepts. The README's examples are unchanged. The change is made on the branch of 0028
+- 2026-10-04T19:08:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer of 0028: the suite's fake host, in
+  `tests/wrapper-fixture.mjs`, now prints `99.1.0 (Claude Code)` and `98.2.0`, where the plan names
+  `2.1.289 (Claude Code)` and `1.18.34`. With the pins set to those two, which a release does, "the wrapper
+  rebuilds for the kit's pins when the host has neither harness, and names the kit" failed: it tells the host's
+  version from the pin by its value. In `tests/agent-wrapper.test.mjs` the labels of an image built earlier,
+  written as 2.1.266 and 1.18.30, are 0.1.0 and 0.2.0, named once. Nothing that ships changed. The decision is
+  the dispatching session's of 0028 and not a sentence of the human's, and is in that unit's record

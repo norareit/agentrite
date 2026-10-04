@@ -24,6 +24,9 @@ function pinOf(argument) {
   return readFileSync(dockerfile, 'utf-8').match(new RegExp(`^ARG ${argument}=(.*)$`, 'm'))[1];
 }
 const pins = { claude: pinOf('CLAUDE_CODE_VERSION'), opencode: pinOf('OPENCODE_VERSION') };
+// What an image built earlier holds, where a test needs it to differ from what is wanted. Below any pin, so that
+// they equal neither a pin nor the fake host's versions, whatever a release moves the pins to.
+const builtBefore = { claude: '0.1.0', opencode: '0.2.0' };
 
 // The calls the fake `docker` recorded for a wrapper that handed Compose `versions`: each of `commands` after
 // what every call opens with.
@@ -157,7 +160,7 @@ test("the wrapper hands Compose the host's versions, in every call", (t) => {
   const result = run(root, '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: '2.1.289', opencode: '1.18.34' }));
+  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
 test("the wrapper hands Compose the kit's pins with neither harness on the PATH, and says nothing", (t) => {
@@ -261,22 +264,22 @@ test('the wrapper builds nothing when the image holds the wanted versions', (t) 
 
 test('the wrapper says which harness differs from the image, and builds before it runs', (t) => {
   const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, `2.1.266|${hostVersions.opencode}\n`);
+  writeFileSync(imageLabels, `${builtBefore.claude}|${hostVersions.opencode}\n`);
   const result = run(root, 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, holdsLine('Claude Code', '2.1.266', hostVersions.claude, 'the host'));
+  assert.equal(result.stderr, holdsLine('Claude Code', builtBefore.claude, hostVersions.claude, 'the host'));
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
 test('the wrapper says so for each harness when both differ from the image', (t) => {
   const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, '2.1.266|1.18.30\n');
+  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
   const result = run(root, 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
     result.stderr,
-    holdsLine('Claude Code', '2.1.266', hostVersions.claude, 'the host') +
-      holdsLine('OpenCode', '1.18.30', hostVersions.opencode, 'the host'),
+    holdsLine('Claude Code', builtBefore.claude, hostVersions.claude, 'the host') +
+      holdsLine('OpenCode', builtBefore.opencode, hostVersions.opencode, 'the host'),
   );
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
@@ -317,15 +320,15 @@ test("the wrapper rebuilds for the project's version, whatever the host has, and
 // A project may hold the very version the host has, or the one the kit pins. The value is the same and the source
 // is not: the project's file stands first.
 for (const [harness, argument, held, labels] of [
-  ['Claude Code', 'CLAUDE_CODE_VERSION', hostVersions.claude, `2.1.266|${hostVersions.opencode}\n`],
-  ['OpenCode', 'OPENCODE_VERSION', hostVersions.opencode, `${hostVersions.claude}|1.18.30\n`],
+  ['Claude Code', 'CLAUDE_CODE_VERSION', hostVersions.claude, `${builtBefore.claude}|${hostVersions.opencode}\n`],
+  ['OpenCode', 'OPENCODE_VERSION', hostVersions.opencode, `${hostVersions.claude}|${builtBefore.opencode}\n`],
 ]) {
   test(`the wrapper names the project's file for a version of ${harness} it gives that equals the host's`, (t) => {
     const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath, { [argument]: held });
     writeFileSync(imageLabels, labels);
     const result = run(root, 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
-    const inImage = harness === 'Claude Code' ? '2.1.266' : '1.18.30';
+    const inImage = harness === 'Claude Code' ? builtBefore.claude : builtBefore.opencode;
     assert.equal(result.stderr, holdsLine(harness, inImage, held, "the project's compose file"));
     assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
   });
@@ -371,7 +374,7 @@ test('the wrapper builds on --rebuild although the image holds the wanted versio
 
 test("the wrapper stops with the build's own error when the build fails, and runs nothing", (t) => {
   const { root, container, imageLabels, buildFails, run, dockerCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, `2.1.266|${hostVersions.opencode}\n`);
+  writeFileSync(imageLabels, `${builtBefore.claude}|${hostVersions.opencode}\n`);
   writeFileSync(buildFails, '');
   const result = run(root, 'echo', 'hi');
   assert.equal(result.status, 17);

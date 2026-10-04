@@ -368,5 +368,34 @@ timestamp: 2026-10-04T18:20:11Z
   `container/Dockerfile` was restored with `git checkout`, which exited 0, and `git status --short` then showed
   the test file as the only changed tracked file. With the pins as `master` has them, `npm test` exited 0 with
   232 tests, 232 passing. No Docker was run for this. Status stays `in-progress`
+- 2026-10-04T19:08:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for the second failure, on the
+  word of the dispatching session and not on a sentence of the human's. Its reasons, as given: the human's
+  decision on the README was made so that the suite survives a bump, the fixture is test-only, and the human will
+  be told and can reverse it. The files are added to the plan first.
+  * `tests/wrapper-fixture.mjs`: the fake host's versions are 99.1.0 for Claude Code and 98.2.0 for OpenCode,
+    where they were 2.1.289 and 1.18.34. That is the one definition, `hostVersions`. The one test that repeated
+    the two values as literals, "the wrapper hands Compose the host's versions, in every call", now refers to it
+  * `tests/agent-wrapper.test.mjs`: the labels of an image built earlier were written 2.1.266 and 1.18.30 in six
+    places, which are the pins of today. No outcome depended on that, since the wanted version in those tests is
+    the host's or the project's. They are now `builtBefore`, 0.1.0 and 0.2.0, defined once, below any pin
+  * Left as they are: `1.18.20`, the version a project holds in two tests, which is below the pin and so equals
+    no later one; `0.0.1` and `0.0.2`; `0.0.0-dev-202610030456`, the pre-release form OpenCode publishes; and
+    `9.9.9`, `7.7.7`, `1.2.3` and `1.2`, which a misbehaving command prints and which never reach Compose
+  * Nothing that ships changed, and the README's examples are as they were
+  With the pins as committed, `npm test` exited 0 with 232 tests, 232 passing. With the pins set to 2.1.289 and
+  1.18.34 in the working tree, the whole of `npm test` exited 0 with 232 tests, 232 passing, where it exited 1
+  with one failing before this change. `container/Dockerfile` was restored with `git checkout`, which exited 0.
+  Looked once for other places where an outcome hangs on a pin equalling a literal or not:
+  * `container/` and `templates/` hold no three-part version but the two pins. The numbers there are addresses,
+    such as `127.0.0.1` and `192.168.65.7`. The test of where a pin is written searches for the pin as a plain
+    substring, so a pin that is part of such an address would fail it. No pin is near one. Not changed
+  * `tests/agent-dev.test.mjs` copies the working copy's Dockerfile and uses the same fixture. Its one version
+    literal is in a comment
+  * `tests/release.test.mjs` asks for a plain three-part version on the two `ARG` lines, so a pre-release pin
+    would fail it, as requirement 17 has it
+  * Outside the suite: the README's examples, which the human decided, and `CHANGELOG.md`, which no test reads
+    for a version
+  0027's plan names the fake host's two versions, so its record has an amendment. Status stays `in-progress`.
+  The other open points are untouched
 
 ## Amendments

@@ -3,8 +3,10 @@
 import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 
-// What the fake harnesses print, in the two forms the real commands use.
-export const hostVersions = { claude: '2.1.289', opencode: '1.18.34' };
+// What the fake harnesses print, in the two forms the real commands use. The versions are ones no release of either
+// harness has, so that no pin comes to equal them: the tests tell the host's version and the kit's pin apart by
+// their values, and a release moves the pins.
+export const hostVersions = { claude: '99.1.0', opencode: '98.2.0' };
 
 // The commands the wrapper, the dev shim and the fakes below run, besides `docker` and the harnesses. A node's own
 // directory cannot be put on the PATH instead, because a harness installed with `npm install -g` sits in it.
