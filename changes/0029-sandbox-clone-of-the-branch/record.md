@@ -114,4 +114,13 @@ timestamp: 2026-10-04T15:31:37Z
   nothing; and `git status --short` showed only the untracked tarball. The commits after it change `plan.md` and
   `record.md` only. Every task is ticked. The status stays `in-progress`: the unit has not been reviewed
 
+- 2026-10-04T23:06:17Z [OpenCode, openai/gpt-6.1-sol] reviewed unit 0029 at
+  `4da86cd5dade4561c3132a8744e0af776733ff35`, a full review against merge base
+  `897a5fc9f81a027ad66162904e8493764c435fd2`. Returned labels `S1`, `S2`, `P1` and `C1`. Complete findings saved in
+  `.reviews/0029-sandbox-clone-of-the-branch/2026-10-04T230322Z-opencode-gpt-6.1-sol-full-4da86cd.md`.
+  Could not independently verify the historical real-Docker runs or their cleanup, or the historical red-test runs
+  and test-writing order. Did not replay real-Docker behavior, Docker Desktop for macOS, interactive terminal
+  interruption, stopped-container recovery or same-moment starts. The saved review names the checks run and their
+  results, including the three targeted reproductions with real git and a Docker stand-in
+
 ## Amendments
