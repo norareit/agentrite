@@ -194,11 +194,11 @@ process of release 2.3.0; this unit was planned under it.
   gives, wrapped at 120 characters (R5, R6)
 - [x] Change the README in the four places the Approach names. Remove nothing but the sentence and code block the
   new order replaces (R10, R11)
-- [ ] In a scratch directory outside the repository, make a git repository with a `package.json` and one commit,
+- [x] In a scratch directory outside the repository, make a git repository with a `package.json` and one commit,
   change a file without committing, and run `npm version patch`. Record the npm version and what it printed. If it
   does not refuse, stop and tell the human: the reason for a separate notes commit is then gone, and the README must
   not give it (R10)
-- [ ] Try the rule once without releasing: in a session that has read only `AGENTS.md` and the README, ask for the
+- [x] Try the rule once without releasing: in a session that has read only `AGENTS.md` and the README, ask for the
   release notes of the units implemented since `v2.3.0`, on a scratch branch or worktree that is thrown away
   afterwards. Record whether the section came out in the shape requirement 2 gives, whether every unit was accounted
   for, and what the agent proposed. Commit nothing from it. When the rule's wording needs changing for it to work,
@@ -206,13 +206,13 @@ process of release 2.3.0; this unit was planned under it.
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with the new tests among them
-- [ ] `npm pack --dry-run` lists 24 files
-- [ ] `git diff master -- process.md roles templates scripts container` is empty
-- [ ] `bash -n deploy.sh` passes
-- [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
-- [ ] `npm run check-changes` passes, after `npm ci`
-- [ ] The record says what was not run: `./deploy.sh` itself, which needs the AWS account and a release
+- [x] `npm test` passes on the host, with the new tests among them
+- [x] `npm pack --dry-run` lists 24 files
+- [x] `git diff master -- process.md roles templates scripts container` is empty
+- [x] `bash -n deploy.sh` passes
+- [x] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
+- [x] `npm run check-changes` passes, after `npm ci`
+- [x] The record says what was not run: `./deploy.sh` itself, which needs the AWS account and a release
 
 ## Commit Points
 
@@ -221,4 +221,4 @@ process of release 2.3.0; this unit was planned under it.
 - [x] The changelog, its test and `files`
 - [x] The rule in `AGENTS.md`
 - [x] The README
-- [ ] The record of the two trials
+- [x] The record of the two trials

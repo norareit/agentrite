@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-04T11:31:30Z
+timestamp: 2026-10-04T11:34:59Z
 ---
 
 # 0025 Release notes with every release
@@ -64,5 +64,41 @@ timestamp: 2026-10-04T11:31:30Z
   `master` at `ab02eae`, which now holds 0024, without conflict, and `npm ci` installed release 2.3.0 there. The
   planner's commit is `b8e5b01` since. This record had no `## Amendments` heading, which the template has, and
   gets it with this entry
+- 2026-10-04T11:34:59Z [Claude Code, anthropic/claude-opus-5-5] implemented the plan, in the commits from `e780081`
+  to `b0dbc60`. Every task of the plan is ticked. The unit stays in-progress, since no review has been made. What was
+  verified:
+  * With the two fixture files alone, the suite reported 188 passing and 0 failing. The three refusal tests then
+    failed before `deploy.sh` had the check, and the test of `files` failed before `package.json` listed the
+    changelog. All pass after
+  * The 2.3.0 section, before it was committed, against the repository: the units whose status differs between
+    `v2.2.1` and `v2.3.0` are 0015, 0016, 0018, 0019, 0021, 0022 and 0023, each on a line of the section; the diff
+    of the shipped files between the tags is the nine files the section's lines cover; the shipped paths hold 22
+    files at `v2.2.1` and 23 at `v2.3.0`; the entrypoint parses both allowlists into one and stops with
+    `allowlisted host <host> is not reachable` after three attempts; the Dockerfile installs `jq` and `git`; and
+    the change check does not mention the "Beyond the request" section. The section is the plan's text unchanged.
+    The human had not said whether that text was read
+  * `npm version patch`, npm 11.11.0, in a scratch git repository with one commit and an uncommitted change:
+    it printed `npm error Git working directory not clean.`, exited 1, and changed neither `package.json` nor
+    the tags. The README's reason for a separate notes commit stands
+  * The trial of the rule. A fresh agent session, given a throwaway worktree at `f7c0a15` and told only to read
+    `AGENTS.md` and the README and to write the release notes for the next release, wrote a `## 2.3.1` section at
+    the top of `CHANGELOG.md`, above 2.3.0, in the two parts, with a unit number on every line and a closing "Not
+    in the package:" line. It found the tag `v2.3.0` and, by status, the one unit implemented since, 0024. It
+    proposed patch, with its reason, and committed nothing and ran neither `npm version` nor `./deploy.sh`.
+    Nothing from it is committed, and the worktree is removed
+  * The trial showed two gaps in the rule's wording, changed in `b0dbc60`, in `AGENTS.md` and in the plan's Approach
+    alike. The shipped diff held changes of this unit, which is not implemented, and the rule spoke only of a
+    change with no unit: it now says to name such a change to the human, whose decision it is whether the release
+    waits. And a task has no spec, where the rule said to read the spec and the record of each: it now says the
+    documents each has. The agent's other remarks changed nothing: it wrote two lines under worth knowing where
+    "Nothing." might have done, it counted the package's files from the tracked files because the rule names no
+    command for that, and it could not tell its branch, the worktree being detached
+  * On the host, on the tree of the commit that holds this entry, with this entry already written: `npm test`
+    reported 192 passing and 0 failing. `npm pack --dry-run` lists 24 files, `CHANGELOG.md` among them.
+    `git diff master -- process.md roles templates scripts container` is empty (R6). `bash -n deploy.sh` passes.
+    No line of a file changed against `master` is over 120 characters and none holds an em dash.
+    `npm run check-changes` exited 0 on that commit
+  * Not run: `./deploy.sh` itself, which needs the AWS account and a release. Its first real use is the next
+    release, the human's. The refusal is held by the suite's stubs only
 
 ## Amendments
