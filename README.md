@@ -24,6 +24,7 @@ The "rite" is also Ritenoar's, whose projects carry it.
 | Path                 | What it holds                                                                             |
 |----------------------|-------------------------------------------------------------------------------------------|
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
+| `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it                  |
 | `roles/`             | The planner, implementer and reviewer instructions                                        |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
 | `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
@@ -47,7 +48,7 @@ npm install https://agentrite.ritenoar.com/ritenoar-agentrite-2.0.0.tgz
 
 npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
 `package-lock.json`. A project receives what `files` in this repository's `package.json` lists, which is
-`process.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agentrite-roles.mjs`,
+`process.md`, `CHANGELOG.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agentrite-roles.mjs`,
 `scripts/agentrite.mjs` and `container/`, plus the `package.json` and this README that npm always ships. It does not
 receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
 
@@ -156,6 +157,10 @@ npm install https://agentrite.ritenoar.com/ritenoar-agentrite-2.1.0.tgz
 That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
 reports that a newer release exists: the URL is the pin, and `npm outdated` has no registry to ask. Moving to a newer
 kit is a deliberate change to the project.
+
+What a release changed, and what is worth knowing when updating to it, is in the kit's `CHANGELOG.md`, which after
+the install is at `node_modules/@ritenoar/agentrite/CHANGELOG.md`. It holds one section per release, newest first. A
+project that skips releases reads every section between its old version and the new one.
 
 Then bring the kit's own files in the project up to date, from the project root, naming the harnesses it uses:
 
@@ -433,13 +438,20 @@ URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront dist
 in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
 it looks up rather than owns. None of it ships to a project.
 
-A release starts with a version bump, then `deploy.sh`, from the repository root and with AWS credentials for the
-account:
+A release is made on `master`, from the repository root, in this order:
 
-```sh
-npm version patch   # or minor, or major
-./deploy.sh
-```
+1. An agent is asked to write the release notes. It adds a section to `CHANGELOG.md` for the units implemented since
+   the last release and proposes major, minor or patch. How it does that is in `AGENTS.md`, under "Release notes"
+2. The human reads the section, corrects it and picks the version, changing the heading when the pick differs from
+   the proposal. The section is committed as `Release notes for <version>`
+3. `npm version patch`, or `minor`, or `major`
+4. `./deploy.sh`, with AWS credentials for the account
+
+The notes are committed first because `npm version` refuses a working tree that is not clean, and so the tree the
+tag names holds the section and the tarball does too. A release has no unit in `changes/`: both commits are made on
+`master`, which is this project's exception to working on a branch. `deploy.sh` refuses, before it does anything
+else, a version whose section is missing from `CHANGELOG.md`; then write the notes, commit them, move the tag with
+`git tag -f v<version>` and run it again.
 
 Pick the part to bump as semver means it; there is no rule of the kit's own. `npm version` updates `package.json` and
 `package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
