@@ -23,5 +23,12 @@ timestamp: 2026-10-04T15:31:37Z
   decided by the human and are the planner's, for the human to approve or change: the host's branch is fast-forwarded
   also when it is not checked out; a run on a new clone is refused while `sandbox/<branch>` holds commits the host's
   branch lacks; and `--workdir` counts as a choice beside `--in-place`. The status stays `draft`
+- 2026-10-04T15:45:23Z [Claude Code, anthropic/claude-opus-5-5] the human asked whether 0027 and 0028, both still
+  `draft` on branches of their own, interfere. Read both. Neither conflicts in design, and the order 0027, 0028, 0029 is
+  safe. The plan here was written against `master` without them, so when they have landed this branch is rebased and the
+  plan is revised before it is approved: 0027 changes `container/agent.sh` and the fixture in
+  `tests/agent-wrapper.test.mjs` that this plan moves and extends, and its queries of the image join the ones the
+  stand-in `docker` answers; 0028 adds `RELEASING.md`, whose check runs the working copy's sandbox with a command and so
+  needs `--in-place` once this unit requires a choice, which puts that file in this plan's list
 
 ## Amendments
