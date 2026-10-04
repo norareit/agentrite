@@ -135,7 +135,7 @@ changes, so no rebuild is needed for the change itself.
   or without a command, and the runs that expect a refusal by Compose, by the build or by the registry. The run of
   the dev shim's test that gives `--workdir` needs none. Implement the option and the required choice in
   `container/agent.sh`, as step 1 of the order above. The suite passes (R1, R2)
-- [ ] In `tests/agent-unit-run.test.mjs`, write the tests of resolving and starting and see them fail (R3, R4, R5,
+- [x] In `tests/agent-unit-run.test.mjs`, write the tests of resolving and starting and see them fail (R3, R4, R5,
   R6, R7, R8, R9, R17). Its setup is its own, on `fakeHost`: the project root is a git repository with the
   branches `master`, `feature-0010-init`, `feature-0010-init2` and `task-0026-doc`, a `.gitignore` that names
   `node_modules` and `.reviews`, and the wrapper and `container/unit-clone.sh` copied under its `node_modules`. The
@@ -164,7 +164,7 @@ changes, so no rebuild is needed for the change itself.
     - the `run` call mounts the host's `.reviews` at `/work/.reviews`, and both directories exist before the call,
       owned by the caller. The stand-in mounts nothing, so a file written there reaching the host is left to the
       real check
-- [ ] Add `container/unit-clone.sh` with `resolve_unit_branch`, `refuse_unlanded` and `prepare_clone`, and the unit
+- [x] Add `container/unit-clone.sh` with `resolve_unit_branch`, `refuse_unlanded` and `prepare_clone`, and the unit
   run in `container/agent.sh` up to and including the named `docker compose run`, in the order of the approach. A
   stopped container under the name is removed with `docker rm` before the run. The tests of the previous task
   pass, and so do those of `tests/agent-wrapper.test.mjs` and `tests/agent-dev.test.mjs`, whose setups copy no
@@ -246,7 +246,7 @@ changes, so no rebuild is needed for the change itself.
 
 - [x] `feature-0029` the extended fixture, with no behavior changed
 - [x] `feature-0029` the tests of the required choice, `--in-place` and the updated runs
-- [ ] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `refuse_unlanded`, `prepare_clone`
+- [x] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `refuse_unlanded`, `prepare_clone`
   and the named run
 - [ ] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of
   `container/compose.yml`

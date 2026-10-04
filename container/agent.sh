@@ -115,12 +115,32 @@ done
 # What to mount at /work has no default. Without --in-place and --workdir the first
 # argument left is the unit, and with nothing left there is nothing to run on. Refused
 # here, before the host's harnesses, Docker or npm are asked anything.
-if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
-  echo "agent.sh: say what to mount at /work. One of:" >&2
+mount_forms() {
+  echo "Say what to mount at /work, as one of:" >&2
   echo "  agent.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch" >&2
   echo "  agent.sh --in-place [COMMAND...]     the project root as it is" >&2
   echo "  agent.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
+}
+if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
+  echo "agent.sh: nothing to mount at /work was given." >&2
+  mount_forms
   exit 2
+fi
+
+# The unit's branch, found with git alone, so that a unit that names none is refused
+# as early. An empty branch says that this is not a unit run.
+branch=""
+if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
+  # shellcheck source=unit-clone.sh
+  . "$here/unit-clone.sh"
+  resolved=0
+  branch="$(resolve_unit_branch "$root" "$1")" || resolved=$?
+  if [ "$resolved" -ne 0 ]; then
+    # A unit that names no branch may be a command given without saying what to mount.
+    [ "$resolved" -ne 1 ] || mount_forms
+    exit 2
+  fi
+  shift
 fi
 
 # The developer's own Claude Code status line, read-only: the script from the host, and
@@ -238,6 +258,11 @@ needs_build() {
   differs_from_image "$harness" "$held" "$wanted" "$origin"
 }
 
+# Whether Docker has a container running under the unit run's name.
+unit_container_running() {
+  [ -n "$(docker ps --quiet --filter "name=^/$container_name\$")" ]
+}
+
 claude_code_host="$(installed_version claude "Claude Code")"
 opencode_host="$(installed_version opencode "OpenCode")"
 
@@ -255,16 +280,35 @@ merged="$(node -e '
   let json = "";
   process.stdin.on("data", (chunk) => (json += chunk));
   process.stdin.on("end", () => {
-    const agent = JSON.parse(json).services.agent;
+    const merged = JSON.parse(json);
+    const agent = merged.services.agent;
     const args = agent.build?.args ?? {};
-    console.log([agent.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? ""].join("\n"));
+    const lines = [agent.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
+    console.log(lines.join("\n"));
   });
 ' <<< "$config")"
 {
   read -r image
   read -r claude_code_wanted
   read -r opencode_wanted
+  read -r project
 } <<< "$merged"
+
+# A unit run has one clone and one container for each Compose project and branch. The
+# container's name is the lock: while Docker says it is running, a second run for the
+# branch is refused. Both refusals come here, before a build and before the registry is
+# asked, which a run that is refused has no use for.
+if [ -n "$branch" ]; then
+  container_name="$project-$branch"
+  container_name="${container_name//[^A-Za-z0-9_.-]/-}"
+  clone="${XDG_STATE_HOME:-${HOME:?}/.local/state}/agentrite/$project/$branch"
+  if unit_container_running; then
+    echo "agent.sh: the container $container_name is running, so a run for $branch is under way." >&2
+    echo "Two runs never work on one branch. Wait for it, or stop it with 'docker stop $container_name'." >&2
+    exit 2
+  fi
+  refuse_unlanded "$root" "$branch" "$clone" || exit 2
+fi
 
 # The wanted version of each harness and where it comes from. An origin left empty says
 # that neither the project nor the host gives one.
@@ -346,7 +390,25 @@ if [ "$build" -eq 1 ]; then
   "${compose[@]}" build
 fi
 
-exec "${compose[@]}" run --rm \
-  --volume "$workdir:/work" \
+if [ -z "$branch" ]; then
+  exec "${compose[@]}" run --rm \
+    --volume "$workdir:/work" \
+    ${mounts[@]+"${mounts[@]}"} \
+    agent "$@"
+fi
+
+# The clone is made only now, so that a build that failed left none behind. Both
+# .reviews directories are made here because Docker creates a mount's missing source
+# and its missing mount point as root. A stopped container that a crash left under the
+# name is removed, and Docker refuses to remove one that is running.
+prepare_clone "$root" "$branch" "$clone"
+mkdir -p "$root/.reviews" "$clone/.reviews"
+docker rm "$container_name" >/dev/null 2>&1 || true
+
+status=0
+"${compose[@]}" run --rm --name "$container_name" \
+  --volume "$clone:/work" \
+  --volume "$root/.reviews:/work/.reviews" \
   ${mounts[@]+"${mounts[@]}"} \
-  agent "$@"
+  agent "$@" || status=$?
+exit "$status"
