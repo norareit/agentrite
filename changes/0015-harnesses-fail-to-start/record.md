@@ -102,5 +102,11 @@ timestamp: 2026-10-03T23:45:26Z
   * This repository's own `agent/compose.project.yml` carries the same comment listing the kit's hosts as the
     template, and still admits `models.dev` for OpenCode. `init` wrote it once and `refresh` does not touch it, and
     the plan does not name it, so it is unchanged
+- 2026-10-03T23:59:12Z [OpenCode, openai/gpt-6.1-sol] as reviewer, made a full review of unit 0015 at commit
+  `e4e3cbfd59c4e32ac359f87f99d081855bad7f81`, against merge base `58430fa51fd239f61caeae9a165b61caac447783`.
+  Returned C1. Complete findings and verification evidence are saved in
+  `.reviews/0015-harnesses-fail-to-start/2026-10-03T235734Z-full-e4e3cbf-opencode.md`.
+  Could not verify the human login-and-prompt task, behavior with a saved login, Docker Desktop on macOS, a rebuilt
+  image, or the chronology of the implementer's original uncommitted regression-test run
 
 ## Amendments
