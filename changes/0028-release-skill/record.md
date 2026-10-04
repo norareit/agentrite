@@ -389,8 +389,8 @@ timestamp: 2026-10-04T18:20:11Z
   * `container/` and `templates/` hold no three-part version but the two pins. The numbers there are addresses,
     such as `127.0.0.1` and `192.168.65.7`. The test of where a pin is written searches for the pin as a plain
     substring, so a pin that is part of such an address would fail it. No pin is near one. Not changed
-  * `tests/agent-dev.test.mjs` copies the working copy's Dockerfile and uses the same fixture. Its one version
-    literal is in a comment
+  * `tests/agent-dev.test.mjs` copies the working copy's Dockerfile and uses the same fixture. It holds no version
+    literal
   * `tests/release.test.mjs` asks for a plain three-part version on the two `ARG` lines, so a pre-release pin
     would fail it, as requirement 17 has it
   * Outside the suite: the README's examples, which the human decided, and `CHANGELOG.md`, which no test reads
