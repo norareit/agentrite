@@ -110,7 +110,7 @@ timestamp: 2026-10-04T18:20:11Z
   names, keeps its id. `master` held two units the branch did not: task 0026 and feature 0027. The merge had no
   conflict, since the branch had changed only this unit's directory. On the merged tree, before any change of this
   unit, `npm test` exited 0 with 224 tests, 224 passing
-- 2026-10-04T18:31:02Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read 0027's spec and record on
+- 2026-10-04T18:25:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read 0027's spec and record on
   `master`, and `container/agent.sh`, `container/Dockerfile`, `container/compose.yml`, the README and
   `tests/harness-versions.test.mjs` as 0027 left them, and went through this unit's spec and plan against them.
   The spec foresaw 0027 under "What is assumed about 0027" and says the implementer writes the step for it from
@@ -179,8 +179,9 @@ timestamp: 2026-10-04T18:20:11Z
     stays in `AGENTS.md` without its last sentence, "The order of a release is in the README, under "Releasing"."
     The plan's text for `AGENTS.md` leaves it out, and the pointer to `RELEASING.md`, which now holds the order,
     stands in its place
-- 2026-10-04T18:27:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the README. "Releasing" is the plan's text,
-  written out of `plan.md` by a script, and "What is here" has the row for `RELEASING.md` after `CHANGELOG.md`'s.
+- 2026-10-04T18:27:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the README. "Releasing" is the plan's
+  text, written out of `plan.md` by a script, and "What is here" has the row for `RELEASING.md` after
+  `CHANGELOG.md`'s.
   The section on `master` at `94099e9` is the one the plan's table was written against: 0026 and 0027 did not
   touch it. Each row of the table, checked by searching for the sentence with the line breaks ignored:
   * "A release is a tarball of the kit served from": in the README, word for word
@@ -209,5 +210,10 @@ timestamp: 2026-10-04T18:20:11Z
   Nothing else in the README changed: `git diff` shows the row and the section only. The README names neither
   pin, which `tests/harness-versions.test.mjs` holds. After it `npm test` exited 1 with 232 tests, 228 passing: the
   four that failed are the ones waiting for `deploy.sh`
+- 2026-10-04T18:28:08Z [Claude Code, anthropic/claude-opus-5-5] as implementer, `deploy.sh`. The refusal's two lines
+  are the plan's, and nothing else in the script changed. `bash -n deploy.sh` exited 0, and `npm test` exited 0
+  with 232 tests, 232 passing. The script itself was not run: the suite runs a copy of it against commands of its
+  own. Also corrected in this record: the time of the entry on 0027, which was written ahead of the clock, is now
+  that of its commit, and a line that was 123 characters long is wrapped
 
 ## Amendments

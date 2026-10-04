@@ -20,8 +20,8 @@ cd "$ROOT"
 
 VERSION="$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')"
 if ! grep -qxF "## $VERSION" CHANGELOG.md 2>/dev/null; then
-  echo "✗ CHANGELOG.md has no section headed \"## $VERSION\". Write the release notes as AGENTS.md" >&2
-  echo "  describes under \"Release notes\", commit them, and run this again." >&2
+  echo "✗ CHANGELOG.md has no section headed \"## $VERSION\". Write the release notes as RELEASING.md" >&2
+  echo "  describes, commit them, and run this again." >&2
   exit 1
 fi
 

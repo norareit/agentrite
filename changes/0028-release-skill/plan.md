@@ -394,7 +394,7 @@ version, and neither does `RELEASING.md`.
 - [x] Replace the README's "Releasing" with the text the Approach gives and add the row to "What is here". Go
   through the table of paragraphs in the Approach and record, for each row, that the sentence is where the table
   says, with its commands as they were (R15)
-- [ ] Change the refusal's message in `deploy.sh` and see every test pass (R16, R17)
+- [x] Change the refusal's message in `deploy.sh` and see every test pass (R16, R17)
 - [ ] On the host, run the check of step 2 by hand, once, as `RELEASING.md` gives it: set the two pins in the
   working tree to what `npm view` prints, run the two runs under `ritenoar-agentrite-agent-release`, and read what
   has to hold. Then restore `container/Dockerfile` with `git checkout`, and remove the volume, the network and the
@@ -430,5 +430,5 @@ version, and neither does `RELEASING.md`.
 - [x] `RELEASING.md` and the skill
 - [x] `AGENTS.md`
 - [x] The README
-- [ ] `deploy.sh`
+- [x] `deploy.sh`
 - [ ] The record of the two trials, with any correction to `RELEASING.md` they caused
