@@ -80,5 +80,18 @@ timestamp: 2026-10-04T00:51:53Z
     says how to remove
   * Not checked: Docker Desktop for macOS; a first build without the release image's layers in the build cache;
     whether either harness starts in the dev sandbox, where only `bash`, `sleep` and `npm test` were run
+- 2026-10-04T01:01:04Z [OpenCode, openai/gpt-6.1-sol] took the reviewer role and completed a full review of
+  0021 on `826982b501baa110de39372de3520235ecf79124`, against merge base
+  `58430fa51fd239f61caeae9a165b61caac447783` with `master`. Returned no findings on spec conformance, plan
+  fidelity or code quality. Complete findings and verification results are saved in
+  `.reviews/0021-working-copy-sandbox/2026-10-04T005903Z-full-826982b.md`. Independently ran `npm test` on the
+  host and `./agent-dev.sh npm test`, each with 182 passing and 0 failing; observed the dev sandbox rebuilding
+  and running concurrently with `./agent.sh sleep 30`; compared the release image ID and home-volume metadata
+  before and after, with no difference; and verified identical default release Compose configuration against
+  the merge base. The change check, packaging check (22 files, no dev shim), shell syntax and whitespace checks
+  passed, and changed committed files meet the line limit and contain no em dashes. Could not independently
+  recover the original test-first execution order or temporary marker experiments. Not checked in this review:
+  release home-volume contents, Docker Desktop for macOS, other engine versions, a cache-empty first build,
+  a live run without a dev image, interactive harness startup, or destructive home-reset and cleanup commands
 
 ## Amendments
