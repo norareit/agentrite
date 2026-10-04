@@ -81,5 +81,29 @@ timestamp: 2026-10-04T01:30:02Z
   the human let the same reading stand for 0021 and 0022, so the implementer took them as the approval of the
   rewritten spec and plan and moved the status through approved to in-progress. The human had not read the
   rewritten documents when the work began. That reading is the implementer's, and the human is told of it
+- 2026-10-04T01:33:00Z [Claude Code, anthropic/claude-opus-5-5] implemented the plan's four tasks in two commits,
+  `7faf72d` with the regression test and the two hosts and `699dc40` with the lists of the kit's hosts and the
+  README section. The unit stays in-progress: the human's check is open, and so is the last commit point, which
+  waits for it, and no review has been made. What was verified:
+  * `tests/compose-allowlist.test.mjs` failed on the tree before the fix, naming `auth.openai.com` and
+    `chatgpt.com` as the two hosts missing from `KIT_ALLOWLIST`, and passes after it
+  * On the host, on `699dc40`: `npm test` reported 188 passing and 0 failing. `git diff master -- container
+    scripts` shows the four lines added to `KIT_ALLOWLIST` and nothing else (R7). `npm pack --dry-run` lists 23
+    files, the same list as an export of `master`. No line of a file changed against `master` is over 120
+    characters and none holds an em dash. `npm run check-changes` exited 0 on the commit that holds this entry
+  * The implementer's run, on Linux with Docker Engine 28.4.0 and Compose 2.39.2, with `./agent-dev.sh`, on a dev
+    home volume that did not exist before the run. The proxy listened for the two new hosts and the start-up check
+    found both reachable. `opencode auth list` named no credential. Under `script`, so on a pseudo-terminal,
+    `opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"` printed `Go to:
+    https://auth.openai.com/codex/device` and `Enter code:` with a code, and waited (R1). It was stopped after 45
+    seconds, and nothing was logged in to. The proxy's log then held `allowed auth.openai.com` once after
+    start-up, and its only refusal for want of an allowlist entry was the canary's, `example.com`
+  * A first attempt, with the command's output piped and no terminal, printed `Add credential` and nothing more
+    in 20 seconds, and made no connection to `auth.openai.com`. The command wants a terminal, which a developer
+    in the sandbox's shell has
+  * Left on the host for the human's check: the dev image, network and home volume, the volume holding no login
+  * Not checked: that the login completes, that a prompt is answered, and what a prompt contacts, which are the
+    human's check (R2, R3); Docker Desktop for macOS; `./agent.sh`, which runs the released kit and gets the
+    hosts only with a release
 
 ## Amendments

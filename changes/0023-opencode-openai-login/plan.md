@@ -52,13 +52,13 @@ the dev home volume until the human removes it with the command the README gives
 
 ## Verification
 
-- [ ] `npm test` passes on the host
-- [ ] `git diff master -- container scripts` shows the lines added to `KIT_ALLOWLIST` and nothing else: no port, no
+- [x] `npm test` passes on the host
+- [x] `git diff master -- container scripts` shows the lines added to `KIT_ALLOWLIST` and nothing else: no port, no
       firewall rule, and `init` as it was (R7)
-- [ ] `npm pack --dry-run` lists the same files as on `master`
-- [ ] `npm run check-changes` passes
-- [ ] No line of a changed file is over 120 characters, and none holds an em dash
-- [ ] The implementer's run, without logging in, with `./agent-dev.sh` on a new dev home volume:
+- [x] `npm pack --dry-run` lists the same files as on `master`
+- [x] `npm run check-changes` passes
+- [x] No line of a changed file is over 120 characters, and none holds an em dash
+- [x] The implementer's run, without logging in, with `./agent-dev.sh` on a new dev home volume:
       `opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"` prints the device page's address and a code
       (R1), and `grep 'not allowlisted' /run/egress-proxy.log` does not name `auth.openai.com`. Stop the login
       there. What was seen is in the record, with the Docker and Compose versions (R8)
