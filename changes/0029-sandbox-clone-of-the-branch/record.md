@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-10-04T15:31:37Z
 ---
 
@@ -54,5 +54,9 @@ timestamp: 2026-10-04T15:31:37Z
   goes on every existing run that gets past the first three refusals, not only on those with a command; the
   comments of `container/compose.yml` and five more commands in the README are in the tasks, three of which the
   first plan had missed and two of which 0027 and 0030 added
+- 2026-10-04T22:44:03Z [human] approved the spec and the plan as revised at `1eaca00`, the planner's two new decisions among
+  them, and asked for the unit to be implemented. Status `approved`
+- 2026-10-04T22:44:03Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main checkout on the unit's
+  branch, which holds `master` at `897a5fc`. Status `in-progress`
 
 ## Amendments
