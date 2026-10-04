@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-10-04T20:13:06Z
 ---
 
@@ -64,5 +64,26 @@ timestamp: 2026-10-04T20:13:06Z
   `--rebuild` or follows the registry at every start; whether the README should name the versions the kit was
   last seen working with; the wrapper's three lines in the plan; the order of 0028 and this unit; and what under
   "Beyond the request" is taken. Status left at `draft` for the human's approval
+- 2026-10-04T21:19:19Z [human] approved the spec and the plan as written at `ec0aa5b`, in the main session, in these
+  words: "Okay. Go ahead and implement 0030 as the @implementer". The time of this entry is when the words reached
+  the implementer, through the dispatching session. Status `draft` to `approved`.
+  The dispatching session reports that the human was shown, twice, what the planner left for them to decide, in
+  this form: the fallback when neither the project nor the host gives a version (the latest from the npm registry,
+  as planned, or the harness left out, or a stop with a message); when the registry is asked (only when a build is
+  due, as planned, or at every start); the order of 0028 and this unit; and a time limit on the registry call,
+  which is under "Beyond the request" and which the main session said it would take. The human answered none of
+  them one by one and gave the approval above. So the unit is built as the spec has it, with the planned answers,
+  and nothing under "Beyond the request" is in scope. The time limit on the question to the registry was
+  recommended by the main session and not taken up by the human: it is not built, and it is theirs to add later.
+  The order is settled by events: 0028 is implemented and on `master`
+- 2026-10-04T21:19:19Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main checkout and not
+  in a worktree, as the human wants it. Status `approved` to `in-progress`. Read the process of release 2.3.0 from
+  `node_modules`, `roles/implementer.md`, the README, and this unit's three documents.
+  The branch was brought up to date before any work, by a merge as the plan says: `master` at `32004d6`, which
+  holds 0028, merged into the branch at `ec0aa5b`, as `8abd2a0`, with no conflict. It was the first of the plan's
+  two cases: `tests/harness-versions.test.mjs` no longer reads `README.md`, and `tests/wrapper-fixture.mjs` has the
+  fake host's versions `99.1.0` and `98.2.0`. `npm test` on `8abd2a0`: 230 tests, 230 passing, exit 0.
+  The plan against what `master` now holds: its steps stand. `RELEASING.md`, the release skill and `AGENTS.md`
+  name no harness version and no pin, checked with `grep`, and are not touched by this unit
 
 ## Amendments

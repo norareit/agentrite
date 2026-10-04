@@ -152,7 +152,7 @@ host runs `npm view` on the host.
 
 ## Tasks
 
-- [ ] Bring the branch up to date with `master` when `master` has moved, by a merge, and run `npm test`. Record
+- [x] Bring the branch up to date with `master` when `master` has moved, by a merge, and run `npm test`. Record
   whether 0028 is in it and how many tests pass (R16)
 - [ ] Add the fake `npm` and `latestVersions` to `tests/wrapper-fixture.mjs`. Change and add the cases of
   `tests/agent-wrapper.test.mjs` as the Approach gives them, and the two tests of
