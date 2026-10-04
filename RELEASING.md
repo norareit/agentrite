@@ -5,143 +5,29 @@ How a release of the kit is made. This file is this repository's own and is not 
 
 A release is made on the host, on `master`, from the repository root, in this order:
 
-1. Before anything else: the host, the branch and the working tree
-2. The harness versions: the pins in `container/Dockerfile` are moved to the latest and checked
-3. The release notes: a section is added to `CHANGELOG.md`
-4. The human reads, corrects and picks the version
-5. The commits
-6. What the human runs: `npm version`, `./deploy.sh` and the push
+1. Before anything else: the branch, the working tree and the suite
+2. The release notes: a section is added to `CHANGELOG.md`
+3. The human reads, corrects and picks the version
+4. The commit
+5. What the human runs: `npm version`, `./deploy.sh` and the push
 
-An agent runs steps 1 to 3, stops at step 4, and on the human's word runs step 5. It runs nothing of step 6: it
-ends by telling the human its three commands. An agent asked only for the release notes runs step 3, stops at
-step 4, and on the human's word commits the section as step 5 gives it and nothing else.
+An agent runs steps 1 and 2, stops at step 3, and on the human's word runs step 4. It runs nothing of step 5: it
+ends by telling the human its three commands. An agent asked only for the release notes runs step 2, stops at
+step 3, and on the human's word commits the section as step 4 gives it and nothing else.
 
 ## 1. Before anything else
 
 Stop, say why and change nothing when one of these does not hold. Do not repair it.
 
-* `docker version` answers. Releasing runs on the host only: the check of step 2 needs Docker, and `./deploy.sh`
-  needs AWS credentials, which never enter the sandbox. A sandbox has no Docker, so a session inside one cannot
-  make a release
 * The branch is `master`
 * `git status --short` shows no change to a tracked file. `npm version` refuses a working tree that is not clean
+* `npm test` passes. `./deploy.sh` runs the suite too, but only after `npm version` has made its commit and its
+  tag, which is late to learn that a test fails. When one fails, say which and what it printed. A test is repaired
+  in a unit in `changes/`, on a branch, and not by the release
 
-## 2. The harness versions
+Releasing runs on the host only: `./deploy.sh` needs AWS credentials, which never enter the sandbox.
 
-The kit pins a version of Claude Code and one of OpenCode in `container/Dockerfile`, as the defaults of
-`ARG CLAUDE_CODE_VERSION` and `ARG OPENCODE_VERSION`. A pin is what a sandbox gets on a host that does not have the
-harness, and the pinned pair is the one the kit and its README were checked against, as the README says under "The
-harness versions". A release moves both to the latest published versions, after checking, in a sandbox built from
-the working copy, that what the kit and its README rely on still holds for them.
-
-* The latest versions are what `npm view @anthropic-ai/claude-code version` and `npm view opencode-ai version`
-  print. When both are the pins already, there is nothing to bump: skip the rest of this step and say so
-* Otherwise edit the two lines. Commit nothing
-
-### The suite
-
-Run `npm test` with the two lines edited, before the check: it needs no Docker and takes about a second. The suite
-reads the pins from `container/Dockerfile`, and `./deploy.sh` runs it too, which is after `npm version` has made its
-commit and its tag, and late to learn that a test does not hold for the new pins.
-
-A test that fails is a finding, and is handled as a finding of the check is, below: restore the pins, tell the
-human which test failed and what it printed, and stop. The check is then not run.
-
-### The check
-
-The check has a Compose project of its own, with its own image and home volume, so that its home holds no login and
-the sandboxes of `./agent.sh` and `./agent-dev.sh`, their images and their saved logins are not touched.
-
-The wrapper builds the image with the pins only for a harness it finds no version of on the host, and the host of a
-release has both harnesses. So the check gives the wrapper a `claude` and an `opencode` of its own, first on the
-`PATH`, that report no version. Nothing else on the host is changed for it, and no tracked file:
-
-```sh
-mkdir -p /tmp/agentrite-release-no-harness
-printf '#!/bin/sh\nexit 1\n' > /tmp/agentrite-release-no-harness/claude
-cp /tmp/agentrite-release-no-harness/claude /tmp/agentrite-release-no-harness/opencode
-chmod +x /tmp/agentrite-release-no-harness/claude /tmp/agentrite-release-no-harness/opencode
-```
-
-A run is then:
-
-```sh
-PATH="/tmp/agentrite-release-no-harness:$PATH" AGENT_PROJECT_NAME=ritenoar-agentrite-agent-release \
-  container/agent.sh "$PWD" --rebuild <command>
-```
-
-That is what `./agent-dev.sh` runs, under another name and without the host's harnesses. At each run the wrapper
-says, for each harness, that its command printed no version and that the sandbox gets the kit's, with the pin.
-Before the first run and after the last, whatever the outcome, remove what bears that name, and nothing else:
-
-```sh
-docker volume rm ritenoar-agentrite-agent-release_agent-home
-docker network rm ritenoar-agentrite-agent-release_default
-docker image rm ritenoar-agentrite-agent-release
-```
-
-Before the first run there may be nothing of that name. Each of the three then fails and says so, which is as it
-should be. After the last run remove `/tmp/agentrite-release-no-harness` as well.
-
-Each run is a new container with a new proxy log, so a harness is started and the log is read in the same run. A
-harness wants a terminal, and one with a size: start it as
-`timeout 30 script -qec 'stty rows 40 cols 120; <command>' <logfile>`, with the log file under `/tmp`, and read its
-screen from the capture, with the escape sequences stripped. Without the `stty`, the terminal `script` makes has no
-rows and no columns when the run itself has no terminal, and OpenCode then draws nothing that can be read. A
-harness places its text by moving the cursor, so in a stripped capture words run together or stand one to a line.
-Log in to nothing, and enter a code nowhere.
-
-The first run, in a home that holds nothing, in this order:
-
-1. `claude --version` and `opencode --version`
-2. Count the lines of `/run/egress-proxy.log`. Those are the start-up checks' own
-3. `claude`, for 30 seconds
-4. `opencode`, for 30 seconds
-5. The login command the README gives under "Logging in to a model provider", as it is written there, for 45
-   seconds
-6. Print the three captures, and the lines of `/run/egress-proxy.log` after the ones counted
-
-The second run, only when `~/.claude/statusline-command.sh` is a file on the host, in the same home:
-
-1. Write `/home/agent/.claude.json` with `hasCompletedOnboarding: true`, a `theme`, the last 20 characters of a
-   made-up API key under `customApiKeyResponses.approved`, and `projects["/work"].hasTrustDialogAccepted: true`
-2. `claude` with `ANTHROPIC_API_KEY` set to the made-up key, for 25 seconds. The key reaches `api.anthropic.com`,
-   which refuses it. Nothing is authenticated and no credential is stored
-3. Print the capture, and the proxy's log as before
-
-What has to hold:
-
-* The image builds, and the two versions printed are the two pins. When they are not, the sandbox did not build
-  from the pins, and nothing else the check saw is about them. A version held in this repository's own
-  `agent/compose.project.yml` stands above the pin, and is one way that happens
-* `claude` reaches its first-run screen and `opencode` its prompt
-* Every host on the proxy's lines after start-up, allowed or refused, is on the kit's own allowlist,
-  `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal known here. A host that was allowed because this
-  repository's own `agent/compose.project.yml` lists it, such as `models.dev`, is not on the kit's allowlist: a
-  project that does not list it refuses it. A line that names no host,
-  `refused: the connection closed before its ClientHello was complete`, has nothing to compare: say how many there
-  were. OpenCode's start leaves many of them. The refusals known here, none of which the kit admits:
-    * `raw.githubusercontent.com`, which Claude Code contacts at start-up and the kit refuses by decision (0015)
-    * `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com`, which Claude Code contacts once
-      it is at its prompt, as in the second run. They were refused there with the versions pinned when this was
-      written and with the latest of that day alike, and Claude Code showed its prompt and the status line without
-      them. The kit refuses them by the human's decision (0028)
-* The login prints an address and a code
-* In the second run, Claude Code shows the line of the host's script. With no such file on the host this is not
-  checked: say so
-
-Anything that does not hold is a finding. Then:
-
-* Restore the pins with `git checkout -- container/Dockerfile`, remove what the check created, tell the human what
-  was seen, with the capture or the log line, and stop
-* Fix nothing. Do not add a host to an allowlist and do not change the README. A harness version that needs a host,
-  a login whose label changed, a build that fails: each is a change with a decision in it, and so a unit in
-  `changes/`, on a branch
-* The human decides whether the release goes out with the pins as they were, in which case it continues at step 3,
-  or waits for that unit. The human may also say to bump one harness alone. Then run the check again for that
-  pair, because that pair is what would ship
-
-## 3. The release notes
+## 2. The release notes
 
 `CHANGELOG.md` holds one section per release and ships in the package. Write the section this way:
 
@@ -157,11 +43,6 @@ Anything that does not hold is a finding. Then:
   unit to the human, and write it in the section without a number. Name one whose unit is not `implemented` to the
   human as well: whether the release waits for that unit is theirs to decide. A consequence nobody wrote down is
   found only here
-* The bump of step 2 is not in that diff, since it is not committed yet, and it is the release's own, not a change
-  that lacks a unit. Write it as a line of "What changed" that gives each harness's old and new version, with no
-  number. Under "Worth knowing when you update", say which sandboxes get the new versions and what a project does to
-  get them, as the README describes the pins under "The harness versions", and name anything the check of step 2
-  did not establish
 * Write the section at the top of `CHANGELOG.md`, above the last release's, headed `## <version>` with the version
   you propose and nothing else on the line. It has two parts:
     * `### What changed`: a line for each change a project gets, ending with the numbers of its units in
@@ -177,35 +58,32 @@ Anything that does not hold is a finding. Then:
 * A section of an earlier release may be corrected in place, for example for a consequence found later. The
   released tarball keeps what it shipped with
 
-## 4. The human reads
+## 3. The human reads
 
 Stop there. Commit nothing before the human's word. In your answer:
 
 * Propose major, minor or patch, with the reason. Pick the part to bump as semver means it; there is no rule of
   the kit's own
 * Name every change in the shipped diff that has no unit
-* For the pins: the old and the new versions, that the suite passed with them, what the check showed, and what it
-  did not establish. Or that they were the latest already
 
 The human reads the section, corrects it and picks the version, changing the heading when the pick differs from the
 proposal.
 
-## 5. The commits
+## 4. The commit
 
 A release is not a unit and has no directory in `changes/`. Its commits are made on `master`, with no unit prefix,
 which is this project's exception to working on a branch. On the human's word, with the version the human picked:
 
 1. Make sure the section is headed `## <version>` with that version
-2. When the pins were bumped, commit `container/Dockerfile` as `Harness pins for <version>`
-3. Commit `CHANGELOG.md` as `Release notes for <version>`
+2. Commit `CHANGELOG.md` as `Release notes for <version>`
 
-Commit nothing else, and push nothing. The pins and the notes are committed first because `npm version` refuses a
-working tree that is not clean, and so the tree the tag names holds both and the tarball does too.
+Commit nothing else, and push nothing. The notes are committed first because `npm version` refuses a working tree
+that is not clean, and so the tree the tag names holds the section and the tarball does too.
 
-Then end by telling the human what is left, as the three commands of step 6, with the part filled in, in that
+Then end by telling the human what is left, as the three commands of step 5, with the part filled in, in that
 order. Do not run `npm version` or `./deploy.sh`.
 
-## 6. What the human runs
+## 5. What the human runs
 
 From the repository root, on `master`, with AWS credentials for the account:
 

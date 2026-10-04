@@ -331,7 +331,7 @@ The first seven were done before the bump was withdrawn, against the texts of th
   skill's test fail and every other test pass (R17)
 - [x] Change the description in `.claude/skills/release/SKILL.md` to the Approach's and see the skill's test pass
   (R1)
-- [ ] Replace `RELEASING.md` with the text the Approach gives, written out of this plan and not retyped. See that
+- [x] Replace `RELEASING.md` with the text the Approach gives, written out of this plan and not retyped. See that
   nothing of the bump is left in it: `grep -n -i -E 'docker|dockerfile|claude-code|opencode|ARG ' RELEASING.md`
   prints nothing (R2, R6, R12, R13, R14)
 - [ ] In the README's "Releasing", replace the paragraph that opens "In short" and the last paragraph with the
@@ -374,6 +374,6 @@ Each was ticked before the revision and is open again, to be seen on the tree th
 - [x] `deploy.sh`
 - [x] The record of the check's trial by hand, with the corrections to `RELEASING.md` it caused
 - [x] The test and the skill's description
-- [ ] `RELEASING.md` cut down
+- [x] `RELEASING.md` cut down
 - [ ] The README
 - [ ] The record of the trial of `/release`, with any correction to `RELEASING.md` it caused
