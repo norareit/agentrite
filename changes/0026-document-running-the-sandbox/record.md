@@ -103,5 +103,25 @@ Not in this task:
   this host is not reachable from the sandbox, as the entry above describes. And this branch was cut from `ab02eae`,
   before 0025 reached `master`, which also changed `README.md`, in other sections. `git merge-tree --write-tree master
   HEAD` reported no conflict; the merged text was not read
+- 2026-10-04T14:35:39Z [OpenCode, openai/gpt-6.1-sol] reviewed 0026 at
+  `bb29b6684215cf6f128b275c4bfb22c2f159d8e3`, full review against merge base
+  `ab02eae43f4385b1cc035efc242e0ad25cb719bb`. Findings: C1. Saved report:
+  `.reviews/0026-document-running-the-sandbox/2026-10-04T14-32-50Z-full-bb29b6684215.md`.
+  Could not independently verify norareit's source at `63662ff` (access denied), the removed worktree trial, or
+  macOS behavior. Did not establish ufw causality or firewall remediation, audit all host access, exercise a fresh
+  build/rebuild, live repeated mounts or root refusal, or test a merge with current `master`. Release not run.
+  Ran `npm test`, `./agent.sh npm test` and `npm run check-changes`; results and other checks are in the report
+- 2026-10-04T14:47:26Z [human] accepted C1, and with it that the README departs from the wording the description asked
+  for, "nothing else of the host reachable"
+- 2026-10-04T14:47:26Z [Claude Code, anthropic/claude-opus-5-5] applied C1 in `f758ce5`. "Starting it" now says that
+  nothing else of the host is reachable with three exceptions, and names them: the developer's `~/.gitconfig`,
+  read-only, the Claude Code status line script, and the local model server's port. The wording the human was shown
+  said that the sections below name all three. That was false for `~/.gitconfig`, which no section of the README
+  named, so the committed sentence says itself what that mount is for, as `container/compose.yml` has it, and points
+  to "The status line" and "The local model server" for the other two. The human has not read the committed wording.
+  Not checked: that these three are everything of the host the sandbox reaches. On `f758ce5`, `npm test` reported 188
+  tests, 188 passed and 0 failed, and `npm run check-changes` exited 0. No line of `README.md` is longer than 120
+  characters and it holds no em dash. The review returned no blocking finding. Status stays `in-progress` until the
+  human says to mark it
 
 ## Amendments
