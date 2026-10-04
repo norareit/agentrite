@@ -104,5 +104,19 @@ timestamp: 2026-10-04T15:49:32Z
   to this branch was refused by the session's permission system, as a whole, and nothing of it ran. The work
   therefore went on in the worktree at `/home/stef/projects/agentrite-0027`, with everything committed on the
   branch, so that the move is `git worktree remove` and `git switch`, and is the human's to make
+- 2026-10-04T15:57:41Z [Claude Code, anthropic/claude-opus-5-5] as implementer, made the comments in `container/`
+  true and wrote the README.
+  * `npm pack --dry-run` lists 24 files, not the 23 the plan names. They are the same 24 paths `master` holds for
+    what `files` in `package.json` lists, with `package.json` and `README.md`, compared by name. So the plan's
+    count was off by one and the package holds the same files.
+    `git diff master -- templates scripts agent agent-dev.sh package.json CHANGELOG.md` is empty
+  * The README's examples use versions that are not the kit's pins, and the test that no shipped file but the
+    Dockerfile holds a pin now reads `README.md` as well, which was added to the plan first. A README that showed
+    the pins would be a second place to bump
+  * Searched `container/`, `templates/`, the three shipped scripts, `process.md`, `roles/`, `README.md` and
+    `CHANGELOG.md` for `pin` and both pinned numbers. What is left names the kit's pin as the third source, a model
+    pinned in a role wrapper, or the release pinned by its URL. `CHANGELOG.md` is not touched: its sections say
+    what earlier releases did
+  * The suite reported 221 tests, all passing
 
 ## Amendments

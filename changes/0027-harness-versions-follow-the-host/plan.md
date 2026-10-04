@@ -115,6 +115,8 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
     * `container/compose.yml` gives both build arguments from `AGENT_CLAUDE_CODE_VERSION` and
       `AGENT_OPENCODE_VERSION`
     * no other file in `container/`, and no file in `templates/`, holds either pinned version number
+    * added while implementing: nor does `README.md`, which ships too and whose new subsection shows versions as
+      examples
 - [x] Add to `tests/agent-wrapper.test.mjs`, and see each fail on the unchanged wrapper (R11):
     * with both fakes printing versions, in the two forms the real commands use, `2.1.289 (Claude Code)` and
       `1.18.34`, every Compose call sees those two versions in the two variables (R1, R2)
@@ -152,9 +154,9 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
   harness CLIs, pinned", the wrapper's header, and the base Compose file's sentence on what the wrapper adds. Search
   what ships and the README for `pinned`, `pin` and both version numbers, and leave nothing that says the kit alone
   decides the versions (R14)
-- [ ] `npm pack --dry-run` lists the same 23 files as on `master`, and
+- [x] `npm pack --dry-run` lists the same 23 files as on `master`, and
   `git diff master -- templates scripts agent agent-dev.sh package.json CHANGELOG.md` is empty (R10)
-- [ ] In `README.md` (R13, R14):
+- [x] In `README.md` (R13, R14):
     * under "Running the sandbox", replace the sentence "The harness versions are pinned in `container/Dockerfile`,
       so a project updates Claude Code and OpenCode by updating the kit, as below, and rebuilding." with one that
       points to the new subsection. The spec approves replacing it: it is no longer true
@@ -211,5 +213,5 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 - [x] `feature-0027` the fixtures of the two wrapper tests, with no behavior changed
 - [x] `feature-0027` the tests, the labels, the build arguments and the wrapper
 - [x] `feature-0027` the comments in `container/`
-- [ ] `feature-0027` the README
+- [x] `feature-0027` the README
 - [ ] `feature-0027` the record of the real check
