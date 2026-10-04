@@ -113,7 +113,10 @@ not. They are in this file at `45e349f`, and what the check saw when it was run 
 
 * That typing `/release` in a session in this repository runs a skill written as this unit describes. It is read
   from the documentation, through a fetch that summarises the page, and was not tried: the session's guard refused
-  the trial in a scratch directory. The plan has a task for it
+  the trial in a scratch directory. It was not tried while the unit was built either: the human left it to the
+  first release, as the decisions say
+* That `RELEASING.md` can be followed as it is. Nobody, human or agent, has followed it since the bump was taken
+  out, and its commit of the notes and the three commands the human runs have never been run
 * What `npm version` does with files that are not tracked. 0025 tried only a changed tracked file. The human runs
   it, and sees it
 
@@ -134,7 +137,8 @@ The skill and the file it points at:
 1. The repository has a Claude Code skill, `.claude/skills/release/SKILL.md`. Its frontmatter holds `name: release`,
    a description, and `disable-model-invocation: true`. Its body is one instruction, which sends the agent to
    `RELEASING.md` in the repository root and says that the skill holds no instruction of its own. Typing `/release`
-   in a Claude Code session in this repository starts it
+   in a Claude Code session in this repository starts it, which rests on Claude Code's documentation and is first
+   seen at the first release made with it
 2. `RELEASING.md`, at the repository root, holds the whole release in order: what is checked before anything else,
    the release notes, the human's reading, the commit, and what the human runs to finish it. It needs no feature
    of one harness to be followed, and names the skill only as one way to arrive at it. It names no harness version
@@ -289,8 +293,17 @@ The tests:
   That they stay is what the main session expects, and the planner agrees. 0030 is planned from `master` and
   says how it meets them
 * **The tests hold the wiring, not the release.** The suite holds what breaks silently: a wrapper that grew a
-  second instruction, and a pointer to a file that was renamed. The release itself is tried once by the plan, by
-  an agent that has only the file
+  second instruction, and a pointer to a file that was renamed. The release itself is held by no test and
+  tried by nothing in this unit: its first trial is the first release, by the next decision
+* **The first real release is the trial of `/release` and of the file. The human's decision, with the risk
+  accepted.** The plan had a task that typed `/release` in a fresh session in a throwaway clone and stopped
+  before the commit. The human has a release to make once 0030 and 0029 are in, and chose to see it there, in
+  the words the record has. Accepted as not established until then: that typing `/release` starts the skill, which
+  requirement 1 asks and only the documentation supports; that the shorter `RELEASING.md` can be followed; and
+  its commit and the human's three commands, which have never been run. What a failure costs is small and is
+  seen at once: when `/release` does not start the skill, an agent is asked to read `RELEASING.md`, which needs
+  no skill, and a step that does not work as written is corrected in the file, in a unit. The steps of the trial
+  stay in the record, for whoever wants it sooner. The reviewer is to judge requirement 1 knowing this
 * **The withdrawn requirements keep their numbers. The planner's.** The record cites requirements 7 to 12 by number
   in many places, as what was built and tried. Renumbering would make each of those point at something else.
   With the gap, only the plan's tasks had citations to correct

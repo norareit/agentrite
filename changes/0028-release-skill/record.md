@@ -599,5 +599,19 @@ timestamp: 2026-10-04T18:20:11Z
   plan has a task for it", and the decision "The tests hold the wiring, not the release" says "The release itself
   is tried once by the plan, by an agent that has only the file", and the plan no longer has either.
   Status stays `in-progress`: the review comes first
+- 2026-10-04T20:29:11Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the branch at `7df8ce1`, brought
+  `spec.md` in line with the human's decision of 20:28:47Z above, which is not logged again here. Only `spec.md`
+  and this record are changed. What changed:
+  * R1 still asks that typing `/release` starts the skill, and now says in the requirement itself that this rests
+    on Claude Code's documentation and is first seen at the first release made with it
+  * "Not established": the sentence "The plan has a task for it" is gone, and says that the human left the trial
+    to the first release. A second point is added: that nobody has followed `RELEASING.md` since the bump was
+    taken out, and that its commit and the human's three commands have never been run
+  * The decision "The tests hold the wiring, not the release" no longer says that the plan tries the release
+  * A decision is added as the human's: the first real release is the trial, with what is accepted as not
+    established until then, what a failure costs, and that the reviewer judges R1 knowing it
+  Looked once for any other sentence that assumes the trial: the other mentions of a trial in the spec are of the
+  withdrawn check's, which was made. No requirement number moved, so no citation changed. Status stays
+  `in-progress`
 
 ## Amendments
