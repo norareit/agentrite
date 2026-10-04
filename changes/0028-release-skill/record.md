@@ -332,5 +332,41 @@ timestamp: 2026-10-04T18:20:11Z
   fail 0027's test when the pins are bumped to them; and whether the check takes the pins through a `claude` and
   an `opencode` that report no version, as written, or through versions held in the project's Compose file.
   Not pushed, not merged into `master`. None of the items under "Beyond the request" was built
+- 2026-10-04T19:06:49Z [human] decided one of the things the trial left open, the README's examples that fail 0027's
+  test when a pin comes to equal them. Shown that the test searches `container/`, `templates/` and `README.md` for
+  the pins as plain text, and that every version in the README is an example: "cant it just ignore the readme?",
+  then "Or even better: cant it just only look in sensicval places?", and on the proposal to keep the plain search
+  over `container/` and `templates/` and drop only the README: "Okay no readme it is". So `README.md` leaves that
+  test, the README's examples stay as they are, and the human accepts that the README is no longer checked for a
+  pin. Still undecided: the three hosts refused in the check's second run, how the check takes the pins, and
+  whether step 2 runs `npm test` after the bump. The time of this entry is when the words reached the implementer,
+  through the dispatching session
+- 2026-10-04T19:06:49Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for that one change.
+  `tests/harness-versions.test.mjs` was not among the plan's files and is added there first, and the plan's
+  paragraph on 0026 and 0027, which said the test holds the README, is made true. The test no longer reads
+  `README.md`. Its search over `container/` and `templates/` and its "written once in the Dockerfile" part are as
+  they were. Its name said "no file that ships", which the README does, so it is now "no file under container/ or
+  templates/ holds a pinned version but the Dockerfile", with a comment that says why the README is not searched.
+  `RELEASING.md` says nothing of the test or of the README's versions and is unchanged. 0027 is frozen, and its
+  plan and record say the test reads the README, so its record has an amendment.
+  What was seen, with the pins set to 2.1.289 and 1.18.34 in the working tree:
+  * Before the change, `npm test` exited 1 with 232 tests, 230 passing and 2 failing: the test of this entry,
+    naming `README.md`, and "the wrapper rebuilds for the kit's pins when the host has neither harness, and names
+    the kit" in `tests/agent-wrapper.test.mjs`
+  * After the change, `npm test` exited 1 with 232 tests, 231 passing and 1 failing. The changed test passes, and
+    `node --test tests/harness-versions.test.mjs` alone exited 0 with 4 of 4 passing. The wrapper's test still
+    fails. So the change does what it is for, and the suite does not pass with these pins all the same
+  * That second failure was not seen in the trial, which ran `tests/harness-versions.test.mjs` alone with the
+    bumped pins and not the suite, and the entry on the trial is wrong where it names one failing test as what
+    `./deploy.sh` would stop at. Its cause is the same kind: `tests/wrapper-fixture.mjs` gives the suite's fake
+    host the versions 2.1.289 and 1.18.34, and the test expects the wrapper to rebuild because the image, which
+    holds the fake host's versions, differs from the pins. With the pins equal to them nothing differs, the
+    wrapper says nothing, and the test's expected lines are not printed. Not fixed: it is another test of 0027's,
+    the human's decision names the README, and what the fixture's versions should be is a choice. For the human:
+    a release that bumps the pins to 2.1.289 and 1.18.34 still fails `npm test`, and so `./deploy.sh`, until the
+    fixture's host versions are ones a pin cannot reach
+  `container/Dockerfile` was restored with `git checkout`, which exited 0, and `git status --short` then showed
+  the test file as the only changed tracked file. With the pins as `master` has them, `npm test` exited 0 with
+  232 tests, 232 passing. No Docker was run for this. Status stays `in-progress`
 
 ## Amendments
