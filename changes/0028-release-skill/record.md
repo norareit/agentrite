@@ -179,5 +179,35 @@ timestamp: 2026-10-04T18:20:11Z
     stays in `AGENTS.md` without its last sentence, "The order of a release is in the README, under "Releasing"."
     The plan's text for `AGENTS.md` leaves it out, and the pointer to `RELEASING.md`, which now holds the order,
     stands in its place
+- 2026-10-04T18:27:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the README. "Releasing" is the plan's text,
+  written out of `plan.md` by a script, and "What is here" has the row for `RELEASING.md` after `CHANGELOG.md`'s.
+  The section on `master` at `94099e9` is the one the plan's table was written against: 0026 and 0027 did not
+  touch it. Each row of the table, checked by searching for the sentence with the line breaks ignored:
+  * "A release is a tarball of the kit served from": in the README, word for word
+  * "A release is made on `master`, from the repository": the opening of `RELEASING.md`, which adds "on the host",
+    and its list of six
+  * List item 1: step 3. Its last sentence, "How it does that is in `AGENTS.md`, under "Release notes"", is gone
+    with what it pointed at
+  * List item 2: step 4 has "The human reads the section, corrects it and picks the version, changing the heading
+    when the pick differs from the proposal", word for word, and step 5 has the commit as
+    `Release notes for <version>`
+  * List item 3: step 6. The command was written "`npm version patch`, or `minor`, or `major`" and is now
+    `npm version <patch|minor|major>` in a block
+  * List item 4: step 6, `./deploy.sh` in the block, under "with AWS credentials for the account"
+  * "The notes are committed first because": step 5, as "The pins and the notes are committed first because", and
+    "holds the section" became "holds both"
+  * "A release has no unit in `changes/`": the opening of step 5, in the words `AGENTS.md` had for it, "A release
+    is not a unit and has no directory in `changes/`", with "both commits" now "Its commits"
+  * "`deploy.sh` refuses, before it does anything else": step 6, word for word, with "which is also what a wrong
+    part gives" added, and `git tag -f v<version>` as it was
+  * "Pick the part to bump as semver means it; there is no rule of the kit's own": step 4, word for word
+  * "`npm version` updates `package.json`" to "fails": step 6, word for word but for its opening, which now says
+    which part to give
+  * "`deploy.sh` signs in with `aws sso login`" and "A released tarball is never replaced or removed": step 6,
+    both paragraphs word for word
+  * "Releasing runs on the host only": the README, with the sentence on Docker added, and step 1
+  Nothing else in the README changed: `git diff` shows the row and the section only. The README names neither
+  pin, which `tests/harness-versions.test.mjs` holds. After it `npm test` exited 1 with 232 tests, 228 passing: the
+  four that failed are the ones waiting for `deploy.sh`
 
 ## Amendments
