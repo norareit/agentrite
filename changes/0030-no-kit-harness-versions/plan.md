@@ -154,11 +154,11 @@ host runs `npm view` on the host.
 
 - [x] Bring the branch up to date with `master` when `master` has moved, by a merge, and run `npm test`. Record
   whether 0028 is in it and how many tests pass (R16)
-- [ ] Add the fake `npm` and `latestVersions` to `tests/wrapper-fixture.mjs`. Change and add the cases of
+- [x] Add the fake `npm` and `latestVersions` to `tests/wrapper-fixture.mjs`. Change and add the cases of
   `tests/agent-wrapper.test.mjs` as the Approach gives them, and the two tests of
   `tests/harness-versions.test.mjs`. Run `npm test`, see the new and changed ones fail and the rest pass, and
   record the numbers (R16)
-- [ ] Change `container/agent.sh` as the Approach gives it, with the three lines word for word, and its head
+- [x] Change `container/agent.sh` as the Approach gives it, with the three lines word for word, and its head
   comment. See the wrapper's tests pass, and `bash -n container/agent.sh` (R1, R3, R4, R5, R6, R7, R8, R10)
 - [ ] Remove the two `ARG` lines with defaults from `container/Dockerfile` and write the comment in their place.
   Correct the comment in `container/compose.yml`. See every test pass, and that
