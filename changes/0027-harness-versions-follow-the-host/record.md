@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-04T15:50:10Z
+timestamp: 2026-10-04T15:49:32Z
 ---
 
 # 0027 The sandbox's harness versions follow the host
@@ -62,15 +62,15 @@ timestamp: 2026-10-04T15:50:10Z
   * The README sentence that the versions are pinned in the Dockerfile is replaced, not kept, on the spec's
     authority. 0026 adds text to the same README section on another branch. The two do not contradict each other
   Status left at `draft` for the human's approval
-- 2026-10-04T15:50:10Z [human] approved the spec and the plan as written, in the session that dispatched the
+- 2026-10-04T15:49:32Z [human] approved the spec and the plan as written, in the session that dispatched the
   implementer, with the words: "Implement feature 0027 as the @implementer". Nothing was said about the six items
   under "Beyond the request", and no decision the planner settled was corrected, so none of the six is in scope and
   the spec is built as it stands. Status `approved`. The time of this entry is when the words reached the
   implementer, not when they were said
-- 2026-10-04T15:50:10Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a worktree of its own
+- 2026-10-04T15:49:32Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a worktree of its own
   at `/home/stef/projects/agentrite-0027`, because the main checkout is on the branch of 0029 with work in progress.
   Working under the process of release 2.3.0, read from the main checkout's `node_modules`. Status `in-progress`
-- 2026-10-04T15:50:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, brought the branch up to date by
+- 2026-10-04T15:49:44Z [Claude Code, anthropic/claude-opus-5-5] as implementer, brought the branch up to date by
   merging `master` at `f3550e0` into it, as `ef45e25`, in the way 0019 and 0007 did, and not by a rebase, so that
   the planner's commit `569d56a` keeps the id the record and the dispatching session know it by. The merge brought
   task 0026 and had no conflict: 0026 changed `README.md` and its own record only. The suite reported 192 tests
@@ -82,5 +82,27 @@ timestamp: 2026-10-04T15:50:10Z
   With the two fixtures on it, and the wrapper unchanged, the suite reported 192 tests passing, as before. The
   fixtures also stopped handing the wrapper the environment of whoever runs the suite: it gets `HOME` and `PATH`
   and nothing else
+- 2026-10-04T15:56:09Z [Claude Code, anthropic/claude-opus-5-5] as implementer, wrote the tests, then the labels,
+  the two build arguments and the wrapper.
+  * Before the change, `tests/harness-versions.test.mjs` had its first and last test passing and the two between
+    failing, as the plan expects. Every test of `tests/agent-wrapper.test.mjs` that reaches Compose, old and new,
+    and the three of the shim failed on the unchanged wrapper, 37 in all. That says less than it seems to: from
+    that point the fake `docker` no longer answered `config --images` and recorded the two variables, so each of
+    them failed for that alone, whatever else it holds
+  * After the change the suite reported 221 tests, all passing
+  * Five tests the plan did not list were added to it first: the version on the second line only and on standard
+    error only, `opencode` named in the line, no input for the host's command, and a Dockerfile without a pin
+  * The wrapper's line for a harness that is there and gives no version is the plan's, word for word, also when the
+    command printed a version and exited non-zero, where "printed no version" is not exact
+  * Not handled, and not in the spec: a project's file that gives one of the two arguments with an empty value or
+    with none. The wrapper then wants the empty version, which no label equals, so it would build at every start.
+    Not tried
+  * The additions were not run under bash 3.2 at this point
+- 2026-10-04T15:56:09Z [Claude Code, anthropic/claude-opus-5-5] as implementer: while this was being written the
+  dispatching session passed on the human's word, "MOVE IT", to build the unit in the main checkout and not in a
+  worktree. The command that would have stashed the open work, removed the worktree and switched the main checkout
+  to this branch was refused by the session's permission system, as a whole, and nothing of it ran. The work
+  therefore went on in the worktree at `/home/stef/projects/agentrite-0027`, with everything committed on the
+  branch, so that the move is `git worktree remove` and `git switch`, and is the human's to make
 
 ## Amendments

@@ -126,11 +126,117 @@ if [ "$AGENT_UID" -eq 0 ] || [ "$AGENT_GID" -eq 0 ]; then
   exit 2
 fi
 
-# The image name is the project's to choose, so ask Compose for it rather than
-# hard-coding one here.
-image="$("${compose[@]}" config --images | head -1)"
+# What the host's command reports as its version: the first word of the first line of
+# its output, when the command exits 0 and that word has the shape of a version. Prints
+# nothing for a command that is not on the PATH, and fails for one that is there and
+# gave no version. The word becomes part of an `npm install` that runs as root in the
+# build, so nothing that is not a version is passed on. The pre-release part is accepted
+# because OpenCode publishes such versions.
+host_version() {
+  local harness_command="$1" output word
+  local shape='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
+  # The ranges of the shape are those of ASCII only in this locale.
+  local LC_ALL=C
+  type -P "$harness_command" >/dev/null || return 0
+  output="$("$harness_command" --version </dev/null 2>/dev/null)" || return 1
+  # read takes the first line only.
+  read -r word _ <<< "$output"
+  [[ "$word" =~ $shape ]] || return 1
+  echo "$word"
+}
 
-if [ "$rebuild" -eq 1 ] || ! docker image inspect "$image" >/dev/null 2>&1; then
+# Prints the version of a harness to hand to Compose and where it comes from, as
+# "<version> <host or kit>": the host's, or else the kit's pin, which is the default of
+# the build argument in the Dockerfile beside this file and is written nowhere else.
+version_from_host_or_kit() {
+  local harness_command="$1" harness="$2" argument="$3" pin version
+  pin="$(sed -n "s/^ARG $argument=//p" "$here/Dockerfile" 2>/dev/null)" || pin=""
+  if [ -z "$pin" ]; then
+    echo "agent.sh: found no ARG $argument in $here/Dockerfile, which holds the kit's version of $harness." >&2
+    return 2
+  fi
+  if ! version="$(host_version "$harness_command")"; then
+    echo "agent.sh: '$harness_command --version' printed no version, so the sandbox gets the kit's $harness $pin." >&2
+    version=""
+  fi
+  if [ -n "$version" ]; then
+    echo "$version host"
+  else
+    echo "$pin kit"
+  fi
+}
+
+# Says, for one harness, that the image is built again and why, when the version the
+# image holds is not the wanted one. Fails when it is.
+differs_from_image() {
+  local harness="$1" held="$2" wanted="$3" origin="$4"
+  [ "$held" != "$wanted" ] || return 1
+  if [ -n "$held" ]; then
+    echo "agent.sh: the image holds $harness $held and $wanted is wanted, from $origin. Rebuilding." >&2
+  else
+    echo "agent.sh: the image records no $harness version and $wanted is wanted, from $origin. Rebuilding." >&2
+  fi
+}
+
+claude_code="$(version_from_host_or_kit claude "Claude Code" CLAUDE_CODE_VERSION)" || exit 2
+opencode="$(version_from_host_or_kit opencode "OpenCode" OPENCODE_VERSION)" || exit 2
+claude_code_origin="the ${claude_code#* }"
+opencode_origin="the ${opencode#* }"
+
+# Assigned whatever the caller's environment holds, so that the host and the kit are the
+# only sources here. The names are the wrapper's own: Claude Code exports variables named
+# CLAUDE_CODE_... into the shells it starts, and agents run the wrapper from those.
+export AGENT_CLAUDE_CODE_VERSION AGENT_OPENCODE_VERSION
+AGENT_CLAUDE_CODE_VERSION="${claude_code% *}"
+AGENT_OPENCODE_VERSION="${opencode% *}"
+
+# The image name and the two versions the image is to hold are in the configuration
+# Compose merges from both files, and only there: the name is the project's to choose,
+# and a version the project's file gives replaces the one handed over above. Captured
+# first, so that a configuration Compose refuses stops here with Compose's own error.
+# node reads the result; the host has node for npm already.
+config="$("${compose[@]}" config --format json)"
+merged="$(node -e '
+  let json = "";
+  process.stdin.on("data", (chunk) => (json += chunk));
+  process.stdin.on("end", () => {
+    const agent = JSON.parse(json).services.agent;
+    const args = agent.build?.args ?? {};
+    console.log([agent.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? ""].join("\n"));
+  });
+' <<< "$config")"
+{
+  read -r image
+  read -r claude_code_wanted
+  read -r opencode_wanted
+} <<< "$merged"
+if [ "$claude_code_wanted" != "$AGENT_CLAUDE_CODE_VERSION" ]; then
+  claude_code_origin="the project's compose file"
+fi
+if [ "$opencode_wanted" != "$AGENT_OPENCODE_VERSION" ]; then
+  opencode_origin="the project's compose file"
+fi
+
+# Build on --rebuild, when there is no image, and when the image was built with another
+# version of a harness than the wanted one, which its two labels say. A build that fails
+# ends the wrapper: the image that exists holds versions nobody asked for.
+build="$rebuild"
+if [ "$build" -eq 0 ]; then
+  labels='{{ index .Config.Labels "com.ritenoar.agentrite.claude-code-version" }}'
+  labels="$labels|"'{{ index .Config.Labels "com.ritenoar.agentrite.opencode-version" }}'
+  if held="$(docker image inspect --format "$labels" "$image" 2>/dev/null)"; then
+    if differs_from_image "Claude Code" "${held%%|*}" "$claude_code_wanted" "$claude_code_origin"; then
+      build=1
+    fi
+    if differs_from_image "OpenCode" "${held#*|}" "$opencode_wanted" "$opencode_origin"; then
+      build=1
+    fi
+  else
+    build=1
+  fi
+fi
+
+if [ "$build" -eq 1 ]; then
   "${compose[@]}" build
 fi
 

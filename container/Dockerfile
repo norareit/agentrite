@@ -84,6 +84,12 @@ RUN npm install -g --no-audit --no-fund \
       "opencode-ai@${OPENCODE_VERSION}" \
     && rm -rf /root/.npm
 
+# The two versions this image was built with. container/agent.sh reads them at each
+# start and builds again when they are not the versions it wants. After the install, so
+# that they are no part of what decides whether the install runs again.
+LABEL com.ritenoar.agentrite.claude-code-version="${CLAUDE_CODE_VERSION}" \
+      com.ritenoar.agentrite.opencode-version="${OPENCODE_VERSION}"
+
 # DISABLE_AUTOUPDATER stops Claude Code's background check; DISABLE_UPDATES also blocks
 # `claude update`. OpenCode has no env switch, so point it at a config that sets
 # autoupdate false; its project opencode.json does not override that key.

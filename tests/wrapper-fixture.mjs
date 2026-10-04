@@ -8,7 +8,7 @@ export const hostVersions = { claude: '2.1.289', opencode: '1.18.34' };
 
 // The commands the wrapper, the dev shim and the fakes below run, besides `docker` and the harnesses. A node's own
 // directory cannot be put on the PATH instead, because a harness installed with `npm install -g` sits in it.
-const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'head', 'id', 'sed'];
+const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'id', 'sed'];
 
 function findOnPath(command) {
   for (const directory of (process.env.PATH ?? '').split(delimiter)) {
@@ -35,6 +35,7 @@ export function writeCommand(bin, name, script) {
 //       refuses
 //     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
 //       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image
+//   A `build` is recorded and then fails when the file `buildFails` is there
 export function fakeHost(base, recorded) {
   const bin = join(base, 'bin');
   mkdirSync(bin);
@@ -46,6 +47,7 @@ export function fakeHost(base, recorded) {
   const calls = join(base, 'docker-calls');
   const projectBuildArgs = join(base, 'project-build-args.json');
   const imageLabels = join(base, 'image-labels');
+  const buildFails = join(base, 'build-fails');
   writeFileSync(projectBuildArgs, '{}');
   writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
   const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
@@ -55,10 +57,6 @@ export function fakeHost(base, recorded) {
     `if [ "$1 $2" = "image inspect" ]; then
   [ -f "${imageLabels}" ] || exit 1
   cat "${imageLabels}"; exit 0
-fi
-if [[ " $* " == *" config --images "* ]]; then
-  [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
-  echo image; exit 0
 fi
 if [[ " $* " == *" config --format json "* ]]; then
   [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
@@ -75,7 +73,8 @@ if [[ " $* " == *" config --format json "* ]]; then
     });
   ' < "${projectBuildArgs}"
 fi
-echo "${record} docker $*" >> "${calls}"`,
+echo "${record} docker $*" >> "${calls}"
+if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi`,
   );
 
   const dockerCalls = () => {
@@ -85,5 +84,5 @@ echo "${record} docker $*" >> "${calls}"`,
       return [];
     }
   };
-  return { bin, projectBuildArgs, imageLabels, dockerCalls };
+  return { bin, projectBuildArgs, imageLabels, buildFails, dockerCalls };
 }

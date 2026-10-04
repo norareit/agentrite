@@ -107,7 +107,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 
 - [x] Change the two fixtures as the approach describes, with nothing else changed, and see the existing tests
   pass on the unchanged wrapper. Commit this on its own: it is a refactoring of the tests (R11)
-- [ ] Write `tests/harness-versions.test.mjs`. The first and the last test pass on the unchanged tree and guard
+- [x] Write `tests/harness-versions.test.mjs`. The first and the last test pass on the unchanged tree and guard
   what 0028 will bump; see the other two fail (R4, R5, R11):
     * `container/Dockerfile` has exactly one line that starts `ARG CLAUDE_CODE_VERSION=` and one that starts
       `ARG OPENCODE_VERSION=`, each followed by a version in the shape of requirement 2 and nothing else
@@ -115,7 +115,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
     * `container/compose.yml` gives both build arguments from `AGENT_CLAUDE_CODE_VERSION` and
       `AGENT_OPENCODE_VERSION`
     * no other file in `container/`, and no file in `templates/`, holds either pinned version number
-- [ ] Add to `tests/agent-wrapper.test.mjs`, and see each fail on the unchanged wrapper (R11):
+- [x] Add to `tests/agent-wrapper.test.mjs`, and see each fail on the unchanged wrapper (R11):
     * with both fakes printing versions, in the two forms the real commands use, `2.1.289 (Claude Code)` and
       `1.18.34`, every Compose call sees those two versions in the two variables (R1, R2)
     * with neither harness on the `PATH`, the calls see the Dockerfile's two pins, and standard error is empty
@@ -138,11 +138,15 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
       `the kit`, then `build` (R1, R6)
     * `--rebuild` with labels that match: `build`, then `run`, and no line (R8)
     * a `build` that exits non-zero: the wrapper exits non-zero and no `run` call is recorded (R8)
+    * added while implementing: a harness that prints its version on its second line only, or on standard error
+      only, gets the pin and the line; the line names `opencode` when that is the command; the host's command gets
+      no input, shown by a fake that reads its input; and a Dockerfile beside the wrapper without one of the two
+      `ARG` lines ends the wrapper with exit 2, naming the argument and the file (R2, R3, R4)
     * the existing test of a configuration Compose refuses still holds: Compose's error, nothing from `node`, no
       call recorded (R8)
-- [ ] Add the labels to `container/Dockerfile` and the two build arguments to `container/compose.yml`, each with
+- [x] Add the labels to `container/Dockerfile` and the two build arguments to `container/compose.yml`, each with
   its comment. `tests/harness-versions.test.mjs` passes (R4, R5)
-- [ ] Change `container/agent.sh` as the approach describes. The whole suite passes, the three tests of
+- [x] Change `container/agent.sh` as the approach describes. The whole suite passes, the three tests of
   `tests/agent-dev.test.mjs` among them (R1, R2, R3, R6, R7, R8, R9)
 - [ ] Make every comment in `container/` true: the Dockerfile's "single place either version is pinned" and "Both
   harness CLIs, pinned", the wrapper's header, and the base Compose file's sentence on what the wrapper adds. Search
@@ -205,7 +209,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 ## Commit Points
 
 - [x] `feature-0027` the fixtures of the two wrapper tests, with no behavior changed
-- [ ] `feature-0027` the tests, the labels, the build arguments and the wrapper
+- [x] `feature-0027` the tests, the labels, the build arguments and the wrapper
 - [ ] `feature-0027` the comments in `container/`
 - [ ] `feature-0027` the README
 - [ ] `feature-0027` the record of the real check
