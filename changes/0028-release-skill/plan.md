@@ -369,8 +369,10 @@ the record:
   subsection "The harness versions"
 
 `tests/harness-versions.test.mjs`, which 0027 added, already holds that the Dockerfile pins each harness once and
-that no shipped file but the Dockerfile, the README among them, holds a pin. The README text above names no
-version, and neither does `RELEASING.md`.
+that no file under `container/` or `templates/` but the Dockerfile holds a pin. As 0027 left it, that test read
+`README.md` as well, and the README's examples under "The harness versions" are versions a pin can come to equal.
+On the human's decision this unit takes `README.md` out of that test, and leaves the examples as they are. The
+README text above names no version, and neither does `RELEASING.md`.
 
 ## Files
 
@@ -381,6 +383,7 @@ version, and neither does `RELEASING.md`.
 - `deploy.sh`: the refusal's message
 - `tests/release.test.mjs`: new
 - `tests/deploy.test.mjs`: one assertion
+- `tests/harness-versions.test.mjs`: 0027's test of where a pin is written no longer reads `README.md`
 - `changes/0028-release-skill/record.md`: the log
 
 ## Tasks
