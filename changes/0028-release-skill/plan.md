@@ -353,16 +353,16 @@ The first seven were done before the bump was withdrawn, against the texts of th
 
 Each was ticked before the revision and is open again, to be seen on the tree the cut-down leaves.
 
-- [ ] `npm test` passes on the host, with the tests of `tests/release.test.mjs` among them
-- [ ] `npm pack --dry-run` lists the same files as on `master`, compared as lists, whatever their number (R3)
-- [ ] `git diff master -- process.md roles templates scripts container .opencode` is empty (R4)
-- [ ] `bash -n deploy.sh` passes
-- [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
-- [ ] `npm run check-changes` passes, after `npm ci`
-- [ ] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
+- [x] `npm test` passes on the host, with the tests of `tests/release.test.mjs` among them
+- [x] `npm pack --dry-run` lists the same files as on `master`, compared as lists, whatever their number (R3)
+- [x] `git diff master -- process.md roles templates scripts container .opencode` is empty (R4)
+- [x] `bash -n deploy.sh` passes
+- [x] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
+- [x] `npm run check-changes` passes, after `npm ci`
+- [x] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
   `ritenoar-agentrite-agent-release`, which the trial of the withdrawn check created and removed, and
   `/tmp/agentrite-release-no-harness` does not exist
-- [ ] The record says what was not run: step 4 with a real version, and the three commands of step 5, which are
+- [x] The record says what was not run: step 4 with a real version, and the three commands of step 5, which are
   the next release's and the human's
 
 ## Commit Points

@@ -524,5 +524,51 @@ timestamp: 2026-10-04T18:20:11Z
   * In the spec's context, three findings that served only the check are replaced by a pointer to `45e349f`
   Not established: that `/release` starts the skill, as before; and nothing of the shorter file has been followed
   by anyone, since it exists only as the plan's text. Status stays `in-progress`
+- 2026-10-04T20:15:20Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed on `e0cf4df` and read the
+  revised `spec.md`, `plan.md` and this record again, then cut what is built down to them, by the plan's tasks in
+  their order. No Docker was run but the three listings of the verification.
+  * The test first, in `83fe92c`: the description the skill's test compares is the plan's, and the two tests of
+    the `ARG` lines are gone with the list `pins` and its comment. `npm test` then exited 1 with 230 tests, 229
+    passing and the skill's test failing, as the task expects. With the skill's description changed, the six
+    tests of `tests/release.test.mjs` passed
+  * `RELEASING.md`, in `194acc1`, is the plan's text, written out of `plan.md` by a script, and a script found the
+    two the same afterwards. It is 116 lines, where it was 238.
+    `grep -n -i -E 'docker|dockerfile|claude-code|opencode|ARG ' RELEASING.md` printed nothing and exited 1
+  * The README, in `4e3ddf6`: "Releasing" is the plan's text. `git diff master -- README.md` shows the row in
+    "What is here" and, in "Releasing", the numbered list and the four paragraphs after it replaced by the two
+    of the skill and of "In short". Its last paragraph is no longer in that diff
+  * Nothing else is left of the bump: `git diff master -- container` is empty, and `AGENTS.md`, `deploy.sh`,
+    `tests/deploy.test.mjs` and the three test files of requirement 18 are as they were at `45e349f`, which
+    `git diff --quiet 45e349f` over them showed by exiting 0. `container/Dockerfile` holds the pins it held
+  On `4e3ddf6`, which this commit follows with this entry and ticks only:
+  * `npm test` exited 0: 230 tests, 230 passing, none failing, cancelled or skipped. The suite is two tests
+    smaller than before the revision, the two of the `ARG` lines
+  * `npm run check-changes` exited 0 and printed nothing of its own, with the 2.3.0 script from `node_modules`,
+    which was there. `npm ci` was not run again for it
+  * `npm pack --dry-run --json` lists 24 paths, the same as an export of `master` at `94099e9`, compared with
+    `diff` as sorted lists
+  * `git diff master -- process.md roles templates scripts container .opencode` is empty, and `bash -n deploy.sh`
+    exited 0
+  * No line of a file this branch adds or changes against `master` is over 120 characters, and none holds an em
+    dash
+  * `docker image ls -a`, `docker volume ls` and `docker network ls` show nothing named
+    `ritenoar-agentrite-agent-release`, and `/tmp/agentrite-release-no-harness` does not exist
+  * Not run, by anyone: the file as it now is, from step 1 on `master` to step 3; step 4 with a real version, so
+    `Release notes for <version>` was never committed by it; and the three commands of step 5, `npm version`,
+    `./deploy.sh` and `git push --follow-tags origin master`, which are the next release's and the human's
+  The trial of `/release` is still the human's, for the reason given at 18:39:43Z, and its task and commit point
+  stay unticked. The steps given there are replaced by these, for the shorter file. No Docker is needed:
+  1. `git clone /home/stef/projects/agentrite /tmp/agentrite-release-trial`, then in the clone
+     `git checkout -B master origin/feature-0028-release-skill` and `npm ci`. The clone has the tags, which step 2
+     of the file needs
+  2. `claude` in the clone, and type `/release`. Say nothing else, except, when it asks or stops for it, that this
+     is a trial that ends at step 3
+  3. To record: whether the skill started and sent the session to `RELEASING.md`; whether it ran the suite and
+     went through step 1; whether it drafted a section; and what it reported at step 3
+  4. Have it restore the tree with `git checkout -- CHANGELOG.md` and commit nothing, then
+     `rm -rf /tmp/agentrite-release-trial`
+  Open, so the status stays `in-progress`: that trial; the review; and the two choices of the revision the human
+  has not read, the suite as a condition of step 1 and the condition on Docker dropped, which are built as the
+  plan has them. Not pushed, not merged into `master`
 
 ## Amendments
