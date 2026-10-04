@@ -16,6 +16,12 @@ const harnesses = [
   { argument: 'OPENCODE_VERSION', label: 'com.ritenoar.agentrite.opencode-version', npmPackage: 'opencode-ai' },
 ];
 
+function filesUnder(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) =>
+    entry.isDirectory() ? filesUnder(join(directory, entry.name)) : [join(directory, entry.name)],
+  );
+}
+
 test('the Dockerfile gives neither harness a version: no line gives its build argument a default', () => {
   const lines = dockerfile.split('\n');
   const lastStage = dockerfile.slice(dockerfile.lastIndexOf('\nFROM ')).split('\n');

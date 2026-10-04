@@ -4,13 +4,11 @@
 # that can run the project's own suites. The kit's README.md describes the sandbox; the
 # project's README.md describes how that project runs it.
 
-# Harness versions. These defaults are the kit's pins, and the single place either is
-# written: container/agent.sh reads them from these two lines. A pin is what the image
-# gets on a host that does not have the harness. Otherwise the wrapper hands the build
-# the version the host has, and a project's compose file that gives the argument itself
-# stands above both.
-ARG CLAUDE_CODE_VERSION=2.1.266
-ARG OPENCODE_VERSION=1.18.30
+# Harness versions. The kit names none: the last stage's CLAUDE_CODE_VERSION and
+# OPENCODE_VERSION have no default, and container/agent.sh hands the build both. Each is
+# the version the project's compose file gives, or else the one the host has, or else
+# the latest published at the time of the build, which the wrapper asks the registry for
+# and hands over as an exact version.
 
 # The browser is in the image only when the project's compose file gives this build
 # argument, as the playwright version resolved in the project's package-lock.json, so the

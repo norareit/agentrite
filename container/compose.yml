@@ -29,8 +29,8 @@ services:
         AGENT_UID: ${AGENT_UID:-1000}
         AGENT_GID: ${AGENT_GID:-1000}
         # The harness versions, which container/agent.sh works out at each start: the
-        # version the host has, or else the one the kit pins in its Dockerfile. A
-        # project that holds a version gives the same argument in its own compose
+        # version the host has, or else the latest published when the image is built.
+        # A project that holds a version gives the same argument in its own compose
         # file, which replaces the value here.
         CLAUDE_CODE_VERSION: ${AGENT_CLAUDE_CODE_VERSION:?run the sandbox through the project's agent.sh}
         OPENCODE_VERSION: ${AGENT_OPENCODE_VERSION:?run the sandbox through the project's agent.sh}

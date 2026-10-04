@@ -160,7 +160,7 @@ host runs `npm view` on the host.
   record the numbers (R16)
 - [x] Change `container/agent.sh` as the Approach gives it, with the three lines word for word, and its head
   comment. See the wrapper's tests pass, and `bash -n container/agent.sh` (R1, R3, R4, R5, R6, R7, R8, R10)
-- [ ] Remove the two `ARG` lines with defaults from `container/Dockerfile` and write the comment in their place.
+- [x] Remove the two `ARG` lines with defaults from `container/Dockerfile` and write the comment in their place.
   Correct the comment in `container/compose.yml`. See every test pass, and that
   `grep -rn -E '[0-9]+\.[0-9]+\.[0-9]+' container templates` shows no version of a harness (R2, R9, R14)
 - [ ] Rewrite the README's "The harness versions" as the Approach gives it, with the wrapper's lines copied from
