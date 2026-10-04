@@ -274,3 +274,23 @@ timestamp: 2026-10-04T18:15:36Z
   pushed and not merged into `master`
 
 ## Amendments
+
+- 2026-10-04T18:16:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, a correction of what the log above
+  says about
+  where the unit was closed, found only after the status was set. While the last entries were being written, the
+  human rebased the branch onto `master`, switched the checkout to `master`, merged the branch with a fast-forward
+  and pushed, at `1d57100`, "Record the second review". The status was `in-progress` then. The implementer did not
+  notice the switch, so its two closing commits, `a6e32ab` with the human's check and the ticks and `6578aba` with
+  the status, were made on local `master` and not on the branch. The last log entry's "not merged into `master`"
+  is therefore untrue, and so is "not pushed" for everything up to `1d57100`. The two closing commits are not
+  pushed. Whether they stay on `master` and are pushed is the human's to decide.
+  The rebase replaced the ids of the unit's commits, and every id the log names up to the second review is the id
+  from before it, the reviewers' among them: `569d56a` (now `aa28ea8`), `e353e05` (now `d535ed6`), `2b9dff7` (now
+  `eb7d2fd`), `68fd7fa` (now `b70e33a`), `9ca037c` (now `d31e3c6`),
+  `13c770f` (now `d97f7cd`), `16962bb` (now `a536165`), `6aea4cb` (now `ec458a9`), `d0e0d99` (now `5034940`),
+  `93752a4` (now `03fc6be`), `1d2060a` (now `816ed07`). The merge `ef45e25` no longer exists: the rebase put the
+  unit's commits on top of `master` instead. The ids in the log are left as they were written.
+  The change check compares the current branch with `master`, so its two runs for the closing commits, made on
+  `master` itself, compared `master` with `master` and show nothing about the unit. Its last run that did was the
+  second reviewer's, on the branch. The suite's runs stand: 224 tests, 224 passing, on `a6e32ab` and on `6578aba`
+
