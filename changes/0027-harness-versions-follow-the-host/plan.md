@@ -199,11 +199,11 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 
 ## Verification
 
-- [ ] `npm test` exits 0 on the host, which has both harnesses, and reports the same count with a `claude` and an
+- [x] `npm test` exits 0 on the host, which has both harnesses, and reports the same count with a `claude` and an
   `opencode` that print nonsense put first on the `PATH`
 - [ ] `npm run check-changes` exits 0 on the committed branch
 - [ ] No line of a changed file is over 120 characters, and none holds an em dash
-- [ ] `git status --short` shows nothing left of the real check's temporary edits, and `docker image ls`,
+- [x] `git status --short` shows nothing left of the real check's temporary edits, and `docker image ls`,
   `docker volume ls` and `docker network ls` show nothing named `agentrite-0027-check`
 - [ ] Each requirement of the spec is met by a ticked task above, and anything requirement 12 found that the spec
   does not expect is in the record, named to the human

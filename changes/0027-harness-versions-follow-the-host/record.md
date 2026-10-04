@@ -118,5 +118,52 @@ timestamp: 2026-10-04T15:49:32Z
     pinned in a role wrapper, or the release pinned by its URL. `CHANGELOG.md` is not touched: its sections say
     what earlier releases did
   * The suite reported 221 tests, all passing
+- 2026-10-04T16:00:50Z [Claude Code, anthropic/claude-opus-5-5] as implementer, checked requirement 12 for real, all
+  but its last item, on the tree of `13c770f`. Linux, Docker Engine 28.4.0, Compose 2.39.2, node 24.14.1, bash
+  5.2.21. The host's `claude --version` prints `2.1.289 (Claude Code)` and `opencode --version` prints `1.18.34`.
+  Each start was `AGENT_PROJECT_NAME=agentrite-0027-check container/agent.sh "$PWD" <command>` from the worktree,
+  with no terminal and standard input from `/dev/null`. Seen, in this order:
+  * A first start, with no image: it built, the entrypoint verified the firewall, and `claude --version` in the
+    sandbox printed `2.1.289 (Claude Code)`. The image's labels were `2.1.289` and `1.18.34`. 10.3 seconds in all,
+    with every layer but the last ones in the build cache from the planner's trials
+  * A second start: no build step ran, the image id was the same, and `opencode --version` printed `1.18.34`
+  * With a `claude` first on the `PATH` that prints `2.1.288 (Claude Code)`: the line
+    `agent.sh: the image holds Claude Code 2.1.289 and 2.1.288 is wanted, from the host. Rebuilding.`, a build, and
+    `claude --version` in the sandbox printed `2.1.288 (Claude Code)`
+  * With one that prints `something else`: the line
+    `agent.sh: 'claude --version' printed no version, so the sandbox gets the kit's Claude Code 2.1.266.`, then
+    `agent.sh: the image holds Claude Code 2.1.288 and 2.1.266 is wanted, from the kit. Rebuilding.`, a build, and
+    the sandbox printed `2.1.266 (Claude Code)`. The OpenCode label stayed `1.18.34` through both
+  * With `CLAUDE_CODE_VERSION: 2.1.288` under `services.agent.build.args` in `agent/compose.project.yml`, not
+    committed, and the host's real `claude` at 2.1.289: the line
+    `agent.sh: the image holds Claude Code 2.1.266 and 2.1.288 is wanted, from the project's compose file.
+    Rebuilding.`, a build, and the sandbox printed `2.1.288 (Claude Code)`. A start after it built nothing. The
+    edit was reverted with `git checkout`, and `git status --short` was empty afterwards. Only Claude Code was held
+    this way, not OpenCode and not both
+  * An image built under the check's name by `master`'s own wrapper and Dockerfile, from a detached worktree of
+    `master` at `f3550e0`, with `--rebuild`: it held `2.1.266 (Claude Code)` and neither label. The next start of
+    this branch's wrapper printed `agent.sh: the image records no Claude Code version and 2.1.289 is wanted, from
+    the host. Rebuilding.` and the same for OpenCode with `1.18.34`, built, and the sandbox printed `2.1.289
+    (Claude Code)`. So `docker image inspect` prints an empty value and exits 0 for an image with neither label
+  Not done: the last item of requirement 12, starting each harness on an empty home and naming the hosts the proxy
+  refused. The one command that would have emptied the check's home volume, started both harnesses under a
+  pseudo-terminal for 25 seconds each and read `/run/egress-proxy.log` was refused by the session's safety check,
+  because it passed a script to a shell that the check could not read. It was not rerun in another form. This
+  session cannot drive a terminal interface in any case, so by the spec this check is the human's. To make it:
+  `./agent-dev.sh`, or the command above, on an empty home volume, start `claude` and then `opencode`, leave each,
+  and run `grep 'not allowlisted' /run/egress-proxy.log` in the same shell. This repository's own `ALLOWLIST`
+  adds `models.dev` and `api.openai.com` to the kit's, so the check here says nothing about the kit's allowlist
+  alone. The plan's task for requirement 12 stays unticked for this
+  Also not done: a build that fails for real, which only the suite's fake shows; a run of the wrapper under bash
+  3.2, on which nothing was established beyond avoiding what the plan names; Docker Desktop for macOS
+  Afterwards: the image `agentrite-0027-check`, the three untagged images the builds left, the volume
+  `agentrite-0027-check_agent-home`, the network `agentrite-0027-check_default` and the worktree of `master` are
+  removed. The lists of all images, volumes, networks and containers are what they were before the check, compared
+  by id and name. `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still
+  `d11961d8abb8`. The build cache keeps the layers the builds made, which `docker builder prune` removes. Nothing
+  was logged in to
+- 2026-10-04T16:00:50Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the suite on the tree of
+  `13c770f`, on the host, which has both harnesses: 221 tests, 221 passing. The same with a `claude` and an
+  `opencode` that print `nonsense` first on the `PATH`: 221 tests, 221 passing
 
 ## Amendments
