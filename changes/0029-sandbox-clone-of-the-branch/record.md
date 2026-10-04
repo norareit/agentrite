@@ -122,8 +122,8 @@ timestamp: 2026-10-04T15:31:37Z
   and test-writing order. Did not replay real-Docker behavior, Docker Desktop for macOS, interactive terminal
   interruption, stopped-container recovery or same-moment starts. The saved review names the checks run and their
   results, including the three targeted reproductions with real git and a Docker stand-in
-- 2026-10-04T23:10:55Z [Claude Code, anthropic/claude-opus-5-5] as implementer, on the human's request to see to the review's
-  findings, read the review of `4da86cd` and accepted all four. None is declined, so none waits for a decision.
+- 2026-10-04T23:10:55Z [Claude Code, anthropic/claude-opus-5-5] as implementer, on the human's request to see to the
+  review's findings, read the review of `4da86cd` and accepted all four. None is declined, so none waits for a decision.
   The work was added to the plan first. The four tests were written before the corrections and seen failing, 4 of
   4, with the 282 others passing; after the corrections `npm test` reported 286 tests, 286 passing, on the tree of
   this commit. Nothing of it was run against Docker. The outcomes:
