@@ -418,16 +418,16 @@ version, and neither does `RELEASING.md`.
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with the new tests among them
-- [ ] `npm pack --dry-run` lists the same files as on `master`, compared as lists, whatever their number (R3)
-- [ ] `git diff master -- process.md roles templates scripts container .opencode` is empty (R4)
-- [ ] `bash -n deploy.sh` passes
-- [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
-- [ ] `npm run check-changes` passes, after `npm ci`
-- [ ] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
+- [x] `npm test` passes on the host, with the new tests among them
+- [x] `npm pack --dry-run` lists the same files as on `master`, compared as lists, whatever their number (R3)
+- [x] `git diff master -- process.md roles templates scripts container .opencode` is empty (R4)
+- [x] `bash -n deploy.sh` passes
+- [x] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
+- [x] `npm run check-changes` passes, after `npm ci`
+- [x] `docker image ls`, `docker volume ls` and `docker network ls` show nothing named
   `ritenoar-agentrite-agent-release`, and the images and volumes of `ritenoar-agentrite-agent` and
   `ritenoar-agentrite-agent-dev` are as they were before the unit
-- [ ] The record says what was not run: step 5 with a real version, and the three commands of step 6, which are
+- [x] The record says what was not run: step 5 with a real version, and the three commands of step 6, which are
   the next release's and the human's
 
 ## Commit Points

@@ -288,5 +288,49 @@ timestamp: 2026-10-04T18:20:11Z
   `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`.
   The build cache keeps the layers the builds made, which `docker builder prune` removes. Nothing was logged in
   to, and `git status --short` shows no change to a tracked file
+- 2026-10-04T18:39:43Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the second trial is not made and is the
+  human's. It asks for `/release` typed in a fresh Claude Code session, which this session cannot drive, so its
+  task and the commit point of the two trials stay unticked. Whether `/release` starts the skill is therefore
+  still not established: the skill's text is held by a test, and nothing has run it. The steps, on the host:
+  1. `git clone /home/stef/projects/agentrite /tmp/agentrite-release-trial`, then in the clone
+     `git checkout -B master origin/feature-0028-release-skill` and `npm ci`. The clone has the tags, which step 3
+     needs
+  2. `claude` in the clone, and type `/release`. Say nothing else, except, when it asks or stops for it, that this
+     is a trial that ends at step 4
+  3. To record: whether the skill started and sent the session to `RELEASING.md`; whether it bumped, checked and
+     cleaned up; whether the section had the bump's line; and what it reported at step 4
+  4. Have it restore the tree and commit nothing. Then `docker image ls`, `docker volume ls` and
+     `docker network ls` show nothing named `ritenoar-agentrite-agent-release`, `/tmp/agentrite-release-no-harness`
+     is gone, and `rm -rf /tmp/agentrite-release-trial`
+  What to expect while the finding of the trial by hand stands: the second run of the check has three refused
+  hosts the file does not know, so the session should stop at step 2 with the pins restored, and the notes then
+  have no line for a bump. The trial shows the bump's line in the section only after the human has decided what
+  those three hosts are
+- 2026-10-04T18:39:43Z [Claude Code, anthropic/claude-opus-5-5] as implementer, where the unit stands, on `99b7a4c`. This
+  commit adds this entry and ticks in the plan and nothing else.
+  * `npm test` exited 0: 232 tests, 232 passing, none failing, cancelled or skipped
+  * `npm run check-changes` exited 0 and printed nothing of its own. It ran the released 2.3.0 script from
+    `node_modules`, which was there already. `npm ci` was not run again for it
+  * `npm pack --dry-run --json` lists 24 paths, the same as an export of `master` at `94099e9`, compared as sorted
+    lists with `diff`
+  * `git diff master -- process.md roles templates scripts container .opencode` is empty, and `spec.md` is as it
+    was at `e33ae0b`
+  * `bash -n deploy.sh` exited 0
+  * No line of a file this branch adds or changes against `master` is over 120 characters, and none holds an em
+    dash
+  * `docker image ls -a`, `docker volume ls` and `docker network ls` show nothing named
+    `ritenoar-agentrite-agent-release`. The images and volumes of `ritenoar-agentrite-agent` and
+    `ritenoar-agentrite-agent-dev` are as they were, as the entry on the trial says
+  * Not run, by anyone: step 1 on `master`; step 3, the notes, with a bump in them; step 4; step 5 with a real
+    version, so neither `Harness pins for <version>` nor `Release notes for <version>` was ever committed; and the
+    three commands of step 6, `npm version`, `./deploy.sh` and `git push --follow-tags origin master`, which are
+    the next release's and the human's. `./deploy.sh` itself was not run with its changed message: the suite runs
+    a copy against commands of its own
+  Open, so the status stays `in-progress`: the second trial; the review; and three things for the human and the
+  planner, each in the entries above: the three hosts refused in the check's second run, which make the check
+  end in a finding with the versions pinned today; the README's examples, which equal today's latest versions and
+  fail 0027's test when the pins are bumped to them; and whether the check takes the pins through a `claude` and
+  an `opencode` that report no version, as written, or through versions held in the project's Compose file.
+  Not pushed, not merged into `master`. None of the items under "Beyond the request" was built
 
 ## Amendments
