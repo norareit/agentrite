@@ -55,7 +55,7 @@ sandbox does the others and leaves those three to the human or to a session on t
   `AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container AGENT_UID=$(id -u) AGENT_GID=$(id -g) docker
   compose --project-directory . -f node_modules/@ritenoar/agentrite/container/compose.yml -f
   agent/compose.project.yml config > /tmp/0021-before.yml` (R4)
-- [ ] Write `tests/agent-dev.test.mjs` and see each test fail for want of the shim or of the variable (R6):
+- [x] Write `tests/agent-dev.test.mjs` and see each test fail for want of the shim or of the variable (R6):
     * the shim runs `container/agent.sh` of its own root: the recorded Compose calls name
       `<root>/container/compose.yml` and `<root>/agent/compose.project.yml`, with `--project-directory <root>`
       and `AGENTRITE_CONTAINER=container` (R1)
@@ -66,8 +66,8 @@ sandbox does the others and leaves those three to the human or to a session on t
       options, with `agent echo hi` last (R1)
     * read as text, this repository's `agent/compose.project.yml` has exactly one top-level `name:` line and one
       `image:` line, and each has the value `${AGENT_PROJECT_NAME:-ritenoar-agentrite-agent}` (R2, R4)
-- [ ] Edit `agent/compose.project.yml` and add `agent-dev.sh`, executable. The suite passes (R1, R2, R3)
-- [ ] Run the command of the first task again into `/tmp/0021-after.yml`, with `AGENT_PROJECT_NAME` unset, and
+- [x] Edit `agent/compose.project.yml` and add `agent-dev.sh`, executable. The suite passes (R1, R2, R3)
+- [x] Run the command of the first task again into `/tmp/0021-after.yml`, with `AGENT_PROJECT_NAME` unset, and
   `diff` the two: no difference. `npm pack --dry-run` lists the same 22 files as on `master`, and `agent-dev.sh` is
   not among them. `git diff master -- container templates scripts package.json` is empty (R4, R5)
 - [ ] In `README.md`, under "The kit's own copy of the kit", change the second paragraph to read:
