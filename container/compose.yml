@@ -2,8 +2,9 @@
 # this kit. Every confinement setting lives here. container/entrypoint.sh is the one
 # exception and holds only the start-up firewall, because iptables rules are kernel state
 # in a network namespace that does not exist until the container runs. container/agent.sh
-# is a thin wrapper that adds only the per-run working directory and any extra mounts; it
-# sets nothing that confines the container.
+# is a thin wrapper that adds only the per-run working directory, any extra mounts and the
+# versions of the two harnesses the image is built with; it sets nothing that confines the
+# container.
 #
 # A project layers its own compose file over this one, at agent/compose.project.yml,
 # holding what varies per project: the Compose project name, the image name, the egress

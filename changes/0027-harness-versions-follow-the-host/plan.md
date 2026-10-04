@@ -148,7 +148,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
   its comment. `tests/harness-versions.test.mjs` passes (R4, R5)
 - [x] Change `container/agent.sh` as the approach describes. The whole suite passes, the three tests of
   `tests/agent-dev.test.mjs` among them (R1, R2, R3, R6, R7, R8, R9)
-- [ ] Make every comment in `container/` true: the Dockerfile's "single place either version is pinned" and "Both
+- [x] Make every comment in `container/` true: the Dockerfile's "single place either version is pinned" and "Both
   harness CLIs, pinned", the wrapper's header, and the base Compose file's sentence on what the wrapper adds. Search
   what ships and the README for `pinned`, `pin` and both version numbers, and leave nothing that says the kit alone
   decides the versions (R14)
@@ -210,6 +210,6 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 
 - [x] `feature-0027` the fixtures of the two wrapper tests, with no behavior changed
 - [x] `feature-0027` the tests, the labels, the build arguments and the wrapper
-- [ ] `feature-0027` the comments in `container/`
+- [x] `feature-0027` the comments in `container/`
 - [ ] `feature-0027` the README
 - [ ] `feature-0027` the record of the real check

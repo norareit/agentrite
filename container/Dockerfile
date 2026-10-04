@@ -4,9 +4,11 @@
 # that can run the project's own suites. The kit's README.md describes the sandbox; the
 # project's README.md describes how that project runs it.
 
-# Harness versions. These are the single place either version is pinned, and they are in
-# the kit so that every project updates its harnesses by pulling the kit. To update a
-# harness, edit the line here and rebuild.
+# Harness versions. These defaults are the kit's pins, and the single place either is
+# written: container/agent.sh reads them from these two lines. A pin is what the image
+# gets on a host that does not have the harness. Otherwise the wrapper hands the build
+# the version the host has, and a project's compose file that gives the argument itself
+# stands above both.
 ARG CLAUDE_CODE_VERSION=2.1.266
 ARG OPENCODE_VERSION=1.18.30
 
@@ -76,9 +78,10 @@ ARG OPENCODE_VERSION
 ARG AGENT_UID=1000
 ARG AGENT_GID=1000
 
-# Both harness CLIs, pinned and installed globally as root. Nothing self-updates, so a
-# read-only root filesystem can protect the install. Auto-update is disabled explicitly
-# rather than left to fail against the firewall.
+# Both harness CLIs, each at exactly the version of its build argument, installed
+# globally as root. Nothing self-updates, so a read-only root filesystem can protect the
+# install. Auto-update is disabled explicitly rather than left to fail against the
+# firewall.
 RUN npm install -g --no-audit --no-fund \
       "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
       "opencode-ai@${OPENCODE_VERSION}" \

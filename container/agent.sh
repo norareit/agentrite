@@ -8,6 +8,12 @@
 # container/compose.yml and the project's agent/compose.project.yml, and the
 # firewall is in container/entrypoint.sh.
 #
+# It also decides which versions of Claude Code and OpenCode the image holds. Each is
+# the first of: the version the project's compose file gives, the version the host's
+# own command reports, and the version the kit pins in container/Dockerfile. When the
+# image was built with another version than that, it builds the image again before it
+# runs, and says why.
+#
 # It layers the project's compose file over the kit's base, with
 # --project-directory set to the project root so that every relative path in
 # either file resolves from there.
@@ -16,7 +22,8 @@
 #   agent.sh PROJECT_ROOT [--rebuild] [--workdir DIR] [--mount HOST[:ro]]... [COMMAND...]
 #
 #   PROJECT_ROOT     the project's root, which the project's agent.sh shim passes
-#   --rebuild        build the image before running, even if it already exists
+#   --rebuild        build the image before running, even if it already exists and
+#                    holds the wanted harness versions
 #   --workdir DIR    mount DIR at /work instead of the project root
 #   --mount HOST     also mount HOST at /mnt/<basename>, read-write
 #   --mount HOST:ro  the same, read-only
@@ -156,7 +163,8 @@ version_from_host_or_kit() {
     return 2
   fi
   if ! version="$(host_version "$harness_command")"; then
-    echo "agent.sh: '$harness_command --version' printed no version, so the sandbox gets the kit's $harness $pin." >&2
+    echo "agent.sh: '$harness_command --version' printed no version," \
+      "so the sandbox gets the kit's $harness $pin." >&2
     version=""
   fi
   if [ -n "$version" ]; then
