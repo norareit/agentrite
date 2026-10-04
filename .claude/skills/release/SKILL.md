@@ -1,8 +1,8 @@
 ---
 name: release
 description: >-
-  Makes a release of the kit, on the host: bumps the pinned harness versions and checks them in a sandbox, drafts the
-  release notes, on the human's word commits both, and names the commands the human runs to finish it.
+  Makes a release of the kit, on the host: sees that the suite passes, drafts the release notes, on the human's word
+  commits them, and names the commands the human runs to finish it.
 disable-model-invocation: true
 ---
 

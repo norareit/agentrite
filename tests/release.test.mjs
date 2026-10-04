@@ -20,8 +20,8 @@ function read(path) {
 const frontmatter = `---
 name: release
 description: >-
-  Makes a release of the kit, on the host: bumps the pinned harness versions and checks them in a sandbox, drafts the
-  release notes, on the human's word commits both, and names the commands the human runs to finish it.
+  Makes a release of the kit, on the host: sees that the suite passes, drafts the release notes, on the human's word
+  commits them, and names the commands the human runs to finish it.
 disable-model-invocation: true
 ---
 `;
@@ -42,24 +42,5 @@ test('RELEASING.md exists', () => {
 for (const path of [skill, 'AGENTS.md', 'README.md', 'deploy.sh']) {
   test(`${path} names RELEASING.md`, () => {
     assert.ok(read(path).includes(releasing));
-  });
-}
-
-// What a release bumps. The release edits these two lines by hand, so each is there once, as a plain version, and
-// RELEASING.md names the arguments and the packages by the names the Dockerfile has.
-const pins = [
-  { argument: 'CLAUDE_CODE_VERSION', npmPackage: '@anthropic-ai/claude-code' },
-  { argument: 'OPENCODE_VERSION', npmPackage: 'opencode-ai' },
-];
-
-for (const { argument, npmPackage } of pins) {
-  test(`the Dockerfile pins ${argument} on one line, as a three-part version, and RELEASING.md names it`, () => {
-    const dockerfile = read(join('container', 'Dockerfile'));
-    const pinned = dockerfile.match(new RegExp(`^ARG ${argument}=\\d+\\.\\d+\\.\\d+$`, 'gm')) ?? [];
-    assert.equal(pinned.length, 1, `one line is ARG ${argument}=<version>`);
-    assert.ok(dockerfile.includes(`"${npmPackage}@\${${argument}}"`), `the image installs ${npmPackage}`);
-    const text = read(releasing);
-    assert.ok(text.includes(argument), `${releasing} names ${argument}`);
-    assert.ok(text.includes(npmPackage), `${releasing} names ${npmPackage}`);
   });
 }

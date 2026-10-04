@@ -326,10 +326,10 @@ The first seven were done before the bump was withdrawn, against the texts of th
 - [x] Take `README.md` out of 0027's test of where a pin is written, and give the fake host of the wrapper's tests
   and their earlier-built image versions no pin equals. Done before the revision, and listed here so that
   requirement 18 has its task (R18)
-- [ ] In `tests/release.test.mjs`, change the description the skill's test compares to the one the Approach gives,
+- [x] In `tests/release.test.mjs`, change the description the skill's test compares to the one the Approach gives,
   and remove the two tests of the `ARG` lines with the list `pins` and its comment. Run `npm test` and see the
   skill's test fail and every other test pass (R17)
-- [ ] Change the description in `.claude/skills/release/SKILL.md` to the Approach's and see the skill's test pass
+- [x] Change the description in `.claude/skills/release/SKILL.md` to the Approach's and see the skill's test pass
   (R1)
 - [ ] Replace `RELEASING.md` with the text the Approach gives, written out of this plan and not retyped. See that
   nothing of the bump is left in it: `grep -n -i -E 'docker|dockerfile|claude-code|opencode|ARG ' RELEASING.md`
@@ -373,7 +373,7 @@ Each was ticked before the revision and is open again, to be seen on the tree th
 - [x] The README
 - [x] `deploy.sh`
 - [x] The record of the check's trial by hand, with the corrections to `RELEASING.md` it caused
-- [ ] The test and the skill's description
+- [x] The test and the skill's description
 - [ ] `RELEASING.md` cut down
 - [ ] The README
 - [ ] The record of the trial of `/release`, with any correction to `RELEASING.md` it caused
