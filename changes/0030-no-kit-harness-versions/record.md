@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-04T20:13:06Z
 ---
 
@@ -380,5 +380,45 @@ timestamp: 2026-10-04T20:13:06Z
   timings, before/after inventories or the original test-first chronology within the review's permitted writes.
   No Task tool was available for subagent dispatch; performed the reviewer role directly. No work under review
   or snapshot was changed, no commit was made and the pre-existing untracked tarball was left alone
+- 2026-10-04T22:27:29Z [human] after the delta review, in the main session, by the dispatching session's account on
+  2026-10-05 of the human's calendar: "rereview is done". Before it, the main session had reported to the human
+  that S1 and C1 were accepted and corrected under the human's delegation, open to their correction, and that
+  after a clean delta review the unit can be marked `implemented`. The human then had the delta review made and
+  said these words. The human corrected neither the acceptance nor the corrections, and gave no explicit sentence
+  to mark the unit implemented. Taking these words, with nothing found, as the word to close is the main
+  session's reading. The time of this entry is when the words reached the implementer
+- 2026-10-04T22:27:29Z [Claude Code, anthropic/claude-opus-5-5] as implementer, set the status to `implemented`. The
+  reviewer's delta entry was committed as written, in the commit before this one.
+  How the process's two conditions are met, so that a reader can judge it:
+  * Every blocking finding decided. There was one, S1. The human did not decide it in a sentence of their own.
+    They said of the review "can you check the remarks and take the necessary actions or discuss if required?",
+    and under that the main session accepted S1 and chose its two corrections: the trial S1a to S1d above, and the
+    planner's rewording of requirement 17 in `eda8dd4`. Both were reported to the human as open to their
+    correction, and the human corrected neither. The delta review of `eda8dd4` found S1 corrected and returned no
+    new finding. The finding was accepted and not declined, so nothing the reviewer asked for was set aside. The
+    implementer reads that as meeting "the human has decided" by delegation. Should the human not have meant the
+    delegation to reach that far, the status goes back to `in-progress` and the decision on S1 is theirs
+  * Every task in `plan.md` is ticked: no box is open, counted with `grep`.
+  C1 did not block, and is corrected in `95da010`, which the delta review confirmed by running the matcher.
+  What the unit leaves not established or not built:
+  * A time limit on the question to the registry: recommended by the main session, not taken up by the human, not
+    built. A start on a host without a harness hangs at `npm view` when the network swallows the connection,
+    until it is interrupted. That case was not tried here; the planner measured `npm view` alone at over two
+    minutes
+  * A start at a terminal: every start of the check had standard input from `/dev/null`
+  * A login, a prompt, the status line and self-update in a sandbox on a version nobody tried. The README promises
+    these for no version
+  * Docker Desktop for macOS, and bash 3.2: the wrapper's additions ran under the host's bash 5.2 only
+  * A project's file that gives an empty value for a version: not handled and not tried. On a host without that
+    harness Compose is expected to refuse it with the base file's message
+  * A project with Playwright
+  * An install that runs for the pair the real registry calls the latest: on this machine it came from the cache,
+    as D3 has it, and the uncached install was shown with a stand-in for the registry's answer
+  * The reviewer replayed none of the live trials, in either review. The outputs of cases A to P2 and S1a to S1d,
+    the inventories before and after, and the counts of failing tests before the code are the implementer's
+    account alone
+  The suite and the change check are run on the commit that holds this entry, and their result is in the
+  implementer's report to the dispatching session. Not pushed, and not merged into `master`: both are the
+  human's. From here `spec.md` and `plan.md` are frozen, and a correction is an amendment below
 
 ## Amendments
