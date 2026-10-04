@@ -339,7 +339,33 @@ The image holds Claude Code and OpenCode. For each on its own, the version is th
 
 1. the version the project's `agent/compose.project.yml` gives
 2. the version installed on the host
-3. the version the kit pins, as the default of the build argument in `container/Dockerfile`
+
+The kit names no version of either harness. With neither of the two, the image gets the latest published version
+at the time it is built, and the wrapper says which, in one line, wrapped here:
+
+```
+agent.sh: neither the project nor the host gives a version of OpenCode, so the image is built with the latest
+published, 1.18.34.
+```
+
+The sandbox then keeps that version until the image is built again, whatever is published in the meantime.
+`./agent.sh --rebuild` builds it again, and is how such a sandbox gets a newer one. A build for another reason,
+such as an update of the other harness on the host, brings the latest too. The wrapper finds the latest with
+`npm view <package> version` on the host, so the build needs `npm` on the host for this. It asks only when it is
+about to build: a start that builds nothing asks the registry nothing, and neither does a build for which the
+project or the host gives both versions.
+
+When the latest cannot be found, because the registry is not reached, `npm` is not on the `PATH`, or its answer is
+not a version, the wrapper stops. It builds nothing and starts nothing, although an image may exist. It prints two
+lines, the second wrapped here:
+
+```
+agent.sh: could not find the latest published version of OpenCode: 'npm view opencode-ai version' gave none.
+Give a version in agent/compose.project.yml, under services.agent.build.args as OPENCODE_VERSION, or install
+OpenCode on the host.
+```
+
+Either gets past it: a version in the project's file, as below, or the harness on the host.
 
 A project holds a version by adding the build argument to its `agent/compose.project.yml`, for either harness or
 for both:
@@ -358,11 +384,10 @@ image is built, and not again.
 
 The host's version is what `claude --version` and `opencode --version` print, for the command on the `PATH` of
 whoever runs `./agent.sh`. A harness that is not there, or that is reached only through a shell alias, counts as
-not installed, and the sandbox gets the kit's version of it. When the command is there and prints no version, the
-sandbox gets the kit's version too, and the wrapper says so:
+not installed. So does one whose command is there and prints no version, and the wrapper says so at each start:
 
 ```
-agent.sh: 'claude --version' printed no version, so the sandbox gets the kit's Claude Code 2.1.288.
+agent.sh: 'claude --version' printed no version, so Claude Code counts as not installed on the host.
 ```
 
 At each start the wrapper compares the versions it wants with those the image was built with, which the image
@@ -373,7 +398,9 @@ agent.sh: the image holds Claude Code 2.1.288 and 2.1.289 is wanted, from the ho
 agent.sh: the image records no OpenCode version and 1.18.34 is wanted, from the host. Rebuilding.
 ```
 
-So no flag is needed after a harness is updated on the host. An image built by a release that did not write the
+So no flag is needed after a harness is updated on the host. For a harness with neither source there is nothing
+to compare: the sandbox keeps the version the image records, and the wrapper builds only when the image records
+none. An image built by a release that did not write the
 labels records no version, and is built again at the first start. When that build fails, for example with no
 network, the sandbox does not start, although an image exists.
 
@@ -389,27 +416,28 @@ What follows from that:
 
 * The image is per machine. Two developers on one project run what their own hosts have, until the project holds a
   version
+* On a host without a harness, the sandbox's version of it is the latest of the day the image was last built
 * Each rebuild leaves the image it replaced behind, untagged, at about 0.6 GB. `docker image prune` removes them
 * Self-update stays off inside the sandbox, for both harnesses: its root filesystem is read-only, and holds what
   the build installed
 
-The kit promises less for a version it did not pin:
+The kit checks no version of either harness. What it promises for a harness version:
 
 * For any version: the confinement, which depends on no harness's version. The firewall, the proxy, the read-only
   root, the capabilities and the mounts are the same whichever version is installed, and a harness that contacts a
-  host the kit does not admit is refused as before. And that the image holds exactly the version the order above
-  names, or the start fails
-* For the pinned versions only, because each was checked against them and nothing else: that both harnesses start
-  with the kit's allowlist alone, that the login command for OpenCode below names a method that exists, that the
-  developer's status line shows through the managed settings, and that the environment variables and the
-  configuration file the image sets do switch self-update off
-* What a developer sees when another version breaks one of these: the harness's own error, such as
+  host the kit does not admit is refused as before. And that the image holds exactly the version the rules above
+  name, or the start fails
+* For no version, because none is checked: that both harnesses start with the kit's allowlist alone, that the
+  login command for OpenCode below names a method that exists, that the developer's status line shows through the
+  managed settings, and that the environment variables and the configuration file the image sets do switch
+  self-update off
+* What a developer sees when a version breaks one of these: the harness's own error, such as
   `Unable to connect`, or a feature that is missing, with the refused host in `/run/egress-proxy.log`; a login
   method OpenCode does not know; a blank status line; an update attempt that fails against the read-only root and
   the firewall; or, for a version that is not on the npm registry, a build that fails with npm's error
-* To recover, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold the version
-  the kit pins, or any that works, in the project's `agent/compose.project.yml`, as above. Holding the versions the
-  image already has, without committing the edit, is also how to start the sandbox while a build cannot run
+* To recover, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version
+  that works in the project's `agent/compose.project.yml`, as above. Holding the versions the image already has,
+  without committing the edit, is also how to start the sandbox while a build cannot run
 
 ### The status line
 
@@ -446,9 +474,8 @@ For OpenAI in OpenCode with a ChatGPT account, that is:
 opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"
 ```
 
-The method's label is the one the version of OpenCode the kit pins uses, and another version may name it
-differently. It prints an address and a code to enter there, in any browser, and completes on its own once the code
-is accepted.
+The method's label is the one OpenCode used when this was written, and another version may name it differently. It
+prints an address and a code to enter there, in any browser, and completes on its own once the code is accepted.
 The kit admits the two hosts this login needs itself, `auth.openai.com` to sign in and `chatgpt.com` for the prompts,
 so the project adds nothing for it. A login with an API key needs `api.openai.com` in the project's `ALLOWLIST`
 instead.
@@ -551,8 +578,8 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
 
 * It is this repository's own file. It is not in the package, and `init` and `refresh` do not write it
 * It builds the image on every start, so a change is in the sandbox that starts
-* It takes the harness versions as `./agent.sh` does, so on a host with the harnesses it runs the host's and not
-  the pinned ones
+* It takes the harness versions as `./agent.sh` does. It builds on every start, so on a host without a harness it
+  asks the registry at every start and gets the latest published version of that harness
 * It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
   `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
   and the saved logins of `./agent.sh` are not touched, and both sandboxes can run at once

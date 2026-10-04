@@ -163,7 +163,7 @@ host runs `npm view` on the host.
 - [x] Remove the two `ARG` lines with defaults from `container/Dockerfile` and write the comment in their place.
   Correct the comment in `container/compose.yml`. See every test pass, and that
   `grep -rn -E '[0-9]+\.[0-9]+\.[0-9]+' container templates` shows no version of a harness (R2, R9, R14)
-- [ ] Rewrite the README's "The harness versions" as the Approach gives it, with the wrapper's lines copied from
+- [x] Rewrite the README's "The harness versions" as the Approach gives it, with the wrapper's lines copied from
   the wrapper, and correct the sentence on the login's label and the bullet on `./agent-dev.sh`. Go through
   0027's subsection paragraph by paragraph and record, for each, that it is kept, changed or removed, and why
   (R12, R13, R14)
