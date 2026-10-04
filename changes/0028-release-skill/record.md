@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: draft
-timestamp: 2026-10-04T14:13:07Z
+status: in-progress
+timestamp: 2026-10-04T18:20:11Z
 ---
 
 # 0028 A release skill
@@ -98,5 +98,57 @@ timestamp: 2026-10-04T14:13:07Z
   `RELEASING.md` text to `git push --follow-tags origin master`, with its explanation, and the spec's decision on
   the push to match. Checked: `git cat-file -t v2.3.0` prints `tag`, so the tags `npm version` makes here are
   annotated, which is what `--follow-tags` pushes. The push itself was not run. Status still `draft`
+- 2026-10-04T18:20:11Z [human] approved the spec and the plan as they stand at `e33ae0b`, in the session that
+  dispatched the implementer, with the words: "Let's move on to 0028. Implement it as the @implementer". Nothing
+  under "Beyond the request" was taken up, so none of it is in scope. Status `approved`. The time of this entry is
+  when the words reached the implementer, not when they were said
+- 2026-10-04T18:20:11Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main checkout at
+  `/home/stef/projects/agentrite`, on the branch `feature-0028-release-skill`, and not in a worktree, as the human
+  wants it. Working under the process of release 2.3.0, read from `node_modules`. Status `in-progress`
+- 2026-10-04T18:22:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, brought the branch up to date by
+  merging `master` at `94099e9` into it, as `3eadd13`, and not by a rebase, so that `e33ae0b`, which the approval
+  names, keeps its id. `master` held two units the branch did not: task 0026 and feature 0027. The merge had no
+  conflict, since the branch had changed only this unit's directory. On the merged tree, before any change of this
+  unit, `npm test` exited 0 with 224 tests, 224 passing
+- 2026-10-04T18:31:02Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read 0027's spec and record on
+  `master`, and `container/agent.sh`, `container/Dockerfile`, `container/compose.yml`, the README and
+  `tests/harness-versions.test.mjs` as 0027 left them, and went through this unit's spec and plan against them.
+  The spec foresaw 0027 under "What is assumed about 0027" and says the implementer writes the step for it from
+  the start, so what follows changes the plan and not the spec. No requirement or decision of the spec was found
+  that no longer holds. What 0027 changed, and what was done about each, in `plan.md` before the work:
+  * A sandbox no longer builds from the pins on a host that has the harnesses. The plan's run command,
+    `AGENT_PROJECT_NAME=ritenoar-agentrite-agent-release container/agent.sh "$PWD" --rebuild <command>`, would on
+    this host build with the host's versions, and requirement 9 has the sandbox print the pins. 0027 gives three
+    ways to a pin, and the first is the one taken:
+    * A `claude` and an `opencode` first on the wrapper's `PATH` that report no version. By 0027's requirement 3
+      the wrapper then takes the kit's pin and says so in a line that names it. It touches no tracked file, it goes
+      through the wrapper's own reading of the two `ARG` lines, and the wrapper's line shows that it did. It rests
+      on a path 0027 built for a harness that misbehaves, which is the weak side of it
+    * The versions held in this repository's `agent/compose.project.yml`, uncommitted, which is the way 0027's
+      spec and README name for holding a version. Not taken: it is an edit to a tracked file in the middle of a
+      procedure that ends by committing on `master`, which 0027's own spec calls easy to commit by mistake; it has
+      to be undone on every outcome; and while it is there a start of `./agent.sh` or `./agent-dev.sh` in this
+      checkout would take the held versions too. It would also not go through the wrapper's fallback
+    * A choice from the environment, which 0027 lists under "Beyond the request" and did not build
+    Which of the first two the release uses is a judgement the human may want to make differently. It changes
+    step 2 of `RELEASING.md` and nothing else
+  * The pins are no longer "the versions the image installs". Step 2 of the plan's `RELEASING.md` text now opens
+    by saying what a pin is under 0027
+  * What a bump means for a project changed: a sandbox on a host that has the harness does not get the pin at
+    all. The spec left that wording to the README of the day. The bullet on the bump in step 3 now has the notes
+    say which sandboxes get the new versions, and names the README's subsection "The harness versions", which 0027
+    added, where it named "Running the sandbox"
+  * The wrapper rebuilds by itself when the image's labels differ from the wanted versions. The check keeps
+    `--rebuild`, so nothing changes for it, and with `--rebuild` the wrapper prints no line about a difference
+  * 0027 added `tests/harness-versions.test.mjs`, with a test that the Dockerfile has one line per pin and one that
+    no shipped file but the Dockerfile holds a pin, `README.md` included. The README text of this unit names no
+    version. The first overlaps with the test of the two `ARG` lines requirement 17 asks for, which is kept as the
+    plan has it: it is stricter, a plain three-part version where 0027's allows a pre-release part, and it sits
+    with the test that `RELEASING.md` names what the release edits
+  * The suite holds 224 tests, not the 192 the plan's first task names. Corrected
+  * 0027's README sentence that the login's label is the one the pinned OpenCode uses, and its sentence that
+    `./agent-dev.sh` runs the host's versions, agree with the check as written and change nothing in it
+  * After 0027 nothing on this host runs the pinned pair, as its record says. So the check of step 2 is the only
+    thing that does, and it is made only when the pins move
 
 ## Amendments

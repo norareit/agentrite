@@ -58,10 +58,11 @@ Stop, say why and change nothing when one of these does not hold. Do not repair 
 
 ## 2. The harness versions
 
-The versions of Claude Code and OpenCode that the image installs are pinned in `container/Dockerfile`, as the
-defaults of `ARG CLAUDE_CODE_VERSION` and `ARG OPENCODE_VERSION`. A release moves both to the latest published
-versions, after checking, in a sandbox built from the working copy, that what the kit and its README rely on still
-holds for them.
+The kit pins a version of Claude Code and one of OpenCode in `container/Dockerfile`, as the defaults of
+`ARG CLAUDE_CODE_VERSION` and `ARG OPENCODE_VERSION`. A pin is what a sandbox gets on a host that does not have the
+harness, and the pinned pair is the one the kit and its README were checked against, as the README says under "The
+harness versions". A release moves both to the latest published versions, after checking, in a sandbox built from
+the working copy, that what the kit and its README rely on still holds for them.
 
 * The latest versions are what `npm view @anthropic-ai/claude-code version` and `npm view opencode-ai version`
   print. When both are the pins already, there is nothing to bump: skip the rest of this step and say so
@@ -70,20 +71,37 @@ holds for them.
 ### The check
 
 The check has a Compose project of its own, with its own image and home volume, so that its home holds no login and
-the sandboxes of `./agent.sh` and `./agent-dev.sh`, their images and their saved logins are not touched:
+the sandboxes of `./agent.sh` and `./agent-dev.sh`, their images and their saved logins are not touched.
+
+The wrapper builds the image with the pins only for a harness it finds no version of on the host, and the host of a
+release has both harnesses. So the check gives the wrapper a `claude` and an `opencode` of its own, first on the
+`PATH`, that report no version. Nothing else on the host is changed for it, and no tracked file:
 
 ```sh
-AGENT_PROJECT_NAME=ritenoar-agentrite-agent-release container/agent.sh "$PWD" --rebuild <command>
+mkdir /tmp/agentrite-release-no-harness
+printf '#!/bin/sh\nexit 1\n' > /tmp/agentrite-release-no-harness/claude
+cp /tmp/agentrite-release-no-harness/claude /tmp/agentrite-release-no-harness/opencode
+chmod +x /tmp/agentrite-release-no-harness/claude /tmp/agentrite-release-no-harness/opencode
 ```
 
-That is what `./agent-dev.sh` runs, under another name. Before the first run and after the last, whatever the
-outcome, remove what bears that name, and nothing else:
+A run is then:
+
+```sh
+PATH="/tmp/agentrite-release-no-harness:$PATH" AGENT_PROJECT_NAME=ritenoar-agentrite-agent-release \
+  container/agent.sh "$PWD" --rebuild <command>
+```
+
+That is what `./agent-dev.sh` runs, under another name and without the host's harnesses. At each run the wrapper
+says, for each harness, that its command printed no version and that the sandbox gets the kit's, with the pin.
+Before the first run and after the last, whatever the outcome, remove what bears that name, and nothing else:
 
 ```sh
 docker volume rm ritenoar-agentrite-agent-release_agent-home
 docker network rm ritenoar-agentrite-agent-release_default
 docker image rm ritenoar-agentrite-agent-release
 ```
+
+After the last run remove `/tmp/agentrite-release-no-harness` as well.
 
 Each run is a new container with a new proxy log, so a harness is started and the log is read in the same run. A
 harness wants a terminal: start it as `timeout 30 script -qec <command> <logfile>`, with the log file under `/tmp`,
@@ -111,7 +129,8 @@ The second run, only when `~/.claude/statusline-command.sh` is a file on the hos
 What has to hold:
 
 * The image builds, and the two versions printed are the two pins. When they are not, the sandbox did not build
-  from the pins, and nothing else the check saw is about them
+  from the pins, and nothing else the check saw is about them. A version held in this repository's own
+  `agent/compose.project.yml` stands above the pin, and is one way that happens
 * `claude` reaches its first-run screen and `opencode` its prompt
 * Every host on the proxy's lines after start-up, allowed or refused, is on the kit's own allowlist,
   `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal known here: `raw.githubusercontent.com`, which the
@@ -150,8 +169,9 @@ Anything that does not hold is a finding. Then:
   found only here
 * The bump of step 2 is not in that diff, since it is not committed yet, and it is the release's own, not a change
   that lacks a unit. Write it as a line of "What changed" that gives each harness's old and new version, with no
-  number. Under "Worth knowing when you update", say what a project does to get the new versions, as the README
-  describes the pins under "Running the sandbox", and name anything the check of step 2 did not establish
+  number. Under "Worth knowing when you update", say which sandboxes get the new versions and what a project does to
+  get them, as the README describes the pins under "The harness versions", and name anything the check of step 2
+  did not establish
 * Write the section at the top of `CHANGELOG.md`, above the last release's, headed `## <version>` with the version
   you propose and nothing else on the line. It has two parts:
     * `### What changed`: a line for each change a project gets, ending with the numbers of its units in
@@ -325,12 +345,26 @@ In "What is here", a row after `CHANGELOG.md`'s: `RELEASING.md`, "How a release 
 
 `tests/deploy.test.mjs` gains one assertion in the existing refusal tests: standard error names `RELEASING.md`.
 
-**0026 and 0027.** `task-0026-document-running-the-sandbox` adds to the README under "Running the sandbox" and does
-not touch "Releasing", `AGENTS.md` or `deploy.sh`. 0027 is expected to change `container/` and the README's
-paragraph on the pins under "Running the sandbox". Neither is on `master`. If 0027 is on `master` when this unit is
-implemented, read what it says of how a build takes its versions, and write the run command of step 2 so that the
-sandbox builds from the pins, by whatever 0027 gives for that. The first line of "What has to hold" is the test of
-it. Record what was changed and why.
+**0026 and 0027.** Both were on `master` when this unit was implemented, and the branch holds them by a merge. 0026
+added to the README under "Running the sandbox" and did not touch "Releasing", `AGENTS.md` or `deploy.sh`. 0027
+made the pins the last of three sources of a harness's version, behind the project's Compose file and the host's
+own version, and gave the README the subsection "The harness versions". The text of `RELEASING.md` above is written
+for that, where the planner's was written for the pins as the only source. What was changed, with the reasons in
+the record:
+
+* Step 2 opens by saying what a pin is under 0027, where it said that the image installs the pins
+* The run command of the check puts a `claude` and an `opencode` that report no version first on the wrapper's
+  `PATH`, so that the wrapper takes both pins, by the rule 0027 gives for a command that is there and prints no
+  version. Without it the sandbox of a host that has the harnesses is built with the host's versions. The directory
+  is made before the first run and removed after the last
+* The first line of "What has to hold" names a version held in the project's Compose file as a way the sandbox
+  does not build from the pins
+* The bullet on the bump in step 3 has the notes say which sandboxes get the new versions, and names the README's
+  subsection "The harness versions"
+
+`tests/harness-versions.test.mjs`, which 0027 added, already holds that the Dockerfile pins each harness once and
+that no shipped file but the Dockerfile, the README among them, holds a pin. The README text above names no
+version, and neither does `RELEASING.md`.
 
 ## Files
 
@@ -347,10 +381,10 @@ it. Record what was changed and why.
 
 - [ ] Add `tests/release.test.mjs` with the three groups of tests the Approach gives, and the assertion on
   `RELEASING.md` to the refusal tests of `tests/deploy.test.mjs`. Run `npm test` and see the new ones fail and the
-  192 existing ones pass (R17)
+  224 existing ones pass (R17)
 - [ ] Add `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, wrapped at 120
-  characters. If `master` holds 0027, adapt the run command of step 2 as the Approach says (R2, R6, R7, R8, R9,
-  R10, R11, R12, R13, R14)
+  characters. `master` holds 0027, so the text is the one adapted to it, as the Approach says under "0026 and
+  0027" (R2, R6, R7, R8, R9, R10, R11, R12, R13, R14)
 - [ ] Add `.claude/skills/release/SKILL.md` with the text the Approach gives. See the skill's tests pass. See that
   `npm pack --dry-run` lists the same files as it does on `master`, comparing the two lists and not their length,
   and that nothing was added under `.opencode/` (R1, R3, R4)
