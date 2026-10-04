@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-04T18:20:11Z
+status: implemented
+timestamp: 2026-10-04T21:01:04Z
 ---
 
 # 0028 A release skill
@@ -667,5 +667,33 @@ timestamp: 2026-10-04T18:20:11Z
   `npm test` passed with 230 tests, and `npm run check-changes` passed on the reviewed tree. Could not verify actual
   `/release` invocation or the complete real release, deferred by the human, or recovery on a signing-configured
   host; tag recovery and a dry-run push were checked in a scratch clone.
+- 2026-10-04T21:01:04Z [human] on the delta review, which returned no new findings and found S1 corrected: "The
+  re-review has happened". The human gave no sentence that says to mark the unit implemented. The main session
+  had said that after the delta review the unit can be marked `implemented` on the human's word, and takes the
+  human's report of the re-review, with nothing found, as the word to close. That reading is the main session's
+  and not the human's. The time of this entry is when the words reached the implementer, through the dispatching
+  session
+- 2026-10-04T21:01:04Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the delta review's findings in full
+  and committed the reviewer's entry as it was written, in `262624c`. Set the status to `implemented`. The
+  process's two conditions hold, as the implementer reads them:
+  * The one blocking finding either review returned, S1, was decided by the human, who accepted it. It is
+    corrected in `42db887`, with the spec brought in line by the planner in `b4a45d0`, and the delta review found
+    it corrected and returned nothing new
+  * Every box in `plan.md` is ticked. The task of the trial of `/release` was removed on the human's decision, with
+    the reason in the entry that removed it
+  On `262624c`, which this commit follows with this entry and the status only, `npm test` exited 0 with 230 tests,
+  230 passing, none failing, cancelled or skipped, and `npm run check-changes` exited 0.
+  What the unit carries into the first release, accepted by the human and not established by anyone:
+  * That typing `/release` in a Claude Code session in this repository starts the skill. A test holds the skill's
+    text, and nothing has run it. If it does not start, `RELEASING.md` can be followed by asking an agent to read it
+  * That `RELEASING.md` as it now is can be followed from step 1 to step 3. Nobody, human or agent, has done so
+  * Step 4, the commit of the notes as the file gives it, and the three commands of step 5, `npm version`,
+    `./deploy.sh` and `git push --follow-tags origin master`, which have never been run by this file
+  * The recovery after a refusal by `./deploy.sh` in a real release. The command was shown twice in a scratch
+    clone with dry-run pushes, by the implementer and by the reviewer, and not on a host where tags are signed by
+    configuration
+  * Two choices of the planner's that the record does not show the human to have read: the suite as a condition
+    of step 1, and the condition on Docker dropped
+  What that release finds is an amendment here, or a new unit. Not pushed, and not merged into `master`
 
 ## Amendments
