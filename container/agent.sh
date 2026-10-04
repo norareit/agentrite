@@ -1,12 +1,23 @@
 #!/usr/bin/env bash
 #
-# Thin wrapper around `docker compose run`. It exists only because Compose cannot
-# take an ad-hoc mount per invocation: it translates the working directory and any
-# --mount flags into `docker compose run --volume` options, adds the developer's
-# Claude Code status line when the host has one, and passes the rest
-# through. It sets nothing that confines the container; every such setting is in
-# container/compose.yml and the project's agent/compose.project.yml, and the
-# firewall is in container/entrypoint.sh.
+# Wrapper around `docker compose run`. Compose cannot take an ad-hoc mount per
+# invocation: the wrapper translates the working directory and any --mount flags into
+# `docker compose run --volume` options, adds the developer's Claude Code status line
+# when the host has one, and passes the rest through. It sets nothing that confines the
+# container; every such setting is in container/compose.yml and the project's
+# agent/compose.project.yml, and the firewall is in container/entrypoint.sh.
+#
+# What is mounted at /work has no default, and there are two ways to run:
+#
+# * A unit run, given a unit. The wrapper makes a clone of the unit's branch in the
+#   developer's state directory, mounts that at /work and the host's .reviews at
+#   /work/.reviews, and names the container after the Compose project and the branch,
+#   so that two runs never work on one branch. When the container has exited it
+#   fetches the clone's branch as sandbox/<branch>, fast-forwards the host's branch
+#   when it can, and removes the clone unless it holds work the host does not. A clone
+#   that is still there is resumed. The git work is in container/unit-clone.sh.
+# * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
+#   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
 # It also decides which versions of Claude Code and OpenCode the image holds. Each is
 # the first of: the version the project's compose file gives, and the version the host's
@@ -20,12 +31,17 @@
 # either file resolves from there.
 #
 # Usage:
-#   agent.sh PROJECT_ROOT [--rebuild] [--workdir DIR] [--mount HOST[:ro]]... [COMMAND...]
+#   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+#   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+#   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
 #
 #   PROJECT_ROOT     the project's root, which the project's agent.sh shim passes
+#   UNIT             mount a clone of the unit's branch at /work: a local branch by its
+#                    name, or by a unit's number that one branch name holds
+#   --in-place       mount the project root at /work, as it is
+#   --workdir DIR    mount DIR at /work, as it is
 #   --rebuild        build the image before running, even if it already exists and
 #                    holds the wanted harness versions
-#   --workdir DIR    mount DIR at /work instead of the project root
 #   --mount HOST     also mount HOST at /mnt/<basename>, read-write
 #   --mount HOST:ro  the same, read-only
 #   COMMAND...       run this instead of an interactive shell
@@ -405,10 +421,27 @@ prepare_clone "$root" "$branch" "$clone"
 mkdir -p "$root/.reviews" "$clone/.reviews"
 docker rm "$container_name" >/dev/null 2>&1 || true
 
+# The wrapper sees the container out. An interrupt, a terminate and a hangup reach the
+# container as they did, and the wrapper waits for it and then brings the work back. A
+# trap that does nothing rather than an ignored signal, which the container's own
+# process would inherit.
+trap : INT TERM HUP
 status=0
 "${compose[@]}" run --rm --name "$container_name" \
   --volume "$clone:/work" \
   --volume "$root/.reviews:/work/.reviews" \
   ${mounts[@]+"${mounts[@]}"} \
   agent "$@" || status=$?
+
+# A container that outlived its `run`, as one does whose terminal was closed, still
+# writes the clone, so nothing is fetched or removed under it.
+if unit_container_running; then
+  echo "agent.sh: the container $container_name is still running, so nothing was fetched." >&2
+  echo "Its clone is at $clone. Once it has stopped, the same command resumes the clone." >&2
+  exit "$status"
+fi
+
+if ! land_clone "$root" "$branch" "$clone" && [ "$status" -eq 0 ]; then
+  status=1
+fi
 exit "$status"

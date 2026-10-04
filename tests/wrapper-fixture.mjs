@@ -15,7 +15,7 @@ export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
 // those a unit run and the scripts that play its agent run: `git` and what follows it. A node's own directory
 // cannot be put on the PATH instead, because a harness installed with `npm install -g` sits in it, and so does the
 // real `npm`.
-const linkedCommands = ['bash', 'basename', 'cat', 'dirname', 'id', 'git', 'grep', 'mkdir', 'mktemp', 'rm'];
+const linkedCommands = ['bash', 'basename', 'cat', 'chmod', 'dirname', 'id', 'git', 'grep', 'mkdir', 'mktemp', 'rm'];
 
 function findOnPath(command) {
   for (const directory of (process.env.PATH ?? '').split(delimiter)) {

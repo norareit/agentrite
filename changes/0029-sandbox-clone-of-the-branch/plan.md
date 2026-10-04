@@ -116,7 +116,8 @@ changes, so no rebuild is needed for the change itself.
 
 - [x] Extend `fakeHost` in `tests/wrapper-fixture.mjs`, with no test depending on it yet, and say each addition in
   its comment. The suite still passes, and this is committed on its own (R17):
-    - `linkedCommands` gains `git`, `grep`, `mkdir`, `mktemp` and `rm`
+    - `linkedCommands` gains `git`, `grep`, `mkdir`, `mktemp` and `rm`, and `chmod` for the agent script that
+      writes hooks
     - the stand-in `docker` answers `ps` without recording it, as it does its other two questions: with the content
       of the file `runningContainer` when that is there, and with nothing otherwise
     - it records `rm` and exits 0
@@ -169,7 +170,7 @@ changes, so no rebuild is needed for the change itself.
   stopped container under the name is removed with `docker rm` before the run. The tests of the previous task
   pass, and so do those of `tests/agent-wrapper.test.mjs` and `tests/agent-dev.test.mjs`, whose setups copy no
   `unit-clone.sh` (R3 to R9)
-- [ ] In `tests/agent-unit-run.test.mjs`, write the tests of landing and see them fail (R10 to R17). The script
+- [x] In `tests/agent-unit-run.test.mjs`, write the tests of landing and see them fail (R10 to R17). The script
   the stand-in runs is the agent:
     - a commit on the branch: afterwards the host's branch is at it, checked out or not, `sandbox/<branch>` is
       gone, and the clone directory is gone
@@ -186,12 +187,16 @@ changes, so no rebuild is needed for the change itself.
       `post-checkout`, `pre-commit` and `post-merge` hooks, each leaving a marker file outside the clone: after
       the run no marker exists
     - after a run the host's `.git/config` and `.git/hooks` are byte for byte as before, and its other branches
-      are where they were
-- [ ] Add `land_clone` to `container/unit-clone.sh` and call it from `container/agent.sh` after the container,
-  with the three signals ignored for the duration of the run. The suite passes (R10 to R16)
-- [ ] Update the header comment of `container/agent.sh`: the usage, the two ways to run, and that the wrapper
+      are where they were, also when the agent made a tag and a second branch at its commit
+    - a run that left nothing: the clone is gone, the branch is where it was and the wrapper says nothing
+    - the script sends the wrapper an interrupt, a terminate and a hangup after its commit: the commit lands
+- [x] Add `land_clone` to `container/unit-clone.sh` and call it from `container/agent.sh` after the container,
+  with the three signals trapped by a handler that does nothing, for the duration of the run and the landing. The
+  wrapper thereby does not act on them, and the container's own process does not inherit an ignored signal. The
+  fetch takes no tags and no submodules. The suite passes (R10 to R16)
+- [x] Update the header comment of `container/agent.sh`: the usage, the two ways to run, and that the wrapper
   still sets nothing that confines the container. The paragraph on the harness versions stays as it is (R19)
-- [ ] In `container/compose.yml`, bring two comments in line: the one at the top, which says the wrapper adds only
+- [x] In `container/compose.yml`, bring two comments in line: the one at the top, which says the wrapper adds only
   the working directory, the extra mounts and the harness versions, and the one over `- .:/work`, which says the
   wrapper overrides the source with `--workdir`. Both now also name the clone of a unit run and the `.reviews`
   mount. No setting changes (R19)
@@ -248,7 +253,7 @@ changes, so no rebuild is needed for the change itself.
 - [x] `feature-0029` the tests of the required choice, `--in-place` and the updated runs
 - [x] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `refuse_unlanded`, `prepare_clone`
   and the named run
-- [ ] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of
+- [x] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of
   `container/compose.yml`
 - [ ] `feature-0029` the README
 - [ ] `feature-0029` the record of the real check

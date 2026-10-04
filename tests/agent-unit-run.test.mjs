@@ -227,3 +227,174 @@ test("the wrapper mounts the host's .reviews in the clone, and makes both direct
     assert.deepEqual(readdirSync(directory), []);
   }
 });
+
+// After the container. The script the stand-in runs is the agent, and what it leaves in the clone is what the
+// wrapper has to bring back or keep.
+const commitWork = 'echo work > work.txt\ngit add work.txt\ngit commit --quiet --message work';
+const subjectOf = (git, ref) => git('log', '--max-count=1', '--format=%s', ref);
+const hasRef = (git, ref) => git('for-each-ref', ref) !== '';
+
+for (const [what, checkedOut] of [
+  ['which is not checked out', false],
+  ['which is checked out', true],
+]) {
+  test(`the wrapper fast-forwards the host's branch, ${what}, to the agent's commit and removes the clone`, (t) => {
+    const { root, clone, run, git, agent } = setUp(t);
+    if (checkedOut) git('checkout', '--quiet', branch);
+    agent(commitWork);
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(subjectOf(git, branch), 'work');
+    assert.equal(hasRef(git, sandboxRef), false);
+    assert.equal(existsSync(clone), false);
+    assert.equal(existsSync(join(root, 'work.txt')), checkedOut);
+    assert.equal(git('symbolic-ref', '--short', 'HEAD'), checkedOut ? branch : 'master');
+  });
+}
+
+test('the wrapper removes the clone of a run that left nothing, and says nothing of it', (t) => {
+  const { clone, run, git } = setUp(t);
+  const before = git('rev-parse', branch);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(git('rev-parse', branch), before);
+  assert.equal(hasRef(git, sandboxRef), false);
+  assert.equal(existsSync(clone), false);
+});
+
+// The host's branch gains a commit of its own while the agent works.
+test("the wrapper leaves a host's branch that moved, keeps sandbox/<branch>, and names the merge", (t) => {
+  const { root, clone, run, git, agent } = setUp(t);
+  agent(
+    `${commitWork}\n` +
+      `moved="$(git -C "${root}" commit-tree "${branch}^{tree}" -p ${branch} -m moved)"\n` +
+      `git -C "${root}" update-ref refs/heads/${branch} "$moved"`,
+  );
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(subjectOf(git, branch), 'moved');
+  assert.equal(subjectOf(git, sandboxRef), 'work');
+  assert.ok(result.stderr.includes(`git merge sandbox/${branch}`), result.stderr);
+  assert.equal(existsSync(clone), false);
+});
+
+for (const [what, script, named] of [
+  ['a changed file', 'echo changed >> unit.md', 'unit.md'],
+  ['a file that is not tracked', 'echo new > new.txt', 'new.txt'],
+  [
+    'a commit on a second branch',
+    `git checkout --quiet -b other\n${commitWork}\ngit checkout --quiet ${branch}`,
+    'refs/heads/other',
+  ],
+  ['a stash', 'echo changed >> unit.md\ngit stash --quiet', 'refs/stash'],
+]) {
+  test(`the wrapper keeps a clone that holds ${what}, and says where it is and what it holds`, (t) => {
+    const { clone, run, git, agent } = setUp(t);
+    agent(script);
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(existsSync(clone), true);
+    assert.ok(result.stderr.includes(clone), result.stderr);
+    assert.ok(result.stderr.includes(named), result.stderr);
+    assert.equal(hasRef(git, 'refs/heads/other'), false);
+    assert.equal(hasRef(git, 'refs/stash'), false);
+  });
+}
+
+test('the wrapper removes a clone that holds only files the project ignores', (t) => {
+  const { clone, run, agent } = setUp(t);
+  agent('mkdir node_modules\necho installed > node_modules/package.txt');
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(existsSync(clone), false);
+});
+
+test("the wrapper lands the commit and exits with the command's status when that is not 0", (t) => {
+  const { clone, run, git, agent } = setUp(t);
+  agent(`${commitWork}\nexit 7`);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 7);
+  assert.equal(subjectOf(git, branch), 'work');
+  assert.equal(existsSync(clone), false);
+});
+
+test('the wrapper fetches and removes nothing while the container is still running', (t) => {
+  const { clone, run, git, agent, runningContainer } = setUp(t);
+  const before = git('rev-parse', branch);
+  agent(`${commitWork}\necho 0123456789ab > "${runningContainer}"`);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /still running/);
+  assert.ok(result.stderr.includes(clone), result.stderr);
+  assert.equal(git('rev-parse', branch), before);
+  assert.equal(hasRef(git, sandboxRef), false);
+  assert.equal(existsSync(join(clone, 'work.txt')), true);
+});
+
+test('the wrapper says that the fetch failed, keeps the clone and exits non-zero', (t) => {
+  const { clone, run, git, agent } = setUp(t);
+  const before = git('rev-parse', branch);
+  agent('rm -rf .git\necho orphan > orphan.txt');
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /agent\.sh: fetching .* failed/);
+  assert.ok(result.stderr.includes(clone), result.stderr);
+  assert.equal(git('rev-parse', branch), before);
+  assert.equal(existsSync(join(clone, 'orphan.txt')), true);
+});
+
+// The signals a terminal sends reach the wrapper as they reach the container. The agent sends them itself: the
+// stand-in is the wrapper's child, as `docker compose run` is.
+test('the wrapper sees the container out and lands its work when it is interrupted meanwhile', (t) => {
+  const { clone, run, git, agent } = setUp(t);
+  agent(`${commitWork}\nkill -INT $PPID\nkill -TERM $PPID\nkill -HUP $PPID`);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(subjectOf(git, branch), 'work');
+  assert.equal(existsSync(clone), false);
+});
+
+// A clone whose configuration and hooks each leave a marker when git runs them. The agent arms them after its own
+// last git command that would run one, and leaves a file so that the wrapper also compares the clone's tree.
+test("the wrapper runs nothing of the clone's configuration and hooks on the host", (t) => {
+  const { base, clone, run, git, agent } = setUp(t);
+  const markers = join(base, 'markers');
+  mkdirSync(markers);
+  agent(
+    `${commitWork}\necho left > left.txt\n` +
+      `arm() { printf '#!/bin/sh\\necho ran > "${markers}/%s"\\n' "$1" > "$2"; chmod +x "$2"; }\n` +
+      'for hook in post-checkout pre-commit post-merge; do arm "$hook" ".git/hooks/$hook"; done\n' +
+      'arm fsmonitor .git/fsmonitor.sh\narm pack-objects .git/pack-objects.sh\n' +
+      'git config uploadpack.packObjectsHook "$PWD/.git/pack-objects.sh"\n' +
+      'git config core.fsmonitor "$PWD/.git/fsmonitor.sh"',
+  );
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(subjectOf(git, branch), 'work');
+  assert.ok(result.stderr.includes('left.txt'), result.stderr);
+  assert.deepEqual(readdirSync(markers), []);
+  // The trap was armed: git run in the clone, as the wrapper must not, leaves the marker.
+  git('-C', clone, 'status');
+  assert.deepEqual(readdirSync(markers), ['fsmonitor']);
+});
+
+test("the wrapper leaves the host's configuration, hooks and other branches as they were", (t) => {
+  const { root, run, git, agent } = setUp(t);
+  const others = () => git('for-each-ref', 'refs').replaceAll(/^.*refs\/heads\/task-0026-doc\n?/gm, '');
+  const read = () => [
+    readFileSync(join(root, '.git', 'config'), 'utf-8'),
+    readdirSync(join(root, '.git', 'hooks')).map((hook) => [
+      hook,
+      readFileSync(join(root, '.git', 'hooks', hook), 'utf-8'),
+    ]),
+    others(),
+    git('status', '--porcelain'),
+  ];
+  const before = read();
+  agent(`${commitWork}\ngit tag made-inside\ngit branch other-inside`);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(subjectOf(git, branch), 'work');
+  assert.deepEqual(read(), before);
+});
