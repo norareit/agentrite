@@ -153,4 +153,14 @@ timestamp: 2026-10-04T15:31:37Z
   directory writable to get a clone removed: "C1 feels like something to fix when we run into it". Decided: it
   stays as it is. A removal that fails is reported and its remains are removed by hand
 
+- 2026-10-04T23:19:55Z [OpenCode, openai/gpt-6.1-sol] reviewed unit 0029 at
+  `3bed96cde99ce05b4f816134a49b3a3b8db9afec`, a delta review from
+  `4da86cd5dade4561c3132a8744e0af776733ff35`. Examined the previous labels `S1`, `S2`, `C1` and `P1` and returned
+  no new finding labels. Complete findings saved in
+  `.reviews/0029-sandbox-clone-of-the-branch/2026-10-04T231754Z-opencode-gpt-6.1-sol-delta-3bed96c.md`.
+  Did not run the delta on live Docker or induce a real daemon failure. Could not independently verify the
+  historical real-Docker runs and cleanup, historical red-test runs or test-writing order. Evidence is the
+  current suite, focused regressions and independent checks with real git and the Docker stand-in, whose
+  results and verification limits are in the saved review. Unchanged behavior was not re-reviewed
+
 ## Amendments
