@@ -306,8 +306,8 @@ timestamp: 2026-10-04T18:20:11Z
   hosts the file does not know, so the session should stop at step 2 with the pins restored, and the notes then
   have no line for a bump. The trial shows the bump's line in the section only after the human has decided what
   those three hosts are
-- 2026-10-04T18:39:43Z [Claude Code, anthropic/claude-opus-5-5] as implementer, where the unit stands, on `99b7a4c`. This
-  commit adds this entry and ticks in the plan and nothing else.
+- 2026-10-04T18:39:43Z [Claude Code, anthropic/claude-opus-5-5] as implementer, where the unit stands, on `99b7a4c`.
+  This commit adds this entry and ticks in the plan and nothing else.
   * `npm test` exited 0: 232 tests, 232 passing, none failing, cancelled or skipped
   * `npm run check-changes` exited 0 and printed nothing of its own. It ran the released 2.3.0 script from
     `node_modules`, which was there already. `npm ci` was not run again for it
