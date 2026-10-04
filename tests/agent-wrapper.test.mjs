@@ -15,7 +15,8 @@ function composeConfig(buildArgs) {
 // A project with the kit's wrapper installed at `kitPath` under `root`, and a `docker` that records each call and
 // the AGENTRITE_CONTAINER it saw, answering only the two queries the wrapper makes before running Compose. Its
 // merged configuration has the build arguments `buildArgs`, and the image it is asked about exists unless
-// `imageExists` is false.
+// `imageExists` is false. The wrapper runs with a home of its own, `home`, which is empty until a test fills it,
+// so that no test depends on what the home of whoever runs the suite holds.
 function setUp(
   t,
   kitPath = 'node_modules/@ritenoar/agentrite/container',
@@ -31,6 +32,8 @@ function setUp(
   mkdirSync(container, { recursive: true });
   copyFileSync(wrapper, join(container, 'agent.sh'));
   chmodSync(join(container, 'agent.sh'), 0o755);
+  const home = join(base, 'home');
+  mkdirSync(home);
   const bin = join(base, 'bin');
   mkdirSync(bin);
   const calls = join(base, 'docker-calls');
@@ -52,7 +55,7 @@ echo "AGENTRITE_CONTAINER=$AGENTRITE_CONTAINER docker $*" >> "${calls}"
   const run = (...args) =>
     spawnSync(join(container, 'agent.sh'), args, {
       encoding: 'utf-8',
-      env: { ...process.env, PATH: `${bin}:${process.env.PATH}` },
+      env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
     });
   const dockerCalls = () => {
     try {
@@ -61,7 +64,7 @@ echo "AGENTRITE_CONTAINER=$AGENTRITE_CONTAINER docker $*" >> "${calls}"
       return [];
     }
   };
-  return { base, root, container, run, dockerCalls };
+  return { base, root, container, home, run, dockerCalls };
 }
 
 test('the wrapper refuses to run without a project root, naming the shim', (t) => {

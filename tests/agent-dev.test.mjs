@@ -14,7 +14,8 @@ const nameFromVariable = '${AGENT_PROJECT_NAME:-ritenoar-agentrite-agent}';
 
 // A checkout holding copies of the shim and of the working copy's wrapper, and a `docker` that says the image
 // exists, answers the wrapper's query for the image name, and records every other call with the
-// AGENT_PROJECT_NAME and the AGENTRITE_CONTAINER it saw.
+// AGENT_PROJECT_NAME and the AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no
+// test depends on what the home of whoever runs the suite holds.
 function setUp(t) {
   const base = mkdtempSync(join(tmpdir(), 'agent-dev-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
@@ -29,6 +30,8 @@ function setUp(t) {
     copyFileSync(from, to);
     chmodSync(to, 0o755);
   }
+  const home = join(base, 'home');
+  mkdirSync(home);
   const bin = join(base, 'bin');
   mkdirSync(bin);
   const calls = join(base, 'docker-calls');
@@ -44,7 +47,7 @@ echo "AGENT_PROJECT_NAME=$AGENT_PROJECT_NAME AGENTRITE_CONTAINER=$AGENTRITE_CONT
   const run = (args, env = {}) =>
     spawnSync(join(root, 'agent-dev.sh'), args, {
       encoding: 'utf-8',
-      env: { ...process.env, ...env, PATH: `${bin}:${process.env.PATH}` },
+      env: { ...process.env, ...env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
     });
   const dockerCalls = () => {
     try {

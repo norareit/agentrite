@@ -73,6 +73,7 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 - `container/compose.yml`: the comment on the git configuration mount, which says it is the only host dotfile
   mounted
 - `tests/agent-wrapper.test.mjs`: a `HOME` per run in `setUp`, and the new tests
+- `tests/agent-dev.test.mjs`: a `HOME` per run in `setUp`
 - `tests/claude-managed-settings.test.mjs`: new, the settings file's content
 - `README.md`: a subsection under "Running the sandbox", and the `container/` row or wrapper description where they
   list what the wrapper mounts
@@ -80,9 +81,11 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 
 ## Tasks
 
-- [ ] In `tests/agent-wrapper.test.mjs`, have `setUp` create an empty home directory under its temporary directory,
+- [x] In `tests/agent-wrapper.test.mjs`, have `setUp` create an empty home directory under its temporary directory,
   pass it as `HOME` in the environment of every `run`, and return its path. Run `npm test` and see all 178 tests
   pass, on a machine whose real home holds a status line script (R6)
+- [x] Do the same in `tests/agent-dev.test.mjs`, which 0021 added after this plan was written and which runs the
+  wrapper through `agent-dev.sh` with the runner's environment too. There are 184 tests since 0015 and 0021 (R6)
 - [ ] Add the wrapper tests and see them fail: with a file at `<home>/.claude/statusline-command.sh`, the `run`
   call to Compose holds, after `--volume <root>:/work`, exactly the two flags below and then `agent`; with no such
   path, the call is as it is today and the path still does not exist afterwards; with a directory at that path, the
@@ -118,7 +121,7 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 
 ## Commit Points
 
-- [ ] The `HOME` per run in the wrapper's tests
+- [x] The `HOME` per run in the wrapper's tests
 - [ ] The tests, the settings file and the wrapper
 - [ ] The Compose comment and the README
 - [ ] The record of the real run
