@@ -43,6 +43,15 @@ was changed for it:
 * No requirement holds the package to a number of files: "Im not sure if checking a hard 'only 24 files' is a good
   idea. This will easily go beyond 24 soon."
 
+While the unit was being implemented, still on the same day, the check was run once for real, as the plan asks. The
+human heard what it found, decided two things further, and this spec was changed for them. The record has what was
+seen:
+
+* Three hosts the egress proxy refused once Claude Code was at its prompt, with the pinned and the latest versions
+  alike, are refusals the check knows, and none is admitted: "for 1) list them as known refusals. None of these
+  seem like something we should care about."
+* The release runs `npm test` with the bumped pins, before anything is committed: "2) YES"
+
 ### What was found while planning
 
 On `master` at `aa4b8b3`, which holds 0025, on Linux with npm 11.11.0, node 24.14.1, Claude Code 2.1.289 on the host
@@ -165,7 +174,8 @@ Before anything else:
 The harness versions:
 
 7. The release sets the two pins in `container/Dockerfile` to the versions `npm view @anthropic-ai/claude-code
-   version` and `npm view opencode-ai version` print. When both pins already equal them, the step is skipped whole,
+   version` and `npm view opencode-ai version` print. With the pins set, and before the check of requirements 8
+   and 9, it runs the suite, `npm test`. When both pins already equal them, the step is skipped whole, suite and
    check included, and the agent says so
 8. The check runs the sandbox of the working copy under a Compose project of its own, named
    `ritenoar-agentrite-agent-release`, with an image and a home volume of that name. It does not touch the image,
@@ -175,14 +185,16 @@ The harness versions:
    * the image builds, and `claude --version` and `opencode --version` inside the sandbox print the two pins
    * with a home that holds no login, `claude` reaches its first-run screen and `opencode` its prompt
    * every host the egress proxy's log shows a harness to have contacted, admitted or refused, is on the kit's own
-     allowlist, `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal the file lists as known, which today is
-     `raw.githubusercontent.com`. A host admitted only because this repository's own `agent/compose.project.yml`
-     lists it is not on the kit's allowlist
+     allowlist, `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal the file lists as known. Those are
+     `raw.githubusercontent.com`, `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com`, and
+     the kit admits none of the four. A host admitted only because this repository's own
+     `agent/compose.project.yml` lists it is not on the kit's allowlist
    * the login command the README gives under "Logging in to a model provider", run as it is written there, prints
      an address and a code. It is stopped there
    * when the host has `~/.claude/statusline-command.sh`: Claude Code, brought to its prompt without a login, shows
      that script's line. When the host has no such file, the agent says this was not checked
-10. Anything in requirement 9 that does not hold is a finding. On a finding the agent restores `container/Dockerfile`
+10. Anything in requirement 9 that does not hold is a finding, and so is a test that fails in the suite of
+    requirement 7, after which the check is not run. On a finding the agent restores `container/Dockerfile`
     to what `master` holds, removes what the check created, tells the human what was seen, and stops. It fixes
     nothing: it adds no host to an allowlist and changes no README. The human then decides whether the release goes
     out with the pins as they were, or waits for a unit in `changes/` that deals with the finding. A release that
@@ -199,7 +211,8 @@ The human's reading, the commits and the version:
 
 12. The agent commits nothing before the human's word. With the notes drafted it stops and reports: the version it
     proposes, as major, minor or patch with the reason; every shipped change that belongs to no unit; and, for the
-    pins, the old and new versions and what the check showed and did not establish
+    pins, the old and new versions, that the suite passed with them, and what the check showed and did not
+    establish
 13. On the human's word, with the version the human picked, the agent makes sure the section's heading is that
     version, and then, on `master` and in this order: commits `container/Dockerfile` as `Harness pins for
     <version>` when the pins were bumped, and commits `CHANGELOG.md` as `Release notes for <version>`. Neither
@@ -276,7 +289,31 @@ The tests:
 * **The check is what the units that depend on a harness's behaviour need, and no more.** Start-up, hosts, the
   documented login and the status line are what 0015, 0023 and 0022 rest on. It is not a review of what a harness
   version does, and it sends no prompt to a model, which needs a login. A unit that comes to depend on something
-  else a harness does adds its check to `RELEASING.md`
+  else a harness does adds its check to `RELEASING.md`. The suite of requirement 7 goes beyond this, and is not
+  part of the check: it runs before it and for a reason of its own, which the next decision gives
+* **The suite runs with the bumped pins, before the check and before anything is committed. The human's decision,
+  made while the unit was implemented.** The suite reads the pins from `container/Dockerfile`, so a test can pass
+  with the pins of today and fail with those of the release. Nothing in the release ran it before `./deploy.sh`,
+  which runs it after `npm version` has committed and tagged, and that is late to learn it. It was found by
+  trying: with the pins set to the latest of that day, two of 0027's tests failed, one on the README's example
+  versions and one on the versions of the test fixture's fake host, each of which had come to equal a pin. Both are
+  corrected on this unit's branch, and the record has what was changed and on whose word. Asked whether step 2
+  runs `npm test` with the bumped pins, the human said: "YES". It runs before the check because it needs no Docker
+  and takes about a second, so a release that would fail on it stops before a build. A test that fails is handled
+  as a finding of the check is, by the same reasoning: the release does not repair a test, the pins go back, and
+  the human decides
+* **Three hosts refused once Claude Code is at its prompt are refusals the check knows, and none is admitted. The
+  human's decision, made while the unit was implemented.** The check, run once for real, saw the proxy refuse
+  `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com` in the run that brings Claude Code
+  to its prompt for the status line. They were refused with the pinned versions and with the latest alike, and
+  Claude Code showed its prompt and the status line without them. By requirement 9 as it stood, which knew
+  `raw.githubusercontent.com` alone, the check of every release would have ended in a finding. Three ways were
+  laid out: to list the three as known refusals, as 0015 did for `raw.githubusercontent.com`; to compare hosts
+  only in the run with an empty home, as 0015's own check did; or a unit that admits a host. The human took the
+  first: "list them as known refusals. None of these seem like something we should care about." So the kit's
+  allowlist is unchanged, and the hosts of both runs are still compared, so that a host a later version contacts
+  at its prompt is a finding. The four are named in the requirement and in the file by host and not by version: a
+  fifth is a finding whichever version brings it, and making it a known refusal is a decision, not the release's
 * **A clean bump needs no unit; a finding is one. The human agreed.** The kit's process sends every change through
   `changes/`, on a branch. A bump with a clean check is two lines whose description and diff say the same, decided
   by nobody: the latest version, checked. It is made as part of the release, on `master`, as a third commit beside
@@ -291,7 +328,8 @@ The tests:
   pair, since that pair is what would ship. The file says so and does not do it unasked
 * **When the pins are the latest already, the check is skipped too.** The pins were checked when they were set. A
   host can change what it serves without a new version, and that is not what a release guards against. Running the
-  check at every release whatever the pins is under "Beyond the request"
+  check at every release whatever the pins is under "Beyond the request". The suite of requirement 7 is skipped
+  with it: it is run there for the sake of new pins, and there are none
 * **"Latest" is npm's `latest` tag, as `npm view <package> version` prints it.** It is what a developer gets from
   an install today. A minimum age for a version is under "Beyond the request"
 * **Nothing is committed before the human's word, the bump included.** 0025 decided it for the notes. With one
@@ -335,7 +373,8 @@ The tests:
 
 * An OpenCode command, or a command for any other harness. The human excluded it
 * Bumping the pins in this unit. They move at the next release, which is the human's
-* Fixing what a check finds. A refused host, a renamed login label and a build that fails are each a new unit
+* Fixing what the suite or the check finds. A test that fails with the new pins, a refused host that is not a
+  known one, a renamed login label and a build that fails are each a new unit
 * Where a sandbox takes its harness versions from, which is 0027's
 * Any change to what ships: the package, `process.md`, the roles, the templates, the scripts, the sandbox
 * A check that sends a prompt to a model or completes a login

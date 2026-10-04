@@ -433,5 +433,40 @@ timestamp: 2026-10-04T18:20:11Z
     suite's run goes beyond, and a decision each for the two, as the human's
   Until then the plan and `RELEASING.md` go beyond the spec in these two things, on the human's words above.
   Nothing was run in Docker for this. Status stays `in-progress`
+- 2026-10-04T19:46:12Z [Claude Code, anthropic/claude-opus-5-5] took the planner role, in the main checkout on the
+  branch, at `a750e88`, and brought `spec.md` in line with the human's two decisions of 19:44:26Z above, which
+  `RELEASING.md` and the plan already hold. Each point was read against `RELEASING.md`, the plan's text of it and
+  this record before it was written. Nothing was redesigned, and nothing under "Beyond the request" was taken. What
+  changed in the spec:
+  * "What the human decided" has a third paragraph, with the two decisions in the human's words
+  * R7 gains a clause and no requirement is renumbered: with the pins set, and before the check of R8 and R9, the
+    release runs the suite, `npm test`. Where the step is skipped because the pins are the latest, the suite is
+    skipped with the check
+  * R9, on the hosts: the refusals the file lists as known are `raw.githubusercontent.com`, `downloads.claude.ai`,
+    `github.com` and `http-intake.logs.us5.datadoghq.com`, and the kit admits none of the four
+  * R10: a test that fails in the suite of R7 is a finding too, and the check is then not run
+  * R12: the report at the stop says that the suite passed with the new pins
+  * Decisions: "The check is what the units that depend on a harness's behaviour need, and no more" now says that
+    the suite goes beyond it and is not part of the check. Two decisions are added after it, each as the human's,
+    with the reason and with what was laid out and not taken: the suite's run, and the three known refusals. "When
+    the pins are the latest already" says that the suite is skipped too
+  * Non-goals: what is not fixed is what the suite or the check finds, and a refused host is a new unit when it is
+    not a known one
+  `plan.md` is not changed: its tasks cite R7, R9, R10 and R12 by number, and no number moved. `RELEASING.md`, the
+  tests and everything that ships are not changed.
+  Left as it is, undecided, for the human: how the check gets the wrapper to take the pins. R9 says only that the
+  sandbox prints the two pins, and the spec names no way.
+  Seen and not changed, for the human to say whether the spec should hold it:
+  * This branch changes three test files of 0027's: `tests/harness-versions.test.mjs` no longer reads `README.md`,
+    on the human's decision of 19:06:49Z, and `tests/wrapper-fixture.mjs` and `tests/agent-wrapper.test.mjs` have
+    versions a pin cannot reach, on the word of the dispatching session and not on a sentence of the human's. The
+    plan lists the files. No requirement of the spec covers either, and R17 names other tests. The new decision
+    on the suite mentions both and points here. A requirement for the fixture would rest on a decision the human
+    has not made, so none was written for either
+  * "Not established", under "What was found while planning", and "What is assumed about 0027" say what held when
+    the unit was planned: that no Docker was run, that the two latest versions were not known to pass the check,
+    and that 0027 was not approved. The trial and the merge of `master` have since moved each. They are under a
+    heading that dates them and this record has what was established, so they stand as written
+  Nothing was run in Docker for this revision. Status stays `in-progress`
 
 ## Amendments
