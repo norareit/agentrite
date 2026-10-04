@@ -126,7 +126,8 @@ services:
       # The developer's git identity, read-only, so commits from inside carry the same
       # name and email as on the host. Mounted as the system git config, the lowest
       # precedence, so the agent's own ~/.gitconfig stays writable. It is the only
-      # host dotfile mounted.
+      # host dotfile this file mounts. container/agent.sh adds the developer's Claude
+      # Code status line script when the host has one.
       - ${HOME}/.gitconfig:/etc/gitconfig:ro
 
 volumes:

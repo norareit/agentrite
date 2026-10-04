@@ -99,10 +99,10 @@ and what was seen instead, and leave the terminal check to the human, who has a 
   as JSON and deep-equals the object in the Approach (R3, R6)
 - [x] Add `container/claude-managed-settings.json` and the lines in `container/agent.sh` as the Approach gives
   them, with the comment and the header line. See the new tests pass and the suite with them (R1, R2, R3, R4, R5)
-- [ ] In `container/compose.yml`, change the last sentence of the comment above the `.gitconfig` mount to say that
+- [x] In `container/compose.yml`, change the last sentence of the comment above the `.gitconfig` mount to say that
   it is the only host dotfile this file mounts, and that the wrapper adds the developer's status line script when
   there is one. Change nothing else in the file (R8)
-- [ ] In `README.md`, add "### The status line" under "Running the sandbox", after "The home volume", saying
+- [x] In `README.md`, add "### The status line" under "Running the sandbox", after "The home volume", saying
   everything R8 lists, and that the settings file is the kit's `container/claude-managed-settings.json`. Remove
   nothing (R8)
 - [ ] Do the real run with `./agent-dev.sh` as the Approach describes, and record, with the Docker and Compose
@@ -123,5 +123,5 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 
 - [x] The `HOME` per run in the wrapper's tests
 - [x] The tests, the settings file and the wrapper
-- [ ] The Compose comment and the README
+- [x] The Compose comment and the README
 - [ ] The record of the real run

@@ -287,6 +287,26 @@ is not the repository's name but the Compose project's, the `name:` key in the p
 `agent/compose.project.yml`, and the volume Docker names after it. A mismatched home is a one-off state: once the
 volume is removed, the next start creates a new one owned by the agent.
 
+### The status line
+
+A developer's own Claude Code status line is shown in the sandbox. When `~/.claude/statusline-command.sh` is a file
+on the host as the sandbox starts, the wrapper mounts it read-only at `/etc/claude-code/statusline-command.sh`,
+together with the kit's `container/claude-managed-settings.json` at `/etc/claude-code/managed-settings.json`, whose
+one setting runs the script with `bash`. With no such file on the host, neither is mounted and the sandbox is as it
+was.
+
+* That script is the only file under the host's `~/.claude` the sandbox can read, and the agent cannot change it.
+  The credentials, the settings and the history stay on the host
+* The script runs in the sandbox, so the tools it calls must be in the image, which has `jq` and `git`
+* Managed settings stand above Claude Code's other settings, so while the host file exists it replaces a status line
+  set inside the sandbox, in the home volume's `~/.claude/settings.json`
+* A script under another name is reached with a symbolic link at `~/.claude/statusline-command.sh`
+* It is mounted at each start, so a start picks up the script and a change to it with no rebuild, and nothing is
+  written to the home volume
+* OpenCode has no such status line, and nothing is mounted for it
+* When the developer's organization delivers managed settings from the claude.ai console, Claude Code by default
+  uses those and ignores the file, so the status line is then whatever that policy gives
+
 ### Egress
 
 The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
