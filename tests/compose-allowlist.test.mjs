@@ -5,14 +5,15 @@ import { test } from 'node:test';
 const compose = readFileSync(new URL('../container/compose.yml', import.meta.url), 'utf-8');
 
 // The hosts of the agent service's `KIT_ALLOWLIST`, read by indentation since the kit has no YAML parser: the lines
-// after `      KIT_ALLOWLIST: |` that are indented deeper than the key, up to the first that is not, with comments
-// and blank lines dropped the way the entrypoint drops them.
+// after `      KIT_ALLOWLIST: |` up to the first that has text and is not indented deeper than the key, with
+// comments and blank lines dropped the way the entrypoint drops them.
 function kitAllowlistHosts(text) {
   const lines = text.split('\n');
   const start = lines.indexOf('      KIT_ALLOWLIST: |');
   assert.notEqual(start, -1, 'the agent service has a KIT_ALLOWLIST block');
   const hosts = [];
   for (const line of lines.slice(start + 1)) {
+    if (line.trim() === '') continue;
     if (!line.startsWith('        ')) break;
     const host = line.replace(/#.*/, '').trim();
     if (host) hosts.push(host);
@@ -37,4 +38,19 @@ test('the kit admits the hosts its harnesses need, besides those it already admi
     [],
     `KIT_ALLOWLIST holds ${hosts.join(', ')}`,
   );
+});
+
+// YAML keeps a block scalar going over an empty line, which carries no indentation, so the block ends only at a
+// line that has text and is indented no deeper than the key.
+test('an empty line inside the block does not end it', () => {
+  const text = [
+    '      KIT_ALLOWLIST: |',
+    '        # a comment',
+    '        one.example',
+    '',
+    '        two.example',
+    '      #',
+    '      MODEL_SERVER_PORT: "11434"',
+  ].join('\n');
+  assert.deepEqual(kitAllowlistHosts(text), ['one.example', 'two.example']);
 });
