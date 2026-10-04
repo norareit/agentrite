@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-04T00:51:53Z
+status: implemented
+timestamp: 2026-10-04T01:02:02Z
 ---
 
 # 0021 A sandbox built from the working copy
@@ -93,5 +93,12 @@ timestamp: 2026-10-04T00:51:53Z
   recover the original test-first execution order or temporary marker experiments. Not checked in this review:
   release home-volume contents, Docker Desktop for macOS, other engine versions, a cache-empty first build,
   a live run without a dev image, interactive harness startup, or destructive home-reset and cleanup commands
+- 2026-10-04T01:02:02Z [human] on the review coming back with no findings, asked for the unit to be marked
+  implemented. The human raised nothing against the implementer's reading of 00:49:51Z, that the request to
+  implement was the approval of the spec and the plan as written
+- 2026-10-04T01:02:02Z [Claude Code, anthropic/claude-opus-5-5] set the status to implemented: every task in `plan.md`
+  is ticked, and the review returned no findings, so there is none to decide. No file but this record changed
+  since `826982b`, which the review ran on, so the suites were not run again. `npm run check-changes` exited 0 on
+  the commit that holds this entry
 
 ## Amendments
