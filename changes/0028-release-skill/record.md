@@ -660,5 +660,12 @@ timestamp: 2026-10-04T18:20:11Z
   * A decision is added as the human's: the recovery recreates an annotated tag, because the push with
     `--follow-tags`, which this unit introduced, takes annotated tags only
   No requirement number moved, and the plan needed no change. Status stays `in-progress`
+- 2026-10-04T20:57:38Z [OpenCode, openai/gpt-6.1-sol] as reviewer, made a delta review of 0028 on commit
+  `b4a45d0345bf0a0dc431cc0135b1479e13bae4c1`, from the previous review's commit
+  `f94362efc5197029e45409a41d4da0a42a581014`. Checked S1's correction and returned no new findings. The complete
+  review is in `.reviews/0028-release-skill/2026-10-04T205641Z-opencode-openai-gpt-6.1-sol-delta.md`.
+  `npm test` passed with 230 tests, and `npm run check-changes` passed on the reviewed tree. Could not verify actual
+  `/release` invocation or the complete real release, deferred by the human, or recovery on a signing-configured
+  host; tag recovery and a dry-run push were checked in a scratch clone.
 
 ## Amendments
