@@ -48,7 +48,7 @@ release has both harnesses. So the check gives the wrapper a `claude` and an `op
 `PATH`, that report no version. Nothing else on the host is changed for it, and no tracked file:
 
 ```sh
-mkdir /tmp/agentrite-release-no-harness
+mkdir -p /tmp/agentrite-release-no-harness
 printf '#!/bin/sh\nexit 1\n' > /tmp/agentrite-release-no-harness/claude
 cp /tmp/agentrite-release-no-harness/claude /tmp/agentrite-release-no-harness/opencode
 chmod +x /tmp/agentrite-release-no-harness/claude /tmp/agentrite-release-no-harness/opencode
@@ -71,12 +71,16 @@ docker network rm ritenoar-agentrite-agent-release_default
 docker image rm ritenoar-agentrite-agent-release
 ```
 
-After the last run remove `/tmp/agentrite-release-no-harness` as well.
+Before the first run there may be nothing of that name. Each of the three then fails and says so, which is as it
+should be. After the last run remove `/tmp/agentrite-release-no-harness` as well.
 
 Each run is a new container with a new proxy log, so a harness is started and the log is read in the same run. A
-harness wants a terminal: start it as `timeout 30 script -qec <command> <logfile>`, with the log file under `/tmp`,
-and read its screen from the capture, with the escape sequences stripped. Log in to nothing, and enter a code
-nowhere.
+harness wants a terminal, and one with a size: start it as
+`timeout 30 script -qec 'stty rows 40 cols 120; <command>' <logfile>`, with the log file under `/tmp`, and read its
+screen from the capture, with the escape sequences stripped. Without the `stty`, the terminal `script` makes has no
+rows and no columns when the run itself has no terminal, and OpenCode then draws nothing that can be read. A
+harness places its text by moving the cursor, so in a stripped capture words run together or stand one to a line.
+Log in to nothing, and enter a code nowhere.
 
 The first run, in a home that holds nothing, in this order:
 
@@ -105,7 +109,9 @@ What has to hold:
 * Every host on the proxy's lines after start-up, allowed or refused, is on the kit's own allowlist,
   `KIT_ALLOWLIST` in `container/compose.yml`, or is a refusal known here: `raw.githubusercontent.com`, which the
   kit refuses by decision (0015). A host that was allowed because this repository's own `agent/compose.project.yml`
-  lists it, such as `models.dev`, is not on the kit's allowlist: a project that does not list it refuses it
+  lists it, such as `models.dev`, is not on the kit's allowlist: a project that does not list it refuses it. A
+  line that names no host, `refused: the connection closed before its ClientHello was complete`, has nothing to
+  compare: say how many there were. OpenCode's start leaves many of them
 * The login prints an address and a code
 * In the second run, Claude Code shows the line of the host's script. With no such file on the host this is not
   checked: say so

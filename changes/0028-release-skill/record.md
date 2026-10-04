@@ -215,5 +215,78 @@ timestamp: 2026-10-04T18:20:11Z
   with 232 tests, 232 passing. The script itself was not run: the suite runs a copy of it against commands of its
   own. Also corrected in this record: the time of the entry on 0027, which was written ahead of the clock, is now
   that of its commit, and a line that was 123 characters long is wrapped
+- 2026-10-04T18:38:53Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the check of step 2 by hand, once, on
+  the host, from this checkout on the tree of `b27c3dc`. Linux, Docker Engine 28.4.0, node 24.14.1. The host has
+  Claude Code 2.1.289 and OpenCode 1.18.34, and `npm view` printed the same two as the latest, so on this day the
+  host's versions and the bumped pins are equal. The branch was this unit's and not `master`, so step 1 would
+  have stopped: the trial is of step 2 alone. The two pins were set in the working tree to 2.1.289 and 1.18.34,
+  nothing was committed, and `container/Dockerfile` was restored with `git checkout` afterwards.
+  The commands were the file's, with two additions of the trial's own: each run's commands were a script in the
+  session's scratch directory, mounted with the wrapper's `--mount <directory>:ro` and run as
+  `bash /mnt/<directory>/<script>`, and a second `--mount` took the raw captures and the proxy's log out for
+  reading. Standard input was `/dev/null`. What each line of "What has to hold" showed:
+  * The image builds from the pins. The wrapper printed `agent.sh: 'claude --version' printed no version, so the
+    sandbox gets the kit's Claude Code 2.1.289.` and the same for OpenCode with 1.18.34, and in the sandbox
+    `claude --version` printed `2.1.289 (Claude Code)` and `opencode --version` printed `1.18.34`. Since the
+    host has those versions too, the printed versions alone would not have shown where they came from. The
+    wrapper's two lines do, and the runs with the pins as they are on `master`, below, printed 2.1.266 and 1.18.30
+    on the same host
+  * `claude`, in a home that held `.bash_logout`, `.bashrc` and `.profile` only, reached its first-run screen:
+    "Welcome to Claude Code v2.1.289", "Let's get started." and the choice of a text style
+  * `opencode` reached its prompt, "Ask anything", with `1.18.34` in the corner, in the run that gave the terminal
+    a size. In the first run, with the command as the plan had it, its capture held terminal queries and nothing
+    that could be read
+  * The hosts of the first run, after the 12 lines of start-up: `claude` gave 5 lines, `api.anthropic.com` and
+    `platform.claude.com` allowed and `raw.githubusercontent.com` refused. `opencode` gave 119 lines:
+    `models.opencode.ai` once and `registry.npmjs.org` 30 times, allowed, and 88 lines `refused: the connection
+    closed before its ClientHello was complete`, which name no host. The login gave 4: `models.opencode.ai` and
+    `auth.openai.com` allowed, and two of the lines that name no host. Every host named is on `KIT_ALLOWLIST` or
+    is the known refusal. `models.dev` and `api.openai.com`, which this repository's own list admits, were
+    contacted by neither harness, only by the entrypoint's start-up check
+  * The login command, as the README gives it, printed "Go to: https://auth.openai.com/codex/device" and "Enter
+    code:" with a code, and waited. It was ended by `timeout` after 45 seconds. The code was entered nowhere
+  * The second run: with the made-up key and the seeded `/home/agent/.claude.json`, Claude Code came to its
+    prompt, said "Remote managed settings failed to load (authentication rejected (401))", and showed
+    `/work (feature-0028-release-skill) | Opus 5.5`, which is the line the host's script prints for that directory
+    and model. No login was made. The home held `backups`, `plugins` and `sessions` under `.claude` afterwards
+  * The hosts of the second run are a finding by the file's rule: besides `api.anthropic.com`, allowed, and
+    `raw.githubusercontent.com`, refused, the proxy refused `downloads.claude.ai` twice, `github.com` once and
+    `http-intake.logs.us5.datadoghq.com` twice. None is on `KIT_ALLOWLIST` and none is a refusal the file knows.
+    Claude Code showed its prompt and its status line all the same
+  Both runs were then repeated with the pins as `master` has them, 2.1.266 and 1.18.30, under the same name, to see
+  what is the new versions' and what is not. The same three hosts were refused in the second run, `github.com`
+  once and the other two twice, and OpenCode's start left 90 of the lines that name no host. So neither is new
+  with 2.1.289 or 1.18.34: the second run has a finding with the versions the kit pins today, and by requirements
+  9 and 10 as they stand the check of every release would end in one. That is told to the human and not fixed
+  here. What to do about it is the human's and the planner's: name the three as refusals the file knows, as 0015
+  did for `raw.githubusercontent.com`; or compare hosts in the first run only, as 0015's own check did; or a unit
+  that admits a host. `RELEASING.md` keeps the rule the spec gives.
+  A second thing the trial found, which no requirement covers: with the pins at 2.1.289 and 1.18.34,
+  `node --test tests/harness-versions.test.mjs` failed in "no file that ships holds a pinned version but the
+  Dockerfile", naming `README.md`. The README's examples under "The harness versions", which 0027 wrote, use
+  2.1.288, 2.1.289, 1.18.33 and 1.18.34, and two of those are today's latest. The check of step 2 does not run
+  the suite, so a release made today would commit the pins, and `./deploy.sh` would stop at its own `npm test`,
+  after `npm version` made its commit and its tag, and before it deploys or uploads anything. Not fixed here: the
+  README's examples are 0027's text, and a step of the check that runs the suite is a requirement the spec does
+  not have. For the human: whether step 2 runs `npm test` with the bumped pins, and whether the README's examples
+  move to versions a pin cannot reach.
+  Corrected in `RELEASING.md` and in the plan's text alike, for what did not work as written or was not said:
+  * A harness is started as `script -qec 'stty rows 40 cols 120; <command>'`. Without a size OpenCode drew
+    nothing readable, as above. Claude Code's first-run screen was readable either way
+  * `mkdir -p` for the directory of the two commands, so that one left by a check that was broken off is no error
+  * That the three removals fail before the first run when there is nothing to remove. Each exited 1 here
+  * That a stripped capture has words run together or one to a line, which is how both harnesses' screens came out
+  * That a proxy line naming no host has nothing to compare, and that their number is reported. Whether some
+    ninety connections that end before they name a host are something to look into is the human's to say
+  Not established by the trial: that the check works from a session whose Bash has no `/dev/null` standard input
+  or cannot mount a directory; the check on a host without `~/.claude/statusline-command.sh`; a build that fails;
+  and the path on a finding as an agent would walk it, since the pins were restored by hand at the end.
+  Afterwards: the volume `ritenoar-agentrite-agent-release_agent-home`, the network
+  `ritenoar-agentrite-agent-release_default`, the image `ritenoar-agentrite-agent-release` and
+  `/tmp/agentrite-release-no-harness` are removed. The lists of all images, volumes, networks and containers,
+  taken before the trial and after it, are the same, compared with `diff` by name and id.
+  `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`.
+  The build cache keeps the layers the builds made, which `docker builder prune` removes. Nothing was logged in
+  to, and `git status --short` shows no change to a tracked file
 
 ## Amendments
