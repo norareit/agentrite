@@ -1,7 +1,7 @@
 ---
 kind: bug
 status: in-progress
-timestamp: 2026-10-03T23:45:26Z
+timestamp: 2026-10-04T00:01:00Z
 ---
 
 # 0015 The sandbox refuses two hosts its harnesses need
@@ -108,5 +108,16 @@ timestamp: 2026-10-03T23:45:26Z
   `.reviews/0015-harnesses-fail-to-start/2026-10-03T235734Z-full-e4e3cbf-opencode.md`.
   Could not verify the human login-and-prompt task, behavior with a saved login, Docker Desktop on macOS, a rebuilt
   image, or the chronology of the implementer's original uncommitted regression-test run
+- 2026-10-04T00:01:00Z [human] asked the implementer to check the review's remarks
+- 2026-10-04T00:01:00Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the review. It returned one
+  finding, C1, which does not block. C1 is right and is applied in `43f56a6`: the helper in
+  `tests/compose-allowlist.test.mjs` now skips a whitespace-only line before it looks for the end of the block, so
+  an empty line among the hosts of `KIT_ALLOWLIST` no longer cuts the list short. A second test holds that, on a
+  block written in the test itself. It failed before the correction, returning the one host above the empty line,
+  and passes after it. No file outside the test changed. On `43f56a6`, `npm test` reported 180 passing and 0 failing,
+  and no line of the test is over 120 characters. `npm run check-changes` exited 0 on the commit that holds this
+  entry. The sandbox was not run again, since nothing it uses changed. The human has not said whether C1 is
+  accepted; it was applied on the implementer's agreement with it. The plan's human task is still open, so the
+  status stays in-progress
 
 ## Amendments
