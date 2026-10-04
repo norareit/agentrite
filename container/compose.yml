@@ -82,6 +82,10 @@ services:
         platform.claude.com
         # OpenCode fetches its model catalog from it
         models.opencode.ai
+        # OpenCode's login with a ChatGPT account, and every refresh of its token
+        auth.openai.com
+        # OpenCode sends the prompts of a ChatGPT login here
+        chatgpt.com
         # npm registry: npm ci inside the container
         registry.npmjs.org
         # AgentRite's release tarballs, which npm ci installs by URL

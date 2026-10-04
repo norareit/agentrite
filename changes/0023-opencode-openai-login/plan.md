@@ -28,10 +28,10 @@ the dev home volume until the human removes it with the command the README gives
 
 ## Tasks
 
-- [ ] In `tests/compose-allowlist.test.mjs`, add `auth.openai.com` and `chatgpt.com` to the hosts the first test
+- [x] In `tests/compose-allowlist.test.mjs`, add `auth.openai.com` and `chatgpt.com` to the hosts the first test
       holds `KIT_ALLOWLIST` to include, and say in its comment what each is for. Run it and see it fail for want of
       the two (R4)
-- [ ] In `container/compose.yml`, add to `KIT_ALLOWLIST`: `auth.openai.com`, under a comment that OpenCode's login
+- [x] In `container/compose.yml`, add to `KIT_ALLOWLIST`: `auth.openai.com`, under a comment that OpenCode's login
       with a ChatGPT account, and every refresh of its token, goes there, and `chatgpt.com`, under a comment that
       OpenCode sends the prompts of a ChatGPT login there. See the test pass (R1, R2, R3, R7)
 - [ ] In `README.md`, add the two hosts to the two sentences that list what the kit admits itself, removing nothing.
@@ -72,6 +72,6 @@ the dev home volume until the human removes it with the command the README gives
 
 ## Commit Points
 
-- [ ] The regression test and the two hosts
+- [x] The regression test and the two hosts
 - [ ] The lists of the kit's hosts and the README section
 - [ ] The record of the implementer's run, and later of the human's check

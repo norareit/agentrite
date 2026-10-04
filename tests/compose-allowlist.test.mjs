@@ -24,11 +24,15 @@ function kitAllowlistHosts(text) {
 // The egress proxy admits only what is on a list, and what the pinned harnesses contact is the kit's to list, so
 // that a project gets a host by moving to a release. Without platform.claude.com Claude Code does not start in a
 // sandbox that holds no saved login, and without models.opencode.ai OpenCode cannot fetch its model catalog.
+// OpenCode logged in with a ChatGPT account signs in and refreshes its token at auth.openai.com and sends its
+// prompts to chatgpt.com.
 test('the kit admits the hosts its harnesses need, besides those it already admitted', () => {
   const hosts = kitAllowlistHosts(compose);
   const needed = [
     'platform.claude.com',
     'models.opencode.ai',
+    'auth.openai.com',
+    'chatgpt.com',
     'api.anthropic.com',
     'registry.npmjs.org',
     'agentrite.ritenoar.com',

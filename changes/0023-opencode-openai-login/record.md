@@ -1,7 +1,7 @@
 ---
 kind: bug
 status: in-progress
-timestamp: 2026-10-04T01:31:30Z
+timestamp: 2026-10-04T01:30:02Z
 ---
 
 # 0023 OpenCode cannot log in to OpenAI in the sandbox
@@ -76,7 +76,7 @@ timestamp: 2026-10-04T01:31:30Z
   The first planner admitted the two hosts through the project's allowlist. The entrypoint joins both lists into
   one, by the README, so the kit's list is expected to behave the same, and the implementer's run is where that is
   seen. Status left at `draft` for the human's approval
-- 2026-10-04T01:31:30Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the same session, on
+- 2026-10-04T01:30:02Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the same session, on
   the host, on Linux. The human's words were an instruction to make the change, "Add it to the kits allowlist", and
   the human let the same reading stand for 0021 and 0022, so the implementer took them as the approval of the
   rewritten spec and plan and moved the status through approved to in-progress. The human had not read the
