@@ -1,7 +1,7 @@
 ---
 kind: task
-status: in-progress
-timestamp: 2026-10-04T14:19:52Z
+status: implemented
+timestamp: 2026-10-04T15:18:03Z
 ---
 
 # 0026 Document running the sandbox
@@ -132,5 +132,10 @@ Not in this task:
   No fresh build/rebuild, live repeated mounts, root execution, alternate checkout, merged-master test or release
   was performed. No new live sandbox check was run. `npm test` and `npm run check-changes` were rerun on reviewed HEAD;
   results and the delta-specific checks are in the report
+- 2026-10-04T15:18:03Z [human] said that the second review found all in order, and asked for the unit to be marked
+  implemented
+- 2026-10-04T15:18:03Z [Claude Code, anthropic/claude-opus-5-5] set the status to `implemented`. The second review, a
+  delta review at `6cea5b8`, found C1 corrected and returned no new finding, so no blocking finding is open, and the
+  unit has no plan. The limitations both reviews list stay as they are recorded above
 
 ## Amendments
