@@ -49,7 +49,7 @@ function setUp(t) {
 // test exits 0 all the same, so the shim asks for the build itself.
 test("the shim runs the checkout's own wrapper, and builds before it runs although the image exists", (t) => {
   const { root, run, dockerCalls, prefix } = setUp(t);
-  const result = run([]);
+  const result = run(['--in-place']);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work agent`]);
 });
@@ -57,7 +57,7 @@ test("the shim runs the checkout's own wrapper, and builds before it runs althou
 // The release sandbox's image and home volume are safe only while the name is the shim's to set.
 test('the shim sets the dev name over one the caller had set', (t) => {
   const { root, run, dockerCalls, prefix } = setUp(t);
-  const result = run([], { AGENT_PROJECT_NAME: 'ritenoar-agentrite-agent' });
+  const result = run(['--in-place'], { AGENT_PROJECT_NAME: 'ritenoar-agentrite-agent' });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work agent`]);
 });

@@ -124,12 +124,12 @@ changes, so no rebuild is needed for the change itself.
       there, in the directory the call mounts at `/work`, and exits with its status
     - `fakeHost` returns the paths of the two files
   The configuration it answers with has `name: "project-agent"` already
-- [ ] In `tests/agent-wrapper.test.mjs`, write the tests of the required choice and see them fail (R1, R2, R17):
+- [x] In `tests/agent-wrapper.test.mjs`, write the tests of the required choice and see them fail (R1, R2, R17):
     - with the project root alone, with `--rebuild` alone and with `--mount DIR` alone, on a host whose image is
       missing, the wrapper exits non-zero, names the three forms, and `dockerCalls()` and `npmCalls()` are empty
     - `--in-place echo hi` makes exactly the Docker calls today's `echo hi` makes
     - `--workdir DIR echo hi` mounts `DIR` at `/work`, and the home holds no `.local/state`
-- [ ] Add `--in-place` to every run of the existing tests in `tests/agent-wrapper.test.mjs` and
+- [x] Add `--in-place` to every run of the existing tests in `tests/agent-wrapper.test.mjs` and
   `tests/agent-dev.test.mjs` that gets past the wrapper's first three refusals, which are the missing project root,
   the missing project Compose file and the kit outside the root. That is every run that expects a container, with
   or without a command, and the runs that expect a refusal by Compose, by the build or by the registry. The run of
@@ -245,7 +245,7 @@ changes, so no rebuild is needed for the change itself.
 ## Commit Points
 
 - [x] `feature-0029` the extended fixture, with no behavior changed
-- [ ] `feature-0029` the tests of the required choice, `--in-place` and the updated runs
+- [x] `feature-0029` the tests of the required choice, `--in-place` and the updated runs
 - [ ] `feature-0029` the tests of resolving and starting, `resolve_unit_branch`, `refuse_unlanded`, `prepare_clone`
   and the named run
 - [ ] `feature-0029` the tests of landing, `land_clone`, the header comment and the comments of

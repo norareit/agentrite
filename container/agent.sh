@@ -69,6 +69,8 @@ export AGENTRITE_CONTAINER="${here#"$root"/}"
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 
 workdir="$root"
+in_place=0
+workdir_given=0
 rebuild=0
 mounts=()
 
@@ -78,9 +80,15 @@ while [ $# -gt 0 ]; do
       rebuild=1
       shift
       ;;
+    --in-place)
+      workdir="$root"
+      in_place=1
+      shift
+      ;;
     --workdir)
       [ $# -ge 2 ] || { echo "agent.sh: --workdir needs a directory" >&2; exit 2; }
       workdir="$(cd "$2" && pwd)"
+      workdir_given=1
       shift 2
       ;;
     --mount)
@@ -103,6 +111,17 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+# What to mount at /work has no default. Without --in-place and --workdir the first
+# argument left is the unit, and with nothing left there is nothing to run on. Refused
+# here, before the host's harnesses, Docker or npm are asked anything.
+if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
+  echo "agent.sh: say what to mount at /work. One of:" >&2
+  echo "  agent.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch" >&2
+  echo "  agent.sh --in-place [COMMAND...]     the project root as it is" >&2
+  echo "  agent.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
+  exit 2
+fi
 
 # The developer's own Claude Code status line, read-only: the script from the host, and
 # the kit's managed settings file, whose one setting runs it. Both or neither, and only
