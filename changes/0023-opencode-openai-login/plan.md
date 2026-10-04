@@ -34,11 +34,11 @@ the dev home volume until the human removes it with the command the README gives
 - [x] In `container/compose.yml`, add to `KIT_ALLOWLIST`: `auth.openai.com`, under a comment that OpenCode's login
       with a ChatGPT account, and every refresh of its token, goes there, and `chatgpt.com`, under a comment that
       OpenCode sends the prompts of a ChatGPT login there. See the test pass (R1, R2, R3, R7)
-- [ ] In `README.md`, add the two hosts to the two sentences that list what the kit admits itself, removing nothing.
+- [x] In `README.md`, add the two hosts to the two sentences that list what the kit admits itself, removing nothing.
       In `templates/project/agent/compose.project.yml`, add them to the comment that lists what the kit admits
       itself, and make the comment above `ALLOWLIST` in `agent/compose.project.yml` list the same hosts as the
       template's. Run the `init` tests, which hold the lines of the generated file to 120 characters (R6)
-- [ ] In `README.md`, add the section "Logging in to a model provider" after "The status line", removing nothing. It
+- [x] In `README.md`, add the section "Logging in to a model provider" after "The status line", removing nothing. It
       says, in this order: a login is done once per home volume, from the sandbox's shell; a login that sends the
       browser to a port on `localhost` cannot complete, because the browser is on the host, the sandbox publishes no
       port and its firewall drops inbound connections, and that this is deliberate; for OpenAI in OpenCode with a
@@ -73,5 +73,5 @@ the dev home volume until the human removes it with the command the README gives
 ## Commit Points
 
 - [x] The regression test and the two hosts
-- [ ] The lists of the kit's hosts and the README section
+- [x] The lists of the kit's hosts and the README section
 - [ ] The record of the implementer's run, and later of the human's check

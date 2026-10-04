@@ -87,9 +87,10 @@ updating the kit delivers it. The files a project is expected to edit are these:
   `package.json`, the `PLAYWRIGHT_VERSION` build argument when the project has Playwright, the memory and CPU limits,
   and the project's `ALLOWLIST`.
   The allowlist lists only what the project needs beyond what the kit admits itself, which is the Anthropic API,
-  `platform.claude.com`, `models.opencode.ai`, the npm registry and `agentrite.ritenoar.com`; the kit's hosts need no
-  listing. Add the API host of any other model provider the project's agents use, and whatever its tools and tests
-  reach
+  `platform.claude.com`, `models.opencode.ai`, `auth.openai.com`, `chatgpt.com`, the npm registry and
+  `agentrite.ritenoar.com`; the kit's hosts need no listing. Add the API host of any other model provider the
+  project's agents use, and whatever its tools and tests reach. A provider's login may need further hosts, as
+  "Logging in to a model provider" below describes
 * The role wrappers, to pin a model per role
 
 `CLAUDE.md` is best left as written.
@@ -307,6 +308,29 @@ was.
 * When the developer's organization delivers managed settings from the claude.ai console, Claude Code by default
   uses those and ignores the file, so the status line is then whatever that policy gives
 
+### Logging in to a model provider
+
+A harness is logged in to its model provider once per home volume, from the sandbox's shell, and the login is kept
+there.
+
+A login that sends the browser back to a port on `localhost` cannot complete in the sandbox. The browser is on the
+host and the harness listens inside the container, which publishes no port and whose firewall drops every inbound
+connection. That is deliberate: nothing reaches into the sandbox from outside. Use a login that needs no callback.
+
+For OpenAI in OpenCode with a ChatGPT account, that is:
+
+```
+opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"
+```
+
+It prints an address and a code to enter there, in any browser, and completes on its own once the code is accepted.
+The kit admits the two hosts this login needs itself, `auth.openai.com` to sign in and `chatgpt.com` for the prompts,
+so the project adds nothing for it. A login with an API key needs `api.openai.com` in the project's `ALLOWLIST`
+instead.
+
+When a login or a prompt fails for a host that is not on the allowlist, the refusal is in the proxy's log:
+`grep 'not allowlisted' /run/egress-proxy.log`.
+
 ### Egress
 
 The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
@@ -316,7 +340,8 @@ or address.
 The allowlist is two lists together. `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit
 itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, `platform.claude.com`, which
 Claude Code contacts at start-up when it holds no saved login, `models.opencode.ai`, from which OpenCode fetches its
-model catalog, the npm registry and `agentrite.ritenoar.com`. `ALLOWLIST`, in the project's
+model catalog, `auth.openai.com` and `chatgpt.com`, which OpenCode logged in with a ChatGPT account uses to sign in
+and to send its prompts, the npm registry and `agentrite.ritenoar.com`. `ALLOWLIST`, in the project's
 `agent/compose.project.yml`, holds what the project needs besides, and may be empty or left out. Both are checked the
 same way, and a host in both is admitted once. A kit release that needs another host adds it to `KIT_ALLOWLIST`, with
 no change to any project.
