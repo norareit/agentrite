@@ -59,14 +59,12 @@ test("the base Compose file gives both build arguments from the wrapper's own va
   }
 });
 
-test('no file that ships holds a pinned version but the Dockerfile', () => {
+// The README ships too and is not searched: every version in it is an example, and an example that a later pin
+// happens to equal is no second place to bump.
+test('no file under container/ or templates/ holds a pinned version but the Dockerfile', () => {
   const pinned = harnesses.map(({ argument }) => pins(argument)[0]);
-  const shipped = [
-    ...filesUnder(join(repository, 'container')),
-    ...filesUnder(join(repository, 'templates')),
-    join(repository, 'README.md'),
-  ];
-  const holding = shipped
+  const searched = [...filesUnder(join(repository, 'container')), ...filesUnder(join(repository, 'templates'))];
+  const holding = searched
     .filter((file) => file !== join(repository, 'container', 'Dockerfile'))
     .filter((file) => pinned.some((pin) => readFileSync(file, 'utf-8').includes(pin)))
     .map((file) => relative(repository, file));

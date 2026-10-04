@@ -123,6 +123,7 @@ for (const [what, changelog] of [
     const { status, stderr, calls } = release(t, { changelog });
     assert.equal(status, 1);
     assert.match(stderr, /CHANGELOG\.md has no section headed "## 1\.2\.3"/);
+    assert.match(stderr, /RELEASING\.md/);
     assert.deepEqual(
       calls.filter((call) => /^(aws|npm|npx)\b/.test(call)),
       [],

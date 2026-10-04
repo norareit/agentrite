@@ -293,4 +293,20 @@ timestamp: 2026-10-04T18:15:36Z
   The change check compares the current branch with `master`, so its two runs for the closing commits, made on
   `master` itself, compared `master` with `master` and show nothing about the unit. Its last run that did was the
   second reviewer's, on the branch. The suite's runs stand: 224 tests, 224 passing, on `a6e32ab` and on `6578aba`
-
+- 2026-10-04T19:06:49Z [Claude Code, anthropic/claude-opus-5-5] as implementer of 0028, on the human's decision recorded
+  there: `tests/harness-versions.test.mjs` no longer reads `README.md` in its test of where a pin is written. The
+  log above and the plan say that the test reads the README "as well", which the implementer of this unit added of
+  its own accord. The README's examples under "The harness versions" use 2.1.288, 2.1.289, 1.18.33 and 1.18.34,
+  and the test failed, naming `README.md`, once the pins were set to 2.1.289 and 1.18.34, which a release does.
+  The human's words: "cant it just ignore the readme?", and on dropping only the README from the search: "Okay no
+  readme it is". The test still searches `container/` and `templates/`, and is now named "no file under
+  container/ or templates/ holds a pinned version but the Dockerfile". Requirement 4 says the pin is written
+  "nowhere else in what ships", and the README ships: nothing in the suite holds that for the README any more,
+  which the human accepts. The README's examples are unchanged. The change is made on the branch of 0028
+- 2026-10-04T19:08:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer of 0028: the suite's fake host, in
+  `tests/wrapper-fixture.mjs`, now prints `99.1.0 (Claude Code)` and `98.2.0`, where the plan names
+  `2.1.289 (Claude Code)` and `1.18.34`. With the pins set to those two, which a release does, "the wrapper
+  rebuilds for the kit's pins when the host has neither harness, and names the kit" failed: it tells the host's
+  version from the pin by its value. In `tests/agent-wrapper.test.mjs` the labels of an image built earlier,
+  written as 2.1.266 and 1.18.30, are 0.1.0 and 0.2.0, named once. Nothing that ships changed. The decision is
+  the dispatching session's of 0028 and not a sentence of the human's, and is in that unit's record

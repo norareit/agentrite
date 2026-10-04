@@ -1,0 +1,699 @@
+---
+kind: feature
+status: implemented
+timestamp: 2026-10-04T21:01:04Z
+---
+
+# 0028 A release skill
+
+## Log
+
+- 2026-10-04T13:24:41Z [human] while deciding, for unit 0027, that the harness versions should no longer be fixed by
+  the kit alone, said: "We can still add the bumps in new version everytime (this should probably be added to
+  'creating the release' along with the release notes. AND come to think of it: maybe that should all be a
+  slash-command/skill here (the creating the release). Then it can be simplified in the readme to: use that skill!"
+  The implementer proposed building it the way the roles are built, the steps in one harness-neutral file and a thin
+  wrapper per harness, and the human agreed with one correction: "I dont necessarily need the opencode command. A
+  claude code skill is enough for the release part. But splitting it the way we did with the roles is a nice pattern
+  anyway. Even without the opencode command!" The spec records four things as the human's: a Claude Code skill and
+  no OpenCode command; the split into a neutral file and a thin pointer; the bump of the pinned harness versions as
+  a step of the release; and the README's "Releasing" simplified to pointing at the skill. The time of this entry is
+  when the request reached the planner, not when each thing was said
+- 2026-10-04T13:24:41Z [Claude Code, anthropic/claude-opus-5-5] took the planner role, in a worktree of this
+  repository, and wrote `spec.md` and `plan.md` on the branch `feature-0028-release-skill`, made from `master` at
+  `aa4b8b3`, which holds 0025. A feature, because it has decisions. The number was given by the session that
+  dispatched the planner: 0026 is on a branch that is not on `master`, and 0027 is being planned at the same time.
+  Planned under the process of release 2.3.0, read from the main checkout's `node_modules`, since a worktree has
+  none. What the spec rests on, on Linux with npm 11.11.0, node 24.14.1 and Claude Code 2.1.289 on the host:
+  * `container/Dockerfile` pins Claude Code 2.1.266 and OpenCode 1.18.30, and no file outside `changes/` names
+    either version. `npm view @anthropic-ai/claude-code version` printed 2.1.289 and `npm view opencode-ai
+    version` printed 1.18.34
+  * The Claude Code documentation on skills, `https://code.claude.com/docs/en/skills`, fetched once, through a
+    fetch that answers questions about the page and does not return it whole. From it: where a project skill
+    lives, its frontmatter, how it is started, and that a file in `.claude/commands/` makes the same command and a
+    skill is recommended for new work
+  * `npm pack --dry-run` lists 24 files, none under `.claude/`
+  * `README.md`, `AGENTS.md`, `deploy.sh`, `container/agent.sh`, `agent-dev.sh`, `agent/compose.project.yml`, the
+    wrappers under `.claude/agents/` and `.opencode/agents/`, and the tests of the wrappers and of `deploy.sh`,
+    read. Every place that names "Releasing" or "Release notes" outside `changes/` is in the README, `AGENTS.md`
+    and `deploy.sh`
+  * The records and plans of 0015, 0022 and 0023, for how each checked a harness in a sandbox, and the documents of
+    0025
+  * `docker volume ls` and `docker image ls`, read only: the dev sandbox's image and home volume exist on this host
+
+  Where the spec keeps the proposal and where it changes it is in its decisions. The changes: the check runs under
+  a Compose project of its own and not with `./agent-dev.sh`, whose home volume may hold a login; the check reads
+  the hosts a harness reached and not only the refusals, because this repository's own allowlist admits
+  `models.dev` and `api.openai.com`; and the agent runs `npm version` on the human's word, where the proposal and
+  0025's rule left it to the human. Decided by the planner where nothing was discussed: the file is `RELEASING.md`
+  at the root; the skill is `release` and cannot be started by the model; a clean bump is a commit of the release
+  on `master` and a finding is a new unit; nothing is committed before the human's word; the check is skipped when
+  the pins are the latest; the check is described and not scripted.
+
+  Not established: that `/release` starts the skill, which is from the documentation and was not tried, the
+  session's guard having refused a trial in a scratch directory; that the check runs as written, since no Docker
+  was run while planning; that the two latest versions pass it; what `npm version` does with untracked files; and
+  whether `./deploy.sh` could run from an agent's shell. The plan has a task for each of the first two.
+
+  For the human to decide, besides approval: the four texts in the plan's approach; whether the steps for the
+  notes may move out of `AGENTS.md`, where 0025 put them, into `RELEASING.md`; whether a clean bump may be a third
+  commit on `master` with no unit; whether the agent runs `npm version`; whether the skill should run
+  `./deploy.sh` as well; and what under "Beyond the request" is taken. Status left at `draft` for the human's
+  approval
+- 2026-10-04T14:01:08Z [human] having heard the planner's report of the first draft, and before reading the spec and
+  the plan, gave these remarks and decisions, and said the documents are read and approved after they are handled:
+  * Against a requirement that holds the package to 24 files: "Im not sure if checking a hard 'only 24 files' is
+    a good idea. This will easily go beyond 24 soon."
+  * The notes steps move to `RELEASING.md`, with a small pointer in `AGENTS.md`: yes
+  * A clean bump of the pins as a commit on `master` with no unit: yes
+  * The agent running `npm version`: "NO. I still want to do the npm version myself. It should simply tell me to
+    do."
+  * The skill running `./deploy.sh`: "same: I will do the deploy myself."
+  * The names: "seems fine to me"
+  * Pushing: "pushing master and the tag should be what the skil lsays at the end. Basically: run npm version
+    [with the correct type], run ./deploy.sh and push master with tags."
+- 2026-10-04T14:01:08Z [Claude Code, anthropic/claude-opus-5-5] took the planner role, in the session that dispatched
+  the first planner, and changed `spec.md` and `plan.md` for those remarks, on the branch in the main checkout,
+  the first planner's worktree being removed. What changed:
+  * R3, the plan's third task and its verification compare the package's list of files with `master`'s and name
+    no number. The decision says why
+  * R13 ends at the agent's two commits. R14 has the agent run neither `npm version` nor `./deploy.sh`, push
+    nothing, and end by telling the human three commands in order: `npm version` with the part that gives the
+    picked version, `./deploy.sh`, and the push of `master` with the release's tag. The requirement that the agent
+    checks `package.json` afterwards is gone with the command: a wrong part gives a version that has no section,
+    which `./deploy.sh` refuses, as 0025 built
+  * In the plan's texts: the skill's description, the list of steps and steps 5 and 6 of `RELEASING.md`, the
+    README's summary sentence, the list of what differs from the moved texts, and two rows of the table of
+    paragraphs. Step 6 is now "What the human runs", with the three commands, and says why the push comes last
+  * The push is written as `git push origin master v<version>`, naming the one tag, where the human said "push
+    master with tags". That choice of command is the planner's, for the human to change on reading
+  * The decisions record each of the human's as the human's. The non-goal on pushing now says only that the agent
+    pushes nothing. Under "Beyond the request", the skill running `./deploy.sh` and the push as a last step are
+    gone, the first declined and the second taken as an instruction to the human. The other items there stand,
+    undecided, and so left out
+  Nothing was run for this revision. What the spec lists as not established still is, except whether `./deploy.sh`
+  runs from an agent's shell, which no longer matters. Status left at `draft` for the human's reading and approval
+- 2026-10-04T14:13:07Z [human] on the push command: "I want it to be --folow-tags"
+- 2026-10-04T14:13:07Z [Claude Code, anthropic/claude-opus-5-5] as planner, changed the push in step 6 of the plan's
+  `RELEASING.md` text to `git push --follow-tags origin master`, with its explanation, and the spec's decision on
+  the push to match. Checked: `git cat-file -t v2.3.0` prints `tag`, so the tags `npm version` makes here are
+  annotated, which is what `--follow-tags` pushes. The push itself was not run. Status still `draft`
+- 2026-10-04T18:20:11Z [human] approved the spec and the plan as they stand at `e33ae0b`, in the session that
+  dispatched the implementer, with the words: "Let's move on to 0028. Implement it as the @implementer". Nothing
+  under "Beyond the request" was taken up, so none of it is in scope. Status `approved`. The time of this entry is
+  when the words reached the implementer, not when they were said
+- 2026-10-04T18:20:11Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main checkout at
+  `/home/stef/projects/agentrite`, on the branch `feature-0028-release-skill`, and not in a worktree, as the human
+  wants it. Working under the process of release 2.3.0, read from `node_modules`. Status `in-progress`
+- 2026-10-04T18:22:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, brought the branch up to date by
+  merging `master` at `94099e9` into it, as `3eadd13`, and not by a rebase, so that `e33ae0b`, which the approval
+  names, keeps its id. `master` held two units the branch did not: task 0026 and feature 0027. The merge had no
+  conflict, since the branch had changed only this unit's directory. On the merged tree, before any change of this
+  unit, `npm test` exited 0 with 224 tests, 224 passing
+- 2026-10-04T18:25:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read 0027's spec and record on
+  `master`, and `container/agent.sh`, `container/Dockerfile`, `container/compose.yml`, the README and
+  `tests/harness-versions.test.mjs` as 0027 left them, and went through this unit's spec and plan against them.
+  The spec foresaw 0027 under "What is assumed about 0027" and says the implementer writes the step for it from
+  the start, so what follows changes the plan and not the spec. No requirement or decision of the spec was found
+  that no longer holds. What 0027 changed, and what was done about each, in `plan.md` before the work:
+  * A sandbox no longer builds from the pins on a host that has the harnesses. The plan's run command,
+    `AGENT_PROJECT_NAME=ritenoar-agentrite-agent-release container/agent.sh "$PWD" --rebuild <command>`, would on
+    this host build with the host's versions, and requirement 9 has the sandbox print the pins. 0027 gives three
+    ways to a pin, and the first is the one taken:
+    * A `claude` and an `opencode` first on the wrapper's `PATH` that report no version. By 0027's requirement 3
+      the wrapper then takes the kit's pin and says so in a line that names it. It touches no tracked file, it goes
+      through the wrapper's own reading of the two `ARG` lines, and the wrapper's line shows that it did. It rests
+      on a path 0027 built for a harness that misbehaves, which is the weak side of it
+    * The versions held in this repository's `agent/compose.project.yml`, uncommitted, which is the way 0027's
+      spec and README name for holding a version. Not taken: it is an edit to a tracked file in the middle of a
+      procedure that ends by committing on `master`, which 0027's own spec calls easy to commit by mistake; it has
+      to be undone on every outcome; and while it is there a start of `./agent.sh` or `./agent-dev.sh` in this
+      checkout would take the held versions too. It would also not go through the wrapper's fallback
+    * A choice from the environment, which 0027 lists under "Beyond the request" and did not build
+    Which of the first two the release uses is a judgement the human may want to make differently. It changes
+    step 2 of `RELEASING.md` and nothing else
+  * The pins are no longer "the versions the image installs". Step 2 of the plan's `RELEASING.md` text now opens
+    by saying what a pin is under 0027
+  * What a bump means for a project changed: a sandbox on a host that has the harness does not get the pin at
+    all. The spec left that wording to the README of the day. The bullet on the bump in step 3 now has the notes
+    say which sandboxes get the new versions, and names the README's subsection "The harness versions", which 0027
+    added, where it named "Running the sandbox"
+  * The wrapper rebuilds by itself when the image's labels differ from the wanted versions. The check keeps
+    `--rebuild`, so nothing changes for it, and with `--rebuild` the wrapper prints no line about a difference
+  * 0027 added `tests/harness-versions.test.mjs`, with a test that the Dockerfile has one line per pin and one that
+    no shipped file but the Dockerfile holds a pin, `README.md` included. The README text of this unit names no
+    version. The first overlaps with the test of the two `ARG` lines requirement 17 asks for, which is kept as the
+    plan has it: it is stricter, a plain three-part version where 0027's allows a pre-release part, and it sits
+    with the test that `RELEASING.md` names what the release edits
+  * The suite holds 224 tests, not the 192 the plan's first task names. Corrected
+  * 0027's README sentence that the login's label is the one the pinned OpenCode uses, and its sentence that
+    `./agent-dev.sh` runs the host's versions, agree with the check as written and change nothing in it
+  * After 0027 nothing on this host runs the pinned pair, as its record says. So the check of step 2 is the only
+    thing that does, and it is made only when the pins move
+- 2026-10-04T18:27:05Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the tests, `RELEASING.md`, the skill and
+  `AGENTS.md`.
+  * `tests/release.test.mjs` holds eight tests, and the three refusal tests of `tests/deploy.test.mjs` gained the
+    assertion. Before anything else of the unit existed, `npm test` exited 1 with 232 tests, 221 passing and 11
+    failing: the eight new ones and those three. The 221 are the suite of the merged tree less the three
+  * `RELEASING.md` and `.claude/skills/release/SKILL.md` are the plan's texts, written out of `plan.md` by a script
+    and not retyped. The skill's test, the two of the pins and the two of `RELEASING.md` then passed
+  * `npm pack --dry-run --json` lists 24 paths here and 24 in an export of `master` at `94099e9`, and the two
+    sorted lists are the same, compared with `diff`. None is `RELEASING.md` or under `.claude/`. Nothing was added
+    under `.opencode/`: `git ls-files .opencode` shows the three role wrappers
+  * `AGENTS.md`: "Release notes" is replaced by the plan's "Releasing". The nine bullets it loses, against
+    `RELEASING.md`, compared by a script for the ones said to be word for word:
+    * "Build the section from the repository", "The units of the release", "Read the diff of what ships", "Write
+      the section at the top" with its two parts, "Write for a reader", and "A section of an earlier release": each
+      is in step 3 word for word, commands included
+    * "In your answer, propose major, minor or patch, with the reason, and name every change in the shipped diff
+      that has no unit": step 4, as two bullets, with the pins added as a third
+    * "Stop there. The human reads the section, corrects it and picks the version. Do not commit it before that,
+      and do not run `npm version` or `./deploy.sh`": the stop, the human's reading and "Commit nothing before the
+      human's word" are in step 4, and "Do not run `npm version` or `./deploy.sh`" closes step 5
+    * "A release is not a unit and has no directory in `changes/`. On the human's word, commit the section on
+      `master` as `Release notes for <version>`, with no unit prefix": step 5, with the commit of the pins before it
+    * The line that opened the list, "When asked to write the release notes:", is the pointer's "Read it when asked
+      to make a release or to write the release notes", and the opening of `RELEASING.md` says which steps an agent
+      asked only for the notes runs
+    What differs is what the plan lists, and one thing it does not list: the opening paragraph of the section
+    stays in `AGENTS.md` without its last sentence, "The order of a release is in the README, under "Releasing"."
+    The plan's text for `AGENTS.md` leaves it out, and the pointer to `RELEASING.md`, which now holds the order,
+    stands in its place
+- 2026-10-04T18:27:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the README. "Releasing" is the plan's
+  text, written out of `plan.md` by a script, and "What is here" has the row for `RELEASING.md` after
+  `CHANGELOG.md`'s.
+  The section on `master` at `94099e9` is the one the plan's table was written against: 0026 and 0027 did not
+  touch it. Each row of the table, checked by searching for the sentence with the line breaks ignored:
+  * "A release is a tarball of the kit served from": in the README, word for word
+  * "A release is made on `master`, from the repository": the opening of `RELEASING.md`, which adds "on the host",
+    and its list of six
+  * List item 1: step 3. Its last sentence, "How it does that is in `AGENTS.md`, under "Release notes"", is gone
+    with what it pointed at
+  * List item 2: step 4 has "The human reads the section, corrects it and picks the version, changing the heading
+    when the pick differs from the proposal", word for word, and step 5 has the commit as
+    `Release notes for <version>`
+  * List item 3: step 6. The command was written "`npm version patch`, or `minor`, or `major`" and is now
+    `npm version <patch|minor|major>` in a block
+  * List item 4: step 6, `./deploy.sh` in the block, under "with AWS credentials for the account"
+  * "The notes are committed first because": step 5, as "The pins and the notes are committed first because", and
+    "holds the section" became "holds both"
+  * "A release has no unit in `changes/`": the opening of step 5, in the words `AGENTS.md` had for it, "A release
+    is not a unit and has no directory in `changes/`", with "both commits" now "Its commits"
+  * "`deploy.sh` refuses, before it does anything else": step 6, word for word, with "which is also what a wrong
+    part gives" added, and `git tag -f v<version>` as it was
+  * "Pick the part to bump as semver means it; there is no rule of the kit's own": step 4, word for word
+  * "`npm version` updates `package.json`" to "fails": step 6, word for word but for its opening, which now says
+    which part to give
+  * "`deploy.sh` signs in with `aws sso login`" and "A released tarball is never replaced or removed": step 6,
+    both paragraphs word for word
+  * "Releasing runs on the host only": the README, with the sentence on Docker added, and step 1
+  Nothing else in the README changed: `git diff` shows the row and the section only. The README names neither
+  pin, which `tests/harness-versions.test.mjs` holds. After it `npm test` exited 1 with 232 tests, 228 passing: the
+  four that failed are the ones waiting for `deploy.sh`
+- 2026-10-04T18:28:08Z [Claude Code, anthropic/claude-opus-5-5] as implementer, `deploy.sh`. The refusal's two lines
+  are the plan's, and nothing else in the script changed. `bash -n deploy.sh` exited 0, and `npm test` exited 0
+  with 232 tests, 232 passing. The script itself was not run: the suite runs a copy of it against commands of its
+  own. Also corrected in this record: the time of the entry on 0027, which was written ahead of the clock, is now
+  that of its commit, and a line that was 123 characters long is wrapped
+- 2026-10-04T18:38:53Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the check of step 2 by hand, once,
+  on the host, from this checkout on the tree of `b27c3dc`. Linux, Docker Engine 28.4.0, node 24.14.1. The host has
+  Claude Code 2.1.289 and OpenCode 1.18.34, and `npm view` printed the same two as the latest, so on this day the
+  host's versions and the bumped pins are equal. The branch was this unit's and not `master`, so step 1 would
+  have stopped: the trial is of step 2 alone. The two pins were set in the working tree to 2.1.289 and 1.18.34,
+  nothing was committed, and `container/Dockerfile` was restored with `git checkout` afterwards.
+  The commands were the file's, with two additions of the trial's own: each run's commands were a script in the
+  session's scratch directory, mounted with the wrapper's `--mount <directory>:ro` and run as
+  `bash /mnt/<directory>/<script>`, and a second `--mount` took the raw captures and the proxy's log out for
+  reading. Standard input was `/dev/null`. What each line of "What has to hold" showed:
+  * The image builds from the pins. The wrapper printed `agent.sh: 'claude --version' printed no version, so the
+    sandbox gets the kit's Claude Code 2.1.289.` and the same for OpenCode with 1.18.34, and in the sandbox
+    `claude --version` printed `2.1.289 (Claude Code)` and `opencode --version` printed `1.18.34`. Since the
+    host has those versions too, the printed versions alone would not have shown where they came from. The
+    wrapper's two lines do, and the runs with the pins as they are on `master`, below, printed 2.1.266 and 1.18.30
+    on the same host
+  * `claude`, in a home that held `.bash_logout`, `.bashrc` and `.profile` only, reached its first-run screen:
+    "Welcome to Claude Code v2.1.289", "Let's get started." and the choice of a text style
+  * `opencode` reached its prompt, "Ask anything", with `1.18.34` in the corner, in the run that gave the terminal
+    a size. In the first run, with the command as the plan had it, its capture held terminal queries and nothing
+    that could be read
+  * The hosts of the first run, after the 12 lines of start-up: `claude` gave 5 lines, `api.anthropic.com` and
+    `platform.claude.com` allowed and `raw.githubusercontent.com` refused. `opencode` gave 119 lines:
+    `models.opencode.ai` once and `registry.npmjs.org` 30 times, allowed, and 88 lines `refused: the connection
+    closed before its ClientHello was complete`, which name no host. The login gave 4: `models.opencode.ai` and
+    `auth.openai.com` allowed, and two of the lines that name no host. Every host named is on `KIT_ALLOWLIST` or
+    is the known refusal. `models.dev` and `api.openai.com`, which this repository's own list admits, were
+    contacted by neither harness, only by the entrypoint's start-up check
+  * The login command, as the README gives it, printed "Go to: https://auth.openai.com/codex/device" and "Enter
+    code:" with a code, and waited. It was ended by `timeout` after 45 seconds. The code was entered nowhere
+  * The second run: with the made-up key and the seeded `/home/agent/.claude.json`, Claude Code came to its
+    prompt, said "Remote managed settings failed to load (authentication rejected (401))", and showed
+    `/work (feature-0028-release-skill) | Opus 5.5`, which is the line the host's script prints for that directory
+    and model. No login was made. The home held `backups`, `plugins` and `sessions` under `.claude` afterwards
+  * The hosts of the second run are a finding by the file's rule: besides `api.anthropic.com`, allowed, and
+    `raw.githubusercontent.com`, refused, the proxy refused `downloads.claude.ai` twice, `github.com` once and
+    `http-intake.logs.us5.datadoghq.com` twice. None is on `KIT_ALLOWLIST` and none is a refusal the file knows.
+    Claude Code showed its prompt and its status line all the same
+  Both runs were then repeated with the pins as `master` has them, 2.1.266 and 1.18.30, under the same name, to see
+  what is the new versions' and what is not. The same three hosts were refused in the second run, `github.com`
+  once and the other two twice, and OpenCode's start left 90 of the lines that name no host. So neither is new
+  with 2.1.289 or 1.18.34: the second run has a finding with the versions the kit pins today, and by requirements
+  9 and 10 as they stand the check of every release would end in one. That is told to the human and not fixed
+  here. What to do about it is the human's and the planner's: name the three as refusals the file knows, as 0015
+  did for `raw.githubusercontent.com`; or compare hosts in the first run only, as 0015's own check did; or a unit
+  that admits a host. `RELEASING.md` keeps the rule the spec gives.
+  A second thing the trial found, which no requirement covers: with the pins at 2.1.289 and 1.18.34,
+  `node --test tests/harness-versions.test.mjs` failed in "no file that ships holds a pinned version but the
+  Dockerfile", naming `README.md`. The README's examples under "The harness versions", which 0027 wrote, use
+  2.1.288, 2.1.289, 1.18.33 and 1.18.34, and two of those are today's latest. The check of step 2 does not run
+  the suite, so a release made today would commit the pins, and `./deploy.sh` would stop at its own `npm test`,
+  after `npm version` made its commit and its tag, and before it deploys or uploads anything. Not fixed here: the
+  README's examples are 0027's text, and a step of the check that runs the suite is a requirement the spec does
+  not have. For the human: whether step 2 runs `npm test` with the bumped pins, and whether the README's examples
+  move to versions a pin cannot reach.
+  Corrected in `RELEASING.md` and in the plan's text alike, for what did not work as written or was not said:
+  * A harness is started as `script -qec 'stty rows 40 cols 120; <command>'`. Without a size OpenCode drew
+    nothing readable, as above. Claude Code's first-run screen was readable either way
+  * `mkdir -p` for the directory of the two commands, so that one left by a check that was broken off is no error
+  * That the three removals fail before the first run when there is nothing to remove. Each exited 1 here
+  * That a stripped capture has words run together or one to a line, which is how both harnesses' screens came out
+  * That a proxy line naming no host has nothing to compare, and that their number is reported. Whether some
+    ninety connections that end before they name a host are something to look into is the human's to say
+  Not established by the trial: that the check works from a session whose Bash has no `/dev/null` standard input
+  or cannot mount a directory; the check on a host without `~/.claude/statusline-command.sh`; a build that fails;
+  and the path on a finding as an agent would walk it, since the pins were restored by hand at the end.
+  Afterwards: the volume `ritenoar-agentrite-agent-release_agent-home`, the network
+  `ritenoar-agentrite-agent-release_default`, the image `ritenoar-agentrite-agent-release` and
+  `/tmp/agentrite-release-no-harness` are removed. The lists of all images, volumes, networks and containers,
+  taken before the trial and after it, are the same, compared with `diff` by name and id.
+  `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`.
+  The build cache keeps the layers the builds made, which `docker builder prune` removes. Nothing was logged in
+  to, and `git status --short` shows no change to a tracked file
+- 2026-10-04T18:39:43Z [Claude Code, anthropic/claude-opus-5-5] as implementer, the second trial is not made and is the
+  human's. It asks for `/release` typed in a fresh Claude Code session, which this session cannot drive, so its
+  task and the commit point of the two trials stay unticked. Whether `/release` starts the skill is therefore
+  still not established: the skill's text is held by a test, and nothing has run it. The steps, on the host:
+  1. `git clone /home/stef/projects/agentrite /tmp/agentrite-release-trial`, then in the clone
+     `git checkout -B master origin/feature-0028-release-skill` and `npm ci`. The clone has the tags, which step 3
+     needs
+  2. `claude` in the clone, and type `/release`. Say nothing else, except, when it asks or stops for it, that this
+     is a trial that ends at step 4
+  3. To record: whether the skill started and sent the session to `RELEASING.md`; whether it bumped, checked and
+     cleaned up; whether the section had the bump's line; and what it reported at step 4
+  4. Have it restore the tree and commit nothing. Then `docker image ls`, `docker volume ls` and
+     `docker network ls` show nothing named `ritenoar-agentrite-agent-release`,
+     `/tmp/agentrite-release-no-harness` is gone, and `rm -rf /tmp/agentrite-release-trial`
+  What to expect while the finding of the trial by hand stands: the second run of the check has three refused
+  hosts the file does not know, so the session should stop at step 2 with the pins restored, and the notes then
+  have no line for a bump. The trial shows the bump's line in the section only after the human has decided what
+  those three hosts are
+- 2026-10-04T18:39:43Z [Claude Code, anthropic/claude-opus-5-5] as implementer, where the unit stands, on `99b7a4c`.
+  This commit adds this entry and ticks in the plan and nothing else.
+  * `npm test` exited 0: 232 tests, 232 passing, none failing, cancelled or skipped
+  * `npm run check-changes` exited 0 and printed nothing of its own. It ran the released 2.3.0 script from
+    `node_modules`, which was there already. `npm ci` was not run again for it
+  * `npm pack --dry-run --json` lists 24 paths, the same as an export of `master` at `94099e9`, compared as sorted
+    lists with `diff`
+  * `git diff master -- process.md roles templates scripts container .opencode` is empty, and `spec.md` is as it
+    was at `e33ae0b`
+  * `bash -n deploy.sh` exited 0
+  * No line of a file this branch adds or changes against `master` is over 120 characters, and none holds an em
+    dash
+  * `docker image ls -a`, `docker volume ls` and `docker network ls` show nothing named
+    `ritenoar-agentrite-agent-release`. The images and volumes of `ritenoar-agentrite-agent` and
+    `ritenoar-agentrite-agent-dev` are as they were, as the entry on the trial says
+  * Not run, by anyone: step 1 on `master`; step 3, the notes, with a bump in them; step 4; step 5 with a real
+    version, so neither `Harness pins for <version>` nor `Release notes for <version>` was ever committed; and the
+    three commands of step 6, `npm version`, `./deploy.sh` and `git push --follow-tags origin master`, which are
+    the next release's and the human's. `./deploy.sh` itself was not run with its changed message: the suite runs
+    a copy against commands of its own
+  Open, so the status stays `in-progress`: the second trial; the review; and three things for the human and the
+  planner, each in the entries above: the three hosts refused in the check's second run, which make the check
+  end in a finding with the versions pinned today; the README's examples, which equal today's latest versions and
+  fail 0027's test when the pins are bumped to them; and whether the check takes the pins through a `claude` and
+  an `opencode` that report no version, as written, or through versions held in the project's Compose file.
+  Not pushed, not merged into `master`. None of the items under "Beyond the request" was built
+- 2026-10-04T19:06:49Z [human] decided one of the things the trial left open, the README's examples that fail 0027's
+  test when a pin comes to equal them. Shown that the test searches `container/`, `templates/` and `README.md` for
+  the pins as plain text, and that every version in the README is an example: "cant it just ignore the readme?",
+  then "Or even better: cant it just only look in sensicval places?", and on the proposal to keep the plain search
+  over `container/` and `templates/` and drop only the README: "Okay no readme it is". So `README.md` leaves that
+  test, the README's examples stay as they are, and the human accepts that the README is no longer checked for a
+  pin. Still undecided: the three hosts refused in the check's second run, how the check takes the pins, and
+  whether step 2 runs `npm test` after the bump. The time of this entry is when the words reached the implementer,
+  through the dispatching session
+- 2026-10-04T19:06:49Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for that one change.
+  `tests/harness-versions.test.mjs` was not among the plan's files and is added there first, and the plan's
+  paragraph on 0026 and 0027, which said the test holds the README, is made true. The test no longer reads
+  `README.md`. Its search over `container/` and `templates/` and its "written once in the Dockerfile" part are as
+  they were. Its name said "no file that ships", which the README does, so it is now "no file under container/ or
+  templates/ holds a pinned version but the Dockerfile", with a comment that says why the README is not searched.
+  `RELEASING.md` says nothing of the test or of the README's versions and is unchanged. 0027 is frozen, and its
+  plan and record say the test reads the README, so its record has an amendment.
+  What was seen, with the pins set to 2.1.289 and 1.18.34 in the working tree:
+  * Before the change, `npm test` exited 1 with 232 tests, 230 passing and 2 failing: the test of this entry,
+    naming `README.md`, and "the wrapper rebuilds for the kit's pins when the host has neither harness, and names
+    the kit" in `tests/agent-wrapper.test.mjs`
+  * After the change, `npm test` exited 1 with 232 tests, 231 passing and 1 failing. The changed test passes, and
+    `node --test tests/harness-versions.test.mjs` alone exited 0 with 4 of 4 passing. The wrapper's test still
+    fails. So the change does what it is for, and the suite does not pass with these pins all the same
+  * That second failure was not seen in the trial, which ran `tests/harness-versions.test.mjs` alone with the
+    bumped pins and not the suite, and the entry on the trial is wrong where it names one failing test as what
+    `./deploy.sh` would stop at. Its cause is the same kind: `tests/wrapper-fixture.mjs` gives the suite's fake
+    host the versions 2.1.289 and 1.18.34, and the test expects the wrapper to rebuild because the image, which
+    holds the fake host's versions, differs from the pins. With the pins equal to them nothing differs, the
+    wrapper says nothing, and the test's expected lines are not printed. Not fixed: it is another test of 0027's,
+    the human's decision names the README, and what the fixture's versions should be is a choice. For the human:
+    a release that bumps the pins to 2.1.289 and 1.18.34 still fails `npm test`, and so `./deploy.sh`, until the
+    fixture's host versions are ones a pin cannot reach
+  `container/Dockerfile` was restored with `git checkout`, which exited 0, and `git status --short` then showed
+  the test file as the only changed tracked file. With the pins as `master` has them, `npm test` exited 0 with
+  232 tests, 232 passing. No Docker was run for this. Status stays `in-progress`
+- 2026-10-04T19:08:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for the second failure, on the
+  word of the dispatching session and not on a sentence of the human's. Its reasons, as given: the human's
+  decision on the README was made so that the suite survives a bump, the fixture is test-only, and the human will
+  be told and can reverse it. The files are added to the plan first.
+  * `tests/wrapper-fixture.mjs`: the fake host's versions are 99.1.0 for Claude Code and 98.2.0 for OpenCode,
+    where they were 2.1.289 and 1.18.34. That is the one definition, `hostVersions`. The one test that repeated
+    the two values as literals, "the wrapper hands Compose the host's versions, in every call", now refers to it
+  * `tests/agent-wrapper.test.mjs`: the labels of an image built earlier were written 2.1.266 and 1.18.30 in six
+    places, which are the pins of today. No outcome depended on that, since the wanted version in those tests is
+    the host's or the project's. They are now `builtBefore`, 0.1.0 and 0.2.0, defined once, below any pin
+  * Left as they are: `1.18.20`, the version a project holds in two tests, which is below the pin and so equals
+    no later one; `0.0.1` and `0.0.2`; `0.0.0-dev-202610030456`, the pre-release form OpenCode publishes; and
+    `9.9.9`, `7.7.7`, `1.2.3` and `1.2`, which a misbehaving command prints and which never reach Compose
+  * Nothing that ships changed, and the README's examples are as they were
+  With the pins as committed, `npm test` exited 0 with 232 tests, 232 passing. With the pins set to 2.1.289 and
+  1.18.34 in the working tree, the whole of `npm test` exited 0 with 232 tests, 232 passing, where it exited 1
+  with one failing before this change. `container/Dockerfile` was restored with `git checkout`, which exited 0.
+  Looked once for other places where an outcome hangs on a pin equalling a literal or not:
+  * `container/` and `templates/` hold no three-part version but the two pins. The numbers there are addresses,
+    such as `127.0.0.1` and `192.168.65.7`. The test of where a pin is written searches for the pin as a plain
+    substring, so a pin that is part of such an address would fail it. No pin is near one. Not changed
+  * `tests/agent-dev.test.mjs` copies the working copy's Dockerfile and uses the same fixture. It holds no version
+    literal
+  * `tests/release.test.mjs` asks for a plain three-part version on the two `ARG` lines, so a pre-release pin
+    would fail it, as requirement 17 has it
+  * Outside the suite: the README's examples, which the human decided, and `CHANGELOG.md`, which no test reads
+    for a version
+  0027's plan names the fake host's two versions, so its record has an amendment. Status stays `in-progress`.
+  The other open points are untouched
+- 2026-10-04T19:44:26Z [human] decided two of the open points, after the three options for the refused hosts and the
+  question on the suite were laid out: "for 1) list them as known refusals. None of these seem like something we
+  should care about. 2) YES". So `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com` are
+  refusals the check knows, nothing is admitted, and step 2 runs `npm test` with the bumped pins. How the check
+  takes the pins is still open. The time of this entry is when the words reached the implementer, through the
+  dispatching session
+- 2026-10-04T19:44:26Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for the two decisions, in
+  `RELEASING.md` and in the plan's text of it alike, which a script found to be the same afterwards:
+  * Step 2 has a part "The suite", before "The check": `npm test` with the two lines edited. A test that fails
+    is a finding, handled as one of the check's is: the pins are restored, the human is told which test and what
+    it printed, and the release stops there, with nothing committed and the check not run. Before the check, as
+    the dispatching session suggested, because it needs no Docker and takes about a second. Step 4 has the agent
+    report that the suite passed with the new pins
+  * The line on the hosts in "What has to hold" lists four known refusals, none of them admitted:
+    `raw.githubusercontent.com` as before, and the three, with where they were seen, that it was with the pinned
+    and the latest versions alike, and that Claude Code showed its prompt and its status line without them. The
+    file names no version number for it, so that it stays without one
+  * No allowlist changed, and nothing that ships
+  * No test was added. `tests/release.test.mjs` holds the wiring, the names the release edits and the pointers,
+    and not the file's steps, by the spec's decision "The tests hold the wiring, not the release"
+  `spec.md` is not changed, and now says less than the file does. The dispatching session asked the implementer
+  to bring it in line. The implementer's role file says "Never change `spec.md`", with no exception for a unit
+  that is not frozen, so the change is left for the planner, as the two earlier revisions of this spec were made.
+  What it has to say, as built:
+  * Requirement 9, on the hosts: the refusals the file lists as known are `raw.githubusercontent.com`,
+    `downloads.claude.ai`, `github.com` and `http-intake.logs.us5.datadoghq.com`, where it says "which today is
+    `raw.githubusercontent.com`"
+  * A requirement between 7 and 8, or a clause of 7: with the pins edited and before the check, the release runs
+    `npm test`
+  * Requirement 10: a failing test is a finding like one of requirement 9, where it says "Anything in requirement
+    9 that does not hold is a finding"
+  * Requirement 12: the report at the stop says that the suite passed
+  * The decision "The check is what the units that depend on a harness's behaviour need, and no more", which the
+    suite's run goes beyond, and a decision each for the two, as the human's
+  Until then the plan and `RELEASING.md` go beyond the spec in these two things, on the human's words above.
+  Nothing was run in Docker for this. Status stays `in-progress`
+- 2026-10-04T19:46:12Z [Claude Code, anthropic/claude-opus-5-5] took the planner role, in the main checkout on the
+  branch, at `a750e88`, and brought `spec.md` in line with the human's two decisions of 19:44:26Z above, which
+  `RELEASING.md` and the plan already hold. Each point was read against `RELEASING.md`, the plan's text of it and
+  this record before it was written. Nothing was redesigned, and nothing under "Beyond the request" was taken. What
+  changed in the spec:
+  * "What the human decided" has a third paragraph, with the two decisions in the human's words
+  * R7 gains a clause and no requirement is renumbered: with the pins set, and before the check of R8 and R9, the
+    release runs the suite, `npm test`. Where the step is skipped because the pins are the latest, the suite is
+    skipped with the check
+  * R9, on the hosts: the refusals the file lists as known are `raw.githubusercontent.com`, `downloads.claude.ai`,
+    `github.com` and `http-intake.logs.us5.datadoghq.com`, and the kit admits none of the four
+  * R10: a test that fails in the suite of R7 is a finding too, and the check is then not run
+  * R12: the report at the stop says that the suite passed with the new pins
+  * Decisions: "The check is what the units that depend on a harness's behaviour need, and no more" now says that
+    the suite goes beyond it and is not part of the check. Two decisions are added after it, each as the human's,
+    with the reason and with what was laid out and not taken: the suite's run, and the three known refusals. "When
+    the pins are the latest already" says that the suite is skipped too
+  * Non-goals: what is not fixed is what the suite or the check finds, and a refused host is a new unit when it is
+    not a known one
+  `plan.md` is not changed: its tasks cite R7, R9, R10 and R12 by number, and no number moved. `RELEASING.md`, the
+  tests and everything that ships are not changed.
+  Left as it is, undecided, for the human: how the check gets the wrapper to take the pins. R9 says only that the
+  sandbox prints the two pins, and the spec names no way.
+  Seen and not changed, for the human to say whether the spec should hold it:
+  * This branch changes three test files of 0027's: `tests/harness-versions.test.mjs` no longer reads `README.md`,
+    on the human's decision of 19:06:49Z, and `tests/wrapper-fixture.mjs` and `tests/agent-wrapper.test.mjs` have
+    versions a pin cannot reach, on the word of the dispatching session and not on a sentence of the human's. The
+    plan lists the files. No requirement of the spec covers either, and R17 names other tests. The new decision
+    on the suite mentions both and points here. A requirement for the fixture would rest on a decision the human
+    has not made, so none was written for either
+  * "Not established", under "What was found while planning", and "What is assumed about 0027" say what held when
+    the unit was planned: that no Docker was run, that the two latest versions were not known to pass the check,
+    and that 0027 was not approved. The trial and the merge of `master` have since moved each. They are under a
+    heading that dates them and this record has what was established, so they stand as written
+  Nothing was run in Docker for this revision. Status stays `in-progress`
+- 2026-10-04T20:03:00Z [human] withdrew the bump of the harness versions, which was the human's own request in the
+  first entry of this log, and with it the check. Shown what step 2 of `RELEASING.md` had become, the two pins
+  bumped, the suite run, and a check of some 90 lines that needs a `claude` and an `opencode` that report no
+  version on the `PATH` for the wrapper to use the pins at all, and that since 0027 a pin is only what a host
+  without the harness gets, the human said: "Regarding the pins we really need to take a few steps back, because
+  this feels like something is getting very complicated while it should be easy." and then: "Mmm I have a hard
+  time finding a good solution. Because no check doesn't feel right either. Maybe it just doesn't make sense
+  anymore to have a kit version? Maybe we only need : host version OR pinned version in compose.project.yml".
+  The main session laid out three answers to what a sandbox gets when the project holds no version and the host
+  does not have that harness: the latest from npm at build time; that harness left out of the image; or a stop
+  with a message. It recommended the first, said that this takes a new unit because 0027 is frozen, and that step
+  2 comes out of this unit while a run of `npm test` before `npm version` is worth keeping as a small step. The
+  human: "Yes, Go ahead". So the human's are that the kit has no version of its own, and the go-ahead for the
+  proposal. The latest as what a sandbox then gets, and keeping the suite's run, are the main session's
+  recommendations, which the go-ahead covers and the human may correct on reading. This also sets aside the
+  human's two decisions of 19:44:26Z as requirements: the known refusals were the check's, and the suite ran for
+  the bumped pins. The point left open there, how the check takes the pins, is gone with the check. The time of
+  this entry is when the words reached the planner, through the dispatching session
+- 2026-10-04T20:03:00Z [Claude Code, anthropic/claude-opus-5-5] as planner, in the main checkout on the branch at
+  `45e349f`, revised `spec.md` and `plan.md` for that. Nothing that is built was changed: `RELEASING.md`, the
+  skill, the README and the tests still hold the bump, and cutting them down is the implementer's, by the plan's
+  new tasks. Nothing was run in Docker. What the documents now require:
+  * R7 to R11 are withdrawn and their numbers are not used again, so that what this record cites by number is
+    still what it was. The spec as it stood with them is the file at `45e349f`
+  * R2: the file holds the release without a step for the harness versions, and names no harness version
+  * R4 no longer says that the pins move at a release. `container/` is unchanged by this unit, as before
+  * R5 cites requirements 12 to 14, where it cited 11 to 14
+  * R6: the agent stops when the branch is not `master`, when a tracked file has a change, or when `npm test`
+    does not pass. The condition on Docker is gone
+  * R12: the report at the stop has the proposed version and the shipped changes with no unit, and nothing on pins
+  * R13: one commit, `Release notes for <version>`. R14: "after its commit"
+  * R15: the README's sentence of what a release does has no bump
+  * R17 loses the test of the two `ARG` lines
+  * R18 is new: the two changes this branch made to 0027's tests stay as they are at `45e349f`
+  * Decisions: eleven that existed only for the bump and the check are gone, two of them the ones added at
+    19:46:12Z. Three are reworded for a release without pins. Seven are new, each saying whose it is
+  * Non-goals and "Beyond the request" lose what referred to the check. Of the latter, `allowed-tools` and the
+    test of `files` stand, undecided and so left out
+  * The plan: a paragraph at the head of the Approach says what the implementer removes and what stays. The text
+    of `RELEASING.md` is the file without step 2, its steps numbered 1 to 5. The skill's description, the README's
+    summary and last paragraph, the list of what differs, the table of paragraphs and the tests' description are
+    changed to match. The done tasks stand, with the withdrawn requirements named as that. Six tasks are new, one
+    of them ticked for what requirement 18 holds, and the task of the trial of `/release` is adjusted to the
+    shorter file. The verification is unticked, to be seen again on the tree the cut-down leaves
+  Decided by the planner, where the human said nothing:
+  * The suite is a third condition of step 1, "Before anything else", and not a step before the commit. An agent
+    asked only for the notes does not run it
+  * The condition on Docker goes with the check, and the README's sentence on Docker with it. Nothing then stops
+    an agent in a sandbox from drafting the notes and committing them. The file and the README still say a
+    release is made on the host, which `./deploy.sh` needs and the human runs
+  * The test of the two `ARG` lines is removed in this unit and not left for 0030
+  * The changes to 0027's three test files stay, as the main session expects. The spec says why
+  * The withdrawn requirements keep their numbers
+  * In the spec's context, three findings that served only the check are replaced by a pointer to `45e349f`
+  Not established: that `/release` starts the skill, as before; and nothing of the shorter file has been followed
+  by anyone, since it exists only as the plan's text. Status stays `in-progress`
+- 2026-10-04T20:15:20Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed on `e0cf4df` and read the
+  revised `spec.md`, `plan.md` and this record again, then cut what is built down to them, by the plan's tasks in
+  their order. No Docker was run but the three listings of the verification.
+  * The test first, in `83fe92c`: the description the skill's test compares is the plan's, and the two tests of
+    the `ARG` lines are gone with the list `pins` and its comment. `npm test` then exited 1 with 230 tests, 229
+    passing and the skill's test failing, as the task expects. With the skill's description changed, the six
+    tests of `tests/release.test.mjs` passed
+  * `RELEASING.md`, in `194acc1`, is the plan's text, written out of `plan.md` by a script, and a script found the
+    two the same afterwards. It is 116 lines, where it was 238.
+    `grep -n -i -E 'docker|dockerfile|claude-code|opencode|ARG ' RELEASING.md` printed nothing and exited 1
+  * The README, in `4e3ddf6`: "Releasing" is the plan's text. `git diff master -- README.md` shows the row in
+    "What is here" and, in "Releasing", the numbered list and the four paragraphs after it replaced by the two
+    of the skill and of "In short". Its last paragraph is no longer in that diff
+  * Nothing else is left of the bump: `git diff master -- container` is empty, and `AGENTS.md`, `deploy.sh`,
+    `tests/deploy.test.mjs` and the three test files of requirement 18 are as they were at `45e349f`, which
+    `git diff --quiet 45e349f` over them showed by exiting 0. `container/Dockerfile` holds the pins it held
+  On `4e3ddf6`, which this commit follows with this entry and ticks only:
+  * `npm test` exited 0: 230 tests, 230 passing, none failing, cancelled or skipped. The suite is two tests
+    smaller than before the revision, the two of the `ARG` lines
+  * `npm run check-changes` exited 0 and printed nothing of its own, with the 2.3.0 script from `node_modules`,
+    which was there. `npm ci` was not run again for it
+  * `npm pack --dry-run --json` lists 24 paths, the same as an export of `master` at `94099e9`, compared with
+    `diff` as sorted lists
+  * `git diff master -- process.md roles templates scripts container .opencode` is empty, and `bash -n deploy.sh`
+    exited 0
+  * No line of a file this branch adds or changes against `master` is over 120 characters, and none holds an em
+    dash
+  * `docker image ls -a`, `docker volume ls` and `docker network ls` show nothing named
+    `ritenoar-agentrite-agent-release`, and `/tmp/agentrite-release-no-harness` does not exist
+  * Not run, by anyone: the file as it now is, from step 1 on `master` to step 3; step 4 with a real version, so
+    `Release notes for <version>` was never committed by it; and the three commands of step 5, `npm version`,
+    `./deploy.sh` and `git push --follow-tags origin master`, which are the next release's and the human's
+  The trial of `/release` is still the human's, for the reason given at 18:39:43Z, and its task and commit point
+  stay unticked. The steps given there are replaced by these, for the shorter file. No Docker is needed:
+  1. `git clone /home/stef/projects/agentrite /tmp/agentrite-release-trial`, then in the clone
+     `git checkout -B master origin/feature-0028-release-skill` and `npm ci`. The clone has the tags, which step 2
+     of the file needs
+  2. `claude` in the clone, and type `/release`. Say nothing else, except, when it asks or stops for it, that this
+     is a trial that ends at step 3
+  3. To record: whether the skill started and sent the session to `RELEASING.md`; whether it ran the suite and
+     went through step 1; whether it drafted a section; and what it reported at step 3
+  4. Have it restore the tree with `git checkout -- CHANGELOG.md` and commit nothing, then
+     `rm -rf /tmp/agentrite-release-trial`
+  Open, so the status stays `in-progress`: that trial; the review; and the two choices of the revision the human
+  has not read, the suite as a condition of step 1 and the condition on Docker dropped, which are built as the
+  plan has them. Not pushed, not merged into `master`
+- 2026-10-04T20:28:47Z [human] decided that the trial of `/release` is not made as a task of this unit: the first real
+  release is the trial. On the trial left open: "Im going to need a release after 0030 and 0029... So maybe I can
+  just test it then?" The main session laid out two ways. Drop the trial's task now, with the reason recorded, so
+  that the unit can be reviewed and marked `implemented` before that release, with what the release then finds
+  becoming amendments or a new unit. Or leave the unit `in-progress` until the release, which collides with the
+  release notes being built from the units that are `implemented`. It recommended the first and named the risk:
+  nobody has typed `/release`, so it is not established that it starts the skill, and if it does not,
+  `RELEASING.md` can still be followed by asking an agent to read it, and the wiring is fixed afterwards. The
+  human: "Ill accept the risk. Note it like that. I'll let the reviewer check this". The time of this entry is
+  when the words reached the implementer, through the dispatching session
+- 2026-10-04T20:28:47Z [Claude Code, anthropic/claude-opus-5-5] as implementer, removed from `plan.md` the task "Try the
+  file once without releasing" and the commit point "The record of the trial of `/release`", which existed only
+  for it, as the process prescribes for a task that will not be done. No other task or verification item refers
+  to that trial: the two that say "trial" are about the withdrawn check's, which was made. No box in the plan is
+  open now. The risk the human accepted, as it stands:
+  * Not established: that typing `/release` in a session in this repository starts the skill. The skill's text is
+    held by a test, and nothing has run it
+  * Nobody, human or agent, has followed `RELEASING.md` as it is since the cut-down, from step 1 to step 3
+  * Step 4, the commit of the notes by the file, and the three commands of step 5 have never been run
+  * All of it is first exercised at the release the human makes after 0030 and 0029. If `/release` does not start
+    the skill, the file can be followed by asking an agent to read it
+  The steps of the trial in the entry of 20:15:20Z above stay as written, and are not done. They remain a way to
+  check it before that release.
+  `spec.md` has no requirement that the trial be made, and the implementer does not edit it. Three things in it
+  bear on this, for the reviewer and the human to see: requirement 1 ends "Typing `/release` in a Claude Code
+  session in this repository starts it", which nothing has shown; under "Not established" it says of that "The
+  plan has a task for it", and the decision "The tests hold the wiring, not the release" says "The release itself
+  is tried once by the plan, by an agent that has only the file", and the plan no longer has either.
+  Status stays `in-progress`: the review comes first
+- 2026-10-04T20:29:11Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the branch at `7df8ce1`, brought
+  `spec.md` in line with the human's decision of 20:28:47Z above, which is not logged again here. Only `spec.md`
+  and this record are changed. What changed:
+  * R1 still asks that typing `/release` starts the skill, and now says in the requirement itself that this rests
+    on Claude Code's documentation and is first seen at the first release made with it
+  * "Not established": the sentence "The plan has a task for it" is gone, and says that the human left the trial
+    to the first release. A second point is added: that nobody has followed `RELEASING.md` since the bump was
+    taken out, and that its commit and the human's three commands have never been run
+  * The decision "The tests hold the wiring, not the release" no longer says that the plan tries the release
+  * A decision is added as the human's: the first real release is the trial, with what is accepted as not
+    established until then, what a failure costs, and that the reviewer judges R1 knowing it
+  Looked once for any other sentence that assumes the trial: the other mentions of a trial in the spec are of the
+  withdrawn check's, which was made. No requirement number moved, so no citation changed. Status stays
+  `in-progress`
+- 2026-10-04T20:36:31Z [OpenCode, openai/gpt-6.1-sol] as reviewer, made a full review of 0028 on commit
+  `f94362efc5197029e45409a41d4da0a42a581014`, against the merge base with `master` at
+  `94099e9aed729431fda03d9daf927273e6eb85f9`. Returned S1. The complete findings are in
+  `.reviews/0028-release-skill/2026-10-04T203510Z-opencode-openai-gpt-6.1-sol-full.md`.
+  Could not verify actual `/release` invocation or the complete release workflow, deferred by the human to the
+  first real release, or independently verify the historical captures of the withdrawn sandbox check.
+- 2026-10-04T20:49:22Z [human] decided the review's one finding, S1, which blocks, after it and its correction were laid
+  out with the recommendation to accept: "Okay do so". S1 is accepted. The time of this entry is when the words
+  reached the implementer, through the dispatching session
+- 2026-10-04T20:49:22Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for S1 on `f94362e`, read the
+  findings in full, and committed the reviewer's entry as it was written, in `395d455`. S1, accepted, is applied:
+  * The recovery in step 5 of `RELEASING.md`, after `./deploy.sh` refuses a version with no section, moves the tag
+    with `git tag -fa v<version> -m "<version>"`, where it said `git tag -f v<version>`, and says why the tag has
+    to stay an annotated one. The plan's text of the file is changed alike, and a script found the two the same.
+    The plan's list of what differs from the moved texts has a line for it
+  * The message is the form `npm version` uses here: `git cat-file -p v2.3.0` shows an object of type `tag` whose
+    whole message is `2.3.0`, the version without the `v`. So a tag made by the recovery differs from one
+    `npm version` made in its tagger's time and nothing else
+  * The old command was nowhere else that is current instruction: not in the README, which lost the sentence to
+    `RELEASING.md`, nor in `AGENTS.md`, nor in a message of `deploy.sh`
+  * Shown in a scratch clone of this repository under the session's scratch directory, with this branch checked
+    out as `master`, an empty local bare remote and dry-run pushes only. An annotated tag `v0.0.0-check` on the
+    commit before the last: `git cat-file -t` printed `tag`. After `git tag -f v0.0.0-check HEAD` it printed
+    `commit`, and `git push --dry-run --follow-tags <remote> master` exited 0 and listed the branch and not that
+    tag. After `git tag -fa v0.0.0-check -m "0.0.0-check"` it printed `tag`, the tag pointed at `HEAD`, its message
+    was `0.0.0-check`, and the same dry run exited 0 and listed `[new tag] v0.0.0-check -> v0.0.0-check`. Signing
+    and the tagger were given on the command line. No configuration was written, no tag of this repository was
+    made or moved, nothing was pushed, and the clone and the remote are removed
+  * Not shown: the recovery in a real release, after a real refusal by `./deploy.sh`, and a host where tags are
+    signed by configuration
+  * No test holds the command. The suite holds the wiring and not the file's steps
+  Pending, and the planner's: requirement 15 asks that what the README's section said is in `RELEASING.md` "with
+  its exact commands", and this command is now another on purpose. `spec.md` is not changed by the implementer,
+  and the exception is to be recorded there. Status stays `in-progress`
+- 2026-10-04T20:49:47Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the branch at `42db887`, brought
+  `spec.md` in line with the outcome of the review's S1, which the human accepted in the entry of 20:49:22Z above
+  and the implementer applied in `42db887`. Read for it: that entry and the implementer's, and the findings in
+  `.reviews/0028-release-skill/2026-10-04T203510Z-opencode-openai-gpt-6.1-sol-full.md`. Only `spec.md` and this
+  record are changed. What changed:
+  * R15 names the one exception to "with its exact commands": the command that moves the tag after a refusal,
+    `git tag -f v<version>` in the README's old text, is `git tag -fa v<version> -m "<version>"` in `RELEASING.md`
+  * R14 says "as the README does today but for the command that moves the tag", and that after the recovery the
+    tag is still an annotated one, which the push takes with `master`
+  * The decision on the push no longer calls the recovery "the recovery 0025 gives", and points at the next one
+  * A decision is added as the human's: the recovery recreates an annotated tag, because the push with
+    `--follow-tags`, which this unit introduced, takes annotated tags only
+  No requirement number moved, and the plan needed no change. Status stays `in-progress`
+- 2026-10-04T20:57:38Z [OpenCode, openai/gpt-6.1-sol] as reviewer, made a delta review of 0028 on commit
+  `b4a45d0345bf0a0dc431cc0135b1479e13bae4c1`, from the previous review's commit
+  `f94362efc5197029e45409a41d4da0a42a581014`. Checked S1's correction and returned no new findings. The complete
+  review is in `.reviews/0028-release-skill/2026-10-04T205641Z-opencode-openai-gpt-6.1-sol-delta.md`.
+  `npm test` passed with 230 tests, and `npm run check-changes` passed on the reviewed tree. Could not verify actual
+  `/release` invocation or the complete real release, deferred by the human, or recovery on a signing-configured
+  host; tag recovery and a dry-run push were checked in a scratch clone.
+- 2026-10-04T21:01:04Z [human] on the delta review, which returned no new findings and found S1 corrected: "The
+  re-review has happened". The human gave no sentence that says to mark the unit implemented. The main session
+  had said that after the delta review the unit can be marked `implemented` on the human's word, and takes the
+  human's report of the re-review, with nothing found, as the word to close. That reading is the main session's
+  and not the human's. The time of this entry is when the words reached the implementer, through the dispatching
+  session
+- 2026-10-04T21:01:04Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the delta review's findings in full
+  and committed the reviewer's entry as it was written, in `262624c`. Set the status to `implemented`. The
+  process's two conditions hold, as the implementer reads them:
+  * The one blocking finding either review returned, S1, was decided by the human, who accepted it. It is
+    corrected in `42db887`, with the spec brought in line by the planner in `b4a45d0`, and the delta review found
+    it corrected and returned nothing new
+  * Every box in `plan.md` is ticked. The task of the trial of `/release` was removed on the human's decision, with
+    the reason in the entry that removed it
+  On `262624c`, which this commit follows with this entry and the status only, `npm test` exited 0 with 230 tests,
+  230 passing, none failing, cancelled or skipped, and `npm run check-changes` exited 0.
+  What the unit carries into the first release, accepted by the human and not established by anyone:
+  * That typing `/release` in a Claude Code session in this repository starts the skill. A test holds the skill's
+    text, and nothing has run it. If it does not start, `RELEASING.md` can be followed by asking an agent to read it
+  * That `RELEASING.md` as it now is can be followed from step 1 to step 3. Nobody, human or agent, has done so
+  * Step 4, the commit of the notes as the file gives it, and the three commands of step 5, `npm version`,
+    `./deploy.sh` and `git push --follow-tags origin master`, which have never been run by this file
+  * The recovery after a refusal by `./deploy.sh` in a real release. The command was shown twice in a scratch
+    clone with dry-run pushes, by the implementer and by the reviewer, and not on a host where tags are signed by
+    configuration
+  * Two choices of the planner's that the record does not show the human to have read: the suite as a condition
+    of step 1, and the condition on Docker dropped
+  What that release finds is an amendment here, or a new unit. Not pushed, and not merged into `master`
+
+## Amendments

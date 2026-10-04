@@ -25,6 +25,7 @@ The "rite" is also Ritenoar's, whose projects carry it.
 |----------------------|-------------------------------------------------------------------------------------------|
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
 | `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it                  |
+| `RELEASING.md`       | How a release of the kit is made, which the `/release` skill follows                      |
 | `roles/`             | The planner, implementer and reviewer instructions                                        |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
 | `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
@@ -567,32 +568,12 @@ URL. `infra/` is the CDK app that serves it: a private bucket, a CloudFront dist
 in us-east-1 because CloudFront takes no other, and the DNS record in the existing `ritenoar.com` hosted zone, which
 it looks up rather than owns. None of it ships to a project.
 
-A release is made on `master`, from the repository root, in this order:
+A release is made with the `/release` skill, in a Claude Code session on the host, on `master`. The skill is
+`.claude/skills/release/SKILL.md`, which holds one line that sends the agent to [`RELEASING.md`](RELEASING.md). That
+file holds every step, and a human, or an agent in another harness, follows it directly.
 
-1. An agent is asked to write the release notes. It adds a section to `CHANGELOG.md` for the units implemented since
-   the last release and proposes major, minor or patch. How it does that is in `AGENTS.md`, under "Release notes"
-2. The human reads the section, corrects it and picks the version, changing the heading when the pick differs from
-   the proposal. The section is committed as `Release notes for <version>`
-3. `npm version patch`, or `minor`, or `major`
-4. `./deploy.sh`, with AWS credentials for the account
-
-The notes are committed first because `npm version` refuses a working tree that is not clean, and so the tree the
-tag names holds the section and the tarball does too. A release has no unit in `changes/`: both commits are made on
-`master`, which is this project's exception to working on a branch. `deploy.sh` refuses, before it does anything
-else, a version whose section is missing from `CHANGELOG.md`; then write the notes, commit them, move the tag with
-`git tag -f v<version>` and run it again.
-
-Pick the part to bump as semver means it; there is no rule of the kit's own. `npm version` updates `package.json` and
-`package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
-version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
-
-`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and uploads
-the tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL with no
-credential and fails unless it is served, and prints the line to put in a project's `package.json`.
-
-A released tarball is never replaced or removed. Projects pin it by its integrity hash, and two projects may sit on
-different versions indefinitely, so the script refuses to upload over a name that already exists. It uploads with
-`aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
-would delete versions that a project still installs.
+In short: an agent sees that the suite passes and drafts the release notes in `CHANGELOG.md`; the human reads them,
+corrects them and picks the version; the agent commits the notes; and the human runs `npm version` and
+`./deploy.sh`, and pushes `master` and the tag.
 
 Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.
