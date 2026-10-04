@@ -367,5 +367,18 @@ timestamp: 2026-10-04T20:13:06Z
   The decision on the exact version in place of `latest` argues from the cache key changing with the version,
   which agrees with the new wording and is as it was. The plan's line on the trial after the review says the
   same as the requirement now does and is not changed. Status stays `in-progress`
+- 2026-10-04T22:23:50Z [OpenCode, openai/gpt-6.1-sol] as reviewer, reviewed 0030 at commit
+  `eda8dd4cef28d8b60dd2d9e405949e2d67aae7e5`. Delta review from the previous reviewed commit,
+  `e630e7617412474862489bcb60bffac4362f4377`, checking accepted S1 and C1 and the subsequent diff on all three
+  axes. Returned no new findings. Complete findings saved in
+  `.reviews/0030-no-kit-harness-versions/2026-10-04-opencode-gpt-6.1-sol-delta-eda8dd4.md`.
+  Ran `npm test`: 248 tests, 248 passing, exit 0; the focused harness-version tests: 7 passing, exit 0;
+  `npm run check-changes` and the delta's `git diff --check`: exit 0. Independently evaluated the old and current
+  matchers against the quoted examples, and confirmed the trial's two version numbers are published on npm.
+  Docker was available; read-only queries show no check0030 resources and the existing release/dev image ids
+  unchanged. Could not independently verify the historical S1c/S1d install/cache outputs, sandbox outputs,
+  timings, before/after inventories or the original test-first chronology within the review's permitted writes.
+  No Task tool was available for subagent dispatch; performed the reviewer role directly. No work under review
+  or snapshot was changed, no commit was made and the pre-existing untracked tarball was left alone
 
 ## Amendments
