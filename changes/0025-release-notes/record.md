@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-04T11:34:59Z
+status: implemented
+timestamp: 2026-10-04T12:36:47Z
 ---
 
 # 0025 Release notes with every release
@@ -114,5 +114,14 @@ timestamp: 2026-10-04T11:34:59Z
   No real AWS release, consuming-project install, live blocked-network sandbox, authentication, interactive status
   line or macOS check was performed, and `npm ci` was not rerun. The Task/subagent tool was unavailable, so the review
   was performed directly under the reviewer role
+- 2026-10-04T12:36:47Z [human] on the review coming back with no findings, asked for the unit to be marked
+  implemented. The human raised nothing against the implementer's reading of 11:31:30Z, that the request to
+  implement was the approval of the spec and the plan as written
+- 2026-10-04T12:36:47Z [Claude Code, anthropic/claude-opus-5-5] set the status to implemented: every task in `plan.md`
+  is ticked, and the review returned no findings, so there is none to decide. The review ran in the worktree, so
+  its findings file was written there, and is copied to `.reviews/0025-release-notes/` of the main checkout, since
+  the worktree is removed once the branch is merged. `npm test` was run on the tree of the commit that holds this
+  entry, with this entry already written, and reported 192 passing and 0 failing. `npm run check-changes` exited 0
+  on that commit
 
 ## Amendments
