@@ -300,8 +300,8 @@ timestamp: 2026-10-04T18:20:11Z
   3. To record: whether the skill started and sent the session to `RELEASING.md`; whether it bumped, checked and
      cleaned up; whether the section had the bump's line; and what it reported at step 4
   4. Have it restore the tree and commit nothing. Then `docker image ls`, `docker volume ls` and
-     `docker network ls` show nothing named `ritenoar-agentrite-agent-release`, `/tmp/agentrite-release-no-harness`
-     is gone, and `rm -rf /tmp/agentrite-release-trial`
+     `docker network ls` show nothing named `ritenoar-agentrite-agent-release`,
+     `/tmp/agentrite-release-no-harness` is gone, and `rm -rf /tmp/agentrite-release-trial`
   What to expect while the finding of the trial by hand stands: the second run of the check has three refused
   hosts the file does not know, so the session should stop at step 2 with the pins restored, and the notes then
   have no line for a bump. The trial shows the bump's line in the section only after the human has decided what
