@@ -245,8 +245,11 @@ The host needs Docker: Desktop on macOS, Engine on Linux. From the project root:
 ```
 
 This builds the image on first use and opens a shell in the container, with the project mounted read-write at
-`/work` and nothing else of the host reachable. A command appended to it runs instead of the shell, as in
-`./agent.sh claude` and `./agent.sh npm test`. `./agent.sh --rebuild` builds the image again before running.
+`/work`. Nothing else of the host is reachable, with three exceptions: the developer's `~/.gitconfig`, mounted
+read-only so that commits from inside carry the same name and email as on the host, the developer's Claude Code
+status line script, as "The status line" below describes, and the local model server's port, as "The local model
+server" below describes. A command appended to it runs instead of the shell, as in `./agent.sh claude` and
+`./agent.sh npm test`. `./agent.sh --rebuild` builds the image again before running.
 
 Never run it with `sudo`. The wrapper refuses to run with uid or gid 0, because the agent inside the sandbox would
 then be root too. When Docker needs elevated permissions on the machine, add the user to the `docker` group instead.
