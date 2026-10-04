@@ -70,7 +70,7 @@ sandbox does the others and leaves those three to the human or to a session on t
 - [x] Run the command of the first task again into `/tmp/0021-after.yml`, with `AGENT_PROJECT_NAME` unset, and
   `diff` the two: no difference. `npm pack --dry-run` lists the same 22 files as on `master`, and `agent-dev.sh` is
   not among them. `git diff master -- container templates scripts package.json` is empty (R4, R5)
-- [ ] In `README.md`, under "The kit's own copy of the kit", change the second paragraph to read:
+- [x] In `README.md`, under "The kit's own copy of the kit", change the second paragraph to read:
 
   > The repository also runs the kit's sandbox, from the installed release, with `./agent.sh`, as any project does.
   > Work on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's:

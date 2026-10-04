@@ -360,8 +360,26 @@ made at the repository root, never under `node_modules`, and the installed copy 
 deliberate update, as described above.
 
 The repository also runs the kit's sandbox, from the installed release, with `./agent.sh`, as any project does. Work
-on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's.
-`./deploy.sh` stays on the host: releasing needs AWS credentials and hosts the sandbox does not reach.
+on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's: a change
+to `container/` does not alter the sandbox the agent making it runs in. Trying such a change is done from the host, as
+described below. `./deploy.sh` stays on the host: releasing needs AWS credentials and hosts the sandbox does not
+reach.
+
+### Trying the working copy's sandbox
+
+`./agent-dev.sh` runs the sandbox from the working copy: `container/agent.sh`, `container/compose.yml`, the
+Dockerfile, the entrypoint and the proxy as they are in the working tree, with the repository's
+`agent/compose.project.yml`. It takes what `./agent.sh` takes, for example `./agent-dev.sh npm test`.
+
+* It is this repository's own file. It is not in the package, and `init` and `refresh` do not write it
+* It builds the image on every start, so a change is in the sandbox that starts
+* It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
+  `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
+  and the saved logins of `./agent.sh` are not touched, and both sandboxes can run at once
+* It runs on the host. A sandbox has no Docker, so an agent working inside one cannot run it
+* The home starts empty and lasts. To empty it again: `docker volume rm ritenoar-agentrite-agent-dev_agent-home`
+* To remove everything it created: that volume, `docker network rm ritenoar-agentrite-agent-dev_default` and
+  `docker image rm ritenoar-agentrite-agent-dev`
 
 ## Releasing
 
