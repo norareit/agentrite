@@ -5,6 +5,7 @@
   "type": "module",
   "files": [
     "process.md",
+    "CHANGELOG.md",
     "roles",
     "templates",
     "scripts/check-changes.mjs",

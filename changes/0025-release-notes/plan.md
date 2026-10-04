@@ -183,8 +183,8 @@ process of release 2.3.0; this unit was planned under it.
 - [x] Add the check to `deploy.sh` as the Approach gives it, ahead of the AWS session check, with `cd "$ROOT"`
   moved above it and a sentence in the header comment. See the new tests pass and the five existing ones with them
   (R7, R8)
-- [ ] Add `tests/changelog.test.mjs` and see it fail: `files` in `package.json` includes `CHANGELOG.md` (R1)
-- [ ] Add `CHANGELOG.md` with the content the Approach gives, as the human corrected it on approval, and list it in
+- [x] Add `tests/changelog.test.mjs` and see it fail: `files` in `package.json` includes `CHANGELOG.md` (R1)
+- [x] Add `CHANGELOG.md` with the content the Approach gives, as the human corrected it on approval, and list it in
   `files` in `package.json`. Before committing, check each line of the 2.3.0 section once more against
   `git diff v2.2.1 v2.3.0` over the shipped files and against the statuses at the two tags, and record what was
   checked. See the test pass and `npm pack --dry-run` list 24 files, `CHANGELOG.md` among them (R1, R2, R3, R4)
@@ -216,7 +216,7 @@ process of release 2.3.0; this unit was planned under it.
 
 - [x] The fixture files in the deploy test
 - [x] The tests and the check in `deploy.sh`
-- [ ] The changelog, its test and `files`
+- [x] The changelog, its test and `files`
 - [ ] The rule in `AGENTS.md`
 - [ ] The README
 - [ ] The record of the two trials
