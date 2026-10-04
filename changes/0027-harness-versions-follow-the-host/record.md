@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-04T15:49:32Z
+status: implemented
+timestamp: 2026-10-04T18:15:36Z
 ---
 
 # 0027 The sandbox's harness versions follow the host
@@ -231,7 +231,8 @@ timestamp: 2026-10-04T15:49:32Z
 - 2026-10-04T18:13:43Z [human] on the second review, which returned no new findings, said: "No nwe findings! I'll
   check manually after my dinner xD". The time of this entry is when the words reached the implementer, through
   the dispatching session
-- 2026-10-04T18:15:34Z [human] made the last check of requirement 12 by hand, on 2026-10-04. This entry is written by the
+- 2026-10-04T18:15:34Z [human] made the last check of requirement 12 by hand, on 2026-10-04. This entry is written by
+  the
   implementer [Claude Code, anthropic/claude-opus-5-5] from what the dispatching session relayed, which had it from
   a screenshot and from the human's words. The implementer saw none of it. Linux, Docker Engine 28.4.0, Compose
   2.39.2, with Claude Code 2.1.289 and OpenCode 1.18.34 on the host.
@@ -255,12 +256,21 @@ timestamp: 2026-10-04T15:49:32Z
   * Cleanup: the human removed what the check created, and the dispatching session did not see the commands. It
     checked afterwards that no image, volume, network or container with `0027` in its name exists, and that
     `ritenoar-agentrite-agent` is still `143d91ec452a` and `ritenoar-agentrite-agent-dev` still `d11961d8abb8`
-- 2026-10-04T18:15:34Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the plan's three open boxes again and
+- 2026-10-04T18:15:34Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the plan's three open boxes
+  again and
   ticked them. The task for requirement 12: every item it lists was tried, the first five by the implementer on
   `13c770f` and the last by the human, and what each check created is removed. That every requirement is met by a
   ticked task, and that what requirement 12 found is in the record: the two refused hosts are above, and neither
   is one the spec does not expect. The commit point of the real check's record: this commit completes it. What
   holds less than the boxes may suggest: the first five items were not repeated on the wrapper as corrected for S1,
   and a real failing build, bash 3.2 and Docker Desktop for macOS were tried by nobody
+- 2026-10-04T18:15:36Z [Claude Code, anthropic/claude-opus-5-5] as implementer, set the status to `implemented`.
+  The process's two conditions hold: the one blocking finding either review returned, S1, was decided by the human,
+  who accepted it, and the second review found it corrected and returned nothing new; and every box in `plan.md`
+  is ticked. The word to close is the dispatching session's reading, not a sentence of the human's: the human was
+  told the result would be recorded, the boxes ticked and the unit marked `implemented`, and answered with the
+  confirmation about OpenCode above. On `a6e32ab`, which differs from the reviewed `1d2060a` in this record and
+  three ticks only, `npm test` exited 0 with 224 tests, 224 passing, and `npm run check-changes` exited 0. Not
+  pushed and not merged into `master`
 
 ## Amendments
