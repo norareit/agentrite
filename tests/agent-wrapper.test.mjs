@@ -1,31 +1,19 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import {
-  chmodSync,
-  copyFileSync,
-  mkdirSync,
-  mkdtempSync,
-  readdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from 'node:fs';
+import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fakeHost } from './wrapper-fixture.mjs';
 
 const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
+const dockerfile = new URL('../container/Dockerfile', import.meta.url).pathname;
 
-// The merged configuration Compose reports for a project whose compose file supplies `buildArgs`.
-function composeConfig(buildArgs) {
-  return JSON.stringify({ name: 'project-agent', services: { agent: { image: 'image', build: { args: buildArgs } } } });
-}
-
-// A project with the kit's wrapper installed at `kitPath` under `root`, and a `docker` that records each call and
-// the AGENTRITE_CONTAINER it saw, answering only the two queries the wrapper makes before running Compose. Its
-// merged configuration has the build arguments `buildArgs`, and the image it is asked about exists unless
-// `imageExists` is false. The wrapper runs with a home of its own, `home`, which is empty until a test fills it,
-// so that no test depends on what the home of whoever runs the suite holds.
+// A project with the kit's wrapper installed at `kitPath` under `root`, with the working copy's Dockerfile beside
+// it, and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER it saw. The
+// project's Compose file gives the build arguments `buildArgs`, where `null` stands for a configuration Compose
+// refuses, and the image exists unless `imageExists` is false. The wrapper runs with a home of its own, `home`,
+// which is empty until a test fills it, so that no test depends on what the home of whoever runs the suite holds.
 function setUp(
   t,
   kitPath = 'node_modules/@ritenoar/agentrite/container',
@@ -41,39 +29,15 @@ function setUp(
   mkdirSync(container, { recursive: true });
   copyFileSync(wrapper, join(container, 'agent.sh'));
   chmodSync(join(container, 'agent.sh'), 0o755);
+  copyFileSync(dockerfile, join(container, 'Dockerfile'));
   const home = join(base, 'home');
   mkdirSync(home);
-  const bin = join(base, 'bin');
-  mkdirSync(bin);
-  const calls = join(base, 'docker-calls');
-  const config = join(base, 'compose-config.json');
-  // Build arguments of `null` stand for a configuration Compose refuses, so the query fails.
-  writeFileSync(config, buildArgs === null ? '' : composeConfig(buildArgs));
-  writeFileSync(
-    join(bin, 'docker'),
-    `#!/usr/bin/env bash
-if [ "$1 $2" = "image inspect" ]; then exit ${imageExists ? 0 : 1}; fi
-if [[ " $* " == *" config --images "* ]]; then
-  [ -s "${config}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
-  echo image; exit 0
-fi
-echo "AGENTRITE_CONTAINER=$AGENTRITE_CONTAINER docker $*" >> "${calls}"
-`,
-  );
-  chmodSync(join(bin, 'docker'), 0o755);
+  const host = fakeHost(base, ['AGENTRITE_CONTAINER']);
+  writeFileSync(host.projectBuildArgs, buildArgs === null ? '' : JSON.stringify(buildArgs));
+  if (!imageExists) rmSync(host.imageLabels);
   const run = (...args) =>
-    spawnSync(join(container, 'agent.sh'), args, {
-      encoding: 'utf-8',
-      env: { ...process.env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
-    });
-  const dockerCalls = () => {
-    try {
-      return readFileSync(calls, 'utf-8').trim().split('\n');
-    } catch {
-      return [];
-    }
-  };
-  return { base, root, container, home, run, dockerCalls };
+    spawnSync(join(container, 'agent.sh'), args, { encoding: 'utf-8', env: { HOME: home, PATH: host.bin } });
+  return { base, root, container, home, run, ...host };
 }
 
 test('the wrapper refuses to run without a project root, naming the shim', (t) => {

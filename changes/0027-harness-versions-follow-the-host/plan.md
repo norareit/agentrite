@@ -87,6 +87,8 @@ first use, and `--rebuild` still builds.
 
 - `tests/agent-wrapper.test.mjs`: the fixture, and the tests below
 - `tests/agent-dev.test.mjs`: the fixture only, so that its three tests of the shim pass against the new wrapper
+- `tests/wrapper-fixture.mjs`: new, added while implementing. The `PATH` of the fixture's own and the fake `docker`,
+  `claude` and `opencode`, which both fixtures above use, so that they are written once
 - `tests/harness-versions.test.mjs`: new, the tests that read `container/Dockerfile` and `container/compose.yml`
 - `container/Dockerfile`: the two labels, and the two comments that call the kit the single place a version is
   pinned and the harnesses pinned
@@ -103,7 +105,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 
 ## Tasks
 
-- [ ] Change the two fixtures as the approach describes, with nothing else changed, and see the existing tests
+- [x] Change the two fixtures as the approach describes, with nothing else changed, and see the existing tests
   pass on the unchanged wrapper. Commit this on its own: it is a refactoring of the tests (R11)
 - [ ] Write `tests/harness-versions.test.mjs`. The first and the last test pass on the unchanged tree and guard
   what 0028 will bump; see the other two fail (R4, R5, R11):
@@ -202,7 +204,7 @@ Not touched: `templates/`, `scripts/`, `agent/compose.project.yml`, `agent-dev.s
 
 ## Commit Points
 
-- [ ] `feature-0027` the fixtures of the two wrapper tests, with no behavior changed
+- [x] `feature-0027` the fixtures of the two wrapper tests, with no behavior changed
 - [ ] `feature-0027` the tests, the labels, the build arguments and the wrapper
 - [ ] `feature-0027` the comments in `container/`
 - [ ] `feature-0027` the README

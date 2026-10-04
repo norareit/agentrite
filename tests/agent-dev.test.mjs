@@ -4,18 +4,20 @@ import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, 
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fakeHost } from './wrapper-fixture.mjs';
 
 const shim = new URL('../agent-dev.sh', import.meta.url).pathname;
 const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
+const dockerfile = new URL('../container/Dockerfile', import.meta.url).pathname;
 const projectCompose = readFileSync(new URL('../agent/compose.project.yml', import.meta.url), 'utf-8');
 
 const devName = 'ritenoar-agentrite-agent-dev';
 const nameFromVariable = '${AGENT_PROJECT_NAME:-ritenoar-agentrite-agent}';
 
-// A checkout holding copies of the shim and of the working copy's wrapper, and a `docker` that says the image
-// exists, answers the wrapper's query for the image name, and records every other call with the
-// AGENT_PROJECT_NAME and the AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no
-// test depends on what the home of whoever runs the suite holds.
+// A checkout holding copies of the shim and of the working copy's wrapper and Dockerfile, and the host of
+// `fakeHost`, whose `docker` says the image exists and records each call with the AGENT_PROJECT_NAME and the
+// AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
+// home of whoever runs the suite holds.
 function setUp(t) {
   const base = mkdtempSync(join(tmpdir(), 'agent-dev-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
@@ -30,32 +32,12 @@ function setUp(t) {
     copyFileSync(from, to);
     chmodSync(to, 0o755);
   }
+  copyFileSync(dockerfile, join(root, 'container', 'Dockerfile'));
   const home = join(base, 'home');
   mkdirSync(home);
-  const bin = join(base, 'bin');
-  mkdirSync(bin);
-  const calls = join(base, 'docker-calls');
-  writeFileSync(
-    join(bin, 'docker'),
-    `#!/usr/bin/env bash
-if [ "$1 $2" = "image inspect" ]; then exit 0; fi
-if [[ " $* " == *" config --images "* ]]; then echo image; exit 0; fi
-echo "AGENT_PROJECT_NAME=$AGENT_PROJECT_NAME AGENTRITE_CONTAINER=$AGENTRITE_CONTAINER docker $*" >> "${calls}"
-`,
-  );
-  chmodSync(join(bin, 'docker'), 0o755);
+  const { bin, dockerCalls } = fakeHost(base, ['AGENT_PROJECT_NAME', 'AGENTRITE_CONTAINER']);
   const run = (args, env = {}) =>
-    spawnSync(join(root, 'agent-dev.sh'), args, {
-      encoding: 'utf-8',
-      env: { ...process.env, ...env, HOME: home, PATH: `${bin}:${process.env.PATH}` },
-    });
-  const dockerCalls = () => {
-    try {
-      return readFileSync(calls, 'utf-8').trim().split('\n');
-    } catch {
-      return [];
-    }
-  };
+    spawnSync(join(root, 'agent-dev.sh'), args, { encoding: 'utf-8', env: { ...env, HOME: home, PATH: bin } });
   // What every recorded call opens with: the dev name, and Compose run by the checkout's own wrapper.
   const prefix =
     `AGENT_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker compose ` +

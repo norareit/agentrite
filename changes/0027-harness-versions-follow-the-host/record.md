@@ -70,5 +70,17 @@ timestamp: 2026-10-04T15:50:10Z
 - 2026-10-04T15:50:10Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a worktree of its own
   at `/home/stef/projects/agentrite-0027`, because the main checkout is on the branch of 0029 with work in progress.
   Working under the process of release 2.3.0, read from the main checkout's `node_modules`. Status `in-progress`
+- 2026-10-04T15:50:45Z [Claude Code, anthropic/claude-opus-5-5] as implementer, brought the branch up to date by
+  merging `master` at `f3550e0` into it, as `ef45e25`, in the way 0019 and 0007 did, and not by a rebase, so that
+  the planner's commit `569d56a` keeps the id the record and the dispatching session know it by. The merge brought
+  task 0026 and had no conflict: 0026 changed `README.md` and its own record only. The suite reported 192 tests
+  passing on the merged tree, before any change of this unit
+- 2026-10-04T15:52:24Z [Claude Code, anthropic/claude-opus-5-5] as implementer, added `tests/wrapper-fixture.mjs` to
+  the plan's files before writing it. The plan changes "the two fixtures" in the same way, and the `PATH` of the
+  fixture's own with its fake `docker`, `claude` and `opencode` is one decision, so it is written once and both
+  test files use it. It is not a test file, like `tests/entrypoint-function.mjs`, and `npm test` does not run it.
+  With the two fixtures on it, and the wrapper unchanged, the suite reported 192 tests passing, as before. The
+  fixtures also stopped handing the wrapper the environment of whoever runs the suite: it gets `HOME` and `PATH`
+  and nothing else
 
 ## Amendments
