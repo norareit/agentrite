@@ -62,7 +62,7 @@ the dev home volume until the human removes it with the command the README gives
       `opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"` prints the device page's address and a code
       (R1), and `grep 'not allowlisted' /run/egress-proxy.log` does not name `auth.openai.com`. Stop the login
       there. What was seen is in the record, with the Docker and Compose versions (R8)
-- [ ] The human's check, which needs their ChatGPT account, in a sandbox started with `./agent-dev.sh`: run the
+- [x] The human's check, which needs their ChatGPT account, in a sandbox started with `./agent-dev.sh`: run the
       command, enter the code in the host's browser, and see the login complete; `opencode auth list` names OpenAI;
       send one prompt to an OpenAI model in OpenCode and see it answered (R2). Then `grep 'not allowlisted'
       /run/egress-proxy.log` names neither `auth.openai.com` nor `chatgpt.com` (R3). Every other host refused there
@@ -74,4 +74,4 @@ the dev home volume until the human removes it with the command the README gives
 
 - [x] The regression test and the two hosts
 - [x] The lists of the kit's hosts and the README section
-- [ ] The record of the implementer's run, and later of the human's check
+- [x] The record of the implementer's run, and later of the human's check

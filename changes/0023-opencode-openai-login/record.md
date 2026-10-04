@@ -1,7 +1,7 @@
 ---
 kind: bug
 status: in-progress
-timestamp: 2026-10-04T01:33:00Z
+timestamp: 2026-10-04T01:39:18Z
 ---
 
 # 0023 OpenCode cannot log in to OpenAI in the sandbox
@@ -105,5 +105,22 @@ timestamp: 2026-10-04T01:33:00Z
   * Not checked: that the login completes, that a prompt is answered, and what a prompt contacts, which are the
     human's check (R2, R3); Docker Desktop for macOS; `./agent.sh`, which runs the released kit and gets the
     hosts only with a release
+- 2026-10-04T01:39:18Z [human] carried out the plan's check, on Linux with Docker Engine 28.4.0 and Compose 2.39.2, in
+  a sandbox started with `./agent-dev.sh` on this branch: ran the headless login with a ChatGPT account, and
+  reported that OpenCode answered a prompt on an OpenAI model. Pasted the output of
+  `grep 'not allowlisted' /run/egress-proxy.log`, which was one line, the refusal of `example.com`
+- 2026-10-04T01:39:18Z [Claude Code, anthropic/claude-opus-5-5] as implementer, read the same container while it ran
+  and ticked the plan's last task and commit point on what the human reported and this showed:
+  * `opencode auth list` named one credential, `OpenAI oauth` (R2)
+  * The proxy's log held no refusal for want of an allowlist entry but the canary's, so none of `auth.openai.com`
+    or `chatgpt.com` (R3), and no other host was refused during the login and the prompt (R8)
+  * After the start-up check, `auth.openai.com` was allowed twice and `chatgpt.com` twice. `api.openai.com` was
+    allowed once, which is the start-up check alone, so in this session a ChatGPT login did not use it
+  * That settles two things the spec lists as not established, for this account on this host: the headless login
+    completes, and a prompt after it needs `chatgpt.com` and no third host
+  * The login is in the dev sandbox's home volume. Every task in `plan.md` is ticked. The status stays in-progress
+    until a review has been made. No file but the plan and this record changed since `699dc40`, on which the
+    suite reported 188 passing and 0 failing, so it was not run again. `npm run check-changes` exited 0 on the
+    commit that holds this entry
 
 ## Amendments
