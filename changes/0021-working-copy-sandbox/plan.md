@@ -92,7 +92,7 @@ sandbox does the others and leaves those three to the human or to a session on t
       `docker volume rm ritenoar-agentrite-agent-dev_agent-home`
     * To remove everything it created: that volume, `docker network rm ritenoar-agentrite-agent-dev_default` and
       `docker image rm ritenoar-agentrite-agent-dev`
-- [ ] Check it for real on a host with Docker, and log what was seen with the Docker and Compose versions (R8):
+- [x] Check it for real on a host with Docker, and log what was seen with the Docker and Compose versions (R8):
     * note `docker image inspect --format '{{.Id}}' ritenoar-agentrite-agent` and `docker volume ls`
     * add, uncommitted, an environment variable to `services.agent.environment` in `container/compose.yml` and a
       `log` line near the top of `container/entrypoint.sh`
@@ -109,14 +109,14 @@ sandbox does the others and leaves those three to the human or to a session on t
 
 ## Verification
 
-- [ ] `npm test` exits 0 on the host
-- [ ] `npm run check-changes` exits 0 on the committed branch
-- [ ] No line of a changed file is over 120 characters, and none holds an em dash
-- [ ] `git status --short` shows nothing left of the real check's temporary edits, and `/tmp/0021-before.yml` and
+- [x] `npm test` exits 0 on the host
+- [x] `npm run check-changes` exits 0 on the committed branch
+- [x] No line of a changed file is over 120 characters, and none holds an em dash
+- [x] `git status --short` shows nothing left of the real check's temporary edits, and `/tmp/0021-before.yml` and
   `/tmp/0021-after.yml` are removed
 
 ## Commit Points
 
-- [ ] `feature-0021` the tests, the variable in `agent/compose.project.yml` and `agent-dev.sh`
-- [ ] `feature-0021` the README
-- [ ] `feature-0021` the record of the real check
+- [x] `feature-0021` the tests, the variable in `agent/compose.project.yml` and `agent-dev.sh`
+- [x] `feature-0021` the README
+- [x] `feature-0021` the record of the real check

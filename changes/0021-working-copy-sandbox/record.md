@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-04T00:49:51Z
+timestamp: 2026-10-04T00:51:53Z
 ---
 
 # 0021 A sandbox built from the working copy
@@ -49,5 +49,36 @@ timestamp: 2026-10-04T00:49:51Z
   clean and was removed so that the main checkout could take the branch. The plan's first task saves Compose's
   configuration to `/tmp/0021-before.yml`; it is saved in the session's scratch directory instead, and so is the
   later one
+- 2026-10-04T00:51:53Z [Claude Code, anthropic/claude-opus-5-5] implemented the plan in two commits, `d5d45a4` with
+  the tests, the variable and the shim, and `897080e` with the README. Every task of the plan is ticked. The unit
+  stays in-progress, since no review has been made. What was verified:
+  * The four tests of `tests/agent-dev.test.mjs` failed before the shim and the variable existed, three for want
+    of `agent-dev.sh` and one on `name: ritenoar-agentrite-agent`, and pass after
+  * Compose's resolved configuration for `./agent.sh`, taken before any edit and again after with
+    `AGENT_PROJECT_NAME` unset, shows no difference under `diff` (R4)
+  * `npm pack --dry-run` lists 22 files, the same list as an export of `master`, without `agent-dev.sh`, and
+    `git diff master -- container templates scripts package.json` is empty (R5)
+  * On the host, on `897080e`: `npm test` reported 182 passing and 0 failing. No line of a file changed against
+    `master` is over 120 characters and none holds an em dash. `npm run check-changes` exited 0 on the commit that
+    holds this entry
+  * The real check (R8), on Linux with Docker Engine 28.4.0 and Compose 2.39.2. Before it, the image
+    `ritenoar-agentrite-agent` had the id `sha256:143d91ec452a9f56c3b367e67d08eea60b51a103ac93e76b7ee6b82510a6ff82`
+    and the volume `ritenoar-agentrite-agent_agent-home` the creation time 2026-10-03T14:37:37+02:00. With an
+    uncommitted variable `AGENTRITE_0021_MARKER` in `container/compose.yml` and a `log` line in
+    `container/entrypoint.sh`, `./agent-dev.sh bash -c 'echo "marker=$AGENTRITE_0021_MARKER"'`, with no flag,
+    printed the variable's value and the entrypoint's line, building the image, in 9.3 seconds. With the
+    entrypoint's line changed, the same command printed the changed line, in 8.7 seconds. Afterwards the volume
+    `ritenoar-agentrite-agent-dev_agent-home`, the image `ritenoar-agentrite-agent-dev` and the network
+    `ritenoar-agentrite-agent-dev_default` existed, and the release image's id and the release volume's creation
+    time were as before. What the release volume holds was not compared
+  * The two at once (R2): no sandbox was running, so `./agent.sh sleep 100` was started first. While it ran,
+    `./agent-dev.sh sleep 25` started, and `docker ps` listed a container of each image
+  * With the two edits reverted by `git checkout -- container`, `./agent-dev.sh npm test` exited 0 with 182
+    passing and 0 failing, the count the host reports. `git status --short` shows nothing of the temporary edits,
+    and the two saved configurations are removed
+  * Left on the host: the dev image, home volume and network, which are what the command creates and the README
+    says how to remove
+  * Not checked: Docker Desktop for macOS; a first build without the release image's layers in the build cache;
+    whether either harness starts in the dev sandbox, where only `bash`, `sleep` and `npm test` were run
 
 ## Amendments
