@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-04T15:31:37Z
 ---
 
@@ -162,5 +162,12 @@ timestamp: 2026-10-04T15:31:37Z
   historical real-Docker runs and cleanup, historical red-test runs or test-writing order. Evidence is the
   current suite, focused regressions and independent checks with real git and the Docker stand-in, whose
   results and verification limits are in the saved review. Unchanged behavior was not re-reviewed
+- 2026-10-04T23:22:52Z [Claude Code, anthropic/claude-opus-5-5] as implementer, closed the unit. The delta review of
+  `3bed96c` found S1, S2, C1 and P1 corrected and returned no new finding, and the human had decided what C1 left
+  open, so no blocking finding is undecided. Every task in `plan.md` is ticked. On `e89301c`, `npm test` reported 286
+  tests, 286 passing, and `npm run check-changes` exited 0; this commit changes this record only. Still not tried, as
+  the entries above say: Docker Desktop for macOS, an interactive terminal and an interrupt typed into one, a stopped
+  container left by a crash, two starts in the same moment, and the corrections of S1, S2 and C1 on a real Docker. The
+  branch is not merged into `master` and not pushed. Status `implemented`
 
 ## Amendments
