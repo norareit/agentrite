@@ -192,8 +192,8 @@ which is this project's exception to working on a branch. On the human's word, w
 Commit nothing else, and push nothing. The pins and the notes are committed first because `npm version` refuses a
 working tree that is not clean, and so the tree the tag names holds both and the tarball does too.
 
-Then end by telling the human what is left, as the three commands of step 6, with the part and the version filled
-in, in that order. Do not run `npm version` or `./deploy.sh`.
+Then end by telling the human what is left, as the three commands of step 6, with the part filled in, in that
+order. Do not run `npm version` or `./deploy.sh`.
 
 ## 6. What the human runs
 
