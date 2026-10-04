@@ -205,9 +205,9 @@ two files:
 * `agent/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
   allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
 
-Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`. The harness
-versions are pinned in `container/Dockerfile`, so a project updates Claude Code and OpenCode by updating the kit, as
-below, and rebuilding.
+Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`. Which versions
+of Claude Code and OpenCode the image holds, and how a sandbox gets a newer one, is under "The harness versions"
+below.
 
 The container's root filesystem is read-only. The agent writes the working directory, its home volume and `/tmp`.
 `/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
@@ -235,6 +235,45 @@ node_modules
 The exception names the files rather than the directory. BuildKit lets an exception for a directory reach the files
 in it only when the directory itself was excluded, so `!node_modules/@ritenoar/agentrite/container` alone does not
 bring back a kit file that a pattern excluded by name.
+
+### Starting it
+
+The host needs Docker: Desktop on macOS, Engine on Linux. From the project root:
+
+```sh
+./agent.sh
+```
+
+This builds the image on first use and opens a shell in the container, with the project mounted read-write at
+`/work`. Nothing else of the host is reachable, with three exceptions: the developer's `~/.gitconfig`, mounted
+read-only so that commits from inside carry the same name and email as on the host, the developer's Claude Code
+status line script, as "The status line" below describes, and the local model server's port, as "The local model
+server" below describes. A command appended to it runs instead of the shell, as in `./agent.sh claude` and
+`./agent.sh npm test`. `./agent.sh --rebuild` builds the image again before running.
+
+Never run it with `sudo`. The wrapper refuses to run with uid or gid 0, because the agent inside the sandbox would
+then be root too. When Docker needs elevated permissions on the machine, add the user to the `docker` group instead.
+
+### Another working directory
+
+`--workdir DIR` mounts `DIR` at `/work` in place of the project root:
+
+```sh
+./agent.sh --workdir /path/to/other/clone
+```
+
+The container works on a full checkout on a branch, not a `git worktree`: a worktree's `.git` points at an absolute
+path on the host that does not resolve inside the container. To isolate the work further, mount a separate clone and
+push branches back from it.
+
+### Extra directories
+
+`--mount HOST` mounts a host directory at `/mnt/<basename>`, read-write, and `--mount HOST:ro` mounts it read-only.
+The option may be repeated:
+
+```sh
+./agent.sh --mount ~/reference:ro --mount ~/scratch
+```
 
 ### The shared `node_modules`
 
@@ -293,6 +332,84 @@ is not the repository's name but the Compose project's, the `name:` key in the p
 `agent/compose.project.yml`, and the volume Docker names after it. A mismatched home is a one-off state: once the
 volume is removed, the next start creates a new one owned by the agent.
 
+### The harness versions
+
+The image holds Claude Code and OpenCode. For each on its own, the version is the first of these that exists:
+
+1. the version the project's `agent/compose.project.yml` gives
+2. the version installed on the host
+3. the version the kit pins, as the default of the build argument in `container/Dockerfile`
+
+A project holds a version by adding the build argument to its `agent/compose.project.yml`, for either harness or
+for both:
+
+```yaml
+services:
+  agent:
+    build:
+      args:
+        CLAUDE_CODE_VERSION: 2.1.288
+        OPENCODE_VERSION: 1.18.33
+```
+
+Give an exact version. The value is passed to npm as it is, so a tag such as `latest` is installed once, when the
+image is built, and not again.
+
+The host's version is what `claude --version` and `opencode --version` print, for the command on the `PATH` of
+whoever runs `./agent.sh`. A harness that is not there, or that is reached only through a shell alias, counts as
+not installed, and the sandbox gets the kit's version of it. When the command is there and prints no version, the
+sandbox gets the kit's version too, and the wrapper says so:
+
+```
+agent.sh: 'claude --version' printed no version, so the sandbox gets the kit's Claude Code 2.1.288.
+```
+
+At each start the wrapper compares the versions it wants with those the image was built with, which the image
+holds as two labels, and builds the image again by itself when they differ, saying which harness and why:
+
+```
+agent.sh: the image holds Claude Code 2.1.288 and 2.1.289 is wanted, from the host. Rebuilding.
+agent.sh: the image records no OpenCode version and 1.18.34 is wanted, from the host. Rebuilding.
+```
+
+So no flag is needed after a harness is updated on the host. An image built by a release that did not write the
+labels records no version, and is built again at the first start. When that build fails, for example with no
+network, the sandbox does not start, although an image exists.
+
+To see what an image holds, read its labels, where `<image>` is the `image:` of the project's
+`agent/compose.project.yml`, or ask the harness in the sandbox:
+
+```sh
+docker image inspect --format '{{ json .Config.Labels }}' <image>
+./agent.sh claude --version
+```
+
+What follows from that:
+
+* The image is per machine. Two developers on one project run what their own hosts have, until the project holds a
+  version
+* Each rebuild leaves the image it replaced behind, untagged, at about 0.6 GB. `docker image prune` removes them
+* Self-update stays off inside the sandbox, for both harnesses: its root filesystem is read-only, and holds what
+  the build installed
+
+The kit promises less for a version it did not pin:
+
+* For any version: the confinement, which depends on no harness's version. The firewall, the proxy, the read-only
+  root, the capabilities and the mounts are the same whichever version is installed, and a harness that contacts a
+  host the kit does not admit is refused as before. And that the image holds exactly the version the order above
+  names, or the start fails
+* For the pinned versions only, because each was checked against them and nothing else: that both harnesses start
+  with the kit's allowlist alone, that the login command for OpenCode below names a method that exists, that the
+  developer's status line shows through the managed settings, and that the environment variables and the
+  configuration file the image sets do switch self-update off
+* What a developer sees when another version breaks one of these: the harness's own error, such as
+  `Unable to connect`, or a feature that is missing, with the refused host in `/run/egress-proxy.log`; a login
+  method OpenCode does not know; a blank status line; an update attempt that fails against the read-only root and
+  the firewall; or, for a version that is not on the npm registry, a build that fails with npm's error
+* To recover, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold the version
+  the kit pins, or any that works, in the project's `agent/compose.project.yml`, as above. Holding the versions the
+  image already has, without committing the edit, is also how to start the sandbox while a build cannot run
+
 ### The status line
 
 A developer's own Claude Code status line is shown in the sandbox. When `~/.claude/statusline-command.sh` is a file
@@ -328,7 +445,9 @@ For OpenAI in OpenCode with a ChatGPT account, that is:
 opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"
 ```
 
-It prints an address and a code to enter there, in any browser, and completes on its own once the code is accepted.
+The method's label is the one the version of OpenCode the kit pins uses, and another version may name it
+differently. It prints an address and a code to enter there, in any browser, and completes on its own once the code
+is accepted.
 The kit admits the two hosts this login needs itself, `auth.openai.com` to sign in and `chatgpt.com` for the prompts,
 so the project adds nothing for it. A login with an API key needs `api.openai.com` in the project's `ALLOWLIST`
 instead.
@@ -340,7 +459,7 @@ When a login or a prompt fails for a host that is not on the allowlist, the refu
 
 The sandbox's egress is bounded by hostname. What leaves the container is DNS to its resolvers, the local model
 server's host and port, and HTTPS on port 443 to the allowlisted hosts. Everything else is denied, whatever its port
-or address.
+or address. "The local model server" below says where that host and port are set.
 
 The allowlist is two lists together. `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit
 itself needs: `api.anthropic.com`, which is the probe host and the API Claude Code uses, `platform.claude.com`, which
@@ -381,6 +500,14 @@ fails:
 * every allowlisted host, and the probe host (`FIREWALL_PROBE`), can be reached through the proxy
 * the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
   is on the hostname and not the address
+
+### The local model server
+
+The sandbox reaches one host and port outside the allowlist: `MODEL_SERVER_HOST` on `MODEL_SERVER_PORT`, which
+`container/compose.yml` sets to `host.docker.internal` and `11434`, and nothing else on the host.
+
+On a Linux host whose firewall denies incoming traffic by default, `ufw` for example, allow the Docker bridge subnets
+to that port on the host, or the container cannot reach the model.
 
 ## The kit's own tests
 
@@ -423,6 +550,8 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
 
 * It is this repository's own file. It is not in the package, and `init` and `refresh` do not write it
 * It builds the image on every start, so a change is in the sandbox that starts
+* It takes the harness versions as `./agent.sh` does, so on a host with the harnesses it runs the host's and not
+  the pinned ones
 * It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
   `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
   and the saved logins of `./agent.sh` are not touched, and both sandboxes can run at once

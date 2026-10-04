@@ -2,8 +2,9 @@
 # this kit. Every confinement setting lives here. container/entrypoint.sh is the one
 # exception and holds only the start-up firewall, because iptables rules are kernel state
 # in a network namespace that does not exist until the container runs. container/agent.sh
-# is a thin wrapper that adds only the per-run working directory and any extra mounts; it
-# sets nothing that confines the container.
+# is a thin wrapper that adds only the per-run working directory, any extra mounts and the
+# versions of the two harnesses the image is built with; it sets nothing that confines the
+# container.
 #
 # A project layers its own compose file over this one, at agent/compose.project.yml,
 # holding what varies per project: the Compose project name, the image name, the egress
@@ -27,6 +28,12 @@ services:
         KIT_CONTAINER: ${AGENTRITE_CONTAINER}
         AGENT_UID: ${AGENT_UID:-1000}
         AGENT_GID: ${AGENT_GID:-1000}
+        # The harness versions, which container/agent.sh works out at each start: the
+        # version the host has, or else the one the kit pins in its Dockerfile. A
+        # project that holds a version gives the same argument in its own compose
+        # file, which replaces the value here.
+        CLAUDE_CODE_VERSION: ${AGENT_CLAUDE_CODE_VERSION:?run the sandbox through the project's agent.sh}
+        OPENCODE_VERSION: ${AGENT_OPENCODE_VERSION:?run the sandbox through the project's agent.sh}
     working_dir: /work
     init: true
     stdin_open: true
