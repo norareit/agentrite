@@ -188,7 +188,7 @@ process of release 2.3.0; this unit was planned under it.
   `files` in `package.json`. Before committing, check each line of the 2.3.0 section once more against
   `git diff v2.2.1 v2.3.0` over the shipped files and against the statuses at the two tags, and record what was
   checked. See the test pass and `npm pack --dry-run` list 24 files, `CHANGELOG.md` among them (R1, R2, R3, R4)
-- [ ] Add the "Release notes" section to `AGENTS.md`, after "General guidelines", with the wording the Approach
+- [x] Add the "Release notes" section to `AGENTS.md`, after "General guidelines", with the wording the Approach
   gives, wrapped at 120 characters (R5, R6)
 - [ ] Change the README in the four places the Approach names. Remove nothing but the sentence and code block the
   new order replaces (R10, R11)
@@ -217,6 +217,6 @@ process of release 2.3.0; this unit was planned under it.
 - [x] The fixture files in the deploy test
 - [x] The tests and the check in `deploy.sh`
 - [x] The changelog, its test and `files`
-- [ ] The rule in `AGENTS.md`
+- [x] The rule in `AGENTS.md`
 - [ ] The README
 - [ ] The record of the two trials
