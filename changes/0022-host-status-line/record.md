@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-04T01:12:22Z
+status: implemented
+timestamp: 2026-10-04T01:23:17Z
 ---
 
 # 0022 The developer's Claude Code status line in the sandbox
@@ -116,5 +116,12 @@ timestamp: 2026-10-04T01:12:22Z
   Not independently verified: Docker Desktop for macOS, subscription usage percentages, organization-managed
   settings, symbolic-link mounting, managed override with both lines configured together, or the historical
   pre-implementation red-test runs. The complete review records these limits.
+- 2026-10-04T01:23:17Z [human] on the review coming back with no remarks, asked for the unit to be marked
+  implemented. The human raised nothing against the implementer's reading of 01:09:49Z, that the request to
+  implement was the approval of the spec and the plan as written
+- 2026-10-04T01:23:17Z [Claude Code, anthropic/claude-opus-5-5] set the status to implemented: every task in `plan.md`
+  is ticked, and the review returned no findings, so there is none to decide. No file but this record changed
+  since `2cf8729`, which the review ran on, so the suites were not run again. `npm run check-changes` exited 0 on
+  the commit that holds this entry
 
 ## Amendments
