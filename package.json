@@ -22,7 +22,7 @@
     "deploy": "./deploy.sh"
   },
   "devDependencies": {
-    "@ritenoar/agentrite": "https://agentrite.ritenoar.com/ritenoar-agentrite-2.2.1.tgz",
+    "@ritenoar/agentrite": "https://agentrite.ritenoar.com/ritenoar-agentrite-2.3.0.tgz",
     "aws-cdk": "^2.1143.0",
     "aws-cdk-lib": "^2.270.0",
     "constructs": "^10.8.1",
