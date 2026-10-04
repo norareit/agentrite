@@ -379,7 +379,7 @@ version, and neither does `RELEASING.md`.
 
 ## Tasks
 
-- [ ] Add `tests/release.test.mjs` with the three groups of tests the Approach gives, and the assertion on
+- [x] Add `tests/release.test.mjs` with the three groups of tests the Approach gives, and the assertion on
   `RELEASING.md` to the refusal tests of `tests/deploy.test.mjs`. Run `npm test` and see the new ones fail and the
   224 existing ones pass (R17)
 - [ ] Add `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, wrapped at 120
@@ -426,7 +426,7 @@ version, and neither does `RELEASING.md`.
 
 ## Commit Points
 
-- [ ] The tests
+- [x] The tests
 - [ ] `RELEASING.md` and the skill
 - [ ] `AGENTS.md`
 - [ ] The README
