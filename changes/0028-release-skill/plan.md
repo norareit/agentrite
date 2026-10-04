@@ -150,8 +150,10 @@ An agent runs none of the three. `./deploy.sh` publishes, and what it publishes 
 version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
 
 `deploy.sh` refuses, before it does anything else, a version whose section is missing from `CHANGELOG.md`, which is
-also what a wrong part gives; then write the notes, commit them, move the tag with `git tag -f v<version>` and run
-it again.
+also what a wrong part gives; then write the notes, commit them, move the tag with
+`git tag -fa v<version> -m "<version>"` and run it again. The tag has to stay an annotated one, with the version as
+its message, as `npm version` made it: `git tag -f` alone replaces it with a plain tag, and the push below takes
+annotated tags only and leaves a plain one behind without saying so.
 
 `deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and
 uploads the tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL
@@ -183,6 +185,8 @@ What differs in steps 2 to 5 from the two texts they are moved from, and nothing
   `master`"
 * The paragraph of `AGENTS.md` that opens the "Release notes" section stays in `AGENTS.md`, as below, and its first
   sentence is repeated at the head of step 2
+* The README said to move the tag with `git tag -f v<version>`. Step 5 says `git tag -fa v<version> -m "<version>"`,
+  and why: the push with `--follow-tags`, which this unit adds, takes annotated tags only. The review's finding S1
 
 Step 1 is new. Its first two conditions are what `npm version` and the README's "on `master`" already asked for,
 and the third, the suite, is this unit's.

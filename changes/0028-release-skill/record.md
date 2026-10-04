@@ -619,5 +619,33 @@ timestamp: 2026-10-04T18:20:11Z
   `.reviews/0028-release-skill/2026-10-04T203510Z-opencode-openai-gpt-6.1-sol-full.md`.
   Could not verify actual `/release` invocation or the complete release workflow, deferred by the human to the
   first real release, or independently verify the historical captures of the withdrawn sandbox check.
+- 2026-10-04T20:49:22Z [human] decided the review's one finding, S1, which blocks, after it and its correction were laid
+  out with the recommendation to accept: "Okay do so". S1 is accepted. The time of this entry is when the words
+  reached the implementer, through the dispatching session
+- 2026-10-04T20:49:22Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for S1 on `f94362e`, read the
+  findings in full, and committed the reviewer's entry as it was written, in `395d455`. S1, accepted, is applied:
+  * The recovery in step 5 of `RELEASING.md`, after `./deploy.sh` refuses a version with no section, moves the tag
+    with `git tag -fa v<version> -m "<version>"`, where it said `git tag -f v<version>`, and says why the tag has
+    to stay an annotated one. The plan's text of the file is changed alike, and a script found the two the same.
+    The plan's list of what differs from the moved texts has a line for it
+  * The message is the form `npm version` uses here: `git cat-file -p v2.3.0` shows an object of type `tag` whose
+    whole message is `2.3.0`, the version without the `v`. So a tag made by the recovery differs from one
+    `npm version` made in its tagger's time and nothing else
+  * The old command was nowhere else that is current instruction: not in the README, which lost the sentence to
+    `RELEASING.md`, nor in `AGENTS.md`, nor in a message of `deploy.sh`
+  * Shown in a scratch clone of this repository under the session's scratch directory, with this branch checked
+    out as `master`, an empty local bare remote and dry-run pushes only. An annotated tag `v0.0.0-check` on the
+    commit before the last: `git cat-file -t` printed `tag`. After `git tag -f v0.0.0-check HEAD` it printed
+    `commit`, and `git push --dry-run --follow-tags <remote> master` exited 0 and listed the branch and not that
+    tag. After `git tag -fa v0.0.0-check -m "0.0.0-check"` it printed `tag`, the tag pointed at `HEAD`, its message
+    was `0.0.0-check`, and the same dry run exited 0 and listed `[new tag] v0.0.0-check -> v0.0.0-check`. Signing
+    and the tagger were given on the command line. No configuration was written, no tag of this repository was
+    made or moved, nothing was pushed, and the clone and the remote are removed
+  * Not shown: the recovery in a real release, after a real refusal by `./deploy.sh`, and a host where tags are
+    signed by configuration
+  * No test holds the command. The suite holds the wiring and not the file's steps
+  Pending, and the planner's: requirement 15 asks that what the README's section said is in `RELEASING.md` "with
+  its exact commands", and this command is now another on purpose. `spec.md` is not changed by the implementer,
+  and the exception is to be recorded there. Status stays `in-progress`
 
 ## Amendments

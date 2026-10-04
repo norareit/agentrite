@@ -100,8 +100,10 @@ An agent runs none of the three. `./deploy.sh` publishes, and what it publishes 
 version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
 
 `deploy.sh` refuses, before it does anything else, a version whose section is missing from `CHANGELOG.md`, which is
-also what a wrong part gives; then write the notes, commit them, move the tag with `git tag -f v<version>` and run
-it again.
+also what a wrong part gives; then write the notes, commit them, move the tag with
+`git tag -fa v<version> -m "<version>"` and run it again. The tag has to stay an annotated one, with the version as
+its message, as `npm version` made it: `git tag -f` alone replaces it with a plain tag, and the push below takes
+annotated tags only and leaves a plain one behind without saying so.
 
 `deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and
 uploads the tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL
