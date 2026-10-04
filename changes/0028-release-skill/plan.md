@@ -382,10 +382,10 @@ version, and neither does `RELEASING.md`.
 - [x] Add `tests/release.test.mjs` with the three groups of tests the Approach gives, and the assertion on
   `RELEASING.md` to the refusal tests of `tests/deploy.test.mjs`. Run `npm test` and see the new ones fail and the
   224 existing ones pass (R17)
-- [ ] Add `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, wrapped at 120
+- [x] Add `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, wrapped at 120
   characters. `master` holds 0027, so the text is the one adapted to it, as the Approach says under "0026 and
   0027" (R2, R6, R7, R8, R9, R10, R11, R12, R13, R14)
-- [ ] Add `.claude/skills/release/SKILL.md` with the text the Approach gives. See the skill's tests pass. See that
+- [x] Add `.claude/skills/release/SKILL.md` with the text the Approach gives. See the skill's tests pass. See that
   `npm pack --dry-run` lists the same files as it does on `master`, comparing the two lists and not their length,
   and that nothing was added under `.opencode/` (R1, R3, R4)
 - [ ] Replace the "Release notes" section of `AGENTS.md` with the "Releasing" section the Approach gives. Compare
@@ -427,7 +427,7 @@ version, and neither does `RELEASING.md`.
 ## Commit Points
 
 - [x] The tests
-- [ ] `RELEASING.md` and the skill
+- [x] `RELEASING.md` and the skill
 - [ ] `AGENTS.md`
 - [ ] The README
 - [ ] `deploy.sh`
