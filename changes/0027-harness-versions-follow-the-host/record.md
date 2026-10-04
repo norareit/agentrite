@@ -165,5 +165,15 @@ timestamp: 2026-10-04T15:49:32Z
 - 2026-10-04T16:00:50Z [Claude Code, anthropic/claude-opus-5-5] as implementer, ran the suite on the tree of
   `13c770f`, on the host, which has both harnesses: 221 tests, 221 passing. The same with a `claude` and an
   `opencode` that print `nonsense` first on the `PATH`: 221 tests, 221 passing
+- 2026-10-04T16:01:38Z [Claude Code, anthropic/claude-opus-5-5] as implementer, where the unit stands. The change
+  check, run on
+  the committed branch at `16962bb` as the released 2.3.0 script from the main checkout's `node_modules` with the
+  worktree as its argument, since a worktree has no `node_modules`, exited 0 and printed nothing. No line of a file
+  this branch changes against `master` is over 120 characters, and none holds an em dash. Nothing changed after
+  the suite's run on `13c770f` but this record and ticks in the plan.
+  Open, so the status stays `in-progress`: the last item of requirement 12, which is the human's; the review; and
+  the move of the work to the main checkout, which the human asked for and the session's permissions refused.
+  Three boxes in the plan are unticked for the first of these. For the human to decide besides: nothing in the
+  spec had to be decided by the implementer, and none of the six items under "Beyond the request" was built
 
 ## Amendments
