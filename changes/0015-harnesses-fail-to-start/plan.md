@@ -41,8 +41,6 @@ this repository's own sandbox with the working copy's Compose file, the way 0020
       `claude` and `opencode` have each been started, `grep 'not allowlisted' /run/egress-proxy.log` names neither
       `platform.claude.com` nor `models.opencode.ai` (R2). What each check showed is in the record, with the Docker
       and Compose versions (R5)
-- [ ] Human: log in to Claude Code in that sandbox, send one prompt in each harness, and run the same `grep`. A
-      host refused there is logged in `record.md` and is a new unit, not part of this one
 
 ## Commit Points
 

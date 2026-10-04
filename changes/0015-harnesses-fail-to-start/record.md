@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: in-progress
-timestamp: 2026-10-04T00:01:00Z
+status: implemented
+timestamp: 2026-10-04T00:29:54Z
 ---
 
 # 0015 The sandbox refuses two hosts its harnesses need
@@ -126,5 +126,30 @@ timestamp: 2026-10-04T00:01:00Z
   `.reviews/0015-harnesses-fail-to-start/2026-10-04T000528Z-delta-32dc2b1-opencode.md`.
   Could not verify the pending human login-and-prompt task or the chronology of the implementer's original
   uncommitted regression-test run
+- 2026-10-04T00:29:54Z [human] carried out the plan's human task as far as it went, on Linux with Docker Engine 28.4.0
+  and Compose 2.39.2, in a sandbox started with the working copy's `container/compose.yml` and a new home volume.
+  Reported that Claude Code works fine there, logged in and prompted. In OpenCode, tried to log in to OpenAI, which
+  did not complete: the browser on the host was sent to `localhost:1455/auth/callback`, where nothing on the host
+  listens. No prompt was sent in OpenCode. Said the review is fine. Decided to close the unit with the task done
+  for Claude Code and not possible for OpenCode, and asked for a new unit for the OpenAI login
+- 2026-10-04T00:29:54Z [Claude Code, anthropic/claude-opus-5-5] as implementer, closed the unit on that decision:
+  * The plan's last verification task, the human's login and one prompt in each harness, is removed from `plan.md`
+    and not ticked, because its OpenCode half cannot be done: a new home volume holds no provider login for
+    OpenCode, and the login to OpenAI cannot complete in a sandbox. Its Claude Code half was done, as the entry
+    above says
+  * The proxy's log of that container, read while it ran, holds these refusals for want of an allowlist entry:
+    `example.com` once, which is the start-up check's canary; `raw.githubusercontent.com` once;
+    `mcp-proxy.anthropic.com` 10 times; `http-intake.logs.us5.datadoghq.com` 5 times; `downloads.claude.ai` once;
+    `github.com` once; `auth.openai.com` once. It holds `platform.claude.com` allowed 3 times and
+    `models.opencode.ai` twice, and no refusal of either (R2). Which harness asked for each refused host was not
+    traced. By the human's report none of them kept Claude Code from logging in or answering a prompt. The plan's
+    rule for a host refused there is that it is logged here and is a new unit
+  * In that container OpenCode listened on port 1455 on all interfaces, and the container publishes no port. That
+    and the refused `auth.openai.com` are what the new unit for the OpenAI login starts from. Whether the login
+    completes with both solved was not tried
+  * C1 is accepted, on the human's word that the review is fine, and the delta review returned no new finding
+  * Status set to implemented: every task left in `plan.md` is ticked, and the review's one finding is decided.
+    `npm test` on the tree of this commit reported 180 passing and 0 failing, and `npm run check-changes` exited 0
+    on the commit that holds this entry
 
 ## Amendments
