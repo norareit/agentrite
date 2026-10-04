@@ -1,7 +1,7 @@
 ---
 kind: task
 status: in-progress
-timestamp: 2026-10-04T11:05:16Z
+timestamp: 2026-10-04T11:05:43Z
 ---
 
 # 0024 Depend on AgentRite 2.3.0
@@ -52,5 +52,26 @@ with the command the README gives, and moving any other project to 2.3.0.
 - 2026-10-04T11:05:16Z [human] shown the task, asked for it to be implemented, which is its approval
 - 2026-10-04T11:05:16Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a session on the host,
   on Linux, and moved the status through approved to in-progress
+- 2026-10-04T11:05:43Z [Claude Code, anthropic/claude-opus-5-5] did the task, in `69921d4`. The harness did not block
+  `npm install` this time, so the implementer ran it. What was verified:
+  * The diff of `package.json` is the one URL. The diff of `package-lock.json` is the kit's entry, its version, its
+    URL and its integrity hash, and the same URL where the lock repeats the root package's devDependencies, which
+    the description does not mention
+  * `node_modules/@ritenoar/agentrite/package.json` says 2.3.0. Its `process.md`, the three files in `roles/` and
+    the seven in `container/` are identical to those at the tag `v2.3.0` (`b1ca65b`), compared with `cmp`
+  * `npx agentrite refresh claude opencode` reported the six role wrappers and `agent.sh` as up to date, and
+    `git status` showed no change from it
+  * On Linux with Docker Engine 28.4.0 and Compose 2.39.2, `./agent.sh` started the sandbox with no rebuild: the
+    id of the image `ritenoar-agentrite-agent` was the same before and after. The proxy's log names
+    `platform.claude.com`, `models.opencode.ai`, `auth.openai.com` and `chatgpt.com` among the hosts it listens
+    for, and its only refusal for want of an allowlist entry was the canary's. This host holds
+    `~/.claude/statusline-command.sh`, and `/etc/claude-code` in the sandbox listed `managed-settings.json` and
+    `statusline-command.sh`
+  * `npm test` was run on the tree of the commit that holds this entry, with this entry already written, and
+    reported 188 passing and 0 failing. `npm run check-changes`, now the check of the installed 2.3.0, exited 0 on
+    that commit
+  * Not checked: Claude Code's terminal showing the status line in the everyday sandbox, where only the two
+    mounted files were listed; a login or a prompt there; Docker Desktop for macOS
+  No review has been made, so the status stays in-progress until the human decides whether the task needs one
 
 ## Amendments
