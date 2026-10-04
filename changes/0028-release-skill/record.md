@@ -613,5 +613,11 @@ timestamp: 2026-10-04T18:20:11Z
   Looked once for any other sentence that assumes the trial: the other mentions of a trial in the spec are of the
   withdrawn check's, which was made. No requirement number moved, so no citation changed. Status stays
   `in-progress`
+- 2026-10-04T20:36:31Z [OpenCode, openai/gpt-6.1-sol] as reviewer, made a full review of 0028 on commit
+  `f94362efc5197029e45409a41d4da0a42a581014`, against the merge base with `master` at
+  `94099e9aed729431fda03d9daf927273e6eb85f9`. Returned S1. The complete findings are in
+  `.reviews/0028-release-skill/2026-10-04T203510Z-opencode-openai-gpt-6.1-sol-full.md`.
+  Could not verify actual `/release` invocation or the complete release workflow, deferred by the human to the
+  first real release, or independently verify the historical captures of the withdrawn sandbox check.
 
 ## Amendments
