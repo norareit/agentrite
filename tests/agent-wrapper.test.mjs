@@ -1,6 +1,15 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -146,4 +155,46 @@ test("the wrapper stops with Compose's own error when Compose refuses the config
   assert.match(result.stderr, /validating compose\.project\.yml: invalid/);
   assert.doesNotMatch(result.stderr, /SyntaxError|JSON/);
   assert.deepEqual(dockerCalls(), []);
+});
+
+// The developer's Claude Code status line. The wrapper mounts the host's script and the kit's managed settings
+// file that runs it, both or neither: Docker would create a root-owned directory at a script that is not there,
+// and the settings without a script would blank a status line set inside the sandbox.
+const statusLinePath = (home) => join(home, '.claude', 'statusline-command.sh');
+
+function expectedRun(root, container, mounts = '') {
+  return (
+    'AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container docker compose ' +
+    `--project-directory ${root} -f ${container}/compose.yml -f ${root}/agent/compose.project.yml ` +
+    `run --rm --volume ${root}:/work ${mounts}agent echo hi`
+  );
+}
+
+test("the wrapper mounts the host's status line script and the settings that run it, read-only", (t) => {
+  const { root, container, home, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container');
+  mkdirSync(join(home, '.claude'));
+  writeFileSync(statusLinePath(home), 'echo line\n');
+  const result = run(root, 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  const mounts =
+    `--volume ${statusLinePath(home)}:/etc/claude-code/statusline-command.sh:ro ` +
+    `--volume ${container}/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
+  assert.deepEqual(dockerCalls(), [expectedRun(root, container, mounts)]);
+});
+
+test('the wrapper mounts neither without a status line script on the host, and creates nothing there', (t) => {
+  const { root, container, home, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container');
+  const result = run(root, 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [expectedRun(root, container)]);
+  assert.deepEqual(readdirSync(home), []);
+});
+
+test('the wrapper mounts neither when a directory is where the status line script would be', (t) => {
+  const { root, container, home, run, dockerCalls } = setUp(t, 'project/node_modules/@ritenoar/agentrite/container');
+  mkdirSync(statusLinePath(home), { recursive: true });
+  const result = run(root, 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [expectedRun(root, container)]);
+  assert.deepEqual(readdirSync(statusLinePath(home)), []);
 });

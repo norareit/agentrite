@@ -2,7 +2,8 @@
 #
 # Thin wrapper around `docker compose run`. It exists only because Compose cannot
 # take an ad-hoc mount per invocation: it translates the working directory and any
-# --mount flags into `docker compose run --volume` options and passes the rest
+# --mount flags into `docker compose run --volume` options, adds the developer's
+# Claude Code status line when the host has one, and passes the rest
 # through. It sets nothing that confines the container; every such setting is in
 # container/compose.yml and the project's agent/compose.project.yml, and the
 # firewall is in container/entrypoint.sh.
@@ -94,6 +95,20 @@ while [ $# -gt 0 ]; do
       ;;
   esac
 done
+
+# The developer's own Claude Code status line, read-only: the script from the host, and
+# the kit's managed settings file, whose one setting runs it. Both or neither, and only
+# after looking, because Compose cannot make a mount conditional. Docker creates a
+# root-owned directory at a source that is not there, which here would be inside the
+# developer's ~/.claude, and a managed statusLine with no script to run would blank a
+# status line set inside the sandbox.
+statusline="${HOME:-}/.claude/statusline-command.sh"
+if [ -f "$statusline" ]; then
+  mounts+=(
+    --volume "$statusline:/etc/claude-code/statusline-command.sh:ro"
+    --volume "$here/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro"
+  )
+fi
 
 export AGENT_UID AGENT_GID
 AGENT_UID="$(id -u)"

@@ -86,7 +86,7 @@ and what was seen instead, and leave the terminal check to the human, who has a 
   pass, on a machine whose real home holds a status line script (R6)
 - [x] Do the same in `tests/agent-dev.test.mjs`, which 0021 added after this plan was written and which runs the
   wrapper through `agent-dev.sh` with the runner's environment too. There are 184 tests since 0015 and 0021 (R6)
-- [ ] Add the wrapper tests and see them fail: with a file at `<home>/.claude/statusline-command.sh`, the `run`
+- [x] Add the wrapper tests and see them fail: with a file at `<home>/.claude/statusline-command.sh`, the `run`
   call to Compose holds, after `--volume <root>:/work`, exactly the two flags below and then `agent`; with no such
   path, the call is as it is today and the path still does not exist afterwards; with a directory at that path, the
   call is as it is today. The existing tests already hold the absent case's exact call (R1, R2, R3, R4, R6)
@@ -95,9 +95,9 @@ and what was seen instead, and leave the terminal check to the human, who has a 
   --volume <home>/.claude/statusline-command.sh:/etc/claude-code/statusline-command.sh:ro
   --volume <container>/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro
   ```
-- [ ] Add `tests/claude-managed-settings.test.mjs` and see it fail: `container/claude-managed-settings.json` parses
+- [x] Add `tests/claude-managed-settings.test.mjs` and see it fail: `container/claude-managed-settings.json` parses
   as JSON and deep-equals the object in the Approach (R3, R6)
-- [ ] Add `container/claude-managed-settings.json` and the lines in `container/agent.sh` as the Approach gives
+- [x] Add `container/claude-managed-settings.json` and the lines in `container/agent.sh` as the Approach gives
   them, with the comment and the header line. See the new tests pass and the suite with them (R1, R2, R3, R4, R5)
 - [ ] In `container/compose.yml`, change the last sentence of the comment above the `.gitconfig` mount to say that
   it is the only host dotfile this file mounts, and that the wrapper adds the developer's status line script when
@@ -122,6 +122,6 @@ and what was seen instead, and leave the terminal check to the human, who has a 
 ## Commit Points
 
 - [x] The `HOME` per run in the wrapper's tests
-- [ ] The tests, the settings file and the wrapper
+- [x] The tests, the settings file and the wrapper
 - [ ] The Compose comment and the README
 - [ ] The record of the real run
