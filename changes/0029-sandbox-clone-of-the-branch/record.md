@@ -149,5 +149,8 @@ timestamp: 2026-10-04T15:31:37Z
   each, and are one for all: the corrections share the fixture and the two shell files. While seeing the tests
   fail, the failing test of C1 left a temporary directory it could not remove, `/tmp/agent-unit-run-jsQ1pm`, which
   was removed by hand. The status stays `in-progress`
+- 2026-10-04T23:13:06Z [human] on what the correction of C1 left open, that the wrapper does not make a read-only
+  directory writable to get a clone removed: "C1 feels like something to fix when we run into it". Decided: it
+  stays as it is. A removal that fails is reported and its remains are removed by hand
 
 ## Amendments
