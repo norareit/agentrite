@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: in-progress
-timestamp: 2026-10-04T01:52:47Z
+status: implemented
+timestamp: 2026-10-04T01:54:18Z
 ---
 
 # 0023 OpenCode cannot log in to OpenAI in the sandbox
@@ -146,5 +146,13 @@ timestamp: 2026-10-04T01:52:47Z
   entry, with this entry already written, and reported 188 passing and 0 failing. `npm run check-changes` exited 0
   on that commit. The reviewer's own run on `b17b00a` reported the same count. Whether C1 is accepted, and whether
   this settles it, is the human's to decide, and the status stays in-progress until then
+- 2026-10-04T01:54:18Z [human] told of C1 and of the suite's run on the final tree that answers it, asked for the
+  unit to be marked completed. The human raised nothing against the implementer's reading of 01:30:02Z, that the
+  instruction to add the hosts to the kit's allowlist was the approval of the rewritten spec and plan
+- 2026-10-04T01:54:18Z [Claude Code, anthropic/claude-opus-5-5] took the human's request as the acceptance of C1 with
+  the run of 01:52:47Z as its correction, and set the status to implemented: every task in `plan.md` is ticked,
+  and the review's one finding is decided. No delta review of the correction was made. `npm test` was run on the
+  tree of the commit that holds this entry, with this entry already written, and reported 188 passing and 0
+  failing. `npm run check-changes` exited 0 on that commit
 
 ## Amendments
