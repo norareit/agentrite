@@ -50,7 +50,7 @@ sandbox does the others and leaves those three to the human or to a session on t
 
 ## Tasks
 
-- [ ] Before any edit, save what Compose resolves today, for the comparison in the fourth task. This reads
+- [x] Before any edit, save what Compose resolves today, for the comparison in the fourth task. This reads
   configuration and creates nothing:
   `AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container AGENT_UID=$(id -u) AGENT_GID=$(id -g) docker
   compose --project-directory . -f node_modules/@ritenoar/agentrite/container/compose.yml -f

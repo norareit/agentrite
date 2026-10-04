@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: draft
-timestamp: 2026-10-04T00:34:26Z
+status: in-progress
+timestamp: 2026-10-04T00:49:51Z
 ---
 
 # 0021 A sandbox built from the working copy
@@ -39,5 +39,15 @@ timestamp: 2026-10-04T00:34:26Z
   wrapper passes two Compose files and takes no third. Three things are left out as beyond the request and listed
   in the spec: a flag for an empty home, letting the caller choose the name, and a rule in `AGENTS.md`. Status left
   at `draft` for the human's approval
+- 2026-10-04T00:49:51Z [human] after the planner's report was put to them, with its questions on the edit to the
+  project Compose file, on always building, on the three things beyond the request and on the names, asked for
+  the unit to be implemented. The human answered none of those questions separately
+- 2026-10-04T00:49:51Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in a session on the host,
+  on Linux. Took the human's request as the approval of the spec and the plan as they are written, with the three
+  things beyond the request left out, and moved the status through approved to in-progress. That reading is the
+  implementer's, and the human is told of it. The branch was checked out in the planner's worktree, which was
+  clean and was removed so that the main checkout could take the branch. The plan's first task saves Compose's
+  configuration to `/tmp/0021-before.yml`; it is saved in the session's scratch directory instead, and so is the
+  later one
 
 ## Amendments
