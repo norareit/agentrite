@@ -175,5 +175,21 @@ timestamp: 2026-10-04T15:49:32Z
   the move of the work to the main checkout, which the human asked for and the session's permissions refused.
   Three boxes in the plan are unticked for the first of these. For the human to decide besides: nothing in the
   spec had to be decided by the implementer, and none of the six items under "Beyond the request" was built
+- 2026-10-04T16:17:31Z [OpenCode, openai/gpt-6.1-sol] as reviewer, full review of 0027 at
+  `6aea4cb369e1d9399e02fa3c27b24c970f792fcb`, against the merge base with `master`,
+  `f3550e03c5007bca0a01366a4574f9c0846915e1`. Returned S1 and P1. Complete findings saved in
+  `.reviews/0027-harness-versions-follow-the-host/2026-10-04T16-15-37Z-opencode-review.md`.
+  Ran `npm test`: 221 tests passing; `npm run check-changes`: exit 0; `npm pack --dry-run --json`: 24 entries;
+  `git diff --check`: exit 0; and the wrapper's syntax check. Confirmed S1 with real Compose merging and simulated
+  image labels and build/run calls. Could not independently verify the historical real build/start trials or
+  cleanup, the empty-home interactive harness startup and refused-host list, Bash 3.2, Docker Desktop for macOS,
+  or a real failed build. The detailed verification and recorded residual risks are in the findings file
+- 2026-10-04T16:34:40Z [human] decided both findings of the review, after reading them, with the words: "Fix both
+  review remarks then." So S1, which blocks, and P1, which does not, are accepted. The time of this entry is when
+  the words reached the implementer
+- 2026-10-04T16:34:40Z [Claude Code, anthropic/claude-opus-5-5] as implementer, resumed for the two findings. The
+  entry of 16:01:38Z says the move to the main checkout was refused. Since then it was made: on the human's word,
+  "Yes bring it back", the dispatching session removed the worktree and switched `/home/stef/projects/agentrite`
+  to this branch at `6aea4cb`, after the implementer's report. The work goes on there, with its `node_modules`
 
 ## Amendments
