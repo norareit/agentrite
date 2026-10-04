@@ -110,3 +110,22 @@ test('an expired AWS session is renewed with aws sso login, and a live one is no
   assert.ok(release(t, { stsOk: false }).calls.includes('aws sso login'));
   assert.ok(!release(t).calls.includes('aws sso login'));
 });
+
+// A release with no notes is refused before anything is touched: no AWS session, no install, no upload. The
+// section is its heading as a whole line, so the version of another release that only begins with the same
+// characters, a deeper heading, and the version in running text are all not the section.
+for (const [what, changelog] of [
+  ['no changelog', null],
+  ['sections for other versions only', `# Changelog\n\n## 1.2.30\n\n* Later\n\n## 1.2.2\n\n* Earlier\n`],
+  ['the version only in text and in a deeper heading', `# Changelog\n\nSince 1.2.3.\n\n### 1.2.3\n\n ## 1.2.3 \n`],
+]) {
+  test(`a version whose release notes are missing is refused before anything is called: ${what}`, (t) => {
+    const { status, stderr, calls } = release(t, { changelog });
+    assert.equal(status, 1);
+    assert.match(stderr, /CHANGELOG\.md has no section headed "## 1\.2\.3"/);
+    assert.deepEqual(
+      calls.filter((call) => /^(aws|npm|npx)\b/.test(call)),
+      [],
+    );
+  });
+}

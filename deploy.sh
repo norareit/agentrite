@@ -4,6 +4,8 @@
 # kit at the version in package.json, and uploads the tarball under that version's
 # name. A released name is never replaced, because consumers' lockfiles pin it by
 # integrity hash, so bump the version with `npm version` before every release.
+# A version whose release notes are missing from CHANGELOG.md is refused before
+# anything else is done.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,12 +16,20 @@ REGION="eu-west-1"
 CERT_STACK="AgentRiteCertStack"
 HOSTING_STACK="AgentRiteHostingStack"
 
+cd "$ROOT"
+
+VERSION="$(node -p 'JSON.parse(require("node:fs").readFileSync("package.json", "utf8")).version')"
+if ! grep -qxF "## $VERSION" CHANGELOG.md 2>/dev/null; then
+  echo "✗ CHANGELOG.md has no section headed \"## $VERSION\". Write the release notes as AGENTS.md" >&2
+  echo "  describes under \"Release notes\", commit them, and run this again." >&2
+  exit 1
+fi
+
 if ! aws sts get-caller-identity &>/dev/null; then
   echo "▶ AWS SSO login"
   aws sso login
 fi
 
-cd "$ROOT"
 # npm ci, not npm install, so that the lockfile is an input to the release rather
 # than something it rewrites.
 npm ci

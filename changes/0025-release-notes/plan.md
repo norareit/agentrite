@@ -176,11 +176,11 @@ process of release 2.3.0; this unit was planned under it.
   holding a `## 1.2.3` section into the `kit` directory, with a `changelog` option that replaces the content and
   writes no file when it is `null`. Run `npm test` and see all 188 tests pass, since `deploy.sh` does not read
   either file yet (R8, R9)
-- [ ] Add the tests and see them fail. With no `CHANGELOG.md`; with a changelog whose only headings are `## 1.2.2`
+- [x] Add the tests and see them fail. With no `CHANGELOG.md`; with a changelog whose only headings are `## 1.2.2`
   and `## 1.2.30`; and with one that holds `1.2.3` in its text and `### 1.2.3` as a heading but no `## 1.2.3`
   line: the exit status is 1, standard error names `1.2.3` and `CHANGELOG.md`, and the log of calls holds no line
   that starts with `aws`, `npm` or `npx` (R7, R9)
-- [ ] Add the check to `deploy.sh` as the Approach gives it, ahead of the AWS session check, with `cd "$ROOT"`
+- [x] Add the check to `deploy.sh` as the Approach gives it, ahead of the AWS session check, with `cd "$ROOT"`
   moved above it and a sentence in the header comment. See the new tests pass and the five existing ones with them
   (R7, R8)
 - [ ] Add `tests/changelog.test.mjs` and see it fail: `files` in `package.json` includes `CHANGELOG.md` (R1)
@@ -215,7 +215,7 @@ process of release 2.3.0; this unit was planned under it.
 ## Commit Points
 
 - [x] The fixture files in the deploy test
-- [ ] The tests and the check in `deploy.sh`
+- [x] The tests and the check in `deploy.sh`
 - [ ] The changelog, its test and `files`
 - [ ] The rule in `AGENTS.md`
 - [ ] The README
