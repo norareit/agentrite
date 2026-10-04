@@ -647,5 +647,18 @@ timestamp: 2026-10-04T18:20:11Z
   Pending, and the planner's: requirement 15 asks that what the README's section said is in `RELEASING.md` "with
   its exact commands", and this command is now another on purpose. `spec.md` is not changed by the implementer,
   and the exception is to be recorded there. Status stays `in-progress`
+- 2026-10-04T20:49:47Z [Claude Code, anthropic/claude-opus-5-5] as planner, on the branch at `42db887`, brought
+  `spec.md` in line with the outcome of the review's S1, which the human accepted in the entry of 20:49:22Z above
+  and the implementer applied in `42db887`. Read for it: that entry and the implementer's, and the findings in
+  `.reviews/0028-release-skill/2026-10-04T203510Z-opencode-openai-gpt-6.1-sol-full.md`. Only `spec.md` and this
+  record are changed. What changed:
+  * R15 names the one exception to "with its exact commands": the command that moves the tag after a refusal,
+    `git tag -f v<version>` in the README's old text, is `git tag -fa v<version> -m "<version>"` in `RELEASING.md`
+  * R14 says "as the README does today but for the command that moves the tag", and that after the recovery the
+    tag is still an annotated one, which the push takes with `master`
+  * The decision on the push no longer calls the recovery "the recovery 0025 gives", and points at the next one
+  * A decision is added as the human's: the recovery recreates an annotated tag, because the push with
+    `--follow-tags`, which this unit introduced, takes annotated tags only
+  No requirement number moved, and the plan needed no change. Status stays `in-progress`
 
 ## Amendments

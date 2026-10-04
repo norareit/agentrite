@@ -170,7 +170,8 @@ The human's reading, the commit and the version:
     the human what is left, as three commands in this order, ready to run: `npm version` with the part, patch,
     minor or major, that gives the version of the heading; `./deploy.sh`; and the push of `master` together with
     the release's tag. `RELEASING.md` says what `npm version` and `./deploy.sh` do, what `./deploy.sh` refuses and
-    what to do then, as the README does today, and why the push comes last
+    what to do then, as the README does today but for the command that moves the tag, and why the push comes
+    last. After that recovery the tag is still an annotated one, which the push takes with `master`
 
 The README and the script:
 
@@ -178,7 +179,9 @@ The README and the script:
     `/release` skill in a Claude Code session on the host, which follows `RELEASING.md`, and that a human or an
     agent in another harness follows that file directly; and, in a sentence, what a release does, what the human
     runs at the end included. Everything else the section says today is in `RELEASING.md`, with its exact commands
-    and its strength. "What is here" has a row for `RELEASING.md`
+    and its strength, with one exception: the command that moves the tag after `./deploy.sh` refused, which the
+    README gives as `git tag -f v<version>`, is `git tag -fa v<version> -m "<version>"` in `RELEASING.md`. "What is
+    here" has a row for `RELEASING.md`
 16. The message `./deploy.sh` prints when it refuses a version with no section sends the reader to `RELEASING.md`,
     and no longer to a section of `AGENTS.md` that is not there. The script does what it did otherwise
 
@@ -233,10 +236,22 @@ The tests:
   The wrong part gives a version with no section in `CHANGELOG.md`, and `./deploy.sh` refuses that before it does
   anything, which 0025 built
 * **The push comes last, after `./deploy.sh`, with `--follow-tags`. The flag is the human's choice.** When
-  `./deploy.sh` refuses, the recovery 0025 gives moves the tag, which is harmless while the tag is on the human's
+  `./deploy.sh` refuses, the recovery moves the tag, which is harmless while the tag is on the human's
   machine only. `git push --follow-tags origin master` pushes `master` and, with it, the annotated tags that point
   into what is pushed, which is the tag `npm version` made: its tags are annotated, as `git cat-file -t v2.3.0`
-  shows. The first revision named the tag in the command, and the human asked for the flag
+  shows. The first revision named the tag in the command, and the human asked for the flag. The flag takes
+  annotated tags only, which the next decision is about
+* **The recovery after a refusal recreates an annotated tag. The human's decision, on the review's finding S1.**
+  0025's recovery, which this unit moved out of the README, moves the tag with `git tag -f v<version>`. That
+  replaces the annotated tag `npm version` made with a plain one, and `git push --follow-tags`, which this unit
+  introduced, pushes annotated tags only: the push would succeed, take `master`, and leave the release's tag
+  behind without a word. 0025 had no push, so the command was right there and became wrong here, and requirement
+  14 was untrue on the one path the file gives for a refusal. The reviewer found it, and the human accepted the
+  correction, in the words the record has. So `RELEASING.md` gives `git tag -fa v<version> -m "<version>"`, the
+  message being the one `npm version` gives its tags here, and says why. It is the one command of the moved text
+  that differs on purpose, which requirement 15 names. Not taken: naming the tag in the push, which the human had
+  already turned down for the flag. Shown in a scratch clone with dry-run pushes, as the record has it, and not
+  yet in a real release after a real refusal
 * **The package is compared with `master`'s, not counted. The human's remark.** The first draft required 24 files.
   The number moves with every unit that ships a file, so a requirement that names it is wrong as soon as another
   unit lands first. What this unit promises is that it adds nothing to the package
