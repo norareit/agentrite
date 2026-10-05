@@ -102,7 +102,7 @@ test('plannedFiles for claude returns exactly the three fixture files, byte for 
   );
 });
 
-test('plannedFiles for opencode carries the claude description, subagent mode and the pointer body', () => {
+test('plannedFiles for opencode carries the claude description, the mode all and the pointer body', () => {
   const files = plannedFiles(['opencode']);
   assert.deepEqual(
     files.map((file) => file.path),
@@ -120,7 +120,7 @@ test('plannedFiles for opencode carries the claude description, subagent mode an
     assert.equal(file.content.startsWith('---\n'), true);
     assert.doesNotMatch(frontmatterBlock, /^name:/m);
     assert.equal(unfoldedDescription(file.content), unfoldedDescription(fixture));
-    assert.ok(frontmatterBlock.includes('mode: subagent\n'));
+    assert.ok(frontmatterBlock.includes('mode: all\n'));
     assert.ok(frontmatterBlock.indexOf('description:') < frontmatterBlock.indexOf('mode:'));
     assert.equal(body, fixtureBody);
     assert.match(body, new RegExp('^Read `node_modules/@ritenoar/agentrite/roles/.*\\.md`'));

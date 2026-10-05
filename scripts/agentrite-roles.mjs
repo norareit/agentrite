@@ -88,7 +88,7 @@ function claudeFile(role) {
  * @returns {string}
  */
 function opencodeFile(role) {
-  return `---\n${descriptionBlock(role.description)}mode: subagent\n---\n\n${body(role.name)}`;
+  return `---\n${descriptionBlock(role.description)}mode: all\n---\n\n${body(role.name)}`;
 }
 
 const HARNESSES = {

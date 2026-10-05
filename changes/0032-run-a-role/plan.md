@@ -75,11 +75,11 @@ usage: agentrite init claude | opencode
 
 The wrappers:
 
-- [ ] In `tests/agentrite-roles.test.mjs`, change the test of the OpenCode wrappers to expect `mode: all`, and
+- [x] In `tests/agentrite-roles.test.mjs`, change the test of the OpenCode wrappers to expect `mode: all`, and
       see it fail. In `tests/agentrite-refresh.test.mjs`, add a test that a wrapper holding `mode: subagent` and a
       pinned model is reported as refreshed and comes out with `mode: all` and its model, and see it fail (R15,
       R16)
-- [ ] Write `mode: all` in `opencodeFile`. Repair the stale wrapper that `tests/agentrite-refresh.test.mjs`
+- [x] Write `mode: all` in `opencodeFile`. Repair the stale wrapper that `tests/agentrite-refresh.test.mjs`
       builds by replacing `mode: subagent`, so that it is still stale. The Claude Code fixture test passes
       unchanged (R15, R16)
 
@@ -165,8 +165,8 @@ unit for the human; it is not worked around.
 
 ## Commit Points
 
-- [ ] `feature-0032 Plan a command that runs a role in a harness`: the three documents
-- [ ] `feature-0032 Write the OpenCode wrappers as primary agents and subagents`: the first two tasks
+- [x] `feature-0032 Plan a command that runs a role in a harness`: the three documents
+- [x] `feature-0032 Write the OpenCode wrappers as primary agents and subagents`: the first two tasks
 - [ ] `feature-0032 Let each command parse its own arguments`: the refactoring, with no change of behavior
 - [ ] `feature-0032 List the roles`: the `roles` command and its tests
 - [ ] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests

@@ -138,7 +138,7 @@ test('a file with no frontmatter, or with one that is never closed, becomes the 
 
 test('a wrapper with CRLF line endings keeps its model, and is written with LF', () => {
   const wrapper = rendered('opencode', 'reviewer');
-  const stale = withAdded(['model: some/model']).replace('mode: subagent', 'mode: primary');
+  const stale = withAdded(['model: some/model']).replace('mode: all', 'mode: primary');
 
   const result = refreshedWrapper(stale.replaceAll('\n', '\r\n'), wrapper);
 
@@ -224,6 +224,26 @@ test('stale wrappers and a stale shim are refreshed, a pinned model is kept, and
   assert.notEqual(statSync(join(base, 'agent.sh')).mode & 0o111, 0);
   for (const path of KIT_OWNED) assert.match(result.stdout, line('refreshed', path));
   assert.equal(result.stdout.trimEnd().split('\n').length, KIT_OWNED.length);
+});
+
+test('a wrapper that holds mode: subagent is refreshed to mode: all, and keeps its pinned model', (t) => {
+  const { run, read, write } = project(t);
+  const wrappers = plannedFiles(['opencode']);
+  const pinnedPath = '.opencode/agents/reviewer.md';
+  for (const file of wrappers) {
+    const earlier = file.content.replace('mode: all\n', 'mode: subagent\n');
+    write(file.path, file.path === pinnedPath ? withFrontmatter(earlier, 'mode:', ['model: some/model']) : earlier);
+  }
+
+  const result = run('refresh', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  for (const file of wrappers) {
+    assert.match(result.stdout, line('refreshed', file.path));
+    assert.match(read(file.path), /^mode: all$/m, file.path);
+    assert.doesNotMatch(read(file.path), /subagent/, file.path);
+  }
+  assert.equal(read(pinnedPath), withFrontmatter(rendered('opencode', 'reviewer'), 'mode:', ['model: some/model']));
 });
 
 test('a second run reports every file as up to date and writes none', (t) => {
