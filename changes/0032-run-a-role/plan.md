@@ -235,20 +235,20 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 What the human changed after the second implementation, which ends at `f136f75`. Requirements 2, 5, 12, 13, 17,
 21, 23 and 24 as they now read:
 
-- [ ] In `tests/agentrite-run.test.mjs`, change the tests of the arguments of `run`: `--prompt <text>` before,
+- [x] In `tests/agentrite-run.test.mjs`, change the tests of the arguments of `run`: `--prompt <text>` before,
       between and after the three positions and as `--prompt=<text>`; its text returned as written, spaces and
       words with a dash included; none given; the last of two; a `--prompt` with nothing after it, with an empty
       text and with an option after it, each named as having no text; `--prompt=--x` taken; and a word beyond
       the unit named as an argument the command does not take. Change the test of the usage of `run` to the
       text above. See them fail (R2, R5, R12, R13, R23, R24)
-- [ ] Change the tests of the prompt: the unit alone, and the unit, an empty line and the text as written. Change
+- [x] Change the tests of the prompt: the unit alone, and the unit, an empty line and the text as written. Change
       the tests of the harness's argument list to the table above: the prompt last in every row, the caller's
       arguments in front of it, and the `--` of the command's own in the three rows that have one, with and
       without arguments of the caller's. See them fail (R5, R9, R21)
-- [ ] Change `parseRunArgs`, `unitPrompt`, `harnessCommand`, the form and the usage of `run` in
+- [x] Change `parseRunArgs`, `unitPrompt`, `harnessCommand`, the form and the usage of `run` in
       `scripts/agentrite-run.mjs`, and what `scripts/agentrite.mjs` hands from the one to the other, until those
       pass (R2, R5, R9, R12, R13, R21, R23, R24)
-- [ ] Change the tests of `run` as a command, and of the usage of every command in both test files, to the new
+- [x] Change the tests of `run` as a command, and of the usage of every command in both test files, to the new
       form: the arguments each fake got in each harness and mode, with `--prompt` and with arguments after the
       `--`, an argument with a space in it as one; a word beyond the unit and a `--prompt` with no text print
       what they are named as and the usage, with exit 2 and no fake started. See them pass, or fail and repair
@@ -297,7 +297,7 @@ human:
 - [x] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
 - [x] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
 - [x] `feature-0032 Record the runs that resume a session`: the record
-- [ ] `feature-0032 Give the text as --prompt, and the harness its prompt last`: the documents as changed
-- [ ] `feature-0032 Take the text as --prompt and put the prompt last`: the tests, the two scripts
+- [x] `feature-0032 Give the text as --prompt, and the harness its prompt last`: the documents as changed
+- [x] `feature-0032 Take the text as --prompt and put the prompt last`: the tests, the two scripts
 - [ ] `feature-0032 Describe --prompt and where the harness's arguments go`: the README
 - [ ] `feature-0032 Record the runs with the prompt last`: the record

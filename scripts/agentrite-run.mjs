@@ -30,7 +30,8 @@ export function rolesJson(roles) {
 
 /** How `run` is run, the second line starting under the first argument. */
 export const RUN_FORM =
-  'usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]\n' +
+  'usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
+  '[--skip-permissions]\n' +
   '                     [-- <harness arguments...>]';
 
 /**
@@ -43,7 +44,7 @@ export function runUsage() {
     `  <role>              ${ROLES.map((role) => role.name).join(' | ')}`,
     `  <harness>           ${HARNESS_NAMES.join(' | ')}`,
     '  <unit>              a directory of changes/, by its name or by the four digits its name opens with',
-    '  [text...]           added to the prompt, after the unit',
+    '  --prompt <text>     added to the prompt, after the unit, as it is written',
     "  --model <id>        the harness's own id of a model, such as claude-sonnet-5-5 or openai/gpt-6.1-sol.",
     "                      Without it the harness decides: the role's wrapper may pin one",
     '  --headless          run without a session: the harness works on the prompt and ends',
@@ -51,16 +52,20 @@ export function runUsage() {
     '                      bypasses every check, and --auto for opencode, which approves what is not denied.',
     '                      Meant for the sandbox',
     '  -- <harness arguments...>',
-    '                      given to the harness as written, after everything else it gets. The command reads',
-    '                      none of them',
+    '                      given to the harness as written, before the prompt. The command reads none of',
+    '                      them',
   ].join('\n');
 }
 
 const RUN_OPTIONS = /** @type {const} */ ({
+  prompt: { type: 'string' },
   model: { type: 'string' },
   headless: { type: 'boolean' },
   'skip-permissions': { type: 'boolean' },
 });
+
+/** What each option that takes a value takes, as the line that says none was given names it. */
+const OPTION_VALUES = { prompt: 'a text', model: 'an id' };
 
 /**
  * What is wrong with an option as it was given, or `undefined` when `run` takes it.
@@ -71,26 +76,26 @@ const RUN_OPTIONS = /** @type {const} */ ({
 function optionError({ name, rawName, value, inlineValue }) {
   if (!Object.hasOwn(RUN_OPTIONS, name)) return `unknown option: ${rawName}`;
   if (RUN_OPTIONS[name].type === 'boolean') return value === undefined ? undefined : `${rawName} takes no value`;
-  // An id written apart from the option never opens with a dash: what follows is then the next option, and the id
-  // was left out.
+  // What stands apart after the option and opens with a dash is taken for the next option, and the value for left
+  // out. A value that does open with a dash is written onto the option, as `--prompt=<text>`.
   const missing = value === undefined || value === '' || (inlineValue === false && value.startsWith('-'));
-  return missing ? `${rawName} takes an id, and none was given` : undefined;
+  return missing ? `${rawName} takes ${OPTION_VALUES[name]}, and none was given` : undefined;
 }
 
 /**
- * What is wrong with the role, the harness and the unit as they were given, or `undefined` when nothing is.
+ * What is wrong with the role, the harness and the unit as they were given, or with a word after them, or
+ * `undefined` when nothing is.
  *
- * @param {string | undefined} role
- * @param {string | undefined} harness
- * @param {string | undefined} unit
+ * @param {string[]} positionals
  * @returns {string | undefined}
  */
-function positionError(role, harness, unit) {
+function positionError([role, harness, unit, beyond]) {
   if (role === undefined) return 'no role given';
   if (!ROLES.some((known) => known.name === role)) return `unknown role: ${role}`;
   if (harness === undefined) return 'no harness given';
   if (!HARNESS_NAMES.includes(harness)) return `unknown harness: ${harness}`;
   if (unit === undefined) return 'no unit given';
+  if (beyond !== undefined) return `unexpected argument: ${beyond}`;
   return undefined;
 }
 
@@ -104,7 +109,7 @@ function positionError(role, harness, unit) {
  *   role: string,
  *   harness: string,
  *   unit: string,
- *   text: string[],
+ *   text: string | undefined,
  *   model: string | undefined,
  *   headless: boolean,
  *   skipPermissions: boolean,
@@ -114,8 +119,8 @@ function positionError(role, harness, unit) {
 export function parseRunArgs(args) {
   if (args.length === 0) throw new Error(runUsage());
 
-  // Taken off before the rest is read, so that no word of the harness's is taken for an option, a position or
-  // text of the command.
+  // Taken off before the rest is read, so that no word of the harness's is taken for an option or a position of
+  // the command.
   const end = args.indexOf('--');
   const own = end === -1 ? args : args.slice(0, end);
   const harnessArguments = end === -1 ? [] : args.slice(end + 1);
@@ -128,17 +133,17 @@ export function parseRunArgs(args) {
     strict: false,
     tokens: true,
   });
-  const [role, harness, unit, ...text] = positionals;
   const error =
     tokens.flatMap((token) => (token.kind === 'option' ? [optionError(token)] : [])).find(Boolean) ??
-    positionError(role, harness, unit);
+    positionError(positionals);
   if (error !== undefined) throw new Error(`${error}\n${runUsage()}`);
 
+  const [role, harness, unit] = positionals;
   return {
     role,
     harness,
     unit,
-    text,
+    text: values.prompt,
     model: values.model,
     headless: values.headless === true,
     skipPermissions: values['skip-permissions'] === true,
@@ -171,17 +176,18 @@ export function resolveUnit(given, directories) {
  * The one prompt a harness gets: the unit's directory and, when text is given, the text after an empty line.
  *
  * @param {string} directory the name of the unit's directory in `changes/`
- * @param {string[]} text
+ * @param {string | undefined} text
  * @returns {string}
  */
 export function unitPrompt(directory, text) {
   const unit = `The unit is changes/${directory}/.`;
-  return text.length === 0 ? unit : `${unit}\n\n${text.join(' ')}`;
+  return text === undefined ? unit : `${unit}\n\n${text}`;
 }
 
 /**
  * How each harness is started as an agent: its command, the flag that ends its questions about permissions, and
- * where the options and the prompt stand with a session and without one.
+ * how the prompt follows the options with a session and without one. The prompt is last. Where it is an argument
+ * of its own, a `--` stands before it, so that no option before it takes it for a value.
  *
  * @type {Record<string, {
  *   command: string,
@@ -194,21 +200,20 @@ const STARTS = {
   claude: {
     command: 'claude',
     skipPermissions: '--dangerously-skip-permissions',
-    interactive: (options, prompt) => [...options, prompt],
-    headless: (options, prompt) => ['--print', ...options, prompt],
+    interactive: (options, prompt) => [...options, '--', prompt],
+    headless: (options, prompt) => ['--print', ...options, '--', prompt],
   },
   opencode: {
     command: 'opencode',
     skipPermissions: '--auto',
     interactive: (options, prompt) => [...options, '--prompt', prompt],
-    headless: (options, prompt) => ['run', ...options, prompt],
+    headless: (options, prompt) => ['run', ...options, '--', prompt],
   },
 };
 
 /**
  * The command that starts `harness` as `role` on `prompt`, and its arguments. The caller's own arguments for the
- * harness come last, after the prompt: before it, an option of the harness that takes several values would take
- * the prompt for one of them.
+ * harness stand after the command's and before the prompt.
  *
  * @param {{
  *   harness: string,
@@ -228,7 +233,7 @@ export function harnessCommand({ harness, role, model, headless, skipPermissions
     role,
     ...(model === undefined ? [] : ['--model', model]),
     ...(skipPermissions ? [start.skipPermissions] : []),
+    ...harnessArguments,
   ];
-  const args = (headless ? start.headless : start.interactive)(options, prompt);
-  return { command: start.command, args: [...args, ...harnessArguments] };
+  return { command: start.command, args: (headless ? start.headless : start.interactive)(options, prompt) };
 }

@@ -140,13 +140,13 @@ test('agentrite roles --json prints the JSON and exits 0 in a directory that is 
 // R12: the usage of `run`.
 
 const RUN_USAGE = `
-usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
                      [-- <harness arguments...>]
 
   <role>              planner | implementer | reviewer
   <harness>           claude | opencode
   <unit>              a directory of changes/, by its name or by the four digits its name opens with
-  [text...]           added to the prompt, after the unit
+  --prompt <text>     added to the prompt, after the unit, as it is written
   --model <id>        the harness's own id of a model, such as claude-sonnet-5-5 or openai/gpt-6.1-sol.
                       Without it the harness decides: the role's wrapper may pin one
   --headless          run without a session: the harness works on the prompt and ends
@@ -154,8 +154,8 @@ usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permis
                       bypasses every check, and --auto for opencode, which approves what is not denied.
                       Meant for the sandbox
   -- <harness arguments...>
-                      given to the harness as written, after everything else it gets. The command reads
-                      none of them`.slice(1);
+                      given to the harness as written, before the prompt. The command reads none of
+                      them`.slice(1);
 
 test('the usage of run is the text of the plan, with the roles and the harnesses the kit has', () => {
   assert.equal(runUsage(), RUN_USAGE);
@@ -166,16 +166,11 @@ test('the usage of run is the text of the plan, with the roles and the harnesses
 
 // R2, R3, R13: the arguments of `run`.
 
-const PLAIN = { model: undefined, headless: false, skipPermissions: false, harnessArguments: [] };
+const PLAIN = { text: undefined, model: undefined, headless: false, skipPermissions: false, harnessArguments: [] };
+const REVIEW = { role: 'reviewer', harness: 'opencode', unit: '0007' };
 
 test('run takes the role, the harness and the unit, in that order', () => {
-  assert.deepEqual(parseRunArgs(['reviewer', 'opencode', '0007']), {
-    role: 'reviewer',
-    harness: 'opencode',
-    unit: '0007',
-    text: [],
-    ...PLAIN,
-  });
+  assert.deepEqual(parseRunArgs(['reviewer', 'opencode', '0007']), { ...REVIEW, ...PLAIN });
   for (const role of ROLES) {
     for (const harness of HARNESS_NAMES) {
       const parsed = parseRunArgs([role.name, harness, '0007-a-unit']);
@@ -189,17 +184,20 @@ test('the options of run are taken before, between and after the three positions
     role: 'implementer',
     harness: 'claude',
     unit: '0007',
-    text: [],
+    text: 'look at the tests',
     model: 'claude-sonnet-5-5',
     headless: true,
     skipPermissions: true,
     harnessArguments: [],
   };
+  const prompt = ['--prompt', 'look at the tests'];
+  const model = ['--model', 'claude-sonnet-5-5'];
   for (const args of [
-    ['--model', 'claude-sonnet-5-5', '--headless', '--skip-permissions', 'implementer', 'claude', '0007'],
-    ['implementer', '--headless', 'claude', '--model', 'claude-sonnet-5-5', '0007', '--skip-permissions'],
-    ['implementer', 'claude', '0007', '--skip-permissions', '--headless', '--model=claude-sonnet-5-5'],
-    ['--skip-permissions', 'implementer', '--model', 'claude-sonnet-5-5', 'claude', '--headless', '0007'],
+    [...prompt, ...model, '--headless', '--skip-permissions', 'implementer', 'claude', '0007'],
+    ['implementer', '--headless', 'claude', ...model, '0007', '--skip-permissions', ...prompt],
+    ['implementer', 'claude', '0007', '--skip-permissions', '--headless', '--model=claude-sonnet-5-5', ...prompt],
+    ['--skip-permissions', 'implementer', ...prompt, ...model, 'claude', '--headless', '0007'],
+    ['implementer', 'claude', '--prompt=look at the tests', '0007', '--headless', ...model, '--skip-permissions'],
   ]) {
     assert.deepEqual(parseRunArgs(args), expected, args.join(' '));
   }
@@ -207,98 +205,89 @@ test('the options of run are taken before, between and after the three positions
 
 test('each option of run is taken alone, and a model id is taken as it is written', () => {
   const base = ['reviewer', 'opencode', '0007'];
-  const parsed = { role: 'reviewer', harness: 'opencode', unit: '0007', text: [] };
-  assert.deepEqual(parseRunArgs([...base, '--headless']), { ...parsed, ...PLAIN, headless: true });
-  assert.deepEqual(parseRunArgs([...base, '--skip-permissions']), { ...parsed, ...PLAIN, skipPermissions: true });
+  assert.deepEqual(parseRunArgs([...base, '--headless']), { ...REVIEW, ...PLAIN, headless: true });
+  assert.deepEqual(parseRunArgs([...base, '--skip-permissions']), { ...REVIEW, ...PLAIN, skipPermissions: true });
   assert.deepEqual(parseRunArgs([...base, '--model', 'openai/gpt-6.1-sol']), {
-    ...parsed,
+    ...REVIEW,
     ...PLAIN,
     model: 'openai/gpt-6.1-sol',
   });
+  assert.deepEqual(parseRunArgs([...base, '--prompt', 'why']), { ...REVIEW, ...PLAIN, text: 'why' });
 });
 
-test('what follows the unit is the text, word by word, with options among the words taken out', () => {
-  assert.deepEqual(parseRunArgs(['reviewer', 'opencode', '0007', 'look', 'at', 'the tests']).text, [
-    'look',
-    'at',
-    'the tests',
-  ]);
-  const parsed = parseRunArgs(['reviewer', 'opencode', '0007', 'look', '--headless', 'again']);
-  assert.deepEqual(parsed.text, ['look', 'again']);
-  assert.equal(parsed.headless, true);
+// R5, R23: the text.
+
+test('the text of --prompt is returned as it is written, whatever words it holds', () => {
+  for (const text of ['look', 'look at  the tests', 'start with --headless in the tests', 'a\n\nb', ' -x']) {
+    assert.equal(parseRunArgs(['reviewer', 'opencode', '0007', '--prompt', text]).text, text, text);
+  }
+});
+
+test('a text that opens with a dash is taken when it is given as --prompt=<text>', () => {
+  const parsed = parseRunArgs(['reviewer', 'opencode', '0007', '--prompt=--headless is what I mean']);
+
+  assert.equal(parsed.text, '--headless is what I mean');
+  assert.equal(parsed.headless, false);
+});
+
+test('of two --prompt the last one counts', () => {
+  assert.equal(parseRunArgs(['reviewer', 'opencode', '--prompt', 'one', '0007', '--prompt=two']).text, 'two');
 });
 
 // R21, R22, R23: the `--`.
 
-test('what follows a -- is returned apart, as written and in order, and none of it is text', () => {
-  const parsed = parseRunArgs(['reviewer', 'opencode', '0007', 'why', '--', '--session', 'ses_1', 'a b', '--', '-x']);
+test('what follows a -- is returned apart, as written and in order', () => {
+  const parsed = parseRunArgs([
+    'reviewer',
+    'opencode',
+    '0007',
+    '--prompt',
+    'why',
+    '--',
+    '--session',
+    'ses_1',
+    'a b',
+    '--',
+    '-x',
+  ]);
 
   assert.deepEqual(parsed, {
-    role: 'reviewer',
-    harness: 'opencode',
-    unit: '0007',
-    text: ['why'],
+    ...REVIEW,
     ...PLAIN,
+    text: 'why',
     harnessArguments: ['--session', 'ses_1', 'a b', '--', '-x'],
   });
 });
 
 test('an option of the command own name after the -- is the harness own, and is not read', () => {
-  const parsed = parseRunArgs([
-    'reviewer',
-    'claude',
-    '0007',
-    '--model',
-    'ours',
-    '--',
-    '--model',
-    'theirs',
-    '--headless',
-    '--skip-permissions',
-    '--verbose',
-    '--model',
-  ]);
+  const after = ['--model', 'theirs', '--headless', '--skip-permissions', '--prompt', 'theirs', '--verbose', '--model'];
+  const parsed = parseRunArgs(['reviewer', 'claude', '0007', '--model', 'ours', '--', ...after]);
 
   assert.equal(parsed.model, 'ours');
   assert.equal(parsed.headless, false);
   assert.equal(parsed.skipPermissions, false);
-  assert.deepEqual(parsed.text, []);
-  assert.deepEqual(parsed.harnessArguments, [
-    '--model',
-    'theirs',
-    '--headless',
-    '--skip-permissions',
-    '--verbose',
-    '--model',
-  ]);
+  assert.equal(parsed.text, undefined);
+  assert.deepEqual(parsed.harnessArguments, after);
 });
 
 test('no -- and a -- with nothing after it give the harness nothing more', () => {
-  assert.deepEqual(parseRunArgs(['reviewer', 'claude', '0007', 'why']).harnessArguments, []);
-  assert.deepEqual(parseRunArgs(['reviewer', 'claude', '0007', 'why', '--']), {
-    role: 'reviewer',
-    harness: 'claude',
-    unit: '0007',
-    text: ['why'],
+  assert.deepEqual(parseRunArgs(['reviewer', 'opencode', '0007', '--prompt', 'why']).harnessArguments, []);
+  assert.deepEqual(parseRunArgs(['reviewer', 'opencode', '0007', '--prompt', 'why', '--']), {
+    ...REVIEW,
     ...PLAIN,
+    text: 'why',
   });
 });
 
 test('a word before the -- that opens with a dash is refused as an option the command does not know', () => {
   for (const [args, named] of [
-    [['reviewer', 'claude', '0007', 'why', '--first', '--', '--resume', 'x'], 'unknown option: --first'],
+    [['reviewer', 'claude', '0007', '--first', '--', '--resume', 'x'], 'unknown option: --first'],
     [['reviewer', 'claude', '0007', '-x', '--'], 'unknown option: -x'],
     [['reviewer', 'claude', '0007', '--resume', 'x'], 'unknown option: --resume'],
+    [['reviewer', 'claude', '0007', '-p', 'why'], 'unknown option: -p'],
   ]) {
     assert.throws(() => parseRunArgs(args), { message: `${named}\n${RUN_USAGE}` }, args.join(' '));
   }
-});
-
-test('a quoted argument that holds a word with a dash after another word is text', () => {
-  const parsed = parseRunArgs(['reviewer', 'claude', '0007', 'look at --first', 'and', 'not -x', '--', '--resume']);
-
-  assert.deepEqual(parsed.text, ['look at --first', 'and', 'not -x']);
-  assert.deepEqual(parsed.harnessArguments, ['--resume']);
 });
 
 test('a role, a harness or a unit missing before the -- is named, whatever follows the --', () => {
@@ -319,6 +308,8 @@ test('run with no argument at all throws its usage alone', () => {
 });
 
 test('each argument run does not take is named, followed by the usage of run', () => {
+  const noText = '--prompt takes a text, and none was given';
+  const noId = '--model takes an id, and none was given';
   for (const [args, named] of [
     [['auditor', 'claude', '0007'], 'unknown role: auditor'],
     [['toString', 'claude', '0007'], 'unknown role: toString'],
@@ -329,11 +320,19 @@ test('each argument run does not take is named, followed by the usage of run', (
     [['reviewer', 'claude', '--headless'], 'no unit given'],
     [['reviewer'], 'no harness given'],
     [['--headless'], 'no role given'],
+    [['reviewer', 'claude', '0007', 'look'], 'unexpected argument: look'],
+    [['reviewer', 'claude', '0007', 'look', 'at', 'it'], 'unexpected argument: look'],
+    [['reviewer', 'claude', '0007', 'look at it', '--', '--resume'], 'unexpected argument: look at it'],
     [['reviewer', 'claude', '0007', '--verbose'], 'unknown option: --verbose'],
-    [['reviewer', 'claude', '0007', '-p'], 'unknown option: -p'],
-    [['reviewer', 'claude', '0007', '--model'], '--model takes an id, and none was given'],
-    [['reviewer', 'claude', '--model', '--headless', '0007'], '--model takes an id, and none was given'],
-    [['reviewer', 'claude', '0007', '--model='], '--model takes an id, and none was given'],
+    [['reviewer', 'claude', '0007', '--model'], noId],
+    [['reviewer', 'claude', '--model', '--headless', '0007'], noId],
+    [['reviewer', 'claude', '0007', '--model='], noId],
+    [['reviewer', 'claude', '0007', '--prompt'], noText],
+    [['reviewer', 'claude', '0007', '--prompt', '--'], noText],
+    [['reviewer', 'claude', '0007', '--prompt', ''], noText],
+    [['reviewer', 'claude', '0007', '--prompt='], noText],
+    [['reviewer', 'claude', '--prompt', '--headless', '0007'], noText],
+    [['reviewer', 'claude', '0007', '--prompt', '-x why'], noText],
     [['reviewer', 'claude', '0007', '--headless=yes'], '--headless takes no value'],
     [['reviewer', 'claude', '0007', '--skip-permissions=1'], '--skip-permissions takes no value'],
   ]) {
@@ -399,13 +398,13 @@ test('digits that open more than one name are refused, and the directories are n
 // R5: the prompt.
 
 test('the prompt names the unit directory, and nothing else when no text is given', () => {
-  assert.equal(unitPrompt('0007-run-a-role', []), 'The unit is changes/0007-run-a-role/.');
+  assert.equal(unitPrompt('0007-run-a-role', undefined), 'The unit is changes/0007-run-a-role/.');
 });
 
-test('the prompt holds the text after an empty line, its words joined by single spaces', () => {
+test('the prompt holds the text after an empty line, as it is written', () => {
   assert.equal(
-    unitPrompt('0007-run-a-role', ['look', 'at', 'the tests', '--first']),
-    'The unit is changes/0007-run-a-role/.\n\nlook at the tests --first',
+    unitPrompt('0007-run-a-role', 'look at  the tests,\n--first'),
+    'The unit is changes/0007-run-a-role/.\n\nlook at  the tests,\n--first',
   );
 });
 
@@ -416,25 +415,26 @@ const ROWS = {
   claude: {
     command: 'claude',
     skip: '--dangerously-skip-permissions',
-    interactive: (options, extra) => [...options, P, ...extra],
-    headless: (options, extra) => ['--print', ...options, P, ...extra],
+    interactive: (options, extra) => [...options, ...extra, '--', P],
+    headless: (options, extra) => ['--print', ...options, ...extra, '--', P],
   },
   opencode: {
     command: 'opencode',
     skip: '--auto',
-    interactive: (options, extra) => [...options, '--prompt', P, ...extra],
-    headless: (options, extra) => ['run', ...options, P, ...extra],
+    interactive: (options, extra) => [...options, ...extra, '--prompt', P],
+    headless: (options, extra) => ['run', ...options, ...extra, '--', P],
   },
 };
-const EXTRA = ['--resume', 'an id', '--model', 'theirs'];
+const EXTRA = ['--resume', 'an id', '--allowedTools', 'Read', 'Grep'];
+const START = { model: undefined, headless: false, skipPermissions: false, harnessArguments: [] };
 
 test('every harness the kit has holds a row for each mode', () => {
   assert.deepEqual(Object.keys(ROWS).sort(), [...HARNESS_NAMES].sort());
   for (const harness of HARNESS_NAMES) {
     for (const headless of [false, true]) {
-      const started = harnessCommand({ ...PLAIN, harness, role: 'reviewer', headless, prompt: P });
+      const started = harnessCommand({ ...START, harness, role: 'reviewer', headless, prompt: P });
       assert.equal(typeof started.command, 'string');
-      assert.ok(started.args.includes(P));
+      assert.equal(started.args.at(-1), P);
     }
   }
 });
@@ -471,7 +471,7 @@ test('the argument list of each harness in each mode is the row of the table, op
   }
 });
 
-test('what the caller gave after the -- is last in the argument list, in every row', () => {
+test('the prompt is last in every row, and what the caller gave stands in front of it, behind the options', () => {
   for (const harness of HARNESS_NAMES) {
     for (const headless of [false, true]) {
       const { args } = harnessCommand({
@@ -483,13 +483,16 @@ test('what the caller gave after the -- is last in the argument list, in every r
         prompt: P,
         harnessArguments: EXTRA,
       });
-      assert.deepEqual(args.slice(-EXTRA.length), EXTRA, `${harness} ${headless}`);
-      assert.equal(args.at(-EXTRA.length - 1), P, `${harness} ${headless}`);
+      const at = args.indexOf(EXTRA[0]);
+      assert.equal(args.at(-1), P, `${harness} ${headless}`);
+      assert.deepEqual(args.slice(at, at + EXTRA.length), EXTRA, `${harness} ${headless}`);
+      assert.equal(args.length, at + EXTRA.length + 2, `${harness} ${headless}`);
+      assert.ok(args.indexOf('m') < at && args.indexOf('--agent') < at, `${harness} ${headless}`);
     }
   }
 });
 
-test('with nothing after a --, the harness gets nothing beyond the arguments of the command own', () => {
+test('the four rows with nothing of the caller, written out', () => {
   const all = { role: 'implementer', model: 'm', skipPermissions: true, prompt: P, harnessArguments: [] };
   assert.deepEqual(harnessCommand({ ...all, harness: 'claude', headless: false }).args, [
     '--agent',
@@ -497,6 +500,7 @@ test('with nothing after a --, the harness gets nothing beyond the arguments of 
     '--model',
     'm',
     '--dangerously-skip-permissions',
+    '--',
     P,
   ]);
   assert.deepEqual(harnessCommand({ ...all, harness: 'claude', headless: true }).args, [
@@ -506,6 +510,7 @@ test('with nothing after a --, the harness gets nothing beyond the arguments of 
     '--model',
     'm',
     '--dangerously-skip-permissions',
+    '--',
     P,
   ]);
   assert.deepEqual(harnessCommand({ ...all, harness: 'opencode', headless: false }).args, [
@@ -524,6 +529,7 @@ test('with nothing after a --, the harness gets nothing beyond the arguments of 
     '--model',
     'm',
     '--auto',
+    '--',
     P,
   ]);
 });
@@ -573,25 +579,34 @@ function started(command, args) {
 
 const WRAPPER_DIRECTORIES = { claude: '.claude/agents', opencode: '.opencode/agents' };
 
+// The arguments each fake is expected to get, for the reviewer: what stands before the prompt, and the prompt.
+const STARTED = {
+  claude: (before, prompt) => ['--agent', 'reviewer', ...before, '--', prompt],
+  'claude --headless': (before, prompt) => ['--print', '--agent', 'reviewer', ...before, '--', prompt],
+  opencode: (before, prompt) => ['--agent', 'reviewer', ...before, '--prompt', prompt],
+  'opencode --headless': (before, prompt) => ['run', '--agent', 'reviewer', ...before, '--', prompt],
+};
+
+// The arguments of `run` for one of the keys of STARTED.
+function reviewerRun(key) {
+  const [harness, ...mode] = key.split(' ');
+  return ['run', 'reviewer', harness, '0007', ...mode];
+}
+
 test('run starts each harness in each mode with the arguments of its row, and its output is the command own', (t) => {
   const { agentrite } = project(t);
-  for (const [args, command, expected] of [
-    [['reviewer', 'claude', '0007'], 'claude', ['--agent', 'reviewer', UNIT_PROMPT]],
-    [['reviewer', 'claude', '0007', '--headless'], 'claude', ['--print', '--agent', 'reviewer', UNIT_PROMPT]],
-    [['reviewer', 'opencode', '0007'], 'opencode', ['--agent', 'reviewer', '--prompt', UNIT_PROMPT]],
-    [['reviewer', 'opencode', '0007', '--headless'], 'opencode', ['run', '--agent', 'reviewer', UNIT_PROMPT]],
-  ]) {
-    const result = agentrite(['run', ...args]);
+  for (const [key, expected] of Object.entries(STARTED)) {
+    const result = agentrite(reviewerRun(key));
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, started(command, expected), args.join(' '));
+    assert.equal(result.stdout, started(key.split(' ')[0], expected([], UNIT_PROMPT)), key);
     assert.equal(result.stderr, 'the harness, on standard error\n');
   }
 });
 
 test('run gives the harness the model, the permission flag and the text, and nothing beyond them', (t) => {
   const { agentrite } = project(t);
-  const text = `${UNIT_PROMPT}\n\nlook at the tests --first`;
+  const text = 'look at  the tests,\nand start with --headless';
 
   const claude = agentrite([
     'run',
@@ -601,9 +616,8 @@ test('run gives the harness the model, the permission flag and the text, and not
     'claude',
     `changes/${UNIT}/`,
     '--skip-permissions',
-    'look',
-    'at',
-    'the tests --first',
+    '--prompt',
+    text,
   ]);
   const opencode = agentrite([
     'run',
@@ -624,43 +638,37 @@ test('run gives the harness the model, the permission flag and the text, and not
       '--model',
       'claude-sonnet-5-5',
       '--dangerously-skip-permissions',
-      text,
+      '--',
+      `${UNIT_PROMPT}\n\n${text}`,
     ]),
   );
   assert.equal(opencode.status, 0, opencode.stderr);
   assert.equal(
     opencode.stdout,
-    started('opencode', ['run', '--agent', 'planner', '--model', 'openai/gpt-6.1-sol', '--auto', UNIT_PROMPT]),
+    started('opencode', ['run', '--agent', 'planner', '--model', 'openai/gpt-6.1-sol', '--auto', '--', UNIT_PROMPT]),
   );
 });
 
-test('each harness in each mode gets what follows the -- after its prompt, as it is written', (t) => {
+test('each harness in each mode gets what follows the -- before its prompt, as it is written', (t) => {
   const { agentrite } = project(t);
   const extra = ['--resume', 'an id with spaces', '--model', 'theirs', '--', '--headless', ''];
-  for (const [args, command, expected] of [
-    [['reviewer', 'claude', '0007'], 'claude', ['--agent', 'reviewer', UNIT_PROMPT]],
-    [['reviewer', 'claude', '0007', '--headless'], 'claude', ['--print', '--agent', 'reviewer', UNIT_PROMPT]],
-    [['reviewer', 'opencode', '0007'], 'opencode', ['--agent', 'reviewer', '--prompt', UNIT_PROMPT]],
-    [['reviewer', 'opencode', '0007', '--headless'], 'opencode', ['run', '--agent', 'reviewer', UNIT_PROMPT]],
-  ]) {
-    const result = agentrite(['run', ...args, '--', ...extra]);
+  const prompt = `${UNIT_PROMPT}\n\nwhich word`;
+  for (const [key, expected] of Object.entries(STARTED)) {
+    const result = agentrite([...reviewerRun(key), '--prompt', 'which word', '--', ...extra]);
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, started(command, [...expected, ...extra]), args.join(' '));
+    assert.equal(result.stdout, started(key.split(' ')[0], expected(extra, prompt)), key);
   }
 });
 
-test('text before the -- stays in the prompt, and a -- with nothing after it adds nothing', (t) => {
+test('a -- with nothing after it adds nothing, and the text stays in the prompt', (t) => {
   const { agentrite } = project(t);
   const prompt = `${UNIT_PROMPT}\n\nwhich word`;
 
-  const run = ['run', 'reviewer', 'opencode', '0007', '--headless', 'which', 'word'];
+  const bare = agentrite(['run', 'reviewer', 'opencode', '0007', '--headless', '--prompt', 'which word', '--']);
 
-  const resumed = agentrite([...run, '--', '--session', 'ses_1']);
-  const bare = agentrite([...run, '--']);
-
-  assert.equal(resumed.stdout, started('opencode', ['run', '--agent', 'reviewer', prompt, '--session', 'ses_1']));
-  assert.equal(bare.stdout, started('opencode', ['run', '--agent', 'reviewer', prompt]));
+  assert.equal(bare.status, 0, bare.stderr);
+  assert.equal(bare.stdout, started('opencode', STARTED['opencode --headless']([], prompt)));
 });
 
 test('the standard input of run is the harness own', (t) => {
@@ -669,7 +677,7 @@ test('the standard input of run is the harness own', (t) => {
   const result = agentrite(['run', 'reviewer', 'claude', '0007'], { input: 'typed\n', env: { FAKE_READS: '1' } });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout, `${started('claude', ['--agent', 'reviewer', UNIT_PROMPT])}read: typed\n`);
+  assert.equal(result.stdout, `${started('claude', STARTED.claude([], UNIT_PROMPT))}read: typed\n`);
 });
 
 test('run exits with the status the harness exited with', (t) => {
@@ -801,6 +809,9 @@ test('what run does not take is named before its usage, with exit 2 and nothing 
     [['reviewer', 'claude', '0007', '--verbose'], 'unknown option: --verbose'],
     [['reviewer', 'claude', '0007', '--model'], '--model takes an id, and none was given'],
     [['reviewer', 'claude', '0007', '--resume', 'an-id'], 'unknown option: --resume'],
+    [['reviewer', 'claude', '0007', 'look', 'at', 'it'], 'unexpected argument: look'],
+    [['reviewer', 'claude', '0007', '--prompt'], '--prompt takes a text, and none was given'],
+    [['reviewer', 'claude', '0007', '--prompt', '--', '--resume'], '--prompt takes a text, and none was given'],
     [['reviewer', 'claude', '--', '0007'], 'no unit given'],
   ]) {
     const result = agentrite(['run', ...args]);
@@ -842,7 +853,7 @@ test('a file beside the unit whose name opens with the same digits does not make
   const result = agentrite(['run', 'reviewer', 'claude', '0007']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout, started('claude', ['--agent', 'reviewer', UNIT_PROMPT]));
+  assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
 });
 
 // R14
@@ -853,7 +864,8 @@ test('agentrite alone and with a command it does not know print the usage of eve
     'usage: agentrite init claude | opencode\n' +
     '       agentrite refresh claude | opencode\n' +
     '       agentrite roles [--json]\n' +
-    '       agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]\n' +
+    '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
+    '[--skip-permissions]\n' +
     '                     [-- <harness arguments...>]\n';
 
   const alone = agentrite([]);
