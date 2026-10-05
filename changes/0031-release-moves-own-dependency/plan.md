@@ -152,13 +152,14 @@ one of these does not hold:
 When the devDependency `@ritenoar/agentrite` in `package.json` already names `<version>`, there is nothing to
 move. Say so, change nothing, and go on to the end of this step.
 
-Run these four, in this order, and nothing else that changes a file:
+Run these five, in this order, and nothing else that changes a file:
 
 ```sh
 npm install --save-dev https://agentrite.ritenoar.com/ritenoar-agentrite-<version>.tgz
 npx agentrite refresh claude opencode
 npm test
 npm run check-changes
+./agent.sh --in-place true
 ```
 
 * `npm install` fetches the tarball `./deploy.sh` uploaded and fails when it is not served. When the session may
@@ -167,6 +168,11 @@ npm run check-changes
   refreshed or up to date
 * `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
   it shows that the installed check starts, and no more
+* `./agent.sh --in-place true` starts the sandbox of the release just installed, through this repository's own
+  shim, and runs a command in it that does nothing. It needs Docker on the host, and builds the image when one is
+  due, which takes minutes. It exits 0 when the container passed its own start-up checks, the firewall's among
+  them. It shows nothing of a harness, a login, a prompt or a unit run. When the session may not run it, ask the
+  human to, and go on from its result
 
 Then read `git status --short` and `git diff package.json`. The tree holds changes to `package.json`,
 `package-lock.json` and the files `refresh` printed as written or refreshed, and to nothing else, and
@@ -176,11 +182,11 @@ Then read "Worth knowing when you update" in the section of `<version>` in `CHAN
 updates does, and look in this repository's own files for what it asks of a project beyond the install and the
 `refresh`: a line that runs something the release changed, a file of the project's own that needs an edit.
 
-The step is those four commands. Stop, commit nothing and repair nothing when:
+The step is those five commands. Stop, commit nothing and repair nothing when:
 
-* One of the four fails. Say which and what it printed
+* One of the five fails. Say which and what it printed
 * The tree holds another change, or `package.json` differs by more than the URL. Say what
-* The release asks this repository for more than the four commands. Name the file and the line
+* The release asks this repository for more than the five commands. Name the file and the line
 
 Then put the repository back: `git restore .`, remove each file `refresh` printed as written, and run `npm ci`,
 which installs the release `package-lock.json` names again. Tell the human that the move is now a unit in
@@ -193,12 +199,14 @@ it what was seen:
 * How many tests passed
 * That the change check exited 0
 * What `refresh` reported: the files written and refreshed, or that every file was up to date
-* That the sandbox of `<version>` was not started
+* That `./agent.sh --in-place true` exited 0, and whether it built the image
 
 Commit nothing else, and push nothing.
 
-This step does not start the sandbox. `./agent.sh` runs the installed release, so its first start after this step
-is the first run of the released sandbox in this repository. Say so to the human.
+The start shows that the released sandbox builds and starts in this repository, and no more. It does not stop a
+release: the tarball is public once `./deploy.sh` ends, and is never replaced. A start that fails is found here,
+before the push and before another project updates, and its repair is a unit and a release after this one. Say so
+to the human when it fails.
 
 Then end by telling the human the command of step 7. An agent that was asked only for this step says that its
 commit needs that push too.
@@ -299,8 +307,8 @@ the root, which is the human's.
 - [ ] See that the unit changed nothing else: `git diff master --stat` names the four files above and this
   unit's documents, and neither `package.json` nor `package-lock.json` (R15, R16)
 - [ ] Write in the record what was done, and what was not tried: step 6 has not been followed, by a release or
-  alone, and its first use is the move to 3.0.0 after the merge, unless the human decided otherwise on approval
-  (R16)
+  alone, its start of the sandbox included, and its first use is the move to 3.0.0 after the merge, unless the
+  human decided otherwise on approval (R16)
 
 ## Verification
 

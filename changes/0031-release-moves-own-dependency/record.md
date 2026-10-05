@@ -38,5 +38,17 @@ timestamp: 2026-10-04T23:56:09Z
   * The move to 3.0.0 is left out of the unit, as the first use of the step after the merge
   The texts of `RELEASING.md`, the skill and the two paragraphs of the README are in the plan, for the human to
   read and correct. Status left at `draft` for the human's approval
+- 2026-10-05T00:03:07Z [human] shown what the draft held and left out, asked for a Docker check once the
+  dependency is moved: "Eat your own dog food. If that works, it's really ready to be pushed and used by the
+  outside world." The main session answered that the release is public by then, and proposed a second start
+  before `./deploy.sh` and a prompt to each harness. The human: "Leave it out. Keep it simple. Just the container
+  running is fine. Can you edit the plan/spec?"
+- 2026-10-05T00:03:07Z [Claude Code, anthropic/claude-opus-5-5] as the main session, on that request, revised the
+  draft's `spec.md` and `plan.md`: step 6 runs a fifth command, `./agent.sh --in-place true`, after the change
+  check, and its commit says that the sandbox started. The spec's context, requirements 6, 7, 8 and 10, the
+  decisions on the sandbox, the non-goals and "Beyond the request" follow, and the text of `RELEASING.md` in the
+  plan. The main session's, and not read by the human: that a start that fails stops the move like any failing
+  command and puts the tree back, and that the file says the start gates the push and not the release. The
+  command was not run. Status still `draft`
 
 ## Amendments

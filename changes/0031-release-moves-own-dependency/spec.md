@@ -26,6 +26,13 @@ the version just released, with no unit afterwards; and that this is planned. Ev
 main session's proposal or the planner's, and each decision below says whose it is. None of it has been read by
 the human yet.
 
+Shown what the planner's draft held and left out, the human asked for one thing it had left out: "A docker check as
+soon as the bump in the agentrite project to the new version has been done, might make sense? Eat your own dog
+food. If that works, it's really ready to be pushed and used by the outside world." The main session answered
+that the release is public by then, and proposed a second start before `./deploy.sh` and a prompt to each harness.
+The human: "Leave it out. Keep it simple. Just the container running is fine." So a third thing is the human's:
+once the dependency is moved, the step starts the released sandbox, and asks no more of it than that it runs.
+
 ### What the main session proposed
 
 * The move is a step after `./deploy.sh` and before the push, since the tarball has to be served before it can be
@@ -78,6 +85,8 @@ On `master` at `2c23bec`, the commit `npm version major` made, tagged `v3.0.0`.
   2.3.0
 * That a session's guard lets an agent run `npm install` from a URL. 0024's record says it did not block it "this
   time"
+* That `./agent.sh --in-place true` exits 0 on the sandbox of 3.0.0 in this repository, and how long its first
+  start, which builds the image, takes. Not run
 
 ## Requirements
 
@@ -101,16 +110,16 @@ The move:
 5. The step states its version as the one `package.json` holds as `version`, and has the agent stop, say why and
    change nothing when the branch is not `master`, or when a tracked file has an uncommitted change. When the
    devDependency already names that version, the agent says that there is nothing to move and changes nothing
-6. The step runs these four commands, in this order, from the repository root, and no other command that changes
+6. The step runs these five commands, in this order, from the repository root, and no other command that changes
    a file: `npm install --save-dev https://agentrite.ritenoar.com/ritenoar-agentrite-<version>.tgz`,
-   `npx agentrite refresh claude opencode`, `npm test` and `npm run check-changes`
-7. When all four succeed and nothing of requirement 8 holds, the agent makes one commit on `master`, with no unit
+   `npx agentrite refresh claude opencode`, `npm test`, `npm run check-changes` and `./agent.sh --in-place true`
+7. When all five succeed and nothing of requirement 8 holds, the agent makes one commit on `master`, with no unit
    prefix, titled `Depend on AgentRite <version>`. It holds `package.json`, `package-lock.json` and the files
    `refresh` printed as written or refreshed, and nothing else. Its body says what was seen: how many tests passed,
-   that the change check exited 0, what `refresh` reported, and that the sandbox of the release was not started.
+   that the change check exited 0, what `refresh` reported, and that the sandbox of the release started.
    The agent pushes nothing, and ends by telling the human the push
 8. The agent commits nothing, repairs nothing and says what it found when:
-    * one of the four commands fails. It says which and what it printed
+    * one of the five commands fails. It says which and what it printed
     * the working tree afterwards holds a change other than `package.json`, `package-lock.json` and the files
       `refresh` printed as written or refreshed, or `package.json` differs by more than the one URL
     * "Worth knowing when you update" in the release's section of `CHANGELOG.md` asks a project for something
@@ -122,8 +131,10 @@ The move:
 9. The step can be followed by an agent that is asked only to move the repository to a release that is already
    made, in a session that did not make the release: everything the step needs is read from the repository. Such
    an agent runs that step and nothing else of the file, and its commit needs a push of its own, which it names
-10. The step says what it does not check: the sandbox the release builds. `./agent.sh` runs the installed release,
-    so the first start after the move is the first run of the released sandbox in this repository
+10. The step says what the start of the sandbox shows and what it does not. It shows that the installed release,
+    run through this repository's own shim, builds its image when one is due and starts a container that passes
+    its own start-up checks. It shows nothing of a harness, a login, a prompt or a unit run. And it says that a
+    start that fails does not stop the release, which is public once `./deploy.sh` ends
 
 The release notes:
 
@@ -178,21 +189,35 @@ What does not change:
   3.0.0 needs, as does any release whose move was left or stopped
 * **No condition on the tag or on `HEAD`. The planner's.** A step run alone, later, finds `master` past the tag.
   A version that was never released has no tarball, and the install says so
-* **The four commands, and nothing wider. The main session's.** They are what 0016 and 0024 ran. The step is kept
-  as narrow as its commit: what it checked is what its four commands print
+* **Four commands for the move, and nothing wider. The main session's.** They are what 0016 and 0024 ran. The
+  fifth, the start of the sandbox, is the human's and is below. The step is kept as narrow as its commit: what it
+  checked is what its commands print
 * **`npm run check-changes` is kept, for what it shows. The planner's.** On `master` the check has nothing to
   compare. It still runs the script of the release just installed, so a release whose check does not start is
   seen here and not by the next unit. The file says that this is all it shows
 * **The commit's body is the record. The planner's, for the first cost the main session named.** A step of a
   release has no `record.md`. The body of its commit holds what a record's entry would: the tests' count, the
-  check, what `refresh` reported, and what was not checked. It costs four lines, and `git log` is where someone
+  check, what `refresh` reported, and that the sandbox started. It costs four lines, and `git log` is where someone
   looks for when the repository moved. Not taken: a file that lists every move, which would be a record kept by
   hand for something git already keeps
-* **The sandbox is not started by the step. The planner's.** 0024 started it and compared the proxy's log. That
-  needs Docker and minutes, may build an image, and what to look for differs with every release, so it cannot be
-  written as a step that holds for all of them. The step says that it was not done, in the file and in the
-  commit. The first `./agent.sh` after the release is the check, and the human sees it. A release whose sandbox
-  needs looking at is a release that asks for more than the commands, and is a unit
+* **The step starts the released sandbox, and asks only that it runs. The human's.** The planner's draft did not
+  start it: 0024 did and compared the proxy's log, and what to look for there differs with every release. The
+  human asked for the start, as the kit eating its own dog food, and for no more than the container running. The
+  command is `./agent.sh --in-place true`: the installed release, through this repository's shim, with a command
+  that does nothing. It builds the image when one is due, and the container runs its start-up checks, the
+  firewall's among them, before the command. It needs Docker on the host, which a release did not need before,
+  and minutes when it builds. A start that fails is a command that fails: nothing is committed and the tree is
+  put back, by requirement 8. An image that the start built is left as it is. A release whose sandbox needs more
+  looking at than this is a release that asks for more than the commands, and is a unit
+* **The start gates the push, and not the release. The main session's.** The human's reason was that a release
+  whose sandbox starts is ready for the outside world. By this step `./deploy.sh` has served the tarball, which is
+  never replaced. So a start that fails is found before the push and before another project updates, and its
+  repair is a unit and a release after this one. The file says so. Proposed by the main session and left out by
+  the human, for simplicity:
+    * A start of the working copy's sandbox before `./deploy.sh`, with `./agent-dev.sh`, which is the only place
+      where a sandbox that does not start could still stop the release
+    * A one-line prompt to each harness in the sandbox, which needs a saved login and can fail for a provider's
+      reasons
 * **What the release asks beyond the commands is a unit, and stops the move whole. The main session's.** The
   agent wrote "Worth knowing when you update" for this very release, so it knows what the release asks of a project,
   and this repository is one. When that needs an edit here, the step does not commit the move and leave the edit
@@ -230,8 +255,9 @@ What does not change:
 
 * The agent running `npm version`, `./deploy.sh` or the push. 0028's decision, kept
 * Moving this repository to 3.0.0. It is the first use of the step, after this unit
-* Starting the released sandbox, or checking anything in it
-* Repairing what a release asks of this repository beyond the four commands. That is a unit
+* Checking anything in the released sandbox beyond that it starts: a harness, a login, a prompt or a unit run
+* A start of the sandbox before `./deploy.sh`
+* Repairing what a release asks of this repository beyond the five commands. That is a unit
 * Moving any other project to a release
 * A change to `deploy.sh`, or to anything that ships
 * A test of the steps of `RELEASING.md`
@@ -242,8 +268,5 @@ What does not change:
   forgotten. It would also fail in the suite `./deploy.sh` runs, between `npm version` and the move, at every
   release. Without it, a forgotten move is seen at the next release, in the shipped diff, or by whoever reads
   `package.json`
-* **A check of the released sandbox in the step**, on a host with Docker, as 0024 made by hand. It costs minutes
-  and a list of what to look for that changes with each release. Without it the first `./agent.sh` after a
-  release shows whether the sandbox starts
 * **A line for the move in the next release's section.** Without it the changelog says nothing of a change no
   project gets
