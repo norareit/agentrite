@@ -1,9 +1,17 @@
 #!/usr/bin/env node
+import { spawnSync } from 'node:child_process';
 import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
-import { dirname, posix, resolve } from 'node:path';
+import { basename, dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { parseHarnesses, plannedFiles, ROLES } from './agentrite-roles.mjs';
-import { rolesListing } from './agentrite-run.mjs';
+import {
+  harnessCommand,
+  parseRunArgs,
+  resolveUnit,
+  rolesListing,
+  RUN_FORM,
+  unitPrompt,
+} from './agentrite-run.mjs';
 
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -626,6 +634,65 @@ function roles() {
 }
 
 /**
+ * The names of the directories in the project's `changes/`, which are none when it has no `changes/`.
+ *
+ * @param {string} root
+ * @returns {string[]}
+ */
+function changeDirectories(root) {
+  const changes = resolve(root, 'changes');
+  if (!exists(changes)) return [];
+  return readdirSync(changes, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+}
+
+/**
+ * Throws unless the wrapper of `role` for `harness` is in the project at `root` as refresh would leave it. A
+ * harness that is given another wrapper may go on as its default agent, which never reads the role's file, and
+ * say so in one line that is easy to miss.
+ *
+ * @param {string} root
+ * @param {string} harness
+ * @param {string} role
+ */
+function checkWrapper(root, harness, role) {
+  const wrapper = plannedFiles([harness]).find((file) => basename(file.path) === `${role}.md`);
+  if (wrapper === undefined) throw new Error(`the kit writes no wrapper of ${role} for ${harness}`);
+  const absolute = resolve(root, wrapper.path);
+  const remedy = `Run: npx agentrite refresh ${harness}`;
+  if (kindOf(absolute) !== 'file') throw new Error(`the project has no file ${wrapper.path}. ${remedy}`);
+  const existing = readFileSync(absolute, 'utf-8');
+  if (existing !== refreshedWrapper(existing, wrapper.content)) {
+    throw new Error(`${wrapper.path} is not the file refresh would leave there. ${remedy}`);
+  }
+}
+
+/**
+ * Starts the harness as the role, on the unit, in the project at `root`, waits for it, and returns the exit
+ * status, which is the harness's own.
+ *
+ * @param {string} root
+ * @param {ReturnType<typeof parseRunArgs>} parsed
+ * @returns {number}
+ */
+function run(root, { role, harness, unit, text, model, headless, skipPermissions }) {
+  const directory = resolveUnit(unit, changeDirectories(root));
+  checkWrapper(root, harness, role);
+  const prompt = unitPrompt(directory, text);
+  const { command, args } = harnessCommand({ harness, role, model, headless, skipPermissions, prompt });
+
+  // The arguments go to the harness as they are, with no shell in between to read the prompt.
+  const result = spawnSync(command, args, { cwd: root, stdio: 'inherit' });
+  if (result.error !== undefined) {
+    const notFound = 'code' in result.error && result.error.code === 'ENOENT';
+    throw notFound ? new Error(`the command ${command} was not found on the PATH`) : result.error;
+  }
+  // A harness that a signal ended has no status of its own to hand on.
+  return result.status ?? 1;
+}
+
+/**
  * A command: `form` is the one line that says how it is run, `parse` reads the arguments after the command's name,
  * and throws what to print for ones it does not take, and `run` takes the project root and what `parse` returned,
  * and returns the exit status.
@@ -655,6 +722,7 @@ const COMMANDS = {
     run: (root, { harnesses }) => refresh(root, harnesses),
   },
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
+  run: { form: RUN_FORM, parse: parseRunArgs, run },
 };
 
 /**

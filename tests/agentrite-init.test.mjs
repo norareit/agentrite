@@ -89,7 +89,8 @@ test('parseArgs gives the usage of every command for no command and for one that
   const usage =
     'usage: agentrite init claude | opencode\n' +
     '       agentrite refresh claude | opencode\n' +
-    '       agentrite roles';
+    '       agentrite roles\n' +
+    '       agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]';
   assert.throws(() => parseArgs([]), { message: usage });
   assert.throws(() => parseArgs(['claude']), { message: `unknown command: claude\n${usage}` });
   assert.throws(() => parseArgs(['setup', 'claude']), { message: `unknown command: setup\n${usage}` });

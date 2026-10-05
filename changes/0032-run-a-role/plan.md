@@ -101,20 +101,20 @@ The roles:
 
 What `run` computes:
 
-- [ ] Test the arguments of `run`: the three positions; the options before, between and after them; text of
+- [x] Test the arguments of `run`: the three positions; the options before, between and after them; text of
       several words; `--` before a word that opens with a dash; and each error of requirement 13 with what it
       names, and no argument at all with the usage alone (R2, R3, R12, R13)
-- [ ] Test the unit: the name, the name after `changes/`, a closing slash, the four digits, a `history-` name
+- [x] Test the unit: the name, the name after `changes/`, a closing slash, the four digits, a `history-` name
       whose digits are given and do not match, no match, and digits that open two names (R4)
-- [ ] Test the prompt with and without text, and the harness's argument list for both harnesses in both modes,
+- [x] Test the prompt with and without text, and the harness's argument list for both harnesses in both modes,
       with and without a model and with and without `--skip-permissions`: each list is exactly the row of the
       table above. Test that every harness the kit has holds a row (R5, R6, R7, R8, R9)
-- [ ] Write those functions and the usage of `run` in `scripts/agentrite-run.mjs`, with `parseArgs` of
+- [x] Write those functions and the usage of `run` in `scripts/agentrite-run.mjs`, with `parseArgs` of
       `node:util` for the options, until the three tasks above pass (R2 to R9, R12, R13)
 
 `run` as a command:
 
-- [ ] Test `agentrite run` as a command, in a project made in a temporary directory with the wrappers `refresh`
+- [x] Test `agentrite run` as a command, in a project made in a temporary directory with the wrappers `refresh`
       writes, a unit, and a `PATH` that holds a fake `claude` and a fake `opencode` which print their arguments
       one to a line and exit with a status the test sets:
     - the arguments each fake got, for one run per harness and mode, and that the fake's output is the command's
@@ -130,7 +130,7 @@ What `run` computes:
       R13)
     - `agentrite` alone and with an unknown command print the four lines of the usage of every command and exit
       2 (R14)
-- [ ] Write the `run` command in `scripts/agentrite.mjs`: list `changes/`, resolve the unit, check the wrapper,
+- [x] Write the `run` command in `scripts/agentrite.mjs`: list `changes/`, resolve the unit, check the wrapper,
       start the harness, and exit as requirement 10 says (R2, R4, R10, R11)
 
 The documents:
@@ -169,6 +169,6 @@ unit for the human; it is not worked around.
 - [x] `feature-0032 Write the OpenCode wrappers as primary agents and subagents`: the first two tasks
 - [x] `feature-0032 Let each command parse its own arguments`: the refactoring, with no change of behavior
 - [x] `feature-0032 List the roles`: the `roles` command and its tests
-- [ ] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
+- [x] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
 - [ ] `feature-0032 Describe running a role`: the README
 - [ ] `feature-0032 Record the runs on the real harnesses`: the record
