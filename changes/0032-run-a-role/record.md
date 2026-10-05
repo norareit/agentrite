@@ -179,3 +179,45 @@ timestamp: 2026-10-05T12:51:34Z
   Two things are new under "Not established": that the harnesses read their options after the prompt, and that a
   session is resumed with the options the README is to show. The planner ran neither. The status stays `in-progress`.
   The implementer's concern of 14:18:03Z about the approval is not answered by this entry
+- 2026-10-05T15:21:47Z [human] said, in the implementer's session: "Ive had the planner amend this change with two of
+  the "beyuond the request" items anyway. Can you check in the record what has been added exactly and implement it
+  on top of what you already implemented as the @implementer ?"
+- 2026-10-05T15:21:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the same session as before, in
+  the main checkout on the host. Read the planner's entry of 15:17:09Z and the whole difference of `spec.md` and
+  `plan.md` against `1ff7e9f`: requirements 20 to 24, the changed 1, 2, 9, 12, 14 and 17, and the ten tasks. The
+  human's instruction is taken as the approval of the two documents as changed, which is again the implementer's
+  reading. Did the tasks:
+  * `43fdd1a` holds the three documents as the planner left them, uncommitted until then
+  * The `--`, `e34e485`. The tests first: 16 of the 43 tests of `tests/agentrite-run.test.mjs` failed, then
+    `parseRunArgs`, `harnessCommand`, the form and the usage. The tests of the command for it were added after,
+    as the plan has it, and passed as written. `npm test`: 332 tests, 332 passed. The first `--` among the
+    arguments is where they are divided, found before `parseArgs` reads the rest, so `--model --` is a `--model`
+    with no id. A `--` after the first one is the harness's, like any word there. `run --` and
+    `run -- <anything>` name the missing role and do not print the usage alone
+  * The two tests of the usage of every command got the second line of `run` in this commit, not in the next as
+    the plan has it, since they fail without it
+  * `roles --json`, `407c4ad`. The tests first, which failed on the missing export. `npm test`: 336 tests, 336
+    passed. `--json` given twice is refused with the usage, like any other second argument
+  * The runs on the real harnesses were made before the README was written, not after as the plan orders them:
+    the task of the README asks for "the commands the runs below showed to work"
+  * The README, `dfd2c3f`. The two sentences the plan names are replaced, and the rest of "Running a role" is as
+    it was. The session ids in its examples are examples
+  * The plan held the heading "## Verification" twice in a row, which the planner's change left. One is removed
+- 2026-10-05T15:21:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the plan's three runs on the
+  real harnesses, Claude Code 2.1.289 and OpenCode 1.18.34, on the host, in the project of the first runs with the
+  working copy at `407c4ad` packed and installed again. Its wrappers still held the pins of the first runs, which
+  `refresh` reported as up to date. All were headless, and every text told the agent to change no file.
+  * Claude Code. `run implementer claude 0001 --headless <remember the word marzipan> -- --session-id <a new
+    uuid>` answered `noted`, exit 0. `run implementer claude 0001 --headless <the word, and the first heading of
+    your instructions' file> -- --resume <that uuid>` answered `marzipan` and `Implementer`, exit 0. Claude
+    Code's transcript of that id is one file, names the agent `implementer` four times and the pinned model in
+    every message. So the session was resumed, as the role, with the options after the prompt
+  * OpenCode. `run reviewer opencode 0001 --headless <remember the word pistachio>` answered `noted`, exit 0.
+    `opencode session list` then had a new session first, and `run reviewer opencode 0001 --headless <the word
+    and the heading> -- --session <its id>` printed `> reviewer · gpt-6-luna` and answered `pistachio` and
+    `# Reviewer`, exit 0. The list had no further session afterwards. So the session was resumed, as the role
+  * `run implementer claude 0001 --headless <the heading> -- --allowedTools Read` answered `# Implementer`, exit
+    0. So the prompt was not taken for a value of the option
+  * Not tried: any of this in a session with a terminal, `--continue` of either harness, an option of OpenCode
+    that takes several values, an argument after the `--` that contradicts one of the command's, and resuming
+    the sessions that the interrupts of the first runs left

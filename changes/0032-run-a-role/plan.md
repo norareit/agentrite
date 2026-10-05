@@ -220,16 +220,15 @@ What the human added after the first implementation, which ends at `1ff7e9f`. Re
 On the real harnesses, in the project the first runs were made in or one made the same way. Each is recorded
 with what was seen, and one that shows requirement 21 or the README wrong stops the unit for the human:
 
-- [ ] Claude Code, headless: a first run with `-- --session-id <a new uuid>` whose text gives the agent a word
+- [x] Claude Code, headless: a first run with `-- --session-id <a new uuid>` whose text gives the agent a word
       to remember, and a second with `-- --resume <that uuid>` whose text asks for the word. The second answers
       with it, and still as the role (R17, R21)
-- [ ] OpenCode, headless: the same, with the session's id read from `opencode session list` after the first run
+- [x] OpenCode, headless: the same, with the session's id read from `opencode session list` after the first run
       and `-- --session <id>` on the second (R17, R21)
-- [ ] Claude Code, headless, with an option that takes several values after the `--`, such as
+- [x] Claude Code, headless, with an option that takes several values after the `--`, such as
       `-- --allowedTools Read`: the agent still answers the prompt, so the prompt was not taken for a value
       (R21)
 
-## Verification
 ## Verification
 
 - [x] `npm test` passes
@@ -253,4 +252,4 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 - [x] `feature-0032 Pass on to the harness what follows --`: the tests and `scripts/agentrite-run.mjs`
 - [x] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
 - [x] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
-- [ ] `feature-0032 Record the runs that resume a session`: the record
+- [x] `feature-0032 Record the runs that resume a session`: the record
