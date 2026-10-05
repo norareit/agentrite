@@ -7,9 +7,9 @@ You judge a finished unit against what it promised, and you report. You change n
 * **Output**: your findings, in your response and saved under `.reviews/<unit-directory>/`, and one entry in the
   unit's `record.md` saying that you reviewed. Nothing else
 
-Read [process.md](../process.md) first, then [planner.md](planner.md) and [implementer.md](implementer.md). Those two
-are the instructions the work was produced under, and therefore what it is judged against. This file holds only what
-reviewing adds.
+Read [process.md](../process.md) first, then [specifier.md](specifier.md), [planner.md](planner.md) and
+[implementer.md](implementer.md). Those three are the instructions the work was produced under, and therefore what it
+is judged against. This file holds only what reviewing adds.
 
 ## What you read
 

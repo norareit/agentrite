@@ -122,16 +122,16 @@ The wrappers:
 
 The role files:
 
-- [ ] Write `roles/specifier.md` and rewrite `roles/planner.md` by the table above, moving text as it is written
+- [x] Write `roles/specifier.md` and rewrite `roles/planner.md` by the table above, moving text as it is written
       (R2, R3)
-- [ ] Account for today's `roles/planner.md`: go through `git show master:roles/planner.md` sentence by sentence
+- [x] Account for today's `roles/planner.md`: go through `git show master:roles/planner.md` sentence by sentence
       and find each in one of the two files. Log in `record.md` that it was done, and every sentence that was
       reworded, with its old and its new wording (R4)
-- [ ] In `roles/implementer.md`: the opening says a planned unit; "Before starting" says which status a feature,
+- [x] In `roles/implementer.md`: the opening says a planned unit; "Before starting" says which status a feature,
       a bug and a task is started from, and that a feature or a bug that is `approved` and not `planned` stops
       the implementer; "the unit goes back to planning and to the human" becomes "to the specifier and to the
       human". Nothing else changes (R5)
-- [ ] In `roles/reviewer.md`, the sentence that names `planner.md` and `implementer.md` names `specifier.md`
+- [x] In `roles/reviewer.md`, the sentence that names `planner.md` and `implementer.md` names `specifier.md`
       first, and "Those two" becomes "Those three". Nothing else changes (R6)
 
 The process:
@@ -185,7 +185,7 @@ The documents:
 - [x] `feature-0033 Read the documents against the tree that holds 0032`: the three documents again
 - [x] `feature-0033 Write a wrapper for the specifier`: the tests, the fixtures, the list of roles and the
       project template
-- [ ] `feature-0033 Divide the planner's role file`: the four role files, with the accounting logged
+- [x] `feature-0033 Divide the planner's role file`: the four role files, with the accounting logged
 - [ ] `feature-0033 Specify on master and plan before the work`: `process.md` and the two change templates
 - [ ] `feature-0033 Cut a unit's branch from master on its first run`: the wrapper and its tests
 - [ ] `feature-0033 Describe specifying and the unit's branch`: the README

@@ -62,3 +62,35 @@ timestamp: 2026-10-05T13:45:27Z
   since is not known here. Read `process.md` and `roles/implementer.md` of the release 3.0.0 in `node_modules`, and
   this unit's spec, plan and record whole. `npm test` on `9f1c083` before any change: 337 tests, 337 passed. Status
   `in-progress`
+- 2026-10-05T17:11:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the plan's first two groups of tasks.
+  * The wrappers, `542b1f5`. The tests and the fixtures first: `npm test` reported 339 tests, 16 failed. With the
+    specifier in the list of roles, the three descriptions and the template, 339 passed. The new test of `refresh`
+    builds the wrappers of the release before from the two descriptions 3.0.0 wrote, which it holds as that release
+    wrapped them; the planner's was compared once, by hand, with `.claude/agents/planner.md` of this repository,
+    which 3.0.0 wrote, and is the same. The test of `init` did not need the specifier's wrapper added by name: it
+    already compares what `init` plans with what `agentrite-roles` plans. The start of the implementation is a
+    commit of its own, `e830f69`, which is not among the plan's commit points
+  * The role files. `roles/planner.md` on `master` was cut into 64 pieces: its headings, and each sentence of its
+    paragraphs and bullets. A script looked for each piece, with its line breaks folded, in the two new files.
+    63 are in one of them word for word, and those of "Read process.md first" in both. One was reworded, and two
+    are word for word in the specifier's file and reworded in the planner's, where the plan's table says "both":
+    * The output. Was: "**Output**: the documents the unit's kind requires, which for a feature is `spec.md` and
+      `plan.md` and for a task may be nothing but the record, and a log entry in its `record.md`". In the
+      specifier's: "**Output**: the documents the unit's kind requires of you, which for a feature or a bug is
+      `spec.md` and for a task may be nothing but the record, and a log entry in its `record.md`. You write no
+      `plan.md`". In the planner's: "**Output**: `plan.md` where the unit gets one, a log entry in its `record.md`,
+      and the status `planned`"
+    * The opening. "You turn a request into a change unit that someone else can implement without coming back to
+      ask what was meant." is the specifier's. The planner's: "You turn an approved unit into a plan that someone
+      else can implement without coming back to ask what was meant."
+    * The handing over. "Log in `record.md` that the unit's documents are written, and leave the status at
+      `draft`. Approval is the human's, and the status moves on when they give it." is the specifier's. The
+      planner's: "Log in `record.md` that the plan is written, or that the unit needs none, and set the status to
+      `planned`. Nobody approves the plan: once the unit is `planned`, the implementer may begin."
+    * The input, "the request, and the unit directory `changes/<number>-<kebab-name>/`, which you create or
+      continue", is the specifier's word for word. The planner's is requirement 3's
+    * "This file holds only what planning adds." is the planner's, and reads "specifying" in the specifier's
+  * New text, which the old file did not hold: the planner's "Before starting", and the second paragraph of the
+    specifier's "Handing over". The implementer's file changed in the three places the plan names and the
+    reviewer's in one sentence. `npm test` on the tree with the four role files: 339 passed. No test reads a role
+    file's text
