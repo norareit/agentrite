@@ -157,5 +157,18 @@ timestamp: 2026-10-04T23:56:09Z
   * `37943a0`, the move to 3.0.0, is now `8647670`, `7a0fe34` is `aa10dde` and `05da240` is `1cd4a52`
   Not rewritten: `a200de4`, the release notes of 3.0.0 on `master`, which carries the line too and is under the
   pushed tag `v3.0.0`. The suite and the change check were run again on the rewritten branch
+- 2026-10-05T00:23:27Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a full review of
+  `changes/0031-release-moves-own-dependency/` at `58a1736195b39951aa89b1dcf25e6e3253673c7d`, against merge base
+  `2c23bec1bb040e936b79c311369c7edab88bac92`. Returned S1 (blocking), S2 and C1 (nonblocking), with no plan-fidelity
+  findings. Complete findings saved at
+  `.reviews/0031-release-moves-own-dependency/2026-10-05T002148Z-opencode-openai-gpt-6.1-sol-full.md`.
+  Independently ran `npm test` (286 passed), `npm run check-changes` (exit 0), and
+  `./agent.sh --in-place true < /dev/null` (exit 0, startup checks passed, no image build). Package dry runs listed
+  the same 25 paths on the reviewed tree and an export of `master`; the forbidden-path diff was empty and
+  `git diff --check master...HEAD` passed. Could not verify the historical initial red test run or the reported
+  ten-second cached build. Did not rerun the install, `refresh`, or rollback on this checkout, or exercise a
+  release on `master`, an agent resuming after deployment, or the already-current and failure paths. S1 follows
+  from the documented cleanup commands; its example was not reproduced by changing this checkout. No harness,
+  login, prompt, or unit run was tested
 
 ## Amendments
