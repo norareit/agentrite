@@ -188,19 +188,19 @@ unit for the human; it is not worked around.
 
 What the human added after the first implementation, which ends at `1ff7e9f`. Requirements 20 to 24:
 
-- [ ] In `tests/agentrite-run.test.mjs`, change the test that a `--` ends the options into tests of requirement
+- [x] In `tests/agentrite-run.test.mjs`, change the test that a `--` ends the options into tests of requirement
       21: what follows the `--` is returned apart, as written and in order, an option of the command's own name
       among it included; nothing of it is text; no `--` and a `--` with nothing after it give none. Add that a
       word before the `--` that opens with a dash is refused as an unknown option, that a quoted argument which
       holds such a word after another is text, and that a role, a harness or a unit missing before the `--` is
       named whatever follows it. See them fail (R21, R22, R23)
-- [ ] Change the tests of the harness's argument list: each row of the table with and without `X...`, which is
+- [x] Change the tests of the harness's argument list: each row of the table with and without `X...`, which is
       last in all four, and the test that the harness gets nothing beyond the command's own arguments, which
       now holds when no `--` is given. Change the test of the usage of `run` to the text above. See them fail
       (R9, R21, R24)
-- [ ] Change `parseRunArgs`, `harnessCommand`, the form and the usage of `run` in `scripts/agentrite-run.mjs`
+- [x] Change `parseRunArgs`, `harnessCommand`, the form and the usage of `run` in `scripts/agentrite-run.mjs`
       until those pass (R2, R9, R21, R22, R23, R24)
-- [ ] Add to the tests of `run` as a command: a fake harness gets what follows the `--` after its prompt, in
+- [x] Add to the tests of `run` as a command: a fake harness gets what follows the `--` after its prompt, in
       each harness and mode, an argument with a space in it as one argument. See it pass, or fail and repair
       the command (R21)
 - [ ] Test `roles --json`: the function that renders it gives a document that `JSON.parse` reads back as the
@@ -248,9 +248,9 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 - [x] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
 - [x] `feature-0032 Describe running a role`: the README
 - [x] `feature-0032 Record the runs on the real harnesses`: the record
-- [ ] `feature-0032 Take arguments for the harness after --, and list the roles as JSON`: the documents as the
+- [x] `feature-0032 Take arguments for the harness after --, and list the roles as JSON`: the documents as the
       human had them changed
-- [ ] `feature-0032 Pass on to the harness what follows --`: the tests and `scripts/agentrite-run.mjs`
+- [x] `feature-0032 Pass on to the harness what follows --`: the tests and `scripts/agentrite-run.mjs`
 - [ ] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
 - [ ] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
 - [ ] `feature-0032 Record the runs that resume a session`: the record

@@ -16,9 +16,10 @@ export function rolesListing(roles) {
   return `${blocks.join('\n\n')}\n`;
 }
 
-/** The one line that says how `run` is run. */
+/** How `run` is run, the second line starting under the first argument. */
 export const RUN_FORM =
-  'usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]';
+  'usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]\n' +
+  '                     [-- <harness arguments...>]';
 
 /**
  * @returns {string}
@@ -37,6 +38,9 @@ export function runUsage() {
     '  --skip-permissions  the harness asks no permission: --dangerously-skip-permissions for claude, which',
     '                      bypasses every check, and --auto for opencode, which approves what is not denied.',
     '                      Meant for the sandbox',
+    '  -- <harness arguments...>',
+    '                      given to the harness as written, after everything else it gets. The command reads',
+    '                      none of them',
   ].join('\n');
 }
 
@@ -79,7 +83,8 @@ function positionError(role, harness, unit) {
 }
 
 /**
- * The arguments of `run`. What it throws holds the usage of `run`: alone when there is no argument at all, and
+ * The arguments of `run`. The first `--` ends the command's own: what follows it is the harness's, and is returned
+ * as written, unread. What it throws holds the usage of `run`: alone when there is no argument at all, and
  * otherwise after a line that names the first argument `run` does not take.
  *
  * @param {string[]} args
@@ -91,14 +96,21 @@ function positionError(role, harness, unit) {
  *   model: string | undefined,
  *   headless: boolean,
  *   skipPermissions: boolean,
+ *   harnessArguments: string[],
  * }}
  */
 export function parseRunArgs(args) {
   if (args.length === 0) throw new Error(runUsage());
 
+  // Taken off before the rest is read, so that no word of the harness's is taken for an option, a position or
+  // text of the command.
+  const end = args.indexOf('--');
+  const own = end === -1 ? args : args.slice(0, end);
+  const harnessArguments = end === -1 ? [] : args.slice(end + 1);
+
   // Not strict, so that an option `run` does not take is named in the kit's words and not in node's.
   const { values, positionals, tokens } = parseArgs({
-    args,
+    args: own,
     options: RUN_OPTIONS,
     allowPositionals: true,
     strict: false,
@@ -118,6 +130,7 @@ export function parseRunArgs(args) {
     model: values.model,
     headless: values.headless === true,
     skipPermissions: values['skip-permissions'] === true,
+    harnessArguments,
   };
 }
 
@@ -181,7 +194,9 @@ const STARTS = {
 };
 
 /**
- * The command that starts `harness` as `role` on `prompt`, and its arguments.
+ * The command that starts `harness` as `role` on `prompt`, and its arguments. The caller's own arguments for the
+ * harness come last, after the prompt: before it, an option of the harness that takes several values would take
+ * the prompt for one of them.
  *
  * @param {{
  *   harness: string,
@@ -190,10 +205,11 @@ const STARTS = {
  *   headless: boolean,
  *   skipPermissions: boolean,
  *   prompt: string,
+ *   harnessArguments: string[],
  * }} run
  * @returns {{ command: string, args: string[] }}
  */
-export function harnessCommand({ harness, role, model, headless, skipPermissions, prompt }) {
+export function harnessCommand({ harness, role, model, headless, skipPermissions, prompt, harnessArguments }) {
   const start = STARTS[harness];
   const options = [
     '--agent',
@@ -201,5 +217,6 @@ export function harnessCommand({ harness, role, model, headless, skipPermissions
     ...(model === undefined ? [] : ['--model', model]),
     ...(skipPermissions ? [start.skipPermissions] : []),
   ];
-  return { command: start.command, args: (headless ? start.headless : start.interactive)(options, prompt) };
+  const args = (headless ? start.headless : start.interactive)(options, prompt);
+  return { command: start.command, args: [...args, ...harnessArguments] };
 }

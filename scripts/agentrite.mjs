@@ -676,11 +676,10 @@ function checkWrapper(root, harness, role) {
  * @param {ReturnType<typeof parseRunArgs>} parsed
  * @returns {number}
  */
-function run(root, { role, harness, unit, text, model, headless, skipPermissions }) {
+function run(root, { role, harness, unit, text, ...start }) {
   const directory = resolveUnit(unit, changeDirectories(root));
   checkWrapper(root, harness, role);
-  const prompt = unitPrompt(directory, text);
-  const { command, args } = harnessCommand({ harness, role, model, headless, skipPermissions, prompt });
+  const { command, args } = harnessCommand({ ...start, harness, role, prompt: unitPrompt(directory, text) });
 
   // The arguments go to the harness as they are, with no shell in between to read the prompt.
   const result = spawnSync(command, args, { cwd: root, stdio: 'inherit' });
