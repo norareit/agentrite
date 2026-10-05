@@ -26,7 +26,7 @@ The "rite" is also Ritenoar's, whose projects carry it.
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
 | `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it                  |
 | `RELEASING.md`       | How a release of the kit is made, which the `/release` skill follows                      |
-| `roles/`             | The planner, implementer and reviewer instructions                                        |
+| `roles/`             | The specifier, planner, implementer and reviewer instructions                             |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
 | `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
 | `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` and `agentrite-roles` commands |
@@ -217,8 +217,8 @@ object with its `name` and its `description`. The description is on one line, no
 {
   "roles": [
     {
-      "name": "planner",
-      "description": "Writes the documents a change unit needs in changes/, ..."
+      "name": "specifier",
+      "description": "Writes what a change unit must make true: the spec of a feature or a bug, ..."
     }
   ]
 }
@@ -233,7 +233,8 @@ npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--he
 
 The role is one that `agentrite roles` lists, and the harness is `claude` or `opencode`. The unit is a directory of
 `changes/`, given by its name, with or without `changes/` before it and a slash after it, or by the four digits its
-name opens with. A unit run by its number, in each harness:
+name opens with. The command takes a unit that has a directory, so the specifier of a unit that does not exist yet is
+started in a session of the harness, not with `run`. A unit run by its number, in each harness:
 
 ```sh
 npx agentrite run implementer claude 0032
@@ -394,9 +395,11 @@ then be root too. When Docker needs elevated permissions on the machine, add the
 
 ### Working on a clone
 
-Planning is done on the host: the planner makes the unit's branch and commits its documents there. The sandbox is
-for the implementer and the reviewer, and a unit run gives them a copy of that branch to work on, not the
-developer's checkout:
+Specifying is done on the host, on `master`: the specifier commits the unit's spec and record there, and the human
+approves them there. The sandbox is for the planner, the implementer and the reviewer, and a unit run gives them a
+copy of the unit's branch to work on, not the developer's checkout. The first unit run of a unit finds no branch
+and cuts one from `master`, named after the unit's kind and its directory, so that the plan is written against
+what `master` holds by then. It says that it did, and it refuses a number for which `master` holds no unit:
 
 ```sh
 ./agent.sh 0029 claude
@@ -405,8 +408,22 @@ developer's checkout:
 
 The unit is a local branch, named outright or by a number that its name holds as a whole number: `0029` names
 `feature-0029-sandbox-clone-of-the-branch`, and `29` and `002` name nothing. When a number names several branches
-the wrapper lists them and asks for one by its name, and when it names none it says so. The wrapper never makes a
-branch.
+the wrapper lists them and asks for one by its name.
+
+When a number names no branch, the wrapper looks at `changes/` as `master` holds it, and cuts the branch of the one
+unit there whose directory opens with that number and a dash. The branch's name is `feature`, `bugfix` or `task`,
+by the `kind` in the unit's record on `master`, then a dash and the directory's name. The wrapper says what it cut,
+before it builds an image or starts a container:
+
+```text
+agent.sh: cut feature-0033-specifier-role from master at 9f03a06, for changes/0033-specifier-role.
+```
+
+Cutting the branch checks nothing out and moves no branch that exists, so the host's checkout, its working tree and
+its index are as they were. The wrapper cuts nothing, says why and starts nothing when `master` holds no unit of that
+number, when the unit's record on `master` cannot be read or names no kind the kit has, and when there is no local
+branch `master`. A unit given by a branch's name that does not exist is refused, as it was: only a number gets a
+branch cut.
 
 Before the container starts, the wrapper clones the repository, with that branch checked out at the commit the
 host's branch is at:

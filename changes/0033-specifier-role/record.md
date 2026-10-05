@@ -95,8 +95,8 @@ timestamp: 2026-10-05T13:45:27Z
     specifier's "Handing over". The implementer's file changed in the three places the plan names and the
     reviewer's in one sentence. `npm test` on the tree with the four role files: 339 passed. No test reads a role
     file's text
-- 2026-10-05T17:12:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed `process.md` in the four places the
-  plan names, and the two change templates. Beyond what the plan's approach spells out:
+- 2026-10-05T17:12:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed `process.md` in the four
+  places the plan names, and the two change templates. Beyond what the plan's approach spells out:
   * The paragraph on the status is two paragraphs now, the second opening at "Set `implemented` only after", and
     that second one is wrapped anew. Its words are as they were
   * Of the paragraph that opened "Work on a branch", the sentence "Commit the change documents first, then the
@@ -107,8 +107,8 @@ timestamp: 2026-10-05T13:45:27Z
     then implements, then reviews"
   * "Features", "Bugs" and "Tasks" were read against requirement 10 and are unchanged: each sentence still holds
   `npm test`: 339 passed. No test reads `process.md` or the change templates
-- 2026-10-05T17:14:41Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the sandbox's two tasks. The tests
-  first: `node --test tests/agent-unit-run.test.mjs` reported 45 tests, 13 failed, all of them new. With
+- 2026-10-05T17:14:41Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the sandbox's two tasks. The
+  tests first: `node --test tests/agent-unit-run.test.mjs` reported 45 tests, 13 failed, all of them new. With
   `cut_unit_branch` in `container/unit-clone.sh`, called from `resolve_unit_branch`, `npm test` reported 351 tests,
   351 passed. The tests run the wrapper against a real git repository and a fake Docker, on Linux. Not run: the
   wrapper against a real Docker, and a first unit run of a real unit. What the plan does not say and was decided
@@ -130,3 +130,13 @@ timestamp: 2026-10-05T13:45:27Z
     as `003` and `0099`, and a branch's name that `master` holds a unit for joined `claude`
   * The line the wrapper prints of the ways to mount gained a second line, "An ID with no branch gets one, cut
     from master". The plan names "the usage" and gives no text for it
+- 2026-10-05T17:15:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the README in the four places the
+  plan names, the paragraph under "Working on a clone" as the plan words it. Searched it for "planner", "plan",
+  "planning", "three roles", "six" and "seven". One further place needed a change, the paragraph after the two
+  examples of `./agent.sh`, which ended: "and when it names none it says so. The wrapper never makes a branch."
+  It now ends at "asks for one by its name.", and is followed by what the wrapper does for a number that names no
+  branch: where it looks, how the branch is named, the line it prints, that nothing else of the host's repository
+  changes, and what it refuses. That is where requirement 15's "what the wrapper prints then and what it refuses"
+  is. Found to need no change: "a change is specified, planned, recorded and frozen" in the opening, the "three
+  sections" of `AGENTS.md`, and "branches made on the host" under the supported usage, since the wrapper cuts on
+  the host. `npm test`: 351 passed. No test reads the README's text on roles or on the sandbox

@@ -163,7 +163,7 @@ The sandbox:
 
 The documents:
 
-- [ ] Change the four places of `README.md` as the approach gives them. Search the README for "planner", "plan"
+- [x] Change the four places of `README.md` as the approach gives them. Search the README for "planner", "plan"
       and "three roles", and log in `record.md` each further place that needed a change and what it became
       (R15)
 - [ ] Check with `git diff master --stat` that no file requirement 16 names has changed, and run the change
@@ -188,4 +188,4 @@ The documents:
 - [x] `feature-0033 Divide the planner's role file`: the four role files, with the accounting logged
 - [x] `feature-0033 Specify on master and plan before the work`: `process.md` and the two change templates
 - [x] `feature-0033 Cut a unit's branch from master on its first run`: the wrapper and its tests
-- [ ] `feature-0033 Describe specifying and the unit's branch`: the README
+- [x] `feature-0033 Describe specifying and the unit's branch`: the README
