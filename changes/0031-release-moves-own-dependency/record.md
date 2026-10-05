@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-04T23:56:09Z
 ---
 
@@ -62,5 +62,11 @@ timestamp: 2026-10-04T23:56:09Z
   words. The text of `RELEASING.md` in the plan is unchanged by this: it already says that a start that fails
   stops the move and does not stop the release. The human approved the texts before the task for 3.0.0 was
   written, having asked for it. Status `approved`
+- 2026-10-05T00:10:20Z [human] asked "Shall I dispatch the implementer?" by the main session, said: "yes"
+- 2026-10-05T00:10:20Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, dispatched by the main
+  session, in the main checkout on the host, on the branch `feature-0031-release-moves-own-dependency` at
+  `37078d3`, with no worktree and outside the sandbox. Read `AGENTS.md`, the process and the implementer role of
+  release 2.3.0, which is what `node_modules` holds until the plan's task moves it, and this unit's spec, plan and
+  record whole. `npm test` on `37078d3` before any change: 286 tests, 286 passed. Status `in-progress`
 
 ## Amendments
