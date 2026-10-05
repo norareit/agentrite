@@ -299,7 +299,7 @@ the root, which is the human's.
   the skill's test fail on the description and every other test pass (R14)
 - [x] Change the description in `.claude/skills/release/SKILL.md` to the Approach's, leaving its name, its
   `disable-model-invocation` and its body as they are, and see the skill's test pass (R12)
-- [ ] Replace `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, written out
+- [x] Replace `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, written out
   of this plan and not retyped. Compare with `git diff master -- RELEASING.md` against the list of differences
   the Approach gives: every changed line is on that list, steps 1 and 3 show no change, and every paragraph and
   command of today's step 5 is in step 5 or step 7 (R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11)
@@ -334,7 +334,7 @@ the root, which is the human's.
 ## Commit Points
 
 - [x] The test and the skill's description
-- [ ] `RELEASING.md`
+- [x] `RELEASING.md`
 - [ ] The README
 - [ ] The move to 3.0.0, as step 6 gives it
 - [ ] The record
