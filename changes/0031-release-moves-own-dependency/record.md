@@ -221,5 +221,56 @@ timestamp: 2026-10-04T23:56:09Z
   branch at `45d82d9`: `npm test` reported 286 tests, 286 passed, and `npm run check-changes` exited 0 and printed
   nothing of the check's own. The commit of this entry changes only this record. `git status --short` shows the
   human's untracked `ritenoar-agent-kit-1.0.3.tgz` and nothing else
+- 2026-10-05T00:29:35Z [human] given the three choices as the entry of 00:25:34Z has them, decided each: "S1): C ,
+  S2) okay, accpet it. C1) yes, add the rebuild". The words reached the implementer through the main session
+- 2026-10-05T00:29:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied the three decisions.
+  The corrections to the approved texts are under "Amendments"; `spec.md` and `plan.md` are not edited.
+  * S1, blocking, decided by the human as choice (c): no text changes, and the gap is a known limit of step 6.
+    When the step stops, a new untracked file that one of the five commands left is not removed by the putting
+    back, and the step does not tell such a file from one that was there before, such as the human's tarball. So
+    R8's "puts the working tree ... back as they were" holds for tracked files, for what `refresh` wrote and for
+    the installed kit, and not for such a file. With this, no blocking finding of the review is undecided
+  * S2, accepted by the human with the proposed wording, and corrected in `RELEASING.md`: step 3's bullet is now
+    "Name every change in the shipped diff that has no unit, but for the one step 2 says not to name"
+  * C1, decided by the human: the start rebuilds. Corrected in `RELEASING.md`, step 6, in three places: the fifth
+    command is `./agent.sh --in-place --rebuild true`; its bullet says that `--rebuild` builds the image every
+    time, so that the container holds the files of this release and not those of an image an earlier release
+    left, and no longer "when one is due"; and the commit body's line no longer asks whether the image was built.
+    The closing paragraph, "The start shows that the released sandbox builds and starts in this repository, and
+    no more", is unchanged: with the rebuild it holds as written. The order of the two options is the one the
+    README uses and the main session gave the human. The installed wrapper reads its options in a loop, in any
+    order; the other order was not run
+  * The new command, run once on this host with closed input (`< /dev/null`) on a clean tree at `b2ddf3d`: exit
+    0 after 10 seconds. It built: 19 build steps, 10 of them from Docker's cache, ending in
+    "ritenoar-agentrite-agent  Built", and then the entrypoint's nine lines, from "installing default-deny egress
+    firewall" to "firewall verified; dropping to the agent user". The tree was unchanged afterwards. So the bullet
+    says that the build "can take minutes" where the approved text said "takes minutes": twice now it took
+    seconds here. A build with an empty cache was not tried. The other four commands were not run again: the
+    repository already depends on 3.0.0. The body of `8647670`, the move, names the command as it was then and
+    says that it built; it is left as it is
+  * Looked for the old command and for what these changes touch: `git grep` outside `changes/` and
+    `CHANGELOG.md` finds `in-place true` only in `RELEASING.md`. No test names the command or reads the steps of
+    `RELEASING.md`: `tests/release.test.mjs` holds the skill's text and that the file exists and is named. The
+    skill's description and the README's two paragraphs say that the release moves the dependency and name no
+    command, so none of them changes. Commit `545bdd7`
 
 ## Amendments
+
+- 2026-10-05T00:29:35Z [Claude Code, anthropic/claude-opus-5-5] on the human's decision of the review's C1, "yes,
+  add the rebuild": the fifth command of requirement 6 is `./agent.sh --in-place --rebuild true`, not
+  `./agent.sh --in-place true`. Requirement 10's "builds its image when one is due" becomes: builds its image at
+  every run. The decision "The step starts the released sandbox, and asks only that it runs" names the old
+  command and "builds the image when one is due" too, and is read the same way. In the plan, the text of
+  `RELEASING.md` differs from the file in step 6's code block, the bullet on the start and the last line of the
+  commit's body, and the task and the check that name the command mean the new one. Reason: without a build, the
+  start can pass on an image an earlier release left, whose entrypoint and proxy are not the release's
+- 2026-10-05T00:29:35Z [Claude Code, anthropic/claude-opus-5-5] on the human's decision of the review's S2, "okay,
+  accpet it": step 3's second bullet in `RELEASING.md` is "Name every change in the shipped diff that has no
+  unit, but for the one step 2 says not to name". The plan's text of `RELEASING.md` has the bullet without the
+  clause, and its "Steps 1 and 3 are unchanged", with the task's "steps 1 and 3 show no change", no longer holds
+  for step 3: `git diff master -- RELEASING.md` shows that one line of it. Reason: step 3 read against the
+  exception of requirement 11 that step 2 gives
+- 2026-10-05T00:29:35Z [Claude Code, anthropic/claude-opus-5-5] on the human's decision of the review's S1, choice
+  (c): requirement 8's "puts the working tree and the installed kit back as they were" has a known limit. A new
+  untracked file that one of the five commands left is not removed, and the step does not tell it from an
+  untracked file that was there before. The text of step 6 is unchanged
