@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-10-05T12:51:34Z
 ---
 
@@ -30,3 +30,14 @@ timestamp: 2026-10-05T12:51:34Z
   kit holds them. The plan's test of the listing and two sentences that said "the three roles" follow. The reason is
   0033, a draft on its own branch, which adds a fourth role: this unit is built first, and its spec is frozen by then.
   Nothing else changed, and the status stays `draft`
+- 2026-10-05T14:02:07Z [human] said, in a new session of Claude Code on the host: "Act as the @implementer and
+  implement feature 0032"
+- 2026-10-05T14:02:07Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main session, in
+  the main checkout on the host, on the branch `feature-0032-run-a-role` at `c1c83f2`. The status was `draft`, and
+  no entry says `approved`. The human's instruction above is taken as the approval of `spec.md` and `plan.md` as
+  they stand at `c1c83f2`: that is the implementer's reading, and the human did not say the word. The spec says of
+  itself that everything beyond the four choices had not been read by the human, and the plan gives the usage of
+  `run` "for the human to read and correct before approving"; whether either was read since is not known here. Read
+  `process.md` and `roles/implementer.md` of the release 3.0.0 in `node_modules`, the README, and this unit's spec,
+  plan and record whole. `npm test` on `c1c83f2` before any change: 286 tests, 286 passed. Claude Code 2.1.289 and
+  OpenCode 1.18.34 are on the host. Status `in-progress`
