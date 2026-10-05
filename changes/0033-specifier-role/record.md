@@ -130,9 +130,9 @@ timestamp: 2026-10-05T13:45:27Z
     as `003` and `0099`, and a branch's name that `master` holds a unit for joined `claude`
   * The line the wrapper prints of the ways to mount gained a second line, "An ID with no branch gets one, cut
     from master". The plan names "the usage" and gives no text for it
-- 2026-10-05T17:15:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the README in the four places the
-  plan names, the paragraph under "Working on a clone" as the plan words it. Searched it for "planner", "plan",
-  "planning", "three roles", "six" and "seven". One further place needed a change, the paragraph after the two
+- 2026-10-05T17:15:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the README in the four
+  places the plan names, the paragraph under "Working on a clone" as the plan words it. Searched it for "planner",
+  "plan", "planning", "three roles", "six" and "seven". One further place needed a change, the paragraph after the two
   examples of `./agent.sh`, which ended: "and when it names none it says so. The wrapper never makes a branch."
   It now ends at "asks for one by its name.", and is followed by what the wrapper does for a number that names no
   branch: where it looks, how the branch is named, the line it prints, that nothing else of the host's repository
@@ -140,3 +140,24 @@ timestamp: 2026-10-05T13:45:27Z
   is. Found to need no change: "a change is specified, planned, recorded and frozen" in the opening, the "three
   sections" of `AGENTS.md`, and "branches made on the host" under the supported usage, since the wrapper cuts on
   the host. `npm test`: 351 passed. No test reads the README's text on roles or on the sandbox
+- 2026-10-05T17:16:01Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the plan's last task and its
+  verification on `6491dd8`, on the host, on Linux. The commit that holds this entry changes only this record and
+  the plan's boxes.
+  * `npm test`: 351 tests, 351 passed
+  * `npm run check-changes`: exit 0. It is the check of the release 3.0.0 in `node_modules`, and the plan asks for
+    it after the last commit, which this entry cannot say of its own commit
+  * `git diff master --name-only` names none of `scripts/check-changes.mjs`, `CHANGELOG.md`, `RELEASING.md`,
+    `AGENTS.md`, `.claude/agents/` and `.opencode/agents/`, and of `container/` only `agent.sh` and
+    `unit-clone.sh`. `node --test tests/check-changes.test.mjs`: 16 tests, 16 passed
+  * `npm pack --dry-run` lists `roles/specifier.md` among four role files
+  * In a temporary directory with a `package.json`, `agentrite.mjs init claude opencode` of the working copy wrote
+    eight wrappers, and each names a role file that `roles/` holds. The `AGENTS.md` it wrote links four
+  * No file that differs from `master` holds a line over 120 characters or an em dash
+  * Every link to a `.md` file in `process.md` and in the four role files names a file that is there
+  Not verified: the wrapper against a real Docker, a planner or an implementer run under the new role files, and
+  `refresh` in a real project that holds the wrappers of 3.0.0, which the suite covers with wrappers it builds
+  itself. This repository's own wrappers are those of 3.0.0, as the spec decides, so `agentrite run` of the
+  working copy refuses the planner and the implementer here until a release is installed and `refresh` is run.
+  Open for the human: the approval was read from the instruction to implement, and the three decisions logged
+  with the sandbox's tasks, of which the sentence "A unit's branch is made on the host, when the unit is planned."
+  is the one that reads wrong today. The status stays `in-progress`, for the review

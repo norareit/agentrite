@@ -166,18 +166,18 @@ The documents:
 - [x] Change the four places of `README.md` as the approach gives them. Search the README for "planner", "plan"
       and "three roles", and log in `record.md` each further place that needed a change and what it became
       (R15)
-- [ ] Check with `git diff master --stat` that no file requirement 16 names has changed, and run the change
+- [x] Check with `git diff master --stat` that no file requirement 16 names has changed, and run the change
       check's own tests (R16)
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` exits 0, run after the last commit
-- [ ] `npm pack --dry-run` lists `roles/specifier.md`
-- [ ] In a temporary directory, `init claude opencode` from the working copy writes eight wrappers, and each
+- [x] `npm test` passes
+- [x] `npm run check-changes` exits 0, run after the last commit
+- [x] `npm pack --dry-run` lists `roles/specifier.md`
+- [x] In a temporary directory, `init claude opencode` from the working copy writes eight wrappers, and each
       points at a role file that the package holds
-- [ ] No line of a changed or new file is over 120 characters, and none holds an em dash
-- [ ] Every link between `process.md` and the four role files resolves
+- [x] No line of a changed or new file is over 120 characters, and none holds an em dash
+- [x] Every link between `process.md` and the four role files resolves
 
 ## Commit Points
 
