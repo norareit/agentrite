@@ -88,7 +88,7 @@ resolve_unit_branch() {
   fi
   if [ -z "$matches" ]; then
     echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
-    echo "A unit's branch is made on the host, when the unit is planned." >&2
+    echo "A unit's branch is cut from master when the unit is given by its number." >&2
     return 1
   fi
   if [ "$(grep -c '' <<< "$matches")" -gt 1 ]; then

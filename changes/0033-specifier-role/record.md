@@ -161,3 +161,12 @@ timestamp: 2026-10-05T13:45:27Z
   Open for the human: the approval was read from the instruction to implement, and the three decisions logged
   with the sandbox's tasks, of which the sentence "A unit's branch is made on the host, when the unit is planned."
   is the one that reads wrong today. The status stays `in-progress`, for the review
+- 2026-10-05T19:01:51Z [human] read the implementer's summary and said: "fix the stale refusal line."
+- 2026-10-05T19:01:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word, changed the
+  second line of the refusal of a unit given by a name that is no branch. It read "A unit's branch is made on the host,
+  when the unit is planned." and reads "A unit's branch is cut from master when the unit is given by its number."
+  The first line, the exit status and the list of the ways to mount are as they were. Requirement 20 has such a
+  unit "refused as today": it still is, and what it is told is the human's decision of today, which the spec does
+  not hold. The task was added to the plan first. The test first: 2 of the 45 tests of
+  `tests/agent-unit-run.test.mjs` failed. With the line changed, `npm test`: 351 tests, 351 passed. The README did
+  not quote the line and is unchanged. The status stays `in-progress`

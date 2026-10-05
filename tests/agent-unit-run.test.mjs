@@ -112,14 +112,18 @@ test('the wrapper lists the branches an ID names when there are several, and sta
 });
 
 for (const unit of ['claude', 'feature-0031-cut-me']) {
-  test(`the wrapper says that ${unit} names no branch and that one is made on the host, and starts nothing`, (t) => {
+  test(`the wrapper says that ${unit} names no branch and that a number gets one cut, and starts nothing`, (t) => {
     const { root, state, run, git, dockerCalls, npmCalls } = setUpWithBuildDue(t);
     commitUnit({ root, git }, 'kind: feature');
     const refs = git('for-each-ref');
     const result = run([unit, 'echo', 'hi']);
     assert.equal(result.status, 2);
     assert.ok(result.stderr.includes(`'${unit}'`), result.stderr);
-    assert.match(result.stderr, /made on the host/);
+    assert.ok(
+      result.stderr.includes("A unit's branch is cut from master when the unit is given by its number.\n"),
+      result.stderr,
+    );
+    assert.doesNotMatch(result.stderr, /made on the host/);
     assert.match(result.stderr, /agent\.sh --in-place /);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
