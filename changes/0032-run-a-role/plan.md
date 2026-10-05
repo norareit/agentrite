@@ -91,10 +91,10 @@ A command parses its own arguments:
 
 The roles:
 
-- [ ] In the new `tests/agentrite-run.test.mjs`, test the listing: the three names in order, each description as
-      the wrappers hold it once its lines are joined, no line over 120 characters. Test the command: it prints
-      the listing and exits 0 in a directory that is no project, and with an argument it prints its usage on
-      standard error and exits 2 (R1)
+- [ ] In the new `tests/agentrite-run.test.mjs`, test the listing: the name of every role the kit has, in the kit's
+      order, each description as the wrappers hold it once its lines are joined, no line over 120 characters. Test the
+      command: it prints the listing and exits 0 in a directory that is no project, and with an argument it prints its
+      usage on standard error and exits 2 (R1)
 - [ ] Export `ROLES` and the harnesses' names from `scripts/agentrite-roles.mjs`, write the listing in
       `scripts/agentrite-run.mjs` and the `roles` command in `scripts/agentrite.mjs`, and add the new file to
       `files` in `package.json` (R1, R18)
@@ -150,7 +150,7 @@ unit for the human; it is not worked around.
 
 - [ ] `run reviewer opencode <unit> --headless`: OpenCode prints no line about falling back, and its answer shows
       that it read the reviewer's role file. The same for `run implementer claude <unit> --headless` (R5, R7, R15)
-- [ ] In a session of OpenCode in that project, the three roles are still offered as subagents (R15)
+- [ ] In a session of OpenCode in that project, the roles are still offered as subagents (R15)
 - [ ] With a model pinned in one wrapper of each harness and no `--model`, which model the run used; and with
       `--model`, that the run used that one (R6, R17)
 - [ ] One interactive run per harness: the session opens with the prompt, and when it is left the terminal is as

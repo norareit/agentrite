@@ -25,3 +25,8 @@ timestamp: 2026-10-05T12:51:34Z
   0031, as every unit since 0002 was numbered beside the `history-` directories. Four things about the harnesses
   are not established and are in the spec; the plan has a run on the real harnesses for each. The status stays
   `draft`
+- 2026-10-05T13:58:59Z [Claude Code, anthropic/claude-opus-5-5] on the human's word, reworded requirement 1 so that it
+  no longer names the three roles and their order: `agentrite roles` prints each role the kit has, in the order the
+  kit holds them. The plan's test of the listing and two sentences that said "the three roles" follow. The reason is
+  0033, a draft on its own branch, which adds a fourth role: this unit is built first, and its spec is frozen by then.
+  Nothing else changed, and the status stays `draft`

@@ -67,7 +67,7 @@ On `master` at `9f03a06`, with Claude Code 2.1.289 and OpenCode 1.18.34 on the h
 
 The roles:
 
-1. `agentrite roles` prints each role of the kit, in the order planner, implementer, reviewer: its name, and its
+1. `agentrite roles` prints each role the kit has, in the order the kit holds them: its name, and its
    description as the wrappers hold it. It exits 0, reads nothing of the project and takes no argument. With one,
    it prints its usage on standard error and exits 2
 
@@ -148,7 +148,7 @@ The package and the documents:
   pin
 * **The OpenCode wrappers become `mode: all`. The human's.** OpenCode takes only a primary agent on its command
   line, and a role is also dispatched as a subagent from a session, so it has to be both. The cost is that the
-  three roles are also offered among the primary agents in OpenCode's own interface. Every project gets the
+  roles are also offered among the primary agents in OpenCode's own interface. Every project gets the
   change with its next `refresh`
 * **A wrapper that is not what `refresh` leaves stops the run. The planner's.** A project that updates the kit
   and does not run `refresh` keeps `mode: subagent`, and OpenCode then runs its default agent and says so in one
