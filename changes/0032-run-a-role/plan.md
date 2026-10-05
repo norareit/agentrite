@@ -253,7 +253,7 @@ What the human changed after the second implementation, which ends at `f136f75`.
       `--`, an argument with a space in it as one; a word beyond the unit and a `--prompt` with no text print
       what they are named as and the usage, with exit 2 and no fake started. See them pass, or fail and repair
       the command (R5, R13, R14, R21)
-- [ ] In `README.md`, under "Running a role": the form with `--prompt`; the example of a run with text as
+- [x] In `README.md`, under "Running a role": the form with `--prompt`; the example of a run with text as
       `--prompt "<text>"`; `--prompt` among the options, with that its text is one argument, given as written,
       and how a text that opens with a dash is given; where the harness gets what follows a `--`, which is before
       the prompt, and that the prompt is last; the resumed sessions with `--prompt` before the `--`; and without
@@ -299,5 +299,5 @@ human:
 - [x] `feature-0032 Record the runs that resume a session`: the record
 - [x] `feature-0032 Give the text as --prompt, and the harness its prompt last`: the documents as changed
 - [x] `feature-0032 Take the text as --prompt and put the prompt last`: the tests, the two scripts
-- [ ] `feature-0032 Describe --prompt and where the harness's arguments go`: the README
+- [x] `feature-0032 Describe --prompt and where the harness's arguments go`: the README
 - [ ] `feature-0032 Record the runs with the prompt last`: the record

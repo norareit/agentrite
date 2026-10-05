@@ -227,7 +227,7 @@ object with its `name` and its `description`. The description is on one line, no
 `agentrite run` starts a harness as one of those roles, for one unit, from the project root:
 
 ```sh
-npx agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
                   [-- <harness arguments...>]
 ```
 
@@ -241,10 +241,10 @@ npx agentrite run reviewer opencode 0032
 ```
 
 The harness is started in the directory the command is run from, with the role as its agent and one prompt:
-`The unit is changes/<directory>/.` Text after the unit is added to that prompt, after an empty line:
+`The unit is changes/<directory>/.` The text of `--prompt` is added to that prompt, after an empty line:
 
 ```sh
-npx agentrite run reviewer opencode 0032 start with the tests of the wrappers
+npx agentrite run reviewer opencode 0032 --prompt "start with the tests of the wrappers"
 ```
 
 The command waits for the harness, and exits with the status the harness exited with, or with a status other than
@@ -252,6 +252,9 @@ The command waits for the harness, and exits with the status the harness exited 
 
 The options may stand anywhere among the arguments before a `--`:
 
+* `--prompt <text>` adds its text to the prompt, as it is written. The text is one argument, so a shell's quotes
+  go around it, and it may hold any word, one that opens with a dash among them. A text that itself opens with a
+  dash is given as `--prompt="<text>"`. The command takes no word after the unit that is not an option
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session, for a script: it works on
   the prompt and ends
@@ -265,17 +268,19 @@ The options may stand anywhere among the arguments before a `--`:
   look where it runs, and on the host the flag does what its name says
 
 A `--` ends the command's own arguments. Every argument after it is given to the harness as it is written and in
-the order given, after everything else the harness gets, the prompt included. The command reads none of them: it
-does not look whether one repeats or undoes an argument of its own, such as a second `--model`, and what the
-harness makes of that is the harness's. With no `--`, or with nothing after it, the harness gets the role, the
-prompt and what the options above give, and nothing else.
+the order given, after the role, the model and the permission flag, and before the prompt. The prompt is the last
+argument the harness gets, and where the harness takes it as an argument of its own, the command puts a `--` in
+front of it, so that an option of the harness that takes several values does not take the prompt for one. The
+command reads none of the arguments it passes on: it does not look whether one repeats or undoes an argument of
+its own, such as a second `--model`, and what the harness makes of that is the harness's. With no `--`, or with
+nothing after it, the harness gets the role, the prompt and what the options above give, and nothing else.
 
 That is how a session is resumed, with the harness's own options, since the kit has no session of its own. In
 Claude Code, give the first run an id, which is a UUID, and resume it by that id:
 
 ```sh
 npx agentrite run implementer claude 0032 --headless -- --session-id 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
-npx agentrite run implementer claude 0032 --headless go on -- --resume 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
+npx agentrite run implementer claude 0032 --headless --prompt "go on" -- --resume 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
 ```
 
 In OpenCode, read the id of the session from `opencode session list` after the first run, and resume it by that:
@@ -283,18 +288,12 @@ In OpenCode, read the id of the session from `opencode session list` after the f
 ```sh
 npx agentrite run reviewer opencode 0032 --headless
 opencode session list
-npx agentrite run reviewer opencode 0032 --headless go on -- --session ses_ef35877c0ffefJvzVbIUZSXpWV
+npx agentrite run reviewer opencode 0032 --headless --prompt "go on" -- --session ses_ef35877c0ffefJvzVbIUZSXpWV
 ```
 
 A resumed run gets the role as its agent again, and its prompt again: the unit, and the text when there is any.
-
-Because the `--` is the harness's, a word before it that opens with a dash is read as an option of the command,
-and refused when the command has no such option. Text holds such a word inside an argument that opens with another
-word, as a shell's quotes make it:
-
-```sh
-npx agentrite run reviewer opencode 0032 "start with --headless in the tests"
-```
+That holds with `--headless`. A session of OpenCode that is resumed so opens on what was said before and does not
+send the new prompt, as seen with OpenCode 1.18.34.
 
 The command needs the role's wrapper for the harness as `refresh` leaves it, since the wrapper is what makes the
 harness read the role's file. When the wrapper is missing, or holds anything but what `refresh` would write, a
