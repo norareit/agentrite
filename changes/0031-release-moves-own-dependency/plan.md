@@ -295,9 +295,9 @@ the root, which is the human's.
 
 ## Tasks
 
-- [ ] In `tests/release.test.mjs`, change the description in `frontmatter` to the one the Approach gives, and see
+- [x] In `tests/release.test.mjs`, change the description in `frontmatter` to the one the Approach gives, and see
   the skill's test fail on the description and every other test pass (R14)
-- [ ] Change the description in `.claude/skills/release/SKILL.md` to the Approach's, leaving its name, its
+- [x] Change the description in `.claude/skills/release/SKILL.md` to the Approach's, leaving its name, its
   `disable-model-invocation` and its body as they are, and see the skill's test pass (R12)
 - [ ] Replace `RELEASING.md` with the text the Approach gives, as the human corrected it on approval, written out
   of this plan and not retyped. Compare with `git diff master -- RELEASING.md` against the list of differences
@@ -333,7 +333,7 @@ the root, which is the human's.
 
 ## Commit Points
 
-- [ ] The test and the skill's description
+- [x] The test and the skill's description
 - [ ] `RELEASING.md`
 - [ ] The README
 - [ ] The move to 3.0.0, as step 6 gives it
