@@ -89,7 +89,7 @@ test('parseArgs gives the usage of every command for no command and for one that
   const usage =
     'usage: agentrite init claude | opencode\n' +
     '       agentrite refresh claude | opencode\n' +
-    '       agentrite roles\n' +
+    '       agentrite roles [--json]\n' +
     '       agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]\n' +
     '                     [-- <harness arguments...>]';
   assert.throws(() => parseArgs([]), { message: usage });

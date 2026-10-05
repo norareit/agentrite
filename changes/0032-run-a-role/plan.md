@@ -203,12 +203,12 @@ What the human added after the first implementation, which ends at `1ff7e9f`. Re
 - [x] Add to the tests of `run` as a command: a fake harness gets what follows the `--` after its prompt, in
       each harness and mode, an argument with a space in it as one argument. See it pass, or fail and repair
       the command (R21)
-- [ ] Test `roles --json`: the function that renders it gives a document that `JSON.parse` reads back as the
+- [x] Test `roles --json`: the function that renders it gives a document that `JSON.parse` reads back as the
       roles the kit has, in order, each with its name and its description on one line; the command prints it
       on standard output with exit 0 in a directory that is no project; `roles` with another argument, and with
       `--json` and another, prints its usage on standard error and exits 2; `roles` alone prints the listing
       as before. See them fail (R1, R20, R24)
-- [ ] Write the rendering in `scripts/agentrite-run.mjs` and `--json` in the `roles` command of
+- [x] Write the rendering in `scripts/agentrite-run.mjs` and `--json` in the `roles` command of
       `scripts/agentrite.mjs`, with its form `usage: agentrite roles [--json]`. Change the test of the usage
       of every command in `tests/agentrite-init.test.mjs` to the text above (R1, R14, R20, R24)
 - [ ] In `README.md`, under "Running a role": `roles --json` with what it prints; the form of `run` with the
@@ -251,6 +251,6 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 - [x] `feature-0032 Take arguments for the harness after --, and list the roles as JSON`: the documents as the
       human had them changed
 - [x] `feature-0032 Pass on to the harness what follows --`: the tests and `scripts/agentrite-run.mjs`
-- [ ] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
+- [x] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
 - [ ] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
 - [ ] `feature-0032 Record the runs that resume a session`: the record

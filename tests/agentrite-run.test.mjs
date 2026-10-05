@@ -9,6 +9,7 @@ import {
   harnessCommand,
   parseRunArgs,
   resolveUnit,
+  rolesJson,
   rolesListing,
   runUsage,
   unitPrompt,
@@ -74,15 +75,66 @@ test('agentrite roles prints the listing and exits 0 in a directory that is no p
   assert.equal(result.stdout, rolesListing(ROLES));
 });
 
-test('agentrite roles with an argument prints its usage on standard error and exits 2', (t) => {
-  const result = spawnSync(process.execPath, [script, 'roles', 'claude'], {
+test('agentrite roles with an argument that is not --json prints its usage on standard error and exits 2', (t) => {
+  const cwd = emptyDirectory(t);
+  for (const args of [['claude'], ['--json', 'claude'], ['claude', '--json'], ['--json', '--json'], ['--yaml']]) {
+    const result = spawnSync(process.execPath, [script, 'roles', ...args], { cwd, encoding: 'utf-8' });
+
+    assert.equal(result.status, 2, args.join(' '));
+    assert.equal(result.stdout, '', args.join(' '));
+    assert.equal(result.stderr, 'usage: agentrite roles [--json]\n', args.join(' '));
+  }
+});
+
+// R20: the roles as JSON.
+
+test('the JSON of the roles reads back as the roles the kit has, in order, by name and description', () => {
+  const document = JSON.parse(rolesJson(ROLES));
+
+  assert.deepEqual(Object.keys(document), ['roles']);
+  assert.deepEqual(
+    document.roles,
+    ROLES.map((role) => ({ name: role.name, description: role.description })),
+  );
+  for (const role of document.roles) {
+    assert.deepEqual(Object.keys(role), ['name', 'description']);
+    assert.doesNotMatch(role.description, /\n/);
+  }
+});
+
+test('each description in the JSON is the one the wrappers hold, as one line', () => {
+  const wrappers = plannedFiles(['claude']);
+
+  for (const role of JSON.parse(rolesJson(ROLES)).roles) {
+    const wrapper = wrappers.find((file) => file.path === `.claude/agents/${role.name}.md`);
+    assert.ok(wrapper, `no wrapper for ${role.name}`);
+    assert.equal(role.description, wrapperDescription(wrapper.content));
+  }
+});
+
+test('the JSON is indented by two, each key of a role on a line of its own, and ends with one line break', () => {
+  const json = rolesJson([{ name: 'a', description: 'One "quoted" line.' }]);
+
+  assert.equal(
+    json,
+    '{\n  "roles": [\n    {\n      "name": "a",\n      "description": "One \\"quoted\\" line."\n    }\n  ]\n}\n',
+  );
+  assert.equal(rolesJson(ROLES), `${JSON.stringify(JSON.parse(rolesJson(ROLES)), null, 2)}\n`);
+});
+
+test('agentrite roles --json prints the JSON and exits 0 in a directory that is no project', (t) => {
+  const result = spawnSync(process.execPath, [script, 'roles', '--json'], {
     cwd: emptyDirectory(t),
     encoding: 'utf-8',
   });
 
-  assert.equal(result.status, 2);
-  assert.equal(result.stdout, '');
-  assert.equal(result.stderr, 'usage: agentrite roles\n');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(result.stdout, rolesJson(ROLES));
+  assert.deepEqual(
+    JSON.parse(result.stdout).roles.map((role) => role.name),
+    ROLES.map((role) => role.name),
+  );
 });
 
 // R12: the usage of `run`.
@@ -800,7 +852,7 @@ test('agentrite alone and with a command it does not know print the usage of eve
   const usage =
     'usage: agentrite init claude | opencode\n' +
     '       agentrite refresh claude | opencode\n' +
-    '       agentrite roles\n' +
+    '       agentrite roles [--json]\n' +
     '       agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]\n' +
     '                     [-- <harness arguments...>]\n';
 

@@ -16,6 +16,18 @@ export function rolesListing(roles) {
   return `${blocks.join('\n\n')}\n`;
 }
 
+/**
+ * What `agentrite roles --json` prints, for a script: an object, so that it can get a key beside `roles` later,
+ * with each description on one line.
+ *
+ * @param {{ name: string, description: string }[]} roles
+ * @returns {string}
+ */
+export function rolesJson(roles) {
+  const document = { roles: roles.map(({ name, description }) => ({ name, description })) };
+  return `${JSON.stringify(document, null, 2)}\n`;
+}
+
 /** How `run` is run, the second line starting under the first argument. */
 export const RUN_FORM =
   'usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]\n' +

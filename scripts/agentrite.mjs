@@ -8,6 +8,7 @@ import {
   harnessCommand,
   parseRunArgs,
   resolveUnit,
+  rolesJson,
   rolesListing,
   RUN_FORM,
   unitPrompt,
@@ -100,17 +101,18 @@ function formWithHarnesses(command) {
   throw new Error('parseHarnesses accepted an empty list of harnesses');
 }
 
-const ROLES_FORM = 'usage: agentrite roles';
+const ROLES_FORM = 'usage: agentrite roles [--json]';
 
 /**
- * `roles` takes no argument.
+ * `roles` takes no argument but `--json`, once.
  *
  * @param {string[]} args
- * @returns {{}}
+ * @returns {{ json: boolean }}
  */
 function parseRoles(args) {
-  if (args.length > 0) throw new Error(ROLES_FORM);
-  return {};
+  const json = args.length === 1 && args[0] === '--json';
+  if (args.length > 0 && !json) throw new Error(ROLES_FORM);
+  return { json };
 }
 
 /**
@@ -624,12 +626,15 @@ function refresh(root, harnesses) {
 }
 
 /**
- * Prints the roles the kit has, and returns the exit status.
+ * Prints the roles the kit has, for a reader or as JSON, and returns the exit status. It reads nothing of the
+ * project.
  *
+ * @param {string} _root
+ * @param {{ json: boolean }} parsed
  * @returns {number}
  */
-function roles() {
-  process.stdout.write(rolesListing(ROLES));
+function roles(_root, { json }) {
+  process.stdout.write(json ? rolesJson(ROLES) : rolesListing(ROLES));
   return 0;
 }
 
