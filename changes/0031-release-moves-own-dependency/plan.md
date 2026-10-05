@@ -306,16 +306,16 @@ the root, which is the human's.
 - [x] In the README's "Releasing", replace the paragraph that opens "In short" with the Approach's, and in "The
   kit's own copy of the kit" add the Approach's sentence to the end of the first paragraph. See with
   `git diff master -- README.md` that nothing else changed and no sentence was removed (R13)
-- [ ] With everything above committed, on a host with Docker, follow step 6 of the new `RELEASING.md`, reading it
+- [x] With everything above committed, on a host with Docker, follow step 6 of the new `RELEASING.md`, reading it
   from the file and not from memory, to move this repository to 3.0.0. Two differences from the step, which a
   unit asks for: stay on the unit's branch, and title the commit `feature-0031 Depend on AgentRite 3.0.0`. Run
   its five commands, `./agent.sh --in-place true` among them, make its two readings, and write the commit's body
   as the step says. When the step stops, put the tree back as it says, write in the record what was found, and
   stop for the human without closing the unit. When the step's text turns out wrong or unclear, say so in the
   record: the texts are approved, so a correction is the human's (R16)
-- [ ] See that the unit changed nothing else: `git diff master --stat` names the four files above,
+- [x] See that the unit changed nothing else: `git diff master --stat` names the four files above,
   `package.json`, `package-lock.json`, whatever `refresh` wrote and this unit's documents (R15, R16)
-- [ ] Write in the record what was done: what each of step 6's five commands printed, whether the start built the
+- [x] Write in the record what was done: what each of step 6's five commands printed, whether the start built the
   image and how long it took, and what was not tried, which is the step on `master`, without a unit's prefix, and
   resumed after a deploy (R16)
 
@@ -336,5 +336,5 @@ the root, which is the human's.
 - [x] The test and the skill's description
 - [x] `RELEASING.md`
 - [x] The README
-- [ ] The move to 3.0.0, as step 6 gives it
-- [ ] The record
+- [x] The move to 3.0.0, as step 6 gives it
+- [x] The record

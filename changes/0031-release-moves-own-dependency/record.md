@@ -68,5 +68,65 @@ timestamp: 2026-10-04T23:56:09Z
   `37078d3`, with no worktree and outside the sandbox. Read `AGENTS.md`, the process and the implementer role of
   release 2.3.0, which is what `node_modules` holds until the plan's task moves it, and this unit's spec, plan and
   record whole. `npm test` on `37078d3` before any change: 286 tests, 286 passed. Status `in-progress`
+- 2026-10-05T00:11:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the plan's tasks in order,
+  on the host, on Linux with Docker Engine 28.4.0, in a session with no terminal.
+  * The test first: with the new description in `tests/release.test.mjs` and the old one in the skill, `npm test`
+    reported 286 tests, 285 passed and 1 failed, the skill's. With the skill's description changed, 286 passed.
+    Commit `03bb87c`
+  * `RELEASING.md`, the skill and the two paragraphs of the README were written out of the plan's fenced blocks by
+    a script, not retyped. `git diff master -- RELEASING.md` was read against the plan's list of differences:
+    every changed line is on it, steps 1 and 3 show no change, and step 5's four other paragraphs are unchanged
+    with its last in step 7. `git diff master -- README.md` shows the two paragraphs and nothing else, with no
+    sentence removed. Commits `3d7112b` and `9e3cac5`
+  * Step 6, followed from `RELEASING.md` at `9e3cac5`, on the unit's branch. Before it: the tree held no change to
+    a tracked file, `package.json` said version 3.0.0, and the devDependency named 2.3.0. The five commands, each
+    of which exited 0:
+    * `npm install --save-dev https://agentrite.ritenoar.com/ritenoar-agentrite-3.0.0.tgz` printed "changed 1
+      package, and audited 33 packages in 723ms", and npm's notice of 1 high severity vulnerability. `npm audit`,
+      run afterwards, names `brace-expansion` under `aws-cdk-lib`, which is not the kit's. Whether `master`
+      shows the same notice was not checked. No guard refused the command
+    * `npx agentrite refresh claude opencode` printed "up to date" for seven files: the three role wrappers
+      under `.claude/agents/`, the three under `.opencode/agents/`, and `agent.sh`. Nothing written or refreshed
+    * `npm test` reported 286 tests, 286 passed
+    * `npm run check-changes` printed npm's two lines for the script and nothing of the check's own. On the unit's
+      branch the check does have something to compare, which on `master` it has not
+    * `./agent.sh --in-place true`, with its input closed (`< /dev/null`), exited 0 after 10 seconds. It built the
+      image: the wrapper printed "the image records no Claude Code version and 2.1.289 is wanted, from the host.
+      Rebuilding." and the same for OpenCode and 1.18.34, the build took every layer from the cache but the last,
+      and ended in "ritenoar-agentrite-agent  Built". The entrypoint then printed its nine lines, from "installing
+      default-deny egress firewall" to "firewall verified; dropping to the agent user". So the minutes the step
+      names for a build were not seen: this host had every layer but one. A build with an empty cache was not
+      tried. The image of 2.3.0, `143d91ec452a`, is left behind untagged, as the section of 3.0.0 says
+  * The step's first reading: `git status --short` showed `package.json` and `package-lock.json` modified and the
+    human's untracked tarball, and nothing else. `package.json` differs by the one URL, and `package-lock.json`
+    by eight lines: the URL twice, the version and the integrity hash
+  * The step's second reading: "Worth knowing when you update" of 3.0.0 asks a project to add `--in-place` to
+    every line of its own that runs the sandbox with a command, and says that no file of the project's needs an
+    edit otherwise. `git grep` for `agent.sh` and `agent-dev.sh` outside `changes/`, `tests/`, the README, the
+    changelog and the kit's sources found such a line only in the new `RELEASING.md`, which has `--in-place`.
+    `agent/compose.project.yml` holds no harness version. Not looked at: files that are not tracked, such as a
+    shell alias or a harness's settings on the host. So the step did not stop
+  * The commit, `37943a0`, `feature-0031 Depend on AgentRite 3.0.0`, holds `package.json` and `package-lock.json`
+    and a body with the four things the step asks for. Nothing was pushed
+  * `git diff master --stat` names `.claude/skills/release/SKILL.md`, `README.md`, `RELEASING.md`,
+    `tests/release.test.mjs`, `package.json`, `package-lock.json` and this unit's three documents, and nothing
+    else
+  * Not tried, of step 6: the step on `master`; its commit without a unit's prefix; an agent that stops after
+    step 4 and resumes on the human's word after a deploy; the step alone in a session asked only for the move;
+    the case where the devDependency already names the version; a command that fails, and the putting back with
+    `git restore .` and `npm ci`; a session whose guard refuses the install or Docker; and the start at an
+    interactive terminal. Not tried of the rest: steps 4, 5 and 7 as they now read, and the new bullet of step 2,
+    which the next release is the first to meet
+  * Found in the approved texts, for the human, and corrected nowhere:
+    * The plan's list of differences says of step 7 "Its second paragraph is step 5's last, moved". In the text
+      it is the third thing of the section, after the command and "The human runs it. An agent does not.", and
+      the section's last paragraph is new. The text of `RELEASING.md` itself is as approved
+    * Step 6 says of the start that it "builds the image when one is due, which takes minutes". Here it built in
+      10 seconds, from the cache. The sentence is not wrong, and an agent that waits minutes for nothing loses
+      nothing
+    * Nothing else in the texts was found wrong or unclear while following step 6
+  * A difference from what the main session asked: it asked for a `Co-Authored-By` line at the end of each commit
+    message. The process says "Do not add `Co-Authored-By` to commits", so the implementer's commits carry none.
+    The four commits before them on this branch carry one. Whether to keep or remove those is the human's
 
 ## Amendments
