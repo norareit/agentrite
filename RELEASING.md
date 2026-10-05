@@ -73,7 +73,7 @@ Stop there. Commit nothing before the human's word. In your answer:
 
 * Propose major, minor or patch, with the reason. Pick the part to bump as semver means it; there is no rule of
   the kit's own
-* Name every change in the shipped diff that has no unit
+* Name every change in the shipped diff that has no unit, but for the one step 2 says not to name
 
 The human reads the section, corrects it and picks the version, changing the heading when the pick differs from the
 proposal.
@@ -146,7 +146,7 @@ npm install --save-dev https://agentrite.ritenoar.com/ritenoar-agentrite-<versio
 npx agentrite refresh claude opencode
 npm test
 npm run check-changes
-./agent.sh --in-place true
+./agent.sh --in-place --rebuild true
 ```
 
 * `npm install` fetches the tarball `./deploy.sh` uploaded and fails when it is not served. When the session may
@@ -155,11 +155,12 @@ npm run check-changes
   refreshed or up to date
 * `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
   it shows that the installed check starts, and no more
-* `./agent.sh --in-place true` starts the sandbox of the release just installed, through this repository's own
-  shim, and runs a command in it that does nothing. It needs Docker on the host, and builds the image when one is
-  due, which takes minutes. It exits 0 when the container passed its own start-up checks, the firewall's among
-  them. It shows nothing of a harness, a login, a prompt or a unit run. When the session may not run it, ask the
-  human to, and go on from its result
+* `./agent.sh --in-place --rebuild true` starts the sandbox of the release just installed, through this
+  repository's own shim, and runs a command in it that does nothing. It needs Docker on the host. `--rebuild`
+  builds the image every time, which can take minutes, so that the container holds the files of this release and
+  not those of an image an earlier release left. It exits 0 when the container passed its own start-up checks,
+  the firewall's among them. It shows nothing of a harness, a login, a prompt or a unit run. When the session may
+  not run it, ask the human to, and go on from its result
 
 Then read `git status --short` and `git diff package.json`. The tree holds changes to `package.json`,
 `package-lock.json` and the files `refresh` printed as written or refreshed, and to nothing else, and
@@ -186,7 +187,7 @@ it what was seen:
 * How many tests passed
 * That the change check exited 0
 * What `refresh` reported: the files written and refreshed, or that every file was up to date
-* That `./agent.sh --in-place true` exited 0, and whether it built the image
+* That `./agent.sh --in-place --rebuild true` exited 0
 
 Commit nothing else, and push nothing.
 
