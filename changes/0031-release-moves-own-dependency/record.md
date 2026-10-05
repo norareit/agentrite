@@ -146,5 +146,16 @@ timestamp: 2026-10-04T23:56:09Z
     names no tarball
   Every task and every check of the plan is ticked. Status left at `in-progress`: the review is done elsewhere,
   and closing the unit is the human's
+- 2026-10-05T00:15:15Z [human] told that five commits of the main session carry a `Co-Authored-By` line, against
+  the process, asked for the four on this branch to be rewritten
+- 2026-10-05T00:15:15Z [Claude Code, anthropic/claude-opus-5-5] as the main session, which had added the line
+  without having read `process.md`, took it out of the four messages with `git filter-branch`. No file changed:
+  `git diff` between the branch before and after is empty. Every commit of the branch after the planner's
+  `2e4572a` has a new id, and the entries above name the old ones:
+  * `2029818` is now `3fecf71`, `9c5e184` is `4797f73`, `91939bc` is `73fcf63` and `37078d3` is `dda7e7a`
+  * `dab25f7` is now `50e6050`, `03bb87c` is `b6d9b5a`, `3d7112b` is `e6e31b9` and `9e3cac5` is `2df37d5`
+  * `37943a0`, the move to 3.0.0, is now `8647670`, `7a0fe34` is `aa10dde` and `05da240` is `1cd4a52`
+  Not rewritten: `a200de4`, the release notes of 3.0.0 on `master`, which carries the line too and is under the
+  pushed tag `v3.0.0`. The suite and the change check were run again on the rewritten branch
 
 ## Amendments
