@@ -272,6 +272,12 @@ human:
 - [x] One session per harness on a pseudo-terminal, each with a `--prompt` and an argument after the `--`: the
       session opens showing the unit and the text, and the agent answers (R5, R21)
 
+After the review of 16:34:26Z, on the human's decision of its C1:
+
+- [x] In `README.md`, under "Running a role", say that the command passes no signal on, what a signal to the
+      command alone leaves behind, and that a caller signals the command's process group. Added while
+      implementing: the human decided C1 as a known limit that the README states (R10, R17)
+
 ## Verification
 
 - [x] `npm test` passes

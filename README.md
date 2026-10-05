@@ -250,6 +250,11 @@ npx agentrite run reviewer opencode 0032 --prompt "start with the tests of the w
 The command waits for the harness, and exits with the status the harness exited with, or with a status other than
 0 when a signal ended the harness. Run with no argument, it prints its usage.
 
+The command does not pass a signal on. A signal sent to the command alone, as `kill <pid>` does, ends the command
+and leaves the harness running, still at work on the unit. A caller that stops a run starts the command in a
+process group of its own and signals the group, as `kill -- -<pgid>` does, which reaches the command and the
+harness alike. Ctrl-C on a terminal already goes to both.
+
 The options may stand anywhere among the arguments before a `--`:
 
 * `--prompt <text>` adds its text to the prompt, as it is written. The text is one argument, so a shell's quotes

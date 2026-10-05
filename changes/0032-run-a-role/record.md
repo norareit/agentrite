@@ -331,3 +331,11 @@ timestamp: 2026-10-05T12:51:34Z
     since a caller that stops a run by its process id is what the unit was asked for, by a requirement that the
     command passes a signal it receives on to the harness and still exits as requirement 10 says. The other
     choice is to leave it as a known limit, which a caller gets around by signalling the command's process group
+- 2026-10-05T16:45:28Z [human] asked by the implementer how C1 is to be handled, with three choices, to fix it in this
+  unit, to leave it as a known limit, or to plan a unit for it later, chose: "Leave as known limit"
+- 2026-10-05T16:45:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied the decision. C1 is decided
+  by the human as a known limit: the command passes no signal on, and no code changes. The README says so under
+  "Running a role", with what a caller does instead, and the plan has a task for that sentence, ticked. What the
+  README says was tried with a fake `claude` that sleeps, not with a real harness: started with `setsid`, the
+  command and the fake were in one process group, and `kill -TERM` of that group ended the command with 143 and
+  left no fake. That a real harness ends on a `TERM` is not checked, nor what it does with its session then
