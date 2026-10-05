@@ -170,3 +170,8 @@ timestamp: 2026-10-05T13:45:27Z
   not hold. The task was added to the plan first. The test first: 2 of the 45 tests of
   `tests/agent-unit-run.test.mjs` failed. With the line changed, `npm test`: 351 tests, 351 passed. The README did
   not quote the line and is unchanged. The status stays `in-progress`
+- 2026-10-05T19:09:05Z [human] decided two things the implementer had logged as its own. Of the refusal of digits that
+  open more than one directory of `changes/` on `master`: "The ambiguous digits is exactly as we wanted." Of the
+  sentence "Commit the change documents first, then the implementation.", kept in `process.md` where the plan has
+  its paragraph replaced: "Yes, it can stay." The review is the human's to start: "I'll let the reviewer check
+  your work." Recorded by Claude Code, anthropic/claude-opus-5-5. The status stays `in-progress`
