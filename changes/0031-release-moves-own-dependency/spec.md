@@ -156,8 +156,11 @@ What does not change:
 
 15. `AGENTS.md`, `deploy.sh`, `process.md`, `roles/`, `templates/`, `scripts/`, `container/` and `.opencode/` are
     unchanged, and `npm pack --dry-run` lists the same files as on `master`
-16. This unit does not move the dependency: `package.json` and `package-lock.json` are unchanged by it, and the
-    devDependency still names 2.3.0 when the unit is merged
+16. This unit moves the dependency to 3.0.0, by following the new step of `RELEASING.md` as it is written, with
+    two differences that a unit asks for: the branch is the unit's and not `master`, and the commit carries the
+    unit's prefix. Its five commands are run, the start of the sandbox among them, and the record says what each
+    printed. When the step stops, the implementer puts the tree back as the step says, records what was found
+    and stops for the human, and the unit is not closed
 
 ## Decisions
 
@@ -178,7 +181,7 @@ What does not change:
   human's word. The word is the trigger and not the proof: when the tarball is not served, `npm install` fails
   and the step stops by requirement 8
 * **0028's ending changes: the agent names two commands after the notes, and the push after the move. The
-  planner's, and it changes words of the human's.** For 0028 the human said: "pushing master and the tag should be
+  planner's, and the human's since: "0028 has been superseded by 0031. So be it."** For 0028 the human said: "pushing master and the tag should be
   what the skill says at the end. Basically: run npm version [with the correct type], run ./deploy.sh and push
   master with tags." The push is still what the agent says at the end, and it still runs none of the three. What
   changes is that the three are no longer told in one breath. 0028 is frozen and keeps its text; this unit is
@@ -209,7 +212,8 @@ What does not change:
   and minutes when it builds. A start that fails is a command that fails: nothing is committed and the tree is
   put back, by requirement 8. An image that the start built is left as it is. A release whose sandbox needs more
   looking at than this is a release that asks for more than the commands, and is a unit
-* **The start gates the push, and not the release. The main session's.** The human's reason was that a release
+* **The start gates the push, and not the release. The main session's, and the human's since: "yes, fair
+  enough. This should be documented."** The human's reason was that a release
   whose sandbox starts is ready for the outside world. By this step `./deploy.sh` has served the tarball, which is
   never replaced. So a start that fails is found before the push and before another project updates, and its
   repair is a unit and a release after this one. The file says so. Proposed by the main session and left out by
@@ -242,19 +246,20 @@ What does not change:
   `RELEASING.md`
 * **`AGENTS.md` is unchanged.** It sends an agent that is asked to make a release to `RELEASING.md`, and says that
   an agent starts neither a release nor the notes unasked. An agent asked to move the dependency is asked
-* **The move to 3.0.0 is not in this unit, and is the step's first trial. The main session's suggestion, taken by
-  the planner, for the human to decide.** Done inside the unit, it would be a commit with a unit prefix on a
-  branch, by a plan's task, and would try nothing of the step. Left for the step, the human asks an agent, on
-  `master` after the merge, to move the repository to the release, and the step is followed once before a release
-  depends on it. Until then this repository runs 2.3.0, as it does now. Not taken: a task of its own now, which
-  is the unit after a release that the human called absurd
+* **The move to 3.0.0 is in this unit, as the step's first trial. The human's.** The planner's draft left it for
+  after the merge, because a move made by a plan's task would try nothing of the step. The human: "Do it inside
+  this unit. It's a good check to see if it works, right?!" So the task is to follow the step, from the file as
+  this unit writes it, and not to make the move some other way. Two things of the step cannot hold in a unit: it
+  is on the unit's branch, and its commit has the unit's prefix. The trial therefore shows the five commands, the
+  two readings and the commit's body, and does not show the step on `master`, or an agent that resumes after a
+  deploy. The next release's shipped diff shows the move as a change of this unit, which is also the one change
+  that step 2 passes over, and this unit is on that section's "Not in the package:" line
 * **The texts are in the plan.** The requirements say what the files must hold. Their wording is in the plan's
   approach, for the human to read with it
 
 ## Non-goals
 
 * The agent running `npm version`, `./deploy.sh` or the push. 0028's decision, kept
-* Moving this repository to 3.0.0. It is the first use of the step, after this unit
 * Checking anything in the released sandbox beyond that it starts: a harness, a login, a prompt or a unit run
 * A start of the sandbox before `./deploy.sh`
 * Repairing what a release asks of this repository beyond the five commands. That is a unit
@@ -263,6 +268,8 @@ What does not change:
 * A test of the steps of `RELEASING.md`
 
 ## Beyond the request
+
+Both were declined by the human on approval, and are not built.
 
 * **A test that the devDependency names the version of `package.json`.** It would catch a release whose move was
   forgotten. It would also fail in the suite `./deploy.sh` runs, between `npm version` and the move, at every

@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-04T23:56:09Z
 ---
 
@@ -50,5 +50,17 @@ timestamp: 2026-10-04T23:56:09Z
   plan. The main session's, and not read by the human: that a start that fails stops the move like any failing
   command and puts the tree back, and that the file says the start gates the push and not the release. The
   command was not run. Status still `draft`
+- 2026-10-05T00:08:44Z [human] given the open points, decided each: the move to 3.0.0 is made inside this unit,
+  "It's a good check to see if it works, right?!"; on the change to 0028's ending, "0028 has been superseded by
+  0031. So be it."; on a start that fails stopping the move and gating only the push, "yes, fair enough. This
+  should be documented."; the texts in the plan, "approved"; and the two things left under "Beyond the request",
+  "nope"
+- 2026-10-05T00:08:44Z [Claude Code, anthropic/claude-opus-5-5] as the main session, wrote those decisions into the
+  documents before the freeze. Requirement 16 is turned around: the unit moves the dependency to 3.0.0 by
+  following step 6 from the file, on the unit's branch and with the unit's prefix, and the plan has the task, its
+  check and its commit point. The decisions on 0028's ending and on what the start gates carry the human's
+  words. The text of `RELEASING.md` in the plan is unchanged by this: it already says that a start that fails
+  stops the move and does not stop the release. The human approved the texts before the task for 3.0.0 was
+  written, having asked for it. Status `approved`
 
 ## Amendments

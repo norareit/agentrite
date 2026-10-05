@@ -3,8 +3,8 @@
 ## Approach
 
 `RELEASING.md` gains two steps and changes three. The skill's description and two places of the README follow, and
-the test of the skill's text changes first. Nothing that ships changes, and `package.json` is not touched: the move
-to 3.0.0 is the first use of the new step, after the merge, and not a task of this plan.
+the test of the skill's text changes first. Nothing that ships changes but one line of `package.json`: the last
+task moves this repository to 3.0.0 by following the new step 6, as its first trial.
 
 The texts below are for the human to read and correct before approving.
 
@@ -285,9 +285,11 @@ deliberate update, as described above. A release makes that update as one of its
 - `.claude/skills/release/SKILL.md`: the description
 - `RELEASING.md`: replaced by the text above
 - `README.md`: the "In short" paragraph of "Releasing", and one sentence added in "The kit's own copy of the kit"
+- `package.json` and `package-lock.json`: the devDependency on the kit, moved to 3.0.0 by step 6's own commands
+- Whatever `refresh` prints as written or refreshed, if anything
 - `changes/0031-release-moves-own-dependency/record.md`: what was done and what was not tried
 
-Not touched: `package.json`, `package-lock.json`, `AGENTS.md`, `deploy.sh`, `tests/deploy.test.mjs`, `process.md`,
+Not touched: `AGENTS.md`, `deploy.sh`, `tests/deploy.test.mjs`, `process.md`,
 `roles/`, `templates/`, `scripts/`, `container/`, `.opencode/`, and the untracked `ritenoar-agent-kit-1.0.3.tgz` in
 the root, which is the human's.
 
@@ -304,11 +306,18 @@ the root, which is the human's.
 - [ ] In the README's "Releasing", replace the paragraph that opens "In short" with the Approach's, and in "The
   kit's own copy of the kit" add the Approach's sentence to the end of the first paragraph. See with
   `git diff master -- README.md` that nothing else changed and no sentence was removed (R13)
-- [ ] See that the unit changed nothing else: `git diff master --stat` names the four files above and this
-  unit's documents, and neither `package.json` nor `package-lock.json` (R15, R16)
-- [ ] Write in the record what was done, and what was not tried: step 6 has not been followed, by a release or
-  alone, its start of the sandbox included, and its first use is the move to 3.0.0 after the merge, unless the
-  human decided otherwise on approval (R16)
+- [ ] With everything above committed, on a host with Docker, follow step 6 of the new `RELEASING.md`, reading it
+  from the file and not from memory, to move this repository to 3.0.0. Two differences from the step, which a
+  unit asks for: stay on the unit's branch, and title the commit `feature-0031 Depend on AgentRite 3.0.0`. Run
+  its five commands, `./agent.sh --in-place true` among them, make its two readings, and write the commit's body
+  as the step says. When the step stops, put the tree back as it says, write in the record what was found, and
+  stop for the human without closing the unit. When the step's text turns out wrong or unclear, say so in the
+  record: the texts are approved, so a correction is the human's (R16)
+- [ ] See that the unit changed nothing else: `git diff master --stat` names the four files above,
+  `package.json`, `package-lock.json`, whatever `refresh` wrote and this unit's documents (R15, R16)
+- [ ] Write in the record what was done: what each of step 6's five commands printed, whether the start built the
+  image and how long it took, and what was not tried, which is the step on `master`, without a unit's prefix, and
+  resumed after a deploy (R16)
 
 ## Verification
 
@@ -316,8 +325,8 @@ the root, which is the human's.
 - [ ] `git diff master --stat -- AGENTS.md deploy.sh process.md roles templates scripts container .opencode` is
   empty (R15)
 - [ ] `npm pack --dry-run` lists the same files as on `master`, compared as lists (R15)
-- [ ] `git diff master --stat -- package.json package-lock.json` is empty, and `package.json` names the tarball of
-  2.3.0 (R16)
+- [ ] `git diff master -- package.json` shows the one URL, now the tarball of 3.0.0, and
+  `node_modules/@ritenoar/agentrite/package.json` says 3.0.0 (R16)
 - [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
 - [ ] `npm run check-changes` passes on the committed branch
 - [ ] `git status --short` still shows `ritenoar-agent-kit-1.0.3.tgz` as untracked, and nothing of it is committed
@@ -327,4 +336,5 @@ the root, which is the human's.
 - [ ] The test and the skill's description
 - [ ] `RELEASING.md`
 - [ ] The README
+- [ ] The move to 3.0.0, as step 6 gives it
 - [ ] The record
