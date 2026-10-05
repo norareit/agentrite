@@ -162,3 +162,20 @@ timestamp: 2026-10-05T12:51:34Z
   shown. Every task and every check of the plan is ticked, the sessions and the interrupts among them on a
   pseudo-terminal and not a human's, as said above. Status left at `in-progress`: the review is done elsewhere,
   and closing the unit is the human's
+- 2026-10-05T15:17:09Z [human] with the first implementation committed up to `1ff7e9f`, said: "During implementation I
+  realised I might want the "passing further arguments" in the beyond the request of 0032 after all. This is really
+  useful for the --resume use-case and I don't see a reason to NOT support this. Besides that, the --json for the
+  roles seems like a useful thing to have as well. Could you act as the @planner and add these in the spec after all.
+  Take into account that a first version of the implementation has already been made. So check the record.md!"
+- 2026-10-05T15:17:09Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session, read this record
+  whole and the first implementation's `scripts/agentrite-run.mjs`, its tests and its section of the README, and
+  changed `spec.md` and `plan.md`. The spec: requirements 20 to 24 are new, and requirements 1, 2, 9, 12, 14 and 17
+  changed with them; none was renumbered. A `--` in `run` now ends the command's own arguments, and what follows it
+  goes to the harness as written, after the prompt. `roles --json` prints an object with a key `roles`. Both left
+  "Beyond the request", where a command for a unit's status stays. The decision that the command takes nothing to pass
+  on is replaced, and names the human. What the implementation at `1ff7e9f` does that this changes: its `--` ends the
+  options and what follows is text, `roles` refuses every argument, and the usages and the README say so. The plan has
+  ten new tasks, unticked, the changed tests first, three of them runs on the real harnesses, and five commit points.
+  Two things are new under "Not established": that the harnesses read their options after the prompt, and that a
+  session is resumed with the options the README is to show. The planner ran neither. The status stays `in-progress`.
+  The implementer's concern of 14:18:03Z about the approval is not answered by this entry

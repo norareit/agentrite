@@ -12,10 +12,13 @@ only when its option is given:
 
 | Harness    | Mode        | Command and arguments                                                         |
 |------------|-------------|-------------------------------------------------------------------------------|
-| `claude`   | interactive | `claude --agent R [--model M] [--dangerously-skip-permissions] P`             |
-| `claude`   | headless    | `claude --print --agent R [--model M] [--dangerously-skip-permissions] P`     |
-| `opencode` | interactive | `opencode --agent R [--model M] [--auto] --prompt P`                          |
-| `opencode` | headless    | `opencode run --agent R [--model M] [--auto] P`                               |
+| `claude`   | interactive | `claude --agent R [--model M] [--dangerously-skip-permissions] P [X...]`      |
+| `claude`   | headless    | `claude --print --agent R [--model M] [--dangerously-skip-permissions] P [X...]` |
+| `opencode` | interactive | `opencode --agent R [--model M] [--auto] --prompt P [X...]`                   |
+| `opencode` | headless    | `opencode run --agent R [--model M] [--auto] P [X...]`                        |
+
+`X...` is what the caller gave after a `--`, as written and in that order. It was added to each row after the
+first implementation, on the human's word, as requirement 21.
 
 The harness is started with `spawnSync` and `stdio: 'inherit'`, with the argument list as an array, so that no
 shell reads the prompt.
@@ -28,6 +31,7 @@ exist.
 
 ```text
 usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+                     [-- <harness arguments...>]
 
   <role>              planner | implementer | reviewer
   <harness>           claude | opencode
@@ -39,7 +43,12 @@ usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permis
   --skip-permissions  the harness asks no permission: --dangerously-skip-permissions for claude, which
                       bypasses every check, and --auto for opencode, which approves what is not denied.
                       Meant for the sandbox
+  -- <harness arguments...>
+                      given to the harness as written, after everything else it gets. The command reads
+                      none of them
 ```
+
+The form takes two lines since requirement 21, the second starting under `<role>`.
 
 The roles and the harnesses in it are read from the kit's lists, not written out.
 
@@ -51,9 +60,27 @@ two spaces and wrapped at 120 characters with `wrapWords`, and an empty line bet
 ```text
 usage: agentrite init claude | opencode
        agentrite refresh claude | opencode
-       agentrite roles
+       agentrite roles [--json]
        agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+                     [-- <harness arguments...>]
 ```
+
+**What `agentrite roles --json` prints**, with two spaces of indentation and each description on one line:
+
+```json
+{
+  "roles": [
+    { "name": "planner", "description": "Writes the documents a change unit needs in changes/, ..." }
+  ]
+}
+```
+
+It is `JSON.stringify` of the object with an indentation of two, so each role's two keys are on lines of their
+own, and a line break after it. The example above is shortened.
+
+**Where the arguments are divided.** `parseArgs` of `node:util` reports the `--` as a token of its own. What
+stands after it in the arguments is taken off before the rest is read, so that no word of it is taken for an
+option, a position or text of the command.
 
 ## Files
 
@@ -159,12 +186,58 @@ unit for the human; it is not worked around.
 - [x] One interactive run per harness: the session opens with the prompt, and when it is left the terminal is as
       it was and the command has ended. What an interrupt does in each, with and without `--headless` (R7, R10)
 
+What the human added after the first implementation, which ends at `1ff7e9f`. Requirements 20 to 24:
+
+- [ ] In `tests/agentrite-run.test.mjs`, change the test that a `--` ends the options into tests of requirement
+      21: what follows the `--` is returned apart, as written and in order, an option of the command's own name
+      among it included; nothing of it is text; no `--` and a `--` with nothing after it give none. Add that a
+      word before the `--` that opens with a dash is refused as an unknown option, that a quoted argument which
+      holds such a word after another is text, and that a role, a harness or a unit missing before the `--` is
+      named whatever follows it. See them fail (R21, R22, R23)
+- [ ] Change the tests of the harness's argument list: each row of the table with and without `X...`, which is
+      last in all four, and the test that the harness gets nothing beyond the command's own arguments, which
+      now holds when no `--` is given. Change the test of the usage of `run` to the text above. See them fail
+      (R9, R21, R24)
+- [ ] Change `parseRunArgs`, `harnessCommand`, the form and the usage of `run` in `scripts/agentrite-run.mjs`
+      until those pass (R2, R9, R21, R22, R23, R24)
+- [ ] Add to the tests of `run` as a command: a fake harness gets what follows the `--` after its prompt, in
+      each harness and mode, an argument with a space in it as one argument. See it pass, or fail and repair
+      the command (R21)
+- [ ] Test `roles --json`: the function that renders it gives a document that `JSON.parse` reads back as the
+      roles the kit has, in order, each with its name and its description on one line; the command prints it
+      on standard output with exit 0 in a directory that is no project; `roles` with another argument, and with
+      `--json` and another, prints its usage on standard error and exits 2; `roles` alone prints the listing
+      as before. See them fail (R1, R20, R24)
+- [ ] Write the rendering in `scripts/agentrite-run.mjs` and `--json` in the `roles` command of
+      `scripts/agentrite.mjs`, with its form `usage: agentrite roles [--json]`. Change the test of the usage
+      of every command in `tests/agentrite-init.test.mjs` to the text above (R1, R14, R20, R24)
+- [ ] In `README.md`, under "Running a role": `roles --json` with what it prints; the form of `run` with the
+      `--`; in place of "The command gives the harness nothing else" and of the sentence that a `--` ends the
+      options, what follows a `--`, where the harness gets it, that the command reads none of it, and how text
+      holds a word that opens with a dash; and a session resumed in each harness as the example, with the
+      commands the runs below showed to work (R17)
+
+On the real harnesses, in the project the first runs were made in or one made the same way. Each is recorded
+with what was seen, and one that shows requirement 21 or the README wrong stops the unit for the human:
+
+- [ ] Claude Code, headless: a first run with `-- --session-id <a new uuid>` whose text gives the agent a word
+      to remember, and a second with `-- --resume <that uuid>` whose text asks for the word. The second answers
+      with it, and still as the role (R17, R21)
+- [ ] OpenCode, headless: the same, with the session's id read from `opencode session list` after the first run
+      and `-- --session <id>` on the second (R17, R21)
+- [ ] Claude Code, headless, with an option that takes several values after the `--`, such as
+      `-- --allowedTools Read`: the agent still answers the prompt, so the prompt was not taken for a value
+      (R21)
+
+## Verification
 ## Verification
 
 - [x] `npm test` passes
 - [x] `npm run check-changes` exits 0, run after the last commit
 - [x] `npm pack --dry-run` lists `scripts/agentrite-run.mjs` and no file of `tests/` (R18)
 - [x] No line of a changed or new file is over 120 characters, and none holds an em dash
+- [ ] After the tasks the human added: `npm test` passes, `npm run check-changes` exits 0 after the last commit,
+      and no line of a changed file is over 120 characters or holds an em dash
 
 ## Commit Points
 
@@ -175,3 +248,9 @@ unit for the human; it is not worked around.
 - [x] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
 - [x] `feature-0032 Describe running a role`: the README
 - [x] `feature-0032 Record the runs on the real harnesses`: the record
+- [ ] `feature-0032 Take arguments for the harness after --, and list the roles as JSON`: the documents as the
+      human had them changed
+- [ ] `feature-0032 Pass on to the harness what follows --`: the tests and `scripts/agentrite-run.mjs`
+- [ ] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
+- [ ] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
+- [ ] `feature-0032 Record the runs that resume a session`: the record
