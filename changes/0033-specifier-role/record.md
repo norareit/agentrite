@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-05T13:45:27Z
 ---
 
@@ -207,3 +207,15 @@ timestamp: 2026-10-05T13:45:27Z
   Not verified: the historical mutation/red-test run or plan-before-test ordering; real Docker builds, launches
   and mounts; live role sessions; refresh in an external real project. Formal human acceptance of C1 is explicitly
   left unconfirmed by the existing record and is not inferred here.
+- 2026-10-05T23:29:52Z [human] after the delta review, said: "Okay review came out okay. I read the roles myself and I
+  think it's fine. So you can mark it as implemented."
+- 2026-10-05T23:29:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word, closed the
+  unit. The full review returned one finding, C1, which blocked, and it was applied in `8987d3f`. The delta review of
+  that commit returned no finding. The human's word above is taken as the acceptance of C1, which the record had left
+  for the human to confirm, and as the human's reading of the role files, which answers what the entry of 17:09:15Z
+  left open about the approval. No box in `plan.md` is open, counted with `grep`. On `ff3b40c`, the commit that holds
+  the reviewer's delta entry, `npm test` reported 352 tests, 352 passed, and `npm run check-changes` exited 0; this
+  commit changes this record only, and the change check was run on it once more. Not tried by anyone, as the entries
+  above say: the wrapper against a real Docker, a first unit run of a real unit, a specifier, planner or implementer
+  session under the new role files, and `refresh` in a real project that holds the wrappers of 3.0.0. Not merged into
+  `master` and not pushed: both are the human's. Status `implemented`
