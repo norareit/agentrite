@@ -339,3 +339,8 @@ timestamp: 2026-10-05T12:51:34Z
   README says was tried with a fake `claude` that sleeps, not with a real harness: started with `setsid`, the
   command and the fake were in one process group, and `kill -TERM` of that group ended the command with 143 and
   left no fake. That a real harness ends on a `TERM` is not checked, nor what it does with its session then
+- 2026-10-05T16:45:36Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on the committed
+  branch at `a69b344`: `npm test` reported 337 tests, 337 passed, and `npm run check-changes` exited 0. No line
+  of the README or of this unit's documents is over 120 characters, and the README holds no em dash. No box of
+  the plan is open. Both findings of the review have their outcome: P1 applied, C1 decided by the human. Status
+  left at `in-progress`: setting `implemented` is the human's word
