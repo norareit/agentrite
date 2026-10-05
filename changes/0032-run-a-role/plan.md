@@ -235,7 +235,7 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 - [x] `npm run check-changes` exits 0, run after the last commit
 - [x] `npm pack --dry-run` lists `scripts/agentrite-run.mjs` and no file of `tests/` (R18)
 - [x] No line of a changed or new file is over 120 characters, and none holds an em dash
-- [ ] After the tasks the human added: `npm test` passes, `npm run check-changes` exits 0 after the last commit,
+- [x] After the tasks the human added: `npm test` passes, `npm run check-changes` exits 0 after the last commit,
       and no line of a changed file is over 120 characters or holds an em dash
 
 ## Commit Points

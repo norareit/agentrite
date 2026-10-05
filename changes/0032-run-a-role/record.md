@@ -221,3 +221,10 @@ timestamp: 2026-10-05T12:51:34Z
   * Not tried: any of this in a session with a terminal, `--continue` of either harness, an option of OpenCode
     that takes several values, an argument after the `--` that contradicts one of the command's, and resuming
     the sessions that the interrupts of the first runs left
+- 2026-10-05T15:22:21Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on the committed
+  branch at `c0717aa`: `npm test` reported 336 tests, 336 passed, and `npm run check-changes` exited 0. No line of
+  a file that differs from `master` is over 120 characters, and none holds an em dash, by a search of each.
+  `npm pack --dry-run` lists no file of `tests/`. `git diff master --stat` names the same twelve files as before
+  the human's additions, so requirement 19 holds as it did. Every task and every check of the plan is ticked.
+  The concerns of 14:18:03Z stand as they were, the one about a signal sent to the command alone among them.
+  Status left at `in-progress`: the review is done elsewhere, and closing the unit is the human's
