@@ -103,7 +103,7 @@ directory, so the specifier of a unit that does not exist yet is started in a se
 
 The wrappers:
 
-- [ ] In `tests/fixtures/claude-agents/`, add `specifier.md` and change the descriptions in `planner.md` and
+- [x] In `tests/fixtures/claude-agents/`, add `specifier.md` and change the descriptions in `planner.md` and
       `implementer.md` to those of requirement 13, wrapped as the command wraps them. In
       `tests/agentrite-roles.test.mjs`, make every list of roles the four in order, every count of files four
       per harness, and the descriptions it holds the new ones. In `tests/agentrite-run.test.mjs`, which 0032
@@ -111,12 +111,12 @@ The wrappers:
       `run specifier` starts each fake harness with `--agent specifier` in a project that has the wrapper. The
       tests of `roles` and of `roles --json` there read the kit's list and are expected to need no change. See
       the tests fail (R12, R13, R21, R22)
-- [ ] In `tests/agentrite-init.test.mjs`, expect four role links in `AGENTS.md`, and the specifier's wrapper
+- [x] In `tests/agentrite-init.test.mjs`, expect four role links in `AGENTS.md`, and the specifier's wrapper
       among what `init` writes. In `tests/agentrite-refresh.test.mjs`, expect nine files where it expects seven,
       and add a test that a project with the three wrappers of an earlier release gets the specifier's reported
       as written, the planner's and the implementer's as refreshed, the reviewer's as up to date, and keeps a
       model pinned in its planner wrapper. See them fail (R12, R14)
-- [ ] In `scripts/agentrite-roles.mjs`, add the specifier as the first role and write the three descriptions of
+- [x] In `scripts/agentrite-roles.mjs`, add the specifier as the first role and write the three descriptions of
       requirement 13. In `templates/project/AGENTS.md`, name four roles and link the four files. The suite
       passes, the tests of `roles`, `roles --json` and `run` among it (R12, R13, R14, R21, R22)
 
@@ -181,9 +181,9 @@ The documents:
 
 ## Commit Points
 
-- [ ] `feature-0033 Plan a specifier role apart from the planner`: the three documents
-- [ ] `feature-0033 Read the documents against the tree that holds 0032`: the three documents again
-- [ ] `feature-0033 Write a wrapper for the specifier`: the tests, the fixtures, the list of roles and the
+- [x] `feature-0033 Plan a specifier role apart from the planner`: the three documents
+- [x] `feature-0033 Read the documents against the tree that holds 0032`: the three documents again
+- [x] `feature-0033 Write a wrapper for the specifier`: the tests, the fixtures, the list of roles and the
       project template
 - [ ] `feature-0033 Divide the planner's role file`: the four role files, with the accounting logged
 - [ ] `feature-0033 Specify on master and plan before the work`: `process.md` and the two change templates

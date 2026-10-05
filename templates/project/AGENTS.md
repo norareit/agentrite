@@ -15,8 +15,9 @@ change to `package.json` and `package-lock.json`. An improvement to it is made i
 
 ## Roles
 
-The three roles that do the work in `changes/` are the kit's:
+The four roles that do the work in `changes/` are the kit's:
 
+* [`node_modules/@ritenoar/agentrite/roles/specifier.md`](node_modules/@ritenoar/agentrite/roles/specifier.md)
 * [`node_modules/@ritenoar/agentrite/roles/planner.md`](node_modules/@ritenoar/agentrite/roles/planner.md)
 * [`node_modules/@ritenoar/agentrite/roles/implementer.md`](node_modules/@ritenoar/agentrite/roles/implementer.md)
 * [`node_modules/@ritenoar/agentrite/roles/reviewer.md`](node_modules/@ritenoar/agentrite/roles/reviewer.md)

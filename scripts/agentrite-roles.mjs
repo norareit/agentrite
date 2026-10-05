@@ -7,15 +7,19 @@ const BODY_LINE =
   'Read `node_modules/@ritenoar/agentrite/roles/{name}.md` in the project root and follow it. ' +
   'It is your instruction; this file holds none of its own.';
 
+const SPECIFIER_DESCRIPTION =
+  'Writes what a change unit must make true: the spec of a feature or a bug, or the record of a task, in ' +
+  'changes/. Use before anything is planned or implemented. Dispatch it with the request, and with the ' +
+  'unit directory when the unit exists already.';
+
 const PLANNER_DESCRIPTION =
-  'Writes the documents a change unit needs in changes/, which is a spec and a plan for a feature and ' +
-  'less for a bug or a task. Use before implementing anything. Dispatch it with the unit directory, and ' +
-  'with the request itself when the unit does not exist yet.';
+  'Writes the plan of an approved change unit, against the tree the unit will be built on. Use once the ' +
+  "human has approved the unit's spec and the unit is next to be built, not before. Dispatch it with the " +
+  'unit directory.';
 
 const IMPLEMENTER_DESCRIPTION =
-  "Builds an approved change unit and keeps its documents true. Use once the documents the unit's kind " +
-  'requires are approved, which for a single-commit bug or a small task may be fewer than a spec and a plan. ' +
-  'Dispatch it with the unit directory.';
+  'Builds a planned change unit and keeps its documents true. Use once the unit is planned, or approved ' +
+  'where it is a task, which has no plan. Dispatch it with the unit directory.';
 
 const REVIEWER_DESCRIPTION =
   'Reviews a finished change unit for spec conformance, plan fidelity and code quality, and returns its ' +
@@ -25,6 +29,7 @@ const REVIEWER_DESCRIPTION =
 
 /** The roles the kit has, in the order every listing of them follows. */
 export const ROLES = [
+  { name: 'specifier', description: SPECIFIER_DESCRIPTION },
   { name: 'planner', description: PLANNER_DESCRIPTION },
   { name: 'implementer', description: IMPLEMENTER_DESCRIPTION },
   { name: 'reviewer', description: REVIEWER_DESCRIPTION },

@@ -91,11 +91,11 @@ test('parseHarnesses rejects Object.prototype property names as unknown', () => 
   assert.throws(() => parseHarnesses(['claude', 'toString']), /toString/);
 });
 
-test('plannedFiles for claude returns exactly the three fixture files, byte for byte', () => {
+test('plannedFiles for claude returns exactly the four fixture files, byte for byte', () => {
   const files = plannedFiles(['claude']);
   assert.deepEqual(
     files,
-    ['planner', 'implementer', 'reviewer'].map((name) => ({
+    ['specifier', 'planner', 'implementer', 'reviewer'].map((name) => ({
       path: `.claude/agents/${name}.md`,
       content: readFileSync(new URL(`./fixtures/claude-agents/${name}.md`, import.meta.url), 'utf-8'),
     })),
@@ -106,7 +106,12 @@ test('plannedFiles for opencode carries the claude description, the mode all and
   const files = plannedFiles(['opencode']);
   assert.deepEqual(
     files.map((file) => file.path),
-    ['.opencode/agents/planner.md', '.opencode/agents/implementer.md', '.opencode/agents/reviewer.md'],
+    [
+      '.opencode/agents/specifier.md',
+      '.opencode/agents/planner.md',
+      '.opencode/agents/implementer.md',
+      '.opencode/agents/reviewer.md',
+    ],
   );
 
   for (const file of files) {
@@ -131,14 +136,17 @@ test('plannedFiles for opencode carries the claude description, the mode all and
 
 test('no line of a planned wrapper is over 120 characters, and its text is what it was on one line', () => {
   const descriptions = {
+    specifier:
+      'Writes what a change unit must make true: the spec of a feature or a bug, or the record of a task, in ' +
+      'changes/. Use before anything is planned or implemented. Dispatch it with the request, and with the ' +
+      'unit directory when the unit exists already.',
     planner:
-      'Writes the documents a change unit needs in changes/, which is a spec and a plan for a feature and ' +
-      'less for a bug or a task. Use before implementing anything. Dispatch it with the unit directory, and ' +
-      'with the request itself when the unit does not exist yet.',
+      'Writes the plan of an approved change unit, against the tree the unit will be built on. Use once the ' +
+      "human has approved the unit's spec and the unit is next to be built, not before. Dispatch it with the " +
+      'unit directory.',
     implementer:
-      "Builds an approved change unit and keeps its documents true. Use once the documents the unit's kind " +
-      'requires are approved, which for a single-commit bug or a small task may be fewer than a spec and a plan. ' +
-      'Dispatch it with the unit directory.',
+      'Builds a planned change unit and keeps its documents true. Use once the unit is planned, or approved ' +
+      'where it is a task, which has no plan. Dispatch it with the unit directory.',
     reviewer:
       'Reviews a finished change unit for spec conformance, plan fidelity and code quality, and returns its ' +
       "findings in its response. It changes nothing under review, and appends one entry to the unit's record.md " +
@@ -162,7 +170,7 @@ test('no line of a planned wrapper is over 120 characters, and its text is what 
   }
 });
 
-test('plannedFiles for both harnesses returns all six files', () => {
+test('plannedFiles for both harnesses returns all eight files', () => {
   const both = plannedFiles(['claude', 'opencode']);
   assert.deepEqual(
     [...both].sort((a, b) => a.path.localeCompare(b.path)),
@@ -179,7 +187,7 @@ function project(t) {
   return { base, run };
 }
 
-test('claude opencode writes the six planned files, prints each path and exits 0', (t) => {
+test('claude opencode writes the eight planned files, prints each path and exits 0', (t) => {
   const { base, run } = project(t);
   const all = [...plannedFiles(['claude']), ...plannedFiles(['opencode'])];
 
@@ -190,7 +198,7 @@ test('claude opencode writes the six planned files, prints each path and exits 0
     assert.equal(readFileSync(join(base, path), 'utf-8'), content);
     assert.match(result.stdout, new RegExp(`^${path.replace(/\./g, '\\.')}$`, 'm'));
   }
-  for (const name of ['planner', 'implementer', 'reviewer']) {
+  for (const name of ['specifier', 'planner', 'implementer', 'reviewer']) {
     assert.equal(
       readFileSync(join(base, '.claude', 'agents', `${name}.md`), 'utf-8'),
       readFileSync(new URL(`./fixtures/claude-agents/${name}.md`, import.meta.url), 'utf-8'),
@@ -224,7 +232,7 @@ test('a refused run names the existing file on standard error and writes nothing
   assert.equal(readFileSync(existing, 'utf-8'), 'mine\n');
   assert.equal(statSync(existing).mode, modeBefore);
   assert.equal(exists(join(base, '.claude')), false);
-  for (const name of ['planner', 'implementer', 'reviewer']) {
+  for (const name of ['specifier', 'planner', 'implementer', 'reviewer']) {
     assert.equal(exists(join(base, `.opencode/agents/${name}.md`)), name === 'reviewer');
   }
 });
@@ -272,7 +280,7 @@ test('a dangling wrapper symlink is named and written over nothing', (t) => {
   assert.doesNotMatch(result.stderr, /render is not a function|EEXIST|not a function/);
   assert.equal(lstatSync(target).isSymbolicLink(), true);
   assert.equal(exists(join(base, '.claude')), false);
-  for (const name of ['planner', 'implementer']) {
+  for (const name of ['specifier', 'planner', 'implementer']) {
     assert.equal(exists(join(base, `.opencode/agents/${name}.md`)), false);
   }
 });
@@ -287,7 +295,7 @@ test('the command runs through a node_modules bin symlink the way npx does', (t)
   const result = spawnSync(process.execPath, [bin, 'claude'], { cwd: base, encoding: 'utf-8' });
 
   assert.equal(result.status, 0, result.stderr);
-  for (const name of ['planner', 'implementer', 'reviewer']) {
+  for (const name of ['specifier', 'planner', 'implementer', 'reviewer']) {
     assert.equal(
       readFileSync(join(base, '.claude', 'agents', `${name}.md`), 'utf-8'),
       readFileSync(new URL(`./fixtures/claude-agents/${name}.md`, import.meta.url), 'utf-8'),

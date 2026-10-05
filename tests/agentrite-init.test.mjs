@@ -119,9 +119,15 @@ test('AGENTS.md holds the three sections, naming process.md, the role files and 
   assert.match(agents, /\[README\.md\]\(README\.md\)/);
   assert.match(agents, /`npm ci` installs it/);
   assert.match(agents, /never under\n?\s*`node_modules\/`/);
-  for (const role of ['planner', 'implementer', 'reviewer']) {
-    assert.match(agents, new RegExp(`node_modules/@ritenoar/agentrite/roles/${role}\\.md`));
-  }
+  const roles = ['specifier', 'planner', 'implementer', 'reviewer'];
+  assert.deepEqual(
+    [...agents.matchAll(/^\* \[`node_modules\/@ritenoar\/agentrite\/roles\/(\w+)\.md`\]\((.*)\)$/gm)].map((link) => [
+      link[1],
+      link[2],
+    ]),
+    roles.map((role) => [role, `node_modules/@ritenoar/agentrite/roles/${role}.md`]),
+  );
+  assert.match(agents, /^The four roles that do the work in `changes\/` are the kit's:$/m);
   assert.match(agents, /`npm run check-changes`, which runs the kit's script/);
   assert.match(agents, /## Specific to this project/);
 });

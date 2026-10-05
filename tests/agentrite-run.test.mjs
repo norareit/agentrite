@@ -143,7 +143,7 @@ const RUN_USAGE = `
 usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
                      [-- <harness arguments...>]
 
-  <role>              planner | implementer | reviewer
+  <role>              specifier | planner | implementer | reviewer
   <harness>           claude | opencode
   <unit>              a directory of changes/, by its name or by the four digits its name opens with
   --prompt <text>     added to the prompt, after the unit, as it is written
@@ -601,6 +601,19 @@ test('run starts each harness in each mode with the arguments of its row, and it
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stdout, started(key.split(' ')[0], expected([], UNIT_PROMPT)), key);
     assert.equal(result.stderr, 'the harness, on standard error\n');
+  }
+});
+
+test('run specifier starts each harness as the specifier, in a project that has its wrapper', (t) => {
+  const { agentrite, read } = project(t);
+  for (const harness of HARNESS_NAMES) {
+    assert.ok(read(`${WRAPPER_DIRECTORIES[harness]}/specifier.md`).includes('roles/specifier.md'), harness);
+
+    const result = agentrite(['run', 'specifier', harness, '0007']);
+
+    assert.equal(result.status, 0, result.stderr);
+    const prompt = harness === 'claude' ? '--' : '--prompt';
+    assert.equal(result.stdout, started(harness, ['--agent', 'specifier', prompt, UNIT_PROMPT]), harness);
   }
 });
 

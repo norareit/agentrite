@@ -194,7 +194,7 @@ function line(word, path) {
   return new RegExp(`^${word} ${path.replaceAll('.', '\\.')}`, 'm');
 }
 
-// A project whose seven files are all out of date: the wrappers name the old package, one pins a model, and the
+// A project whose nine files are all out of date: the wrappers name the old package, one pins a model, and the
 // shim is another script that is not executable.
 function staleProject(t) {
   const made = project(t);
@@ -264,7 +264,7 @@ test('a second run reports every file as up to date and writes none', (t) => {
   assert.doesNotMatch(result.stdout, /^(wrote|refreshed) /m);
 });
 
-test('a project with none of the files gets all seven, listed as written', (t) => {
+test('a project with none of the files gets all nine, listed as written', (t) => {
   const { base, run, read } = project(t);
 
   const result = run('refresh', 'claude', 'opencode');
@@ -277,6 +277,73 @@ test('a project with none of the files gets all seven, listed as written', (t) =
   assert.equal(read('agent.sh'), SHIM);
   assert.notEqual(statSync(join(base, 'agent.sh')).mode & 0o111, 0);
   assert.match(result.stdout, line('wrote', 'agent.sh'));
+  assert.equal(result.stdout.trimEnd().split('\n').length, 9);
+});
+
+// The descriptions the planner's and the implementer's wrappers held in the release before the specifier, as that
+// release wrapped them.
+const EARLIER_DESCRIPTIONS = {
+  planner: [
+    '  Writes the documents a change unit needs in changes/, which is a spec and a plan for a feature and ' +
+      'less for a bug or a',
+    '  task. Use before implementing anything. Dispatch it with the unit directory, and with the request ' +
+      'itself when the unit',
+    '  does not exist yet.',
+  ],
+  implementer: [
+    "  Builds an approved change unit and keeps its documents true. Use once the documents the unit's kind " +
+      'requires are',
+    '  approved, which for a single-commit bug or a small task may be fewer than a spec and a plan. Dispatch ' +
+      'it with the unit',
+    '  directory.',
+  ],
+};
+
+// The wrapper of `role` as the release before the specifier wrote it. The reviewer's is what it is now.
+function earlierWrapper(harness, role) {
+  const now = rendered(harness, role);
+  if (!Object.hasOwn(EARLIER_DESCRIPTIONS, role)) return now;
+  const lines = now.split('\n');
+  const start = lines.indexOf('description: >-') + 1;
+  const end = lines.findIndex((line, index) => index >= start && !line.startsWith('  '));
+  return [...lines.slice(0, start), ...EARLIER_DESCRIPTIONS[role], ...lines.slice(end)].join('\n');
+}
+
+test('a project with the three wrappers of the release before gets the fourth, and keeps a pinned model', (t) => {
+  const { base, run, read, write } = project(t);
+  write('agent.sh', SHIM);
+  chmodSync(join(base, 'agent.sh'), 0o755);
+  for (const harness of ['claude', 'opencode']) {
+    for (const role of ['planner', 'implementer', 'reviewer']) {
+      write(`.${harness}/agents/${role}.md`, earlierWrapper(harness, role));
+    }
+  }
+  const pinnedPath = '.opencode/agents/planner.md';
+  write(pinnedPath, withFrontmatter(read(pinnedPath), 'mode:', ['model: some/model']));
+
+  const result = run('refresh', 'claude', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    result.stdout,
+    [
+      'wrote .claude/agents/specifier.md',
+      'refreshed .claude/agents/planner.md',
+      'refreshed .claude/agents/implementer.md',
+      'up to date .claude/agents/reviewer.md',
+      'wrote .opencode/agents/specifier.md',
+      'refreshed .opencode/agents/planner.md',
+      'refreshed .opencode/agents/implementer.md',
+      'up to date .opencode/agents/reviewer.md',
+      'up to date agent.sh',
+      '',
+    ].join('\n'),
+  );
+  for (const file of WRAPPERS) {
+    const expected =
+      file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
+    assert.equal(read(file.path), expected, file.path);
+  }
 });
 
 test('a shim with the right content that is not executable is made executable', (t) => {
