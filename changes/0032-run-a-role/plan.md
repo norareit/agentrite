@@ -135,11 +135,14 @@ What `run` computes:
 
 The documents:
 
-- [ ] In `README.md`, add "Running a role" after "Updating a project to a newer kit", with what requirement 17
+- [x] In `README.md`, add "Running a role" after "Updating a project to a newer kit", with what requirement 17
       lists, and name `roles` and `run` in the row of `scripts/` under "What is here". Where the wrappers are
       described, under "Installing it into a project", say that the OpenCode ones are written as both a primary
       agent and a subagent, because OpenCode takes only a primary agent on its command line. Nothing that is
       there is removed or reworded (R17)
+- [x] In `README.md`, under "Installing it into a project", add `scripts/agentrite-run.mjs` to the files a
+      project receives. Added while implementing: the sentence lists what `files` in `package.json` holds, and is
+      false without the new file (R18)
 - [ ] Check with `git diff master --stat` that no file requirement 19 names has changed, and with
       `git status --short` that this repository's own wrappers have not (R19)
 
@@ -170,5 +173,5 @@ unit for the human; it is not worked around.
 - [x] `feature-0032 Let each command parse its own arguments`: the refactoring, with no change of behavior
 - [x] `feature-0032 List the roles`: the `roles` command and its tests
 - [x] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
-- [ ] `feature-0032 Describe running a role`: the README
+- [x] `feature-0032 Describe running a role`: the README
 - [ ] `feature-0032 Record the runs on the real harnesses`: the record

@@ -35,6 +35,9 @@ The "rite" is also Ritenoar's, whose projects carry it.
 | `infra/`             | The CDK app that serves release tarballs from `agentrite.ritenoar.com`                    |
 | `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit                     |
 
+The `agentrite` command holds four commands of its own: `init` and `refresh`, which set a project up and bring it
+up to date, and `roles` and `run`, which list the roles and run one in a harness.
+
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
 project's own `AGENTS.md`, which links here for the rest.
 
@@ -50,8 +53,8 @@ npm install https://agentrite.ritenoar.com/ritenoar-agentrite-2.0.0.tgz
 npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
 `package-lock.json`. A project receives what `files` in this repository's `package.json` lists, which is
 `process.md`, `CHANGELOG.md`, `roles/`, `templates/`, `scripts/check-changes.mjs`, `scripts/agentrite-roles.mjs`,
-`scripts/agentrite.mjs` and `container/`, plus the `package.json` and this README that npm always ships. It does not
-receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
+`scripts/agentrite-run.mjs`, `scripts/agentrite.mjs` and `container/`, plus the `package.json` and this README that
+npm always ships. It does not receive this repository's `changes/`, `tests/`, `infra/` or `deploy.sh`.
 
 The kit assumes npm: `init` reads `package-lock.json`, and the sandbox's image installs from it.
 
@@ -75,6 +78,11 @@ It prints each file it wrote, changed or skipped. It writes:
 The role wrappers are the ones `npx agentrite-roles claude opencode` writes, which is still there for a project that
 wants only those. Unlike `init`, it refuses to overwrite a file that already exists. A model per role goes in the
 project's own wrapper.
+
+The OpenCode wrappers are written with `mode: all`, which makes each role both a primary agent and a subagent.
+OpenCode takes only a primary agent on its command line, which is where `agentrite run` gives it the role, and a
+role is also dispatched as a subagent from a session, so a wrapper has to be both. The roles are therefore also
+offered among the primary agents in OpenCode's own interface.
 
 Every generated file is the project's own once written, and the project may edit any of them. `init` never
 regenerates one: a file it would create that already exists is left as it is and reported as skipped, so running it
@@ -187,6 +195,72 @@ release wrote them, and nothing says so.
 An improvement found while working in a project is made here, in the kit repository, and committed here. The
 installed copy under a project's `node_modules` is not a working copy of this repository, and nothing in it reaches
 here. The improvement reaches that project, and every other, as a new release that each one updates to as above.
+
+## Running a role
+
+`agentrite roles` lists the roles the kit has, each with the description its wrappers hold:
+
+```sh
+npx agentrite roles
+```
+
+It reads nothing of the project and takes no argument.
+
+`agentrite run` starts a harness as one of those roles, for one unit, from the project root:
+
+```sh
+npx agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+```
+
+The role is one that `agentrite roles` lists, and the harness is `claude` or `opencode`. The unit is a directory of
+`changes/`, given by its name, with or without `changes/` before it and a slash after it, or by the four digits its
+name opens with. A unit run by its number, in each harness:
+
+```sh
+npx agentrite run implementer claude 0032
+npx agentrite run reviewer opencode 0032
+```
+
+The harness is started in the directory the command is run from, with the role as its agent and one prompt:
+`The unit is changes/<directory>/.` Text after the unit is added to that prompt, after an empty line:
+
+```sh
+npx agentrite run reviewer opencode 0032 start with the tests of the wrappers
+```
+
+The command gives the harness nothing else. It waits for the harness, and exits with the status the harness exited
+with, or with a status other than 0 when a signal ended the harness. Run with no argument, it prints its usage.
+
+The options may stand anywhere among the arguments, and a `--` ends them, so that text may hold a word that opens
+with a dash:
+
+* `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
+  was run on, with the prompt as its first. With it the harness is run without a session, for a script: it works on
+  the prompt and ends
+* `--model <id>` takes the harness's own id of a model and passes it on as it is written, such as
+  `claude-sonnet-5-5` for Claude Code or `openai/gpt-6.1-sol` for OpenCode. The kit has no names of its own for
+  models. Without the option the harness gets no model and decides by itself, and a model pinned in the role's
+  wrapper is what such a run is expected to use
+* `--skip-permissions` ends the harness's questions about permissions, in both modes. Claude Code gets
+  `--dangerously-skip-permissions`, which bypasses every check, and OpenCode gets `--auto`, which approves what is
+  not explicitly denied, so the two do not do the same. The option belongs in the sandbox. The command does not
+  look where it runs, and on the host the flag does what its name says
+
+The command needs the role's wrapper for the harness as `refresh` leaves it, since the wrapper is what makes the
+harness read the role's file. When the wrapper is missing, or holds anything but what `refresh` would write, a
+pinned model aside, the command starts nothing, names the file and names the command that repairs it:
+
+```sh
+npx agentrite refresh opencode
+```
+
+So a project that moved to a newer kit runs `refresh` before `run`, and a key a project added to a wrapper by hand
+stops `run` until `refresh` has removed it. The command also starts nothing when the harness's own command is not
+on the `PATH`, and when `changes/` holds no directory for the unit, or more than one for its digits.
+
+The command starts no sandbox: it starts the harness where it is run, on the host or inside the sandbox, and
+`./agent.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there after
+`npm ci` in the clone, like the role files.
 
 ## Where to run it
 
