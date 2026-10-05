@@ -91,11 +91,11 @@ A command parses its own arguments:
 
 The roles:
 
-- [ ] In the new `tests/agentrite-run.test.mjs`, test the listing: the name of every role the kit has, in the kit's
+- [x] In the new `tests/agentrite-run.test.mjs`, test the listing: the name of every role the kit has, in the kit's
       order, each description as the wrappers hold it once its lines are joined, no line over 120 characters. Test the
       command: it prints the listing and exits 0 in a directory that is no project, and with an argument it prints its
       usage on standard error and exits 2 (R1)
-- [ ] Export `ROLES` and the harnesses' names from `scripts/agentrite-roles.mjs`, write the listing in
+- [x] Export `ROLES` and the harnesses' names from `scripts/agentrite-roles.mjs`, write the listing in
       `scripts/agentrite-run.mjs` and the `roles` command in `scripts/agentrite.mjs`, and add the new file to
       `files` in `package.json` (R1, R18)
 
@@ -168,7 +168,7 @@ unit for the human; it is not worked around.
 - [x] `feature-0032 Plan a command that runs a role in a harness`: the three documents
 - [x] `feature-0032 Write the OpenCode wrappers as primary agents and subagents`: the first two tasks
 - [x] `feature-0032 Let each command parse its own arguments`: the refactoring, with no change of behavior
-- [ ] `feature-0032 List the roles`: the `roles` command and its tests
+- [x] `feature-0032 List the roles`: the `roles` command and its tests
 - [ ] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
 - [ ] `feature-0032 Describe running a role`: the README
 - [ ] `feature-0032 Record the runs on the real harnesses`: the record

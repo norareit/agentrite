@@ -23,7 +23,8 @@ const REVIEWER_DESCRIPTION =
   'saying that it reviewed. Use once the implementation is committed. Dispatch it with the unit directory; ' +
   'it produces its own diff and runs the suites itself.';
 
-const ROLES = [
+/** The roles the kit has, in the order every listing of them follows. */
+export const ROLES = [
   { name: 'planner', description: PLANNER_DESCRIPTION },
   { name: 'implementer', description: IMPLEMENTER_DESCRIPTION },
   { name: 'reviewer', description: REVIEWER_DESCRIPTION },
@@ -96,6 +97,9 @@ const HARNESSES = {
   opencode: { directory: '.opencode/agents', render: opencodeFile },
 };
 
+/** The names of the harnesses the kit writes wrappers for, as the commands take them. */
+export const HARNESS_NAMES = Object.keys(HARNESSES);
+
 /**
  * True when `name` is a harness registered in `HARNESSES`, using an own-property check
  * so that inherited `Object.prototype` names such as `toString` are not accepted.
@@ -111,7 +115,7 @@ function isKnownHarness(name) {
  * @returns {string}
  */
 function usage() {
-  return `usage: agentrite-roles ${Object.keys(HARNESSES).join(' | ')}`;
+  return `usage: agentrite-roles ${HARNESS_NAMES.join(' | ')}`;
 }
 
 /**

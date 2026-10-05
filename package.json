@@ -10,6 +10,7 @@
     "templates",
     "scripts/check-changes.mjs",
     "scripts/agentrite-roles.mjs",
+    "scripts/agentrite-run.mjs",
     "scripts/agentrite.mjs",
     "container"
   ],

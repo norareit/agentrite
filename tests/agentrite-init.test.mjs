@@ -85,8 +85,11 @@ test('parseArgs gives the usage of the command alone for no harness and for an u
   }
 });
 
-test('parseArgs gives the usage of both commands for no command and for one that is neither', () => {
-  const usage = 'usage: agentrite init claude | opencode\n       agentrite refresh claude | opencode';
+test('parseArgs gives the usage of every command for no command and for one that is none of them', () => {
+  const usage =
+    'usage: agentrite init claude | opencode\n' +
+    '       agentrite refresh claude | opencode\n' +
+    '       agentrite roles';
   assert.throws(() => parseArgs([]), { message: usage });
   assert.throws(() => parseArgs(['claude']), { message: `unknown command: claude\n${usage}` });
   assert.throws(() => parseArgs(['setup', 'claude']), { message: `unknown command: setup\n${usage}` });

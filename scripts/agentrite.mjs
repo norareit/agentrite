@@ -2,7 +2,8 @@
 import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseHarnesses, plannedFiles } from './agentrite-roles.mjs';
+import { parseHarnesses, plannedFiles, ROLES } from './agentrite-roles.mjs';
+import { rolesListing } from './agentrite-run.mjs';
 
 const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -55,14 +56,8 @@ function forCommand(command, message) {
  * @returns {string}
  */
 function usage() {
-  try {
-    // With no harnesses, parseHarnesses throws its usage alone.
-    parseHarnesses([]);
-  } catch (error) {
-    const lines = Object.keys(COMMANDS).map((command) => forCommand(command, messageOf(error)));
-    return lines.join('\n').replaceAll('\nusage: ', '\n       ');
-  }
-  throw new Error('parseHarnesses accepted an empty list of harnesses');
+  const lines = Object.values(COMMANDS).map((command) => command.form);
+  return lines.join('\n').replaceAll('\nusage: ', '\n       ');
 }
 
 /**
@@ -79,6 +74,35 @@ function harnessesOf(command) {
       throw new Error(forCommand(command, messageOf(error)));
     }
   };
+}
+
+/**
+ * The one line that says how a command that takes harnesses and nothing else is run.
+ *
+ * @param {string} command
+ * @returns {string}
+ */
+function formWithHarnesses(command) {
+  try {
+    // With no harnesses, parseHarnesses throws its usage alone.
+    parseHarnesses([]);
+  } catch (error) {
+    return forCommand(command, messageOf(error));
+  }
+  throw new Error('parseHarnesses accepted an empty list of harnesses');
+}
+
+const ROLES_FORM = 'usage: agentrite roles';
+
+/**
+ * `roles` takes no argument.
+ *
+ * @param {string[]} args
+ * @returns {{}}
+ */
+function parseRoles(args) {
+  if (args.length > 0) throw new Error(ROLES_FORM);
+  return {};
 }
 
 /**
@@ -592,11 +616,26 @@ function refresh(root, harnesses) {
 }
 
 /**
- * A command: `parse` reads the arguments after the command's name, and throws what to print for ones it does not
- * take, and `run` takes the project root and what `parse` returned, and returns the exit status.
+ * Prints the roles the kit has, and returns the exit status.
+ *
+ * @returns {number}
+ */
+function roles() {
+  process.stdout.write(rolesListing(ROLES));
+  return 0;
+}
+
+/**
+ * A command: `form` is the one line that says how it is run, `parse` reads the arguments after the command's name,
+ * and throws what to print for ones it does not take, and `run` takes the project root and what `parse` returned,
+ * and returns the exit status.
  *
  * @template Parsed
- * @typedef {{ parse: (args: string[]) => Parsed, run: (root: string, parsed: Parsed) => number }} Command
+ * @typedef {{
+ *   form: string,
+ *   parse: (args: string[]) => Parsed,
+ *   run: (root: string, parsed: Parsed) => number,
+ * }} Command
  */
 
 /**
@@ -605,8 +644,17 @@ function refresh(root, harnesses) {
  * @type {Record<string, Command<object>>}
  */
 const COMMANDS = {
-  init: { parse: harnessesOf('init'), run: (root, { harnesses }) => init(root, harnesses) },
-  refresh: { parse: harnessesOf('refresh'), run: (root, { harnesses }) => refresh(root, harnesses) },
+  init: {
+    form: formWithHarnesses('init'),
+    parse: harnessesOf('init'),
+    run: (root, { harnesses }) => init(root, harnesses),
+  },
+  refresh: {
+    form: formWithHarnesses('refresh'),
+    parse: harnessesOf('refresh'),
+    run: (root, { harnesses }) => refresh(root, harnesses),
+  },
+  roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
 };
 
 /**
