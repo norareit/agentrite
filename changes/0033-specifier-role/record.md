@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: in-progress
 timestamp: 2026-10-05T13:45:27Z
 ---
 
@@ -52,3 +52,13 @@ timestamp: 2026-10-05T13:45:27Z
   change: the tasks on the role files, on `process.md`, on the templates and on the sandbox's wrapper, since 0032
   touched none of those files, and the counts of files in the tests the plan changes, which 0032 left as they were.
   Not run: the suite. The status stays `draft`
+- 2026-10-05T17:09:15Z [human] said, in a new session of Claude Code on the host: "Act as the @implementer and
+  implement feature 0033"
+- 2026-10-05T17:09:15Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role, in the main session, in
+  the main checkout on the host, on the branch `feature-0033-specifier-role` at `9f1c083`. The status was `draft`,
+  and no entry says `approved`. The human's instruction above is taken as the approval of `spec.md` and `plan.md` as
+  they stand at `9f1c083`: that is the implementer's reading, as it was for 0032, and the human did not say the word.
+  The spec says of itself that everything beyond the four choices had not been read by the human; whether it was read
+  since is not known here. Read `process.md` and `roles/implementer.md` of the release 3.0.0 in `node_modules`, and
+  this unit's spec, plan and record whole. `npm test` on `9f1c083` before any change: 337 tests, 337 passed. Status
+  `in-progress`
