@@ -211,7 +211,7 @@ What the human added after the first implementation, which ends at `1ff7e9f`. Re
 - [x] Write the rendering in `scripts/agentrite-run.mjs` and `--json` in the `roles` command of
       `scripts/agentrite.mjs`, with its form `usage: agentrite roles [--json]`. Change the test of the usage
       of every command in `tests/agentrite-init.test.mjs` to the text above (R1, R14, R20, R24)
-- [ ] In `README.md`, under "Running a role": `roles --json` with what it prints; the form of `run` with the
+- [x] In `README.md`, under "Running a role": `roles --json` with what it prints; the form of `run` with the
       `--`; in place of "The command gives the harness nothing else" and of the sentence that a `--` ends the
       options, what follows a `--`, where the harness gets it, that the command reads none of it, and how text
       holds a word that opens with a dash; and a session resumed in each harness as the example, with the
@@ -252,5 +252,5 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
       human had them changed
 - [x] `feature-0032 Pass on to the harness what follows --`: the tests and `scripts/agentrite-run.mjs`
 - [x] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
-- [ ] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
+- [x] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
 - [ ] `feature-0032 Record the runs that resume a session`: the record

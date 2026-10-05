@@ -204,12 +204,31 @@ here. The improvement reaches that project, and every other, as a new release th
 npx agentrite roles
 ```
 
-It reads nothing of the project and takes no argument.
+It reads nothing of the project, and takes no argument but `--json`, which prints the same roles for a script:
+
+```sh
+npx agentrite roles --json
+```
+
+That is one JSON document: an object with one key, `roles`, an array that holds each role in the same order, as an
+object with its `name` and its `description`. The description is on one line, not wrapped. Shortened here:
+
+```json
+{
+  "roles": [
+    {
+      "name": "planner",
+      "description": "Writes the documents a change unit needs in changes/, ..."
+    }
+  ]
+}
+```
 
 `agentrite run` starts a harness as one of those roles, for one unit, from the project root:
 
 ```sh
 npx agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+                  [-- <harness arguments...>]
 ```
 
 The role is one that `agentrite roles` lists, and the harness is `claude` or `opencode`. The unit is a directory of
@@ -228,11 +247,10 @@ The harness is started in the directory the command is run from, with the role a
 npx agentrite run reviewer opencode 0032 start with the tests of the wrappers
 ```
 
-The command gives the harness nothing else. It waits for the harness, and exits with the status the harness exited
-with, or with a status other than 0 when a signal ended the harness. Run with no argument, it prints its usage.
+The command waits for the harness, and exits with the status the harness exited with, or with a status other than
+0 when a signal ended the harness. Run with no argument, it prints its usage.
 
-The options may stand anywhere among the arguments, and a `--` ends them, so that text may hold a word that opens
-with a dash:
+The options may stand anywhere among the arguments before a `--`:
 
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session, for a script: it works on
@@ -245,6 +263,38 @@ with a dash:
   `--dangerously-skip-permissions`, which bypasses every check, and OpenCode gets `--auto`, which approves what is
   not explicitly denied, so the two do not do the same. The option belongs in the sandbox. The command does not
   look where it runs, and on the host the flag does what its name says
+
+A `--` ends the command's own arguments. Every argument after it is given to the harness as it is written and in
+the order given, after everything else the harness gets, the prompt included. The command reads none of them: it
+does not look whether one repeats or undoes an argument of its own, such as a second `--model`, and what the
+harness makes of that is the harness's. With no `--`, or with nothing after it, the harness gets the role, the
+prompt and what the options above give, and nothing else.
+
+That is how a session is resumed, with the harness's own options, since the kit has no session of its own. In
+Claude Code, give the first run an id, which is a UUID, and resume it by that id:
+
+```sh
+npx agentrite run implementer claude 0032 --headless -- --session-id 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
+npx agentrite run implementer claude 0032 --headless go on -- --resume 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
+```
+
+In OpenCode, read the id of the session from `opencode session list` after the first run, and resume it by that:
+
+```sh
+npx agentrite run reviewer opencode 0032 --headless
+opencode session list
+npx agentrite run reviewer opencode 0032 --headless go on -- --session ses_ef35877c0ffefJvzVbIUZSXpWV
+```
+
+A resumed run gets the role as its agent again, and its prompt again: the unit, and the text when there is any.
+
+Because the `--` is the harness's, a word before it that opens with a dash is read as an option of the command,
+and refused when the command has no such option. Text holds such a word inside an argument that opens with another
+word, as a shell's quotes make it:
+
+```sh
+npx agentrite run reviewer opencode 0032 "start with --headless in the tests"
+```
 
 The command needs the role's wrapper for the harness as `refresh` leaves it, since the wrapper is what makes the
 harness read the role's file. When the wrapper is missing, or holds anything but what `refresh` would write, a
