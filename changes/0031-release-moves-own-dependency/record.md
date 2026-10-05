@@ -170,5 +170,52 @@ timestamp: 2026-10-04T23:56:09Z
   release on `master`, an agent resuming after deployment, or the already-current and failure paths. S1 follows
   from the documented cleanup commands; its example was not reproduced by changing this checkout. No harness,
   login, prompt, or unit run was tested
+- 2026-10-05T00:25:34Z [human] asked: "Review remarks are in; can you check them and fix where necessary? (as the
+  @implementer)"
+- 2026-10-05T00:25:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, dispatched by the main session
+  for the review's findings, read the review of `58a1736` whole and checked each finding against the files. No
+  file but this record is changed: every correction the findings point to is a change to the text of
+  `RELEASING.md`, which the human approved as written, so each waits for the human. None is declined. The
+  wordings below are the implementer's proposals and are written into no file.
+  * S1, blocking, on R8: checked and found right. The correction waits for the human. In a throwaway repository
+    outside this checkout, with one tracked file changed and one new untracked file beside an untracked file that
+    was there before, `git restore .` put the tracked file back and left both untracked files. Step 6's putting
+    back is `git restore .`, the removal of what `refresh` printed as written, and `npm ci`, and none of the three
+    removes a new file another command left. So after the stop of R8's second bullet the tree is not as it was.
+    Not reproduced in this checkout, and no command of the five is known to leave such a file here: the trial's
+    reading showed none. Also seen while checking: the step's condition before the commands looks at tracked files
+    only, so nothing in the step keeps which untracked files were there before, and afterwards the human's tarball
+    and a new file look alike in `git status --short`. The choice is the human's, between:
+    * (a) The step keeps what was there and removes what is new. After the two conditions: "Keep what
+      `git status --short` printed: the untracked files it names were there before this step." And the putting
+      back becomes: "`git restore .`, remove each file `refresh` printed as written and each untracked file that
+      `git status --short` names now and did not name before the five commands, and run `npm ci`". R8 holds as
+      written, and the agent deletes a file it did not expect
+    * (b) The step removes nothing it does not know: it names each new untracked file to the human and leaves it.
+      R8's "puts the working tree ... back as they were" then needs the exception written down as a decision
+    * (c) Leave the text, and record the gap as a known limit of the step
+    The implementer would take (a). No test is proposed: the spec decides that no test reads the steps of
+    `RELEASING.md`
+  * S2, not blocking, on R11: checked and found right as a matter of the text. The correction waits for the
+    human. Step 3 says "Name every change in the shipped diff that has no unit", and step 2 says of the one
+    expected change "Do not name it to the human". Read in order the particular rule of step 2 wins, which is
+    how the reviewer reads it too. The proposed wording for step 3's bullet: "Name every change in the shipped
+    diff that has no unit, but for the one step 2 says not to name". Not made, though it is small, because the
+    plan says "Steps 1 and 3 are unchanged" and its task checks that they show no change, so the human would be
+    agreeing to that too. The choice: take that wording, another, or leave step 3 as it is
+  * C1, not blocking: checked and found right. The reviewer asks for no change, and none is made. The installed
+    `container/agent.sh` builds on `--rebuild`, when there is no image, and when one of the image's two harness
+    labels differs from the version wanted, and on nothing else. The installed `container/Dockerfile` copies
+    `entrypoint.sh`, `egress-proxy.mjs` and `sni.mjs` into the image. So when no build is due, the start-up
+    checks that `./agent.sh --in-place true` passes are those of the entrypoint in the image that exists, which
+    may be an earlier release's, under the wrapper and the Compose files of the release just installed. The
+    reviewer's own start built nothing, and the trial's did, for the labels. This touches two sentences of the
+    approved step 6, which the human may want to read again knowing it: "starts the sandbox of the release just
+    installed" and "The start shows that the released sandbox builds and starts in this repository, and no more".
+    The choice: leave them, with this entry as the record of the limit; say the limit in step 6; or have the step
+    run `./agent.sh --rebuild --in-place true`, which costs a build at every release and changes R6's command, so
+    it would be a change to the spec. Whether `--rebuild` combines with `--in-place` and a command was not tried
+  Step 6 and its five commands were not run again: nothing they read has changed. Status left at `in-progress`.
+  S1 is blocking and undecided, so the unit cannot be closed
 
 ## Amendments
