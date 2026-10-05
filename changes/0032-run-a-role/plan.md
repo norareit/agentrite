@@ -280,7 +280,7 @@ human:
 - [x] No line of a changed or new file is over 120 characters, and none holds an em dash
 - [x] After the tasks the human added: `npm test` passes, `npm run check-changes` exits 0 after the last commit,
       and no line of a changed file is over 120 characters or holds an em dash
-- [ ] After the tasks of the human's last change: the same three checks again
+- [x] After the tasks of the human's last change: the same three checks again
 
 ## Commit Points
 

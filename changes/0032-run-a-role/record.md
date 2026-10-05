@@ -296,3 +296,11 @@ timestamp: 2026-10-05T12:51:34Z
     README says so. A new session by hand with `--model <id>` before `--prompt` showed the prompt and answered
   * Not tried: `--skip-permissions` on a real harness, `--continue` of either, a session of Claude Code
     resumed with a prompt, and a bare word after the `--`, which the harness would now get before its prompt
+- 2026-10-05T15:50:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on the committed
+  branch at `870d901`: `npm test` reported 337 tests, 337 passed, and `npm run check-changes` exited 0. No line of
+  a file that differs from `master` is over 120 characters, and none holds an em dash, by a search of each.
+  `npm pack --dry-run` lists no file of `tests/`, and `git diff master --stat` names the same twelve files as
+  before. Every task and every check of the plan is ticked, the session of OpenCode among them with what the
+  entry above says was not seen. The concerns of 14:18:03Z stand. Status left at `in-progress`: the human has
+  not read the documents of the last two changes, the review is done elsewhere, and closing the unit is the
+  human's
