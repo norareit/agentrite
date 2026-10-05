@@ -257,6 +257,18 @@ timestamp: 2026-10-04T23:56:09Z
   branch at `319e472`: `npm test` reported 286 tests, 286 passed, and `npm run check-changes` exited 0 and printed
   nothing of the check's own. The commit of this entry changes only this record, and both were run once more on
   it with the same result. Status left at `in-progress`: closing the unit, and any further review, is the human's
+- 2026-10-05T00:35:56Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a delta review of
+  `changes/0031-release-moves-own-dependency/` at `5ce3b59b82bfe398ae5ad5d4b22f074f5d8ba129`, from the previous
+  review's commit `58a1736195b39951aa89b1dcf25e6e3253673c7d`. Checked the previous findings against the recorded
+  human decisions and reviewed the six successor commits on all three axes. Returned P1 (nonblocking), with no
+  new spec-conformance or code-quality findings and no blocking findings. Complete findings saved at
+  `.reviews/0031-release-moves-own-dependency/2026-10-05T003426Z-opencode-openai-gpt-6.1-sol-delta.md`.
+  Independently ran `npm test` (286 passed), `npm run check-changes` (exit 0), and
+  `./agent.sh --in-place --rebuild true < /dev/null` (exit 0, image built using cached layers, startup checks
+  passed). The delta whitespace check passed, the forbidden-path diff remained empty, and verification left the
+  tree with only the human's untracked tarball. Could not verify the historical elapsed time or the implementer's
+  scratch rollback experiment. No empty-cache build, failure recovery, deployment, publication, push, resumed
+  release session, harness, login, prompt, or unit run was exercised
 
 ## Amendments
 
