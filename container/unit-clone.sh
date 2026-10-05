@@ -8,9 +8,70 @@
 # The clone is only ever the source of a fetch, which runs nothing of its own, and its
 # tree is compared from the host's repository.
 
+# Cuts the branch of a unit that master holds and that has none, and prints its name.
+# The unit is given by its digits, and is the one directory of changes/ on master whose
+# name opens with them and a dash. The branch is named after the kind in the unit's
+# record and its directory, as process.md names a unit's branch, and is cut at the head
+# of master. Only master is read, never the working tree, and nothing is checked out, so
+# what the host has checked out and what it has not committed do not matter and are
+# left as they are. Says on standard error what it cut, because standard output is the
+# branch's name. Says why and fails otherwise, with 1 when master holds no such unit and
+# 3 when it holds one that no branch can be cut for.
+cut_unit_branch() {
+  local root="$1" unit="$2" directories directory record line kind="" prefix name
+  if ! git -C "$root" show-ref --verify --quiet refs/heads/master; then
+    echo "agent.sh: '$unit' names no local branch, and there is no local branch master to cut one from." >&2
+    return 3
+  fi
+  directories="$(git -C "$root" ls-tree -d --name-only master changes/ | grep -E "^changes/$unit-")" \
+    || directories=""
+  if [ -z "$directories" ]; then
+    echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
+    echo "master holds no unit of that number in changes/, so there is no branch to cut." >&2
+    return 1
+  fi
+  if [ "$(grep -c '' <<< "$directories")" -gt 1 ]; then
+    echo "agent.sh: '$unit' names no local branch, and master holds more than one unit of that number:" >&2
+    echo "  ${directories//$'\n'/$'\n'  }" >&2
+    echo "So no branch is cut." >&2
+    return 3
+  fi
+  directory="${directories#changes/}"
+  record="changes/$directory/record.md"
+  if ! git -C "$root" cat-file -e "master:$record" 2>/dev/null; then
+    echo "agent.sh: $record cannot be read on master, so no branch is cut for '$unit'." >&2
+    return 3
+  fi
+  while IFS= read -r line; do
+    if [[ "$line" =~ ^kind:[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
+      kind="${BASH_REMATCH[1]}"
+      break
+    fi
+  done < <(git -C "$root" show "master:$record")
+  case "$kind" in
+    feature) prefix="feature" ;;
+    bug) prefix="bugfix" ;;
+    task) prefix="task" ;;
+    *)
+      echo "agent.sh: $record on master names no kind the kit has, which are feature, bug and task," >&2
+      echo "so no branch is cut for '$unit'." >&2
+      return 3
+      ;;
+  esac
+  name="$prefix-$directory"
+  if ! git -C "$root" branch --quiet --no-track "$name" master; then
+    echo "agent.sh: cutting $name from master failed." >&2
+    return 3
+  fi
+  echo "agent.sh: cut $name from master at $(git -C "$root" rev-parse --short master), for changes/$directory." >&2
+  echo "$name"
+}
+
 # Prints the branch a unit names: the local branch of that name, or else, for a unit of
-# digits only, the one local branch whose name holds it as a whole number. Says why and
-# fails otherwise, with 1 when no branch is named and 3 when several are.
+# digits only, the one local branch whose name holds it as a whole number. A unit of
+# digits that no branch holds gets its branch cut from master, by cut_unit_branch, whose
+# failures are this function's too. Says why and fails otherwise, with 1 when no branch
+# is named and 3 when several are.
 resolve_unit_branch() {
   local root="$1" unit="$2" matches="" match
   if git -C "$root" show-ref --verify --quiet "refs/heads/$unit" 2>/dev/null; then
@@ -20,6 +81,10 @@ resolve_unit_branch() {
   if [[ "$unit" =~ ^[0-9]+$ ]]; then
     matches="$(git -C "$root" for-each-ref --format='%(refname:short)' refs/heads \
       | grep -E "(^|[^0-9A-Za-z])$unit([^0-9A-Za-z]|\$)")" || matches=""
+    if [ -z "$matches" ]; then
+      cut_unit_branch "$root" "$unit"
+      return
+    fi
   fi
   if [ -z "$matches" ]; then
     echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2

@@ -144,7 +144,7 @@ The process:
 
 The sandbox:
 
-- [ ] In `tests/agent-unit-run.test.mjs`, with a repository whose `master` holds a unit and no branch for it, test
+- [x] In `tests/agent-unit-run.test.mjs`, with a repository whose `master` holds a unit and no branch for it, test
       that the wrapper given the unit's digits:
     - cuts `feature-<directory>` at the head of `master`, prints the line above with that commit, and mounts a
       clone of that branch. The same with `bugfix` for a record of kind `bug` and `task` for one of kind `task`
@@ -157,7 +157,7 @@ The sandbox:
     - runs a unit whose branch exists as before, and cuts nothing for a branch's name that does not exist (R20)
 
   See them fail
-- [ ] Write the function in `container/unit-clone.sh` and call it from `resolve_unit_branch`. Change the comment
+- [x] Write the function in `container/unit-clone.sh` and call it from `resolve_unit_branch`. Change the comment
       over `resolve_unit_branch`, and the comment and the usage of `container/agent.sh` where they say what a
       unit may be given as, to say what happens to a unit with no branch (R17, R18, R19, R20)
 
@@ -187,5 +187,5 @@ The documents:
       project template
 - [x] `feature-0033 Divide the planner's role file`: the four role files, with the accounting logged
 - [x] `feature-0033 Specify on master and plan before the work`: `process.md` and the two change templates
-- [ ] `feature-0033 Cut a unit's branch from master on its first run`: the wrapper and its tests
+- [x] `feature-0033 Cut a unit's branch from master on its first run`: the wrapper and its tests
 - [ ] `feature-0033 Describe specifying and the unit's branch`: the README

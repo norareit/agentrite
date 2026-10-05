@@ -107,3 +107,26 @@ timestamp: 2026-10-05T13:45:27Z
     then implements, then reviews"
   * "Features", "Bugs" and "Tasks" were read against requirement 10 and are unchanged: each sentence still holds
   `npm test`: 339 passed. No test reads `process.md` or the change templates
+- 2026-10-05T17:14:41Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the sandbox's two tasks. The tests
+  first: `node --test tests/agent-unit-run.test.mjs` reported 45 tests, 13 failed, all of them new. With
+  `cut_unit_branch` in `container/unit-clone.sh`, called from `resolve_unit_branch`, `npm test` reported 351 tests,
+  351 passed. The tests run the wrapper against a real git repository and a fake Docker, on Linux. Not run: the
+  wrapper against a real Docker, and a first unit run of a real unit. What the plan does not say and was decided
+  in the work:
+  * A unit given by a name that is no branch is refused with today's two lines, the second of which still reads
+    "A unit's branch is made on the host, when the unit is planned." Requirement 20 has it "refused as today",
+    and requirement 19 drops that sentence only where `master` holds no unit of the digits. The sentence is less
+    true than it was, since the wrapper now cuts the branch for a number. It is left for the human
+  * Digits that open more than one directory of `changes/` on `master` are refused, with the directories named
+    and exit 2. Requirement 17 cuts "when one directory there opens with those digits", and no requirement says
+    what the other case prints. No test covers it
+  * The kind is the first line of the record on `master` that reads `kind: <word>`, wherever it stands, which is
+    how `scripts/check-changes.mjs` reads the status. The frontmatter is not parsed
+  * The branch is cut with `git branch --no-track`, so that a host configured to track on every new branch gets
+    no upstream set to its own `master`
+  * The refusals that are not "no such unit" print no list of the ways to say what to mount, as the refusal of
+    several branches does not today. The one for digits `master` holds no unit of prints it, as today
+  * The test of today's refusal ran for `026`, `0099` and `claude`. The two of digits moved to the new refusals,
+    as `003` and `0099`, and a branch's name that `master` holds a unit for joined `claude`
+  * The line the wrapper prints of the ways to mount gained a second line, "An ID with no branch gets one, cut
+    from master". The plan names "the usage" and gives no text for it

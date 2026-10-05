@@ -111,14 +111,198 @@ test('the wrapper lists the branches an ID names when there are several, and sta
   assert.equal(existsSync(state), false);
 });
 
-for (const unit of ['026', '0099', 'claude']) {
+for (const unit of ['claude', 'feature-0031-cut-me']) {
   test(`the wrapper says that ${unit} names no branch and that one is made on the host, and starts nothing`, (t) => {
-    const { state, run, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+    const { root, state, run, git, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+    commitUnit({ root, git }, 'kind: feature');
+    const refs = git('for-each-ref');
     const result = run([unit, 'echo', 'hi']);
     assert.equal(result.status, 2);
     assert.ok(result.stderr.includes(`'${unit}'`), result.stderr);
     assert.match(result.stderr, /made on the host/);
     assert.match(result.stderr, /agent\.sh --in-place /);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+    assert.equal(existsSync(state), false);
+    assert.equal(git('for-each-ref'), refs);
+  });
+}
+
+// The cutting of a unit's branch: `master` holds the unit's directory and no branch holds its number.
+
+const cutDirectory = '0031-cut-me';
+
+// Commits `files` as the unit's directory on `master`, which is checked out, and returns the commit, abbreviated.
+// The files are the record alone, with `frontmatter` between its two lines of dashes, unless others are given.
+function commitUnit({ root, git }, frontmatter, files = { 'record.md': `---\n${frontmatter}\n---\n\n# Cut me\n` }) {
+  mkdirSync(join(root, 'changes', cutDirectory), { recursive: true });
+  for (const [name, content] of Object.entries(files)) {
+    writeFileSync(join(root, 'changes', cutDirectory, name), content);
+  }
+  git('add', 'changes');
+  git('commit', '--quiet', '--message', 'the spec of a unit');
+  return git('rev-parse', '--short', 'master');
+}
+
+for (const [kind, prefix] of [
+  ['feature', 'feature'],
+  ['bug', 'bugfix'],
+  ['task', 'task'],
+]) {
+  test(`the wrapper cuts ${prefix}-${cutDirectory} from master for a ${kind} that has no branch, and runs it`, (t) => {
+    const host = setUp(t);
+    const { root, state, run, git, dockerCalls, unitRun } = host;
+    const commit = commitUnit(host, `kind: ${kind}\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z`);
+    const cut = `${prefix}-${cutDirectory}`;
+
+    const result = run(['0031', 'echo', 'hi']);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(
+      result.stderr.includes(`agent.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
+      result.stderr,
+    );
+    assert.equal(git('rev-parse', `refs/heads/${cut}`), git('rev-parse', 'refs/heads/master'));
+    const calls = unitRun(join(state, 'agentrite', 'project-agent', cut));
+    assert.deepEqual(
+      dockerCalls(),
+      calls.map((call) => call.replaceAll(containerName, `project-agent-${cut}`)),
+    );
+    assert.equal(existsSync(join(root, '.git', 'refs', 'remotes', 'sandbox')), false);
+  });
+}
+
+test('the wrapper cuts the branch before it builds: a build that fails leaves the branch cut', (t) => {
+  const host = setUp(t, { imageExists: false });
+  const { run, git, buildFails, dockerCalls } = host;
+  commitUnit(host, 'kind: feature');
+  writeFileSync(buildFails, '');
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^agent\.sh: cut feature-0031-cut-me from master at /m);
+  assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/master'));
+  assert.equal(dockerCalls().filter((call) => / run /.test(call)).length, 0);
+  assert.ok(result.stderr.indexOf('agent.sh: cut ') < result.stderr.indexOf('failed to solve'), result.stderr);
+});
+
+test('cutting a branch leaves the checked out branch, the tree, the index and every other branch as they were', (t) => {
+  const host = setUp(t);
+  const { root, run, git } = host;
+  commitUnit(host, 'kind: feature');
+  git('checkout', '--quiet', 'feature-0010-init');
+  writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\nchanged, not staged\n');
+  writeFileSync(join(root, 'staged.txt'), 'staged\n');
+  git('add', 'staged.txt');
+  const before = {
+    head: git('symbolic-ref', 'HEAD'),
+    status: git('status', '--porcelain', '--untracked-files=all'),
+    unstaged: git('diff'),
+    staged: git('diff', '--cached'),
+    refs: git('for-each-ref'),
+  };
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /^agent\.sh: cut feature-0031-cut-me from master at /m);
+  const cutRef = `${git('rev-parse', 'master')} commit\trefs/heads/feature-0031-cut-me`;
+  assert.deepEqual(
+    {
+      head: git('symbolic-ref', 'HEAD'),
+      status: git('status', '--porcelain', '--untracked-files=all'),
+      unstaged: git('diff'),
+      staged: git('diff', '--cached'),
+      refs: git('for-each-ref')
+        .split('\n')
+        .filter((ref) => ref !== cutRef)
+        .join('\n'),
+    },
+    before,
+  );
+  assert.ok(git('for-each-ref').split('\n').includes(cutRef));
+});
+
+test('a second run of a unit whose branch was cut runs that branch, and cuts nothing', (t) => {
+  const host = setUp(t);
+  const { run, git } = host;
+  commitUnit(host, 'kind: feature');
+  assert.equal(run(['0031', 'echo', 'hi']).status, 0);
+  const refs = git('for-each-ref');
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stderr, /cut /);
+  assert.equal(git('for-each-ref'), refs);
+});
+
+// What makes the wrapper cut nothing, each with what its message must name.
+const noCut = [
+  {
+    name: 'digits master holds no unit of',
+    unit: '0099',
+    arrange: (host) => commitUnit(host, 'kind: feature'),
+    says: [/'0099' names no local branch/, /master holds no unit of that number in changes\//],
+  },
+  {
+    name: 'digits that only open a longer number',
+    unit: '003',
+    arrange: (host) => commitUnit(host, 'kind: feature'),
+    says: [/'003' names no local branch/, /master holds no unit of that number in changes\//],
+  },
+  {
+    name: 'a unit that is in the working tree and not on master',
+    unit: '0031',
+    arrange: ({ root }) => {
+      mkdirSync(join(root, 'changes', cutDirectory), { recursive: true });
+      writeFileSync(join(root, 'changes', cutDirectory, 'record.md'), '---\nkind: feature\n---\n');
+    },
+    says: [/master holds no unit of that number in changes\//],
+  },
+  {
+    name: 'a unit with no record',
+    unit: '0031',
+    arrange: (host) => commitUnit(host, '', { 'spec.md': '# Cut me\n' }),
+    says: [/changes\/0031-cut-me\/record\.md/, /cannot be read/],
+  },
+  {
+    name: 'a record with no kind',
+    unit: '0031',
+    arrange: (host) => commitUnit(host, 'status: approved'),
+    says: [/changes\/0031-cut-me\/record\.md/, /names no kind/],
+  },
+  {
+    name: 'a record with a kind the kit does not have',
+    unit: '0031',
+    arrange: (host) => commitUnit(host, 'kind: chore'),
+    says: [/changes\/0031-cut-me\/record\.md/, /names no kind/],
+  },
+  {
+    name: 'a repository with no branch master',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      host.git('branch', '--move', 'master', 'main');
+    },
+    says: [/no local branch master/],
+  },
+];
+
+for (const { name, unit, arrange, says } of noCut) {
+  test(`the wrapper cuts no branch for ${name}, says why, and starts nothing`, (t) => {
+    const host = setUpWithBuildDue(t);
+    const { state, run, git, dockerCalls, npmCalls } = host;
+    arrange(host);
+    const refs = git('for-each-ref');
+
+    const result = run([unit, 'echo', 'hi']);
+
+    assert.equal(result.status, 2, result.stderr);
+    for (const said of says) assert.match(result.stderr, said);
+    assert.doesNotMatch(result.stderr, /made on the host|agent\.sh: cut /);
+    assert.equal(git('for-each-ref'), refs);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
     assert.equal(existsSync(state), false);

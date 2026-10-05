@@ -15,7 +15,8 @@
 #   so that two runs never work on one branch. When the container has exited it
 #   fetches the clone's branch as sandbox/<branch>, fast-forwards the host's branch
 #   when it can, and removes the clone unless it holds work the host does not. A clone
-#   that is still there is resumed. The git work is in container/unit-clone.sh.
+#   that is still there is resumed. A unit given by its number that has no branch yet
+#   gets one first, cut from master. The git work is in container/unit-clone.sh.
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
@@ -37,7 +38,9 @@
 #
 #   PROJECT_ROOT     the project's root, which the project's agent.sh shim passes
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
-#                    name, or by a unit's number that one branch name holds
+#                    name, or by a unit's number that one branch name holds. A number
+#                    that no branch holds and that is a unit of changes/ on master gets
+#                    its branch first, cut from the head of master
 #   --in-place       mount the project root at /work, as it is
 #   --workdir DIR    mount DIR at /work, as it is
 #   --rebuild        build the image before running, even if it already exists and
@@ -133,7 +136,8 @@ done
 # here, before the host's harnesses, Docker or npm are asked anything.
 mount_forms() {
   echo "Say what to mount at /work, as one of:" >&2
-  echo "  agent.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch" >&2
+  echo "  agent.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch." >&2
+  echo "                                       An ID with no branch gets one, cut from master" >&2
   echo "  agent.sh --in-place [COMMAND...]     the project root as it is" >&2
   echo "  agent.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
 }
@@ -143,8 +147,9 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   exit 2
 fi
 
-# The unit's branch, found with git alone, so that a unit that names none is refused
-# as early. An empty branch says that this is not a unit run.
+# The unit's branch, found with git alone, or cut from master for a unit that has none
+# yet, so that a unit that names none is refused as early. An empty branch says that
+# this is not a unit run.
 branch=""
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   # shellcheck source=unit-clone.sh
@@ -152,7 +157,8 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   resolved=0
   branch="$(resolve_unit_branch "$root" "$1")" || resolved=$?
   if [ "$resolved" -ne 0 ]; then
-    # A unit that names no branch may be a command given without saying what to mount.
+    # A unit that names no branch, and no unit of master's to cut one for, may be a
+    # command given without saying what to mount.
     [ "$resolved" -ne 1 ] || mount_forms
     exit 2
   fi
