@@ -175,3 +175,27 @@ timestamp: 2026-10-05T13:45:27Z
   sentence "Commit the change documents first, then the implementation.", kept in `process.md` where the plan has
   its paragraph replaced: "Yes, it can stay." The review is the human's to start: "I'll let the reviewer check
   your work." Recorded by Claude Code, anthropic/claude-opus-5-5. The status stays `in-progress`
+- 2026-10-05T19:15:39Z [OpenCode, openai/gpt-6.1-sol] as reviewer, reviewed `changes/0033-specifier-role/`
+  at `0650b6ca62c53723fe58eb5777e3086f6fb29fd2`. Full review against merge base
+  `39251d648946b163f0d3ad52ce8695f328a3d889` with `master`. Returned finding labels: `C1`.
+  Saved findings: `.reviews/0033-specifier-role/2026-10-05T191352Z-opencode-gpt-6.1-sol-0650b6c-full.md`.
+  Not verified: real Docker builds, first unit launches and mounts; live harness dispatch and compliance with the
+  new role files; refresh in an external real project with 3.0.0 wrappers; historical red-test counts and test-first
+  ordering; whether the human read the entire spec before the recorded instruction to implement.
+- 2026-10-05T23:02:18Z [human] said, of the review: "The reviewer came back with a few findings; can you check them?"
+- 2026-10-05T23:02:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the review of `0650b6c` in
+  `.reviews/0033-specifier-role/`. It returned one finding, C1: the refusal of digits that open more than one
+  directory of `changes/` on `master` has no test, against the rule "Unit test all newly added logic". The
+  implementer agrees: this record said of that refusal "No test covers it", and the human's decision of it was on
+  what it does, not on leaving it untested. C1 is applied, in place, as the review says it belongs. The human
+  asked that the findings be checked and did not say that C1 is accepted: applying it is the implementer's
+  reading, and the acceptance is the human's to confirm.
+  * The task was added to the plan first, with a commit point
+  * The test is one more case among those that cut nothing in `tests/agent-unit-run.test.mjs`: `master` holds
+    `changes/0031-cut-me` and `changes/0031-cut-me-too`, and no branch holds `0031`. It expects exit 2, both
+    directories named, every ref as it was, and no call of Docker or npm
+  * With the refusal taken out of `container/unit-clone.sh` by hand, that test failed and the other 45 of the file
+    passed. With the script restored, which `git diff` shows unchanged, `npm test`: 352 tests, 352 passed
+  * No code changed. The commit also holds the reviewer's entry above, which the reviewer appended and did not
+    commit
+  The status stays `in-progress`

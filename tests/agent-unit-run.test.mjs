@@ -257,6 +257,20 @@ const noCut = [
     says: [/'003' names no local branch/, /master holds no unit of that number in changes\//],
   },
   {
+    name: 'digits that open two directories on master',
+    unit: '0031',
+    arrange: (host) => {
+      mkdirSync(join(host.root, 'changes', `${cutDirectory}-too`), { recursive: true });
+      writeFileSync(join(host.root, 'changes', `${cutDirectory}-too`, 'record.md'), '---\nkind: bug\n---\n');
+      commitUnit(host, 'kind: feature');
+    },
+    says: [
+      /'0031' names no local branch, and master holds more than one unit of that number:/,
+      /^ {2}changes\/0031-cut-me$/m,
+      /^ {2}changes\/0031-cut-me-too$/m,
+    ],
+  },
+  {
     name: 'a unit that is in the working tree and not on master',
     unit: '0031',
     arrange: ({ root }) => {

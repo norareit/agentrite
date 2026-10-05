@@ -165,6 +165,10 @@ The sandbox:
       second line that says a unit's branch is cut from `master` when the unit is given by its number, in place
       of "A unit's branch is made on the host, when the unit is planned." The test of that refusal first (R20)
 
+- [x] For the review's finding C1: in `tests/agent-unit-run.test.mjs`, among the cases that cut nothing, a
+      `master` that holds two directories of one number and no branch for it. The wrapper names both, exits 2,
+      leaves every ref as it was and starts nothing. See that it fails with the refusal taken out (R17)
+
 The documents:
 
 - [x] Change the four places of `README.md` as the approach gives them. Search the README for "planner", "plan"
@@ -194,3 +198,4 @@ The documents:
 - [x] `feature-0033 Cut a unit's branch from master on its first run`: the wrapper and its tests
 - [x] `feature-0033 Describe specifying and the unit's branch`: the README
 - [x] `feature-0033 Say how a unit's branch is cut where a name is refused`: the wrapper's script and its test
+- [x] `feature-0033 Test the refusal of two units of one number`: the test, for the review's finding C1
