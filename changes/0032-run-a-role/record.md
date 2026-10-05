@@ -304,3 +304,30 @@ timestamp: 2026-10-05T12:51:34Z
   entry above says was not seen. The concerns of 14:18:03Z stand. Status left at `in-progress`: the human has
   not read the documents of the last two changes, the review is done elsewhere, and closing the unit is the
   human's
+- 2026-10-05T16:36:34Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of
+  `changes/0032-run-a-role/` at `22ae325d8d4ad51801e4570201a36f8c557c6f80`, against merge base
+  `9f03a06848407346e1ac878cb49d9d632befe0d5`. Returned P1 and C1, both non-blocking, saved in
+  `.reviews/0032-run-a-role/2026-10-05T163426Z-opencode-openai-gpt-6.1-sol-full.md`. Independently ran `npm test`
+  (337 passed), `npm run check-changes` (exit 0), `npm pack --dry-run` and `git diff --check master...HEAD`;
+  reproduced the launcher-only SIGTERM concern with an in-memory substitute harness. Historical real-harness
+  and pseudo-terminal trials were not independently verified; the final OpenCode interactive answer was not
+  observed in the recorded trial. No finding outcome or status transition recorded
+- 2026-10-05T16:41:35Z [human] said, in the implementer's session: "The review came back with some remarks; can you
+  check them and handle them?"
+- 2026-10-05T16:41:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the review of 16:34:26Z in
+  `.reviews/0032-run-a-role/` whole. It returns P1 and C1, neither blocking, and no finding on the spec.
+  * P1, the session of OpenCode ticked without its answer: accepted and applied. The task was unticked, and the
+    session run again through the command, on a pseudo-terminal, in the project of the earlier runs, whose
+    installed `scripts/agentrite.mjs` and `scripts/agentrite-run.mjs` were compared with the branch's and are
+    the same: `run reviewer opencode 0001 --prompt <answer at once with the product of thirty-seven and
+    forty-one> -- --model openai/gpt-6-sol`. The session showed the unit and the text, and after twelve seconds
+    `Reviewer · GPT-6 Sol` answered `1517`, which stands nowhere in the prompt. Left with `/exit`: status 0,
+    the terminal's settings as before, no process left. The task is ticked again. The entry of 15:50:24Z said
+    that every task was ticked while this one lacked its answer, which the reviewer is right to call too much
+  * C1, a signal to the command alone leaves the harness running: the fact is the one the entry of 14:18:03Z
+    recorded, and the reviewer reproduced it. Nothing is changed for it. Stopping the harness when the command is
+    stopped is behavior the spec does not have, in requirement 10 or elsewhere, so it is not the implementer's
+    to add: it waits for the human. The implementer's proposal, written into no file: take it into this unit,
+    since a caller that stops a run by its process id is what the unit was asked for, by a requirement that the
+    command passes a signal it receives on to the harness and still exits as requirement 10 says. The other
+    choice is to leave it as a known limit, which a caller gets around by signalling the command's process group
