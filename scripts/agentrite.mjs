@@ -66,18 +66,32 @@ function usage() {
 }
 
 /**
+ * The parser of a command that takes harnesses and nothing else, whose errors hold the usage of that command.
+ *
+ * @param {string} command
+ * @returns {(args: string[]) => { harnesses: string[] }}
+ */
+function harnessesOf(command) {
+  return (args) => {
+    try {
+      return { harnesses: parseHarnesses(args) };
+    } catch (error) {
+      throw new Error(forCommand(command, messageOf(error)));
+    }
+  };
+}
+
+/**
+ * The command, and what that command's own parser reads from the arguments after its name.
+ *
  * @param {string[]} args
- * @returns {{ command: string, harnesses: string[] }}
+ * @returns {{ command: string } & Record<string, unknown>}
  */
 export function parseArgs(args) {
-  const [command, ...names] = args;
+  const [command, ...rest] = args;
   if (command === undefined) throw new Error(usage());
   if (!Object.hasOwn(COMMANDS, command)) throw new Error(`unknown command: ${command}\n${usage()}`);
-  try {
-    return { command, harnesses: parseHarnesses(names) };
-  } catch (error) {
-    throw new Error(forCommand(command, messageOf(error)));
-  }
+  return { command, ...COMMANDS[command].parse(rest) };
 }
 
 /**
@@ -578,12 +592,22 @@ function refresh(root, harnesses) {
 }
 
 /**
- * The commands, by the name each is run with. Each takes the project root and the harnesses, and returns the exit
- * status.
+ * A command: `parse` reads the arguments after the command's name, and throws what to print for ones it does not
+ * take, and `run` takes the project root and what `parse` returned, and returns the exit status.
  *
- * @type {Record<string, (root: string, harnesses: string[]) => number>}
+ * @template Parsed
+ * @typedef {{ parse: (args: string[]) => Parsed, run: (root: string, parsed: Parsed) => number }} Command
  */
-const COMMANDS = { init, refresh };
+
+/**
+ * The commands, by the name each is run with.
+ *
+ * @type {Record<string, Command<object>>}
+ */
+const COMMANDS = {
+  init: { parse: harnessesOf('init'), run: (root, { harnesses }) => init(root, harnesses) },
+  refresh: { parse: harnessesOf('refresh'), run: (root, { harnesses }) => refresh(root, harnesses) },
+};
 
 /**
  * True when this file is the entry point, even when it is executed through a
@@ -608,7 +632,7 @@ if (isMain()) {
     process.exit(2);
   }
   try {
-    process.exit(COMMANDS[parsed.command](process.cwd(), parsed.harnesses));
+    process.exit(COMMANDS[parsed.command].run(process.cwd(), parsed));
   } catch (error) {
     console.error(`agentrite: ${messageOf(error)}`);
     process.exit(1);

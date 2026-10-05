@@ -85,7 +85,7 @@ The wrappers:
 
 A command parses its own arguments:
 
-- [ ] Change the commands of `scripts/agentrite.mjs` to take the project root and the arguments after the
+- [x] Change the commands of `scripts/agentrite.mjs` to take the project root and the arguments after the
       command's name, and move the parsing of the harnesses into `init` and `refresh`. No behavior changes: the
       suite passes as it is, the usage texts included (R14)
 
@@ -167,7 +167,7 @@ unit for the human; it is not worked around.
 
 - [x] `feature-0032 Plan a command that runs a role in a harness`: the three documents
 - [x] `feature-0032 Write the OpenCode wrappers as primary agents and subagents`: the first two tasks
-- [ ] `feature-0032 Let each command parse its own arguments`: the refactoring, with no change of behavior
+- [x] `feature-0032 Let each command parse its own arguments`: the refactoring, with no change of behavior
 - [ ] `feature-0032 List the roles`: the `roles` command and its tests
 - [ ] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
 - [ ] `feature-0032 Describe running a role`: the README
