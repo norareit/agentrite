@@ -344,3 +344,10 @@ timestamp: 2026-10-05T12:51:34Z
   of the README or of this unit's documents is over 120 characters, and the README holds no em dash. No box of
   the plan is open. Both findings of the review have their outcome: P1 applied, C1 decided by the human. Status
   left at `in-progress`: setting `implemented` is the human's word
+- 2026-10-05T16:51:27Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of
+  `changes/0032-run-a-role/` at `bcd0809a4c1252e69e6862d2d767e8cc8acfdc1c`, compared with the previous reviewed
+  commit `22ae325d8d4ad51801e4570201a36f8c557c6f80`. Returned no new findings on any of the three axes; saved in
+  `.reviews/0032-run-a-role/2026-10-05T165017Z-opencode-openai-gpt-6.1-sol-delta.md`. Independently ran `npm test`
+  (337 passed), `npm run check-changes` (exit 0) and `git diff --check 22ae325..HEAD`, and verified the new
+  process-group signal guidance with an in-memory substitute harness. The historical OpenCode smoke-test
+  rerun and its terminal observations were not independently verified, nor real-harness signal handling
