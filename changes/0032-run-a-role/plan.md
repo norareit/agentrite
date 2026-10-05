@@ -143,7 +143,7 @@ The documents:
 - [x] In `README.md`, under "Installing it into a project", add `scripts/agentrite-run.mjs` to the files a
       project receives. Added while implementing: the sentence lists what `files` in `package.json` holds, and is
       false without the new file (R18)
-- [ ] Check with `git diff master --stat` that no file requirement 19 names has changed, and with
+- [x] Check with `git diff master --stat` that no file requirement 19 names has changed, and with
       `git status --short` that this repository's own wrappers have not (R19)
 
 On the real harnesses, on the host, in a project made for it: pack the working copy, install the tarball in a
@@ -151,20 +151,20 @@ temporary directory, run `init claude opencode`, and make one unit there by hand
 the record says what was seen. One that shows a requirement or the README to be wrong is recorded and stops the
 unit for the human; it is not worked around.
 
-- [ ] `run reviewer opencode <unit> --headless`: OpenCode prints no line about falling back, and its answer shows
+- [x] `run reviewer opencode <unit> --headless`: OpenCode prints no line about falling back, and its answer shows
       that it read the reviewer's role file. The same for `run implementer claude <unit> --headless` (R5, R7, R15)
-- [ ] In a session of OpenCode in that project, the roles are still offered as subagents (R15)
-- [ ] With a model pinned in one wrapper of each harness and no `--model`, which model the run used; and with
+- [x] In a session of OpenCode in that project, the roles are still offered as subagents (R15)
+- [x] With a model pinned in one wrapper of each harness and no `--model`, which model the run used; and with
       `--model`, that the run used that one (R6, R17)
-- [ ] One interactive run per harness: the session opens with the prompt, and when it is left the terminal is as
+- [x] One interactive run per harness: the session opens with the prompt, and when it is left the terminal is as
       it was and the command has ended. What an interrupt does in each, with and without `--headless` (R7, R10)
 
 ## Verification
 
-- [ ] `npm test` passes
+- [x] `npm test` passes
 - [ ] `npm run check-changes` exits 0, run after the last commit
-- [ ] `npm pack --dry-run` lists `scripts/agentrite-run.mjs` and no file of `tests/` (R18)
-- [ ] No line of a changed or new file is over 120 characters, and none holds an em dash
+- [x] `npm pack --dry-run` lists `scripts/agentrite-run.mjs` and no file of `tests/` (R18)
+- [x] No line of a changed or new file is over 120 characters, and none holds an em dash
 
 ## Commit Points
 
@@ -174,4 +174,4 @@ unit for the human; it is not worked around.
 - [x] `feature-0032 List the roles`: the `roles` command and its tests
 - [x] `feature-0032 Run a role in a harness`: `scripts/agentrite-run.mjs`, the `run` command and their tests
 - [x] `feature-0032 Describe running a role`: the README
-- [ ] `feature-0032 Record the runs on the real harnesses`: the record
+- [x] `feature-0032 Record the runs on the real harnesses`: the record
