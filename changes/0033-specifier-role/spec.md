@@ -45,7 +45,7 @@ Everything else in this spec is the planner's, and has not been read by the huma
 
 ### What was found while planning
 
-On `master` at `9f03a06`.
+On `master` at `9f03a06`, and read again at `39251d6`, which holds 0032. What 0032 changed is in the last bullets.
 
 * The planner's role file has six sections. "Choosing the kind", "Writing a task record" and "Writing the spec"
   are about what should be true. "Writing the plan" is about how. "Handing over" and the opening are about both
@@ -68,8 +68,19 @@ On `master` at `9f03a06`.
   is for the implementer and the reviewer"
 * A unit's number is the highest in `changes/` plus one. Two units planned on two branches at the same time take
   the same number: 0032 and this unit would have, had the planner not counted the branch of 0032 by hand
-* 0032, "Run a role in a harness", is a draft on its own branch and not on `master`. Its first requirement names
-  the three roles and their order
+* 0032, "Run a role in a harness", is implemented and on `master`. It was a draft on its own branch when this
+  spec was first written, and this unit's branch has been rebased onto it since
+* 0032 added `agentrite roles`, `agentrite roles --json` and `agentrite run <role> <harness> <unit>`. All three
+  read the roles from the list in `scripts/agentrite-roles.mjs`, so a fourth role appears in each without a
+  change to them. Two places hold the roles written out: the test of the usage of `run`, and the README's
+  example of the JSON, which shows the planner with its present description
+* `agentrite run` takes a unit that has a directory in `changes/`, and refuses without one. 0032 left out, as a
+  non-goal, running the planner for a unit that has no directory yet. After this unit the role that starts from
+  a request is the specifier
+* `agentrite run` refuses a role whose wrapper is not the file `refresh` would leave. This unit changes two
+  descriptions and adds a wrapper, so in a project that updates, `run` refuses the planner and the implementer
+  until `refresh` is run, and names `refresh` when it does
+* The OpenCode wrappers are written with `mode: all` since 0032. Nothing in this unit depends on the mode
 
 **Not established.**
 
@@ -151,7 +162,9 @@ The documents:
 15. The README says, where it describes a unit run of the sandbox, that specifying is done on the host, on
     `master`, that a unit run is for the planner, the implementer and the reviewer, and that the first unit run of a
     unit cuts its branch from `master`, with what the wrapper prints then and what it refuses. Where it lists what
-    `roles/` holds, it names the four
+    `roles/` holds, it names the four. Where it shows the JSON of `agentrite roles --json`, the role shown is
+    the first the kit has, the specifier, with its description. Where it describes `agentrite run`, it says
+    that the command takes a unit that exists, so the specifier of a new unit is started in a session
 16. `scripts/check-changes.mjs`, `CHANGELOG.md`, `RELEASING.md`, `AGENTS.md` and this repository's own wrappers
     under `.claude/agents/` and `.opencode/agents/` are unchanged, and the change check passes and refuses what
     it did. Of `container/`, only the wrapper and the script that holds its git work change
@@ -172,6 +185,13 @@ The sandbox:
 20. Cutting the branch changes nothing else of the host's repository: the branch that is checked out, the
     working tree and the index are as they were, and no branch that exists is moved. A unit given by a branch's
     name that does not exist is refused as today, and a unit whose branch exists is run as today
+
+The commands of 0032:
+
+21. `agentrite roles` and `agentrite roles --json` list four roles, the specifier first, each with the
+    description of requirement 13, and the usage of `agentrite run` names the four
+22. `agentrite run specifier <harness> <unit>` starts the harness as the specifier for a unit that has a
+    directory, as it does for the other roles. Nothing else of `run`, of `roles` or of their usage changes
 
 ## Decisions
 
@@ -239,9 +259,16 @@ The sandbox:
   move with the release that holds this unit
 * **This unit is made under the process as it is on `master`.** It has its plan now, on its own branch, and is
   approved whole. So is 0032
-* **0032 and this unit both change the list of roles, and neither is on `master`.** 0032 lists "the three roles"
-  in a fixed order. Whichever of the two is built second is built on a tree that holds the other, and its plan
-  is checked against that tree before the work, which is the practice this unit makes a rule
+* **0032 was built first, and this unit was read against it before the work. The human's order.** Both units
+  change the list of roles. 0032's first requirement was reworded while it was a draft, so that it names no
+  number and no order of roles, and its commands read the list. What this unit owes 0032 is therefore small:
+  requirements 21 and 22, a line of one test, and an example in the README. Reading a unit against the tree
+  that holds the one before it is the practice this unit makes a rule
+* **`agentrite run` still takes a unit that exists. The planner's.** The specifier is the one role whose work
+  can begin with no unit, and `run specifier` with no unit is the first thing someone will try. It stays
+  refused, with the usage: the human specifies in a session, which is where the questions of specifying are
+  asked and answered, and an orchestrator starts at the planner, which always has a unit. It is under "Beyond
+  the request"
 
 ## Non-goals
 
@@ -254,6 +281,7 @@ The sandbox:
 * A change to the change check, or to the freeze
 * A way back for a status. What happens to the status of a unit that goes back to the specifier is left as it is
   today, which is unsaid
+* Running the specifier with `agentrite run` for a unit that has no directory yet
 * Rewriting units that exist, their statuses and their role names among them
 * A change to what a spec or a plan holds
 
@@ -272,3 +300,7 @@ The sandbox:
   costs a second mode of the check, which today compares a branch with `master`. Without it, a commit on `master`
   that holds more than a unit's own documents is seen by whoever reads the log, as today
 * **A status for a unit that went back to the specifier.** Without it, the record's log says where the unit is
+* **`agentrite run specifier` for a unit that does not exist yet.** 0032 listed the same for the planner. It
+  would cost a second form of the command, with no unit and the request as its prompt, and a specifier that
+  makes the unit's directory itself, as it does in a session. Without it, a new unit is specified from a
+  session started by hand, and `run specifier` serves a unit that is being continued

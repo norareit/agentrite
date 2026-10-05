@@ -37,3 +37,18 @@ timestamp: 2026-10-05T13:45:27Z
   under "Beyond the request" before. The spec does it without an option, where the human said "maybe an option", and
   says why. One thing it leaves open is now under "Beyond the request": a branch that a run cut and left empty stays
   where it was cut
+- 2026-10-05T16:57:42Z [human] said: "Okay... 0032 is done. Can you check it out? I've ff'ed it to master and rebased
+  this branch on master. So all changes should be here. Use the @planner role to change anything that needs changing
+  in 0033."
+- 2026-10-05T16:57:42Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session, on the branch as
+  the human rebased it, where the plan's commit is `253863b` on `master` at `39251d6`. Read 0032's record to its end,
+  the README's "Running a role", `scripts/agentrite-run.mjs` and the tests 0032 added, and searched the scripts, the
+  tests and the README for the roles' names and for counts of them. What changed in `spec.md`: the findings say that
+  0032 is on `master` and what it added; requirements 21 and 22 are new, for `roles`, `roles --json` and `run` with a
+  fourth role; requirement 15 names two more places of the README; the decision on 0032 is rewritten, and one is added
+  that `run` still takes a unit that exists; that case is a non-goal and under "Beyond the request". What changed in
+  `plan.md`: `tests/agentrite-run.test.mjs` is among the files, the first task changes the line of the usage of `run`
+  that names the roles and adds a run of the specifier, and the README's task has four places. Found to need no
+  change: the tasks on the role files, on `process.md`, on the templates and on the sandbox's wrapper, since 0032
+  touched none of those files, and the counts of files in the tests the plan changes, which 0032 left as they were.
+  Not run: the suite. The status stays `draft`
