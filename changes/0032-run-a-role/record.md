@@ -255,3 +255,44 @@ timestamp: 2026-10-05T12:51:34Z
   no arguments. The plan has nine new tasks, unticked, four of them runs on the real harnesses, and four commit
   points. The status stays `in-progress`: the human asked for the change and its implementation in one sentence,
   and has not read these documents
+- 2026-10-05T15:50:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the same session, in the main
+  checkout on the host, having read the documents as the planner's entry above left them at `83498a6`. The
+  human's "Then implement it" is taken as the approval of them, unread, as that entry says. Did the tasks:
+  * The tests first: 21 of the 50 tests of `tests/agentrite-run.test.mjs` failed. Then the script, and the tests
+    of the command, of which 7 failed until they were changed. `9185839`: `npm test` reported 337 tests, 337
+    passed
+  * The implementer's, where the spec names no words: `unexpected argument: <word>` for a word beyond the unit,
+    naming the first one only, and `--prompt takes a text, and none was given`. `--prompt ""` and `--prompt=`
+    count as no text, as `--model` does with an id. A text that opens with a space and then a dash is taken
+  * The README, `cf162b6`. The paragraph on text that holds a word with a dash is gone, as the plan says, and
+    its example with it. One sentence is there that the plan does not ask for, on a resumed session of OpenCode,
+    for what the runs below showed
+  * The runs were again made before the README was written
+- 2026-10-05T15:50:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the plan's four runs on the
+  real harnesses, Claude Code 2.1.289 and OpenCode 1.18.34, on the host, in the project of the earlier runs with
+  the working copy at `9185839` packed and installed again, the wrappers still pinned as before.
+  * Claude Code, headless. `run implementer claude 0001 --headless --prompt <remember the word nougat> --
+    --session-id <a new uuid>` answered `noted`, exit 0. The same with `--prompt <the word, and the heading of
+    your instructions' file> -- --resume <that uuid>` answered `nougat`, exit 0, and declined the heading
+    because the first text had told it to read no file, which was the text's doing. That it ran as the role is
+    read from its transcript of that id, which names the agent `implementer`
+  * OpenCode, headless. The first run, told to change and read no file and to remember the word praline, did the
+    reviewer's work all the same: it read the role files and the unit, ran git, wrote under `.reviews/` and
+    added a line to the unit's record in the trial project, and then answered `noted`, exit 0. The second,
+    with `-- --session <the id from opencode session list>`, printed `> reviewer · gpt-6-luna` and answered
+    `praline`, exit 0, in the same session
+  * `run implementer claude 0001 --headless --prompt <the heading> -- --allowedTools Read` answered
+    `# Implementer`, exit 0
+  * A session of Claude Code on a pseudo-terminal, `run reviewer claude 0001 --prompt <text> -- --allowedTools
+    Read`: it showed the unit and the text and answered. Left with `/exit`, status 0, settings as before
+  * A session of OpenCode on a pseudo-terminal, `run reviewer opencode 0001 --prompt <text> -- --model
+    openai/gpt-6-sol`: it showed the unit and the text, as `Reviewer · GPT-6 Sol`, so the argument was taken,
+    over the pin. In the minute it was given the agent read the role files and the unit and had not answered. It
+    was left with `/exit`, status 0, settings as before. So for OpenCode "the agent answers" was not seen
+  * Found beside the plan: a session of OpenCode with `-- --session <id>` opened on what was said before, and
+    in two minutes neither showed nor sent the new prompt. `opencode --agent reviewer --prompt <text> --session
+    <id>`, by hand, with the prompt before the option, did the same in eighty seconds. So that is OpenCode's
+    with a session resumed in its interface, whatever the order, and not what requirement 21 changed. The
+    README says so. A new session by hand with `--model <id>` before `--prompt` showed the prompt and answered
+  * Not tried: `--skip-permissions` on a real harness, `--continue` of either, a session of Claude Code
+    resumed with a prompt, and a bare word after the `--`, which the harness would now get before its prompt

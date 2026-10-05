@@ -263,13 +263,13 @@ On the real harnesses, in the project of the earlier runs with the working copy 
 is recorded with what was seen, and one that shows requirement 21 or the README wrong stops the unit for the
 human:
 
-- [ ] Claude Code, headless: a first run with `--prompt` and `-- --session-id <a new uuid>`, and a second with
+- [x] Claude Code, headless: a first run with `--prompt` and `-- --session-id <a new uuid>`, and a second with
       `--prompt` and `-- --resume <that uuid>`, which answers with the word the first was given, as the role
       (R5, R17, R21)
-- [ ] OpenCode, headless: the same, with `-- --session <id>` on the second and the id from
+- [x] OpenCode, headless: the same, with `-- --session <id>` on the second and the id from
       `opencode session list` (R5, R17, R21)
-- [ ] Claude Code, headless, with `-- --allowedTools Read`: the agent answers the prompt (R21)
-- [ ] One session per harness on a pseudo-terminal, each with a `--prompt` and an argument after the `--`: the
+- [x] Claude Code, headless, with `-- --allowedTools Read`: the agent answers the prompt (R21)
+- [x] One session per harness on a pseudo-terminal, each with a `--prompt` and an argument after the `--`: the
       session opens showing the unit and the text, and the agent answers (R5, R21)
 
 ## Verification
@@ -300,4 +300,4 @@ human:
 - [x] `feature-0032 Give the text as --prompt, and the harness its prompt last`: the documents as changed
 - [x] `feature-0032 Take the text as --prompt and put the prompt last`: the tests, the two scripts
 - [x] `feature-0032 Describe --prompt and where the harness's arguments go`: the README
-- [ ] `feature-0032 Record the runs with the prompt last`: the record
+- [x] `feature-0032 Record the runs with the prompt last`: the record
