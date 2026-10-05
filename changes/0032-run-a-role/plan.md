@@ -162,7 +162,7 @@ unit for the human; it is not worked around.
 ## Verification
 
 - [x] `npm test` passes
-- [ ] `npm run check-changes` exits 0, run after the last commit
+- [x] `npm run check-changes` exits 0, run after the last commit
 - [x] `npm pack --dry-run` lists `scripts/agentrite-run.mjs` and no file of `tests/` (R18)
 - [x] No line of a changed or new file is over 120 characters, and none holds an em dash
 

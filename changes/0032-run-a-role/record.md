@@ -153,3 +153,12 @@ timestamp: 2026-10-05T12:51:34Z
     was not run: the plan has no run for it, and `run` refuses before it gets there
   * Not tried: any run inside the sandbox, `--skip-permissions` on a real harness, the planner, macOS, and a
     session on a terminal a human sat at
+- 2026-10-05T14:19:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on the committed
+  branch at `9401b9f`: `npm test` reported 324 tests, 324 passed, and `npm run check-changes` exited 0 and printed
+  nothing of its own. `npm pack --dry-run` lists `scripts/agentrite-run.mjs` among 26 files and no file of
+  `tests/`. No line of a file that differs from `master` is over 120 characters, and none holds an em dash, by a
+  search of each. One correction to the entry above on an interrupt of a headless run: what was seen to end by
+  the signal is `npx agentrite`, the process the pseudo-terminal started, and why it ends so was reasoned and not
+  shown. Every task and every check of the plan is ticked, the sessions and the interrupts among them on a
+  pseudo-terminal and not a human's, as said above. Status left at `in-progress`: the review is done elsewhere,
+  and closing the unit is the human's
