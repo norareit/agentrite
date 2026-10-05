@@ -12,13 +12,15 @@ only when its option is given:
 
 | Harness    | Mode        | Command and arguments                                                         |
 |------------|-------------|-------------------------------------------------------------------------------|
-| `claude`   | interactive | `claude --agent R [--model M] [--dangerously-skip-permissions] P [X...]`      |
-| `claude`   | headless    | `claude --print --agent R [--model M] [--dangerously-skip-permissions] P [X...]` |
-| `opencode` | interactive | `opencode --agent R [--model M] [--auto] --prompt P [X...]`                   |
-| `opencode` | headless    | `opencode run --agent R [--model M] [--auto] P [X...]`                        |
+| `claude`   | interactive | `claude --agent R [--model M] [--dangerously-skip-permissions] [X...] -- P`   |
+| `claude`   | headless    | `claude --print --agent R [--model M] [--dangerously-skip-permissions] [X...] -- P` |
+| `opencode` | interactive | `opencode --agent R [--model M] [--auto] [X...] --prompt P`                   |
+| `opencode` | headless    | `opencode run --agent R [--model M] [--auto] [X...] -- P`                     |
 
 `X...` is what the caller gave after a `--`, as written and in that order. It was added to each row after the
-first implementation, on the human's word, as requirement 21.
+first implementation, on the human's word, as requirement 21, behind the prompt. After the second it moved in
+front of the prompt, again on the human's word: the prompt is last in every row, and the `--` in three of them is
+the command's own and is there in every run.
 
 The harness is started with `spawnSync` and `stdio: 'inherit'`, with the argument list as an array, so that no
 shell reads the prompt.
@@ -30,13 +32,13 @@ exist.
 **The usage of `run`**, for the human to read and correct before approving:
 
 ```text
-usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
                      [-- <harness arguments...>]
 
   <role>              planner | implementer | reviewer
   <harness>           claude | opencode
   <unit>              a directory of changes/, by its name or by the four digits its name opens with
-  [text...]           added to the prompt, after the unit
+  --prompt <text>     added to the prompt, after the unit, as it is written
   --model <id>        the harness's own id of a model, such as claude-sonnet-5-5 or openai/gpt-6.1-sol.
                       Without it the harness decides: the role's wrapper may pin one
   --headless          run without a session: the harness works on the prompt and ends
@@ -44,11 +46,12 @@ usage: agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permis
                       bypasses every check, and --auto for opencode, which approves what is not denied.
                       Meant for the sandbox
   -- <harness arguments...>
-                      given to the harness as written, after everything else it gets. The command reads
-                      none of them
+                      given to the harness as written, before the prompt. The command reads none of
+                      them
 ```
 
-The form takes two lines since requirement 21, the second starting under `<role>`.
+The form takes two lines since requirement 21, the second starting under `<role>`. Since the human's last change
+the unit stands with the other positions, and `--prompt` leads the options.
 
 The roles and the harnesses in it are read from the kit's lists, not written out.
 
@@ -61,7 +64,7 @@ two spaces and wrapped at 120 characters with `wrapWords`, and an empty line bet
 usage: agentrite init claude | opencode
        agentrite refresh claude | opencode
        agentrite roles [--json]
-       agentrite run <role> <harness> [--model <id>] [--headless] [--skip-permissions] <unit> [text...]
+       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
                      [-- <harness arguments...>]
 ```
 
@@ -229,6 +232,46 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
       `-- --allowedTools Read`: the agent still answers the prompt, so the prompt was not taken for a value
       (R21)
 
+What the human changed after the second implementation, which ends at `f136f75`. Requirements 2, 5, 12, 13, 17,
+21, 23 and 24 as they now read:
+
+- [ ] In `tests/agentrite-run.test.mjs`, change the tests of the arguments of `run`: `--prompt <text>` before,
+      between and after the three positions and as `--prompt=<text>`; its text returned as written, spaces and
+      words with a dash included; none given; the last of two; a `--prompt` with nothing after it, with an empty
+      text and with an option after it, each named as having no text; `--prompt=--x` taken; and a word beyond
+      the unit named as an argument the command does not take. Change the test of the usage of `run` to the
+      text above. See them fail (R2, R5, R12, R13, R23, R24)
+- [ ] Change the tests of the prompt: the unit alone, and the unit, an empty line and the text as written. Change
+      the tests of the harness's argument list to the table above: the prompt last in every row, the caller's
+      arguments in front of it, and the `--` of the command's own in the three rows that have one, with and
+      without arguments of the caller's. See them fail (R5, R9, R21)
+- [ ] Change `parseRunArgs`, `unitPrompt`, `harnessCommand`, the form and the usage of `run` in
+      `scripts/agentrite-run.mjs`, and what `scripts/agentrite.mjs` hands from the one to the other, until those
+      pass (R2, R5, R9, R12, R13, R21, R23, R24)
+- [ ] Change the tests of `run` as a command, and of the usage of every command in both test files, to the new
+      form: the arguments each fake got in each harness and mode, with `--prompt` and with arguments after the
+      `--`, an argument with a space in it as one; a word beyond the unit and a `--prompt` with no text print
+      what they are named as and the usage, with exit 2 and no fake started. See them pass, or fail and repair
+      the command (R5, R13, R14, R21)
+- [ ] In `README.md`, under "Running a role": the form with `--prompt`; the example of a run with text as
+      `--prompt "<text>"`; `--prompt` among the options, with that its text is one argument, given as written,
+      and how a text that opens with a dash is given; where the harness gets what follows a `--`, which is before
+      the prompt, and that the prompt is last; the resumed sessions with `--prompt` before the `--`; and without
+      the paragraph on text that holds a word with a dash, which no longer holds (R17)
+
+On the real harnesses, in the project of the earlier runs with the working copy packed and installed again. Each
+is recorded with what was seen, and one that shows requirement 21 or the README wrong stops the unit for the
+human:
+
+- [ ] Claude Code, headless: a first run with `--prompt` and `-- --session-id <a new uuid>`, and a second with
+      `--prompt` and `-- --resume <that uuid>`, which answers with the word the first was given, as the role
+      (R5, R17, R21)
+- [ ] OpenCode, headless: the same, with `-- --session <id>` on the second and the id from
+      `opencode session list` (R5, R17, R21)
+- [ ] Claude Code, headless, with `-- --allowedTools Read`: the agent answers the prompt (R21)
+- [ ] One session per harness on a pseudo-terminal, each with a `--prompt` and an argument after the `--`: the
+      session opens showing the unit and the text, and the agent answers (R5, R21)
+
 ## Verification
 
 - [x] `npm test` passes
@@ -237,6 +280,7 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 - [x] No line of a changed or new file is over 120 characters, and none holds an em dash
 - [x] After the tasks the human added: `npm test` passes, `npm run check-changes` exits 0 after the last commit,
       and no line of a changed file is over 120 characters or holds an em dash
+- [ ] After the tasks of the human's last change: the same three checks again
 
 ## Commit Points
 
@@ -253,3 +297,7 @@ with what was seen, and one that shows requirement 21 or the README wrong stops 
 - [x] `feature-0032 List the roles as JSON`: the tests, the rendering and the command
 - [x] `feature-0032 Describe the harness's arguments and the JSON listing`: the README
 - [x] `feature-0032 Record the runs that resume a session`: the record
+- [ ] `feature-0032 Give the text as --prompt, and the harness its prompt last`: the documents as changed
+- [ ] `feature-0032 Take the text as --prompt and put the prompt last`: the tests, the two scripts
+- [ ] `feature-0032 Describe --prompt and where the harness's arguments go`: the README
+- [ ] `feature-0032 Record the runs with the prompt last`: the record

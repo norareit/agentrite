@@ -228,3 +228,30 @@ timestamp: 2026-10-05T12:51:34Z
   the human's additions, so requirement 19 holds as it did. Every task and every check of the plan is ticked.
   The concerns of 14:18:03Z stand as they were, the one about a signal sent to the command alone among them.
   Status left at `in-progress`: the review is done elsewhere, and closing the unit is the human's
+- 2026-10-05T15:37:33Z [human] in the implementer's session, with the additions implemented up to `f136f75`, asked:
+  "Doesn't it make more sense to NOT have the -- arguments AFTER the prompt? The prompt should be the last part
+  IMO. I think we can assume anything AFTER the arguments that does NOT start with a dash, is the start of the
+  prompt?"; then, told that the value of an option such as `--resume` opens with no dash either: "What about
+  making the prompt an argument itself? --p "some prompt" ?"; then, on the proposal below: "go ahead and act as the
+  planner to make that change. Then implement it."
+- 2026-10-05T15:37:33Z [Claude Code, anthropic/claude-opus-5-5] in the same session, as the implementer answering, ran
+  five things by hand in the project of the earlier runs, each once, with Claude Code 2.1.289 and OpenCode 1.18.34:
+  * `claude --print --agent implementer --allowedTools Read <prompt>` ended with status 1 and "Input must be
+    provided either through stdin or as a prompt argument when using --print": the option took the prompt
+  * `claude --print --agent implementer --resume <id> <prompt>` answered the prompt
+  * `claude --print --agent implementer --allowedTools Read -- <prompt>` answered the prompt
+  * `opencode run --agent reviewer -- <prompt>` answered the prompt, as `reviewer`
+  * `claude --agent reviewer --allowedTools Read -- <prompt>`, a session on a pseudo-terminal, showed the prompt
+    and answered it
+  and proposed: the text as `--prompt`, and the harness's prompt last behind a `--`
+- 2026-10-05T15:37:33Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the same session, having read
+  `roles/planner.md`, changed `spec.md` and `plan.md`. The spec: requirements 2, 5, 12, 13, 17, 21, 23 and 24
+  changed, and none was renumbered or added. The text is the value of `--prompt`, given as written, and a word
+  beyond the unit is refused. The harness gets the caller's arguments before the prompt and the prompt last, behind
+  a `--` that the command adds in every run of Claude Code and of `opencode run`. Two decisions are replaced and
+  name the human, and one says what the implementation at `f136f75` does that this changes. Decided by the
+  planner and not asked: the name `--prompt` where the human wrote `--p`, that the last of two counts, that a
+  text opening with a dash is given as `--prompt=<text>`, and that the `--` is added also when the caller gave
+  no arguments. The plan has nine new tasks, unticked, four of them runs on the real harnesses, and four commit
+  points. The status stays `in-progress`: the human asked for the change and its implementation in one sentence,
+  and has not read these documents

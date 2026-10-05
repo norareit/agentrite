@@ -43,6 +43,24 @@ on to the harness, and `agentrite roles --json`. They are requirements 20 to 24,
 14 and 17 changed with them. No requirement was renumbered, so the record's entries name what they named. What
 the first implementation does that these change is said under Decisions.
 
+### What the human changed after the second implementation
+
+On 2026-10-05, with the additions above implemented on the unit's branch, up to `f136f75`, in the implementer's
+session. First: "Doesn't it make more sense to NOT have the -- arguments AFTER the prompt? The prompt should be the
+last part IMO." The implementer answered that an option of a harness that takes several values, placed before the
+prompt, takes the prompt for one, and showed a run of Claude Code that failed so. Then: "What about making the
+prompt an argument itself? --p "some prompt" ?" The implementer found that Claude Code has no option for a prompt,
+that both harnesses take a `--` in front of the prompt, and proposed both together. The human: "go ahead and act
+as the planner to make that change. Then implement it."
+
+So two things changed, both the human's:
+
+* The text is an option of the command, `--prompt <text>`, and no longer the words after the unit
+* The harness gets the caller's arguments before the prompt, and the prompt last
+
+Requirements 2, 5, 12, 13, 17, 21, 23 and 24 changed with them, and none was renumbered. What the second
+implementation does that these change is said under Decisions.
+
 ### What was found while planning
 
 On `master` at `9f03a06`, with Claude Code 2.1.289 and OpenCode 1.18.34 on the host.
@@ -74,11 +92,15 @@ On `master` at `9f03a06`, with Claude Code 2.1.289 and OpenCode 1.18.34 on the h
 * That the model pinned in a wrapper is the one a harness uses when it is started with `--agent` and no model.
   Not run in either harness
 * What Claude Code does with `--agent` and a name it has no agent for. Not run
-* That each harness takes its own options after the prompt, as requirement 21 places them, and that an option
-  of a harness that takes several values, placed there, leaves the prompt alone. Read from each harness's help,
-  not run
-* That a session is resumed as the README is to show it: in Claude Code by a `--session-id` on the first run and
-  a `--resume` on the next, and in OpenCode by a `--session`, each with the role given again as the agent. Not run
+* That each harness takes its prompt last, as requirement 21 places it: after a `--` in Claude Code and in
+  `opencode run`, and as the value of `--prompt` in a session of OpenCode, with the caller's arguments in front.
+  Run before this was written, once each and with a harness started by hand, not by the command: Claude Code
+  headless and in a session on a pseudo-terminal, each with `--allowedTools Read -- <prompt>`, and
+  `opencode run --agent reviewer -- <prompt>`. All three answered the prompt. Not run: a session of OpenCode
+  with arguments of the caller's before its `--prompt`
+* That a session is resumed with the caller's arguments in that place: in Claude Code by a `--session-id` on the
+  first run and a `--resume` on the next, and in OpenCode by a `--session`. With the arguments after the prompt
+  it was run and worked, as the record's entry of 15:21:47Z says. With them before the prompt it is not run
 * How each harness ends when it is interrupted, and whether an interactive session of either leaves the terminal
   as it found it when it is started by a command that waits for it
 
@@ -92,16 +114,18 @@ The roles:
 
 Running a role:
 
-2. `agentrite run <role> <harness> <unit> [text...]` starts the harness in the directory it is run from, which is
-   the project root, as that role. The options are `--model <id>`, `--headless` and `--skip-permissions`, and each
-   may stand anywhere among the arguments before a `--`. What a `--` does is in requirement 21
+2. `agentrite run <role> <harness> <unit>` starts the harness in the directory it is run from, which is the
+   project root, as that role. The options are `--prompt <text>`, `--model <id>`, `--headless` and
+   `--skip-permissions`, and each may stand anywhere among the arguments before a `--`. What a `--` does is in
+   requirement 21
 3. `<role>` is one of the roles `agentrite roles` prints, and `<harness>` is one of the harnesses `init` takes
 4. `<unit>` names one directory of `changes/`: by its name, by its name after `changes/` and with or without a
    closing slash, or by the four digits its name opens with. The command stops, says so on standard error, exits 1 and
    starts nothing when `changes/` holds no such directory, and names the directories when the digits open more
    than one
-5. The harness gets the role as its agent, and one prompt: `The unit is changes/<directory>/.`, and, when text is
-   given, an empty line and the words of the text joined by single spaces
+5. The harness gets the role as its agent, and one prompt: `The unit is changes/<directory>/.`, and, when
+   `--prompt <text>` is given, an empty line and the text as it is written. The text is one argument. When
+   `--prompt` is given more than once, the last one counts
 6. With `--model <id>` the harness gets the id as it is written, as its own model option. Without it the harness
    gets no model, and decides by itself
 7. Without `--headless` the harness is started with a session, on the terminal the command was run on. With it,
@@ -123,8 +147,9 @@ The usage:
     usage holds the form of requirement 2 with the `--` of requirement 21, the roles, the harnesses, what a unit may
     be given as, each option with what it does, and what follows a `--`. It says of `--skip-permissions` which flag
     each harness gets, and that it is meant for the sandbox
-13. A role or a harness the command does not know, a missing unit, an option it does not know and a `--model`
-    with no id are each named on standard error, followed by the usage of `run`, with exit 2 and nothing started
+13. A role or a harness the command does not know, a missing unit, an argument beyond the unit, an option it
+    does not know, a `--model` with no id and a `--prompt` with no text are each named on standard error,
+    followed by the usage of `run`, with exit 2 and nothing started
 14. `agentrite` with no command, and with one it does not know, prints the usage of every command, `roles` and `run`
     among them, with the `--json` of `roles` and the `--` of `run`, and exits 2 as today. `init` and `refresh` take
     what they took and print what they printed
@@ -141,8 +166,9 @@ The package and the documents:
 17. The README describes `roles` and `run`: the form, a unit run by its number in each harness, the two modes,
     that the harness's own model id is what `--model` takes, that a pinned model is what a run without `--model`
     is expected to use, what `--skip-permissions` gives each harness and that it belongs in the sandbox, and that
-    the command needs the wrappers as `refresh` leaves them, what follows a `--` and where the harness gets it,
-    with a session resumed in each harness as its example, and `roles --json` with what it prints. Where the
+    the command needs the wrappers as `refresh` leaves them, `--prompt` and what it adds, what follows a `--`
+    and where the harness gets it, with a session resumed in each harness as its example, and `roles --json`
+    with what it prints. Where the
     README describes the wrappers it says that
     the OpenCode ones are both a primary agent and a subagent, and why
 18. `npm pack --dry-run` lists every file the two commands need, and nothing of `tests/`
@@ -156,16 +182,21 @@ What the human added during the implementation:
     the kit holds them, an object with the role's `name` and its `description`. The description is the one the
     wrappers hold, as one line. Without `--json` the command prints what requirement 1 says
 21. In `agentrite run`, a `--` ends the command's own arguments. Every argument after it is given to the harness
-    as it is written and in the order given, after everything requirements 5 to 8 give the harness, the prompt
-    included. The command reads none of them: it does not look whether one repeats, contradicts or undoes an
-    argument of its own. With no `--`, or with nothing after it, the harness gets nothing more
+    as it is written and in the order given, after the agent, the model and the permission flag that
+    requirements 5 to 8 give, and before the prompt. The prompt is the last argument the harness gets. Claude
+    Code in both modes, and OpenCode without a session, get a `--` of the command's own straight before it,
+    whether or not the caller gave arguments; a session of OpenCode gets the prompt as the value of its
+    `--prompt`. The command reads none of the caller's arguments: it does not look whether one repeats,
+    contradicts or undoes an argument of its own. With no `--`, or with nothing after it, the harness gets
+    nothing more
 22. The role, the harness and the unit stand before the `--`. One that is missing there is named as requirement
     13 says, whatever follows the `--`
 23. A word before the `--` that opens with a dash is read as an option of the command, and is refused as
-    requirement 13 says when the command has no such option. Text holds such a word only inside an argument
-    that opens with another word, as a shell's quotes make it
-24. The usage of `roles` holds `--json`, and the usage of `run` holds the `--` and says that what follows it is
-    given to the harness as written
+    requirement 13 says when the command has no such option. The text of `--prompt` may hold any word. A text
+    that itself opens with a dash is given as `--prompt=<text>`: after `--prompt` as an argument of its own,
+    such a text counts as no text
+24. The usage of `roles` holds `--json`, and the usage of `run` holds `--prompt`, the `--`, and that what follows
+    the `--` is given to the harness as written, before the prompt
 
 ## Decisions
 
@@ -219,15 +250,32 @@ What the human added during the implementation:
 * **`--` is the marker, and the text loses it. The planner's.** It is what `npm run`, `docker run` and the
   sandbox's own wrapper use to hand arguments on, so it is what a caller tries first. The first implementation
   gave `--` another meaning, from this spec as it stood: it ended the options, so that text could hold a word
-  that opens with a dash. A marker cannot mean both. Text with such a word is rare and has another way, one
-  quoted argument, and arguments for the harness have none. Weighed and not taken: an option of the command's
-  own that is repeated for each argument, which reads badly and has to be told apart from the harness's options
-  by eye
-* **The harness's arguments come last, after the prompt. The planner's.** Both harnesses have options that take
-  several values, such as the tools Claude Code is allowed. Placed before the prompt, such an option takes the
-  prompt for one of its values, and the run then has no prompt and says nothing of it. After the prompt, what
-  the caller gives can take nothing of the command's. It is listed as not established that both harnesses read
-  options there, and the plan runs it
+  that opens with a dash. A marker cannot mean both. Text with such a word is rare and has another way, which
+  since the human's last change is the value of `--prompt`, and arguments for the harness have none. Weighed
+  and not taken: an option of the command's own that is repeated for each argument, which reads badly and has
+  to be told apart from the harness's options by eye
+* **The prompt is the harness's last argument, behind a `--`, and the caller's arguments stand before it. The
+  human's, in place of the planner's.** The planner had the caller's arguments after the prompt, because both
+  harnesses have options that take several values, such as the tools Claude Code is allowed, and such an option
+  before the prompt takes the prompt for one of its values. That is so: `claude --print --agent implementer
+  --allowedTools Read <prompt>` ended with "Input must be provided either through stdin or as a prompt
+  argument". The human wants the prompt last all the same, as a reader of a command line expects it. A `--` in
+  front of the prompt gives both: it ends the harness's options, so none of them reaches the prompt. The
+  command adds it in every run, so that there is one argument list per harness and mode and not two. A session
+  of OpenCode needs none, since its prompt is the value of an option. The cost: a caller cannot hand the
+  harness a bare word as a second prompt or a path, only options and their values. Nobody asked for that
+* **The text is an option, `--prompt`, and not the words after the unit. The human's, in place of an earlier
+  choice of the human's.** Asked while planning, the human chose a unit with optional text after it. With the
+  `--` taken for the harness's arguments, text that held a word with a dash had to be quoted as one argument
+  that opens with another word, which is a rule nobody guesses. As the value of an option the text is one
+  argument that holds whatever it holds, and the command line reads as what it is: three positions, options,
+  and the harness's arguments. The human wrote `--p`. It is `--prompt`: OpenCode names its own so, and `-p` is
+  Claude Code's `--print`, which is what `--headless` gives it, so a short form would read as the opposite.
+  The words of a text are no longer joined by the command, because a shell's quotes already make them one
+  argument
+* **What the second implementation does that this changes.** At `f136f75` the words after the unit are the text,
+  and what follows the `--` goes to the harness after the prompt. The usages, the README and the tests hold
+  that. The plan has tasks that change those tests first. `roles --json` is not touched
 * **The command reads nothing of what it passes on. The planner's.** A caller that gives `--model` twice, once
   as the command's and once after the `--`, gets what the harness makes of that. A list of the harness's
   arguments that the command refuses would be a list the kit has to keep true for two harnesses and every
