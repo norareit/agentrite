@@ -136,10 +136,10 @@ The role files:
 
 The process:
 
-- [ ] Change the four places of `process.md` as the approach gives them, and read "Features", "Bugs" and
+- [x] Change the four places of `process.md` as the approach gives them, and read "Features", "Bugs" and
       "Tasks" against requirement 10. A sentence there that no longer holds is changed and logged in `record.md`
       (R1, R7, R8, R9, R10)
-- [ ] In `templates/changes/record.md`, the status line holds the five statuses in order. In
+- [x] In `templates/changes/record.md`, the status line holds the five statuses in order. In
       `templates/changes/spec.md`, "What the planner would add" becomes "What the specifier would add" (R7, R11)
 
 The sandbox:
@@ -186,6 +186,6 @@ The documents:
 - [x] `feature-0033 Write a wrapper for the specifier`: the tests, the fixtures, the list of roles and the
       project template
 - [x] `feature-0033 Divide the planner's role file`: the four role files, with the accounting logged
-- [ ] `feature-0033 Specify on master and plan before the work`: `process.md` and the two change templates
+- [x] `feature-0033 Specify on master and plan before the work`: `process.md` and the two change templates
 - [ ] `feature-0033 Cut a unit's branch from master on its first run`: the wrapper and its tests
 - [ ] `feature-0033 Describe specifying and the unit's branch`: the README

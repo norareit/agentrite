@@ -62,7 +62,8 @@ timestamp: 2026-10-05T13:45:27Z
   since is not known here. Read `process.md` and `roles/implementer.md` of the release 3.0.0 in `node_modules`, and
   this unit's spec, plan and record whole. `npm test` on `9f1c083` before any change: 337 tests, 337 passed. Status
   `in-progress`
-- 2026-10-05T17:11:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the plan's first two groups of tasks.
+- 2026-10-05T17:11:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the plan's first two groups of
+  tasks.
   * The wrappers, `542b1f5`. The tests and the fixtures first: `npm test` reported 339 tests, 16 failed. With the
     specifier in the list of roles, the three descriptions and the template, 339 passed. The new test of `refresh`
     builds the wrappers of the release before from the two descriptions 3.0.0 wrote, which it holds as that release
@@ -94,3 +95,15 @@ timestamp: 2026-10-05T13:45:27Z
     specifier's "Handing over". The implementer's file changed in the three places the plan names and the
     reviewer's in one sentence. `npm test` on the tree with the four role files: 339 passed. No test reads a role
     file's text
+- 2026-10-05T17:12:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed `process.md` in the four places the
+  plan names, and the two change templates. Beyond what the plan's approach spells out:
+  * The paragraph on the status is two paragraphs now, the second opening at "Set `implemented` only after", and
+    that second one is wrapped anew. Its words are as they were
+  * Of the paragraph that opened "Work on a branch", the sentence "Commit the change documents first, then the
+    implementation." is kept as it was, in the paragraph on where each document is committed. The plan says the
+    paragraph is replaced and names only the freeze sentence as staying; the requirements say nothing against the
+    sentence, and it still holds on the unit's branch
+  * In "Roles", "A session that plans, then implements, then reviews" became "A session that specifies, then plans,
+    then implements, then reviews"
+  * "Features", "Bugs" and "Tasks" were read against requirement 10 and are unchanged: each sentence still holds
+  `npm test`: 339 passed. No test reads `process.md` or the change templates

@@ -69,7 +69,7 @@ Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`.
 `templates/changes/`.
 
 * `spec.md` states what should be true: context, requirements, decisions with rationale, non-goals, and what the
-  planner left out as beyond the request. It has no file paths or task order
+  specifier left out as beyond the request. It has no file paths or task order
 * `plan.md` states how the work will be done: approach, files, ordered tasks, tests first, and commit points
 * `record.md` states what happened: frontmatter, timestamped status transitions, and amendments. Every log and
   amendment entry opens with the same UTC timestamp format as the frontmatter, then names the harness and
@@ -79,13 +79,16 @@ Use the frontmatter in `templates/changes/record.md`. Its `kind`, `status`, and 
 `supersedes` names an older unit when applicable. The timestamp is an ISO 8601 instant in UTC ending in `Z`, so that
 sorting it lexicographically orders the whole set chronologically.
 
-Status progresses from `draft` to `approved` to `in-progress` to `implemented`. Set `implemented` only after the human
-has decided every blocking finding the review returned and every task in `plan.md` is ticked. What blocks is defined
-in [`roles/reviewer.md`](roles/reviewer.md), and a limitation already recorded as a decision does not. Remove a task
-that will not be done, recording the reason in `record.md`, rather than leaving its box open. Once implemented,
-`spec.md` and `plan.md` are frozen. Log later small corrections under `## Amendments` in `record.md`, with the
-timestamp, change, and reason. For a correction that would make the original record misleading, create a new unit and
-set `supersedes:` to the old directory.
+Status progresses from `draft` to `approved` to `planned` to `in-progress` to `implemented`. `approved` says that the
+human approved what the specifier wrote. `planned` says that the planner is done with the unit: its plan is written,
+or the planner logged that it needs none. A task goes from `approved` to `in-progress`, and is never `planned`.
+
+Set `implemented` only after the human has decided every blocking finding the review returned and every task in
+`plan.md` is ticked. What blocks is defined in [`roles/reviewer.md`](roles/reviewer.md), and a limitation already
+recorded as a decision does not. Remove a task that will not be done, recording the reason in `record.md`, rather
+than leaving its box open. Once implemented, `spec.md` and `plan.md` are frozen. Log later small corrections under
+`## Amendments` in `record.md`, with the timestamp, change, and reason. For a correction that would make the original
+record misleading, create a new unit and set `supersedes:` to the old directory.
 
 Run the change check before submitting work. The kit ships it as `scripts/check-changes.mjs`, and each project wires
 it to a command of its own. It compares the committed work on the current branch with `master` and rejects changes to
@@ -97,8 +100,18 @@ The reviewer saves its complete findings in the ignored `.reviews/<unit-director
 of each finding, not the full review, in `record.md`: as timestamped log entries while the unit is not frozen, and
 as amendments once it is.
 
-Work on a branch, never directly on `master`. Commit the change documents first, then the implementation.
-Work committed straight to `master` skips the freeze check entirely.
+The spec is written when the human wants the unit described, and any number of units may be `draft` or `approved`
+at one time. The plan is written when the unit is next to be built and not before, and nobody approves it: once the
+unit is `planned`, the implementer may begin.
+
+What the specifier writes, and the approval, are committed on `master`: a unit's `spec.md` and `record.md` while its
+status is `draft` or `approved`. Such a commit holds nothing but that unit's own documents. Everything after the
+approval is done on the unit's branch and never on `master`: the plan, the implementation, the record's further
+entries, and a correction of the spec. The branch is cut from the head of `master` when the planner starts, or the
+implementer for a task, and not earlier. Its name is the prefix of the unit's commits and its directory name, as
+`feature-0033-specifier-role`, with `bugfix` for a bug and `task` for a task. A unit run of the sandbox cuts it, and a
+role run on the host cuts it itself. Commit the change documents first, then the implementation. Work committed
+straight to `master` skips the freeze check entirely, and that holds for the specifier's commits too.
 
 ### Features
 
@@ -115,18 +128,20 @@ Tasks are small changes and may need only a record.
 
 ## Roles
 
-Three roles do the work in `changes/`. The planner writes the documents a unit's kind requires, the implementer
-builds it and keeps those documents true, and the reviewer judges the result against them.
+Four roles do the work in `changes/`. The specifier writes what a unit must make true, the planner writes the plan
+of an approved unit, the implementer builds it and keeps those documents true, and the reviewer judges the result
+against them.
 
-Before planning, implementing or reviewing, read the matching file:
+Before specifying, planning, implementing or reviewing, read the matching file:
 
+* [`roles/specifier.md`](roles/specifier.md)
 * [`roles/planner.md`](roles/planner.md)
 * [`roles/implementer.md`](roles/implementer.md)
 * [`roles/reviewer.md`](roles/reviewer.md)
 
 Read it at the point the role is taken on, whether or not the tool running the session can delegate to a separate
-agent. A session that plans, then implements, then reviews reads each file in turn as it reaches that stage. Work that
-fits none of the three roles follows this document and the project's `AGENTS.md` alone.
+agent. A session that specifies, then plans, then implements, then reviews reads each file in turn as it reaches that
+stage. Work that fits none of the four roles follows this document and the project's `AGENTS.md` alone.
 
 ## Code
 

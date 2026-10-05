@@ -1,6 +1,6 @@
 ---
 kind: [feature | bug | task]
-status: [draft | approved | in-progress | implemented]
+status: [draft | approved | planned | in-progress | implemented]
 timestamp: [YYYY-MM-DDTHH:MM:SSZ]
 supersedes: [change directory name]
 ---
