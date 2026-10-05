@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-04T23:56:09Z
 ---
 
@@ -269,6 +269,18 @@ timestamp: 2026-10-04T23:56:09Z
   tree with only the human's untracked tarball. Could not verify the historical elapsed time or the implementer's
   scratch rollback experiment. No empty-cache build, failure recovery, deployment, publication, push, resumed
   release session, harness, login, prompt, or unit run was exercised
+- 2026-10-05T00:43:37Z [human] on the delta review's P1, which does not block: "Idc about it tbh. So for all I
+  care we can mark this implemented."
+- 2026-10-05T00:43:37Z [Claude Code, anthropic/claude-opus-5-5] as the main session, on the human's word, closed the
+  unit. P1 is declined by the human: the plan keeps the command without `--rebuild` and its "Steps 1 and 3 are
+  unchanged", and the amendments below say what holds in their place. The delta review returned no blocking
+  finding, the human decided S1 of the full review, and no box in `plan.md` is open, counted with `grep`. On the
+  commit that holds the reviewer's entry, `npm test` reported 286 tests, 286 passing, and
+  `npm run check-changes` exited 0; this commit changes this record only, and the change check was run on it
+  once more. Not tried by anyone, as the entries above say: step 6 on `master` with a commit that has no unit's
+  prefix, an agent that resumes after a deploy, a command that fails and the putting back, a build from an empty
+  cache, and steps 2, 3, 4, 5 and 7 as they now read, which the next release is the first to meet. Not merged
+  into `master` and not pushed: both are the human's. Status `implemented`
 
 ## Amendments
 
