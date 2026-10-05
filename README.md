@@ -651,7 +651,8 @@ The kit is also a devDependency of itself, installed from a release by its URL l
 `node_modules/@ritenoar/agentrite/` exists here too. `AGENTS.md` sends agents to the process and roles there, which
 means work on the kit follows the released instructions rather than the working copy it may be changing. Changes are
 made at the repository root, never under `node_modules`, and the installed copy moves to a newer release only by a
-deliberate update, as described above.
+deliberate update, as described above. A release makes that update as one of its own steps, which
+[`RELEASING.md`](RELEASING.md) gives.
 
 The repository also runs the kit's sandbox, from the installed release, with `./agent.sh`, as any project does. Work
 on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's: a change
@@ -691,7 +692,8 @@ A release is made with the `/release` skill, in a Claude Code session on the hos
 file holds every step, and a human, or an agent in another harness, follows it directly.
 
 In short: an agent sees that the suite passes and drafts the release notes in `CHANGELOG.md`; the human reads them,
-corrects them and picks the version; the agent commits the notes; and the human runs `npm version` and
-`./deploy.sh`, and pushes `master` and the tag.
+corrects them and picks the version; the agent commits the notes; the human runs `npm version` and `./deploy.sh`;
+the agent moves this repository's own dependency on the kit to the release; and the human pushes `master` and the
+tag.
 
 Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.

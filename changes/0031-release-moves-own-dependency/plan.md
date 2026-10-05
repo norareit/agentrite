@@ -303,7 +303,7 @@ the root, which is the human's.
   of this plan and not retyped. Compare with `git diff master -- RELEASING.md` against the list of differences
   the Approach gives: every changed line is on that list, steps 1 and 3 show no change, and every paragraph and
   command of today's step 5 is in step 5 or step 7 (R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11)
-- [ ] In the README's "Releasing", replace the paragraph that opens "In short" with the Approach's, and in "The
+- [x] In the README's "Releasing", replace the paragraph that opens "In short" with the Approach's, and in "The
   kit's own copy of the kit" add the Approach's sentence to the end of the first paragraph. See with
   `git diff master -- README.md` that nothing else changed and no sentence was removed (R13)
 - [ ] With everything above committed, on a host with Docker, follow step 6 of the new `RELEASING.md`, reading it
@@ -335,6 +335,6 @@ the root, which is the human's.
 
 - [x] The test and the skill's description
 - [x] `RELEASING.md`
-- [ ] The README
+- [x] The README
 - [ ] The move to 3.0.0, as step 6 gives it
 - [ ] The record
