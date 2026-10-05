@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-05T12:51:34Z
 ---
 
@@ -351,3 +351,14 @@ timestamp: 2026-10-05T12:51:34Z
   (337 passed), `npm run check-changes` (exit 0) and `git diff --check 22ae325..HEAD`, and verified the new
   process-group signal guidance with an in-memory substitute harness. The historical OpenCode smoke-test
   rerun and its terminal observations were not independently verified, nor real-harness signal handling
+- 2026-10-05T16:53:37Z [human] after the delta review, said: "Review is okay now. You can mark this as implemented and
+  make sure everything is commited on the branch."
+- 2026-10-05T16:53:37Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word, closed the
+  unit. The full review returned P1 and C1, neither blocking: P1 was applied, and the human decided C1 as a
+  known limit. The delta review returned no finding. No box in `plan.md` is open, counted with `grep`. On
+  `39e9339`, the commit that holds the reviewer's entry, `npm test` reported 337 tests, 337 passed, and
+  `npm run check-changes` exited 0; this commit changes this record only, and the change check was run on it once
+  more. Not tried by anyone, as the entries above say: any run inside the sandbox, `--skip-permissions` on a real
+  harness, the planner, macOS, a session on a terminal a human sat at, and a signal to a real harness. Open from
+  the entry of 14:18:03Z and answered nowhere: whether Claude Code asks its question about trust in a unit run's
+  new clone. Not merged into `master` and not pushed: both are the human's. Status `implemented`
