@@ -181,9 +181,9 @@ What does not change:
   human's word. The word is the trigger and not the proof: when the tarball is not served, `npm install` fails
   and the step stops by requirement 8
 * **0028's ending changes: the agent names two commands after the notes, and the push after the move. The
-  planner's, and the human's since: "0028 has been superseded by 0031. So be it."** For 0028 the human said: "pushing master and the tag should be
-  what the skill says at the end. Basically: run npm version [with the correct type], run ./deploy.sh and push
-  master with tags." The push is still what the agent says at the end, and it still runs none of the three. What
+  planner's, and the human's since: "0028 has been superseded by 0031. So be it."** For 0028 the human said:
+  "pushing master and the tag should be what the skill says at the end. Basically: run npm version [with the
+  correct type], run ./deploy.sh and push master with tags." The push is still what the agent says at the end, and it still runs none of the three. What
   changes is that the three are no longer told in one breath. 0028 is frozen and keeps its text; this unit is
   where the change is found
 * **The step reads its version from `package.json`, and needs no session before it. The planner's.** The agent
