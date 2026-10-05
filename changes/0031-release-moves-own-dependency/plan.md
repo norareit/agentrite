@@ -321,15 +321,15 @@ the root, which is the human's.
 
 ## Verification
 
-- [ ] `npm test` passes, with the tests of `tests/release.test.mjs` among them (R12, R14)
-- [ ] `git diff master --stat -- AGENTS.md deploy.sh process.md roles templates scripts container .opencode` is
+- [x] `npm test` passes, with the tests of `tests/release.test.mjs` among them (R12, R14)
+- [x] `git diff master --stat -- AGENTS.md deploy.sh process.md roles templates scripts container .opencode` is
   empty (R15)
-- [ ] `npm pack --dry-run` lists the same files as on `master`, compared as lists (R15)
-- [ ] `git diff master -- package.json` shows the one URL, now the tarball of 3.0.0, and
+- [x] `npm pack --dry-run` lists the same files as on `master`, compared as lists (R15)
+- [x] `git diff master -- package.json` shows the one URL, now the tarball of 3.0.0, and
   `node_modules/@ritenoar/agentrite/package.json` says 3.0.0 (R16)
-- [ ] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] `git status --short` still shows `ritenoar-agent-kit-1.0.3.tgz` as untracked, and nothing of it is committed
+- [x] No line of the files this unit adds or changes is longer than 120 characters, and none holds an em dash
+- [x] `npm run check-changes` passes on the committed branch
+- [x] `git status --short` still shows `ritenoar-agent-kit-1.0.3.tgz` as untracked, and nothing of it is committed
 
 ## Commit Points
 

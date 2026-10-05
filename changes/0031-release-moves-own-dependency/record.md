@@ -128,5 +128,23 @@ timestamp: 2026-10-04T23:56:09Z
   * A difference from what the main session asked: it asked for a `Co-Authored-By` line at the end of each commit
     message. The process says "Do not add `Co-Authored-By` to commits", so the implementer's commits carry none.
     The four commits before them on this branch carry one. Whether to keep or remove those is the human's
+- 2026-10-05T00:12:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the plan's verification on
+  the committed tree at `7a0fe34`. The commit of this entry changes only this record and the plan's ticks.
+  * `npm test`: 286 tests, 286 passed, the six of `tests/release.test.mjs` among them
+  * `git diff master --stat -- AGENTS.md deploy.sh process.md roles templates scripts container .opencode` is
+    empty
+  * `npm pack --dry-run --json` lists 25 files, and the sorted list of paths is the same as the one it gives in
+    an export of `master` made with `git archive`. The sizes and the hashes were not compared: `package.json` and
+    the README differ, as the unit means them to
+  * `git diff master -- package.json` shows the one line, the URL of the tarball of 3.0.0, and
+    `node_modules/@ritenoar/agentrite/package.json` says 3.0.0
+  * No line of the files `git diff master --name-only` names is longer than 120 characters, and none holds an em
+    dash, with one exception: `package-lock.json`, which npm writes, has five lines over 120, all `resolved` URLs
+    of the registry, none of them changed by this unit, and five on `master` too
+  * `npm run check-changes` exited 0 on the committed branch, with the check of release 3.0.0
+  * `git status --short` shows `ritenoar-agent-kit-1.0.3.tgz` as untracked and nothing else, and `git ls-files`
+    names no tarball
+  Every task and every check of the plan is ticked. Status left at `in-progress`: the review is done elsewhere,
+  and closing the unit is the human's
 
 ## Amendments
