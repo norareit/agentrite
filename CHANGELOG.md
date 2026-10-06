@@ -5,6 +5,95 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 4.0.0
+
+### What changed
+
+* There are four roles where there were three. A new role, the specifier, writes what a unit must make true: the
+  spec of a feature or a bug, or the record of a task. Its file, `roles/specifier.md`, holds what the planner's
+  held on choosing the kind, writing a task record and writing the spec. The planner keeps its name and writes
+  the plan only, for a unit the human approved, against the tree as it is on the unit's branch. It never changes
+  the spec: where the spec is unclear or no longer fits the tree, it stops and the unit goes back to the specifier
+  and to the human (0033)
+* A status `planned` stands between `approved` and `in-progress`. `approved` says that the human approved what
+  the specifier wrote, and `planned` that the planner is done: the plan is written, or the planner logged that a
+  bug needs none. Nobody approves the plan. A task has no plan, is never `planned`, and goes from `approved` to
+  `in-progress`. The implementer builds a planned unit, and stops at a feature or a bug that is `approved` and
+  not yet `planned` (0033)
+* `process.md` says when each document is written and where it is committed. A spec is written when the human
+  wants the unit described, and any number of units may wait as `draft` or `approved`. A plan is written when
+  the unit is next to be built and not before. What the specifier writes, and the approval, are committed on
+  `master`, in commits that hold nothing but that unit's own documents. Everything after the approval is done on
+  the unit's branch, which is cut from the head of `master` when the planner starts, or the implementer for a
+  task, and is named `feature-`, `bugfix-` or `task-` and the unit's directory name (0033)
+* `./agent.sh <number>` cuts that branch. Given a number that no local branch holds, the wrapper looks at
+  `changes/` as `master` holds it, cuts a local branch for the one unit there whose directory opens with the
+  number and a dash, says on standard error what it cut and at which commit, and goes on as for a unit whose
+  branch was there. Nothing is checked out and no branch that exists is moved. The README's "Working on a clone"
+  says what it refuses (0033)
+* `agentrite roles` lists the roles the kit has, each with the description its wrappers hold, and
+  `agentrite roles --json` prints the same for a script, as an object with one key, `roles` (0032)
+* `agentrite run <role> <harness> <unit>` starts Claude Code or OpenCode as a role, for one unit of `changes/`
+  given by its name or its four digits, from the project root. `--prompt <text>` adds text to the prompt,
+  `--model <id>` passes the harness's own id of a model on, `--headless` runs the harness without a session, for
+  a script, and `--skip-permissions` gives Claude Code `--dangerously-skip-permissions` and OpenCode `--auto`.
+  What follows a `--` is given to the harness as written, before the prompt, which is how a session is resumed.
+  The command exits with the harness's status. It starts no sandbox: it runs the harness where it is run, on the
+  host or inside the sandbox. The README has a new section, "Running a role" (0032)
+* The OpenCode wrappers are written with `mode: all` where they held `mode: subagent`, so that a role is both a
+  primary agent, which is what OpenCode takes on its command line, and a subagent (0032)
+* The wrappers of the planner and the implementer hold new descriptions, for what the two roles do now, and the
+  template of a project's `AGENTS.md` and the two change templates name the specifier and `planned` (0033)
+* The package holds 27 files, two more than 3.0.0: `roles/specifier.md` (0033) and `scripts/agentrite-run.mjs`
+  (0032)
+* Not in the package: the step of `RELEASING.md` by which a release moves the kit repository's own dependency to
+  itself, and that repository's dependency on release 3.0.0 (0031)
+
+### Worth knowing when you update
+
+* Run `npx agentrite refresh claude opencode` after the install. It writes the specifier's wrapper for each
+  harness, and refreshes the planner's and the implementer's for both and the reviewer's for OpenCode. A pinned
+  model is kept, and a key a project added to a wrapper by hand is removed, as before. This was tested with
+  wrappers the kit's suite builds as 3.0.0 wrote them, not in a project that holds them (0032, 0033)
+* The planner no longer writes a spec. Whoever dispatched the planner with a request now dispatches the
+  specifier, and the planner, given a unit that is not `approved`, has nothing to plan from (0033)
+* A unit that is under way needs a look. A feature or a bug that is `approved`, with a plan the human approved
+  with it, is refused by the implementer as not planned: set its status to `planned` in its `record.md`, with a
+  log entry that says so. A unit that is `in-progress` goes on as it was, and a unit that is `implemented` is not
+  touched. A draft that waits on a branch of its own stays where it is: nothing moves it to `master` (0033)
+* No human reads a plan before the work begins. Every plan the kit's own repository had so far was read and
+  corrected by its human first, so that an agent writes a usable plan from a spec alone was not established. What
+  the approval is meant to approve has to be in the spec (0033)
+* The specifier commits on `master`, which the process forbade before for every commit. A project whose `master`
+  takes no direct commit cannot follow that as written. Nothing checks that such a commit holds only the unit's
+  own documents: the change check compares a branch with `master`, and does not see `master` itself (0033)
+* `./agent.sh <number>` now makes a local branch where it refused before, when `master` holds a unit of that
+  number and no branch does. It is cut from the local `master`, so a `master` that is behind its remote gives a
+  branch that is behind too. A run that cut the branch and committed nothing leaves it where it was cut, and a
+  later run plans on that older tree without saying so: remove such a branch by hand, with `git branch -d`. A unit
+  given by a branch's name that does not exist is refused as before. The cutting was tested against a real git
+  repository and a fake Docker, on Linux. A first unit run of a real unit, on a real Docker, was not made (0033)
+* The image is as it was: no file that goes into it changed, so the update asks for no rebuild (0032, 0033)
+* A project's own `AGENTS.md` is not touched, and still names three roles and links three files. The specifier
+  reaches the project through `process.md` and through its wrapper. Add the fourth link by hand where the file
+  should name it (0033)
+* In OpenCode the roles are now also offered among the primary agents of its own interface. They were seen as
+  subagents and as agents of the command line with OpenCode 1.18.34, and what the interface lists was not looked
+  at (0032)
+* `agentrite run` starts nothing when the role's wrapper is missing or is not what `refresh` would leave, a
+  pinned model aside, and names the file and the `refresh` that repairs it. So `refresh` comes before the first
+  `run`, as the first line above has it (0032)
+* `agentrite run` passes no signal on. A signal sent to the command alone, as `kill <pid>` does, ends the command
+  and leaves the harness running. A caller that stops a run signals the command's process group. That was tried
+  with a stand-in for the harness, not with a real one (0032)
+* What was tried of `agentrite run`, and what was not. Both harnesses were run as a role, headless and in a
+  session, with a pinned model, with `--model` over the pin, and with a session resumed after a `--`, with Claude
+  Code 2.1.289 and OpenCode 1.18.34, on the host, on Linux, the sessions on a terminal a script drove. Not tried:
+  any run inside the sandbox, `--skip-permissions` on a real harness, the specifier and the planner as the role,
+  and macOS. In a directory Claude Code was never trusted in, a session opens on its question about trust and
+  ends with status 1 when that is declined. Whether it asks in the new clone of a unit run was not tried. A
+  session of OpenCode that is resumed opens on what was said before and does not send the new prompt (0032)
+
 ## 3.0.0
 
 ### What changed
