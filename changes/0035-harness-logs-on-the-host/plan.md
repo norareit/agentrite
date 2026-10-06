@@ -138,7 +138,7 @@ The image:
 
 The README:
 
-- [ ] Add "### The harness logs" after "### The home volume", holding the seven points of requirement 15 in its
+- [x] Add "### The harness logs" after "### The home volume", holding the seven points of requirement 15 in its
   order: where the logs are on the host, with the path, `$XDG_DATA_HOME`, the layout as a home, and that a tool on
   the host reads them there; that the agent writes this directory besides `/work` and that a reader treats what is
   in it as data; that OpenCode's login is there, in a file of the host, and Claude Code's stays in the volume; that
@@ -146,7 +146,7 @@ The README:
   project that has a home volume; that a volume in which a harness was never started may be refused, with the
   refusal as the entrypoint prints it, and that the logs are copied first by whoever wants them; and that it was
   shown on macOS with Docker Desktop's VirtioFS and with no other file sharing (R15)
-- [ ] Give in that section the command that copies a volume's logs to the log directory by hand. It is one
+- [x] Give in that section the command that copies a volume's logs to the log directory by hand. It is one
   `docker run` on the project's image with `--entrypoint` given, so that no firewall is installed, with the home
   volume mounted read-only, the log directory mounted beside it, and `--user` the developer's uid and gid, so that
   what it writes is the developer's. It copies `.claude/projects` and `.local/share/opencode`, each when the volume
@@ -155,7 +155,7 @@ The README:
   the command once as it is written in the README, from `ritenoar-agentrite-agent_agent-home` read-only into a
   directory under the scratch directory and not into the real log directory, and log what it printed and what
   arrived. Moving the human's own logs is the human's (R15)
-- [ ] Correct what the unit makes untrue (R16):
+- [x] Correct what the unit makes untrue (R16):
     - under "Running the sandbox": "The agent writes the working directory, its home volume and `/tmp`."
     - under "Working on a clone", the last point of what a unit run does not defend against: the saved logins are
       now Claude Code's in the home volume and OpenCode's in the log directory, and the log directory is one more
@@ -168,9 +168,13 @@ The README:
     - under "Trying the working copy's sandbox": "The image and the saved logins of `./agent.sh` are not touched",
       "The home starts empty and lasts", and "To remove everything it created". The two sandboxes share the log
       directory `~/.local/share/agentrite/agentrite`, and so their sessions and their OpenCode login
-- [ ] Read every other sentence of the README that holds "home volume", "login" or "logged in", and
+- [x] Read every other sentence of the README that holds "home volume", "login" or "logged in", and
   `templates/project/` for the same, and correct what is untrue. Leave what is still true as it is, as the status
   line's `~/.claude/settings.json` (R16)
+- [x] Added while implementing: correct the comment of this repository's own `agent/compose.project.yml`, which
+  says that `./agent-dev.sh` leaves the saved logins of `./agent.sh` alone. The two share OpenCode's login now. And
+  under "Starting it" in the README, "Nothing else of the host is reachable, with three exceptions", which are
+  four (R16)
 
 The proof on a real Docker, on the Linux host, by the implementer with the human at hand:
 
@@ -246,5 +250,5 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
   line of its test, with no change of behavior
 - [x] `feature-0035 Refuse a home volume made without the log directories`: the entrypoint's check and its tests
 - [x] `feature-0035 Make the log directories in the image`: the Dockerfile and its test
-- [ ] `feature-0035 Describe the harness logs`: the README
+- [x] `feature-0035 Describe the harness logs`: the README
 - [ ] `feature-0035 Record the proof on a real Docker`: the record

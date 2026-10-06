@@ -339,9 +339,10 @@ Everything that confines the container is in `container/compose.yml` and `contai
 of Claude Code and OpenCode the image holds, and how a sandbox gets a newer one, is under "The harness versions"
 below.
 
-The container's root filesystem is read-only. The agent writes the working directory, its home volume and `/tmp`.
-`/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
-that runs what it writes to the temporary directory works as on the host.
+The container's root filesystem is read-only. The agent writes the working directory, its home volume, the
+project's log directory on the host, which "The harness logs" below describes, and `/tmp`. `/tmp` is in memory and
+is emptied when the container stops, and files in it can be run, so a test suite or a tool that runs what it writes
+to the temporary directory works as on the host.
 
 The browser is in the image when the project's compose file gives `PLAYWRIGHT_VERSION` under
 `services.agent.build.args`, and not otherwise: the build argument alone decides. A project that starts using
@@ -383,10 +384,11 @@ run something on the tree as it is, such as the suite. A command that says neith
 either, starts nothing and names the forms.
 
 Either builds the image on first use and opens a shell in the container, with the clone or the project mounted
-read-write at `/work`. Nothing else of the host is reachable, with three exceptions: the developer's `~/.gitconfig`,
+read-write at `/work`. Nothing else of the host is reachable, with four exceptions: the developer's `~/.gitconfig`,
 mounted read-only so that commits from inside carry the same name and email as on the host, the developer's Claude
-Code status line script, as "The status line" below describes, and the local model server's port, as "The local
-model server" below describes. A unit run also mounts the project's `.reviews` directory. A command appended to it
+Code status line script, as "The status line" below describes, the project's log directory, mounted read-write, as
+"The harness logs" below describes, and the local model server's port, as "The local model server" below
+describes. A unit run also mounts the project's `.reviews` directory. A command appended to it
 runs instead of the shell, as in `./agent.sh 0029 claude` and `./agent.sh --in-place npm test`. `--rebuild` is an
 option of either form and builds the image again before running, as in `./agent.sh --in-place --rebuild`.
 
@@ -477,8 +479,10 @@ hook, a line in `.git/config` and a file in `node_modules` stay in the clone. It
 * what a review file says, to a human or to an agent that reads it on the host
 * a run with `--in-place` or `--workdir`, which mounts a directory as it is
 * a flaw in git's handling of a fetch from a hostile repository, or in Docker
-* anything the sandbox did not defend against before: the saved logins in the home volume, and data leaving
-  through an allowlisted host or through DNS
+* anything the sandbox did not defend against before: the saved logins, which are Claude Code's in the home volume
+  and OpenCode's in the project's log directory, and data leaving through an allowlisted host or through DNS
+* what is in the project's log directory, which is one more place of the host that such an agent writes, in every
+  run. "The harness logs" below says what that means for whatever reads it
 
 The supported usage is one developer, one host, branches made on the host, and a clone that only the wrapper and
 the sandbox touch. Submodules and Git LFS are as plain `git clone` leaves them, and a push to a remote from inside
@@ -541,8 +545,10 @@ platform.
 
 ### The home volume
 
-The agent's home, `/home/agent`, is a named volume in `container/compose.yml`, the one writable place that survives a
-container. It holds both harnesses' credentials and state and the npm cache, so authentication happens once.
+The agent's home, `/home/agent`, is a named volume in `container/compose.yml`, which survives a container. It holds
+Claude Code's login and settings, whatever else a harness keeps in its home, and the npm cache, so authentication
+happens once. Two directories in the home are not of the volume: the harnesses' sessions, and with them OpenCode's
+login, are in the project's log directory on the host, as "The harness logs" below describes.
 
 Docker fills a named volume from the image, ownership included, only the first time an empty volume is mounted, and
 never changes it afterwards. The agent is always the host user's uid, set when the image is built. So a volume first
@@ -562,6 +568,104 @@ That is: the home volume was created by an image for a different user, and the a
 is not the repository's name but the Compose project's, the `name:` key in the project's own
 `agent/compose.project.yml`, and the volume Docker names after it. A mismatched home is a one-off state: once the
 volume is removed, the next start creates a new one owned by the agent.
+
+The entrypoint refuses one more home volume, in the same way and with the same recovery: one in which a directory
+above the two mounted log directories is not the agent's. "The harness logs" below gives that refusal and says which
+volumes get it.
+
+### The harness logs
+
+Claude Code and OpenCode each keep a log of every session on disk: what was asked, what was answered and how many
+tokens it took. In the sandbox those logs are on the host and not in the home volume. In every run, whatever is
+mounted at `/work`, the wrapper mounts two directories of the host over the two in the agent's home that hold them:
+
+| In the container                    | On the host                    | What it holds                            |
+|-------------------------------------|--------------------------------|------------------------------------------|
+| `/home/agent/.claude/projects`      | `<logs>/.claude/projects`      | Claude Code's sessions                   |
+| `/home/agent/.local/share/opencode` | `<logs>/.local/share/opencode` | OpenCode's data: its database, its login |
+
+`<logs>` is the project's log directory, `<data>/agentrite/<name>`. `<data>` is `$XDG_DATA_HOME` when that is set
+and `~/.local/share` when it is not, and `<name>` is the name of the project root's directory, so a project at
+`~/projects/norareit` has `~/.local/share/agentrite/norareit/`. Every run of one project root uses that directory: a
+unit run of any branch, `--in-place` and `--workdir` alike. The wrapper makes it, with the two directories in it, as
+the developer, before the container starts.
+
+In the log directory the two have the places they have in a home, so it reads as a home that holds nothing but the
+two, and a tool on the host that reads the harnesses' logs is given that one path and reads them there. What a
+harness writes belongs to the developer on the host, who reads it like any other file of theirs, without Docker.
+A sandboxed session is started in `/work`, so Claude Code's sessions are under `.claude/projects/-work`.
+
+The agent writes the log directory. It is a directory of the host that the agent writes besides `/work`, and what is
+in it was written by an agent that may have been misled: it can put anything there, a false record of usage and a
+link to a file elsewhere among it. So whatever reads the log directory treats what it finds as data. A container
+reaches its own project's log directory and no other project's, no directory above it, and none of the host's own
+`~/.claude` or OpenCode directories.
+
+OpenCode keeps its login in its data directory, as `auth.json`. That login is therefore in a file of the host,
+`<logs>/.local/share/opencode/auth.json`, and no longer in the home volume. Claude Code's login and settings are
+beside its projects directory and not in it, so they stay in the home volume.
+
+Two projects whose root directories have one name share a log directory, wherever on the host they are. Either
+harness may then continue or list the other project's sessions, a reader cannot tell the two projects' sessions
+apart, and the two share one OpenCode login. Renaming one of the roots ends it.
+
+Releases up to 4.0.0 kept the logs in the home volume. Moving a project that has such a volume to a later release
+does this:
+
+* The sessions in the volume are no longer listed or continued, because the harnesses now look in the log directory
+* OpenCode asks for its login once more
+* Nothing is deleted. The volume holds what it held, under the mounted directories, where a container no longer
+  sees it
+
+To have the volume's logs in the log directory, copy them by hand, from the project root, while no sandbox of the
+project runs. `<project>` is the Compose project's name, the `name:` of the project's `agent/compose.project.yml`,
+and `<image>` is its `image:`:
+
+```sh
+logs="${XDG_DATA_HOME:-$HOME/.local/share}/agentrite/$(basename "$PWD")"
+mkdir -p "$logs/.claude/projects" "$logs/.local/share/opencode"
+docker run --rm --network none --entrypoint bash --user "$(id -u):$(id -g)" \
+  --volume <project>_agent-home:/from:ro --volume "$logs:/to" <image> -c '
+    cd /from
+    sessions=.claude/projects
+    opencode=.local/share/opencode
+    if [ -d "$sessions" ]; then cp -Rnv "$sessions/." "/to/$sessions/"; fi
+    if [ -e "/to/$opencode/opencode.db" ]; then
+      echo "The log directory holds a database of OpenCode, so the data of OpenCode was not copied."
+    elif [ -d "$opencode" ]; then cp -Rnv "$opencode/." "/to/$opencode/"; fi'
+```
+
+It copies Claude Code's sessions and OpenCode's data directory, each when the volume holds it, and prints every file
+it copied. The volume is mounted read-only, and the container has no network and does not run the sandbox's
+entrypoint, so it installs no firewall. It runs as the developer, so what it writes is the developer's. It
+overwrites nothing that the log directory already holds. Of OpenCode it copies nothing at all once the log directory
+holds a database, and says so: the database is one file with companions that belong to it alone, and the volume's
+would not fit another. Run it before the first start with the later release for that reason: once OpenCode has
+held a session in a sandbox, the log directory holds a new database.
+
+A home volume in which a harness was never started may be refused after the move. Such a volume lacks `.claude`, or
+`.local/share`, so Docker makes the mount point inside it, and every missing directory above it, as root, and the
+agent cannot write them. The entrypoint then refuses to start, before the command runs, naming the first such
+directory:
+
+```
+[entrypoint] FATAL: /home/agent/.claude is owned by uid 0, but the agent is uid 1000, so the agent cannot write it.
+The home volume was made by an earlier release, in which that directory was never made, so Docker made it as root
+when it mounted the harnesses' logs inside it.
+Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
+agent/compose.project.yml. Find the exact name with docker volume ls, then:
+  docker volume rm <project>_agent-home
+```
+
+Removing the volume is the way on. The next start makes a new one from the image, which holds both mount points
+and every directory above them as the agent's. A developer who wants the volume's logs copies them first, with the
+command above, which a refused volume still allows.
+
+This was shown to work on macOS 15.1.1 with Docker Desktop 4.26.0 and VirtioFS as its file sharing: both harnesses
+with their logs on the mounted directories, two containers writing at the same time, and the host reading while a
+container wrote. It was shown with no other file sharing of Docker Desktop for macOS, so neither with gRPC FUSE nor
+with osxfs.
 
 ### The harness versions
 
@@ -695,8 +799,9 @@ was.
 
 ### Logging in to a model provider
 
-A harness is logged in to its model provider once per home volume, from the sandbox's shell, and the login is kept
-there.
+A harness is logged in to its model provider from the sandbox's shell, and the login is kept. Claude Code is logged
+in once per home volume, which holds its login. OpenCode is logged in once per log directory, which holds its
+login, as "The harness logs" above describes, so a new home volume of the project needs no new login of OpenCode.
 
 A login that sends the browser back to a port on `localhost` cannot complete in the sandbox. The browser is on the
 host and the harness listens inside the container, which publishes no port and whose firewall drops every inbound
@@ -817,13 +922,18 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
   asks the registry at every start and gets the latest published version of that harness
 * It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
   `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
-  and the saved logins of `./agent.sh` are not touched, and both sandboxes can run at once
+  and the home volume of `./agent.sh`, with Claude Code's login in it, are not touched, and both sandboxes can run
+  at once
+* It shares its log directory with `./agent.sh`, because both run from one project root:
+  `~/.local/share/agentrite/agentrite`. So the two sandboxes list and continue each other's sessions, and share one
+  OpenCode login
 * A unit run of it has clones of its own, under its own Compose project name:
   `~/.local/state/agentrite/ritenoar-agentrite-agent-dev/<branch>`
 * It runs on the host. A sandbox has no Docker, so an agent working inside one cannot run it
-* The home starts empty and lasts. To empty it again: `docker volume rm ritenoar-agentrite-agent-dev_agent-home`
-* To remove everything it created: that volume, `docker network rm ritenoar-agentrite-agent-dev_default` and
-  `docker image rm ritenoar-agentrite-agent-dev`
+* The home volume starts as the image fills it and lasts. To start it anew:
+  `docker volume rm ritenoar-agentrite-agent-dev_agent-home`. That leaves the log directory as it is
+* To remove what it alone created: that volume, `docker network rm ritenoar-agentrite-agent-dev_default` and
+  `docker image rm ritenoar-agentrite-agent-dev`. The log directory is `./agent.sh`'s too, and stays
 
 ## Releasing
 
