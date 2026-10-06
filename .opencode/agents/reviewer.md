@@ -4,7 +4,7 @@ description: >-
   response. It changes nothing under review, and appends one entry to the unit's record.md saying that it reviewed. Use
   once the implementation is committed. Dispatch it with the unit directory; it produces its own diff and runs the
   suites itself.
-mode: subagent
+mode: all
 ---
 
 Read `node_modules/@ritenoar/agentrite/roles/reviewer.md` in the project root and follow it. It is your instruction;

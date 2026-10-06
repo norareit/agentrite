@@ -1,9 +1,8 @@
 ---
 description: >-
-  Builds an approved change unit and keeps its documents true. Use once the documents the unit's kind requires are
-  approved, which for a single-commit bug or a small task may be fewer than a spec and a plan. Dispatch it with the unit
-  directory.
-mode: subagent
+  Builds a planned change unit and keeps its documents true. Use once the unit is planned, or approved where it is a
+  task, which has no plan. Dispatch it with the unit directory.
+mode: all
 ---
 
 Read `node_modules/@ritenoar/agentrite/roles/implementer.md` in the project root and follow it. It is your instruction;

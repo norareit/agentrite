@@ -1,9 +1,8 @@
 ---
 name: planner
 description: >-
-  Writes the documents a change unit needs in changes/, which is a spec and a plan for a feature and less for a bug or a
-  task. Use before implementing anything. Dispatch it with the unit directory, and with the request itself when the unit
-  does not exist yet.
+  Writes the plan of an approved change unit, against the tree the unit will be built on. Use once the human has
+  approved the unit's spec and the unit is next to be built, not before. Dispatch it with the unit directory.
 ---
 
 Read `node_modules/@ritenoar/agentrite/roles/planner.md` in the project root and follow it. It is your instruction; this
