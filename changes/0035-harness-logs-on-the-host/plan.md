@@ -108,7 +108,7 @@ The wrapper:
 
 The entrypoint:
 
-- [ ] Extract what `check_home_owner` says after its first line, from "Recover by removing" to the `docker volume
+- [x] Extract what `check_home_owner` says after its first line, from "Recover by removing" to the `docker volume
   rm` line, into a function that prints it, and call it from `check_home_owner`. Add its name to the functions
   `tests/entrypoint-home-owner.test.mjs` builds its script from. The message is the same to the letter, and both
   existing tests pass with their assertions unchanged. `entrypointFunctions` ends a function at the first line that
@@ -242,7 +242,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 - [x] `feature-0035 Plan the harness logs on the host`: this plan and the record's entry, by the planner
 - [x] `feature-0035 Mount the harness logs from the host`: the fixture, the three test files, `container/agent.sh`,
   and the comments of `container/compose.yml`
-- [ ] `feature-0035 Extract the recovery of a refused home volume`: the refactoring of the entrypoint and the one
+- [x] `feature-0035 Extract the recovery of a refused home volume`: the refactoring of the entrypoint and the one
   line of its test, with no change of behavior
 - [ ] `feature-0035 Refuse a home volume made without the log directories`: the entrypoint's check and its tests
 - [ ] `feature-0035 Make the log directories in the image`: the Dockerfile and its test

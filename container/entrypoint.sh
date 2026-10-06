@@ -48,6 +48,17 @@ proxy_uid="$(id -u "$PROXY_USER")" || die "the $PROXY_USER account is missing fr
 [ "$proxy_uid" -ne 0 ] && [ "$proxy_uid" -ne "$agent_uid" ] \
   || die "the $PROXY_USER account is uid $proxy_uid; it must be neither root nor the agent"
 
+# How a home volume that the agent cannot write is recovered, which is what a refusal of
+# one ends in.
+home_volume_recovery() {
+  cat <<'RECOVERY'
+Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
+agent/compose.project.yml. Find the exact name with docker volume ls, then:
+  docker volume rm <project>_agent-home
+RECOVERY
+}
+
 # The agent's home is a named volume, filled from the image only the first time it is
 # mounted. Docker never changes its owner afterwards, so a volume filled by an image
 # whose agent had another uid stays owned by that uid, and the agent then cannot write
@@ -62,10 +73,7 @@ check_home_owner() {
   home_owner="$(stat -c %u "$home_path")"
   if [ "$home_owner" -ne "$agent_uid" ]; then
     die "$home_path is owned by uid $home_owner, but the agent is uid $agent_uid, so the agent cannot write its home.
-Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
-The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
-agent/compose.project.yml. Find the exact name with docker volume ls, then:
-  docker volume rm <project>_agent-home"
+$(home_volume_recovery)"
   fi
 }
 check_home_owner "$agent_uid" /home/agent

@@ -18,7 +18,7 @@ function runGuard(t, agentUid) {
   const script = join(base, 'guard.sh');
   writeFileSync(script, `
     set -euo pipefail
-    ${entrypointFunctions('die', 'check_home_owner')}
+    ${entrypointFunctions('die', 'home_volume_recovery', 'check_home_owner')}
     check_home_owner "${agentUid}" "${home}"
   `);
   chmodSync(script, 0o755);
