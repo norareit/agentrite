@@ -178,7 +178,7 @@ The README:
 
 The proof on a real Docker, on the Linux host, by the implementer with the human at hand:
 
-- [ ] Set up, from the repository's root. `released` runs the sandbox of the release 4.0.0 and `working` the
+- [x] Set up, from the repository's root. `released` runs the sandbox of the release 4.0.0 and `working` the
   working copy's, both under the trial's Compose project. Both always rebuild, because they share one image name:
 
   ```sh
@@ -189,10 +189,10 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
   ```
 
   Log the versions of Docker Engine and Compose, and of both harnesses in the image (R18)
-- [ ] **A volume that lacks the directories.** `released --in-place true` makes the trial's home volume with no
+- [x] **A volume that lacks the directories.** `released --in-place true` makes the trial's home volume with no
   harness started. Then `working --in-place true`. It must exit non-zero before the firewall is installed, with
   the refusal naming `/home/agent/.claude`. Log the message whole (R12, R18)
-- [ ] **A volume this release makes.** Remove the volume as the refusal says, `docker volume rm
+- [x] **A volume this release makes.** Remove the volume as the refusal says, `docker volume rm
   "${trial}_agent-home"`. Then, before any harness is started:
 
   ```sh
@@ -234,11 +234,11 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 ## Verification
 
 - [ ] `npm test` passes, on the host and with `./agent-dev.sh --in-place npm test` in the sandbox
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Every line of the changed files is within 120 characters, and no changed text holds an em dash
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Every line of the changed files is within 120 characters, and no changed text holds an em dash
 - [ ] Each of the requirements 1 to 18 is shown by a test named above or by a logged step of the proof, and the
   record says which
-- [ ] Each code block in the README's new section was run as written, and the refusal quoted there is the
+- [x] Each code block in the README's new section was run as written, and the refusal quoted there is the
   entrypoint's to the letter
 
 ## Commit Points

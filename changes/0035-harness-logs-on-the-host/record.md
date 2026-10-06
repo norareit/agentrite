@@ -180,3 +180,125 @@ timestamp: 2026-10-06T17:23:33Z
   the host reported 360 tests, 360 passed. One assertion was added that the plan did not have, and is in the plan
   now: a build that fails leaves no log directory. The stand-in for Docker mounts nothing, so these tests show the
   flags and the directories the wrapper makes, and not what a container sees
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] the entrypoint and the image, each with its test written
+  first and seen to fail. `7053e4d` extracts the recovery text with no change of behavior: the refusal of a home with
+  another owner was printed before and after by a script built from the entrypoint's own functions, and `cmp` found the
+  two the same. `03e15d7` adds `check_log_directory_owners`, which compares `.claude`, `.local` and `.local/share` and
+  not the mount points. `f8aa38b` makes both mount points in the image
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] the README, in `7bf0222`: the section "The harness logs"
+  and the corrections the plan lists. Two corrections were added to the plan: "Starting it" said that nothing else of
+  the host is reachable "with three exceptions", which are four, and the comment of this repository's
+  `agent/compose.project.yml` said that `./agent-dev.sh` leaves the saved logins of `./agent.sh` alone.
+  `templates/project/` holds no sentence on the home volume or a login. The README says "Releases up to 4.0.0 kept the
+  logs in the home volume" where the spec says "this release", because 4.0.0 is the last release and the next one's
+  number is not the unit's to know
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] **the copy command differs from the plan in one thing.**
+  As the plan words it, one loop with `cp -Rn` over both directories, it was run against a volume made for the check and
+  a log directory that held an `opencode.db` already: the database was kept, and the volume's `opencode.db-wal` was
+  copied beside it, a companion of another database. The README's command therefore copies nothing of OpenCode once the
+  log directory holds `opencode.db`, and says so. It still overwrites nothing. The README's block was then run as it is
+  written, from the repository's root, with `<project>` and `<image>` both `ritenoar-agentrite-agent` and with
+  `XDG_DATA_HOME` set to a directory under the scratch directory, so that the real log directory was not written:
+    - from `ritenoar-agentrite-agent_agent-home`, read-only: exit 0. It printed three lines, the directory
+      `.claude/projects/-work` and the two session files in it, `4be7f9b6-1e75-4c82-9ebf-e41f73545e12.jsonl` and
+      `9b7564eb-f642-4f95-a8fb-ae5c1905ee2a.jsonl`. Both arrived, every file and directory was uid 1000, and
+      nothing of OpenCode was copied: that volume holds `.local/share/applications` and no `.local/share/opencode`
+    - a second time, after one of the two copies was overwritten with the word "changed": exit 0, it printed
+      nothing, and the file still held "changed"
+    - from a volume made for the check, `agentrite-0035-copy-check`, holding `opencode.db`, `opencode.db-wal` and
+      `log/a.log` with made-up content, into an empty directory: all three were copied
+    - from that volume into a directory that held an `opencode.db`: it printed "The log directory holds a database
+      of OpenCode, so the data of OpenCode was not copied.", and the directory held that one file, unchanged
+
+  The check's volume and the scratch copies were removed. Not checked: the command with a real OpenCode database,
+  and on macOS. The human's own logs were not moved
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] **the proof on a real Docker, as far as it runs without
+  the human.** On the Linux host, Docker Engine 28.4.0 and Compose v2.39.2, under the Compose project
+  `ritenoar-agentrite-0035-trial`, with `released` and `working` as the plan defines them and standard input from
+  `/dev/null`, because the session has no terminal. The image holds Claude Code 2.1.292 and OpenCode 1.18.34, which
+  `claude --version` and `opencode --version` printed in a container of `working`. The agent is uid 1000 and gid 1000,
+  as the developer is
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] **a volume that lacks the directories is refused.**
+  `released --in-place true` made the trial's home volume and exited 0. `working --in-place true` then exited 1. Its
+  output holds no line of the firewall, so the refusal came before it, and after the build ended in:
+
+  ```
+  [entrypoint] FATAL: /home/agent/.claude is owned by uid 0, but the agent is uid 1000, so the agent cannot write it.
+  The home volume was made by an earlier release, in which that directory was never made, so Docker made it as root
+  when it mounted the harnesses' logs inside it.
+  Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+  The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
+  agent/compose.project.yml. Find the exact name with docker volume ls, then:
+    docker volume rm <project>_agent-home
+  ```
+
+  The README quotes these seven lines, and a comparison of the two by a script found them the same
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] **a volume this release makes.** After `docker volume rm
+  ritenoar-agentrite-0035-trial_agent-home`, the plan's `working --in-place bash -c '...'`, before any harness was
+  started, with `claude --version; opencode --version; ls -A ~` added at its end, exited 0 and printed, after the
+  entrypoint's lines:
+
+  ```
+  uid=1000(agent) gid=1000(agent) groups=1000(agent)
+  drwxr-xr-x 4 1000 1000 4096 Oct  6 20:29 /home/agent
+  drwxr-xr-x 3 1000 1000 4096 Oct  6 20:29 /home/agent/.claude
+  drwxrwxr-x 2 1000 1000 4096 Oct  6 20:29 /home/agent/.claude/projects
+  drwxr-xr-x 3 1000 1000 4096 Oct  6 20:29 /home/agent/.local
+  drwxr-xr-x 3 1000 1000 4096 Oct  6 20:29 /home/agent/.local/share
+  drwxrwxr-x 2 1000 1000 4096 Oct  6 20:29 /home/agent/.local/share/opencode
+  /home/agent /dev/nvme1n1p1[/var/lib/docker/volumes/ritenoar-agentrite-0035-trial_agent-home/_data]
+  /home/agent/.claude/projects /dev/nvme1n1p1[/home/stef/.local/share/agentrite/agentrite/.claude/projects]
+  /home/agent/.local/share/opencode /dev/nvme1n1p1[/home/stef/.local/share/agentrite/agentrite/.local/share/opencode]
+  2.1.292 (Claude Code)
+  1.18.34
+  ```
+
+  and then the home's entries: `.bash_logout`, `.bashrc`, `.cache`, `.claude`, `.config`, `.local` and `.profile`.
+  All six directories are the agent's, no line says "NOT WRITABLE", and `/home/agent` has the volume and the two
+  mounts and no other. `opencode --version` left `log` and `repos` in the mounted data directory, and on the host
+  both are uid 1000 and gid 1000, read with `ls -ln` as the developer
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] **a volume of an earlier release that holds the
+  directories, without a harness.** This is not the plan's step, which has the human log in under `released`. The volume
+  was removed, and `released --in-place bash -c 'mkdir -p ~/.claude ~/.local/share && ls -ldn ~/.claude ~/.local
+  ~/.local/share'` made the three as the agent, uid 1000, which stands in for what a harness does. `working --in-place`
+  with the same `bash -c` as above, without the three commands added there, then started, exited 0, showed all six
+  directories as uid 1000, printed no "NOT WRITABLE", and showed the same three mounts. Afterwards the volume was
+  removed once more and made again by `working --in-place true`, which exited 0, so that the trial's volume is one this
+  release made
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] **not done, because they need the human's logins**, and
+  their boxes in the plan are open: the logins and the first prompts in a volume this release makes, with the second
+  container that continues and lists; the two containers at the same time; the logins under `released` and the move to
+  `working`; and the removal of the trial. So on Linux no harness has held a session with its logs on the host. The
+  trial is left for the human to go on with: the volume `ritenoar-agentrite-0035-trial_agent-home`, the network
+  `ritenoar-agentrite-0035-trial_default` and the image `ritenoar-agentrite-0035-trial`. The real log directory
+  `~/.local/share/agentrite/agentrite` exists now, and holds `.claude/projects`, empty, and `.local/share/opencode` with
+  the empty `log` and `repos`
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] the suites, on `7bf0222`, which holds every change but
+  this record's. `npm test` on the host: 363 tests, 363 passed, none skipped. In the working copy's sandbox: 363 tests,
+  363 passed, none skipped, run as `AGENT_PROJECT_NAME=ritenoar-agentrite-0035-trial container/agent.sh "$PWD" --rebuild
+  --in-place npm test` and not as the plan's `./agent-dev.sh --in-place npm test`. That one starts on
+  `ritenoar-agentrite-agent-dev_agent-home`, which lacks `.claude`, so this unit refuses it, and the start itself would
+  have Docker make `.claude` in the human's volume as root. The two differ in the Compose project's name alone, and the
+  plan's box stays open. `npm run check-changes` exited 0. No line of a file the unit changed is longer than 120
+  characters, and none holds an em dash
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] which requirement is shown by what:
+    - 1, 2, 3, 4, 5, 13 and 17: the tests of `agent-wrapper.test.mjs`, `agent-unit-run.test.mjs` and
+      `agent-dev.test.mjs`, which compare the whole call the wrapper gives Docker, for a unit run, `--in-place`
+      and `--workdir`, with `XDG_DATA_HOME` set and unset, and the directories it makes. On a real Docker, the
+      three mounts under `/home/agent` above, for `--in-place` alone
+    - 9 and 11: the image's test in `dockerfile-log-directories.test.mjs`, and the two volumes above, before any
+      harness was started
+    - 12: the two new tests of `entrypoint-home-owner.test.mjs`, and the refusal above
+    - 7: in part. The mounts above show that the home is the volume apart from the two directories. That Claude
+      Code's login is in the volume was not shown, with no login made
+    - 6: in part. What `opencode --version` wrote is the developer's on the host. A session file and a database
+      were not written
+    - 8 and 10: not shown on Linux. The record's trial on the Mac is what there is
+    - 14, 15 and 16: the comments and the README, read against the code. The README's command and its quoted
+      refusal were run and compared as said above
+    - 18: the refused volume and the new volume are shown. The harnesses on a new volume, the two containers at
+      once and the volume of an earlier release with logins are not
+- 2026-10-06T20:35:01Z [Claude Code, anthropic/claude-opus-5-5] three home volumes of the host lack `.claude` and will
+  be refused once their sandbox runs this unit: `agentrite-orchestrator-agent_agent-home`,
+  `ritenoar-agentrite-agent-dev_agent-home` and `scratch-verify-agent_agent-home`, as the specifier read them. They were
+  not touched. The status stays `in-progress`: the proof is not complete, and no review has been made
