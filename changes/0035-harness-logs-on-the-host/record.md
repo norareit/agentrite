@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-06T17:23:33Z
 ---
 
@@ -148,3 +148,25 @@ timestamp: 2026-10-06T17:23:33Z
   `master` at `2cad045`, said that it is
 - 2026-10-06T20:14:46Z [Claude Code, anthropic/claude-opus-5-5] in the main session, on `master` at `2cad045`, set the
   status to `approved`. `mac-instructions.md` stays in the unit's directory as what the trial on the Mac was run from
+- 2026-10-06T20:31:12Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session on the Linux host.
+  Cut `feature-0035-harness-logs-on-the-host` from `master` at `e1495c3`, on which `npm test` passes with 352 tests.
+  Read `process.md` and `roles/planner.md` of the release 4.0.0, the spec and this record, the wrapper, the base compose
+  file, the Dockerfile, the entrypoint, the tests of the wrapper and of the entrypoint with their fixture, and the
+  README's sections on the sandbox
+- 2026-10-06T20:31:12Z [Claude Code, anthropic/claude-opus-5-5] tried, before writing, what requirement 11 rests on:
+  whether directories made in the image become the agent's in a new home volume when both mounts are given at its first
+  start. On Docker Engine on this host, an image made from `ritenoar-agentrite-agent` by `RUN mkdir -p
+  /home/agent/.claude/projects /home/agent/.local/share/opencode && chown -R agent:agent /home/agent/.claude
+  /home/agent/.local`, a new volume at `/home/agent`, two directories of the scratch directory at the mount points, the
+  entrypoint replaced by `bash` and the user given as the developer's. `ls -ldn` printed uid and gid 1000 for the home,
+  `.claude`, `.claude/projects`, `.local`, `.local/share` and `.local/share/opencode`, `touch` succeeded in every one,
+  and the file written in a mount was `-rw-r--r-- 1 1000 1000` on the host. The image, the volume and the two
+  directories were removed. No harness was started, which is left to requirement 18
+- 2026-10-06T20:31:12Z [Claude Code, anthropic/claude-opus-5-5] wrote `plan.md`. The wrapper gives the two mounts as
+  flags and makes the directories, the image holds the mount points as the agent's, the entrypoint refuses a home in
+  which `.claude`, `.local` or `.local/share` is not the agent's, and the README gets a section of its own. Three things
+  the spec leaves to the plan were settled as how, and are named here so that the reviewer sees them: the directories
+  are made after the build, so a refused run makes none; a relative `$XDG_DATA_HOME` is resolved to an absolute path,
+  because Docker reads any other source as a volume's name; and the README's copy command overwrites nothing in the log
+  directory. The proof on a real Docker runs under a Compose project of its own and needs the human for four logins.
+  Nothing in the spec was found unclear or untrue of the tree. The status is `planned`
