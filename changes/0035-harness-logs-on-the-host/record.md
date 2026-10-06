@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-06T17:23:33Z
 ---
 
@@ -144,3 +144,7 @@ timestamp: 2026-10-06T17:23:33Z
 - 2026-10-06T20:06:48Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `a7758e7`, replaced
   every quotation of the human in `spec.md` and in this record with what was meant, in the specifier's words, the entry
   of the session on the Mac among them. Nothing that the spec requires or decides changed. The status stays `draft`
+- 2026-10-06T20:14:46Z [human] asked for the unit to be planned. Asked whether the spec is approved as it stands on
+  `master` at `2cad045`, said that it is
+- 2026-10-06T20:14:46Z [Claude Code, anthropic/claude-opus-5-5] in the main session, on `master` at `2cad045`, set the
+  status to `approved`. `mac-instructions.md` stays in the unit's directory as what the trial on the Mac was run from
