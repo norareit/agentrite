@@ -113,13 +113,13 @@ The entrypoint:
   `tests/entrypoint-home-owner.test.mjs` builds its script from. The message is the same to the letter, and both
   existing tests pass with their assertions unchanged. `entrypointFunctions` ends a function at the first line that
   is a lone `}`, so the new function holds none inside it (R12)
-- [ ] Add to `tests/entrypoint-home-owner.test.mjs`, failing, with a home that holds `.claude`, `.local` and
+- [x] Add to `tests/entrypoint-home-owner.test.mjs`, failing, with a home that holds `.claude`, `.local` and
   `.local/share` as real directories of the user running the suite, and skipped off Linux as the two beside them:
     - with the agent's uid that user's, the new check passes and prints nothing
     - with another uid it exits 1, and the message names `<home>/.claude`, says that the volume was made by an
       earlier release in which that directory was never made, gives `docker volume rm <project>_agent-home` and
       starting again, and says that this discards the saved logins (R12)
-- [ ] Add the check to `container/entrypoint.sh` as a function that takes the agent's uid and the home, compares
+- [x] Add the check to `container/entrypoint.sh` as a function that takes the agent's uid and the home, compares
   the owner of `.claude`, `.local` and `.local/share` in it with the uid, and dies at the first that differs with
   the message above, ending in the extracted recovery. Call it with `/home/agent` directly after
   `check_home_owner`. Correct the comment above `check_home_owner`, which says that comparing the top alone is
@@ -244,7 +244,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
   and the comments of `container/compose.yml`
 - [x] `feature-0035 Extract the recovery of a refused home volume`: the refactoring of the entrypoint and the one
   line of its test, with no change of behavior
-- [ ] `feature-0035 Refuse a home volume made without the log directories`: the entrypoint's check and its tests
+- [x] `feature-0035 Refuse a home volume made without the log directories`: the entrypoint's check and its tests
 - [ ] `feature-0035 Make the log directories in the image`: the Dockerfile and its test
 - [ ] `feature-0035 Describe the harness logs`: the README
 - [ ] `feature-0035 Record the proof on a real Docker`: the record

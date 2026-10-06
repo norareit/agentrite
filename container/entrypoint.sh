@@ -65,8 +65,9 @@ RECOVERY
 # its own home: npm fails to create its cache and the harnesses cannot save their state,
 # with nothing inside naming the cause. The container's root holds no CAP_CHOWN, so this
 # entrypoint cannot repair it either. Fail loudly instead, before any of that happens.
-# Comparing only the top of the home is enough: a volume filled by one image is owned
-# throughout by one uid, and a mixed volume would need a hand-made change.
+# Comparing only the top of the home is enough for that: a volume filled by one image is
+# owned throughout by one uid. What Docker makes in the volume later, for a mount inside
+# it, is another matter, and check_log_directory_owners below looks at that.
 check_home_owner() {
   local agent_uid="$1" home_path="$2"
   local home_owner
@@ -77,6 +78,31 @@ $(home_volume_recovery)"
   fi
 }
 check_home_owner "$agent_uid" /home/agent
+
+# container/agent.sh mounts two directories of the host inside the home, for the
+# harnesses' logs: .claude/projects and .local/share/opencode. The image holds both
+# mount points as the agent's, so a home volume filled from it has them. A volume that
+# an earlier release filled has them only when a harness made them, and where one is
+# missing Docker makes it, and every missing directory above it, as root, before this
+# script runs. The agent then cannot write beside the mount: Claude Code keeps its login
+# and its settings in .claude. As above, root here cannot change an owner, so the start
+# is refused, at the first such directory. The two mount points themselves are not
+# compared: Docker Desktop shows the top of every mounted directory as root's while the
+# agent writes it, so their owner says nothing.
+check_log_directory_owners() {
+  local agent_uid="$1" home_path="$2"
+  local name directory owner
+  for name in .claude .local .local/share; do
+    directory="$home_path/$name"
+    owner="$(stat -c %u "$directory")"
+    [ "$owner" -eq "$agent_uid" ] \
+      || die "$directory is owned by uid $owner, but the agent is uid $agent_uid, so the agent cannot write it.
+The home volume was made by an earlier release, in which that directory was never made, so Docker made it as root
+when it mounted the harnesses' logs inside it.
+$(home_volume_recovery)"
+  done
+}
+check_log_directory_owners "$agent_uid" /home/agent
 
 # Every allowlist entry is a hostname, admitted by the proxy on 443 alone. A CIDR range
 # is refused rather than ignored: there is no longer a rule that could admit one, and
