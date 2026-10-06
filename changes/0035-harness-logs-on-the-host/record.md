@@ -302,3 +302,62 @@ timestamp: 2026-10-06T17:23:33Z
   be refused once their sandbox runs this unit: `agentrite-orchestrator-agent_agent-home`,
   `ritenoar-agentrite-agent-dev_agent-home` and `scratch-verify-agent_agent-home`, as the specifier read them. They were
   not touched. The status stays `in-progress`: the proof is not complete, and no review has been made
+- 2026-10-06T20:57:36Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
+  `changes/0035-harness-logs-on-the-host/` at `1668e611eb46d779fa2d53f16c13b7a549238a8c`. Full review against
+  merge base `e1495c3c1b83373c784e20900798c6684d7538ec`; no previous review was found. Returned `S1`, saved in
+  `.reviews/0035-harness-logs-on-the-host/20261006T205601Z-opencode-gpt-6.1-sol-full.md`.
+  Host and trial-project sandbox suites each reported 363 passed, none failed or skipped; change check exited 0.
+  Independently checked real mounts/access, all three ownership refusals, recovery-output preservation and synthetic
+  migration behavior. The sandbox suite automatically rebuilt the trial image with OpenCode 1.18.35.
+  Could not verify authenticated Linux sessions, credential persistence, continuation/listing and concurrency;
+  historical first-creation and earlier-release transition results; real-database migration; the literal dev-project
+  suite command; the historical macOS trial; or historical test-first execution order. These limits are in the review.
+- 2026-10-06T21:17:00Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
+  `changes/0035-harness-logs-on-the-host/` at `1668e611eb46d779fa2d53f16c13b7a549238a8c`. Delta review from
+  `1668e611eb46d779fa2d53f16c13b7a549238a8c`; the committed delta is empty. Returned `S1`, with no new finding
+  labels, saved in `.reviews/0035-harness-logs-on-the-host/20261006T211551Z-opencode-gpt-6.1-sol-delta.md`.
+  Checked history, committed/index/working-tree diffs, the prior review and the unit documents. The pre-existing
+  working-tree diff adds only the prior reviewer entry. Diff checks exited 0. Suites and Docker trials were not
+  rerun; the earlier review's passing checks are identified as previous results, not checks run this time.
+  Could not verify authenticated Linux sessions, credential persistence, second-container continuation/listing,
+  session/database ownership, concurrent writes or the authenticated earlier-release transition. Other prior
+  verification limits are retained in the review. Preserved the existing uncommitted reviewer entry.
+- 2026-10-06T22:18:34Z [Claude Code, anthropic/claude-opus-5-5] the reviewer's `S1` is right and is accepted: the
+  proof of requirement 18 was not complete. It is finished in this unit, the human making the logins and the
+  implementer running the rest, on the trial's volume as `working --in-place true` had made it. The host is Docker
+  Engine 28.4.0, and the image holds Claude Code 2.1.292 and OpenCode 1.18.35, as the reviewer's run rebuilt it
+- 2026-10-06T22:18:34Z [Claude Code, anthropic/claude-opus-5-5] **the harnesses on a volume this release made.** The
+  human, in `working --in-place`, logged in to Claude Code with `/login` and gave it one prompt, "Hi", logged in to
+  OpenCode with `opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"`, gave it one prompt with `opencode
+  run`, and left. In a second container, `working --in-place bash -c '...'` with standard input from `/dev/null`:
+    - `claude --continue -p "What was the first thing I asked you?"` exited 0 and answered from that session: that
+      the first message was just "Hi", that `/exit` was run after it, and that this question came then. Its words
+      are given here and not quoted, because they hold an em dash
+    - `opencode session list` exited 0 and listed the one session, `ses_eecb5c4e0ffeQr3KupdbnOEJP3`, "Test message"
+    - `opencode auth list` exited 0 and printed "Credentials ~/.local/share/opencode/auth.json", "OpenAI oauth" and
+      "1 credentials"
+    - `ls -A ~` printed `.bash_history`, `.bash_logout`, `.bashrc`, `.cache`, `.claude`, `.claude.json`, `.config`,
+      `.local`, `.npm` and `.profile`, and `ls -A ~/.claude` printed `.credentials.json`, `backups`, `cache`,
+      `history.jsonl`, `plugins`, `projects`, `sessions`, `settings.json` and `skills`. So Claude Code's login and
+      settings are in the volume, with `projects` alone of them mounted from the host
+
+  On the host, as the developer, uid 1000, without `sudo` and without Docker:
+    - `ls -A "$logs"` printed `.claude` and `.local` alone
+    - the plan's `ls -lnR "$logs"` prints nothing of the two, whose names start with a dot, so `ls -lnRA "$logs"` was
+      run in its place. Every entry is uid 1000 and gid 1000, among them `.claude/projects/-work/
+      84102949-5cd5-4472-ad79-d1030984f023.jsonl`, mode `-rw-------`, and in `.local/share/opencode` the files
+      `auth.json`, mode `-rw-------`, `opencode.db`, `opencode.db-shm`, `opencode.db-wal` and `log/opencode.log`.
+      `find "$logs" ! -uid 1000` printed nothing
+    - `wc -l` of the session file printed 41
+    - the host has no `sqlite3`, so the integrity check was made with Python's `sqlite3` module, SQLite 3.45.1, on
+      `opencode.db` opened read-only: `PRAGMA integrity_check` returned `ok`
+- 2026-10-06T22:18:34Z [Claude Code, anthropic/claude-opus-5-5] **two containers at the same time.** Two calls of
+  `working --in-place bash -c 'for i in 1 2 3 4 5; do opencode run "say the number $i"; done; claude -p "Reply with
+  only the word A"'`, the second with `B`, were started together from one shell and not from two terminals, each with
+  standard input from `/dev/null` and a line with the time before each run. Both wrappers exited 0. The first
+  container's runs started between 22:17:47.825 and 22:18:02.854 UTC and the second's between 22:17:47.824 and
+  22:18:03.960, each `opencode run` of the one within a second of the other's. All ten `opencode run` exited 0 and
+  printed their number, and the two `claude -p` exited 0 and printed `A` and `B`. No line of either output holds an
+  error. Afterwards, in a third container, `opencode session list` listed eleven sessions, the ten beside "Test
+  message". Claude Code's directory on the host holds three session files, two more than before, all uid 1000, and
+  `find "$logs" ! -uid 1000` printed nothing. The integrity check returned `ok`

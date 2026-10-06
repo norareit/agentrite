@@ -204,7 +204,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 
   All six are the agent's uid, nothing is printed as not writable, and `/home/agent` has the volume and the two
   mounts and no other (R7, R9, R11, R18)
-- [ ] In that volume the human, in `working --in-place`, logs in to Claude Code and gives it one prompt, logs in to
+- [x] In that volume the human, in `working --in-place`, logs in to Claude Code and gives it one prompt, logs in to
   OpenCode with the README's command and gives it one prompt, and leaves. In a second container:
   `claude --continue -p "What was the first thing I asked you?"` answers from that session, `opencode session
   list` lists the session, and `opencode auth list` shows the login. On the host, `ls -lnR "$logs"` shows every
@@ -212,7 +212,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
   share/opencode/opencode.db" "PRAGMA integrity_check;"`, both as the developer and without `sudo`. `ls -A "$logs"`
   holds `.claude` and `.local` alone, and in a container `ls -A ~` shows Claude Code's login and settings in the
   volume (R6, R7, R8, R18)
-- [ ] Two containers at the same time, in two terminals, each `working --in-place bash -c 'for i in 1 2 3 4 5; do
+- [x] Two containers at the same time, in two terminals, each `working --in-place bash -c 'for i in 1 2 3 4 5; do
   opencode run "say the number $i"; done; claude -p "Reply with only the word A"'`, with `B` in the second. No run
   prints an error, `opencode session list` afterwards lists the ten beside the first, Claude Code's directory holds
   two more session files, and the integrity check prints `ok` (R10, R18)
