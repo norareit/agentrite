@@ -416,3 +416,13 @@ timestamp: 2026-10-06T17:23:33Z
   `~/.local/share/agentrite/agentrite` stays. It holds the trial's sessions and an OpenCode login, and is this
   project's real one, which `./agent.sh` uses from the next release on. The suite was not run in the sandbox as
   `./agent-dev.sh --in-place npm test`, for the reason given at 20:35:01Z, and that box stays open
+- 2026-10-06T22:29:51Z [Claude Code, anthropic/claude-opus-5-5] the human removed the trial: `docker volume ls`,
+  `docker network ls` and `docker image ls` hold nothing of `ritenoar-agentrite-0035-trial`. The human also ran
+  `./agent-dev.sh --in-place` on `ritenoar-agentrite-agent-dev_agent-home` as it was, which was refused with the
+  message the README quotes, naming `/home/agent/.claude` as owned by uid 0. That is the refusal on a real volume of
+  an earlier release, and not one made for the trial. The human then removed that volume, and the next start made it
+  again. On it, `./agent-dev.sh --in-place npm test`, with standard input from `/dev/null`, on `514bb4d`, exited 0:
+  363 tests, 363 passed, none failed, none skipped. So the suite passes in the sandbox as the plan runs it. Two home
+  volumes of the host still lack `.claude` and will be refused, `agentrite-orchestrator-agent_agent-home` and
+  `scratch-verify-agent_agent-home`, as the specifier read them, and are left as they are. The status stays
+  `in-progress`: the reviewer's `S1` is answered and not yet reviewed again

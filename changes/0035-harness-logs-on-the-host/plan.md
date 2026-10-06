@@ -224,7 +224,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
   Code's session and list OpenCode's. Log also what the README says of moving to this release, as seen here:
   whether the sessions made under `released` are listed, and that they are still in the volume, read from a
   container with the volume mounted read-only (R8, R9, R15, R18)
-- [ ] Log each of the four steps in `record.md` with what was run and what it printed. Remove the trial: `docker
+- [x] Log each of the four steps in `record.md` with what was run and what it printed. Remove the trial: `docker
   volume rm "${trial}_agent-home"`, `docker network rm "${trial}_default"`, `docker image rm "$trial"`. The log
   directory stays, and the record says that it holds the trial's sessions and an OpenCode login: it is this
   project's real one, which `./agent.sh` uses from the next release on. Three home volumes of the host lack
@@ -233,7 +233,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 
 ## Verification
 
-- [ ] `npm test` passes, on the host and with `./agent-dev.sh --in-place npm test` in the sandbox
+- [x] `npm test` passes, on the host and with `./agent-dev.sh --in-place npm test` in the sandbox
 - [x] `npm run check-changes` passes on the committed branch
 - [x] Every line of the changed files is within 120 characters, and no changed text holds an em dash
 - [x] Each of the requirements 1 to 18 is shown by a test named above or by a logged step of the proof, and the
@@ -251,4 +251,4 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 - [x] `feature-0035 Refuse a home volume made without the log directories`: the entrypoint's check and its tests
 - [x] `feature-0035 Make the log directories in the image`: the Dockerfile and its test
 - [x] `feature-0035 Describe the harness logs`: the README
-- [ ] `feature-0035 Record the proof on a real Docker`: the record
+- [x] `feature-0035 Record the proof on a real Docker`: the record
