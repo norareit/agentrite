@@ -64,20 +64,22 @@ it: both harnesses are logged in by hand, twice.
 
 The wrapper:
 
-- [ ] In `tests/wrapper-fixture.mjs`, export `logDirectory(data, root)`, which gives
+- [x] In `tests/wrapper-fixture.mjs`, export `logDirectory(data, root)`, which gives
   `<data>/agentrite/<basename of root>`, and `logMounts(logs)`, which gives the two flags as the wrapper is to pass
   them, each followed by a space: `--volume <logs>/.claude/projects:/home/agent/.claude/projects` and
   `--volume <logs>/.local/share/opencode:/home/agent/.local/share/opencode` (R17)
-- [ ] Put `logMounts` in every expected `run` call, directly before `agent`: in `agent-wrapper.test.mjs` the
+- [x] Put `logMounts` in every expected `run` call, directly before `agent`: in `agent-wrapper.test.mjs` the
   literal calls at the three `build`-and-`run` tests, `runOnly`, `buildAndRun`, `expectedRun` and the `--workdir`
   test; in `agent-unit-run.test.mjs` the `unitRun` builder; in `agent-dev.test.mjs` the three calls, whose root is
   named `checkout`. `<data>` is `.local/share` in the test's home. The suite now fails on these (R1, R2, R3, R13,
   R17)
-- [ ] Change the four assertions that the wrapper leaves the home empty, so that each still says what its test is
+- [x] Change the four assertions that the wrapper leaves the home empty, so that each still says what its test is
   about: "creates nothing there" asserts that the home holds no `.claude`; the `--in-place` and the `--workdir`
   test, "makes no clone", assert that the home holds no `.local/state`; the `XDG_STATE_HOME` test of
   `agent-unit-run.test.mjs` asserts the same in place of no `.local` (R17)
-- [ ] Give `setUp` of `agent-wrapper.test.mjs` a way to run the wrapper with more environment and in a working
+- [x] Added while implementing: the test of a build that fails, in `agent-wrapper.test.mjs`, also asserts that no
+  log directory was made, which is what making the directories after the build is for (R5)
+- [x] Give `setUp` of `agent-wrapper.test.mjs` a way to run the wrapper with more environment and in a working
   directory, and add these tests, which fail (R17):
     - for `--in-place` and for `--workdir`, with `XDG_DATA_HOME` unset: the call mounts both directories of
       `<home>/.local/share/agentrite/project`, and they were there when Docker was called, which the stand-in's
@@ -88,16 +90,16 @@ The wrapper:
     - `--workdir` with a directory named otherwise than the root mounts the log directory named after the root,
       not after the directory (R4)
     - a relative `XDG_DATA_HOME` is mounted as the absolute path it names from the wrapper's working directory (R1)
-- [ ] Add to `agent-unit-run.test.mjs`, failing: a unit run with `XDG_DATA_HOME` unset mounts both directories of
+- [x] Add to `agent-unit-run.test.mjs`, failing: a unit run with `XDG_DATA_HOME` unset mounts both directories of
   `<home>/.local/share/agentrite/project`, named after the root and neither after the Compose project
   `project-agent` nor after the branch, and they were there when Docker was called; with `XDG_DATA_HOME` set it
   mounts those of `<that directory>/agentrite/project`, while the clone stays under the state directory (R1, R2,
   R4, R5, R17)
-- [ ] In `container/agent.sh`, after the build and before `if [ -z "$branch" ]`: work out the log directory, make
+- [x] In `container/agent.sh`, after the build and before `if [ -z "$branch" ]`: work out the log directory, make
   `.claude/projects` and `.local/share/opencode` in it with one `mkdir -p`, resolve it with `cd` and `pwd`, and
   append the two `--volume` flags to `mounts`. Mount nothing above them. Every test above passes (R1, R2, R3, R4,
   R5, R13)
-- [ ] Make the comments true. In `container/agent.sh`: the header, which lists what the wrapper adds, and a
+- [x] Make the comments true. In `container/agent.sh`: the header, which lists what the wrapper adds, and a
   comment at the new lines that says why the wrapper makes the directories and where a reader finds them. In
   `container/compose.yml`: the header's sentence on what the wrapper adds; at `read_only`, that the agent also
   writes the two mounted log directories of the host; at `agent-home`, that OpenCode's login and both harnesses'
@@ -238,7 +240,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 ## Commit Points
 
 - [x] `feature-0035 Plan the harness logs on the host`: this plan and the record's entry, by the planner
-- [ ] `feature-0035 Mount the harness logs from the host`: the fixture, the three test files, `container/agent.sh`,
+- [x] `feature-0035 Mount the harness logs from the host`: the fixture, the three test files, `container/agent.sh`,
   and the comments of `container/compose.yml`
 - [ ] `feature-0035 Extract the recovery of a refused home volume`: the refactoring of the entrypoint and the one
   line of its test, with no change of behavior

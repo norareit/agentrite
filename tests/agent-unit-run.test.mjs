@@ -15,7 +15,7 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { fakeHost } from './wrapper-fixture.mjs';
+import { fakeHost, logDirectories, logDirectory, logMounts } from './wrapper-fixture.mjs';
 
 const kitContainer = new URL('../container/', import.meta.url).pathname;
 const kitPath = 'node_modules/@ritenoar/agentrite/container';
@@ -72,15 +72,19 @@ function setUp(t, { imageExists = true } = {}) {
   const compose =
     `AGENTRITE_CONTAINER=${kitPath} docker compose --project-directory ${root} ` +
     `-f ${container}/compose.yml -f ${root}/agent/compose.project.yml`;
-  // The calls of a unit run that mounts `mounted` at /work, with `mounts` after the two of the unit run.
-  const unitRun = (mounted, mounts = '') => [
+  // The project's log directory, which is named after the root and lies in the home's data directory unless a run
+  // sets XDG_DATA_HOME.
+  const logs = logDirectory(join(home, '.local', 'share'), root);
+  // The calls of a unit run that mounts `mounted` at /work, with `mounts` after the two of the unit run and the two
+  // directories of `logDirectory` last.
+  const unitRun = (mounted, mounts = '', logDirectory = logs) => [
     `AGENTRITE_CONTAINER=${kitPath} docker rm ${containerName}`,
     `${compose} run --rm --name ${containerName} --volume ${mounted}:/work ` +
-      `--volume ${root}/.reviews:/work/.reviews ${mounts}agent echo hi`,
+      `--volume ${root}/.reviews:/work/.reviews ${mounts}${logMounts(logDirectory)}agent echo hi`,
   ];
   // The script the stand-in `docker` runs as the agent, in the directory mounted at /work.
   const agent = (script) => writeFileSync(host.agentScript, `set -e\n${script}\n`);
-  return { base, root, container, home, state, clone, run, git, compose, unitRun, agent, ...host };
+  return { base, root, container, home, state, clone, logs, run, git, compose, unitRun, agent, ...host };
 }
 
 // A host on which a build would be due and would need the registry, so that a refusal that comes too late shows
@@ -347,7 +351,33 @@ test('the wrapper puts the clone under XDG_STATE_HOME when that is set', (t) => 
   const result = run([branch, 'echo', 'hi'], { XDG_STATE_HOME: state });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), unitRun(join(state, 'agentrite', 'project-agent', branch)));
-  assert.equal(existsSync(join(home, '.local')), false);
+  assert.equal(existsSync(join(home, '.local', 'state')), false);
+});
+
+// The logs of a unit run are those of the project, whatever branch is cloned and whatever Docker calls the project.
+test("a unit run mounts the log directories of the project root, which the wrapper made before Docker ran", (t) => {
+  const { base, home, clone, logs, run, agent, dockerCalls, unitRun } = setUp(t);
+  assert.equal(logs, join(home, '.local', 'share', 'agentrite', 'project'));
+  const seen = join(base, 'seen');
+  const both = logDirectories.map((directory) => `[ -d "${logs}/${directory}" ]`).join(' && ');
+  agent(`${both} && echo both > "${seen}"`);
+  const result = run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), unitRun(clone));
+  assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
+  assert.deepEqual(readdirSync(join(home, '.local', 'share', 'agentrite')), ['project']);
+  for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).uid, process.getuid());
+});
+
+test('a unit run mounts the log directories under XDG_DATA_HOME when that is set, and the clone stays put', (t) => {
+  const { base, home, clone, run, dockerCalls, unitRun } = setUp(t);
+  const data = join(base, 'data');
+  const result = run([branch, 'echo', 'hi'], { XDG_DATA_HOME: data });
+  assert.equal(result.status, 0, result.stderr);
+  const logs = join(data, 'agentrite', 'project');
+  assert.deepEqual(dockerCalls(), unitRun(clone, '', logs));
+  for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).isDirectory(), true);
+  assert.equal(existsSync(join(home, '.local', 'share')), false);
 });
 
 test('the wrapper leaves no clone behind when the build fails', (t) => {

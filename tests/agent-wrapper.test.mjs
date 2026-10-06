@@ -3,16 +3,27 @@ import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
   copyFileSync,
+  existsSync,
   mkdirSync,
   mkdtempSync,
   readdirSync,
+  readFileSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { fakeHost, hostVersions, latestVersions, writeCommand } from './wrapper-fixture.mjs';
+import {
+  fakeHost,
+  hostVersions,
+  latestVersions,
+  logDirectories,
+  logDirectory,
+  logMounts,
+  writeCommand,
+} from './wrapper-fixture.mjs';
 
 const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
 const kitPath = 'project/node_modules/@ritenoar/agentrite/container';
@@ -31,12 +42,22 @@ function composeCalls(root, container, versions, ...commands) {
   return commands.map((command) => `${opening} ${command}`);
 }
 
+// The flags of the log directory of the project at `root`, where `setUp` puts it: in the data directory of the home
+// that lies beside the project.
+const homeLogs = (root) => logDirectory(join(dirname(root), 'home', '.local', 'share'), root);
+
+// The `run` of a wrapper given `echo hi` for the project at `root`: `mounted` at /work, then `mounts`, and last the
+// two directories of `logs`.
+const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root)) =>
+  `run --rm --volume ${mounted}:/work ${mounts}${logMounts(logs)}agent echo hi`;
+
 // A project with the kit's wrapper installed at `kitPath` under `root`, and nothing else of the kit beside it,
 // and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER and the two version
 // variables it saw. The project's Compose file gives the build arguments `buildArgs`, where `null` stands for a
 // configuration Compose refuses, and the image exists unless `imageExists` is false. The wrapper runs with a home
 // of its own, `home`, which is empty until a test fills it, so that no test depends on what the home of whoever
-// runs the suite holds.
+// runs the suite holds. `run` runs the wrapper with that home alone, and `runWith` with the variables of `env`
+// besides and in the working directory `cwd`.
 function setUp(
   t,
   kitPath = 'node_modules/@ritenoar/agentrite/container',
@@ -57,9 +78,14 @@ function setUp(
   const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'AGENT_CLAUDE_CODE_VERSION', 'AGENT_OPENCODE_VERSION']);
   writeFileSync(host.projectBuildArgs, buildArgs === null ? '' : JSON.stringify(buildArgs));
   if (!imageExists) rmSync(host.imageLabels);
-  const run = (...args) =>
-    spawnSync(join(container, 'agent.sh'), args, { encoding: 'utf-8', env: { HOME: home, PATH: host.bin } });
-  return { base, root, container, home, run, ...host };
+  const runWith = ({ env = {}, cwd }, ...args) =>
+    spawnSync(join(container, 'agent.sh'), args, {
+      encoding: 'utf-8',
+      cwd,
+      env: { ...env, HOME: home, PATH: host.bin },
+    });
+  const run = (...args) => runWith({}, ...args);
+  return { base, root, container, home, run, runWith, ...host };
 }
 
 test('the wrapper refuses to run without a project root, naming the shim', (t) => {
@@ -94,7 +120,7 @@ test('the wrapper runs Compose from the project root with the kit located relati
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(
     dockerCalls(),
-    composeCalls(root, container, hostVersions, 'build', `run --rm --volume ${root}:/work agent echo hi`),
+    composeCalls(root, container, hostVersions, 'build', runCommand(root)),
   );
 });
 
@@ -108,7 +134,7 @@ for (const [what, buildArgs] of [
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(
       dockerCalls(),
-      composeCalls(root, container, hostVersions, 'build', `run --rm --volume ${root}:/work agent echo hi`),
+      composeCalls(root, container, hostVersions, 'build', runCommand(root)),
     );
   });
 
@@ -119,7 +145,7 @@ for (const [what, buildArgs] of [
     assert.equal(result.stderr, '');
     assert.deepEqual(
       dockerCalls(),
-      composeCalls(root, container, hostVersions, 'build', `run --rm --volume ${root}:/work agent echo hi`),
+      composeCalls(root, container, hostVersions, 'build', runCommand(root)),
     );
   });
 }
@@ -138,9 +164,9 @@ test("the wrapper stops with Compose's own error when Compose refuses the config
 // which the wrapper asks `npm` for, when the image is built. The wrapper hands Compose the version the image is
 // built with in a variable of its own, and learns of the project's from the merged configuration.
 const runOnly = (root, container, versions) =>
-  composeCalls(root, container, versions, `run --rm --volume ${root}:/work agent echo hi`);
+  composeCalls(root, container, versions, runCommand(root));
 const buildAndRun = (root, container, versions) =>
-  composeCalls(root, container, versions, 'build', `run --rm --volume ${root}:/work agent echo hi`);
+  composeCalls(root, container, versions, 'build', runCommand(root));
 const noVersionLine = (command, harness) =>
   `agent.sh: '${command} --version' printed no version, so ${harness} counts as not installed on the host.\n`;
 const holdsLine = (harness, held, wanted, source) =>
@@ -519,7 +545,7 @@ test('the wrapper builds on --rebuild although the image holds the wanted versio
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
-test("the wrapper stops with the build's own error when the build fails, and runs nothing", (t) => {
+test("the wrapper stops with the build's own error when the build fails, and runs and makes nothing", (t) => {
   const { root, container, imageLabels, buildFails, run, dockerCalls } = setUp(t, kitPath);
   writeFileSync(imageLabels, `${builtBefore.claude}|${hostVersions.opencode}\n`);
   writeFileSync(buildFails, '');
@@ -527,6 +553,7 @@ test("the wrapper stops with the build's own error when the build fails, and run
   assert.equal(result.status, 17);
   assert.match(result.stderr, /failed to solve: no network/);
   assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, 'build'));
+  assert.equal(existsSync(homeLogs(root)), false);
 });
 
 test('the wrapper runs with no Dockerfile beside it to read a version from', (t) => {
@@ -543,7 +570,7 @@ test('the wrapper runs with no Dockerfile beside it to read a version from', (t)
 const statusLinePath = (home) => join(home, '.claude', 'statusline-command.sh');
 
 function expectedRun(root, container, mounts = '') {
-  return composeCalls(root, container, hostVersions, `run --rm --volume ${root}:/work ${mounts}agent echo hi`);
+  return composeCalls(root, container, hostVersions, runCommand(root, root, mounts));
 }
 
 test("the wrapper mounts the host's status line script and the settings that run it, read-only", (t) => {
@@ -563,7 +590,7 @@ test('the wrapper mounts neither without a status line script on the host, and c
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), expectedRun(root, container));
-  assert.deepEqual(readdirSync(home), []);
+  assert.equal(existsSync(join(home, '.claude')), false);
 });
 
 test('the wrapper mounts neither when a directory is where the status line script would be', (t) => {
@@ -601,7 +628,7 @@ test('the wrapper mounts the project root with --in-place, and makes no clone', 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
-  assert.deepEqual(readdirSync(home), []);
+  assert.equal(existsSync(join(home, '.local', 'state')), false);
 });
 
 test('the wrapper mounts the directory of --workdir, and makes no clone', (t) => {
@@ -612,7 +639,76 @@ test('the wrapper mounts the directory of --workdir, and makes no clone', (t) =>
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(
     dockerCalls(),
-    composeCalls(root, container, hostVersions, `run --rm --volume ${workdir}:/work agent echo hi`),
+    composeCalls(root, container, hostVersions, runCommand(root, workdir)),
   );
-  assert.deepEqual(readdirSync(home), []);
+  assert.equal(existsSync(join(home, '.local', 'state')), false);
+});
+
+// The harnesses' logs. The wrapper mounts two directories of the host over the two in the agent's home that hold
+// them, from one log directory for each project root, and makes them itself, because Docker would make them as
+// root. The stand-in mounts nothing, so that what a harness writes there is the developer's is left to the check on
+// a host with Docker.
+const everythingIn = (directory) => readdirSync(directory, { recursive: true }).sort();
+const logDirectoryHolds = ['.claude', '.claude/projects', '.local', '.local/share', '.local/share/opencode'];
+
+for (const [form, formArgs] of [
+  ['--in-place', () => ['--in-place']],
+  ['--workdir', (workdir) => ['--workdir', workdir]],
+]) {
+  test(`the wrapper mounts the log directories of the home with ${form}, and makes them before Docker runs`, (t) => {
+    const { base, root, container, agentScript, run, dockerCalls } = setUp(t, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    const logs = homeLogs(root);
+    assert.equal(logs, join(base, 'home', '.local', 'share', 'agentrite', 'project'));
+    const seen = join(base, 'seen');
+    const both = logDirectories.map((directory) => `[ -d "${logs}/${directory}" ]`).join(' && ');
+    writeFileSync(agentScript, `${both} && echo both > "${seen}"\n`);
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    const mounted = form === '--workdir' ? workdir : root;
+    assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, mounted)));
+    assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
+    assert.deepEqual(everythingIn(logs), logDirectoryHolds);
+    for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).uid, process.getuid());
+  });
+
+  test(`the wrapper mounts the log directories under XDG_DATA_HOME with ${form}, when that is set`, (t) => {
+    const { base, root, container, home, runWith, dockerCalls } = setUp(t, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    const data = join(base, 'data');
+    const logs = join(data, 'agentrite', 'project');
+
+    const result = runWith({ env: { XDG_DATA_HOME: data } }, root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    const mounted = form === '--workdir' ? workdir : root;
+    assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, mounted, '', logs)));
+    assert.deepEqual(everythingIn(logs), logDirectoryHolds);
+    assert.equal(existsSync(join(home, '.local')), false);
+  });
+}
+
+test('the wrapper names the log directory after the project root, not after the directory of --workdir', (t) => {
+  const { base, root, home, run, dockerCalls } = setUp(t, kitPath);
+  const workdir = join(base, 'another-name');
+  mkdirSync(workdir);
+  const result = run(root, '--workdir', workdir, 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  const [call] = dockerCalls();
+  assert.ok(call.includes(logMounts(join(home, '.local', 'share', 'agentrite', 'project'))), call);
+  assert.deepEqual(readdirSync(join(home, '.local', 'share', 'agentrite')), ['project']);
+});
+
+// Docker reads a source that is not an absolute path as the name of a volume.
+test('the wrapper mounts a relative XDG_DATA_HOME as the absolute path it names from its working directory', (t) => {
+  const { base, root, container, runWith, dockerCalls } = setUp(t, kitPath);
+  const result = runWith({ env: { XDG_DATA_HOME: 'data' }, cwd: base }, root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  const logs = join(base, 'data', 'agentrite', 'project');
+  assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, root, '', logs)));
+  assert.deepEqual(everythingIn(logs), logDirectoryHolds);
 });

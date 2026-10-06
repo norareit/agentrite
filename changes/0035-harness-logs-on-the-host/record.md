@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-06T17:23:33Z
 ---
 
@@ -170,3 +170,13 @@ timestamp: 2026-10-06T17:23:33Z
   because Docker reads any other source as a volume's name; and the README's copy command overwrites nothing in the log
   directory. The proof on a real Docker runs under a Compose project of its own and needs the human for four logins.
   Nothing in the spec was found unclear or untrue of the tree. The status is `planned`
+- 2026-10-06T20:24:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, dispatched as a subagent of a
+  session on the Linux host, in the main checkout on `feature-0035-harness-logs-on-the-host` at `e35ebb3`. Read
+  `process.md` and `roles/implementer.md` of the release 4.0.0, the spec, the plan and this record. Status `planned`
+  to `in-progress`. The host's clock gives this entry a time before the planner's entries above, which is left as
+  it is
+- 2026-10-06T20:27:11Z [Claude Code, anthropic/claude-opus-5-5] the wrapper mounts the two log directories. The tests
+  were written first and failed on the expected calls, then `container/agent.sh` was changed, and `npm test` on
+  the host reported 360 tests, 360 passed. One assertion was added that the plan did not have, and is in the plan
+  now: a build that fails leaves no log directory. The stand-in for Docker mounts nothing, so these tests show the
+  flags and the directories the wrapper makes, and not what a container sees

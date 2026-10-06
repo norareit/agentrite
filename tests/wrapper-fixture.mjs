@@ -1,7 +1,7 @@
 // The host the two wrapper tests run the wrapper on: a `bin` directory that is the whole PATH, so that no test
 // depends on which harnesses the host that runs the suite has, or at which version.
 import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { delimiter, join } from 'node:path';
+import { basename, delimiter, join } from 'node:path';
 
 // What the fake harnesses print, in the two forms the real commands use. The versions are ones no release of either
 // harness has, so that no test comes to depend on what the registry holds.
@@ -10,6 +10,21 @@ export const hostVersions = { claude: '99.1.0', opencode: '98.2.0' };
 // What the fake `npm` gives as the latest published version of each harness's package. They differ from
 // `hostVersions`, so that the tests tell the two sources apart by their values.
 export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
+
+// The two directories the wrapper mounts from the host, as they lie in a home: Claude Code's sessions and OpenCode's
+// data. In the project's log directory they have these places, and in the container the same under /home/agent.
+export const logDirectories = ['.claude/projects', '.local/share/opencode'];
+
+// The log directory of the project at `root` on a host whose data directory is `data`.
+export function logDirectory(data, root) {
+  return join(data, 'agentrite', basename(root));
+}
+
+// The two flags the wrapper passes for the log directory `logs`, as a recorded call holds them, each followed by a
+// space.
+export function logMounts(logs) {
+  return logDirectories.map((directory) => `--volume ${logs}/${directory}:/home/agent/${directory} `).join('');
+}
 
 // The commands the wrapper, the dev shim and the fakes below run, besides `docker`, `npm` and the harnesses, and
 // those a unit run and the scripts that play its agent run: `git` and what follows it. A node's own directory

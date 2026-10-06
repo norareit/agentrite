@@ -3,9 +3,16 @@
 # Wrapper around `docker compose run`. Compose cannot take an ad-hoc mount per
 # invocation: the wrapper translates the working directory and any --mount flags into
 # `docker compose run --volume` options, adds the developer's Claude Code status line
-# when the host has one, and passes the rest through. It sets nothing that confines the
-# container; every such setting is in container/compose.yml and the project's
-# agent/compose.project.yml, and the firewall is in container/entrypoint.sh.
+# when the host has one and the two directories of the host that hold the harnesses'
+# logs, and passes the rest through. It sets nothing that confines the container; every
+# such setting is in container/compose.yml and the project's agent/compose.project.yml,
+# and the firewall is in container/entrypoint.sh.
+#
+# The logs are Claude Code's sessions and OpenCode's data directory. In every run they
+# are in the project's log directory on the host, <data>/agentrite/<name>, where <data>
+# is $XDG_DATA_HOME or ~/.local/share and <name> is the name of the project root's
+# directory, and not in the home volume. The agent writes them, so they are one more
+# place of the host that it writes besides /work.
 #
 # What is mounted at /work has no default, and there are two ways to run:
 #
@@ -424,6 +431,23 @@ AGENT_OPENCODE_VERSION="$opencode_wanted"
 if [ "$build" -eq 1 ]; then
   "${compose[@]}" build
 fi
+
+# The harnesses' logs, on the host: Claude Code's sessions and OpenCode's data directory,
+# from the project's log directory, which is named after the project root's directory
+# and is the same whatever is mounted at /work. In it the two have the places they have
+# in a home, so a tool on the host reads it as a home that holds nothing else. Made
+# here, as the developer, because Docker creates a mount's missing source as root, and
+# only now, so that a run that was refused or whose build failed made none. The path is
+# taken through cd and pwd because Docker reads a source that is not absolute as the
+# name of a volume. Nothing above the two directories is mounted. OpenCode keeps its
+# login in its data directory, so that is a file of the host too.
+logs="${XDG_DATA_HOME:-${HOME:?}/.local/share}/agentrite/$(basename "$root")"
+mkdir -p "$logs/.claude/projects" "$logs/.local/share/opencode"
+logs="$(cd "$logs" && pwd)"
+mounts+=(
+  --volume "$logs/.claude/projects:/home/agent/.claude/projects"
+  --volume "$logs/.local/share/opencode:/home/agent/.local/share/opencode"
+)
 
 if [ -z "$branch" ]; then
   exec "${compose[@]}" run --rm \
