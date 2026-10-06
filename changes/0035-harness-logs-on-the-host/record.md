@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-06T17:23:33Z
 ---
 
@@ -426,3 +426,20 @@ timestamp: 2026-10-06T17:23:33Z
   volumes of the host still lack `.claude` and will be refused, `agentrite-orchestrator-agent_agent-home` and
   `scratch-verify-agent_agent-home`, as the specifier read them, and are left as they are. The status stays
   `in-progress`: the reviewer's `S1` is answered and not yet reviewed again
+- 2026-10-06T22:38:42Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
+  `changes/0035-harness-logs-on-the-host/` at `b45a891158ffeda75978b7c085c853976cbc6f3d`. Delta review from
+  `1668e611eb46d779fa2d53f16c13b7a549238a8c`. Rechecked prior `S1`; returned no new S/P/C finding labels.
+  Complete review saved in
+  `.reviews/0035-harness-logs-on-the-host/20261006T223635Z-opencode-gpt-6.1-sol-delta.md`.
+  Host `npm test` and exact `./agent-dev.sh --in-place npm test` each reported 363 passed, none failed or skipped;
+  change check and delta diff checks exited 0. Independently checked developer-owned host session/database artifacts,
+  integrity, retained Docker concurrency/transition events, trial cleanup and the recreated dev home's ownership.
+  No fresh login, authenticated prompt or harness continuation/listing was attempted. Could not inspect the removed
+  trial home's credentials, preserved old logs, pre-transition owners or historical mounts; recover the old dev
+  refusal text or every historical command/output/wrapper status; or verify the macOS trial, historical test-first
+  timing or real-database migration. The review also records SQLite's initial SHM reader-bookkeeping side effect.
+- 2026-10-06T22:41:02Z [Claude Code, anthropic/claude-opus-5-5] the outcome of the reviewer's one finding. `S1`,
+  that the proof of requirement 18 on Linux was not complete: accepted by the human, who made the logins of the proof
+  and removed the trial, and corrected in this unit by the entries from 22:18:34Z on. The reviewer's delta review at
+  `b45a891` found it corrected and returned no finding, and the human said that the review came back with no more
+  remarks. No finding is left to decide and every task of the plan is ticked, so the status is `implemented`
