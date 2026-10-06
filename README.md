@@ -25,14 +25,14 @@ The "rite" is also Ritenoar's, whose projects carry it.
 |----------------------|-------------------------------------------------------------------------------------------|
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
 | `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it                  |
-| `RELEASING.md`       | How a release of the kit is made, which the `/release` skill follows                      |
 | `roles/`             | The specifier, planner, implementer and reviewer instructions                             |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
 | `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
 | `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` and `agentrite-roles` commands |
-| `tests/`             | The kit's own unit tests, run by node's built-in test runner                              |
 | `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper         |
+| `tests/`             | The kit's own unit tests, run by node's built-in test runner                              |
 | `infra/`             | The CDK app that serves release tarballs from `agentrite.ritenoar.com`                    |
+| `RELEASING.md`       | How a release of the kit is made, which the `/release` skill follows                      |
 | `deploy.sh`          | The release script, which deploys `infra/` and uploads the packed kit                     |
 
 The `agentrite` command holds four commands of its own: `init` and `refresh`, which set a project up and bring it
