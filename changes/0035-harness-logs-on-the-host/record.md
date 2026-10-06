@@ -29,3 +29,11 @@ timestamp: 2026-10-06T17:23:33Z
   which the README is to say. Six things are under "Beyond the request", the human's proposal of another path than
   `/work` among them. The plan for the human's own tool was written in that tool's repository and is no part of this
   unit. No plan is written. The status stays `draft`
+- 2026-10-06T19:29:11Z [human] asked whether a session on their Mac could find out if this works on macOS before
+  the unit is approved, and for the instructions as a file in the unit's directory: "could you maybe create an extra
+  file in the change directory of this change 'mac-instructions.md' ?"
+- 2026-10-06T19:29:11Z [Claude Code, anthropic/claude-opus-5-5] wrote `mac-instructions.md`: how to try, with the
+  image of the release 4.0.0 and the two mounts given by hand, the home with the mounts inside it, one container, two
+  at the same time, and a read from the host while a container writes. It is not part of the spec, and nothing in it
+  was run: the commands are written from the compose file and the wrapper, and OpenCode's from memory. The status
+  stays `draft`
