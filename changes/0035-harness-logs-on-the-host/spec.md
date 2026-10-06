@@ -13,38 +13,38 @@ usage of every sandboxed session is missing from it.
 
 ### What the human asked for
 
-On 2026-10-06, in a session of Claude Code on the host, about that tool: "It uses my local claude logs and opencode
-database to push metrics to a rpi SQL database... BUT I just realised this probably doesn't happen when I'm running in
-the agentrite containers, becasue they have their own claude and opencode 'homes', right?!"
+On 2026-10-06, in a session of Claude Code on the host, the human said of that tool that it reads the host's Claude
+Code logs and OpenCode database, and asked whether it therefore misses what is run in the sandbox, where both
+harnesses have a home of their own. It does.
 
 Several ways out were weighed in that session, and the human chose:
 
 * **A directory of the host is mounted for the harnesses' logs**, over reading the volumes from the host, which does
   not work on macOS, and over running the tool in the sandbox, which would need the tool's database login and a way
   to its server from inside
-* **That directory is outside the project**, over one inside it: "I'm really not a fan of polluting a project
-  directory with this type of stuff. Someone could accidentally commit this."
-* **It is named after the project root's directory, under one place for all projects**: "the kit puts it in a GENERIC
-  path, but uses the projects root folder as the directory. Something like: .local/share/agentrite/norareit/ and
-  .local/share/agentrite/projectx"
+* **That directory is outside the project**, over one inside it, which would put files in a project that do not
+  belong to it and that someone could commit by accident
+* **It is named after the project root's directory, under one place for all projects**, and the human gave
+  `.local/share/agentrite/norareit/` as the example
 * **Not the host's own harness directories**, which the human proposed and dropped when told what they hold
 * **`/work` stays `/work`**, which the human proposed changing and left for later
 
-Then: "Can you write the plan for harness-telemetry AND act as the @specifier for the changes necessary to fix this
-for agentrite?" Asked by the specifier, the human chose:
+The human then asked for a plan for the tool, in its own repository, and for this unit to be specified. Asked by the
+specifier, the human chose:
 
 * **The whole of OpenCode's data directory is mounted, its login included**, over moving Claude Code's logs only and
   over a requirement that the login stays in the volume
-* **The logs already in a home volume are not moved by the kit.** The human wants them collected and does not mind
-  how: "If you tell me how to do it manually, that's fine."
+* **The logs already in a home volume are not moved by the kit.** The human wants them collected, does not mind
+  how, and is content with a command to run by hand
 
 After the trials below, told that a home volume of an earlier release may hold directories that are not the
 agent's, and given three ways out, the human chose:
 
-* **Such a volume is refused, and the developer removes it**: "Can't we just show a clear error when that happens and
-  instruct to remove the volume? Then it'll be recreated after and all is gut."
+* **Such a volume is refused with a clear error, and the developer removes it**, after which it is made again as
+  this release makes one
 
-Everything else in this spec is the specifier's, and has not been read by the human yet.
+What the human said is given here in the specifier's words, at the human's request. Everything else in this spec is
+the specifier's.
 
 ### What was found while specifying
 
