@@ -361,3 +361,58 @@ timestamp: 2026-10-06T17:23:33Z
   error. Afterwards, in a third container, `opencode session list` listed eleven sessions, the ten beside "Test
   message". Claude Code's directory on the host holds three session files, two more than before, all uid 1000, and
   `find "$logs" ! -uid 1000` printed nothing. The integrity check returned `ok`
+- 2026-10-06T22:24:23Z [Claude Code, anthropic/claude-opus-5-5] **a volume of an earlier release that holds the
+  directories, with the harnesses.** The human removed the trial's volume, and in `released --in-place` logged in to
+  Claude Code and gave it one prompt, logged in to OpenCode and gave it one prompt, and ran `ls -ldn ~/.claude
+  ~/.local ~/.local/share`, which printed:
+
+  ```
+  drwxr-xr-x 7 1000 1000 4096 Oct  6 22:21 /home/agent/.claude
+  drwxr-xr-x 4 1000 1000 4096 Oct  6 22:21 /home/agent/.local
+  drwxr-xr-x 4 1000 1000 4096 Oct  6 22:21 /home/agent/.local/share
+  ```
+
+  The volume, read from a container with it mounted read-only and no network, held Claude Code's
+  `.credentials.json` and the session `.claude/projects/-work/11bf8c39-b588-4b77-a9eb-819ce8508f8f.jsonl`, and in
+  `.local/share/opencode` an `auth.json` and an `opencode.db` with its two companions. The container of `released`
+  was still up, with its shell idle, during what follows.
+
+  `working --in-place` with the `bash -c` of the new volume's step, with standard input from `/dev/null`, started:
+  the firewall was verified, `id` printed uid 1000, all six directories are uid 1000, no line says "NOT WRITABLE", and
+  `findmnt` shows `/home/agent` as the volume, with `/home/agent/.claude/projects` and
+  `/home/agent/.local/share/opencode` from `/home/stef/.local/share/agentrite/agentrite`, and no other. In the same
+  container:
+    - `opencode auth list` showed "OpenAI oauth", from the `auth.json` of the log directory, which the first step's
+      login left there. So OpenCode did not ask for its login once more here, as the README says it does for a
+      project whose log directory holds none
+    - `opencode session list` listed the eleven sessions of the log directory and not the one made under `released`
+    - `claude -p "Remember the word walnut. Reply with only OK."` exited 0 and printed `OK`, logged in from the
+      volume
+    - `opencode run "say the word walnut"` exited 0 and printed `walnut`
+
+  In a second container, `claude --continue -p "Which word did I ask you to remember? Reply with only that word."`
+  exited 0 and printed `walnut`, and `opencode session list` exited 0 and listed twelve sessions, the new one first.
+  The wrapper's own exit status was lost in the pipe that trimmed the build's output, in both; each command in it
+  exited 0.
+
+  Of moving to this release, as the README says it: the sessions made under `released` are not listed, and nothing
+  was deleted. Read once more from a container with the volume mounted read-only, the volume still holds
+  `11bf8c39-b588-4b77-a9eb-819ce8508f8f.jsonl` and OpenCode's `auth.json` and database, unchanged in size and time.
+  The log directory on the host holds four Claude Code session files, that one not among them, all uid 1000, and
+  `find "$logs" ! -uid 1000` printed nothing
+- 2026-10-06T22:24:23Z [Claude Code, anthropic/claude-opus-5-5] which requirement is shown by what, where the entry
+  of 20:35:01Z said in part or not shown:
+    - 6: the files of both harnesses on the host, a session file, the database and the login among them, all the
+      developer's and read as the developer
+    - 7: Claude Code's `.credentials.json` and `settings.json` in the volume, and the three mounts
+    - 8: on the new volume and on the one of the earlier release, each with a second container that continues
+      Claude Code's session and lists OpenCode's
+    - 10: the two containers at the same time
+    - 18: all three volumes are shown, each with what was run and what it printed
+
+  The trial is not yet removed: the volume `ritenoar-agentrite-0035-trial_agent-home`, the network
+  `ritenoar-agentrite-0035-trial_default` and the image `ritenoar-agentrite-0035-trial` are left to the human, the
+  harness's permissions having refused the implementer the removal of the volume. The log directory
+  `~/.local/share/agentrite/agentrite` stays. It holds the trial's sessions and an OpenCode login, and is this
+  project's real one, which `./agent.sh` uses from the next release on. The suite was not run in the sandbox as
+  `./agent-dev.sh --in-place npm test`, for the reason given at 20:35:01Z, and that box stays open

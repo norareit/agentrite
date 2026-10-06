@@ -216,7 +216,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
   opencode run "say the number $i"; done; claude -p "Reply with only the word A"'`, with `B` in the second. No run
   prints an error, `opencode session list` afterwards lists the ten beside the first, Claude Code's directory holds
   two more session files, and the integrity check prints `ok` (R10, R18)
-- [ ] **A volume of an earlier release that holds the directories.** Remove the volume. In `released --in-place`
+- [x] **A volume of an earlier release that holds the directories.** Remove the volume. In `released --in-place`
   the human logs in to both harnesses and gives each one prompt, which is how such a volume came to hold them, and
   `ls -ldn ~/.claude ~/.local ~/.local/share` shows all three as the agent's. Then `working --in-place` with the
   `bash -c` of the task above: it starts, and every directory is writable. Claude Code is logged in from the
@@ -236,7 +236,7 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 - [ ] `npm test` passes, on the host and with `./agent-dev.sh --in-place npm test` in the sandbox
 - [x] `npm run check-changes` passes on the committed branch
 - [x] Every line of the changed files is within 120 characters, and no changed text holds an em dash
-- [ ] Each of the requirements 1 to 18 is shown by a test named above or by a logged step of the proof, and the
+- [x] Each of the requirements 1 to 18 is shown by a test named above or by a logged step of the proof, and the
   record says which
 - [x] Each code block in the README's new section was run as written, and the refusal quoted there is the
   entrypoint's to the letter
