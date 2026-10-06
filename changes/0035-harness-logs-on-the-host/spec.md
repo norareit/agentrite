@@ -38,11 +38,19 @@ for agentrite?" Asked by the specifier, the human chose:
 * **The logs already in a home volume are not moved by the kit.** The human wants them collected and does not mind
   how: "If you tell me how to do it manually, that's fine."
 
+After the trials below, told that a home volume of an earlier release may hold directories that are not the
+agent's, and given three ways out, the human chose:
+
+* **Such a volume is refused, and the developer removes it**: "Can't we just show a clear error when that happens and
+  instruct to remove the volume? Then it'll be recreated after and all is gut."
+
 Everything else in this spec is the specifier's, and has not been read by the human yet.
 
 ### What was found while specifying
 
-On `master` at `f6998db`, which holds the release 4.0.0, and on the human's Linux host.
+On `master` at `f6998db`, which holds the release 4.0.0, and on the human's Linux host. The trials were made later
+the same day, with the image of that release and the two mounts given by hand: on the human's Mac by a session
+there, which the unit's record holds in full, and of the home alone on the Linux host by the specifier.
 
 * The home is one named volume for each Compose project, mounted at `/home/agent`, and every container of a project
   shares it. The base compose file mounts one host dotfile, the developer's git configuration, read-only. The wrapper
@@ -67,16 +75,31 @@ On `master` at `f6998db`, which holds the release 4.0.0, and on the human's Linu
   of the working copy. They differ in the Compose project's name, and so in image and home volume
 * The README states what the sandbox defends against: an agent that was misled and writes whatever it likes under
   `/work`. It names as not defended "the saved logins in the home volume"
+* The home in the image holds `.bash_logout`, `.bashrc` and `.profile`, and neither `.claude` nor `.local`. Docker
+  fills a new volume from the image once, and never again
+* A mount point that the home volume does not hold is made by Docker, as root, with every directory above it that
+  is missing. Tried on a new volume, on Linux and on macOS alike: `.claude`, `.local` and `.local/share` were root's,
+  the agent could not write in them, and the two mounted directories were writable. Claude Code keeps its settings
+  and its login in `.claude`
+* The container's root holds no capability to change a file's owner, which the entrypoint says of itself, so
+  nothing in the container can make such a directory the agent's
+* A volume in which the agent had made the directories before the mounts were given has none of this: every
+  directory above the mounts was the agent's
+* Of the five home volumes on the Linux host, three lack `.claude`, and one of those lacks `.local` too. They are
+  the sandboxes in which Claude Code, or either harness, was never started. The other two hold every directory above
+  both mounts
+* On macOS 15.1.1 with Docker Desktop 4.26.0 and VirtioFS as its file sharing, in a volume prepared so, both
+  harnesses worked with their logs on a mounted directory of the host. A second container continued Claude Code's
+  session, listed OpenCode's, and found OpenCode logged in. Two containers at the same time ran ten OpenCode
+  sessions and two Claude Code prompts without an error, and the database's integrity check passed. Read from the
+  Mac every three seconds while a container wrote, the database gave a current count each time, and Claude Code's
+  log arrived on the Mac as it was written. What the container wrote belonged to the developer on the Mac
 
 **Not established.**
 
-* What a directory mounted inside the home volume does to the home. In a volume that does not hold the mount point
-  yet, Docker makes it, and whether it and the directories above it then belong to the agent was not tried. Claude
-  Code keeps its settings and its login beside `projects`, so a `.claude` the agent cannot write would break it
-* That both harnesses work with their logs on a mounted directory of the host. Nothing was started
-* That OpenCode's database works on a mounted directory under Docker Desktop for macOS, where a mount goes through a
-  file sharing layer and a volume does not. SQLite's locking and its shared memory file are known to be where such
-  layers fail. The specifier has no macOS host
+* That both harnesses work so on a Linux host. Of the trial, only the home was repeated there, and no harness was
+  started. A mounted directory is the host's own file system on Linux, with no layer between
+* That it holds with Docker Desktop's other file sharing implementations, gRPC FUSE and osxfs. Neither was tried
 * That OpenCode has no setting that puts its database apart from its login. None was found, and none was looked for
   beyond the directory's contents
 
@@ -96,7 +119,7 @@ Where the logs are:
    branch, the project root, or another directory
 5. The log directory and the two directories in it exist before the container starts, made by the wrapper as the
    developer. Docker makes none of them
-6. On a Linux host, what a harness writes there belongs to the developer, who reads it as any other file of theirs,
+6. On the host, what a harness writes there belongs to the developer, who reads it as any other file of theirs,
    without Docker and without another user's rights
 
 What stays as it was:
@@ -105,23 +128,33 @@ What stays as it was:
    harness keeps outside the two directories
 8. Both harnesses work in the sandbox as they did. Each starts, is logged in, and holds a session. A second container
    of the project finds that session: Claude Code continues it, and OpenCode lists it. That holds on a home volume
-   that did not exist before and on one made by an earlier release
-9. The agent can write its whole home, the two directories and every directory above them included. The
-   entrypoint's refusal of a home the agent does not own stands
+   that did not exist before, and on one of an earlier release that holds every directory above both mounts
+9. In a container that starts, the agent can write its whole home, the two directories and every directory above
+   them included. The entrypoint's refusal of a home the agent does not own stands
 10. Two containers of one project that run at the same time both write their sessions, as they do today in one home
     volume
 
+The home volume:
+
+11. In a home volume that this release makes, the two mount points and every directory above them belong to the
+    agent, whichever harness is started first and whether one is started at all
+12. A home volume in which a directory above either mount does not belong to the agent is refused when the container
+    starts, before the command runs, as a home the agent does not own is refused today. The refusal names the
+    directory, says that the volume was made by an earlier release in which that directory was never made, and says
+    how to recover: remove the project's home volume, with the command, and start again. It says that this discards
+    the logins saved in the volume
+
 What the sandbox reaches on the host:
 
-11. A container reaches its own project's log directory and no other project's. Besides that directory the sandbox
+13. A container reaches its own project's log directory and no other project's. Besides that directory the sandbox
     mounts what it mounted before and nothing more: none of the host's own harness directories, and no directory
     above the log directory
 
 What says so:
 
-12. The comments of the base compose file and of the wrapper, which state what is mounted and what the agent can
+14. The comments of the base compose file and of the wrapper, which state what is mounted and what the agent can
     write, are true of the sandbox with this unit
-13. The README states, where it describes the sandbox:
+15. The README states, where it describes the sandbox:
     * where the logs are on the host, and that a tool on the host can read them there
     * that the agent writes this directory of the host besides `/work`, and that what is in it was written by an
       agent that may have been misled, so that whatever reads it treats it as data
@@ -132,18 +165,23 @@ What says so:
     * what moving to this release does to a project that has a home volume: the sessions in it are no longer listed,
       OpenCode asks for its login once more, and nothing is deleted. It gives the command that copies a volume's
       logs to the log directory by hand
-    * that OpenCode on a macOS host has not been shown to work with this, if that is still so when the unit is done
-14. Each sentence of the README that this unit makes untrue is corrected, among them that the agent writes "the
+    * that a home volume in which a harness was never started may be refused after moving to this release, what the
+      refusal says, and that removing the volume is the way on. It tells a developer who wants the volume's logs to
+      copy them first
+    * with which file sharing of Docker Desktop for macOS this was shown to work, and that it was shown with no
+      other
+16. Each sentence of the README that this unit makes untrue is corrected, among them that the agent writes "the
     working directory, its home volume and `/tmp`", that a harness's login is kept in the home volume, and the list
     of what a unit run does not defend against
 
 The proof:
 
-15. The suite shows, with the stand-in for Docker it has, what the wrapper asks Docker to mount and which directories
+17. The suite shows, with the stand-in for Docker it has, what the wrapper asks Docker to mount and which directories
     it makes first, for a unit run, for `--in-place` and for `--workdir`, with `$XDG_DATA_HOME` set and unset
-16. Requirements 6, 8, 9 and 10 are shown once on a real Docker, on a Linux host, with what was run and what it
-    printed in the unit's record: on a home volume made for it and on one an earlier release made. The stand-in
-    cannot show these, and they are what the unit can break
+18. Requirements 6 and 8 to 12 are shown once on a real Docker, on a Linux host, with what was run and what it
+    printed in the unit's record: on a home volume this release made, on one of an earlier release that holds the
+    directories, and on one that lacks them, which is refused. The stand-in cannot show these, and they are what
+    the unit can break
 
 ## Decisions
 
@@ -155,7 +193,7 @@ The proof:
   and the human's tool shows a project by the last part of its path, so sandboxed and host sessions of one project
   come together there without a rule. The Compose project's name would have matched where the clones are kept, and
   would have given this repository's two sandboxes a directory each. It was not chosen because it is a name made for
-  Docker: `norareit-agent`, `ritenoar-agentrite-agent`. The cost is requirement 13's fourth point, and that this
+  Docker: `norareit-agent`, `ritenoar-agentrite-agent`. The cost is requirement 15's fourth point, and that this
   repository's `./agent.sh` and `./agent-dev.sh` share their logs and their OpenCode login
 * **Under the data directory, not the state directory. The human named the path.** The state directory holds a
   directory for each Compose project, with the clones in it. A directory for each project root beside those would put
@@ -179,12 +217,21 @@ The proof:
   container that was misled. With this unit that agent writes one more directory of the host: its own project's log
   directory. It can put anything there, a false record of usage and a link to a file elsewhere among it. The unit
   defends the logs of other projects and the host's own harness directories, which the container does not reach, and
-  that is requirement 11. It does not defend a tool that reads the log directory against what is in it, and it does
+  that is requirement 13. It does not defend a tool that reads the log directory against what is in it, and it does
   not keep apart two projects whose roots have one name. Nothing on the host reads the directory unless the
   developer points something at it. The supported usage is the sandbox's: one developer, one host
-* **Shown on Linux, and macOS is said to be open. The specifier's.** The unit can be built and shown on the host it
-  is built on. Whether OpenCode's database holds on a macOS mount is not established, and the README says so rather
-  than the unit claiming it. Showing it is under "Beyond the request"
+* **A home volume with a directory that is not the agent's is refused, and removed by the developer. The human's.**
+  Docker has made the directory as root before anything of the kit runs in the container, and nothing in the
+  container can change its owner. Left alone, the harness fails later with nothing naming the cause, which is what
+  the entrypoint's present refusal exists to prevent. Removing the volume costs its saved logins, and here that is
+  little: a volume without `.claude` holds no login of Claude Code, and OpenCode's login leaves the volume with this
+  unit in any case. Two other ways were given to the human. A container that the wrapper starts before each run,
+  without the mounts, to make the directories as the agent: it repairs every volume, and every start of every
+  sandbox then pays for a second container and its firewall, for a fault a volume can have once. A capability for
+  the entrypoint to change the owner: the container is started without it on purpose
+* **Shown on macOS with VirtioFS, and to be shown on Linux. The specifier's.** The trial on the human's Mac is what
+  is known of macOS, and the README names the file sharing it was made with rather than macOS as a whole. On Linux
+  no harness was started, so requirement 18 asks for it on the host the unit is built on
 
 ## Non-goals
 
@@ -196,14 +243,17 @@ The proof:
 * Keeping apart two projects whose root directories have one name
 * Keeping OpenCode's login in the home volume
 * An option for where the log directory is, or for not having one
-* A change to the firewall, the egress allowlist or the entrypoint's checks
+* A change to the firewall or the egress allowlist
+* Repairing a home volume that is refused
 * The logs of a harness other than Claude Code and OpenCode
 
 ## Beyond the request
 
-* **Showing OpenCode's database on a macOS host.** It would cost a session on a Mac with Docker Desktop: a login, a
-  session, and a second container at the same time. Without it the README says that it is open, and a developer on
-  macOS who finds OpenCode failing sees it at once, in the sandbox, with nothing of the host's lost
+* **Showing it with Docker Desktop's other file sharing implementations.** It would cost the trial on the Mac once
+  more for each. Without it the README names the one it was shown with, and a developer on another who finds
+  OpenCode failing sees it at once, in the sandbox, with nothing of the host's lost
+* **A wrapper that repairs a refused home volume.** The human chose against it. It is named here because it is what
+  would spare a developer the removal
 * **Copying a volume's logs at the first start.** It would cost code in the wrapper or the entrypoint that runs once
   for each project, and its tests. Without it the README's command does the same by hand, and a developer who skips
   it loses the listing of old sessions and no file

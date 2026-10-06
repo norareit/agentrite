@@ -131,3 +131,22 @@ timestamp: 2026-10-06T17:23:33Z
   while a container writes. `spec.md` is left as it is. What this changes in it is the specifier's to write and the
   human's to approve. The trial was removed: the volume `agentrite-mac-trial_agent-home`, its network, and
   `~/.local/share/agentrite`, which held the OpenCode login. The status stays `draft`
+- 2026-10-06T19:59:43Z [human] asked for the trial's results to be read, and what they change in the spec. Told that
+  Docker makes the directories above the mounts as root in a volume that lacks them, and given three ways out, chose a
+  refusal: "Can't we just show a clear error when that happens and instruct to remove the volume? Then it'll be
+  recreated after and all is gut."
+- 2026-10-06T19:59:43Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the main session on the Linux host,
+  on `master` at `aded19a`. Repeated step 1 of `mac-instructions.md` on a volume made for it, with the image
+  `ritenoar-agentrite-agent` and no harness started: `.claude`, `.local` and `.local/share` were root's and not writable
+  by the agent, and both mounted directories were writable, as on the Mac. The volume was removed. Read the five home
+  volumes of the host, each mounted read-only: `agentrite-orchestrator-agent` and `ritenoar-agentrite-agent-dev` lack
+  `.claude`, `scratch-verify-agent` lacks `.claude` and `.local`, and `norareit-agent` and `ritenoar-agentrite-agent`
+  hold every directory above both mounts
+- 2026-10-06T19:59:43Z [Claude Code, anthropic/claude-opus-5-5] corrected `spec.md`, which is `draft`. What the trials
+  showed moved from "Not established" to what was found, and what is left open is Linux with a harness started, and
+  Docker Desktop's other file sharing. Two requirements are new, 11 and 12: a home volume this release makes holds the
+  directories as the agent's, and one in which a directory above a mount is not the agent's is refused, with the removal
+  named. The requirements after them moved up by two. Requirement 8 no longer promises a volume of an earlier release
+  that lacks the directories. The README is to name the file sharing the unit was shown with, in place of saying that
+  macOS is open. The entrypoint's checks left the non-goals, and repairing a refused volume joined them. The status
+  stays `draft`
