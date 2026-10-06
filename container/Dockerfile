@@ -123,6 +123,16 @@ RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
     && mkdir -p /work \
     && chown "${AGENT_UID}:${AGENT_GID}" /work /home/agent
 
+# The two directories that container/agent.sh mounts from the host for the harnesses'
+# logs, and every directory above them in the home, as the agent's. Docker fills a new
+# home volume from the image, ownership included, before it mounts anything inside it,
+# so the mount points are found there. A mount point that a volume lacks is made by
+# Docker as root, with every missing directory above it, and the agent then cannot write
+# ~/.claude, where Claude Code keeps its login and its settings. The entrypoint refuses
+# a volume that was made without these.
+RUN mkdir -p /home/agent/.claude/projects /home/agent/.local/share/opencode \
+    && chown -R "${AGENT_UID}:${AGENT_GID}" /home/agent/.claude /home/agent/.local
+
 # The egress proxy's own account. The firewall exempts this uid from the redirect to the
 # proxy and lets it alone connect out on 443, so it must be distinct from the agent.
 # Created after the agent, as a system account, so that useradd picks a uid nothing else

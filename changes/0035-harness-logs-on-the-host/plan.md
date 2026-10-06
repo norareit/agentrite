@@ -127,11 +127,11 @@ The entrypoint:
 
 The image:
 
-- [ ] Add `tests/dockerfile-log-directories.test.mjs`, failing: the Dockerfile's last stage makes
+- [x] Add `tests/dockerfile-log-directories.test.mjs`, failing: the Dockerfile's last stage makes
   `/home/agent/.claude/projects` and `/home/agent/.local/share/opencode`, which are the two targets `logMounts`
   gives, and gives `/home/agent/.claude` and `/home/agent/.local` to the agent with everything in them, after the
   agent's account is made (R11)
-- [ ] In `container/Dockerfile`, a `RUN` of its own after the one that makes the agent: `mkdir -p` of both mount
+- [x] In `container/Dockerfile`, a `RUN` of its own after the one that makes the agent: `mkdir -p` of both mount
   points and `chown -R "${AGENT_UID}:${AGENT_GID}"` of `/home/agent/.claude` and `/home/agent/.local`. Its comment
   says what Docker does to a mount point a new volume lacks, and that the entrypoint refuses a volume made without
   these (R11)
@@ -245,6 +245,6 @@ The proof on a real Docker, on the Linux host, by the implementer with the human
 - [x] `feature-0035 Extract the recovery of a refused home volume`: the refactoring of the entrypoint and the one
   line of its test, with no change of behavior
 - [x] `feature-0035 Refuse a home volume made without the log directories`: the entrypoint's check and its tests
-- [ ] `feature-0035 Make the log directories in the image`: the Dockerfile and its test
+- [x] `feature-0035 Make the log directories in the image`: the Dockerfile and its test
 - [ ] `feature-0035 Describe the harness logs`: the README
 - [ ] `feature-0035 Record the proof on a real Docker`: the record
