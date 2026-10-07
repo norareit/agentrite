@@ -16,10 +16,10 @@ keeps for installing the firewall. The sandbox exists to keep those from a harne
 
 ### What the human asked for
 
-On 2026-10-06, trying the release 4.0.0 in another project: "Im running into an issue during testing this all out: I
-want claude code and opencode open both in the container for the implementation/review loop. Can I connect a second
-client to the container for this?" And, told that Docker can and how: "I really think it is worth making this into its
-own unit. Can you act as the @specifier and create a spec for this? maybe something like npx agentrite connect 0012"
+On 2026-10-06, while trying the release 4.0.0 in another project, the human wanted Claude Code and OpenCode open in
+the container at the same time, for the loop of implementing and reviewing, and asked whether a second client can be
+connected to the container. Told that Docker can and how, the human asked for a unit of its own for it, and proposed
+a command such as `npx agentrite connect 0012`.
 
 Asked by the specifier, the human chose:
 
