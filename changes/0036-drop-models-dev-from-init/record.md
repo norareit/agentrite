@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-10-06T22:50:00Z
 ---
 
@@ -65,3 +65,5 @@ section, which is written at the release; and the `ALLOWLIST` of any existing pr
   Nothing else in the unit changed, and no other file named it as 0041: the 0041 in `history-0037-kit-as-an-npm-package`
   is an older unit of another name. The one commit made under the old number, `909d084`, keeps its prefix `task-0041`.
   The record of 0042 says that 0041 was the highest number when it was written, which it was. The status stays `draft`
+- 2026-10-07T12:56:44Z [human] asked for the unit to be implemented, was told that it was still `draft`, and approved
+  it, asking for the renumbering to be committed on `master` first. The status is `approved`
