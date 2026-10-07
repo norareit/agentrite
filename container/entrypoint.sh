@@ -89,12 +89,22 @@ check_home_owner "$agent_uid" /home/agent
 # is refused, at the first such directory. The two mount points themselves are not
 # compared: Docker Desktop shows the top of every mounted directory as root's while the
 # agent writes it, so their owner says nothing.
+#
+# Each directory is read as the agent, not as root. Root here holds none of the
+# capabilities that let root pass a file's permissions, so it enters a directory only as
+# any other user would, and a tool that follows the XDG convention makes .local for its
+# owner alone: root could then not look at .local/share in a home that is sound. The
+# agent is who has to use these directories, and this script can become the agent. A
+# directory that even the agent cannot read is refused too, in this script's words and
+# with what the read said, rather than the script ending on the bare error of stat.
 check_log_directory_owners() {
   local agent_uid="$1" home_path="$2"
   local name directory owner
   for name in .claude .local .local/share; do
     directory="$home_path/$name"
-    owner="$(stat -c %u "$directory")"
+    owner="$(setpriv --reuid=agent --regid=agent --init-groups -- stat -c %u "$directory" 2>&1)" \
+      || die "$directory could not be examined as the agent, so the agent cannot be shown to write it: $owner
+$(home_volume_recovery)"
     [ "$owner" -eq "$agent_uid" ] \
       || die "$directory is owned by uid $owner, but the agent is uid $agent_uid, so the agent cannot write it.
 The home volume was made by an earlier release, in which that directory was never made, so Docker made it as root

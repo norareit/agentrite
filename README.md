@@ -662,6 +662,10 @@ Removing the volume is the way on. The next start makes a new one from the image
 and every directory above them as the agent's. A developer who wants the volume's logs copies them first, with the
 command above, which a refused volume still allows.
 
+The entrypoint examines those directories as the agent, so a directory that admits its owner alone, as tools that
+follow the XDG convention make `.local`, passes when it is the agent's. One that even the agent cannot read is
+refused in the same way, with what the read said in place of an owner.
+
 This was shown to work on macOS 15.1.1 with Docker Desktop 4.26.0 and VirtioFS as its file sharing: both harnesses
 with their logs on the mounted directories, two containers writing at the same time, and the host reading while a
 container wrote. It was shown with no other file sharing of Docker Desktop for macOS, so neither with gRPC FUSE nor
