@@ -94,3 +94,15 @@ section, which is written at the release; and the `ALLOWLIST` of any existing pr
       version but 1.18.35, the interactive session, which was not started, since `opencode run` sent the prompt,
       any provider but the ChatGPT login, and a home volume that holds no catalog while `models.dev` is not listed
     * The sandbox left the checkout as it was: `git status` showed the one edited file after both runs
+- 2026-10-07T12:59:57Z [Claude Code, anthropic/claude-opus-5-5] implemented the description, in `85f97de` and `535f5ba`.
+  `85f97de` removes `HARNESS_HOSTS`, `harnessHosts` and the `harness_hosts` value from `scripts/agentrite.mjs`, the
+  `{{harness_hosts}}` line from the compose template, whose `ALLOWLIST` now ends with its three comment lines, the
+  test for `models.dev` from `tests/agentrite-init.test.mjs`, and `models.dev` with its comment line from this
+  repository's `agent/compose.project.yml`, where `api.openai.com` and its comment stay. `535f5ba` adds the
+  amendment to the record of 0010. The test that the compose file carries no host now asks for `claude` and
+  `opencode` together. It was changed before the code and failed then, as the one failing test of the suite, and
+  passes since. What was run, on the host with Node 26.9.0, on the tree of `535f5ba`: `npm test`, 364 of 364
+  passed, none skipped; `npm run check-changes`, which printed no finding and exited 0. Not checked: `agentrite
+  init` run in a project outside the tests, and a start of the sandbox from the committed tree, which is the tree
+  the second run of the check above had for `agent/compose.project.yml`. The unit stays `in-progress`, since no
+  review has been made
