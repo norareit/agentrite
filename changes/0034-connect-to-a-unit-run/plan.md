@@ -205,6 +205,15 @@ The README.
 - [x] In "Starting it", name `--connect` in one sentence that points to "Working on a clone", and make the sentence
       on a command that says neither form true of the four forms (R13, R14)
 
+After the review of `7db50d7`, for its finding S1. Added on 2026-10-07, with the reason in `record.md`.
+
+- [ ] Test that `--connect` together with `--workdir DIR` or `--mount DIR` is refused as the approach says when
+      `DIR` does not exist, once with the option before `--connect` and once after it: exit 2, the option named,
+      no call of Docker and npm asked nothing (R10)
+- [ ] In `container/agent.sh`, keep the directories of `--workdir` and `--mount` as they were given while the
+      options are read, and resolve them after the refusals of `--connect`, so that those refusals do not depend
+      on a directory. A run resolves them as before, and reports a directory that is not there as before (R10)
+
 ## Verification
 
 - [x] `npm test` passes on the final tree
@@ -223,3 +232,8 @@ The README.
 - [x] `feature-0034 Record the runs on a real Docker`: the record
 - [x] `feature-0034 Describe --connect in the README`: the README
 - [x] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree
+- [x] `feature-0034 Record the review and plan the correction of its finding S1`: the reviewer's entry, the record
+      and the plan
+- [ ] `feature-0034 Refuse --connect with an option of a run before its directory is read`: the tests and the
+      wrapper
+- [ ] `feature-0034 Record the outcome of the review's findings`: the record, with the suites on the final tree

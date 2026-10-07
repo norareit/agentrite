@@ -183,3 +183,20 @@ timestamp: 2026-10-06T14:38:19Z
   always passes `--rebuild`, while the README says that the shim takes what `./agent.sh` takes, and this unit did
   not change that sentence or the shim. Two harnesses side by side in one container were not tried, as said above.
   The status stays `in-progress`: the review is done elsewhere, and `implemented` is set after it
+- 2026-10-07T16:25:38Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of
+  `changes/0034-connect-to-a-unit-run/` at `7db50d7e34754b5202fc7f231950920cc992ea76`, against the merge base
+  `1391ee6da8d8499d065620192f5a52b91ace2ec1`. Returned S1 and C1; complete findings are saved in
+  `.reviews/0034-connect-to-a-unit-run/2026-10-07T162356Z-opencode-gpt-6.1-sol-7db50d7-full.md`.
+  `npm test` reported 390 passing, none failing or skipped; `npm run check-changes`, `bash -n` of both changed
+  shell files and `git diff --check` passed. Independently exercised connected identity, environment, capabilities,
+  privilege refusals, egress, terminals, concurrent commands and owner termination on real Docker 28.4.0 on Linux.
+  Historical test-first ordering and red-test counts could not be verified from committed history. Did not run
+  macOS or two interactive harnesses side by side. No implementation, spec or plan was changed, and no commit made
+- 2026-10-07T16:27:42Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the host, asked
+  by the human, through the session that coordinates the work, to check the review of `7db50d7` and to change what
+  is necessary. Read the findings file in full and `process.md` and `roles/reviewer.md` of the release 4.1.1 again.
+  The reviewer's entry above was not committed, and is committed with this one, as it was written. S1 is right:
+  `--workdir` and `--mount` resolve their directory with `cd` while the options are read, so a directory that is
+  not there ends the wrapper with the shell's error and 1 before the refusal of requirement 10 is reached, in
+  either order. The tests of that refusal gave only a directory that exists. Two tasks for it are added to
+  `plan.md`, under a line that says when and why, with three commit points. The status stays `in-progress`
