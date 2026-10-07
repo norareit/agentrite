@@ -81,3 +81,31 @@ timestamp: 2026-10-07T11:45:34Z
   Docker: the refusal of a directory that cannot be examined, which the suite shows with a directory closed to its own
   owner, and anything on macOS. Not done: the human's own project, which needs a release that holds this and its image
   built again. Every task of the plan is ticked. The status stays `in-progress`: the review is not this session's
+- 2026-10-07T12:03:38Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of
+  `0042-home-check-cannot-enter-a-directory` at commit `47d524d1d2b1bb56fb0fb4341c40246abbf64919`, against the merge
+  base with `master`, `a41ca27`. Returned P1. Complete findings saved in
+  `.reviews/0042-home-check-cannot-enter-a-directory/20261007T120141Z-opencode-gpt-6.1-sol-full.md`.
+  Independently ran `npm test`: 365 tests passed, none skipped; `npm run check-changes` passed. Both new regression
+  tests failed against the entrypoint of `20587ef`. On Docker Engine 28.4.0 with Compose 2.39.2, through the wrapper,
+  startup passed with all three directories at mode 700, and the unreadable-directory and root-owned-directory cases
+  were refused before the firewall or command ran. The trial was removed. The exact omitted output of the
+  implementer's Docker run and macOS behavior could not be verified
+- 2026-10-07T12:08:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the review. It returned no
+  blocking finding and one that does not block, P1: the plan's task asks for the refusal of requirement 2 to be logged
+  whole, and the entry above gives its first line and counts the rest. **P1 is accepted.** The whole output of that
+  start, after the build, as the session that ran it still holds it. The file it was written to was removed with the
+  trial:
+
+  ```
+  [entrypoint] FATAL: /home/agent/.claude is owned by uid 0, but the agent is uid 1000, so the agent cannot write it.
+  The home volume was made by an earlier release, in which that directory was never made, so Docker made it as root
+  when it mounted the harnesses' logs inside it.
+  Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+  The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
+  agent/compose.project.yml. Find the exact name with docker volume ls, then:
+    docker volume rm <project>_agent-home
+  ```
+
+  It exited 1. The reviewer's own run printed the same seven lines. Nothing else was changed: no code, no test and
+  no other document. The suite was not run again, because the tree it passed on, `6db6223`, is unchanged in
+  everything but this record. The status stays `in-progress`
