@@ -992,9 +992,11 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
 `agent/compose.project.yml`. It takes what `./agent.sh` takes, for example `./agent-dev.sh --in-place npm test`.
 
 * It is this repository's own file. It is not in the package, and `init` and `refresh` do not write it
-* It builds the image on every start, so a change is in the sandbox that starts
-* It takes the harness versions as `./agent.sh` does. It builds on every start, so on a host without a harness it
-  asks the registry at every start and gets the latest published version of that harness
+* It builds the image on every start of a run, so a change is in the sandbox that starts. With `--connect` it
+  builds nothing, as `./agent.sh --connect` builds nothing: the command runs in the container that the run it
+  connects to started, with the image that run built
+* It takes the harness versions as `./agent.sh` does. It builds on every start of a run, so on a host without a
+  harness it asks the registry at every such start and gets the latest published version of that harness
 * It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
   `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
   and the home volume of `./agent.sh`, with Claude Code's login in it, are not touched, and both sandboxes can run

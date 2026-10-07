@@ -10,5 +10,24 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # so the working copy's sandbox gets an image and a home volume of its own and leaves
 # those of ./agent.sh alone.
 export AGENT_PROJECT_NAME=ritenoar-agentrite-agent-dev
-# Always build: the wrapper otherwise reuses an image built before the change under test.
-exec "$here/container/agent.sh" "$here" --rebuild "$@"
+# Build before every run: the wrapper otherwise reuses an image built before the change
+# under test. Not for --connect, which starts no run and which the wrapper refuses
+# together with --rebuild. Whether --connect is given is read as the wrapper reads its
+# options: up to a -- or the first word that is no option, which opens the unit or the
+# command, and past the directory of --workdir and of --mount. The options are the
+# wrapper's, so one it gains that takes a value is added here too.
+rebuild=(--rebuild)
+arguments=("$@")
+index=0
+while [ "$index" -lt $# ]; do
+  case "${arguments[$index]}" in
+    --connect)
+      rebuild=()
+      break
+      ;;
+    --workdir | --mount) index=$((index + 2)) ;;
+    --rebuild | --in-place) index=$((index + 1)) ;;
+    *) break ;;
+  esac
+done
+exec "$here/container/agent.sh" "$here" ${rebuild[@]+"${rebuild[@]}"} "$@"

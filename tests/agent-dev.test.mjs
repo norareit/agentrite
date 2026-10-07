@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
@@ -8,6 +8,7 @@ import { fakeHost, logDirectory, logMounts } from './wrapper-fixture.mjs';
 
 const shim = new URL('../agent-dev.sh', import.meta.url).pathname;
 const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
+const unitClone = new URL('../container/unit-clone.sh', import.meta.url).pathname;
 const dockerfile = new URL('../container/Dockerfile', import.meta.url).pathname;
 const projectCompose = readFileSync(new URL('../agent/compose.project.yml', import.meta.url), 'utf-8');
 
@@ -76,6 +77,75 @@ test("the shim passes the wrapper's options and the command on", (t) => {
     `${prefix} build`,
     `${prefix} run --rm --volume ${workdir}:/work --volume ${mounted}:/mnt/mounted:ro ${logs}agent echo hi`,
   ]);
+});
+
+// Connecting. The wrapper refuses --rebuild together with --connect, so the shim asks for no build then, and reads
+// the wrapper's options as the wrapper does to tell.
+
+const unitBranch = 'task-0026-doc';
+
+// Makes the checkout of `setUp` a repository with the branch of a unit, gives it the wrapper's git functions, and
+// has the stand-in's `ps` say that a container is running.
+function withUnitRun({ base, root }) {
+  copyFileSync(unitClone, join(root, 'container', 'unit-clone.sh'));
+  const git = (...args) =>
+    execFileSync('git', ['-c', 'user.name=Tester', '-c', 'user.email=tester@example.com', ...args], { cwd: root });
+  git('init', '--quiet', '--initial-branch', 'master');
+  git('add', '.');
+  git('commit', '--quiet', '--message', 'the checkout');
+  git('branch', unitBranch);
+  writeFileSync(join(base, 'running-container'), '0123456789ab\n');
+}
+
+test('the shim connects to a unit run under the dev name, and asks for no build', (t) => {
+  const host = setUp(t);
+  withUnitRun(host);
+  const result = host.run(['--connect', unitBranch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(host.dockerCalls(), [
+    `AGENT_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker exec --interactive --user agent ` +
+      '--workdir /work --env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
+      `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin project-agent-${unitBranch} echo hi`,
+  ]);
+});
+
+// The directory of --mount is passed over, so the --connect after it is seen, and the wrapper's refusal names the
+// option the caller gave and not one the shim added.
+test('the shim adds no --rebuild to a --connect that follows another option and its directory', (t) => {
+  const host = setUp(t);
+  withUnitRun(host);
+  const result = host.run(['--mount', host.base, '--connect', unitBranch]);
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /--connect cannot be given together with --mount\./);
+  assert.doesNotMatch(result.stderr, /--rebuild/);
+  assert.deepEqual(host.dockerCalls(), []);
+});
+
+for (const [what, args, command] of [
+  ['after --in-place', ['--in-place', 'echo', '--connect'], 'echo --connect'],
+  ['after a --', ['--in-place', '--', '--connect'], '--connect'],
+]) {
+  test(`the shim builds for a run whose command holds --connect ${what}`, (t) => {
+    const { root, run, dockerCalls, prefix, logs } = setUp(t);
+    const result = run(args);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), [
+      `${prefix} build`,
+      `${prefix} run --rm --volume ${root}:/work ${logs}agent ${command}`,
+    ]);
+  });
+}
+
+test('the shim builds for a unit run whose command holds --connect', (t) => {
+  const host = setUp(t);
+  withUnitRun(host);
+  rmSync(join(host.base, 'running-container'));
+  const result = host.run([unitBranch, 'echo', '--connect']);
+  assert.equal(result.status, 0, result.stderr);
+  const calls = host.dockerCalls();
+  assert.equal(calls[0], `${host.prefix} build`);
+  assert.match(calls.at(-1), / run --rm --name project-agent-task-0026-doc .* agent echo --connect$/);
 });
 
 // With the variable unset both resolve to the names ./agent.sh has always used, and with the shim's value to a
