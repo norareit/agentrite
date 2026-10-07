@@ -5,6 +5,35 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 4.1.1
+
+### What changed
+
+* The sandbox starts again on a home volume in which `.local`, `.local/share` or `.claude` admits its owner alone.
+  In 4.1.0 the entrypoint looked at those three directories as the container's root, which holds no capability to
+  pass a file's permissions and so could not enter such a directory, and every start ended in the one line
+  `stat: cannot statx '/home/agent/.local/share': Permission denied`, with no refusal of the entrypoint's own and
+  nothing saying how to go on. Tools that follow the XDG convention make `.local` that way, so a volume in which
+  one ran has it. The entrypoint now looks at the three as the agent. What it refuses is what it refused in 4.1.0,
+  a directory among the three that is not the agent's, with the same words (0042)
+* A directory among the three that even the agent cannot read is refused by the entrypoint, before the command
+  runs: `FATAL: <directory> could not be examined as the agent`, with what the read said and the command that
+  removes the home volume (0042)
+* The README's "The harness logs" says who examines the directories (0042)
+* Not in the package: nothing
+
+### Worth knowing when you update
+
+* Build the image again after the install, with `./agent.sh --in-place --rebuild true`. The entrypoint is in the
+  image, and nothing else builds it: the wrapper builds only when there is no image or a harness version is due.
+  Until then a project has the entrypoint of the release its image was built with, and a start that failed with
+  the line above fails the same way. The update asks for no `refresh` (0042)
+* A project whose sandbox did not start on 4.1.0 with that line needs nothing done to its home volume. The failed
+  starts changed nothing in it, and it starts on this release as it is, once the image is built again (0042)
+* Shown on Linux, on Docker Engine 28.4.0: a start through the wrapper with the three directories closed to all
+  but their owner, the refusal of a directory Docker made as root, and the refusal of a directory the agent cannot
+  read. Nothing of this release was tried on macOS (0042)
+
 ## 4.1.0
 
 ### What changed
@@ -60,6 +89,10 @@ it.
   harness may then list or continue the other project's sessions, a reader cannot tell them apart, and the two
   share one OpenCode login. Renaming one of the roots ends it. Two sandboxes run from one project root under two
   Compose project names share it in the same way (0035)
+* Found after the release: the sandbox of 4.1.0 does not start on a home volume in which `.local`, `.local/share`
+  or `.claude` admits its owner alone, which is how tools that follow the XDG convention make `.local`. The start
+  ends in `stat: cannot statx '/home/agent/.local/share': Permission denied`. The volume is sound and needs
+  nothing done to it. 4.1.1 holds the fix (0042)
 * Nothing removes a log directory. It stays when the home volume is removed and when the project is gone (0035)
 * What was tried, and what was not. On Linux, with Docker Engine 28.4.0, Claude Code 2.1.292 and OpenCode 1.18.35,
   through the wrapper: both harnesses logged in and holding a session, a second container continuing Claude
