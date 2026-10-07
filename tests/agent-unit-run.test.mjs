@@ -933,6 +933,27 @@ for (const [option, value] of [
   }
 }
 
+// What the review of 7db50d7 found: the refusal must not wait for the option's directory to be read.
+for (const option of ['--workdir', '--mount']) {
+  for (const [where, order] of [
+    ['before', (given) => [...given, '--connect']],
+    ['after', (given) => ['--connect', ...given]],
+  ]) {
+    test(`--connect is refused with ${option} ${where} it and a directory that is not there`, (t) => {
+      const host = setUpWithBuildDue(t);
+      markRunning(host);
+      const missing = join(host.base, 'not-there');
+      const result = host.run([...order([option, missing]), branch, 'echo', 'hi']);
+      assertNothingRan(host, result);
+      assert.ok(
+        result.stderr.includes(`agent.sh: --connect cannot be given together with ${option}.\n`),
+        result.stderr,
+      );
+      assert.doesNotMatch(result.stderr, /No such file or directory/);
+    });
+  }
+}
+
 test('--connect is refused as root, like a run', (t) => {
   const host = setUp(t);
   markRunning(host);

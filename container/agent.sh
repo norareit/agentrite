@@ -108,11 +108,15 @@ export AGENTRITE_CONTAINER="${here#"$root"/}"
 
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 
+# The directories of --workdir and --mount are kept as they were given while the options
+# are read, and are resolved after the loop: what refuses a combination of options
+# comes first, and does not depend on a directory being there.
 workdir="$root"
 in_place=0
 workdir_given=0
 rebuild=0
 connect=0
+mount_specs=()
 mounts=()
 
 while [ $# -gt 0 ]; do
@@ -128,7 +132,7 @@ while [ $# -gt 0 ]; do
       ;;
     --workdir)
       [ $# -ge 2 ] || { echo "agent.sh: --workdir needs a directory" >&2; exit 2; }
-      workdir="$(cd "$2" && pwd)"
+      workdir="$2"
       workdir_given=1
       shift 2
       ;;
@@ -138,13 +142,7 @@ while [ $# -gt 0 ]; do
       ;;
     --mount)
       [ $# -ge 2 ] || { echo "agent.sh: --mount needs a path" >&2; exit 2; }
-      spec="$2"
-      opts=""
-      case "$spec" in
-        *:ro) opts=":ro"; spec="${spec%:ro}" ;;
-      esac
-      host="$(cd "$spec" && pwd)"
-      mounts+=(--volume "$host:/mnt/$(basename "$host")$opts")
+      mount_specs+=("$2")
       shift 2
       ;;
     --)
@@ -158,12 +156,12 @@ while [ $# -gt 0 ]; do
 done
 
 # --connect starts no run, so it takes no option of one, and it needs the unit whose run
-# it connects to. Refused here, where the mounts hold only what --mount gave.
+# it connects to. Refused here, before a directory of --workdir or --mount is read.
 if [ "$connect" -eq 1 ]; then
   run_options=()
   [ "$in_place" -eq 0 ] || run_options+=(--in-place)
   [ "$workdir_given" -eq 0 ] || run_options+=(--workdir)
-  [ "${#mounts[@]}" -eq 0 ] || run_options+=(--mount)
+  [ "${#mount_specs[@]}" -eq 0 ] || run_options+=(--mount)
   [ "$rebuild" -eq 0 ] || run_options+=(--rebuild)
   if [ "${#run_options[@]}" -gt 0 ]; then
     for run_option in "${run_options[@]}"; do
@@ -178,6 +176,18 @@ if [ "$connect" -eq 1 ]; then
     exit 2
   fi
 fi
+
+# The directories of a run, as absolute paths. One that is not there ends the wrapper
+# here, with the shell's own error.
+workdir="$(cd "$workdir" && pwd)"
+for spec in ${mount_specs[@]+"${mount_specs[@]}"}; do
+  opts=""
+  case "$spec" in
+    *:ro) opts=":ro"; spec="${spec%:ro}" ;;
+  esac
+  host="$(cd "$spec" && pwd)"
+  mounts+=(--volume "$host:/mnt/$(basename "$host")$opts")
+done
 
 # What to mount at /work has no default. Without --in-place and --workdir the first
 # argument left is the unit, and with nothing left there is nothing to run on. Refused

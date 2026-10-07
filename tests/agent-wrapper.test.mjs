@@ -623,6 +623,18 @@ for (const [what, args] of [
   });
 }
 
+for (const option of ['--workdir', '--mount']) {
+  test(`the wrapper starts nothing for a run whose ${option} names a directory that is not there`, (t) => {
+    const { base, root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+    rmSync(join(bin, 'claude'));
+    const result = run(root, '--in-place', option, join(base, 'not-there'), 'echo', 'hi');
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /not-there: No such file or directory/);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
 test('the wrapper mounts the project root with --in-place, and makes no clone', (t) => {
   const { root, container, home, run, dockerCalls } = setUp(t, kitPath);
   const result = run(root, '--in-place', 'echo', 'hi');

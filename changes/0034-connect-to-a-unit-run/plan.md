@@ -207,12 +207,13 @@ The README.
 
 After the review of `7db50d7`, for its finding S1. Added on 2026-10-07, with the reason in `record.md`.
 
-- [ ] Test that `--connect` together with `--workdir DIR` or `--mount DIR` is refused as the approach says when
+- [x] Test that `--connect` together with `--workdir DIR` or `--mount DIR` is refused as the approach says when
       `DIR` does not exist, once with the option before `--connect` and once after it: exit 2, the option named,
       no call of Docker and npm asked nothing (R10)
-- [ ] In `container/agent.sh`, keep the directories of `--workdir` and `--mount` as they were given while the
+- [x] In `container/agent.sh`, keep the directories of `--workdir` and `--mount` as they were given while the
       options are read, and resolve them after the refusals of `--connect`, so that those refusals do not depend
-      on a directory. A run resolves them as before, and reports a directory that is not there as before (R10)
+      on a directory. A run resolves them as before, and reports a directory that is not there as before, which
+      a test in `tests/agent-wrapper.test.mjs` holds, written and seen to pass before the wrapper was changed (R10)
 
 ## Verification
 
@@ -234,6 +235,6 @@ After the review of `7db50d7`, for its finding S1. Added on 2026-10-07, with the
 - [x] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree
 - [x] `feature-0034 Record the review and plan the correction of its finding S1`: the reviewer's entry, the record
       and the plan
-- [ ] `feature-0034 Refuse --connect with an option of a run before its directory is read`: the tests and the
+- [x] `feature-0034 Refuse --connect with an option of a run before its directory is read`: the tests and the
       wrapper
 - [ ] `feature-0034 Record the outcome of the review's findings`: the record, with the suites on the final tree
