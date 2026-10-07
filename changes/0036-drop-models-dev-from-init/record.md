@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-10-06T22:50:00Z
 ---
 
@@ -115,3 +115,12 @@ section, which is written at the release; and the `ALLOWLIST` of any existing pr
   `models.opencode.ai`; the only hostname marked `not allowlisted` was the expected canary. Could not independently
   verify the historical run with the entry present or the test-before-code claim. The runtime check used the existing
   home volume and ChatGPT login in headless mode
+- 2026-10-07T13:14:52Z [human] reported that the review came back with no remarks, and asked whether the unit can
+  therefore be marked implemented
+- 2026-10-07T13:14:52Z [Claude Code, anthropic/claude-opus-5-5] in the implementer role, on the host, read the review
+  saved at `.reviews/0036-drop-models-dev-from-init/full-d1a4873-20261007T130857Z.md`: it returns no finding on any of
+  its three axes, so none is left for the human to decide. The unit is a task and has no `plan.md`, so no task is
+  left to tick. Committed the reviewer's entry above as `7aaadf3`, which changes this record and nothing else since
+  the reviewed `d1a4873`. Run on the tree of `7aaadf3`, with Node 26.9.0: `npm test`, 364 of 364 passed, none
+  skipped; `npm run check-changes`, which printed no finding and exited 0. Not run again: the sandbox check with
+  OpenCode, which the entries of 12:59:30Z and 13:10:31Z hold. The status is `implemented`
