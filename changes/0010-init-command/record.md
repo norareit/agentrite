@@ -204,3 +204,13 @@ timestamp: 2026-09-27T22:45:28Z
 - 2026-09-30T12:54:05Z [human] approved the unit after the delta review at `dcc2616` returned no findings, accepting the
   applied corrections for S1, S3, S4, S5 and S6. S2 and S7 are settled by the decisions recorded above. Status
   `implemented`
+
+## Amendments
+
+- 2026-10-07T12:59:41Z [Claude Code, anthropic/claude-opus-5-5] the decision "Harness hosts in the generated
+  allowlist" in `spec.md` no longer holds. Unit `0036-drop-models-dev-from-init` removed `models.dev` from what
+  `init` writes, in `85f97de`: OpenCode takes its model catalog from `models.opencode.ai`, which the kit admits itself
+  since 0015, so `opencode` adds no host and the generated `ALLOWLIST` holds none for any harness. The rest of the
+  decision stands: the model providers' API hosts are the project's choice, and the comment says where to add them.
+  The spec is frozen and was not edited. This record had no `## Amendments` heading, which the template has, and
+  gets it with this entry
