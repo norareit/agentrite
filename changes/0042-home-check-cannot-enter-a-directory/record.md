@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-07T11:45:34Z
 ---
 
@@ -109,3 +109,6 @@ timestamp: 2026-10-07T11:45:34Z
   It exited 1. The reviewer's own run printed the same seven lines. Nothing else was changed: no code, no test and
   no other document. The suite was not run again, because the tree it passed on, `6db6223`, is unchanged in
   everything but this record. The status stays `in-progress`
+- 2026-10-07T12:09:36Z [human] asked for the unit to be marked implemented, after the review returned no blocking
+  finding and its one finding, P1, was accepted and applied. Every task of `plan.md` is ticked. The status is
+  `implemented`
