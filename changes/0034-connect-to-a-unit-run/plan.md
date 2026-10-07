@@ -170,7 +170,7 @@ What says that it exists.
 The proof on a real Docker, on the host, before the README is written, so that the README says what was seen.
 Each command and what it printed goes into `record.md`.
 
-- [ ] Start a unit run of this unit's branch with `./agent-dev.sh`, whose first command writes a file to `/tmp`
+- [x] Start a unit run of this unit's branch with `./agent-dev.sh`, whose first command writes a file to `/tmp`
       and then sleeps. With the connecting command of the approach, show from connected commands (R16):
     - the user, the group and the groups of the connected process and of the first command's process, from
       `id` and from `/proc/<pid>/status` of both, and that they are equal (R4)
@@ -188,7 +188,7 @@ Each command and what it printed goes into `record.md`.
     - two connected commands at one time (R9)
     - a connected `sleep` under way when the first command ends: what the connecting wrapper prints and exits
       with, and that the unit run's wrapper then ends as it does today (R8)
-- [ ] Where one of these is not as the requirement says, stop: log what was seen in `record.md`, leave the status
+- [x] Where one of these is not as the requirement says, stop: log what was seen in `record.md`, leave the status
       `in-progress`, and write nothing into the README that was not seen. The unit goes back to the specifier and
       the human (R5, R16)
 
@@ -220,6 +220,6 @@ The README.
 - [x] `feature-0034 Connect a command to a unit run`: the stand-in, the tests of `--connect`, the wrapper and its
       header
 - [x] `feature-0034 Name --connect where a second shell is looked for`: the second run's refusal and the forms
-- [ ] `feature-0034 Record the runs on a real Docker`: the record
+- [x] `feature-0034 Record the runs on a real Docker`: the record
 - [ ] `feature-0034 Describe --connect in the README`: the README
 - [ ] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree
