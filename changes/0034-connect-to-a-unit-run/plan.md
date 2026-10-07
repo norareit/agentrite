@@ -207,10 +207,10 @@ The README.
 
 ## Verification
 
-- [ ] `npm test` passes on the final tree
-- [ ] `npm run check-changes` exits 0, run after the last commit
-- [ ] No line of a changed or new file is over 120 characters, and none holds an em dash
-- [ ] Every requirement of the spec has a ticked task that names it, and requirement 16 has its runs in `record.md`
+- [x] `npm test` passes on the final tree
+- [x] `npm run check-changes` exits 0, run after the last commit
+- [x] No line of a changed or new file is over 120 characters, and none holds an em dash
+- [x] Every requirement of the spec has a ticked task that names it, and requirement 16 has its runs in `record.md`
 
 ## Commit Points
 
@@ -222,4 +222,4 @@ The README.
 - [x] `feature-0034 Name --connect where a second shell is looked for`: the second run's refusal and the forms
 - [x] `feature-0034 Record the runs on a real Docker`: the record
 - [x] `feature-0034 Describe --connect in the README`: the README
-- [ ] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree
+- [x] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree

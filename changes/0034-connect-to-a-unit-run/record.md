@@ -166,3 +166,20 @@ timestamp: 2026-10-06T14:38:19Z
       established, two harnesses with a terminal each side by side, stays so: the size of each terminal and what
       each does to the other's files were not looked at. `--tty` was seen only under `script`, not from a
       developer's own terminal. Nothing was run on macOS
+- 2026-10-07T14:54:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer: the README is `537b41a`. It says
+  of a connected command only what the entry above saw, names Linux and Docker 28.4.0 as where it was seen, and says
+  what was not shown. That `NET_ADMIN` is what changing the firewall takes is the spec's finding and was not tried:
+  no rule was changed from a root process
+- 2026-10-07T14:54:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, what was run on `537b41a`, whose
+  tree differs from this entry's commit in this record and the plan's ticks only. `npm test` reported 390 tests, 390
+  passing, none failing and none skipped, the test of `--tty` under `script` among those that ran. It was 364 on
+  `ff15108`. `npm run check-changes` exited 0, and is run once more after this entry is committed, which the entry
+  cannot hold. No line of a file that differs from `master` is over 120 characters and none holds an em dash, by
+  `awk 'length > 120'` and `grep` over `git diff master --name-only`. Every requirement of the spec is named by a
+  ticked task, and every task of the plan is ticked. No shellcheck is on the host, so the two shell files were
+  checked by `bash -n` and the suite alone
+- 2026-10-07T14:54:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, what is open. The planner's two
+  points stand as logged, for the specifier and the human: `./agent-dev.sh --connect` is refused, because the shim
+  always passes `--rebuild`, while the README says that the shim takes what `./agent.sh` takes, and this unit did
+  not change that sentence or the shim. Two harnesses side by side in one container were not tried, as said above.
+  The status stays `in-progress`: the review is done elsewhere, and `implemented` is set after it
