@@ -5,6 +5,70 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 4.1.0
+
+### What changed
+
+* The harnesses' logs are on the host and no longer in the home volume. In every run of the sandbox, a unit run,
+  `--in-place` and `--workdir` alike, the wrapper mounts two directories of the host in the agent's home:
+  `/home/agent/.claude/projects`, which holds Claude Code's sessions, and `/home/agent/.local/share/opencode`,
+  which holds OpenCode's database and its login. On the host they are in the project's log directory,
+  `<data>/agentrite/<name>/`, as `.claude/projects` and `.local/share/opencode`. `<data>` is `$XDG_DATA_HOME` when
+  that is set and `~/.local/share` when it is not, and `<name>` is the name of the project root's directory, so a
+  project at `~/projects/norareit` has `~/.local/share/agentrite/norareit/`. The wrapper makes the directories, as
+  the developer, before the container starts, and what a harness writes there is the developer's. A tool on the
+  host that reads the harnesses' logs is given that one path and reads the sandboxed sessions as plain files,
+  without Docker. There is no option for another place, and none that turns the mounts off (0035)
+* The image holds `.claude/projects` and `.local/share/opencode` in the agent's home, with every directory above
+  them, as the agent's, so that a home volume filled from it has both mount points (0035)
+* The entrypoint refuses to start, before the command runs, when `.claude`, `.local` or `.local/share` in the home
+  is not the agent's. The refusal names the directory and gives the command that removes the home volume, as the
+  refusal of a home with another owner does (0035)
+* The README has a new section, "The harness logs", and says in "The home volume", "Logging in to a model
+  provider" and the list of what a unit run does not defend against where each login is now (0035)
+* The README's table of what the repository holds lists its rows in another order
+* Not in the package: nothing
+
+### Worth knowing when you update
+
+* Build the image again after the install, with `./agent.sh --in-place --rebuild true`. Nothing else does it: the
+  wrapper builds only when there is no image or a harness version is due. The wrapper of this release mounts the
+  two directories from its first run, and an image that an earlier release built holds neither the mount points
+  nor the new refusal, so a new home volume made from it gets `.claude` and `.local` as root's and nothing says
+  so. A start of this release on an image of an earlier one was not tried. The update asks for no `refresh` (0035)
+* The sandbox writes one more directory of the host in every run: the project's log directory. What is in it was
+  written by an agent that may have been misled, which can put anything there, a false record of usage and a link
+  to a file elsewhere among it. Whatever reads the directory treats what it finds as data. A container reaches
+  its own project's log directory and no other, no directory above it, and none of the host's own `~/.claude` or
+  OpenCode directories (0035)
+* OpenCode's login is now a file of the host, `<logs>/.local/share/opencode/auth.json`, and is no longer in the
+  home volume. OpenCode asks for its login once more in each project, and after that a new home volume of the
+  project needs none. Claude Code's login and settings stay in the home volume (0035)
+* The sessions a home volume holds are no longer listed or continued, because the harnesses now look in the log
+  directory. Nothing is deleted, and the kit moves nothing. "The harness logs" in the README gives a command that
+  copies a volume's logs, OpenCode's login among them, to the log directory by hand. Run it before the first start
+  with this release, while no sandbox of the project runs: it copies nothing of OpenCode once the log directory
+  holds a database, and it overwrites nothing. The command was tried with Claude Code's real sessions and with a
+  made-up OpenCode database, on Linux. It was not tried with a real OpenCode database, or on macOS (0035)
+* A home volume in which a harness was never started may be refused at the first start. Such a volume lacks
+  `.claude` or `.local/share`, Docker makes them as root when it mounts the logs, and the entrypoint stops with
+  `FATAL: /home/agent/.claude is owned by uid 0`. The way on is the one the refusal gives,
+  `docker volume rm <project>_agent-home`, which discards the logins saved in the volume. The next start makes a
+  new volume from the image, which is one more reason for the rebuild above. The kit does not repair such a
+  volume, and the copy command still reads one that is refused (0035)
+* Two projects whose root directories have one name share a log directory, wherever on the host they are. Either
+  harness may then list or continue the other project's sessions, a reader cannot tell them apart, and the two
+  share one OpenCode login. Renaming one of the roots ends it. Two sandboxes run from one project root under two
+  Compose project names share it in the same way (0035)
+* Nothing removes a log directory. It stays when the home volume is removed and when the project is gone (0035)
+* What was tried, and what was not. On Linux, with Docker Engine 28.4.0, Claude Code 2.1.292 and OpenCode 1.18.35,
+  through the wrapper: both harnesses logged in and holding a session, a second container continuing Claude
+  Code's and listing OpenCode's, and two containers writing at the same time, on a home volume this release made
+  and on one of 4.0.0 in which both harnesses had been started, and the refusal of one in which neither had. On
+  macOS 15.1.1, with Docker Desktop 4.26.0 and VirtioFS as its file sharing, the same was tried with the image of
+  4.0.0, the two mounts given by hand and a home volume prepared for it, and not with this release's wrapper and
+  image. Not tried: gRPC FUSE and osxfs, the other file sharing of Docker Desktop for macOS (0035)
+
 ## 4.0.0
 
 ### What changed
