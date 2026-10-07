@@ -227,7 +227,7 @@ decision in `record.md`. It replaces what the approach says of `./agent-dev.sh`,
       `--mount` passed over. Say in its comment why, and that the list of options is the wrapper's
 - [x] In the README, under "Trying the working copy's sandbox", say that the shim builds on every start of a run
       and builds nothing for `--connect`
-- [ ] On a real Docker, on the host: `./agent-dev.sh --connect <unit> true` connects to a unit run that
+- [x] On a real Docker, on the host: `./agent-dev.sh --connect <unit> true` connects to a unit run that
       `./agent-dev.sh <unit>` started, with what was run and printed in `record.md`
 
 ## Verification
@@ -255,5 +255,5 @@ decision in `record.md`. It replaces what the approach says of `./agent-dev.sh`,
 - [x] `feature-0034 Record the outcome of the review's findings`: the record, with the suites on the final tree
 - [x] `feature-0034 Record the decision that the shim connects, and plan it`: the record and the plan
 - [x] `feature-0034 Let the dev shim connect`: the tests, the shim and the README
-- [ ] `feature-0034 Record the shim's connect and what was run`: the record, with the run on a real Docker and the
+- [x] `feature-0034 Record the shim's connect and what was run`: the record, with the run on a real Docker and the
       suites on the final tree

@@ -235,3 +235,33 @@ timestamp: 2026-10-06T14:38:19Z
   `bea7394`: four tasks and three commit points for that decision are added to `plan.md`. `spec.md` is not changed:
   it says nothing of the shim, which is this repository's own file and not the kit's, the implementer does not
   change a spec, and the decision is recorded here. The status stays `in-progress`
+- 2026-10-07T19:19:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer: the shim connects, in `4f8731c`.
+  `agent-dev.sh` reads the words it was given as the wrapper's option loop does, up to a `--` or the first word that
+  is no option, and past the directory of `--workdir` and of `--mount`. When `--connect` is among them it passes no
+  `--rebuild`, and otherwise it passes it as before. Of the five tests added to `tests/agent-dev.test.mjs`, two
+  failed before the shim was changed, the connect and the `--connect` after `--mount DIR`, and three passed before
+  and after: a run whose command holds `--connect` after `--in-place`, after a `--` and after a unit still builds.
+  The README's two sentences that the shim builds on every start now say every start of a run, and that
+  `--connect` builds nothing. Where the shim and the wrapper can come apart: the shim holds the wrapper's four
+  other options by name, so an option the wrapper gains is not known to the shim until it is added there. Given
+  before `--connect`, such an option makes the shim pass `--rebuild`, which the wrapper refuses, naming it. No
+  case was found in which they disagree today, and no case was looked for beyond the tests named here
+- 2026-10-07T19:19:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, the shim's connect on a real
+  Docker, on the host, with the working copy at `4f8731c`, Docker 28.4.0. A unit run was started with
+  `./agent-dev.sh 0034 bash -c 'while [ ! -e /tmp/end-the-first-command ]; do sleep 1; done'`, which built the
+  image and started `ritenoar-agentrite-agent-dev-feature-0034-connect-to-a-unit-run`. Then, each with standard
+  input from `/dev/null`: `./agent-dev.sh --connect 0034 true` printed nothing and exited 0;
+  `./agent-dev.sh --connect 0034 id -un` printed `agent` and exited 0; `./agent-dev.sh --connect 0034 false`
+  exited 1. None printed a line of a build. `./agent-dev.sh --connect 0034 touch /tmp/end-the-first-command` ended
+  the first command, and the unit run's wrapper exited 0. Afterwards no container of the dev project was left,
+  running or stopped, the clone was gone, no `sandbox/` ref was there and the working tree was clean, and
+  `./agent-dev.sh --connect 0034 true` said that no run is under way for `0034` and exited 2. Not shown on a real
+  Docker: a connect through the shim from a terminal, and anything but these four commands
+- 2026-10-07T19:19:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, what was run on `4f8731c`, whose
+  tree differs from this entry's commit in this record and the plan's ticks only. `npm test` reported 401 tests,
+  401 passing, none failing and none skipped. `npm run check-changes` exited 0, and is run once more after this
+  entry is committed. `bash -n` passed for `agent-dev.sh` and `container/agent.sh`. No line of a file that differs
+  from `master` is over 120 characters and none holds an em dash. Both findings of the review are decided by the
+  human and corrected, and every task of the plan is ticked. The corrections of `e27106e` and `4f8731c` were not
+  reviewed. The status stays `in-progress`: setting `implemented` was not asked of the implementer, who was told to
+  stop there, and is left to the human
