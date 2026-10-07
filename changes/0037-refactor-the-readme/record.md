@@ -58,5 +58,14 @@ timestamp: 2026-10-07T22:40:04Z
   gone with the need for it. That the rows which leave go into a table in `CONTRIBUTING.md`, and that this table is
   complete for the rest of the repository, is the specifier's: the human said where the rows do not belong, not
   where they go. Status left at `draft`
+- 2026-10-07T23:15:00Z [human] answered the two open questions. No table of contents, unless its links work in the
+  Markdown on Bitbucket, on GitHub and in IntelliJ alike. And the rule that the documents say what and how, and not
+  why, goes into this repository's `AGENTS.md` and is not a rule for every project
+- 2026-10-07T23:15:00Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, changed `spec.md` for that. The
+  table of contents is out of the requirements, with a decision that says why there is none, and the requirements
+  after it are renumbered, so a number in an earlier entry of this log is the number of that time. The two entries
+  under "Beyond the request" that the answers settle are removed: the rule as a rule of the kit, and a table of
+  contents in the other two documents. That Bitbucket's anchors differ from GitHub's and IntelliJ's is from the
+  specifier's memory and was not tried. Nothing the specifier asked is open now. Status left at `draft`
 
 ## Amendments
