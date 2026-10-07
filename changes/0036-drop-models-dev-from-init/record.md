@@ -4,7 +4,7 @@ status: draft
 timestamp: 2026-10-06T22:50:00Z
 ---
 
-# 0041 Drop models.dev from what init writes
+# 0036 Drop models.dev from what init writes
 
 ## Description
 
@@ -56,3 +56,12 @@ section, which is written at the release; and the `ALLOWLIST` of any existing pr
   `RELEASING.md` name `models.dev` nowhere; `container/compose.yml` admits `models.opencode.ai`. Not checked: that
   the OpenCode in use today leaves `models.dev` alone, which the description has the implementer check first.
   Status left at `draft` for the human's approval
+- 2026-10-07T12:41:25Z [human] asked for this unit to be renumbered from 0041 to 0036. It had taken 0041 because the
+  `history-` directories run up to `history-0040`, while the units beside them had been numbered up to 0035 without
+  counting those, and the jump from 0035 to 0041 read as five units missing. A `history-` directory and a unit of the
+  same number are not the same thing
+- 2026-10-07T12:41:25Z [Claude Code, anthropic/claude-opus-5-5] in the main session and in no role, on `master` at
+  `9597dab`, moved the directory to `changes/0036-drop-models-dev-from-init` and changed the number in the title.
+  Nothing else in the unit changed, and no other file named it as 0041: the 0041 in `history-0037-kit-as-an-npm-package`
+  is an older unit of another name. The one commit made under the old number, `909d084`, keeps its prefix `task-0041`.
+  The record of 0042 says that 0041 was the highest number when it was written, which it was. The status stays `draft`
