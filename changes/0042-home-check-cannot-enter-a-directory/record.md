@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: planned
+status: in-progress
 timestamp: 2026-10-07T11:45:34Z
 ---
 
@@ -41,3 +41,43 @@ timestamp: 2026-10-07T11:45:34Z
   `plan.md`. Settled as how: the owner is read through the `setpriv` call the entrypoint ends in, the suite stands in
   for `setpriv` on the `PATH`, and the runs on a real Docker use a Compose project and a data directory of their own.
   Nothing in the spec was found unclear or untrue of the tree. The status is `planned`
+- 2026-10-07T11:51:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `20587ef`. Read `roles/implementer.md` of the release 4.1.0, and the spec, the plan and
+  this record in full. The status is `in-progress`
+- 2026-10-07T11:55:29Z [Claude Code, anthropic/claude-opus-5-5] **the fault on a real Docker, before the fix.** On the
+  tree at `20587ef`, whose entrypoint is that of 4.1.0, with Docker Engine 28.4.0 and Compose 2.39.2, through the
+  wrapper as `XDG_DATA_HOME=<scratch> AGENT_PROJECT_NAME=ritenoar-agentrite-0042-trial container/agent.sh "$PWD"
+  --rebuild`, called `trial` below. `trial --in-place true` built the image, made the volume
+  `ritenoar-agentrite-0042-trial_agent-home`, passed the firewall's proof and exited 0. `trial --in-place chmod 700
+  /home/agent/.local` exited 0. `trial --in-place bash -c 'ls -ldn ~/.claude ~/.local ~/.local/share; echo started'`
+  then printed, after the build, the one line `stat: cannot statx '/home/agent/.local/share': Permission denied` and
+  exited 1, with no line of the entrypoint's own. That is the human's output
+- 2026-10-07T11:55:29Z [Claude Code, anthropic/claude-opus-5-5] **the tests, failing first.**
+  `tests/entrypoint-home-owner.test.mjs` got a stand-in for `setpriv` on the `PATH` of the guard's script and two tests.
+  Run against the entrypoint of `20587ef`, both failed on their assertions: no call of `setpriv` was recorded where
+  three were expected, and the message of the closed directory was not the entrypoint's. The four tests that were there
+  passed, before and after
+- 2026-10-07T11:55:29Z [Claude Code, anthropic/claude-opus-5-5] **the fix.** `check_log_directory_owners` reads each
+  owner through `setpriv --reuid=agent --regid=agent --init-groups -- stat -c %u`, and a read that fails is refused with
+  `<directory> could not be examined as the agent, so the agent cannot be shown to write it:`, what the read said, and
+  the recovery. The comparison of the owner and its refusal are unchanged, and so is the refusal the README quotes,
+  compared by eye with the function. The comment above the function says who reads and why, and the README's "The
+  harness logs" has three lines on it. `container/compose.yml` has no difference from `master`. Committed as `6db6223`
+- 2026-10-07T11:55:29Z [Claude Code, anthropic/claude-opus-5-5] **requirement 1 on a real Docker, after the fix.** On
+  the same volume, with the working tree that became `6db6223`: the third command above passed the firewall's proof,
+  printed `drwx------ 3 1000 1000` for `/home/agent/.local`, `drwxr-xr-x` for the other two, and `started`, and exited
+  0. Then `.local/share` was closed too, by `chmod 700` in a container of the image with the entrypoint replaced and the
+  user the developer's, which is how the human's volume has them: the start printed both as `drwx------ 3 1000 1000` and
+  `started`, and exited 0
+- 2026-10-07T11:55:29Z [Claude Code, anthropic/claude-opus-5-5] **requirement 2 on a real Docker, after the fix.**
+  `.claude` was removed from the volume in such a container, with no log mounts, leaving `.bash_logout`, `.bashrc`,
+  `.local` and `.profile`. `trial --in-place bash -c 'echo started'` exited 1 with `[entrypoint] FATAL:
+  /home/agent/.claude is owned by uid 0, but the agent is uid 1000, so the agent cannot write it.`, then the two lines
+  on the earlier release and the four of the recovery, as 4.1.0 printed them. The output holds no line of the firewall
+  being installed, and not `started`. The trial was removed: its volume, network, image and the scratch data directory,
+  which held `.claude` and `.local` under `agentrite/agentrite` and nothing of a harness
+- 2026-10-07T11:55:29Z [Claude Code, anthropic/claude-opus-5-5] `npm test` on the host, on the tree of `6db6223`: 365
+  tests, 365 pass, none skipped. Not run: the suite in the sandbox, which the plan does not ask for. Not shown on a real
+  Docker: the refusal of a directory that cannot be examined, which the suite shows with a directory closed to its own
+  owner, and anything on macOS. Not done: the human's own project, which needs a release that holds this and its image
+  built again. Every task of the plan is ticked. The status stays `in-progress`: the review is not this session's

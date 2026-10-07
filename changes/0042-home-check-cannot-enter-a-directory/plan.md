@@ -34,44 +34,44 @@ No harness is started and nobody logs in.
 
 ## Tasks
 
-- [ ] Show the fault on a real Docker, on the tree as it is. With `trial() { XDG_DATA_HOME=<scratch>
+- [x] Show the fault on a real Docker, on the tree as it is. With `trial() { XDG_DATA_HOME=<scratch>
   AGENT_PROJECT_NAME=ritenoar-agentrite-0042-trial container/agent.sh "$PWD" --rebuild "$@"; }`: `trial --in-place
   true` makes the home volume, `trial --in-place chmod 700 /home/agent/.local` closes the directory as the agent,
   and a third start must end in the line of `stat` that the spec gives. Log what each printed (R6)
-- [ ] In `tests/entrypoint-home-owner.test.mjs`, give `runGuard` a stand-in for `setpriv` on the `PATH` of the
+- [x] In `tests/entrypoint-home-owner.test.mjs`, give `runGuard` a stand-in for `setpriv` on the `PATH` of the
   guard's script, which appends its arguments to a file and runs what follows `--`, and return what it recorded.
   Add, failing: `check_log_directory_owners` reads each of `.claude`, `.local` and `.local/share` through
   `setpriv --reuid=agent --regid=agent --init-groups -- stat -c %u <directory>`, in that order, and `check_home_owner`
   is left reading the top without it (R5)
-- [ ] Add, failing: with `.local` closed to its owner, the guard exits 1, its message opens with `[entrypoint]
+- [x] Add, failing: with `.local` closed to its owner, the guard exits 1, its message opens with `[entrypoint]
   FATAL: <home>/.local/share could not be examined as the agent`, holds what `stat` said, ends in the recovery, and
   its last line is the recovery's `docker volume rm` line and not a tool's error (R3, R5)
-- [ ] In `container/entrypoint.sh`, read the owner through `setpriv` as above, and at a read that fails `die` with
+- [x] In `container/entrypoint.sh`, read the owner through `setpriv` as above, and at a read that fails `die` with
   that message. Leave the comparison and its refusal as they are. Both new tests pass, and the two tests of the
   check that were there pass with their assertions unchanged (R1, R2, R3, R4)
-- [ ] Correct the comment above `check_log_directory_owners`: who reads the directories and why not root, and what
+- [x] Correct the comment above `check_log_directory_owners`: who reads the directories and why not root, and what
   a directory that cannot be read gets. Add to the README's "The harness logs", where it describes the refusal, that
   the directories are examined as the agent, so that one only the agent may enter passes. The refusal quoted there
   is unchanged, which the task checks against the entrypoint (R7)
-- [ ] Show requirement 1 on a real Docker, on the volume of the first task: the same third start now runs its
+- [x] Show requirement 1 on a real Docker, on the volume of the first task: the same third start now runs its
   command, `bash -c 'ls -ldn ~/.claude ~/.local ~/.local/share; echo started'`, which prints `.local` as
   `drwx------` and `started`, and exits 0 (R1, R6)
-- [ ] Show requirement 2 on a real Docker. Remove `.claude` from the trial's volume, in a container of the image
+- [x] Show requirement 2 on a real Docker. Remove `.claude` from the trial's volume, in a container of the image
   with the entrypoint replaced and the user the developer's, and no log mounts. A start through `trial` then has
   Docker make `.claude` as root, and must be refused before the firewall is installed, with the refusal of 4.1.0
   naming `/home/agent/.claude`, uid 0 and the agent's uid. Log it whole (R2, R6)
-- [ ] Log the runs in `record.md`, and remove the trial: its volume, network, image and scratch directory
+- [x] Log the runs in `record.md`, and remove the trial: its volume, network, image and scratch directory
 
 ## Verification
 
-- [ ] `npm test` passes on the final tree, on the host
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Every line of the changed files is within 120 characters, and no changed text holds an em dash
-- [ ] `git diff master -- container/compose.yml` is empty (R4)
+- [x] `npm test` passes on the final tree, on the host
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Every line of the changed files is within 120 characters, and no changed text holds an em dash
+- [x] `git diff master -- container/compose.yml` is empty (R4)
 
 ## Commit Points
 
 - [x] `bugfix-0042 Plan the home check as the agent`: this plan and the record's entries, by the planner
-- [ ] `bugfix-0042 Examine the directories above the log mounts as the agent`: the tests, the entrypoint and the
+- [x] `bugfix-0042 Examine the directories above the log mounts as the agent`: the tests, the entrypoint and the
   README
-- [ ] `bugfix-0042 Record the runs on a real Docker`: the record
+- [x] `bugfix-0042 Record the runs on a real Docker`: the record
