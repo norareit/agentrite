@@ -200,3 +200,27 @@ timestamp: 2026-10-06T14:38:19Z
   not there ends the wrapper with the shell's error and 1 before the refusal of requirement 10 is reached, in
   either order. The tests of that refusal gave only a directory that exists. Two tasks for it are added to
   `plan.md`, under a line that says when and why, with three commit points. The status stays `in-progress`
+- 2026-10-07T16:28:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, the outcome of the review's two
+  findings:
+    - `S1`, blocking, that `--connect` with `--workdir` or `--mount` and a directory that is not there ends with
+      the shell's error and 1, not with the refusal of requirement 10: accepted, on the human's word to change what
+      is right, and corrected in `e27106e`. The wrapper keeps the two options' directories as they were given
+      while it reads the options and resolves them after the refusals of `--connect`. Four tests, both options in
+      both orders with a directory that is not there, failed before the change and pass after it. The reviewer's
+      four commands, run on the fixed wrapper with another directory that is not there, each printed the refusal
+      that names the option and exited 2. A run is as it was: two tests that a run with such a directory prints
+      the shell's error, exits 1 and asks Docker and npm nothing were written first and passed before and after.
+      One thing a run does differently, which no test holds: a directory that is not there is now reported after
+      all options are read, so an option after it that lacks its argument is reported in its place
+    - `C1`, not blocking, that the README says `./agent-dev.sh` takes what `./agent.sh` takes while
+      `./agent-dev.sh --connect` is refused: not changed, and not declined. It is the planner's first point of
+      2026-10-07T14:17:00Z, and whether the shim should connect or the README should say that it does not is the
+      human's to decide. It is open
+- 2026-10-07T16:28:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, what was run on `e27106e`, whose
+  tree differs from this entry's commit in this record and one tick of the plan only. `npm test` reported 396
+  tests, 396 passing, none failing and none skipped. `npm run check-changes` exited 0, and is run once more after
+  this entry is committed. `bash -n container/agent.sh` passed. No line of a file that differs from `master` is
+  over 120 characters and none holds an em dash. Nothing was run on a real Docker for this correction: the refusal
+  comes before Docker is asked anything, and a run on a real Docker was not started again, so that a run's
+  directories still reach `docker compose run` as before rests on the suite's stand-in. The fix was not reviewed.
+  The status stays `in-progress`: `C1` is the human's, and so is `implemented`

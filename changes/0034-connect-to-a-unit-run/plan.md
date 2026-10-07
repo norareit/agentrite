@@ -237,4 +237,4 @@ After the review of `7db50d7`, for its finding S1. Added on 2026-10-07, with the
       and the plan
 - [x] `feature-0034 Refuse --connect with an option of a run before its directory is read`: the tests and the
       wrapper
-- [ ] `feature-0034 Record the outcome of the review's findings`: the record, with the suites on the final tree
+- [x] `feature-0034 Record the outcome of the review's findings`: the record, with the suites on the final tree
