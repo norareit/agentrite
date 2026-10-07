@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-06T14:38:19Z
 ---
 
@@ -265,3 +265,18 @@ timestamp: 2026-10-06T14:38:19Z
   human and corrected, and every task of the plan is ticked. The corrections of `e27106e` and `4f8731c` were not
   reviewed. The status stays `in-progress`: setting `implemented` was not asked of the implementer, who was told to
   stop there, and is left to the human
+- 2026-10-07T19:40:38Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of
+  `changes/0034-connect-to-a-unit-run/` at `61c671429003fb5779cfad71c14a4a7f5e6c71e2`, from the previous reviewed
+  commit `7db50d7e34754b5202fc7f231950920cc992ea76`. Checked the accepted findings S1 and C1 and the subsequent
+  diff on all three axes; returned no new findings. Complete review saved in
+  `.reviews/0034-connect-to-a-unit-run/2026-10-07T193802Z-opencode-gpt-6.1-sol-61c6714-delta.md`.
+  `npm test` reported 401 passing, none failing or skipped; the change check, shell syntax checks and whitespace
+  check passed. Repeated the four S1 probes and exercised the corrected shim on real Docker 28.4.0 on Linux.
+  Historical test-first ordering and red-test counts could not be verified. Did not test macOS, terminal
+  connecting through the shim or two interactive harnesses side by side. No implementation, spec or plan was
+  changed, no status was advanced and no commit was made
+- 2026-10-07T19:43:50Z [human] reported that the second review returned no new finding, and asked for the unit to be
+  marked implemented. The first review's blocking finding, S1, was accepted and corrected in `e27106e`, its other
+  finding, C1, was decided by the human and built in `4f8731c`, and the delta review at `61c6714` confirmed both and
+  returned no finding. Every task of `plan.md` is ticked, 42 of 42. Recorded by Claude Code, anthropic/claude-opus-5-5,
+  in the main session, which changed nothing but this record. The status is `implemented`
