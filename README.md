@@ -144,8 +144,6 @@ to run, writing nothing, when `package.json` has no `name`.
 `node_modules/@ritenoar/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
 files, filling in each `{{placeholder}}` itself.
 
-A missing or altered kit is then npm's error, like any other dependency's, and needs no check of the project's own.
-
 ## Installing on a fresh clone
 
 A fresh clone of a project has no kit. `npm ci` installs it with the project's other dependencies, at exactly the
@@ -299,7 +297,7 @@ npx agentrite run reviewer opencode 0032 --headless --prompt "go on" -- --sessio
 
 A resumed run gets the role as its agent again, and its prompt again: the unit, and the text when there is any.
 That holds with `--headless`. A session of OpenCode that is resumed so opens on what was said before and does not
-send the new prompt, as seen with OpenCode 1.18.34.
+send the new prompt.
 
 The command needs the role's wrapper for the harness as `refresh` leaves it, since the wrapper is what makes the
 harness read the role's file. When the wrapper is missing, or holds anything but what `refresh` would write, a
@@ -426,8 +424,7 @@ agent.sh: cut feature-0033-specifier-role from master at 9f03a06, for changes/00
 Cutting the branch checks nothing out and moves no branch that exists, so the host's checkout, its working tree and
 its index are as they were. The wrapper cuts nothing, says why and starts nothing when `master` holds no unit of that
 number, when the unit's record on `master` cannot be read or names no kind the kit has, and when there is no local
-branch `master`. A unit given by a branch's name that does not exist is refused, as it was: only a number gets a
-branch cut.
+branch `master`. A unit given by a branch's name that does not exist is refused.
 
 Before the container starts, the wrapper clones the repository, with that branch checked out at the commit the
 host's branch is at:
@@ -809,9 +806,8 @@ agent.sh: the image records no OpenCode version and 1.18.34 is wanted, from the 
 
 So no flag is needed after a harness is updated on the host. For a harness with neither source there is nothing
 to compare: the sandbox keeps the version the image records, and the wrapper builds only when the image records
-none. An image built by a release that did not write the
-labels records no version, and is built again at the first start. When that build fails, for example with no
-network, the sandbox does not start, although an image exists.
+none. An image built by a release that did not write the labels records no version, and is built again at the first 
+start. When that build fails, for example with no network, the sandbox does not start, although an image exists.
 
 To see what an image holds, read its labels, where `<image>` is the `image:` of the project's
 `agent/compose.project.yml`, or ask the harness in the sandbox:
