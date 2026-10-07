@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-10-06T22:50:00Z
 ---
 
@@ -67,3 +67,30 @@ section, which is written at the release; and the `ALLOWLIST` of any existing pr
   The record of 0042 says that 0041 was the highest number when it was written, which it was. The status stays `draft`
 - 2026-10-07T12:56:44Z [human] asked for the unit to be implemented, was told that it was still `draft`, and approved
   it, asking for the renumbering to be committed on `master` first. The status is `approved`
+- 2026-10-07T12:59:30Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role on the host, fast-forwarded
+  the branch `task-0036-drop-models-dev-from-init`, which existed at `5efbdf1` with no commit of its own, to `master`
+  at `ead1e39`, and works on it in the main checkout. Status `in-progress`
+- 2026-10-07T12:59:30Z [Claude Code, anthropic/claude-opus-5-5] made the check the description asks for before
+  removing anything, on the host, a Linux host with Docker, with OpenCode 1.18.35 in the image, which is the host's
+  version and what `opencode --version` printed in the sandbox. Two runs of one command, the first with this
+  repository's `ALLOWLIST` as `master` holds it and the second with `models.dev` and its comment line taken out of
+  `agent/compose.project.yml` in the working tree:
+  `./agent-dev.sh --in-place bash -c 'opencode --version; opencode run "Reply with the single word ok. Do not use
+  any tool."; grep models.dev /run/egress-proxy.log; grep "not allowlisted" /run/egress-proxy.log; cat
+  /run/egress-proxy.log'`. OpenCode was logged in with the ChatGPT account the log directory holds, answered `ok`
+  from `gpt-5.6-terra-fast` and exited 0, in both runs.
+    * Without the entry: `grep models.dev /run/egress-proxy.log` printed no line and exited 1. `grep 'not
+      allowlisted'` printed one line, `refused example.com: not allowlisted`, which is the entrypoint's own canary
+      check and not OpenCode. After the entrypoint's checks the log holds two connections to `chatgpt.com`, both
+      allowed, and nothing else that names a host
+    * With the entry: `grep 'not allowlisted'` gives the same one line for `example.com`, so the run without the
+      entry has no refusal that this one lacks. `models.dev` is in the log twice, in the proxy's line that lists
+      what it listens for and as one allowed connection among the entrypoint's start-up checks of every listed host,
+      before the canary. After those checks OpenCode connected to `models.opencode.ai`, `registry.npmjs.org` and
+      `chatgpt.com`, and not to `models.dev`, although the proxy would have admitted it
+    * What this does not show: the second run made no connection to `models.opencode.ai` either, so OpenCode took
+      its catalog from what the first run left in the home volume, and that run says nothing about a fetch of the
+      catalog. The fetch was seen in the first run only, where it went to `models.opencode.ai`. Not checked: any
+      version but 1.18.35, the interactive session, which was not started, since `opencode run` sent the prompt,
+      any provider but the ChatGPT login, and a home volume that holds no catalog while `models.dev` is not listed
+    * The sandbox left the checkout as it was: `git status` showed the one edited file after both runs
