@@ -34,5 +34,21 @@ timestamp: 2026-10-07T22:40:04Z
   words: the names `SANDBOX.md` and `CONTRIBUTING.md`, that nothing is dropped but repetition, and that there is no
   target length. The human answered neither the question on a length nor the one on dropping detail. Status left at
   `draft`
+- 2026-10-07T22:55:04Z [human] read the spec's three open decisions and answered: `SANDBOX.md` is fine. The documents
+  are still to lose a lot of their prose, and every account of why something was done: whoever reads the README
+  wants to know what there is and how to use it, and the why is in the change documents. That may be a general
+  rule. The reviewer is to check against the original README what was lost, so that the human can decide whether a
+  loss is a problem. Asked for a table of contents with links, between "The name" and "What is here". Said that
+  "What is here" is not complete, is to be corrected, and is to be kept up to date by an entry in `AGENTS.md`
+- 2026-10-07T22:55:04Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, rewrote `spec.md` for that. The
+  decision that nothing is dropped but repetition is replaced by requirement 10, which says what stays and what
+  goes, and by a section for the reviewer. The table of contents moved from "Beyond the request" into the
+  requirements, for the README. "What is here" is to have a row for every tracked entry at the root of the
+  repository, of which there are 24 by `git ls-tree`, and the present table has 11. Three things in the rewrite are
+  the specifier's and not the human's in those words: that the table says of each entry whether it is in the
+  package, that the links of the table of contents are Bitbucket's, since `origin` is at `bitbucket.org`, and that
+  the rule on the why goes into this repository's `AGENTS.md`, with the kit-wide form under "Beyond the request".
+  Not checked: the form of Bitbucket's anchors, which the specifier knows from memory and did not try. Status left
+  at `draft`
 
 ## Amendments
