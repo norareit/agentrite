@@ -113,31 +113,31 @@ Refactoring, with no change of behavior. The suite passes before and after with 
 
 The command, tests first.
 
-- [ ] In `tests/wrapper-fixture.mjs`, let the stand-in `docker` exit from a recorded `exec` with the status in the
+- [x] In `tests/wrapper-fixture.mjs`, let the stand-in `docker` exit from a recorded `exec` with the status in the
       file `execStatus`, when that is there, and return the file's path with the others. Say so in the comment of
       `fakeHost` (R15)
-- [ ] Test, for the unit as `task-0026-doc` and as `0026`, with a container running: `--connect <unit> echo hi`
+- [x] Test, for the unit as `task-0026-doc` and as `0026`, with a container running: `--connect <unit> echo hi`
       exits 0 and the only recorded call of Docker is the `exec` of the approach, word for word, without `--tty`,
       with the container `project-agent-task-0026-doc` and the command `echo hi`. With no command the call ends in
       `bash` (R1, R2, R3, R4, R15)
-- [ ] Test that the wrapper exits with the status the stand-in's `exec` exits with, for a status that is neither 0
+- [x] Test that the wrapper exits with the status the stand-in's `exec` exits with, for a status that is neither 0
       nor 2 (R3)
-- [ ] Test that the call holds `--tty` when the wrapper is run from a terminal. The test runs the wrapper under
+- [x] Test that the call holds `--tty` when the wrapper is run from a terminal. The test runs the wrapper under
       `script` of util-linux, taken from the suite's own PATH and not put in the stand-in's `bin`, and is skipped,
       with the reason, where `script --version` does not name util-linux (R3)
-- [ ] Test that what the call gives is what the image gives the first command: the values of `HOME`, `USER`,
+- [x] Test that what the call gives is what the image gives the first command: the values of `HOME`, `USER`,
       `LOGNAME` and `PATH` and the user are the ones `container/entrypoint.sh` exports and becomes, the working
       directory is the `working_dir` of `container/compose.yml`, and the default command is the `CMD` of
       `container/Dockerfile`. The test reads the three files (R1, R4)
-- [ ] Test what connecting leaves alone, on the host of `setUpWithBuildDue`, with a container running: after
+- [x] Test what connecting leaves alone, on the host of `setUpWithBuildDue`, with a container running: after
       `--connect` the recorded calls of Docker are the one `exec`, npm was asked nothing, the state directory and
       the project's log directory do not exist, and `git for-each-ref` and `git status --porcelain` print what
       they printed before (R7)
-- [ ] Test that a unit run is as it was: the script that plays the agent of a unit run marks the container as
+- [x] Test that a unit run is as it was: the script that plays the agent of a unit run marks the container as
       running, runs the wrapper with `--connect` and a command, twice, and commits work. Both connects exit 0, and
       the unit run then fast-forwards the host's branch and removes the clone as it does with nothing connected
       (R8, R9)
-- [ ] Test the refusals. Each exits 2, records no call of Docker and asks npm nothing (R10):
+- [x] Test the refusals. Each exits 2, records no call of Docker and asks npm nothing (R10):
     - `--connect` alone: names `--connect` and the form
     - a name that is no branch, and a number that no branch holds while `master` holds a unit of that number:
       names the unit, does not hold the word `cut`, and `git for-each-ref` prints what it printed before (R7)
@@ -147,14 +147,14 @@ The command, tests first.
     - Docker cannot be asked: holds `could not ask Docker whether` and `Nothing was run.`
     - each of `--in-place`, `--workdir DIR`, `--mount DIR` and `--rebuild`, once before `--connect` and once
       after it: names the option
-- [ ] Test that `--connect` is refused with exit 2, `refusing to run as root` and no call of Docker when the `id`
+- [x] Test that `--connect` is refused with exit 2, `refusing to run as root` and no call of Docker when the `id`
       of the stand-in's `bin` prints 0 (R11)
-- [ ] In `container/agent.sh`, implement `--connect` as the approach orders it, with the messages of its list,
+- [x] In `container/agent.sh`, implement `--connect` as the approach orders it, with the messages of its list,
       until the tests above pass: the option, the two refusals after the loop, `find_unit_branch` for the branch,
       and the block that names the container, asks Docker and ends in `exec docker exec`. Keep the unit as it was
       given, for the messages. A comment at the call names the three files its values come from and the test that
       holds them together (R1, R2, R3, R4, R7, R8, R9, R10, R11)
-- [ ] In the wrapper's header, describe `--connect`: a third paragraph beside the two ways to run, that it starts
+- [x] In the wrapper's header, describe `--connect`: a third paragraph beside the two ways to run, that it starts
       and mounts nothing and that the wrapper names the user of the connected process, the form in the `Usage:`
       block, and the option in the list under it (R13)
 
@@ -217,7 +217,7 @@ The README.
 - [x] `feature-0034 Plan connecting to a unit run`: the plan and the record
 - [x] `feature-0034 Split finding a unit's branch from cutting it`: the two refactoring tasks, with no change of
       behavior
-- [ ] `feature-0034 Connect a command to a unit run`: the stand-in, the tests of `--connect`, the wrapper and its
+- [x] `feature-0034 Connect a command to a unit run`: the stand-in, the tests of `--connect`, the wrapper and its
       header
 - [ ] `feature-0034 Name --connect where a second shell is looked for`: the second run's refusal and the forms
 - [ ] `feature-0034 Record the runs on a real Docker`: the record

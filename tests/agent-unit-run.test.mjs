@@ -13,9 +13,9 @@ import {
   writeFileSync,
 } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
-import { fakeHost, logDirectories, logDirectory, logMounts } from './wrapper-fixture.mjs';
+import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
 
 const kitContainer = new URL('../container/', import.meta.url).pathname;
 const kitPath = 'node_modules/@ritenoar/agentrite/container';
@@ -696,4 +696,247 @@ test('the wrapper says that removing the clone failed, exits non-zero, and does 
     // So that the test's own directory can be removed.
     if (existsSync(locked)) chmodSync(locked, 0o755);
   }
+});
+
+// Connecting: `--connect` runs a command in the container of the unit run that is under way, and starts nothing.
+
+// What the entrypoint, the compose file and the image give the first command of a container, read from the three
+// files. The wrapper holds them a second time, for the command it connects.
+function firstCommandGets() {
+  const read = (file) => readFileSync(join(kitContainer, file), 'utf-8');
+  const entrypoint = read('entrypoint.sh');
+  const [, home, user, logname] = entrypoint.match(/^export HOME=(\S+) USER=(\S+) LOGNAME=(\S+)$/m);
+  return {
+    path: entrypoint.match(/^export PATH=(\S+)$/m)[1],
+    home,
+    user,
+    logname,
+    becomes: entrypoint.match(/^exec setpriv --reuid=(\S+) /m)[1],
+    workingDirectory: read('compose.yml').match(/^ +working_dir: (\S+)$/m)[1],
+    defaultCommand: read('Dockerfile').match(/^CMD \["([^"]+)"\]$/m)[1],
+  };
+}
+
+// The one call of Docker a connect makes, as the stand-in records it: `command` in the unit run's container, with
+// a terminal when `tty` says so.
+const connectCall = (command, { tty = false } = {}) =>
+  `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive ${tty ? '--tty ' : ''}--user agent --workdir /work ` +
+  '--env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
+  '--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ' +
+  `${containerName} ${command}`;
+
+// What the stand-in's `ps` prints for a container that is running.
+const markRunning = ({ runningContainer }) => writeFileSync(runningContainer, '0123456789ab\n');
+
+for (const unit of [branch, '0026']) {
+  test(`--connect ${unit} runs the command in the container of the run of ${branch}, and nothing else`, (t) => {
+    const host = setUp(t);
+    markRunning(host);
+    const result = host.run(['--connect', unit, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+  });
+
+  test(`--connect ${unit} with no command opens the shell a unit run opens`, (t) => {
+    const host = setUp(t);
+    markRunning(host);
+    const result = host.run(['--connect', unit]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(host.dockerCalls(), [connectCall('bash')]);
+  });
+}
+
+test('--connect exits with the status the connected command exited with', (t) => {
+  const host = setUp(t);
+  markRunning(host);
+  writeFileSync(host.execStatus, '7\n');
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+  assert.equal(result.status, 7, result.stderr);
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});
+
+// `script` of util-linux runs a command on a terminal of its own. It is the suite's, not the wrapper's, so it is
+// taken from the suite's PATH and is not in the stand-in's `bin`.
+function utilLinuxScript() {
+  const found = (process.env.PATH ?? '')
+    .split(delimiter)
+    .filter((directory) => directory !== '')
+    .map((directory) => join(directory, 'script'))
+    .find((candidate) => existsSync(candidate));
+  if (found === undefined) return undefined;
+  const version = spawnSync(found, ['--version'], { encoding: 'utf-8' });
+  return version.status === 0 && version.stdout.includes('util-linux') ? found : undefined;
+}
+
+test('--connect gives the command a terminal when the wrapper is run from one', (t) => {
+  const script = utilLinuxScript();
+  if (script === undefined) {
+    t.skip('script of util-linux, which runs the wrapper on a terminal, is not on the PATH of the suite');
+    return;
+  }
+  const host = setUp(t);
+  markRunning(host);
+  const wrapper = `'${join(host.container, 'agent.sh')}' '${host.root}' --connect ${branch} echo hi`;
+  const result = spawnSync(script, ['--quiet', '--return', '--command', wrapper, '/dev/null'], {
+    encoding: 'utf-8',
+    env: { HOME: host.home, PATH: host.bin },
+  });
+  assert.equal(result.status, 0, result.stdout + result.stderr);
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', { tty: true })]);
+});
+
+test('--connect gives the command what the entrypoint, the compose file and the image give the first', (t) => {
+  const gets = firstCommandGets();
+  const host = setUp(t);
+  markRunning(host);
+  const result = host.run(['--connect', branch]);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(gets.user, gets.becomes);
+  assert.deepEqual(host.dockerCalls(), [
+    `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive --user ${gets.becomes} ` +
+      `--workdir ${gets.workingDirectory} --env HOME=${gets.home} --env USER=${gets.user} ` +
+      `--env LOGNAME=${gets.logname} --env PATH=${gets.path} ${containerName} ${gets.defaultCommand}`,
+  ]);
+});
+
+test('--connect builds, asks, clones, cuts and fetches nothing, and makes no directory on the host', (t) => {
+  const host = setUpWithBuildDue(t);
+  const { home, state, logs, run, git, dockerCalls, npmCalls } = host;
+  markRunning(host);
+  const before = { refs: git('for-each-ref'), status: git('status', '--porcelain') };
+
+  const result = run(['--connect', '0026', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [connectCall('echo hi')]);
+  assert.deepEqual(npmCalls(), []);
+  assert.equal(existsSync(state), false);
+  assert.equal(existsSync(logs), false);
+  assert.equal(existsSync(join(home, '.local')), false);
+  assert.deepEqual({ refs: git('for-each-ref'), status: git('status', '--porcelain') }, before);
+});
+
+// The agent of the unit run connects twice to its own run, as a developer does from two other terminals while
+// the first command is at work. The container is running while it does, and has stopped when the script ends.
+test('a unit run to which commands were connected lands its work and removes the clone as it does without', (t) => {
+  const host = setUp(t);
+  const { root, container, clone, run, git, agent, runningContainer, dockerCalls, unitRun } = host;
+  const connect = (word) => `"${join(container, 'agent.sh')}" "${root}" --connect ${branch} echo ${word}`;
+  agent(
+    `echo 0123456789ab > "${runningContainer}"\n${connect('one')}\n${connect('two')}\n` +
+      `rm "${runningContainer}"\n${commitWork}`,
+  );
+
+  const result = run([branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [...unitRun(clone), connectCall('echo one'), connectCall('echo two')]);
+  assert.equal(subjectOf(git, branch), 'work');
+  assert.equal(hasRef(git, sandboxRef), false);
+  assert.equal(existsSync(clone), false);
+});
+
+// What `--connect` refuses. Each on a host where a build would be due, so that a refusal that came too late
+// would show in the calls of Docker and of npm.
+function assertNothingRan(host, result) {
+  assert.equal(result.status, 2, result.stderr);
+  assert.deepEqual(host.dockerCalls(), []);
+  assert.deepEqual(host.npmCalls(), []);
+  assert.equal(existsSync(host.state), false);
+}
+
+test('--connect with no unit is refused, and names --connect and its form', (t) => {
+  const host = setUpWithBuildDue(t);
+  markRunning(host);
+  const result = host.run(['--connect']);
+  assertNothingRan(host, result);
+  assert.ok(result.stderr.includes('agent.sh: --connect needs a unit.\n'), result.stderr);
+  assert.ok(result.stderr.includes('agent.sh --connect UNIT [COMMAND...]\n'), result.stderr);
+});
+
+for (const unit of ['claude', '0031']) {
+  test(`--connect ${unit} is refused for a unit that names no branch, and cuts none`, (t) => {
+    const host = setUpWithBuildDue(t);
+    markRunning(host);
+    commitUnit(host, 'kind: feature');
+    const refs = host.git('for-each-ref');
+    const result = host.run(['--connect', unit, 'echo', 'hi']);
+    assertNothingRan(host, result);
+    assert.ok(result.stderr.includes(`agent.sh: '${unit}' names no local branch`), result.stderr);
+    assert.ok(result.stderr.includes('So there is no run to connect to.\n'), result.stderr);
+    assert.doesNotMatch(result.stderr, /cut/);
+    assert.doesNotMatch(result.stderr, /agent\.sh --in-place /);
+    assert.equal(host.git('for-each-ref'), refs);
+  });
+}
+
+test('--connect 0010 is refused, and lists the branches the number names', (t) => {
+  const host = setUpWithBuildDue(t);
+  markRunning(host);
+  const result = host.run(['--connect', '0010', 'echo', 'hi']);
+  assertNothingRan(host, result);
+  assert.match(result.stderr, /^ {2}feature-0010-init$/m);
+  assert.match(result.stderr, /^ {2}feature-0010-init2$/m);
+});
+
+for (const unit of [branch, '0026']) {
+  test(`--connect ${unit} is refused while no container of the run is running, and names the command`, (t) => {
+    const host = setUpWithBuildDue(t);
+    const result = host.run(['--connect', unit, 'echo', 'hi']);
+    assertNothingRan(host, result);
+    assert.ok(
+      result.stderr.includes(
+        `agent.sh: no run is under way for '${unit}': the container ${containerName} is not running.\n`,
+      ),
+      result.stderr,
+    );
+    assert.ok(result.stderr.includes(`Start one with 'agent.sh ${unit}'.\n`), result.stderr);
+  });
+}
+
+test('--connect is refused when Docker cannot say whether the container is running', (t) => {
+  const host = setUpWithBuildDue(t);
+  markRunning(host);
+  writeFileSync(host.psFails, '');
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+  assertNothingRan(host, result);
+  assert.match(result.stderr, /agent\.sh: could not ask Docker whether/);
+  assert.ok(result.stderr.includes('Nothing was run.\n'), result.stderr);
+});
+
+for (const [option, value] of [
+  ['--in-place', () => []],
+  ['--workdir', (base) => [base]],
+  ['--mount', (base) => [base]],
+  ['--rebuild', () => []],
+]) {
+  for (const [where, order] of [
+    ['before', (given) => [...given, '--connect']],
+    ['after', (given) => ['--connect', ...given]],
+  ]) {
+    test(`--connect is refused with ${option} ${where} it, and names the option`, (t) => {
+      const host = setUpWithBuildDue(t);
+      markRunning(host);
+      const result = host.run([...order([option, ...value(host.base)]), branch, 'echo', 'hi']);
+      assertNothingRan(host, result);
+      assert.ok(
+        result.stderr.includes(`agent.sh: --connect cannot be given together with ${option}.\n`),
+        result.stderr,
+      );
+      assert.ok(result.stderr.includes('That is an option of a run, and --connect starts none.\n'), result.stderr);
+    });
+  }
+}
+
+test('--connect is refused as root, like a run', (t) => {
+  const host = setUp(t);
+  markRunning(host);
+  // The stand-in's `id` is a link to the host's own, which writing through would reach.
+  rmSync(join(host.bin, 'id'));
+  writeCommand(host.bin, 'id', 'echo 0');
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+  assert.equal(result.status, 2, result.stderr);
+  assert.match(result.stderr, /agent\.sh: refusing to run as root/);
+  assert.deepEqual(host.dockerCalls(), []);
 });

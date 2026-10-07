@@ -27,6 +27,15 @@
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
+# Besides the two, --connect runs a command in the container of a unit run that is
+# under way, beside what runs there. It starts and mounts nothing, builds nothing and
+# changes nothing on the host, and the wrapper ends in `docker exec`. The container is
+# confined as the unit run started it, and the wrapper sets nothing of that. The user of
+# a connected process is the wrapper's to name, though: Docker runs it as root, with the
+# capabilities the entrypoint keeps for the firewall, unless it is told the user, so the
+# wrapper names the agent, and gives the command the environment and the working
+# directory that the first command has.
+#
 # It also decides which versions of Claude Code and OpenCode the image holds. Each is
 # the first of: the version the project's compose file gives, and the version the host's
 # own command reports. When the image was built with another version than that, it
@@ -42,6 +51,7 @@
 #   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
 #   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
 #   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+#   agent.sh PROJECT_ROOT --connect UNIT [COMMAND...]
 #
 #   PROJECT_ROOT     the project's root, which the project's agent.sh shim passes
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
@@ -50,6 +60,10 @@
 #                    its branch first, cut from the head of master
 #   --in-place       mount the project root at /work, as it is
 #   --workdir DIR    mount DIR at /work, as it is
+#   --connect UNIT   run the command in the container of the run that is under way for
+#                    the unit, as the agent, and start nothing. The unit is a local
+#                    branch, by its name or by a unit's number, and no branch is cut.
+#                    Takes none of the options below
 #   --rebuild        build the image before running, even if it already exists and
 #                    holds the wanted harness versions
 #   --mount HOST     also mount HOST at /mnt/<basename>, read-write
@@ -98,6 +112,7 @@ workdir="$root"
 in_place=0
 workdir_given=0
 rebuild=0
+connect=0
 mounts=()
 
 while [ $# -gt 0 ]; do
@@ -116,6 +131,10 @@ while [ $# -gt 0 ]; do
       workdir="$(cd "$2" && pwd)"
       workdir_given=1
       shift 2
+      ;;
+    --connect)
+      connect=1
+      shift
       ;;
     --mount)
       [ $# -ge 2 ] || { echo "agent.sh: --mount needs a path" >&2; exit 2; }
@@ -138,6 +157,28 @@ while [ $# -gt 0 ]; do
   esac
 done
 
+# --connect starts no run, so it takes no option of one, and it needs the unit whose run
+# it connects to. Refused here, where the mounts hold only what --mount gave.
+if [ "$connect" -eq 1 ]; then
+  run_options=()
+  [ "$in_place" -eq 0 ] || run_options+=(--in-place)
+  [ "$workdir_given" -eq 0 ] || run_options+=(--workdir)
+  [ "${#mounts[@]}" -eq 0 ] || run_options+=(--mount)
+  [ "$rebuild" -eq 0 ] || run_options+=(--rebuild)
+  if [ "${#run_options[@]}" -gt 0 ]; then
+    for run_option in "${run_options[@]}"; do
+      echo "agent.sh: --connect cannot be given together with $run_option." >&2
+    done
+    echo "That is an option of a run, and --connect starts none." >&2
+    exit 2
+  fi
+  if [ $# -eq 0 ]; then
+    echo "agent.sh: --connect needs a unit." >&2
+    echo "  agent.sh --connect UNIT [COMMAND...]" >&2
+    exit 2
+  fi
+fi
+
 # What to mount at /work has no default. Without --in-place and --workdir the first
 # argument left is the unit, and with nothing left there is nothing to run on. Refused
 # here, before the host's harnesses, Docker or npm are asked anything.
@@ -156,18 +197,31 @@ fi
 
 # The unit's branch, found with git alone, or cut from master for a unit that has none
 # yet, so that a unit that names none is refused as early. An empty branch says that
-# this is not a unit run.
+# this is not a unit run. --connect finds the branch and cuts none: a unit with no
+# branch has no run to connect to. The unit is kept as it was given, for the messages
+# that name a command to run.
 branch=""
+unit=""
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   # shellcheck source=unit-clone.sh
   . "$here/unit-clone.sh"
+  unit="$1"
   resolved=0
-  branch="$(resolve_unit_branch "$root" "$1")" || resolved=$?
-  if [ "$resolved" -ne 0 ]; then
-    # A unit that names no branch, and no unit of master's to cut one for, may be a
-    # command given without saying what to mount.
-    [ "$resolved" -ne 1 ] || mount_forms
-    exit 2
+  if [ "$connect" -eq 1 ]; then
+    branch="$(find_unit_branch "$root" "$unit")" || resolved=$?
+    if [ "$resolved" -eq 1 ]; then
+      echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
+      echo "So there is no run to connect to." >&2
+    fi
+    [ "$resolved" -eq 0 ] || exit 2
+  else
+    branch="$(resolve_unit_branch "$root" "$unit")" || resolved=$?
+    if [ "$resolved" -ne 0 ]; then
+      # A unit that names no branch, and no unit of master's to cut one for, may be a
+      # command given without saying what to mount.
+      [ "$resolved" -ne 1 ] || mount_forms
+      exit 2
+    fi
   fi
   shift
 fi
@@ -336,6 +390,50 @@ unit_container_name() {
   local name="$1-$2"
   echo "${name//[^A-Za-z0-9_.-]/-}"
 }
+
+# --connect ends here, before the host's harnesses are asked for a version, a build is
+# weighed or a directory is made: it runs the command in the container of the unit's
+# run, beside what runs there, and the wrapper becomes that call, so its status is the
+# command's. The container's name is the one the unit run gave it, and a container that
+# is not running under it says that no run is under way.
+#
+# What the command is given is what the first command of the container has, which this
+# call holds a second time: the user is the one container/entrypoint.sh becomes, named
+# with no group so that Docker takes its groups from the container's own account files,
+# HOME, USER, LOGNAME and PATH are the values the entrypoint exports, /work is the
+# working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. A
+# test in tests/agent-unit-run.test.mjs reads the three files and holds this call
+# against them. Without --user the command would be root, with the capabilities the
+# entrypoint keeps for the firewall.
+#
+# Standard input is always passed on, so that a command a script runs can be given
+# input. A terminal only when the wrapper has one on both its input and its output:
+# Docker refuses a terminal without one on its input, and a terminal's line endings do
+# not belong in a pipe.
+if [ "$connect" -eq 1 ]; then
+  read_merged_configuration
+  container_name="$(unit_container_name "$project" "$branch")"
+  running=0
+  unit_container_running || running=$?
+  if [ "$running" -eq 1 ]; then
+    echo "agent.sh: no run is under way for '$unit': the container $container_name is not running." >&2
+    echo "Start one with 'agent.sh $unit'." >&2
+    exit 2
+  fi
+  if [ "$running" -eq 2 ]; then
+    echo "Nothing was run." >&2
+    exit 2
+  fi
+  [ $# -gt 0 ] || set -- bash
+  terminal=()
+  if [ -t 0 ] && [ -t 1 ]; then
+    terminal=(--tty)
+  fi
+  exec docker exec --interactive ${terminal[@]+"${terminal[@]}"} --user agent --workdir /work \
+    --env HOME=/home/agent --env USER=agent --env LOGNAME=agent \
+    --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    "$container_name" "$@"
+fi
 
 claude_code_host="$(installed_version claude "Claude Code")"
 opencode_host="$(installed_version opencode "OpenCode")"

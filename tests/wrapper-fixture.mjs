@@ -74,8 +74,10 @@ export function writeCommand(bin, name, script) {
 //       running under the name the file holds, and with nothing otherwise. It fails instead, as it does with no
 //       daemon to ask, when the file `psFails` is there
 //   A `build` is recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does
-//   nothing. A `run` is recorded and then plays the agent when the file `agentScript` is there: it runs that file
-//   with `bash` in the directory the call mounts at `/work`, and exits with its status
+//   nothing. An `exec` is recorded, runs nothing, and exits with the status the file `execStatus` holds when that
+//   is there, which stands for the status of the command Docker ran in the container. A `run` is recorded and
+//   then plays the agent when the file `agentScript` is there: it runs that file with `bash` in the directory the
+//   call mounts at `/work`, and exits with its status
 // * an `npm` that records each call, which `npmCalls` reads, and answers `view <package> version` with the
 //   package's version of `latestVersions`. It prints the content of the file `npmPrints` instead when that is
 //   there, and fails, as the real one does with no registry to reach, when the file `npmFails` is. A test that
@@ -95,6 +97,7 @@ export function fakeHost(base, recorded) {
   const runningContainer = join(base, 'running-container');
   const agentScript = join(base, 'agent-script');
   const psFails = join(base, 'ps-fails');
+  const execStatus = join(base, 'exec-status');
   writeFileSync(projectBuildArgs, '{}');
   writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
   const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
@@ -126,6 +129,10 @@ if [[ " $* " == *" config --format json "* ]]; then
   ' < "${projectBuildArgs}"
 fi
 echo "${record} docker $*" >> "${calls}"
+if [ "$1" = "exec" ]; then
+  [ ! -f "${execStatus}" ] || exit "$(cat "${execStatus}")"
+  exit 0
+fi
 if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi
 if [[ " $* " == *" run "* ]] && [ -f "${agentScript}" ]; then
   for argument in "$@"; do
@@ -169,6 +176,7 @@ esac`,
     runningContainer,
     agentScript,
     psFails,
+    execStatus,
     dockerCalls,
     npmPrints,
     npmFails,
