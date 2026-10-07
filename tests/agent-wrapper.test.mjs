@@ -609,7 +609,7 @@ for (const [what, args] of [
   ['--rebuild alone', () => ['--rebuild']],
   ['--mount alone', (base) => ['--mount', base]],
 ]) {
-  test(`the wrapper refuses ${what}, names the three forms, and asks Docker and npm nothing`, (t) => {
+  test(`the wrapper refuses ${what}, names the forms, and asks Docker and npm nothing`, (t) => {
     const { base, root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
     rmSync(join(bin, 'claude'));
     const result = run(root, ...args(base));
@@ -617,6 +617,7 @@ for (const [what, args] of [
     assert.match(result.stderr, /agent\.sh UNIT /);
     assert.match(result.stderr, /agent\.sh --in-place /);
     assert.match(result.stderr, /agent\.sh --workdir DIR /);
+    assert.match(result.stderr, /agent\.sh --connect UNIT /);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
   });

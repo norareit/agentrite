@@ -331,19 +331,23 @@ for (const { name, unit, arrange, says } of noCut) {
   });
 }
 
-test('the wrapper refuses a second run for a branch whose container is running, before it builds', (t) => {
-  const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(t);
-  writeFileSync(runningContainer, '0123456789ab\n');
-  const refs = git('for-each-ref');
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 2);
-  assert.ok(result.stderr.includes(containerName), result.stderr);
-  assert.match(result.stderr, /is running/);
-  assert.deepEqual(dockerCalls(), []);
-  assert.deepEqual(npmCalls(), []);
-  assert.equal(existsSync(state), false);
-  assert.equal(git('for-each-ref'), refs);
-});
+for (const unit of [branch, '0026']) {
+  test(`the wrapper refuses a second run of ${unit} while its container is running, and names --connect`, (t) => {
+    const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+    writeFileSync(runningContainer, '0123456789ab\n');
+    const refs = git('for-each-ref');
+    const result = run([unit, 'echo', 'hi']);
+    assert.equal(result.status, 2);
+    assert.ok(result.stderr.includes(containerName), result.stderr);
+    assert.match(result.stderr, /is running/);
+    assert.ok(result.stderr.includes(`'docker stop ${containerName}'`), result.stderr);
+    assert.ok(result.stderr.includes(`'agent.sh --connect ${unit} [COMMAND...]'`), result.stderr);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+    assert.equal(existsSync(state), false);
+    assert.equal(git('for-each-ref'), refs);
+  });
+}
 
 test('the wrapper puts the clone under XDG_STATE_HOME when that is set', (t) => {
   const { base, home, run, dockerCalls, unitRun } = setUp(t);

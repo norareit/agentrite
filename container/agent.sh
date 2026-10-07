@@ -181,13 +181,16 @@ fi
 
 # What to mount at /work has no default. Without --in-place and --workdir the first
 # argument left is the unit, and with nothing left there is nothing to run on. Refused
-# here, before the host's harnesses, Docker or npm are asked anything.
+# here, before the host's harnesses, Docker or npm are asked anything. The forms end
+# with the one that mounts nothing, --connect, for whoever wanted a second shell.
 mount_forms() {
   echo "Say what to mount at /work, as one of:" >&2
   echo "  agent.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch." >&2
   echo "                                       An ID with no branch gets one, cut from master" >&2
   echo "  agent.sh --in-place [COMMAND...]     the project root as it is" >&2
   echo "  agent.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
+  echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
+  echo "  agent.sh --connect UNIT [COMMAND...]" >&2
 }
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   echo "agent.sh: nothing to mount at /work was given." >&2
@@ -452,6 +455,7 @@ if [ -n "$branch" ]; then
   if [ "$running" -eq 0 ]; then
     echo "agent.sh: the container $container_name is running, so a run for $branch is under way." >&2
     echo "Two runs never work on one branch. Wait for it, or stop it with 'docker stop $container_name'." >&2
+    echo "To run a command beside it: 'agent.sh --connect $unit [COMMAND...]'." >&2
     exit 2
   fi
   if [ "$running" -eq 2 ]; then

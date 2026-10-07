@@ -160,10 +160,10 @@ The command, tests first.
 
 What says that it exists.
 
-- [ ] Extend the test of the second run's refusal: for the unit as a branch and as a number, standard error holds
+- [x] Extend the test of the second run's refusal: for the unit as a branch and as a number, standard error holds
       `agent.sh --connect <unit>` with the unit as it was given. Then add the line of the approach's list to the
       refusal (R12)
-- [ ] In `tests/agent-wrapper.test.mjs`, the test of the forms the wrapper lists also expects
+- [x] In `tests/agent-wrapper.test.mjs`, the test of the forms the wrapper lists also expects
       `agent.sh --connect UNIT `, and its name no longer counts three. Then add the form to `mount_forms`:
       `agent.sh --connect UNIT [COMMAND...]`, a command beside the one of the unit's run that is under way (R13)
 
@@ -219,7 +219,7 @@ The README.
       behavior
 - [x] `feature-0034 Connect a command to a unit run`: the stand-in, the tests of `--connect`, the wrapper and its
       header
-- [ ] `feature-0034 Name --connect where a second shell is looked for`: the second run's refusal and the forms
+- [x] `feature-0034 Name --connect where a second shell is looked for`: the second run's refusal and the forms
 - [ ] `feature-0034 Record the runs on a real Docker`: the record
 - [ ] `feature-0034 Describe --connect in the README`: the README
 - [ ] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree
