@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-06T14:38:19Z
 ---
 
@@ -31,3 +31,22 @@ timestamp: 2026-10-06T14:38:19Z
   was. The status stays `draft`
 - 2026-10-07T14:14:38Z [human] approved the spec as it is on `master` at `ddb8020`, asked in a session of Claude Code on
   the host. The status is `approved`
+- 2026-10-07T14:17:00Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session on the host. Read
+  `process.md` and `roles/planner.md` of the release 4.1.1, the spec and this record, the wrapper, `unit-clone.sh`, the
+  compose file, the entrypoint, the Dockerfile, the two suites of the wrapper with their stand-in for Docker, and the
+  README's sections on the sandbox. Cut `feature-0034-connect-to-a-unit-run` from `master` at `1391ee6` and wrote
+  `plan.md` against it. Every task names the requirements it delivers and every requirement has a task. Nothing was run
+  but git: no test, no Docker. The status is `planned`
+- 2026-10-07T14:17:00Z [Claude Code, anthropic/claude-opus-5-5] as the planner, two things found that the spec does not
+  cover. The plan decides neither, and neither keeps it from being built:
+    - `./agent-dev.sh --connect <unit>` will be refused. The shim always passes `--rebuild`, which requirement 10
+      refuses together with `--connect`, while the README says of the shim that it takes what `./agent.sh` takes. The
+      plan runs requirement 16 by calling the working copy's wrapper itself for the connecting side. Whether the shim
+      should connect, or the README should say that it does not, is the specifier's and the human's
+    - The wrapper prints no usage besides the forms it lists when nothing to mount was given. The plan reads "the usage
+      the wrapper prints" of requirement 13 as those forms and the `Usage:` block of the wrapper's header
+- 2026-10-07T14:17:00Z [Claude Code, anthropic/claude-opus-5-5] as the planner, for the implementer: requirement 16
+  needs a Docker, which a sandbox does not have. The plan says to leave that task unticked and to log it as a blocker
+  when the implementer runs in one. The plan holds the values of the connected command's environment a second time in
+  the wrapper, because the spec keeps the entrypoint, the image and the compose file as they are, and has a test hold
+  the two together
