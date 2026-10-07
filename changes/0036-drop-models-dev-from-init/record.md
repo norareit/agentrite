@@ -106,3 +106,12 @@ section, which is written at the release; and the `ALLOWLIST` of any existing pr
   init` run in a project outside the tests, and a start of the sandbox from the committed tree, which is the tree
   the second run of the check above had for `agent/compose.project.yml`. The unit stays `in-progress`, since no
   review has been made
+- 2026-10-07T13:10:31Z [OpenCode, openai/gpt-6.1-sol] completed a full review of `0036-drop-models-dev-from-init` at
+  commit `d1a48735b698220578d1c16b22812e94c816fd54`, against merge base
+  `ead1e3919e56d567bf8296fe03c513b76e6b8c2c`. Saved at
+  `.reviews/0036-drop-models-dev-from-init/full-d1a4873-20261007T130857Z.md`. Findings: none on all three axes.
+  Ran `npm test`, 364 passed with none skipped; `npm run check-changes` and the diff whitespace check passed.
+  OpenCode 1.18.35 answered the prompt in `./agent-dev.sh` with `models.dev` absent and connected to
+  `models.opencode.ai`; the only hostname marked `not allowlisted` was the expected canary. Could not independently
+  verify the historical run with the entry present or the test-before-code claim. The runtime check used the existing
+  home volume and ChatGPT login in headless mode
