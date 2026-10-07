@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-07T11:45:34Z
 ---
 
@@ -31,3 +31,5 @@ timestamp: 2026-10-07T11:45:34Z
   was not looked for. Two things are under "Beyond the request", the first of them that the image is not built again
   when the kit changed, so that a project needs `--rebuild` to get this fix. No plan is written. The status stays
   `draft`
+- 2026-10-07T11:51:06Z [human] read what the specifier answered and the summary of the spec, and asked for the unit to
+  be built, which approves it. The status is `approved`
