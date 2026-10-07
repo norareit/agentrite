@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: planned
 timestamp: 2026-10-07T11:45:34Z
 ---
 
@@ -33,3 +33,11 @@ timestamp: 2026-10-07T11:45:34Z
   `draft`
 - 2026-10-07T11:51:06Z [human] read what the specifier answered and the summary of the spec, and asked for the unit to
   be built, which approves it. The status is `approved`
+- 2026-10-07T11:51:36Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session on the Linux host,
+  at the human's word to build the unit. Cut `bugfix-0042-home-check-cannot-enter-a-directory` from `master` at
+  `a41ca27`, on which `npm test` passes with 363 tests. Read `roles/planner.md` of the release 4.1.0, the spec and this
+  record, the entrypoint, and the tests of its home checks with their fixture. The fix takes more than a couple of
+  steps, with two tests, a comment, a sentence of the README and three runs on a real Docker, so the unit has a
+  `plan.md`. Settled as how: the owner is read through the `setpriv` call the entrypoint ends in, the suite stands in
+  for `setpriv` on the `PATH`, and the runs on a real Docker use a Compose project and a data directory of their own.
+  Nothing in the spec was found unclear or untrue of the tree. The status is `planned`
