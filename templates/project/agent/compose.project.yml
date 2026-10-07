@@ -29,4 +29,3 @@ services:
         # Add the hosts this project needs, one per line: the API host of each model
         # provider its agents use besides Anthropic, such as api.openai.com, and what
         # its tools and tests reach, such as github.com for git over HTTPS.
-        {{harness_hosts}}

@@ -34,12 +34,6 @@ export const CLAUDE_NOTICE =
   'CLAUDE.md exists and was left as it is. For Claude Code to read the instructions in AGENTS.md, it must import\n' +
   'that file with a line holding `@AGENTS.md`.\n';
 
-// Hosts a harness reaches at start-up beyond those the kit admits itself, as the lines of the project's allowlist.
-/** @type {Record<string, string[]>} */
-const HARNESS_HOSTS = {
-  opencode: ['# OpenCode fetches its model catalog from here at start-up', 'models.dev'],
-};
-
 /**
  * @param {unknown} error
  * @returns {string}
@@ -198,14 +192,6 @@ function roleWrapperDirectories(harnesses) {
 }
 
 /**
- * @param {string[]} harnesses
- * @returns {string}
- */
-function harnessHosts(harnesses) {
-  return harnesses.flatMap((harness) => HARNESS_HOSTS[harness] ?? []).join('\n');
-}
-
-/**
  * The shim that runs the kit's sandbox from the project root.
  *
  * @param {Record<string, string>} templates
@@ -267,7 +253,6 @@ export function projectFiles({ templates, harnesses, packageName, playwrightVers
   const compose = fillTemplate(templates[COMPOSE_FILE], {
     agent_name: agentName(packageName),
     playwright_build: playwrightVersion === undefined ? '' : playwrightBuildBlock(playwrightVersion),
-    harness_hosts: harnessHosts(harnesses),
   });
   return [...files, { path: COMPOSE_FILE, content: compose }];
 }

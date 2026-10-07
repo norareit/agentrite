@@ -197,7 +197,10 @@ test('agentName reduces a package name to the characters Compose accepts in a pr
 });
 
 test('the compose file carries the names, the Playwright version, the limits and no host the kit supplies', () => {
-  const compose = fileAt(files(['claude'], { packageName: '@acme/shop' }), 'agent/compose.project.yml').content;
+  const compose = fileAt(
+    files(['claude', 'opencode'], { packageName: '@acme/shop' }),
+    'agent/compose.project.yml',
+  ).content;
   assert.match(compose, /^name: acme-shop-agent$/m);
   assert.match(compose, /^ {4}image: acme-shop-agent$/m);
   assert.match(compose, /^ {8}PLAYWRIGHT_VERSION: 1\.59\.1$/m);
@@ -210,11 +213,6 @@ test('the compose file carries the names, the Playwright version, the limits and
     .map((line) => line.replace(/#.*/, '').trim())
     .filter(Boolean);
   assert.deepEqual(hosts, []);
-});
-
-test('the compose file admits models.dev for opencode, which OpenCode fetches at start-up', () => {
-  const compose = fileAt(files(['claude', 'opencode']), 'agent/compose.project.yml').content;
-  assert.match(compose, /^ {8}models\.dev$/m);
 });
 
 test('playwrightVersion reads playwright resolved directly and through @playwright/test', () => {
