@@ -5,6 +5,66 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 4.2.0
+
+### What changed
+
+* `./agent.sh --connect <unit> [COMMAND...]` runs a command in the container of the unit run that is under way for
+  the unit, beside what runs there, and with no command it opens the shell a unit run opens. It is the way to two
+  harnesses on one unit at the same time, such as the implementer in one terminal and the reviewer in another:
+  `./agent.sh 0029 claude` in the first, and `./agent.sh --connect 0029 opencode` in the second while that runs.
+  The unit is given as a unit run takes it, by its branch's name or by a number that one local branch's name
+  holds. Any number of commands may be connected to one run (0034)
+* A connected command is in that container and not in one like it: the same `/work`, the same home, the same
+  processes, and the firewall and the egress proxy between it and the network. It runs as the agent, as the first
+  command does: the same user and groups, no capability and no way to gain one, the same `HOME`, `USER`, `LOGNAME`
+  and `PATH`, and `/work` as its working directory. It is given a terminal when `--connect` is run from one and
+  none when it is not, and the wrapper exits with the status the command exited with (0034)
+* `--connect` starts no container and stops none, builds no image, asks npm nothing, makes no clone, cuts no
+  branch and fetches nothing. It runs nothing, says why and exits with 2 when no unit is given, when the unit
+  names no local branch or several, when no run is under way for the unit, in which case it names the command
+  that starts one, when Docker could not be asked, and when it is given together with `--in-place`, `--workdir`,
+  `--mount` or `--rebuild`. A number that no branch holds is refused although `master` holds a unit of that
+  number: only a unit run cuts the branch. A run with `--in-place` or `--workdir` cannot be connected to (0034)
+* The refusal of a second unit run for a branch whose container is running names `--connect`, and so do the forms
+  the wrapper lists when nothing to mount was given (0034)
+* `init` no longer writes `models.dev` into the `ALLOWLIST` of a project that uses OpenCode. OpenCode takes its
+  model catalog from `models.opencode.ai`, which the kit admits itself, so the `ALLOWLIST` that `init` writes
+  holds its comment and no host, for either harness (0036)
+* The README describes `--connect` under "Working on a clone", with what ends with the first command, what is
+  refused, and why `docker exec` with no user named is not the way to a second shell (0034)
+* Not in the package: nothing
+
+### Worth knowing when you update
+
+* The update asks for no rebuild of the image and no `refresh`. `--connect` is in the wrapper, which the install
+  brings, and nothing in the image, the entrypoint or the compose file changed (0034)
+* The first command of a unit run owns the container. When it ends the container stops and every connected
+  command ends with it: its wrapper prints nothing and exits with 137. So end the first shell last. A session of
+  a harness in a connected shell that had not saved what it held is lost. A commit is not: what was committed in
+  the clone is brought back as after every unit run (0034)
+* Two harnesses in one clone write the same files and commit on the same branch. Nothing keeps them out of each
+  other's way (0034)
+* A second shell opened with `docker exec <container> bash`, with no user named, is root and holds `NET_ADMIN`,
+  `SETUID` and `SETGID`, which is what changing the firewall takes. Whoever opened a second shell that way before
+  this release uses `--connect` now (0034)
+* A project that `init` set up for OpenCode before this release keeps `models.dev` in the `ALLOWLIST` of its
+  `agent/compose.project.yml`, with a comment that is no longer true. `init` wrote the file once and `refresh`
+  does not touch it. The entry harms nothing while the host answers, but the entrypoint refuses to start when a
+  listed host is unreachable, so the project depends on a host it does not use. Remove the line and its comment
+  by hand. It is read when a container starts, and asks for no rebuild (0036)
+* That OpenCode leaves `models.dev` alone was seen with OpenCode 1.18.35, logged in with a ChatGPT account, for a
+  prompt sent with `opencode run`. It was not checked for another version or provider, for the interactive
+  session, or with a home volume that holds no catalog yet (0036)
+* A run given `--workdir` or `--mount` with a directory that is not there still ends with the shell's error and
+  1, but only after all options are read. An option after it that lacks its argument is now reported in its
+  place (0034)
+* Shown on Linux, on Docker 28.4.0: the user, the groups, the environment, the working directory and the
+  capability sets of a connected command, that it could not become root or read the firewall's rules, and that it
+  was refused a host that is not on the allowlist. Not tried: a harness in each of two shells, so nothing is
+  known of how two of them share a clone and the size of each terminal, `--connect` from a developer's own
+  terminal, which was seen only under `script`, and anything on macOS (0034)
+
 ## 4.1.1
 
 ### What changed
