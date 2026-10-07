@@ -100,13 +100,13 @@ requirement 13 is read as those forms and the `Usage:` block of the wrapper's he
 
 Refactoring, with no change of behavior. The suite passes before and after with no test changed.
 
-- [ ] In `container/unit-clone.sh`, split `find_unit_branch ROOT UNIT` from `resolve_unit_branch`. It prints the
+- [x] In `container/unit-clone.sh`, split `find_unit_branch ROOT UNIT` from `resolve_unit_branch`. It prints the
       local branch of that name, or the one local branch whose name holds a unit of digits as a whole number. It
       fails with 1 and says nothing when the unit names no branch, and fails with 3 and lists the branches when
       it names several, in the words of today. `resolve_unit_branch` calls it, and on 1 cuts the branch of a unit of
       digits or says what it says today. Its header comment says that it runs git in the host's repository only
       and changes nothing (R2, R7, R10)
-- [ ] In `container/agent.sh`, move the question to Compose and the reading of its answer into a function,
+- [x] In `container/agent.sh`, move the question to Compose and the reading of its answer into a function,
       `read_merged_configuration`, which sets `image`, `claude_code_wanted`, `opencode_wanted` and `project`, and
       call it where the lines are. Move the two lines that make a container's name from the project and the branch
       into a function, `unit_container_name PROJECT BRANCH`, which prints it, and call it there (R2)
@@ -215,7 +215,7 @@ The README.
 ## Commit Points
 
 - [x] `feature-0034 Plan connecting to a unit run`: the plan and the record
-- [ ] `feature-0034 Split finding a unit's branch from cutting it`: the two refactoring tasks, with no change of
+- [x] `feature-0034 Split finding a unit's branch from cutting it`: the two refactoring tasks, with no change of
       behavior
 - [ ] `feature-0034 Connect a command to a unit run`: the stand-in, the tests of `--connect`, the wrapper and its
       header

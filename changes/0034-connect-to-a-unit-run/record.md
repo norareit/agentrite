@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-06T14:38:19Z
 ---
 
@@ -50,3 +50,8 @@ timestamp: 2026-10-06T14:38:19Z
   when the implementer runs in one. The plan holds the values of the connected command's environment a second time in
   the wrapper, because the spec keeps the entrypoint, the image and the compose file as they are, and has a test hold
   the two together
+- 2026-10-07T14:48:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the host, in the
+  main checkout on `feature-0034-connect-to-a-unit-run` at `ff15108`. Read `process.md` and `roles/implementer.md` of
+  the release 4.1.1, the README, the spec, the plan and this record. `npm test` on `ff15108` reported 364 tests, all
+  passing. The host has Docker and `script` of util-linux 2.39.3, so the proof of requirement 16 can be run here.
+  The status is `in-progress`

@@ -68,11 +68,11 @@ cut_unit_branch() {
 }
 
 # Prints the branch a unit names: the local branch of that name, or else, for a unit of
-# digits only, the one local branch whose name holds it as a whole number. A unit of
-# digits that no branch holds gets its branch cut from master, by cut_unit_branch, whose
-# failures are this function's too. Says why and fails otherwise, with 1 when no branch
-# is named and 3 when several are.
-resolve_unit_branch() {
+# digits only, the one local branch whose name holds it as a whole number. Runs git in
+# the host's repository only, and changes nothing there: it finds a branch and never
+# cuts one. Fails with 1, and says nothing, when the unit names no branch, which is the
+# caller's to say. Fails with 3, and lists them, when it names several.
+find_unit_branch() {
   local root="$1" unit="$2" matches="" match
   if git -C "$root" show-ref --verify --quiet "refs/heads/$unit" 2>/dev/null; then
     echo "$unit"
@@ -81,16 +81,8 @@ resolve_unit_branch() {
   if [[ "$unit" =~ ^[0-9]+$ ]]; then
     matches="$(git -C "$root" for-each-ref --format='%(refname:short)' refs/heads \
       | grep -E "(^|[^0-9A-Za-z])$unit([^0-9A-Za-z]|\$)")" || matches=""
-    if [ -z "$matches" ]; then
-      cut_unit_branch "$root" "$unit"
-      return
-    fi
   fi
-  if [ -z "$matches" ]; then
-    echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
-    echo "A unit's branch is cut from master when the unit is given by its number." >&2
-    return 1
-  fi
+  [ -n "$matches" ] || return 1
   if [ "$(grep -c '' <<< "$matches")" -gt 1 ]; then
     echo "agent.sh: '$unit' names more than one branch. Give one by its name:" >&2
     while read -r match; do
@@ -99,6 +91,24 @@ resolve_unit_branch() {
     return 3
   fi
   echo "$matches"
+}
+
+# Prints the branch a unit names, as find_unit_branch finds it, whose failure for
+# several branches is this function's too. A unit of digits that no branch holds gets
+# its branch cut from master, by cut_unit_branch, whose failures are this function's
+# too. Says why and fails otherwise, with 1 when no branch is named and 3 when several
+# are.
+resolve_unit_branch() {
+  local root="$1" unit="$2" found=0
+  find_unit_branch "$root" "$unit" || found=$?
+  [ "$found" -eq 1 ] || return "$found"
+  if [[ "$unit" =~ ^[0-9]+$ ]]; then
+    cut_unit_branch "$root" "$unit"
+    return
+  fi
+  echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
+  echo "A unit's branch is cut from master when the unit is given by its number." >&2
+  return 1
 }
 
 # Fails, saying what to do first, when a new clone would be made while sandbox/<branch>

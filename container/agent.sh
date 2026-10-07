@@ -299,44 +299,55 @@ unit_container_running() {
   [ -n "$found" ]
 }
 
+# Asks Compose for the configuration it merges from both files, and sets from it: the
+# image name, the Compose project's name, and the version of each harness that the
+# project's file gives, which stands above the host's. For this one question Compose is
+# handed a marker in place of the two versions: a marker that comes back says the project
+# gives none, and anything else is the project's own value, also when it equals the
+# host's. Captured first, so that a configuration Compose refuses stops here with
+# Compose's own error. node reads the result; the host has node for npm already.
+unheld="agent.sh/no-version-from-the-project"
+read_merged_configuration() {
+  local config merged
+  config="$(AGENT_CLAUDE_CODE_VERSION="$unheld" AGENT_OPENCODE_VERSION="$unheld" \
+    "${compose[@]}" config --format json)"
+  merged="$(node -e '
+    let json = "";
+    process.stdin.on("data", (chunk) => (json += chunk));
+    process.stdin.on("end", () => {
+      const merged = JSON.parse(json);
+      const agent = merged.services.agent;
+      const args = agent.build?.args ?? {};
+      const lines = [agent.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
+      console.log(lines.join("\n"));
+    });
+  ' <<< "$config")"
+  {
+    read -r image
+    read -r claude_code_wanted
+    read -r opencode_wanted
+    read -r project
+  } <<< "$merged"
+}
+
+# Prints the name of the container of a unit run: the Compose project's name, a dash and
+# the branch, with every character a container's name cannot hold made a dash.
+unit_container_name() {
+  local name="$1-$2"
+  echo "${name//[^A-Za-z0-9_.-]/-}"
+}
+
 claude_code_host="$(installed_version claude "Claude Code")"
 opencode_host="$(installed_version opencode "OpenCode")"
 
-# The image name is in the configuration Compose merges from both files, and so is a
-# version the project's file gives, which stands above the host's. For this one
-# question Compose is handed a marker in place of the two versions: a marker that comes
-# back says the project gives none, and anything else is the project's own value, also
-# when it equals the host's. Captured first, so that a configuration Compose refuses
-# stops here with Compose's own error. node reads the result; the host has node for npm
-# already.
-unheld="agent.sh/no-version-from-the-project"
-config="$(AGENT_CLAUDE_CODE_VERSION="$unheld" AGENT_OPENCODE_VERSION="$unheld" \
-  "${compose[@]}" config --format json)"
-merged="$(node -e '
-  let json = "";
-  process.stdin.on("data", (chunk) => (json += chunk));
-  process.stdin.on("end", () => {
-    const merged = JSON.parse(json);
-    const agent = merged.services.agent;
-    const args = agent.build?.args ?? {};
-    const lines = [agent.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
-    console.log(lines.join("\n"));
-  });
-' <<< "$config")"
-{
-  read -r image
-  read -r claude_code_wanted
-  read -r opencode_wanted
-  read -r project
-} <<< "$merged"
+read_merged_configuration
 
 # A unit run has one clone and one container for each Compose project and branch. The
 # container's name is the lock: while Docker says it is running, a second run for the
 # branch is refused. Both refusals come here, before a build and before the registry is
 # asked, which a run that is refused has no use for.
 if [ -n "$branch" ]; then
-  container_name="$project-$branch"
-  container_name="${container_name//[^A-Za-z0-9_.-]/-}"
+  container_name="$(unit_container_name "$project" "$branch")"
   clone="${XDG_STATE_HOME:-${HOME:?}/.local/state}/agentrite/$project/$branch"
   running=0
   unit_container_running || running=$?
