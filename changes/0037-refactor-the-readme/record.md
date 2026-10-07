@@ -50,5 +50,13 @@ timestamp: 2026-10-07T22:40:04Z
   the rule on the why goes into this repository's `AGENTS.md`, with the kit-wide form under "Beyond the request".
   Not checked: the form of Bitbucket's anchors, which the specifier knows from memory and did not try. Status left
   at `draft`
+- 2026-10-07T23:05:00Z [human] said that "What is here" is not to hold everything at the root of the repository: it
+  is limited to what is shipped, so `deploy.sh`, `infra/` and `RELEASING.md`, which are in it today, do not belong
+  there
+- 2026-10-07T23:05:00Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, changed `spec.md` for that:
+  requirement 3 limits "What is here" to what the package holds, and the column that said whether an entry ships is
+  gone with the need for it. That the rows which leave go into a table in `CONTRIBUTING.md`, and that this table is
+  complete for the rest of the repository, is the specifier's: the human said where the rows do not belong, not
+  where they go. Status left at `draft`
 
 ## Amendments

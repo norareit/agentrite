@@ -29,8 +29,9 @@ that say what there is and how to use it.
        the reference is
 2. The table of contents lists every section of the README of the second and the third level, each as a link that
    leads to that section on the host the repository is on
-3. "What is here" is complete: it has a row for every file and directory that is tracked at the root of the
-   repository, and says of each whether it is in the package. Files that only configure a tool may share one row
+3. "What is here" lists what the package holds, and nothing else: a row for every file and directory at the root of
+   the package. What the repository holds besides, such as `tests/`, `infra/`, `RELEASING.md` and `deploy.sh`, which
+   the present table lists, is not in it
 4. "How it works" describes each role briefly and in general terms: what it is given, what it produces, and where it
    stands in the order of the work. It states no rule that `process.md` or a role file states, and points to them
    for the rules
@@ -54,7 +55,9 @@ that say what there is and how to use it.
 9. Working on the kit itself is in `CONTRIBUTING.md`, which does not ship in the package. It holds what the present
    README says under "The kit's own tests", "The kit's own copy of the kit", "Trying the working copy's sandbox" and
    "Releasing", and describes the commands that only this repository has, each with every argument and option, as
-   requirement 6 asks of the README
+   requirement 6 asks of the README. It also has a table of what the repository holds that the package does not,
+   with a row for every such file and directory that is tracked at the root of the repository. Files that only
+   configure a tool may share one row
 10. The three documents say what there is and how to use it, and not why it is so. What stays, and what goes:
     * Stays: what a command, a file or the sandbox does; what a reader types; what a reader then sees or finds, and
       where; what is refused, and how to recover; what a reader must do or must not do, and the one clause of
@@ -79,8 +82,9 @@ that say what there is and how to use it.
     * that the README is complete and is kept complete: every command a project can run is described in it with
       every argument, option and environment variable, and a unit that adds, changes or removes one changes the
       README in the same unit. The same holds for `CONTRIBUTING.md` and this repository's own commands
-    * that "What is here" is kept up to date: a unit that adds, removes or renames a file or directory at the root
-      of the repository, or changes whether it is in the package, changes the table in the same unit
+    * that the two tables are kept up to date, "What is here" in the README and the one in `CONTRIBUTING.md`: a unit
+      that adds, removes or renames a file or directory at the root of the repository, or changes whether it is in
+      the package, changes the table it belongs in, in the same unit
     * that the three documents say what there is and how to use it, as requirement 10 has it, and that the why of a
       change is written in its unit under `changes/` and not in them
     * which of the three documents is the source of truth on what, where it now names the README for all of it
@@ -114,6 +118,9 @@ decision, and a later review treats it as settled.
   looks for, and the name code hosts link to by themselves. npm does not put it in a package unless the package
   lists it, and it is not listed. `RELEASING.md` stays its own document, since it is the instruction a release
   follows step by step, and `CONTRIBUTING.md` points to it
+* **"What is here" is the package, on the human's word.** The README ships, so "here" is what a project that
+  installed the kit finds under `node_modules`. A row for `deploy.sh` or `infra/` tells that reader of something
+  they do not have. Those rows move to `CONTRIBUTING.md`, whose reader has the repository
 * **Complete means the commands.** The README describes every command a project runs, in full. It does not hold
   every consequence of every command: what a unit run does to the host's branches when the container exits is in
   `SANDBOX.md`. The line is that whatever a developer types is in the README, and whatever happens as a result may be
@@ -146,8 +153,8 @@ decision, and a later review treats it as settled.
 * A change to `CHANGELOG.md`. Earlier release notes name sections of the README by title, as they were when those
   notes were written. The notes of the release that carries this unit say where the text went, and are written when
   that release is made
-* Correcting the content on the way, apart from "What is here". A statement of the present README that is out of
-  date is moved as it is, when it stays at all, and named in the record for the human
+* Correcting the content on the way, apart from the two tables of what is where. A statement of the present README
+  that is out of date is moved as it is, when it stays at all, and named in the record for the human
 * Making the repository open source, or anything that would take: a licence, a code of conduct, a public remote
 
 ## Beyond the request
