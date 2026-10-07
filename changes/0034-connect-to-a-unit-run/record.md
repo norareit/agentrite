@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-06T14:38:19Z
 ---
 
@@ -29,3 +29,5 @@ timestamp: 2026-10-06T14:38:19Z
   asked, in "What the human asked for" in `spec.md` and in the first entry of this log. The human did not want the
   wording of a chat message in the unit's documents. What was asked, and every requirement and decision, is as it
   was. The status stays `draft`
+- 2026-10-07T14:14:38Z [human] approved the spec as it is on `master` at `ddb8020`, asked in a session of Claude Code on
+  the host. The status is `approved`
