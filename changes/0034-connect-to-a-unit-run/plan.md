@@ -215,6 +215,21 @@ After the review of `7db50d7`, for its finding S1. Added on 2026-10-07, with the
       on a directory. A run resolves them as before, and reports a directory that is not there as before, which
       a test in `tests/agent-wrapper.test.mjs` holds, written and seen to pass before the wrapper was changed (R10)
 
+After the human's decision on the review's finding C1, that the shim connects. Added on 2026-10-07, with the
+decision in `record.md`. It replaces what the approach says of `./agent-dev.sh`, that it cannot connect.
+
+- [ ] In `tests/agent-dev.test.mjs`, test that `./agent-dev.sh --connect <unit> echo hi`, with a container running,
+      exits 0 and that the only recorded call of Docker is the `exec`, under the dev name, with no build. Test that
+      a run still builds when `--connect` is a word of its command, after `--in-place`, after a `--` and after a
+      unit, and that `--connect` with `--mount DIR` is refused by the wrapper naming `--mount` and not `--rebuild`
+- [ ] In `agent-dev.sh`, pass `--rebuild` unless `--connect` is among the wrapper's options, read as the wrapper
+      reads them: up to a `--` or the first word that is no option, with the directory of `--workdir` and of
+      `--mount` passed over. Say in its comment why, and that the list of options is the wrapper's
+- [ ] In the README, under "Trying the working copy's sandbox", say that the shim builds on every start of a run
+      and builds nothing for `--connect`
+- [ ] On a real Docker, on the host: `./agent-dev.sh --connect <unit> true` connects to a unit run that
+      `./agent-dev.sh <unit>` started, with what was run and printed in `record.md`
+
 ## Verification
 
 - [x] `npm test` passes on the final tree
@@ -238,3 +253,7 @@ After the review of `7db50d7`, for its finding S1. Added on 2026-10-07, with the
 - [x] `feature-0034 Refuse --connect with an option of a run before its directory is read`: the tests and the
       wrapper
 - [x] `feature-0034 Record the outcome of the review's findings`: the record, with the suites on the final tree
+- [x] `feature-0034 Record the decision that the shim connects, and plan it`: the record and the plan
+- [ ] `feature-0034 Let the dev shim connect`: the tests, the shim and the README
+- [ ] `feature-0034 Record the shim's connect and what was run`: the record, with the run on a real Docker and the
+      suites on the final tree

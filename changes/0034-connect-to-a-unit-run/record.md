@@ -224,3 +224,14 @@ timestamp: 2026-10-06T14:38:19Z
   comes before Docker is asked anything, and a run on a real Docker was not started again, so that a run's
   directories still reach `docker compose run` as before rests on the suite's stand-in. The fix was not reviewed.
   The status stays `in-progress`: `C1` is the human's, and so is `implemented`
+- 2026-10-07T19:17:34Z [human] decided the review's finding `C1`, through the session that coordinates the work:
+  the shim connects. `agent-dev.sh` does not pass `--rebuild` to the wrapper when `--connect` is among the options
+  given to it, so that `./agent-dev.sh --connect <unit> [COMMAND...]` reaches the unit run of the working copy's
+  sandbox, and the README's sentence that the shim takes what `./agent.sh` takes stays true. Saying the exception
+  in the README and leaving the shim as it is was considered and not chosen. `--connect` counts only as an option
+  of the wrapper, not as a word of the command, and every other use of the shim is as before, `--rebuild` among
+  it. Recorded by Claude Code, anthropic/claude-opus-5-5
+- 2026-10-07T19:17:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the host, on
+  `bea7394`: four tasks and three commit points for that decision are added to `plan.md`. `spec.md` is not changed:
+  it says nothing of the shim, which is this repository's own file and not the kit's, the implementer does not
+  change a spec, and the decision is recorded here. The status stays `in-progress`
