@@ -380,8 +380,10 @@ default. From the project root, one of:
 The first names a unit, by its number or by its branch, and mounts a clone of that unit's branch, as "Working on a
 clone" below describes. It is the way to implement and to review a unit. The second mounts the project as it is on
 the host, so the agent works in the developer's own checkout, `.git` and `node_modules` included. It is the way to
-run something on the tree as it is, such as the suite. A command that says neither, and gives no `--workdir`
-either, starts nothing and names the forms.
+run something on the tree as it is, such as the suite. A command that says neither, and gives no `--workdir` and
+no `--connect` either, starts nothing and names the forms. `--connect` is the fourth of them, and the one that
+mounts and starts nothing: `./agent.sh --connect 0029` runs a command in the container of the unit run that is under
+way for the unit, beside what runs there, as "Working on a clone" below describes.
 
 Either builds the image on first use and opens a shell in the container, with the clone or the project mounted
 read-write at `/work`. Nothing else of the host is reachable, with four exceptions: the developer's `~/.gitconfig`,
@@ -463,10 +465,79 @@ crash of the container, the wrapper or the host, the clone is still there and no
 its directory with `rm -rf`. A new run is refused while `sandbox/<branch>` holds commits the branch does not have,
 so that an earlier run's commits are not overwritten: merge it or delete it first.
 
-Two units run side by side, each on its own clone, in its own container, and each container has the full memory
-and CPU limits of the project's compose file. Two runs never work on one branch: the container is named after the
-Compose project and the branch, and a second run for a branch whose container is running is refused. Two checkouts
-of one project on one host share a branch's clone.
+Two units run side by side, each on its own clone, in its own container, and each container has the full memory and CPU
+limits of the project's compose file. Two runs never work on one branch: the container is named after the Compose
+project and the branch, and a second run for a branch whose container is running is refused. That refusal names
+`--connect`, which is the way to a second shell in the run that is under way, as described next. Two checkouts of one
+project on one host share a branch's clone.
+
+A second command is run beside the first command of a unit run with `--connect`, from another terminal on the host:
+
+```sh
+./agent.sh --connect <unit> [COMMAND...]
+```
+
+It runs the command in the container of the run that is under way for the unit, beside what runs there, and with no
+command it opens the shell a unit run opens. That is how two harnesses work on one unit at the same time, such as the
+implementer in one and the reviewer in the other. In one terminal:
+
+```sh
+./agent.sh 0029 claude
+```
+
+And in another, while that runs:
+
+```sh
+./agent.sh --connect 0029 opencode
+```
+
+* The unit is given as a unit run takes it: by its branch's name, or by a number that one local branch's name holds. It
+  names the container that the unit run of that branch named
+* The connected command is in that container, not in one like it. It has the same `/work`, the same home and the same
+  processes, and the firewall and the egress proxy stand between it and the network as they do for the first command
+* It runs as the agent, as the first command does: the same user and groups, no capability and no way to gain one,
+  `HOME`, `USER`, `LOGNAME` and `PATH` as the first command has them, and `/work` as its working directory
+* It is given a terminal when `--connect` is run from one, and none when it is not, so a script can connect a command
+  and give it its input. The wrapper exits with the status the command exited with
+* Any number of commands may be connected to one run at a time. Two harnesses in one clone write the same files and
+  commit on the same branch, and keeping them out of each other's way is the developer's, as it is with two terminals on
+  the host
+* `--connect` starts no container and stops none, builds no image, asks npm nothing, makes no clone, cuts no branch and
+  fetches nothing, and it changes nothing in the host's repository
+
+The first command owns the container. When it ends, the container stops, every connected command ends with it, and the
+wrapper of the unit run brings the work back as described above. The wrapper of a connected command then prints nothing
+and exits with 137. So end the first shell last. A session of a harness in a connected shell that had not saved what it
+held is lost with the container. A commit is not: whatever was committed in the clone is brought back, and a file that
+was not committed keeps the clone. A connected command that ends changes nothing for the first command or for another
+connected command.
+
+`--connect` runs nothing, says why and exits with 2 when:
+
+* no unit is given
+* the unit names no local branch. A number that no branch holds is refused although `master` holds a unit of that
+  number: a unit with no branch has no run to connect to, and only a unit run cuts the branch
+* the unit names several branches, which it lists, as a unit run does
+* no container of the unit's run is running. It says that no run is under way for the unit, and names the command that
+  starts one
+* Docker could not be asked whether the container is running
+* it is given together with `--in-place`, `--workdir`, `--mount` or `--rebuild`, which are options of a run. It names
+  the option
+* it is run with uid or gid 0, as every form of the wrapper is
+
+Only a unit run can be connected to. A run with `--in-place` or `--workdir` has a container whose name Compose made up,
+and no unit to give.
+
+Docker's own command starts a process in a running container too, and that process is not what `--connect` gives.
+`docker exec <container> bash`, with no user named, is root and holds `NET_ADMIN`, `SETUID` and `SETGID`, the
+capabilities the entrypoint keeps to install the firewall and to leave root. Such a process does not pass through the
+entrypoint, which is where the first command becomes the agent and loses them, and `NET_ADMIN` is what changing the
+firewall takes. `--connect` names the agent for the process it starts, which is why it is the way to a second shell.
+
+This was shown on Linux with Docker 28.4.0: a connected command had the user, the groups, the environment, the working
+directory and the capability sets of the first command, all of them empty but the bounding set, could not become root or
+read the firewall's rules, and was refused a host that is not on the allowlist. It was not shown with a harness in each
+of two shells, and not on macOS.
 
 What the clone protects, and what it does not. A unit run defends the host's repository against an agent that was
 misled, for example by an instruction injected through a dependency, and that writes whatever it likes under

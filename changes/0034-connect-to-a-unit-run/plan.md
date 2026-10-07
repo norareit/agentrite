@@ -194,7 +194,7 @@ Each command and what it printed goes into `record.md`.
 
 The README.
 
-- [ ] In "Working on a clone", after the paragraph on two units side by side, add what requirement 14 names: the
+- [x] In "Working on a clone", after the paragraph on two units side by side, add what requirement 14 names: the
       form `./agent.sh --connect <unit> [COMMAND...]`; an example with `./agent.sh 0029 claude` in one terminal and
       `./agent.sh --connect 0029 opencode` in another; that the first shell owns the container, that every
       connected command ends when it ends, with what the connecting wrapper then prints as it was seen, and that
@@ -202,7 +202,7 @@ The README.
       back; what `--connect` refuses; and that a process started in the container with `docker exec` and no user
       named is root and holds the capabilities the firewall is installed with, which is why `--connect` is the way.
       In that paragraph on two units, say that the refusal of a second run names `--connect` (R14)
-- [ ] In "Starting it", name `--connect` in one sentence that points to "Working on a clone", and make the sentence
+- [x] In "Starting it", name `--connect` in one sentence that points to "Working on a clone", and make the sentence
       on a command that says neither form true of the four forms (R13, R14)
 
 ## Verification
@@ -221,5 +221,5 @@ The README.
       header
 - [x] `feature-0034 Name --connect where a second shell is looked for`: the second run's refusal and the forms
 - [x] `feature-0034 Record the runs on a real Docker`: the record
-- [ ] `feature-0034 Describe --connect in the README`: the README
+- [x] `feature-0034 Describe --connect in the README`: the README
 - [ ] `feature-0034 Record the implementation and what was run`: the record, with the suites on the final tree
