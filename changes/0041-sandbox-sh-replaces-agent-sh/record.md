@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: planned
-timestamp: 2026-10-08T19:58:16Z
+status: in-progress
+timestamp: 2026-10-08T20:41:00Z
 ---
 
 # 0041 `sandbox.sh` replaces `agent.sh`
@@ -46,5 +46,8 @@ timestamp: 2026-10-08T19:58:16Z
   repository's file as it is merge into the services `agent` and `sandbox`, with exit 0 and no image for `sandbox`,
   so the refusal is made before the image name is used. Replaced the names in a copy of the tree: five lines pass 120
   characters, which the plan names. Not run: anything that builds or starts a container. The status is `planned`
+- 2026-10-08T20:41:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in the main session on the Linux host, on
+  `feature-0041-sandbox-sh-replaces-agent-sh` at `baf1562`. Read `process.md`, `roles/implementer.md` and the three
+  documents of the unit. Set the status to `in-progress`
 
 ## Amendments
