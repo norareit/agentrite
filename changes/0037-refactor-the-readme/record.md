@@ -124,6 +124,13 @@ timestamp: 2026-10-07T22:40:04Z
   one heading the plan does not name, `### Moving from a release up to 4.0.0` under "The harness logs", for the steps of
   moving away from the home volume. `tests/package-documents.test.mjs` failed on `SANDBOX.md` before `package.json`
   named it, and `npm test` passes after, with 403 tests
+- 2026-10-08T12:03:42Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the second move.
+  `CONTRIBUTING.md` is written anew from the base README's last four sections, with a table of the 18 entries that
+  `git ls-tree` lists at the root and `npm pack --dry-run --json` does not, and with the commands that only this
+  repository has. Read for those: `agent-dev.sh`, `deploy.sh`, `scripts` of `package.json` and
+  `.claude/skills/release/SKILL.md`. `deploy.sh` and `npm test` read no argument, and `agent-dev.sh` passes every
+  argument on to the wrapper. `tests/release.test.mjs` failed on `CONTRIBUTING.md` before the file was there, and
+  `npm test` passes after, with 403 tests. The four sections are out of the README
 
 ## What the three documents leave out
 
@@ -214,5 +221,17 @@ Its opening. Went as why a behavior was chosen, or as how it is brought about wh
   in the clear in the TLS ClientHello
 
 "The local model server": nothing is left out.
+
+### The kit's own tests, The kit's own copy of the kit, Trying the working copy's sandbox
+
+Nothing is left out. Each statement of the three is in `CONTRIBUTING.md`, under the same title.
+
+### Releasing
+
+Went as why a behavior was chosen, or is now said elsewhere:
+
+* That the certificate is in us-east-1 because CloudFront takes no other. That it is there stays
+* The paragraph that opens with "In short", which gave the steps of a release and who takes each. `RELEASING.md`
+  holds every step, and `CONTRIBUTING.md` names it and holds none
 
 ## Amendments

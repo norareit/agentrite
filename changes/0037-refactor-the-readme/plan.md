@@ -133,21 +133,21 @@ The reference of the sandbox:
 
 Working on the kit:
 
-- [ ] In `tests/release.test.mjs`, put `CONTRIBUTING.md` in place of `README.md` in the list of files that name
+- [x] In `tests/release.test.mjs`, put `CONTRIBUTING.md` in place of `README.md` in the list of files that name
       `RELEASING.md`. The suite now fails on it (R8, R14)
-- [ ] Write `CONTRIBUTING.md` with the headings above, from "The kit's own tests", "The kit's own copy of the kit",
+- [x] Write `CONTRIBUTING.md` with the headings above, from "The kit's own tests", "The kit's own copy of the kit",
       "Trying the working copy's sandbox" and "Releasing" of the base README, by requirements 9 and 10. It names
       `RELEASING.md` as what a release follows, and holds no step of it (R8, R9, R10, R12)
-- [ ] In `## The commands` of `CONTRIBUTING.md`, describe each command that only this repository has, as an entry
+- [x] In `## The commands` of `CONTRIBUTING.md`, describe each command that only this repository has, as an entry
       of the README's list is built: `npm test`, `./agent-dev.sh` in every form, with `AGENT_PROJECT_NAME`,
       `./deploy.sh` with `npm run deploy`, and `/release`. Read `agent-dev.sh`, `deploy.sh` and `scripts` of
       `package.json` for every argument, option and environment variable, and do not take them from here (R8)
-- [ ] In `## What the repository holds besides the package`, write a table with a row for every entry that
+- [x] In `## What the repository holds besides the package`, write a table with a row for every entry that
       `git ls-tree --name-only HEAD` lists and `npm pack --dry-run --json` does not, `CONTRIBUTING.md` among them.
       `.dockerignore`, `.editorconfig` and `.gitignore` share one row. The rows for `tests/`, `infra/`,
       `RELEASING.md` and `deploy.sh` are worded as the base README has them (R2, R8)
-- [ ] Remove the four sections from `README.md` (R8, R11)
-- [ ] List in `record.md` what this move left out of those four sections (R13)
+- [x] Remove the four sections from `README.md` (R8, R11)
+- [x] List in `record.md` what this move left out of those four sections (R13)
 
 The README:
 
@@ -245,7 +245,7 @@ This repository's instructions:
 - [x] `feature-0037 Plan the rebuilding of the README`: the plan and the record
 - [x] `feature-0037 Move the reference of the sandbox to SANDBOX.md`: the test, `package.json`, `SANDBOX.md`, the
       README's "The sandbox" and the record's list
-- [ ] `feature-0037 Move working on the kit to CONTRIBUTING.md`: the test, `CONTRIBUTING.md`, the README and the
+- [x] `feature-0037 Move working on the kit to CONTRIBUTING.md`: the test, `CONTRIBUTING.md`, the README and the
       record's list
 - [ ] `feature-0037 Rebuild the README around the commands`: the README and the record's list
 - [ ] `feature-0037 Name the document where the README was named`: the comments and the message
