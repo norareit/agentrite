@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-08T13:27:02Z
 ---
 
@@ -300,6 +300,24 @@ timestamp: 2026-10-08T13:27:02Z
   built. Nothing outside the two documents and this record is changed. Run on this tree: the two new checks of
   "Verification" print nothing, the titles are twelve in the spec's order, and no line of the three documents is over
   120 characters. The status stays `in-progress`
+- 2026-10-08T16:36:25Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of unit 0039 at
+  `86d9b533ce447fb83a088ddeea2f0ba03458ae66`, from the previously reviewed commit
+  `58a46b9d6ae1c2c65c10d614b118887381f04e01`. Reviewed the migration removal, Markdown form and spec/plan alignment
+  on all three axes. Returned no findings. Complete findings are in
+  `.reviews/0039-slim-down-the-sandbox-reference/delta-86d9b53-20261008T163525Z.md`.
+  `npm test` passes with 403 tests and none skipped, `npm run check-changes` exits 0, and the delta's
+  `git diff --check` exits 0. Compared the old tables with the new text, checked the twelve titles and anchors,
+  exact retained commands and code spellings, absence of HTML, and the local Markdown rendering of the four
+  places and thirteen failure entries. Not independently verified: GitHub or npm rendering. The unchanged Docker
+  and historical-trial limitations of earlier reviews were not retested
+- 2026-10-08T16:37:46Z [human] after the delta review of `86d9b53` returned no findings, said that the unit can be
+  marked implemented
+- 2026-10-08T16:37:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `86d9b53`, set the status to `implemented`. The reviews returned one blocking finding,
+  S1 of the full review of `790d0a0`, which was applied and which the delta review of `58a46b9` found corrected, and the
+  delta review of `86d9b53` returned none. Every task of `plan.md` is ticked. On this tree, which differs from `86d9b53`
+  by this record alone, `npm test` passes with 403 tests. The last review's own entry above is committed with this one.
+  `spec.md` and `plan.md` are frozen from here
 
 ## What SANDBOX.md leaves out
 
