@@ -60,8 +60,8 @@ nothing but what the four steps say, and never tells the fake what to answer.
 
 **The project of the release before.** The test of requirement 7 holds, as two strings, the `agent.sh` and the
 `agent/compose.project.yml` that `init` of release 4.2.0 writes for a package named `my-app` with no Playwright, and
-writes them to a temporary project. They are taken from `git show c818fa2:templates/project/agent.sh` and from the
-template `c818fa2:templates/project/agent/compose.project.yml`, filled with `my-app-agent` and with the line of the
+writes them to a temporary project. They are taken from `git show v4.2.0:templates/project/agent.sh` and from the
+template `v4.2.0:templates/project/agent/compose.project.yml`, filled with `my-app-agent` and with the line of the
 Playwright placeholder dropped. No tracked file or directory is named after an old name for it.
 
 **Line lengths.** `sandbox` is two characters longer than `agent`. The planner replaced the names in a copy of the

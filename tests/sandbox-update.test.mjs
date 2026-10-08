@@ -28,9 +28,9 @@ const branch = 'task-0001-update';
 const OLD_SHIM = `#!/usr/bin/env bash
 #
 # The sandbox is AgentRite's. This shim keeps it one command from the repository
-# root; it holds no configuration of its own. The command is described in the kit's
-# README.md and the sandbox in its SANDBOX.md, and this project's half of the
-# configuration is in agent/compose.project.yml.
+# root; it holds no configuration of its own. The wrapper is documented in the kit's
+# README.md, and this project's half of the configuration is in
+# agent/compose.project.yml.
 set -euo pipefail
 
 here="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
@@ -64,8 +64,7 @@ services:
       # KIT_ALLOWLIST in the kit's container/compose.yml. Everything else is denied.
       # Comments and blank lines are ignored. Entries are hostnames only; the
       # entrypoint refuses an address or a CIDR range, and fails to start if a listed
-      # host is unreachable. The kit's SANDBOX.md explains the boundary under "Reaching
-      # more hosts".
+      # host is unreachable. The kit's README.md explains the boundary under "Egress".
       ALLOWLIST: |
         # Add the hosts this project needs, one per line: the API host of each model
         # provider its agents use besides Anthropic, such as api.openai.com, and what
