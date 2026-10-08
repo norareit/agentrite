@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-08T17:05:00Z
+timestamp: 2026-10-08T17:40:00Z
 ---
 
 # 0038 `--no-sandbox` replaces `agentrite-roles`
@@ -54,5 +54,19 @@ timestamp: 2026-10-08T17:05:00Z
   host, on the branch `feature-0038-no-sandbox-replaces-agentrite-roles` at `99e441d`. Read `process.md`,
   `roles/implementer.md`, `spec.md`, `plan.md` and `record.md`. Ran `npm test` before any change: 403 tests, all
   passing. Status set to `in-progress`
+- 2026-10-08T17:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the unit in the commits
+  `98c18ee` (tests, failing: 21 of 411), `ae97275` (code), `79d79f4` (pointer) and one for the documents. Followed the
+  plan in order. Departures, both small: `tests/agentrite-run.test.mjs` holds the usage of every command and changed
+  to the new `init` and `refresh` lines, which the plan listed as unchanged (the plan's Files entry is corrected); and
+  the `pointers/` row of `CONTRIBUTING.md` already names the two names without calling the second a command, so it is
+  left as it is. `parseHarnesses` is not exported from `scripts/agentrite.mjs`; its cases are tested through
+  `parseArgs`. Verified on the tree after the last code and document commit: `npm test` reports 411 tests, 411 pass,
+  0 fail; `npm run check-changes` exits 0 (run before this entry was committed). In a scratch project,
+  `agentrite init --no-sandbox claude` wrote the four wrappers, `AGENTS.md` and `CLAUDE.md`, changed `package.json`,
+  and printed nothing for the three files of the sandbox; `refresh claude --no-sandbox` printed four `up to date`
+  lines. An `npm pack` of the tree installed into a scratch project has only `agentrite` in `node_modules/.bin`. Ran
+  `agentrite` with no argument, `bad`, `init`, `roles x`, `run`, `refresh --no-sandbox` and
+  `init --no-sandbox=1 claude`: none prints `agentrite-roles`. Not checked: publishing the pointer, the review, and
+  the run of `agentrite run` with a stale wrapper. Status left at `in-progress`, for the review
 
 ## Amendments
