@@ -21,7 +21,7 @@ that say what there is and how to use it.
     1. The introduction and "The name", worded as they are now
     2. "What is here"
     3. How it works: what each of the four roles is, and a usual workflow
-    4. The commands: every command a project runs, each with every argument and option it takes
+    4. The commands: one list of every command a project runs, each with every argument and option it takes
     5. Installing the kit into a project, a fresh clone included
     6. Updating a project to a newer kit
     7. The sandbox, in brief: what it is for, what it confines, the files a project configures it with, and where
@@ -34,10 +34,17 @@ that say what there is and how to use it.
    for the rules
 4. The usual workflow in "How it works" is the human's own text, on how the human uses the kit today. The implementer
    asks for it, places it as given apart from line wrapping, and writes none of it
-5. The commands part opens with one overview that lists every command with one line on what it does, and then
-   describes each. For each command it gives every form the command is run in, every argument, every option, and
-   every environment variable a developer may set to change what it does. None is left out because it is rarely
-   used. The commands are those a project that installed the kit can run:
+5. The commands part is one list, in which each command stands once, with its description right after it. There is
+   no overview beside that list, and no second place in the part where a command is described again. An entry
+   holds, in this order, and nothing else:
+    * the command as it is typed, in every form it is run in
+    * what it does, in one or two sentences
+    * every argument, every option, and every environment variable a developer may set to change what it does, each
+      with one line on what it is. None is left out because it is rarely used
+    * where more is said, by the title of that section, when another part of the README or `SANDBOX.md` says what
+      the command writes, refuses or leaves behind
+
+   The commands are those a project that installed the kit can run:
     * `agentrite init`, `agentrite refresh`, `agentrite roles` and `agentrite run`
     * `agentrite-roles`
     * the change check, by its npm script and by the kit's script run with `node`
@@ -118,6 +125,9 @@ decision, and a later review treats it as settled.
 * **"What is here" is the package, on the human's word.** The README ships, so "here" is what a project that
   installed the kit finds under `node_modules`. A row for `deploy.sh` or `infra/` tells that reader of something
   they do not have. Those rows move to `CONTRIBUTING.md`, whose reader has the repository
+* **One list of commands, on the human's word.** An overview followed by a description of each would say every
+  command twice and grow long again. So the list is the description, and what a command does at length is in the
+  section it belongs to, which the entry names
 * **Complete means the commands.** The README describes every command a project runs, in full. It does not hold
   every consequence of every command: what a unit run does to the host's branches when the container exits is in
   `SANDBOX.md`. The line is that whatever a developer types is in the README, and whatever happens as a result may be

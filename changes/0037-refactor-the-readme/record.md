@@ -67,5 +67,11 @@ timestamp: 2026-10-07T22:40:04Z
   under "Beyond the request" that the answers settle are removed: the rule as a rule of the kit, and a table of
   contents in the other two documents. That Bitbucket's anchors differ from GitHub's and IntelliJ's is from the
   specifier's memory and was not tried. Nothing the specifier asked is open now. Status left at `draft`
+- 2026-10-08T10:57:11Z [human] read the spec and found requirement 5 ambiguous: it could give a list of all commands
+  and then a description of each, or one list with the description right after each command. Wants the second, so
+  that the result does not grow long again
+- 2026-10-08T10:57:11Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, rewrote requirement 5 for that. As
+  it stood it meant the first reading. It now asks for one list in which each command stands once, says what an
+  entry holds and in which order, and has a decision beside it. Status left at `draft`
 
 ## Amendments
