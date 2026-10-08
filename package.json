@@ -16,7 +16,6 @@
     "container"
   ],
   "bin": {
-    "agentrite-roles": "scripts/agentrite-roles.mjs",
     "agentrite": "scripts/agentrite.mjs"
   },
   "scripts": {

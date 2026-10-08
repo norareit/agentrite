@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { parseHarnesses, plannedFiles, ROLES } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, plannedFiles, ROLES } from './agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -43,17 +43,6 @@ function messageOf(error) {
 }
 
 /**
- * agentrite-roles words its usage for its own command. The harnesses it lists are the ones each command here takes.
- *
- * @param {string} command
- * @param {string} message
- * @returns {string}
- */
-function forCommand(command, message) {
-  return message.replace('usage: agentrite-roles ', `usage: agentrite ${command} `);
-}
-
-/**
  * The usage of every command, one to a line, the lines after the first indented to start under the command's name.
  *
  * @returns {string}
@@ -63,36 +52,52 @@ function usage() {
   return lines.join('\n').replaceAll('\nusage: ', '\n       ');
 }
 
-/**
- * The parser of a command that takes harnesses and nothing else, whose errors hold the usage of that command.
- *
- * @param {string} command
- * @returns {(args: string[]) => { harnesses: string[] }}
- */
-function harnessesOf(command) {
-  return (args) => {
-    try {
-      return { harnesses: parseHarnesses(args) };
-    } catch (error) {
-      throw new Error(forCommand(command, messageOf(error)));
-    }
-  };
-}
+const NO_SANDBOX = '--no-sandbox';
 
 /**
- * The one line that says how a command that takes harnesses and nothing else is run.
+ * The one line that says how a command that takes harnesses and `--no-sandbox` is run.
  *
  * @param {string} command
  * @returns {string}
  */
-function formWithHarnesses(command) {
-  try {
-    // With no harnesses, parseHarnesses throws its usage alone.
-    parseHarnesses([]);
-  } catch (error) {
-    return forCommand(command, messageOf(error));
+function sandboxForm(command) {
+  return `usage: agentrite ${command} [${NO_SANDBOX}] ${HARNESS_NAMES.join(' | ')}`;
+}
+
+/**
+ * The harnesses named in `args`, each once, in the order they were given.
+ *
+ * @param {string[]} args
+ * @param {string} form the usage to throw with
+ * @returns {string[]}
+ */
+function parseHarnesses(args, form) {
+  if (args.length === 0) throw new Error(form);
+
+  const unknown = args.filter((name) => !HARNESS_NAMES.includes(name));
+  if (unknown.length > 0) {
+    throw new Error(`${unknown.map((name) => `unknown harness: ${name}`).join(', ')}\n${form}`);
   }
-  throw new Error('parseHarnesses accepted an empty list of harnesses');
+
+  return [...new Set(args)];
+}
+
+/**
+ * The parser of a command that takes harnesses and `--no-sandbox` at any place among them, whose errors hold the
+ * usage of that command. The option is told apart from a harness by an exact match, so `--no-sandbox=1` is an unknown
+ * harness.
+ *
+ * @param {string} command
+ * @returns {(args: string[]) => { harnesses: string[], sandbox: boolean }}
+ */
+function harnessesAndSandboxOf(command) {
+  return (args) => ({
+    harnesses: parseHarnesses(
+      args.filter((arg) => arg !== NO_SANDBOX),
+      sandboxForm(command),
+    ),
+    sandbox: !args.includes(NO_SANDBOX),
+  });
 }
 
 const ROLES_FORM = 'usage: agentrite roles [--json]';
@@ -203,13 +208,14 @@ function shimFile(templates) {
 
 /**
  * The generated files that hold nothing but what the kit put there, which refresh keeps as the release writes
- * them: the role wrappers, in which a project may have pinned a model, and the shim.
+ * them: the role wrappers, in which a project may have pinned a model, and the shim when the project has the sandbox.
  *
- * @param {{ templates: Record<string, string>, harnesses: string[] }} project
+ * @param {{ templates: Record<string, string>, harnesses: string[], sandbox: boolean }} project
  * @returns {{ path: string, content: string, executable?: boolean, keepsModel?: boolean }[]}
  */
-function kitOwnedFiles({ templates, harnesses }) {
-  return [...plannedFiles(harnesses).map((file) => ({ ...file, keepsModel: true })), shimFile(templates)];
+function kitOwnedFiles({ templates, harnesses, sandbox }) {
+  const wrappers = plannedFiles(harnesses).map((file) => ({ ...file, keepsModel: true }));
+  return sandbox ? [...wrappers, shimFile(templates)] : wrappers;
 }
 
 /**
@@ -229,8 +235,43 @@ function playwrightBuildBlock(version) {
 }
 
 /**
- * The files init creates, filled from the templates. The compose file names the Playwright version only when the
- * project has one.
+ * The files init creates that carry the process: the role wrappers, `AGENTS.md` and `CLAUDE.md`.
+ *
+ * @param {{ templates: Record<string, string>, harnesses: string[] }} project
+ * @returns {{ path: string, content: string }[]}
+ */
+export function processFiles({ templates, harnesses }) {
+  return [
+    ...plannedFiles(harnesses),
+    {
+      path: 'AGENTS.md',
+      content: fillTemplate(templates['AGENTS.md'], { role_wrapper_directories: roleWrapperDirectories(harnesses) }),
+    },
+    { path: 'CLAUDE.md', content: fillTemplate(templates['CLAUDE.md'], {}) },
+  ];
+}
+
+/**
+ * The files init creates that carry the sandbox, apart from `.dockerignore`: the shim and the compose file, which
+ * names the Playwright version only when the project has one.
+ *
+ * @param {{
+ *   templates: Record<string, string>,
+ *   packageName: string,
+ *   playwrightVersion: string | undefined,
+ * }} project
+ * @returns {{ path: string, content: string, executable?: boolean }[]}
+ */
+function sandboxFiles({ templates, packageName, playwrightVersion }) {
+  const compose = fillTemplate(templates[COMPOSE_FILE], {
+    agent_name: agentName(packageName),
+    playwright_build: playwrightVersion === undefined ? '' : playwrightBuildBlock(playwrightVersion),
+  });
+  return [shimFile(templates), { path: COMPOSE_FILE, content: compose }];
+}
+
+/**
+ * The files init creates, filled from the templates.
  *
  * @param {{
  *   templates: Record<string, string>,
@@ -241,20 +282,10 @@ function playwrightBuildBlock(version) {
  * @returns {{ path: string, content: string, executable?: boolean }[]}
  */
 export function projectFiles({ templates, harnesses, packageName, playwrightVersion }) {
-  const files = [
-    ...plannedFiles(harnesses),
-    {
-      path: 'AGENTS.md',
-      content: fillTemplate(templates['AGENTS.md'], { role_wrapper_directories: roleWrapperDirectories(harnesses) }),
-    },
-    { path: 'CLAUDE.md', content: fillTemplate(templates['CLAUDE.md'], {}) },
-    shimFile(templates),
+  return [
+    ...processFiles({ templates, harnesses }),
+    ...sandboxFiles({ templates, packageName, playwrightVersion }),
   ];
-  const compose = fillTemplate(templates[COMPOSE_FILE], {
-    agent_name: agentName(packageName),
-    playwright_build: playwrightVersion === undefined ? '' : playwrightBuildBlock(playwrightVersion),
-  });
-  return [...files, { path: COMPOSE_FILE, content: compose }];
 }
 
 /**
@@ -460,10 +491,10 @@ function readIfPresent(path) {
 }
 
 /**
- * The project's `package.json`, which must name the package, since the sandbox's names are derived from it.
+ * The project's `package.json`, which is refused when it cannot be read.
  *
  * @param {string} root
- * @returns {{ text: string, name: string }}
+ * @returns {{ path: string, text: string, name: unknown }}
  */
 function readPackageJson(root) {
   const path = resolve(root, 'package.json');
@@ -476,10 +507,20 @@ function readPackageJson(root) {
     throw new Error(`cannot read ${path}: ${error instanceof Error ? error.message : String(error)}`);
   }
   const name = typeof manifest === 'object' && manifest !== null && 'name' in manifest ? manifest.name : undefined;
+  return { path, text, name };
+}
+
+/**
+ * The name of the package, which the sandbox's Compose project and image names are derived from.
+ *
+ * @param {{ path: string, name: unknown }} manifest
+ * @returns {string}
+ */
+function packageNameOf({ path, name }) {
   if (typeof name !== 'string' || name === '') {
     throw new Error(`${path} has no name, from which the sandbox's Compose project and image names are derived`);
   }
-  return { text, name };
+  return name;
 }
 
 /**
@@ -508,20 +549,54 @@ function readTemplates() {
 }
 
 /**
- * Writes what is missing in the project at `root`, prints what it did, and returns the exit status.
+ * The files init creates in the project at `root`: those of the process, and with the sandbox those of the sandbox.
+ *
+ * @param {string} root
+ * @param {{ path: string, text: string, name: unknown }} manifest
+ * @param {string[]} harnesses
+ * @param {boolean} sandbox
+ * @returns {{ path: string, content: string, executable?: boolean }[]}
+ */
+function plannedProjectFiles(root, manifest, harnesses, sandbox) {
+  const templates = readTemplates();
+  if (!sandbox) return processFiles({ templates, harnesses });
+  return projectFiles({
+    templates,
+    harnesses,
+    packageName: packageNameOf(manifest),
+    playwrightVersion: playwrightVersion(readLockfile(root)),
+  });
+}
+
+/**
+ * Writes the `.dockerignore` the sandbox's image build needs, or amends the project's, and prints what it did.
+ *
+ * @param {string} root
+ */
+function initDockerignore(root) {
+  const ignorePath = resolve(root, '.dockerignore');
+  const existingIgnore = readIfPresent(ignorePath);
+  const ignore = dockerignore(existingIgnore, readdirSync(new URL('../container/', import.meta.url)));
+  if (ignore === undefined) {
+    console.log('skipped .dockerignore, which lets the kit into the build context or does not exclude node_modules');
+    return;
+  }
+  writeFileSync(ignorePath, ignore);
+  console.log(`${existingIgnore === undefined ? 'wrote' : 'changed'} .dockerignore`);
+}
+
+/**
+ * Writes what is missing in the project at `root`, prints what it did, and returns the exit status. Without the
+ * sandbox it leaves out the files of the sandbox and says nothing of them.
  *
  * @param {string} root
  * @param {string[]} harnesses
+ * @param {boolean} sandbox
  * @returns {number}
  */
-function init(root, harnesses) {
+function init(root, harnesses, sandbox) {
   const manifest = readPackageJson(root);
-  const files = projectFiles({
-    templates: readTemplates(),
-    harnesses,
-    packageName: manifest.name,
-    playwrightVersion: playwrightVersion(readLockfile(root)),
-  });
+  const files = plannedProjectFiles(root, manifest, harnesses, sandbox);
   /** @type {string[]} */ const notices = [];
 
   for (const file of files) {
@@ -542,19 +617,11 @@ function init(root, harnesses) {
   if (amendedManifest === undefined) {
     console.log('skipped package.json, which has a check-changes script');
   } else {
-    writeFileSync(resolve(root, 'package.json'), amendedManifest);
+    writeFileSync(manifest.path, amendedManifest);
     console.log('changed package.json');
   }
 
-  const ignorePath = resolve(root, '.dockerignore');
-  const existingIgnore = readIfPresent(ignorePath);
-  const ignore = dockerignore(existingIgnore, readdirSync(new URL('../container/', import.meta.url)));
-  if (ignore === undefined) {
-    console.log('skipped .dockerignore, which lets the kit into the build context or does not exclude node_modules');
-  } else {
-    writeFileSync(ignorePath, ignore);
-    console.log(`${existingIgnore === undefined ? 'wrote' : 'changed'} .dockerignore`);
-  }
+  if (sandbox) initDockerignore(root);
 
   for (const notice of notices) console.log(`\n${notice}`);
 
@@ -579,11 +646,12 @@ function kindOf(path) {
  *
  * @param {string} root
  * @param {string[]} harnesses
+ * @param {boolean} sandbox false leaves the shim out, so that nothing is read or printed of it
  * @returns {number}
  */
-function refresh(root, harnesses) {
+function refresh(root, harnesses, sandbox) {
   let status = 0;
-  for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses })) {
+  for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses, sandbox })) {
     const absolute = resolve(root, file.path);
     const kind = kindOf(absolute);
     if (kind === 'other') {
@@ -701,14 +769,14 @@ function run(root, { role, harness, unit, text, ...start }) {
  */
 const COMMANDS = {
   init: {
-    form: formWithHarnesses('init'),
-    parse: harnessesOf('init'),
-    run: (root, { harnesses }) => init(root, harnesses),
+    form: sandboxForm('init'),
+    parse: harnessesAndSandboxOf('init'),
+    run: (root, { harnesses, sandbox }) => init(root, harnesses, sandbox),
   },
   refresh: {
-    form: formWithHarnesses('refresh'),
-    parse: harnessesOf('refresh'),
-    run: (root, { harnesses }) => refresh(root, harnesses),
+    form: sandboxForm('refresh'),
+    parse: harnessesAndSandboxOf('refresh'),
+    run: (root, { harnesses, sandbox }) => refresh(root, harnesses, sandbox),
   },
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
   run: { form: RUN_FORM, parse: parseRunArgs, run },

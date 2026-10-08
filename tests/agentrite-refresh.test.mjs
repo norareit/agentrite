@@ -491,7 +491,7 @@ test('no harness and an unknown one print the usage of refresh, write nothing an
     const result = run(...args);
 
     assert.equal(result.status, 2, args.join(' '));
-    assert.match(result.stderr, /^usage: agentrite refresh claude \| opencode$/m);
+    assert.match(result.stderr, /^usage: agentrite refresh \[--no-sandbox\] claude \| opencode$/m);
     assert.doesNotMatch(result.stderr, /agentrite init/);
     for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
     assert.equal(exists(join(base, 'AGENTS.md')), false);
