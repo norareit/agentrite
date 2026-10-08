@@ -393,7 +393,7 @@ docker volume ls
 docker volume rm <project>_agent-home
 ```
 
-Removing the volume discards the harnesses' saved logins. The next start creates a new volume owned by the agent.
+Removing the volume discards Claude Code's saved login. The next start creates a new volume owned by the agent.
 
 </td>
 </tr>

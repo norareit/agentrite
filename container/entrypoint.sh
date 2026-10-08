@@ -52,7 +52,7 @@ proxy_uid="$(id -u "$PROXY_USER")" || die "the $PROXY_USER account is missing fr
 # one ends in.
 home_volume_recovery() {
   cat <<'RECOVERY'
-Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, and starting again.
+Recover by removing the project's agent-home volume, which discards Claude Code's saved login, and starting again.
 The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
 agent/compose.project.yml. Find the exact name with docker volume ls, then:
   docker volume rm <project>_agent-home

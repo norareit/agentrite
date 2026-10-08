@@ -101,7 +101,7 @@ test('a home in which another uid owns a directory above a log mount is refused,
     stderr,
   );
   assert.match(stderr, /The home volume was made by an earlier release, in which that directory was never made/);
-  assert.match(stderr, /which discards the harnesses' saved logins, and starting again\./);
+  assert.match(stderr, /which discards Claude Code's saved login, and starting again\./);
   assert.match(stderr, /^ {2}docker volume rm <project>_agent-home$/m);
   assert.doesNotMatch(stderr, /\.local/);
 });
@@ -139,6 +139,6 @@ test('a directory above a log mount that cannot be examined is refused by the en
     stderr,
   );
   assert.match(stderr, /stat: cannot statx? '.*\/\.local\/share': Permission denied/);
-  assert.match(stderr, /which discards the harnesses' saved logins, and starting again\./);
+  assert.match(stderr, /which discards Claude Code's saved login, and starting again\./);
   assert.equal(stderr.trimEnd().split('\n').at(-1), '  docker volume rm <project>_agent-home');
 });

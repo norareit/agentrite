@@ -356,7 +356,7 @@ The rule:
 
 The correction, added on the human's word after the tasks above were done:
 
-- [ ] Say which login a removed home volume discards: Claude Code's, since OpenCode's is in the project's log
+- [x] Say which login a removed home volume discards: Claude Code's, since OpenCode's is in the project's log
       directory. In "How it is removed" of the home volume in `SANDBOX.md`, and in the message of
       `home_volume_recovery` in `container/entrypoint.sh`, which says the same. Change the two assertions of
       `tests/entrypoint-home-owner.test.mjs` on that message first and see them fail. Bring the message the record
@@ -435,5 +435,5 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 - [x] `feature-0039 Say in AGENTS.md how the sandbox reference is kept`: `AGENTS.md`
 - [x] `feature-0039 Record the implementation and what was run`: the record, with the suites on the final tree
 - [x] `feature-0039 Plan the correction of which login a home volume holds`: the plan and the record
-- [ ] `feature-0039 Say which login a removed home volume discards`: `SANDBOX.md`, `container/entrypoint.sh`, its
+- [x] `feature-0039 Say which login a removed home volume discards`: `SANDBOX.md`, `container/entrypoint.sh`, its
       test, and the record, with the suites on the final tree

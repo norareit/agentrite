@@ -197,6 +197,14 @@ timestamp: 2026-10-08T13:27:02Z
   host, on the unit's branch at `e590e58`, added the correction to `plan.md` as a task, with its two files and its
   commit points, before doing it. `spec.md` is not changed, which is not the implementer's to do: the human's decision
   above is what the correction answers to
+- 2026-10-08T15:37:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the correction. Changed the two
+  assertions of `tests/entrypoint-home-owner.test.mjs` on the message first, and both tests failed against the message
+  as it was. Then changed the message of `home_volume_recovery` in `container/entrypoint.sh` and the statement in "Where
+  things are kept on the host" of `SANDBOX.md`, both to "Claude Code's saved login", and brought the message this record
+  quotes and its `### Out of date, left as it is` along. On that tree `npm test` passes with 403 tests, and no file
+  outside `changes/` and `CHANGELOG.md` holds the earlier wording. Not tried: a container started on a home volume that
+  the entrypoint refuses, so the message was seen in the tests' output only. The entrypoint is in the image, so a
+  sandbox prints the corrected message once its image is built again. The status stays `in-progress`
 
 ## What SANDBOX.md leaves out
 
@@ -276,7 +284,7 @@ By requirement 6, which names both:
   entrypoint then refuses to start, naming both uids and how to recover. The message, in `check_home_owner` of
   `container/entrypoint.sh`: "$home_path is owned by uid $home_owner, but the agent is uid $agent_uid, so the agent
   cannot write its home.", followed by that of `home_volume_recovery`: "Recover by removing the project's
-  agent-home volume, which discards the harnesses' saved logins, and starting again.", "The volume is named
+  agent-home volume, which discards Claude Code's saved login, and starting again.", "The volume is named
   <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in",
   "agent/compose.project.yml. Find the exact name with docker volume ls, then:" and "  docker volume rm
   <project>_agent-home"
@@ -425,12 +433,13 @@ not what to do, so they stay by requirement 6, and the base document gives no re
 
 ### Out of date, left as it is
 
-One statement that stays was found out of date, for the human:
+None is left. One statement that stays was found out of date, and was corrected on the human's word:
 
 * "Removing the volume discards the harnesses' saved logins", of the home volume, in "Where things are kept on
-  the host". Since the logs are on the host, the volume holds Claude Code's login alone, and OpenCode's is in the
-  project's log directory, as the same table says. The message of `home_volume_recovery` in
-  `container/entrypoint.sh` says the same as the statement
+  the host", is now "Removing the volume discards Claude Code's saved login". Since the logs are on the host, the
+  volume holds Claude Code's login alone, and OpenCode's is in the project's log directory, as the same table
+  says. The message of `home_volume_recovery` in `container/entrypoint.sh` said the same as the statement, and is
+  corrected with it
 
 Looked at and not out of date: "at about 0.6 GB", of an image a rebuild left behind. `docker system df -v` on the
 Linux host gives 625.8MB as the unique size of an image whose harness layers differ from the others. No other
