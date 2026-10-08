@@ -189,6 +189,14 @@ timestamp: 2026-10-08T13:27:02Z
   since nothing here renders them. The status stays `in-progress`, for the review. For the human, besides the review:
   the three rows with no "What to do", the statement found out of date, and the two new cells, all under `## What
   SANDBOX.md leaves out`
+- 2026-10-08T15:37:13Z [human] read that one statement that stays is out of date, "Removing the volume discards the
+  harnesses' saved logins", and that the entrypoint's message says the same, and decided that it is corrected in this
+  unit: it makes no sense to leave it. This stands above the spec's non-goals of correcting no content and changing no
+  message, for this one statement and this one message
+- 2026-10-08T15:37:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `e590e58`, added the correction to `plan.md` as a task, with its two files and its
+  commit points, before doing it. `spec.md` is not changed, which is not the implementer's to do: the human's decision
+  above is what the correction answers to
 
 ## What SANDBOX.md leaves out
 

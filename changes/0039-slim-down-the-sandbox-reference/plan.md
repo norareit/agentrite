@@ -267,8 +267,10 @@ one. It holds:
   out
 - `changes/0039-slim-down-the-sandbox-reference/plan.md`: ticked as the work is done
 
-Read and not changed: `container/agent.sh`, `container/unit-clone.sh` and `container/entrypoint.sh`, for the
-messages, and `CONTRIBUTING.md`.
+- `container/entrypoint.sh`: the message of `home_volume_recovery`, for the correction
+- `tests/entrypoint-home-owner.test.mjs`: its two assertions on that message
+
+Read and not changed: `container/agent.sh` and `container/unit-clone.sh`, for the messages, and `CONTRIBUTING.md`.
 
 ## Tasks
 
@@ -352,6 +354,14 @@ The rule:
       the unit that changes either. Where the bullet on what the three documents say names "what is refused and
       how to recover", say that the rule on refusals is the exception for `SANDBOX.md` (R16)
 
+The correction, added on the human's word after the tasks above were done:
+
+- [ ] Say which login a removed home volume discards: Claude Code's, since OpenCode's is in the project's log
+      directory. In "How it is removed" of the home volume in `SANDBOX.md`, and in the message of
+      `home_volume_recovery` in `container/entrypoint.sh`, which says the same. Change the two assertions of
+      `tests/entrypoint-home-owner.test.mjs` on that message first and see them fail. Bring the message the record
+      quotes, and its `### Out of date, left as it is`, along
+
 Finishing:
 
 - [x] Run the checks under "Verification" on the final tree and log in `record.md` what was run and what it
@@ -404,7 +414,8 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 - [x] "The spellings" prints only the titles of sections and what the record names under `### New statements`
       (R13)
 - [x] `git diff "$base" --stat` names `SANDBOX.md`, `README.md`, `AGENTS.md`, the two `compose.project.yml` files
-      and the unit's own documents, and no other file. The diff of `README.md` and of the two
+      and the unit's own documents, and, for the correction, `container/entrypoint.sh` and
+      `tests/entrypoint-home-owner.test.mjs`, and no other file. The diff of `README.md` and of the two
       `compose.project.yml` files changes titles and the layout of one table, and nothing else (R15)
 - [x] Every refusal the record lists under requirement 6 has its message quoted, and the quoted message names why
       and what to do (R6, R14)
@@ -423,3 +434,6 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
       the record's list
 - [x] `feature-0039 Say in AGENTS.md how the sandbox reference is kept`: `AGENTS.md`
 - [x] `feature-0039 Record the implementation and what was run`: the record, with the suites on the final tree
+- [x] `feature-0039 Plan the correction of which login a home volume holds`: the plan and the record
+- [ ] `feature-0039 Say which login a removed home volume discards`: `SANDBOX.md`, `container/entrypoint.sh`, its
+      test, and the record, with the suites on the final tree
