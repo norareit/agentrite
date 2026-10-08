@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-07T22:40:04Z
 ---
 
@@ -234,6 +234,20 @@ timestamp: 2026-10-07T22:40:04Z
   decision beside it. S2: accepted, as the implementer. The statement is added to the list of "The harness logs" below,
   as how a behavior is brought about. Whether it comes back is the human's to decide, and was not asked. P1: nothing is
   changed. Not run again: the suites, since no file outside the unit's documents changed
+- 2026-10-08T13:06:17Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a delta review of 0037 at
+  `c14c850b10aaf61f25fc2b707a7fab17d9cc9836`, from the previous reviewed commit
+  `bcc9234a07f1c83d48968b34d96eeb8b04c51a3f`. Returned no findings on spec conformance, plan fidelity or code
+  quality. Complete review is in `.reviews/0037-refactor-the-readme/delta-c14c850-20261008T130525Z.md`.
+  On the reviewed tree, `npm test` passed with 403 tests, `npm run check-changes` exited 0, and the delta's
+  whitespace, line-width and no-em-dash checks passed. Confirmed that every file outside `changes/` is identical
+  to the previous reviewed tree. The original workflow session and historical tests-first failures remain
+  unavailable for independent verification
+- 2026-10-08T13:10:54Z [human] read that the delta review returned no findings, and asked for the unit to be marked
+  implemented
+- 2026-10-08T13:10:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the status to `implemented`.
+  Every finding of the full review has its outcome above, the delta review at `c14c850` returned none, and every task of
+  `plan.md` is ticked. `npm test` passes with 403 tests on `c14c850`, and the commit that holds this entry changes
+  nothing but this record
 
 ## What the three documents leave out
 
