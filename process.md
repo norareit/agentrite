@@ -162,7 +162,7 @@ stage. Work that fits none of the four roles follows this document and the proje
 
 ### How code is written
 
-* Use meaningful names and avoid ambiguous abbreviations
+* Use meaningful names and avoid ambiguous abbreviations. One-character variables are never used. 
 * Separate concerns. A module has one job and one reason to change. When the same kind of change keeps forcing
   edits in the same two modules, they were one job split in two; when one module changes for two unrelated reasons,
   it was two jobs in one
