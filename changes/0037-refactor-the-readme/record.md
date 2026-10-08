@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-07T22:40:04Z
 ---
 
@@ -101,5 +101,15 @@ timestamp: 2026-10-07T22:40:04Z
   unit's branch, read `roles/specifier.md` and changed `spec.md` for that: requirement 1 has the part as its fifth,
   so the parts after it are the sixth to the eighth, requirement 2 names the two rows, and each has a decision. No
   requirement was renumbered. The status stays `approved`, since both are the human's own decisions
+- 2026-10-08T11:24:29Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the same session, wrote
+  `plan.md` against the branch at `6cefdfd`, on which `npm test` passes with 401 tests and `npm run check-changes`
+  exits 0. Read for it, besides the above: the usage text and the argument parsing of the four scripts under
+  `scripts/` and of `container/agent.sh`, the environment variables the compose files and the wrapper read,
+  `agent-dev.sh`, `deploy.sh`, what `npm pack --dry-run` lists against `git ls-tree`, and every line outside
+  `changes/` and `CHANGELOG.md` that names the README or a section of it. Three things in the plan are the
+  planner's: the headings of the three documents, in which document each of the four facts of requirement 11 is
+  stated, and that what the documents leave out is listed in a section of this record of its own, built up with
+  each move. Not done: the full list of options against the code, which is a task of the plan, and the text of
+  the workflow, which the implementer asks the human for. Status `planned`
 
 ## Amendments
