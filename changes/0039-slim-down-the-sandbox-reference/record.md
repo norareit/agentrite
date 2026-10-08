@@ -31,5 +31,9 @@ timestamp: 2026-10-08T13:27:02Z
   command stays. Not checked: which refusals have a message that names why and what to do, which is the implementer's by
   requirement 6; which lines outside `SANDBOX.md` name a section of it, which is the planner's; and whether the release
   notes say what was tried for `--connect`, as they do for the harness logs. Status left at `draft`
+- 2026-10-08T14:56:21Z [human] asked for a requirement that `AGENTS.md` says when `SANDBOX.md` is changed or added to,
+  so that a later feature of the sandbox ends up in it
+- 2026-10-08T14:56:21Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, added that to requirement 16 as its
+  first rule, with a decision. No requirement was renumbered. Status left at `draft`
 
 ## Amendments

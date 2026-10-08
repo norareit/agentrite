@@ -88,6 +88,8 @@ on the host and the failures each in one table.
     is. That holds for `README.md`, for `CONTRIBUTING.md`, for what the kit writes into a project, for what a
     command prints, and for comments
 16. This repository's `AGENTS.md` says, in "The documents":
+    * that `SANDBOX.md` is kept complete for its reader: a unit that adds, changes or removes something a
+      developer does with the sandbox, or meets in it, changes `SANDBOX.md` in the same unit
     * that `SANDBOX.md` is ordered by what a reader does, and that a unit which adds to it puts the text in the
       section of what the reader is doing
     * that a refusal whose message names why and what to do is not described in it
@@ -124,6 +126,9 @@ decision, and a later review treats it as settled.
   README as it was when they were written, which 0037 already moved
 * **No target length, on the human's word.** The document is as long as what the requirements keep takes, and a
   number would have something a reader needs dropped to meet it
+* **The document is kept by a rule in `AGENTS.md`, on the human's word.** 0037 wrote such a rule for the commands
+  of the README and for the two tables, and none for the sandbox. Without one, a later feature of the sandbox is
+  in its unit and in the code and not in the document a user reads
 * **The places on the host in one table.** The clone, the log directory, the home volume and the image are each
   described in a section of their own today, and a reader who wants to find or remove one reads that section for
   one line of it
