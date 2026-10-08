@@ -215,6 +215,25 @@ timestamp: 2026-10-07T22:40:04Z
   on the form beside the one on each command standing once. No requirement was renumbered. The status stays
   `in-progress`, since it is the human's own decision. Then, as the implementer, made the plan name `## Commands` among
   the headings and say that the part was first built as one list
+- 2026-10-08T12:52:24Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a full review of 0037 at
+  `bcc9234a07f1c83d48968b34d96eeb8b04c51a3f`, against the merge base with `master` at
+  `4bcf21f1d3bca02b023b3a21f6042c27258a0f42`. Returned S1, S2 and P1. Complete findings are in
+  `.reviews/0037-refactor-the-readme/full-bcc9234-20261008T125054Z.md`. Independently compared the base README
+  section by section with the three documents. On the reviewed tree, `npm test` passed with 403 tests,
+  `npm run check-changes` exited 0, `npm pack --dry-run --json` included `README.md` and `SANDBOX.md` and excluded
+  `CONTRIBUTING.md`, and the whitespace, line-width and no-em-dash checks passed. Could not independently establish
+  the original workflow's authorship, the source of its later edits or the historical tests-first failures.
+  Markdown rendering on Bitbucket, GitHub and IntelliJ and historical platform trials were not checked
+- 2026-10-08T13:01:12Z [human] decided the review's findings. S1: `agent-dev.sh` points to the README for what it takes
+  of `agent.sh`, since the README describes all of it, and the rows are not repeated. That is the human's decision and
+  is settled. P1: declined. The further edits to the workflow text in `285d06b` are the human's own, to the human's own
+  text
+- 2026-10-08T13:01:12Z [Claude Code, anthropic/claude-opus-5-5] in the main session on the Linux host. S1: no document
+  is changed. Saw that every argument, option and environment variable the review names is a row of "agent.sh" in
+  "Commands" of `README.md`. As the specifier, wrote the decision into `spec.md`, as a sentence of requirement 8 and a
+  decision beside it. S2: accepted, as the implementer. The statement is added to the list of "The harness logs" below,
+  as how a behavior is brought about. Whether it comes back is the human's to decide, and was not asked. P1: nothing is
+  changed. Not run again: the suites, since no file outside the unit's documents changed
 
 ## What the three documents leave out
 
@@ -334,6 +353,8 @@ Its opening. Went as why a behavior was chosen, or as how it is brought about wh
 * Why nothing of OpenCode is copied once the log directory holds a database: that the database is one file with
   companions that belong to it alone
 * That it is Docker that makes the missing mount points as root. That they are root's stays
+* That it is the entrypoint that examines those directories, and that it does so as the agent. What passes and
+  what is refused stays
 * The six lines the entrypoint prints for such a volume. What they name stays
 * What was shown on macOS: both harnesses with their logs on the mounted directories, two containers writing at
   the same time, and the host reading while a container wrote. The system and the limit stay

@@ -66,7 +66,9 @@ that say what there is and how to use it.
 8. Working on the kit itself is in `CONTRIBUTING.md`, which does not ship in the package. It covers the subjects of
    the present README's "The kit's own tests", "The kit's own copy of the kit", "Trying the working copy's sandbox"
    and "Releasing", written anew by requirements 9 and 10 and not copied. It describes the commands that only this
-   repository has, each with every argument and option, as requirement 5 asks of the README. It also has a table of
+   repository has, each with every argument and option, as requirement 5 asks of the README. A command that takes
+   what a command of the README takes names that command's section for them, and has rows only for what differs.
+   It also has a table of
    what the repository holds that the package does not, with a row for every such file and directory that is
    tracked at the root of the repository. Files that only configure a tool may share one row
 9. The three documents say what there is and how to use it, and not why it is so. What stays, and what goes:
@@ -134,6 +136,10 @@ decision, and a later review treats it as settled.
 * **"What is here" is the package, on the human's word.** The README ships, so "here" is what a project that
   installed the kit finds under `node_modules`. A row for `deploy.sh` or `infra/` tells that reader of something
   they do not have. Those rows move to `CONTRIBUTING.md`, whose reader has the repository
+* **`agent-dev.sh` points to `agent.sh` for what it takes, on the human's word.** It passes every argument on to
+  the wrapper, and the README describes each of them, with the environment variables. Repeating those rows in
+  `CONTRIBUTING.md` was rejected: it would say them twice, against requirement 11, and the two tables would have
+  to be kept the same
 * **Each command once, on the human's word.** An overview followed by a description of each would say every
   command twice and grow long again. So a command's section is its description, and what a command does at length
   is in the part it belongs to, which the section names
