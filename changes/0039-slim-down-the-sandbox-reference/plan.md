@@ -391,6 +391,15 @@ The review, added after the review of `790d0a0`:
       cuts the branch is started with the unit's number, since no branch is cut for a name. Try it, and bring
       the record's list of the cells written new along (R5)
 
+The form of the two sections, added on the human's word after the reviews. It stands above "The form of the two
+tables" and the tasks of the form above, which describe the HTML tables as they were first built:
+
+- [x] Write "Where things are kept on the host" and "When something goes wrong" with no HTML. The places are a
+      Markdown table of where each is and how it is removed, with what each is and holds as text under its name.
+      Each failure is what is seen, in bold, then why, then what to do, and a failure with several causes has
+      each cause with its recovery. Every statement of the two tables stays. Say in `AGENTS.md` that the document
+      holds no HTML, and name an entry where it names a row. Run "Verification" again (R3, R5, R16, R17)
+
 Finishing:
 
 - [x] Run the checks under "Verification" on the final tree and log in `record.md` what was run and what it
@@ -468,5 +477,7 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
       test, and the record, with the suites on the final tree
 - [x] `feature-0039 Say what to do for the failures that had no recovery`: `SANDBOX.md` and the record, with the
       suites on the final tree
+- [x] `feature-0039 Write the places and the failures of the sandbox without HTML`: `SANDBOX.md`, `AGENTS.md`, the
+      plan and the record, with the suites on the final tree
 - [x] `feature-0039 Start the unit run that a --connect waits for by its number`: `SANDBOX.md`, the plan and the
       record, with the review's own entry and the suites on the final tree

@@ -40,10 +40,13 @@ characters.
 * `SANDBOX.md` is ordered by what a reader does. A unit that adds to it puts the text in the section of what the
   reader is doing, and not in a section for the part of the sandbox that changed
 * A refusal whose message names both why it refused and what to do is not described in `SANDBOX.md`. One whose
-  message leaves either out is a row of "When something goes wrong"
-* A failure of the sandbox that a reader recovers from by doing something is a row of "When something goes wrong"
-  in `SANDBOX.md`, and is described nowhere else in it. The table of "Where things are kept on the host" is kept
-  up to date. A unit that changes either changes the table in the same unit
+  message leaves either out is an entry of "When something goes wrong"
+* A failure of the sandbox that a reader recovers from by doing something is an entry of "When something goes
+  wrong" in `SANDBOX.md`, with what is seen, why and what to do, and is described nowhere else in it. "Where things
+  are kept on the host" is kept up to date, its table and what it says of each place. A unit that changes either
+  changes that section in the same unit
+* `SANDBOX.md` holds no HTML. A table in it is a Markdown table whose lines fit the line limit, and what does not
+  fit one is written as text
 
 ## Releasing
 

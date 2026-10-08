@@ -278,49 +278,22 @@ For a model that the container cannot reach, see "When something goes wrong".
 
 What the sandbox keeps on the host, where it is and how it is removed:
 
-<table>
-<tr>
-<th></th>
-<th>What it is</th>
-<th>Where it is</th>
-<th>What it holds</th>
-<th>How it is removed</th>
-</tr>
-<tr>
-<td>
+| What              | Where it is                                           | How it is removed                       |
+|-------------------|-------------------------------------------------------|-----------------------------------------|
+| The clone         | `~/.local/state/agentrite/<Compose project>/<branch>` | `rm -rf` of its directory               |
+| The log directory | `<data>/agentrite/<name>`                             | `rm -rf` of the directory               |
+| The home volume   | `<project>_agent-home`                                | `docker volume rm <project>_agent-home` |
+| The image         | `<image>`                                             | `docker image rm <image>`               |
 
-The clone of a unit run
+**The clone of a unit run**
 
-</td>
-<td>
-
-The clone of the unit's branch that a unit run mounts at `/work`.
-
-</td>
-<td>
-
-`~/.local/state/agentrite/<Compose project>/<branch>`, or under `$XDG_STATE_HOME` when that is set.
-
-</td>
-<td>
-
-See "Running a unit".
-
-</td>
-<td>
+The clone of the unit's branch that a unit run mounts at `/work`. It is under `$XDG_STATE_HOME` when that is set.
+What it holds is in "Running a unit".
 
 To discard a clone, remove its directory with `rm -rf`. When the wrapper removes it itself is in "Getting the work
 back".
 
-</td>
-</tr>
-<tr>
-<td>
-
-The project's log directory
-
-</td>
-<td>
+**The project's log directory**
 
 Claude Code and OpenCode each keep a log of every session on disk: what was asked, what was answered and how many
 tokens it took. In the sandbox those logs are on the host and not in the home volume. In every run, whatever is
@@ -329,17 +302,13 @@ mounted at `/work`, the wrapper mounts two directories of the host over the two 
 Every run of one project root uses that directory: a unit run of any branch, `--in-place` and `--workdir` alike.
 The wrapper makes it, with the two directories in it, as the developer, before the container starts.
 
-</td>
-<td>
-
 `<logs>` is the project's log directory, `<data>/agentrite/<name>`:
 
 * `<data>` is `$XDG_DATA_HOME` when that is set and `~/.local/share` when it is not
 * `<name>` is the name of the project root's directory, so a project at `~/projects/norareit` has
   `~/.local/share/agentrite/norareit/`
 
-</td>
-<td>
+It holds:
 
 * `<logs>/.claude/projects`, mounted at `/home/agent/.claude/projects`: Claude Code's sessions. A sandboxed session
   is started in `/work`, so Claude Code's sessions are under `.claude/projects/-work`
@@ -350,32 +319,17 @@ The two directories have the places they have in a home, so a tool on the host t
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
-</td>
-<td>
-
 With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of both harnesses and
 OpenCode's login go with it. The next run makes the directory again, empty.
 
-</td>
-</tr>
-<tr>
-<td>
-
-The home volume
-
-</td>
-<td>
+**The home volume**
 
 The agent's home, `/home/agent`, is a named volume in `container/compose.yml`, which survives a container.
 
-</td>
-<td>
+`<project>` is not the repository's name but the Compose project's, the `name:` key in the project's own
+`agent/compose.project.yml`. `docker volume ls` shows the exact name.
 
-`<project>_agent-home`. `<project>` is not the repository's name but the Compose project's, the `name:` key in the
-project's own `agent/compose.project.yml`. `docker volume ls` shows the exact name.
-
-</td>
-<td>
+It holds:
 
 * Claude Code's login and settings, which are beside its projects directory and not in it
 * whatever else a harness keeps in its home
@@ -384,9 +338,6 @@ project's own `agent/compose.project.yml`. `docker volume ls` shows the exact na
 Two directories in the home are not of the volume: the harnesses' sessions, and with them OpenCode's login, are in
 the project's log directory on the host.
 
-</td>
-<td>
-
 ```sh
 docker volume ls
 docker volume rm <project>_agent-home
@@ -394,30 +345,10 @@ docker volume rm <project>_agent-home
 
 Removing the volume discards Claude Code's saved login. The next start creates a new volume owned by the agent.
 
-</td>
-</tr>
-<tr>
-<td>
+**The image**
 
-The image
-
-</td>
-<td>
-
-What the wrapper builds for the project's sandbox.
-
-</td>
-<td>
-
-`<image>` is the `image:` of the project's `agent/compose.project.yml`.
-
-</td>
-<td>
-
-Claude Code and OpenCode. For which versions, see "Holding a harness version".
-
-</td>
-<td>
+What the wrapper builds for the project's sandbox. `<image>` is the `image:` of the project's
+`agent/compose.project.yml`. It holds Claude Code and OpenCode. For which versions, see "Holding a harness version".
 
 ```sh
 docker image rm <image>
@@ -425,10 +356,6 @@ docker image rm <image>
 
 The next start builds the image again. Each rebuild leaves the image it replaced behind, untagged, at about 0.6 GB.
 `docker image prune` removes them.
-
-</td>
-</tr>
-</table>
 
 ## What the sandbox defends against
 
@@ -471,131 +398,66 @@ a clone does not work: its `origin` is the host's path, which the container cann
 
 ## When something goes wrong
 
-<table>
-<tr>
-<th>What you see</th>
-<th>Why</th>
-<th>What to do</th>
-</tr>
-<tr>
-<td>
+Each failure is given by what you see, in bold, then why, then what to do.
 
-For a unit run, the wrapper says why and starts nothing: it refuses the unit, or cuts no branch for it.
+**For a unit run, the wrapper says why and starts nothing: it refuses the unit, or cuts no branch for it.**
 
-</td>
-<td>
+Why, and what to do for each:
 
-One of:
+* The unit is given by a name that no branch has, which is refused. Give the unit by the name of a branch that
+  exists, which `git branch` lists, or by its number. A command that is given with no unit before it, as in
+  `./agent.sh claude`, is taken for the unit: say what to mount first
+* The unit is given by a number that names no branch, and `master` holds no unit of that number. Specify the unit
+  and commit it on `master` first: the wrapper cuts a branch for a unit whose directory is in `changes/` on
+  `master`. Or give the number of a unit that is there
+* The unit is given by such a number, and the unit's record on `master` cannot be read or names no kind the kit
+  has. Commit a `record.md` for the unit on `master` whose frontmatter names its `kind` as `feature`, `bug` or
+  `task`
+* The unit is given by such a number, and there is no local branch `master`. Make a local branch `master`, for
+  example with `git branch master origin/master`
 
-* the unit is given by a name that no branch has, which is refused
-* the unit is given by a number that names no branch, and `master` holds no unit of that number
-* the unit is given by such a number, and the unit's record on `master` cannot be read or names no kind the kit has
-* the unit is given by such a number, and there is no local branch `master`
+**The container, the wrapper or the host crashed during a unit run.**
 
-</td>
-<td>
+Why: after a crash, the clone is still there and nothing has been fetched.
 
-In that order:
+What to do: `./agent.sh <unit> true` resumes it, runs nothing of note and brings its commits back.
 
-* Give the unit by the name of a branch that exists, which `git branch` lists, or by its number. A command that is
-  given with no unit before it, as in `./agent.sh claude`, is taken for the unit: say what to mount first
-* Specify the unit and commit it on `master` first: the wrapper cuts a branch for a unit whose directory is in
-  `changes/` on `master`. Or give the number of a unit that is there
-* Commit a `record.md` for the unit on `master` whose frontmatter names its `kind` as `feature`, `bug` or `task`
-* Make a local branch `master`, for example with `git branch master origin/master`
+**The host's branch is left as it is, the commits wait at `sandbox/<branch>`, and the wrapper names the command
+that merges them.**
 
-</td>
-</tr>
-<tr>
-<td>
+Why: the host's branch moved meanwhile and cannot be fast-forwarded. The same happens when the branch is checked
+out and the commits add a file where the host has an ignored one, which a fast-forward would overwrite.
 
-The container, the wrapper or the host crashed during a unit run.
-
-</td>
-<td>
-
-After a crash, the clone is still there and nothing has been fetched.
-
-</td>
-<td>
-
-`./agent.sh <unit> true` resumes it, runs nothing of note and brings its commits back.
-
-</td>
-</tr>
-<tr>
-<td>
-
-The host's branch is left as it is, the commits wait at `sandbox/<branch>`, and the wrapper names the command that
-merges them.
-
-</td>
-<td>
-
-The host's branch moved meanwhile and cannot be fast-forwarded. The same happens when the branch is checked out and
-the commits add a file where the host has an ignored one, which a fast-forward would overwrite.
-
-</td>
-<td>
+What to do:
 
 ```sh
 git merge sandbox/<branch>
 ```
 
-</td>
-</tr>
-<tr>
-<td>
+**The wrapper says that the removal of a clone failed, and where the remains are: beside the clone's place, as
+`.discarded-<branch>`.**
 
-The wrapper says that the removal of a clone failed, and where the remains are: beside the clone's place, as
-`.discarded-<branch>`.
+Why: the removal itself failed, for example on a directory the agent made read-only.
 
-</td>
-<td>
+What to do: remove the remains by hand.
 
-The removal itself failed, for example on a directory the agent made read-only.
+**`--connect` runs nothing, says why and exits with 2.**
 
-</td>
-<td>
+Why, and what to do for each:
 
-Remove the remains by hand.
+* The unit names no local branch. A number that no branch holds is refused although `master` holds a unit of that
+  number: a unit with no branch has no run to connect to, and only a unit run cuts the branch. Start a unit run of
+  the unit first, giving the unit by its number, as in `./agent.sh 0029`: a branch that is not there yet is cut for
+  a number and not for a name. Then connect to it while it runs
+* Docker could not be asked whether the container is running. See that Docker runs and that the user may use it:
+  Docker's own error is printed above the wrapper's. Then give the command again
+* It is given together with `--in-place`, `--workdir`, `--mount` or `--rebuild`, which are options of a run. It
+  names the option. Leave the option out: `--connect` takes the unit and a command, and nothing else
 
-</td>
-</tr>
-<tr>
-<td>
+**After an install on one side of a shared `node_modules`, packages of the other side are gone, and nothing
+reports it.**
 
-`--connect` runs nothing, says why and exits with 2.
-
-</td>
-<td>
-
-One of:
-
-* the unit names no local branch. A number that no branch holds is refused although `master` holds a unit of that
-  number: a unit with no branch has no run to connect to, and only a unit run cuts the branch
-* Docker could not be asked whether the container is running
-* it is given together with `--in-place`, `--workdir`, `--mount` or `--rebuild`, which are options of a run. It
-  names the option
-
-</td>
-<td>
-
-In that order:
-
-* Start a unit run of the unit first, giving the unit by its number, as in `./agent.sh 0029`: a branch that is not
-  there yet is cut for a number and not for a name. Then connect to it while it runs
-* See that Docker runs and that the user may use it: Docker's own error is printed above the wrapper's. Then give
-  the command again
-* Leave the option out: `--connect` takes the unit and a command, and nothing else
-
-</td>
-</tr>
-<tr>
-<td>
-
-After an install on one side of a shared `node_modules`, packages of the other side are gone, and nothing reports
-it. On a macOS host:
+On a macOS host:
 
 * After an install in the sandbox, the host's macOS-only packages are gone. `fsevents`, which Playwright uses to
   watch files, is one. Playwright still runs without it, so the loss goes unnoticed
@@ -603,17 +465,11 @@ it. On a macOS host:
 * A package that ships a native binary per platform, as a bundler may, then fails on the side that did not install
   last, because the binary it finds is the other platform's
 
-</td>
-<td>
-
-In a run with `--in-place` or `--workdir`, an install on either side of the shared `node_modules` installs for that
-side's platform and removes what only the other side's platform used. On a Linux host both sides are the same
+Why: in a run with `--in-place` or `--workdir`, an install on either side of the shared `node_modules` installs for
+that side's platform and removes what only the other side's platform used. On a Linux host both sides are the same
 platform and nothing is lost. A macOS host is the case where it matters.
 
-</td>
-<td>
-
-`npm ci` on the side about to be used restores that side. On the host:
+What to do: `npm ci` on the side about to be used restores that side. On the host:
 
 ```sh
 npm ci
@@ -629,22 +485,11 @@ Use `npm ci` rather than `npm install`. `npm install` swaps the platform-limited
 that is already installed as the other side left it, including a binary that one of them set up for the other
 platform.
 
-</td>
-</tr>
-<tr>
-<td>
+**A login that sends the browser back to a port on `localhost` cannot complete in the sandbox.**
 
-A login that sends the browser back to a port on `localhost` cannot complete in the sandbox.
+Why: the container publishes no port, and its firewall drops every inbound connection.
 
-</td>
-<td>
-
-The container publishes no port, and its firewall drops every inbound connection.
-
-</td>
-<td>
-
-Use a login that needs no callback. For OpenAI in OpenCode with a ChatGPT account, that is:
+What to do: use a login that needs no callback. For OpenAI in OpenCode with a ChatGPT account, that is:
 
 ```
 opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"
@@ -657,22 +502,11 @@ opencode auth login -p openai -m "ChatGPT Pro/Plus (headless)"
   hosts"
 * A login with an API key needs `api.openai.com` in the project's `ALLOWLIST` instead
 
-</td>
-</tr>
-<tr>
-<td>
+**A login or a prompt fails. A refused client fails with a TLS `unrecognized_name` alert.**
 
-A login or a prompt fails. A refused client fails with a TLS `unrecognized_name` alert.
+Why: the connection is to a host that is not on the allowlist, and is refused.
 
-</td>
-<td>
-
-The connection is to a host that is not on the allowlist, and is refused.
-
-</td>
-<td>
-
-The refusal is in the proxy's log, `/run/egress-proxy.log`, which the agent can read:
+What to do: the refusal is in the proxy's log, `/run/egress-proxy.log`, which the agent can read:
 
 ```sh
 grep 'not allowlisted' /run/egress-proxy.log
@@ -680,62 +514,32 @@ grep 'not allowlisted' /run/egress-proxy.log
 
 What a project adds to its `ALLOWLIST` is in "Reaching more hosts".
 
-</td>
-</tr>
-<tr>
-<td>
+**The entrypoint refuses to start.**
 
-The entrypoint refuses to start.
+Why: at start-up the entrypoint proves the boundary before it drops to the agent, and refuses to start if any check
+fails. The message names the check that failed. The checks, and what to do for each:
 
-</td>
-<td>
+* The canary host (`FIREWALL_CANARY`) cannot be reached on port 80. When the canary is reached, nothing a reader
+  does repairs it: egress is not confined. Do not work around it, for example by naming another canary, and report
+  it to whoever maintains the kit. When the message says that the canary does not resolve, see that the host has
+  network and DNS
+* Every allowlisted host, and the probe host (`FIREWALL_PROBE`), can be reached through the proxy. When a host is
+  not reached, the message names it. See that the host machine has network. For a host of the project's
+  `ALLOWLIST`, see that its name is right and that it answers HTTPS on port 443, and correct it or take it out
+* The canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
+  is on the hostname and not the address. When the canary's hostname is not refused, the same holds as when the
+  canary is reached: egress is not bounded by hostname, so do not work around it, and report it
 
-At start-up the entrypoint proves the boundary before it drops to the agent, and refuses to start if any check
-fails:
+**The sandbox does not start, although an image exists.**
 
-* the canary host (`FIREWALL_CANARY`) cannot be reached on port 80
-* every allowlisted host, and the probe host (`FIREWALL_PROBE`), can be reached through the proxy
-* the canary's hostname, presented at the probe's own address, is refused by the proxy, which shows that the check
-  is on the hostname and not the address
+Why: a build that the wrapper started by itself failed, for example with no network.
 
-</td>
-<td>
+What to do: holding the versions the image already has, in the project's `agent/compose.project.yml`, without
+committing the edit, is how to start the sandbox while a build cannot run.
 
-The message names the check that failed. In that order:
+**A version of a harness breaks something.**
 
-* When the canary is reached, nothing a reader does repairs it: egress is not confined. Do not work around it, for
-  example by naming another canary, and report it to whoever maintains the kit. When the message says that the
-  canary does not resolve, see that the host has network and DNS
-* When a host is not reached, the message names it. See that the host machine has network. For a host of the
-  project's `ALLOWLIST`, see that its name is right and that it answers HTTPS on port 443, and correct it or take
-  it out
-* When the canary's hostname is not refused, the same holds as when the canary is reached: egress is not bounded
-  by hostname, so do not work around it, and report it
-
-</td>
-</tr>
-<tr>
-<td>
-
-The sandbox does not start, although an image exists.
-
-</td>
-<td>
-
-A build that the wrapper started by itself failed, for example with no network.
-
-</td>
-<td>
-
-Holding the versions the image already has, in the project's `agent/compose.project.yml`, without committing the
-edit, is how to start the sandbox while a build cannot run.
-
-</td>
-</tr>
-<tr>
-<td>
-
-One of:
+What you see is one of:
 
 * the harness's own error, such as `Unable to connect`, or a feature that is missing, with the refused host in
   `/run/egress-proxy.log`
@@ -744,57 +548,25 @@ One of:
 * an update attempt that fails against the read-only root and the firewall
 * for a version that is not on the npm registry, a build that fails with npm's error
 
-</td>
-<td>
-
-The kit checks no version of either harness. What it promises for no version, because none is checked:
+Why: the kit checks no version of either harness. What it promises for no version, because none is checked:
 
 * that both harnesses start with the kit's allowlist alone
-* that the login command for OpenCode in this table names a method that exists
+* that the login command for OpenCode in this section names a method that exists
 * that the developer's status line shows through the managed settings
 * that the environment variables and the configuration file the image sets do switch self-update off
 
-</td>
-<td>
+What to do, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that
+works in the project's `agent/compose.project.yml`.
 
-In the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that works in
-the project's `agent/compose.project.yml`.
+**The container cannot reach the model of the local model server.**
 
-</td>
-</tr>
-<tr>
-<td>
+Why: the host is a Linux host whose firewall denies incoming traffic by default, `ufw` for example.
 
-The container cannot reach the model of the local model server.
+What to do: allow the Docker bridge subnets to `MODEL_SERVER_PORT` on the host.
 
-</td>
-<td>
+**Either harness continues or lists another project's sessions, a reader cannot tell the two projects' sessions
+apart, and the two share one OpenCode login.**
 
-The host is a Linux host whose firewall denies incoming traffic by default, `ufw` for example.
+Why: two projects whose root directories have one name share a log directory, wherever on the host they are.
 
-</td>
-<td>
-
-Allow the Docker bridge subnets to `MODEL_SERVER_PORT` on the host.
-
-</td>
-</tr>
-<tr>
-<td>
-
-Either harness continues or lists another project's sessions, a reader cannot tell the two projects' sessions
-apart, and the two share one OpenCode login.
-
-</td>
-<td>
-
-Two projects whose root directories have one name share a log directory, wherever on the host they are.
-
-</td>
-<td>
-
-Renaming one of the roots ends it.
-
-</td>
-</tr>
-</table>
+What to do: renaming one of the roots ends it.

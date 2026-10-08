@@ -266,6 +266,24 @@ timestamp: 2026-10-08T13:27:02Z
   removal above is what stands. The notes of 4.1.0 in `CHANGELOG.md` send a reader to the README's "The harness logs"
   for the command, which no document holds now. The delta review's own entry above is committed with this one. The form
   of the two tables is open, with the human
+- 2026-10-08T16:25:37Z [human] was given three forms for the two tables: entries in plain Markdown and no table for the
+  failures, Markdown tables with lines past the limit, or the HTML as it is. Took the first
+- 2026-10-08T16:25:37Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `2c17a65`, wrote the two sections again with no HTML. "Where things are kept on the
+  host" is a Markdown table of the four places, where each is and how it is removed, with what each is and holds as text
+  under its name in bold. "When something goes wrong" is one entry for each of the thirteen failures: what is seen, in
+  bold, then why, then what to do, and the three failures with several causes have each cause with its recovery. Every
+  statement of the two tables is in the new text, held one against the other while writing, and "in this table" became
+  "in this section". The failure of a harness version got a name of its own in bold, "A version of a harness breaks
+  something", with what is seen as a list under it. `AGENTS.md` names an entry where it named a row, and says that the
+  document holds no HTML. `spec.md` asks for one table each in requirements 3 and 5, and the plan describes the HTML
+  tables: the spec is not changed, the human's decision above is what stands, and the plan has the work as a task that
+  says so. On that tree `npm test` passes with 403 tests, `SANDBOX.md` has its twelve titles in order, no `###` and no
+  HTML tag, no changed file has a line over 120 characters or an em dash, "What was tried" and "The titles" print
+  nothing, "The places" prints lines of "Where things are kept on the host" only, and "The spellings" prints what it
+  printed before and `docker image rm <image>`, which the table now holds as well as the code block under the image.
+  `SANDBOX.md` is 572 lines and 5080 words. Not reviewed: this commit and the one before it, which came after the delta
+  review of `58a46b9`. The status stays `in-progress`
 
 ## What SANDBOX.md leaves out
 
