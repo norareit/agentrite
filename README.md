@@ -65,119 +65,142 @@ The writers current workflow:
    separate checkout!). At this point it is up to you how to handle the rest. You can create a pull request and check
    the changes yourself, or you can simply mark the change `implemented` and merge it back to master
 
-## The commands
+## Commands
 
 Every command a project that installed the kit runs, each with every argument, option and environment variable it
-takes:
+takes.
 
-* ```sh
-  npx agentrite init <harness>...
-  ```
+### agentrite init
 
-  Sets a project up, from its root: writes the role wrappers, the project's agent instructions and the sandbox's
-  two files, and prints each file it wrote, changed or skipped.
+```sh
+npx agentrite init <harness>...
+```
 
-    * `<harness>`: `claude` or `opencode`, one or both, for the harnesses the project uses
+Sets a project up, from its root: writes the role wrappers, the project's agent instructions and the sandbox's two
+files, and prints each file it wrote, changed or skipped.
 
-  See "Installing it into a project".
+| Argument or option | What it is                                                              |
+|--------------------|-------------------------------------------------------------------------|
+| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses |
 
-* ```sh
-  npx agentrite refresh <harness>...
-  ```
+See "Installing it into a project".
 
-  Brings the kit's own files in a project up to date with the installed release, from the project root, and prints
-  each file as written, refreshed or up to date.
+### agentrite refresh
 
-    * `<harness>`: `claude` or `opencode`, one or both, for the harnesses the project uses
+```sh
+npx agentrite refresh <harness>...
+```
 
-  See "Updating a project to a newer kit".
+Brings the kit's own files in a project up to date with the installed release, from the project root, and prints
+each file as written, refreshed or up to date.
 
-* ```sh
-  npx agentrite roles [--json]
-  ```
+| Argument or option | What it is                                                              |
+|--------------------|-------------------------------------------------------------------------|
+| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses |
 
-  Lists the roles the kit has, each with the description its wrappers hold. It reads nothing of the project.
+See "Updating a project to a newer kit".
 
-    * `--json`: prints the same roles for a script, as one JSON document: an object with one key, `roles`, an array
-      that holds each role in the same order, as an object with its `name` and its `description`. The description
-      is on one line, not wrapped
+### agentrite roles
 
-* ```sh
-  npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
-                    [-- <harness arguments...>]
-  ```
+```sh
+npx agentrite roles [--json]
+```
 
-  Starts a harness as one of the roles, for one unit, from the project root. Run with no argument, it prints its
-  usage.
+Lists the roles the kit has, each with the description its wrappers hold, and reads nothing of the project. The JSON
+document is an object with one key, `roles`, an array that holds each role as an object with its `name` and its
+`description`, which is on one line, not wrapped.
 
-    * `<role>`: one that `agentrite roles` lists
-    * `<harness>`: `claude` or `opencode`
-    * `<unit>`: a directory of `changes/`, given by its name, with or without `changes/` before it and a slash
-      after it, or by the four digits its name opens with
-    * `--prompt <text>`: adds its text to the prompt, as it is written. Also written as `--prompt="<text>"`
-    * `--model <id>`: the harness's own id of a model, passed on as it is written, such as `claude-sonnet-5-5` for
-      Claude Code or `openai/gpt-6.1-sol` for OpenCode. Also written as `--model=<id>`
-    * `--headless`: runs the harness without a session, for a script: it works on the prompt and ends
-    * `--skip-permissions`: ends the harness's questions about permissions. The option belongs in the sandbox
-    * `-- <harness arguments...>`: a `--` ends the command's own arguments, and every argument after it is given to
-      the harness as it is written
+| Argument or option | What it is                                                                   |
+|--------------------|------------------------------------------------------------------------------|
+| `--json`           | Prints the same roles, in the same order, as one JSON document, for a script |
 
-  See "Running a role".
+### agentrite run
 
-* ```sh
-  npx agentrite-roles <harness>...
-  ```
+```sh
+npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
+                  [-- <harness arguments...>]
+```
 
-  Writes the role wrappers and nothing else, for a project that wants only those. Unlike `init`, it refuses to
-  overwrite a file that already exists.
+Starts a harness as one of the roles, for one unit, from the project root. Run with no argument, it prints its
+usage.
 
-    * `<harness>`: `claude` or `opencode`, one or both
+| Argument or option          | What it is                                                                          |
+|-----------------------------|-------------------------------------------------------------------------------------|
+| `<role>`                    | One that `agentrite roles` lists                                                    |
+| `<harness>`                 | `claude` or `opencode`                                                              |
+| `<unit>`                    | A directory of `changes/`, by its name or by the four digits its name opens with    |
+| `--prompt <text>`           | Adds its text to the prompt, as it is written. Also `--prompt="<text>"`             |
+| `--model <id>`              | The harness's own id of a model, passed on as it is written. Also `--model=<id>`    |
+| `--headless`                | Runs the harness without a session, for a script: it works on the prompt and ends   |
+| `--skip-permissions`        | Ends the harness's questions about permissions. The option belongs in the sandbox   |
+| `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
 
-  See "Installing it into a project".
+See "Running a role".
 
-* ```sh
-  npm run check-changes
-  node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs [<repository root>]
-  ```
+### agentrite-roles
 
-  The change check. It compares the committed work on the current branch with `master`, and exits non-zero with a
-  list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked
-  tasks.
+```sh
+npx agentrite-roles <harness>...
+```
 
-    * `<repository root>`: optional, and the working directory when it is not given
+Writes the role wrappers and nothing else, for a project that wants only those. Unlike `init`, it refuses to
+overwrite a file that already exists.
 
-  See "Installing it into a project".
+| Argument or option | What it is                          |
+|--------------------|-------------------------------------|
+| `<harness>...`     | `claude` or `opencode`, one or both |
 
-* ```sh
-  ./agent.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
-  ./agent.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
-  ./agent.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-  ./agent.sh --connect UNIT [COMMAND...]
-  ```
+See "Installing it into a project".
 
-  Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
-  With `--connect` it starts nothing, and runs beside a unit run that is under way.
+### check-changes
 
-    * `UNIT`: mounts a clone of the unit's branch. The unit is a local branch, by its name or by a unit's number that
-      one branch's name holds. A number that no branch holds and that is a unit on `master` gets its branch first
-    * `--in-place`: mounts the project root, as it is
-    * `--workdir DIR`: mounts `DIR`, as it is
-    * `--connect UNIT`: runs the command in the container of the run that is under way for the unit. It takes none
-      of the other options
-    * `--rebuild`: builds the image before running, even if it already exists and holds the wanted harness versions
-    * `--mount HOST`: also mounts the host directory `HOST` at `/mnt/<basename>`, read-write. It may be repeated
-    * `--mount HOST:ro`: the same, read-only
-    * `--`: ends the options, so that what follows is the unit or the command
-    * `COMMAND...`: runs this instead of the shell
-    * `AGENT_MEM_LIMIT`: the container's memory limit, in place of the one in `agent/compose.project.yml`, which
-      `init` writes as `8g`
-    * `AGENT_CPUS`: the container's CPU limit, in place of the one in `agent/compose.project.yml`, which `init`
-      writes as `6`
-    * `XDG_STATE_HOME`: where the clones of unit runs are kept, in place of `~/.local/state`
-    * `XDG_DATA_HOME`: where the project's log directory is, in place of `~/.local/share`
+```sh
+npm run check-changes
+node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs [<repository root>]
+```
 
-  See "The sandbox", and in `SANDBOX.md` "Working on a clone", "Connecting to a unit run", "Another working
-  directory", "Extra directories" and "The harness logs".
+The change check. It compares the committed work on the current branch with `master`, and exits non-zero with a
+list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked tasks.
+
+| Argument or option  | What it is                                               |
+|---------------------|----------------------------------------------------------|
+| `<repository root>` | Optional, and the working directory when it is not given |
+
+See "Installing it into a project".
+
+### agent.sh
+
+```sh
+./agent.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+./agent.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+./agent.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+./agent.sh --connect UNIT [COMMAND...]
+```
+
+Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
+With `--connect` it starts nothing, and runs beside a unit run that is under way.
+
+| Argument or option | What it is                                                                                   |
+|--------------------|----------------------------------------------------------------------------------------------|
+| `UNIT`             | Mounts a clone of the unit's branch, given by its name or by the unit's number in its name   |
+| `--in-place`       | Mounts the project root, as it is                                                            |
+| `--workdir DIR`    | Mounts `DIR`, as it is                                                                       |
+| `--connect UNIT`   | Runs the command in the container of the unit's run that is under way. Takes no other option |
+| `--rebuild`        | Builds the image before running, even if it exists and holds the wanted harness versions     |
+| `--mount HOST`     | Also mounts the host directory `HOST` at `/mnt/<basename>`, read-write. It may be repeated   |
+| `--mount HOST:ro`  | The same, read-only                                                                          |
+| `--`               | Ends the options, so that what follows is the unit or the command                            |
+| `COMMAND...`       | Runs this instead of the shell                                                               |
+
+| Environment variable | What it is                                                                               |
+|----------------------|------------------------------------------------------------------------------------------|
+| `AGENT_MEM_LIMIT`    | The memory limit, in place of the `8g` that `init` writes in `agent/compose.project.yml` |
+| `AGENT_CPUS`         | The CPU limit, in place of the `6` that `init` writes in `agent/compose.project.yml`     |
+| `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                     |
+| `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                       |
+
+See "The sandbox", and in `SANDBOX.md` "Working on a clone", "Connecting to a unit run", "Another working
+directory", "Extra directories" and "The harness logs".
 
 ## Running a role
 
@@ -189,6 +212,8 @@ npx agentrite run implementer claude 0032
 npx agentrite run reviewer opencode 0032
 ```
 
+* The unit is given by its directory's name, with or without `changes/` before it and a slash after it, or by the
+  four digits its name opens with
 * The command takes a unit that has a directory, so the specifier of a unit that does not exist yet is started in a
   session of the harness, not with `run`
 * The command waits for the harness, and exits with the status the harness exited with, or with a status other than
@@ -209,7 +234,8 @@ The options, which may stand anywhere among the arguments before a `--`:
 
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session
-* The kit has no names of its own for models. Without `--model` the harness gets no model and decides by itself, and
+* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code or `openai/gpt-6.1-sol` for OpenCode. The kit has
+  no names of its own for models. Without `--model` the harness gets no model and decides by itself, and
   a model pinned in the role's wrapper is what such a run is expected to use
 * `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
   check, and OpenCode gets `--auto`, which approves what is not explicitly denied, so the two do not do the same.
@@ -420,7 +446,7 @@ improvement reaches that project, and every other, as a new release that each on
 ## The sandbox
 
 The sandbox is a Docker container that a harness is run in, with a clone of a unit's branch or the project mounted
-read-write at `/work`. `./agent.sh` starts it, in the forms "The commands" gives. The reference is
+read-write at `/work`. `./agent.sh` starts it, in the forms "Commands" gives. The reference is
 [`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/@ritenoar/agentrite/SANDBOX.md`.
 
 What a run needs:
@@ -434,7 +460,8 @@ What a run needs:
 What a run does:
 
 * A unit run, as `./agent.sh 0029`, mounts a clone of that unit's branch. It is the way to implement and to review a
-  unit. See "Working on a clone" of `SANDBOX.md`
+  unit. A number that no branch holds and that is a unit on `master` gets its branch first. See "Working on a clone"
+  of `SANDBOX.md`
 * A run with `--in-place` mounts the project as it is on the host, so the agent works in the developer's own
   checkout, `.git` and `node_modules` included. It is the way to run something on the tree as it is, such as the
   suite

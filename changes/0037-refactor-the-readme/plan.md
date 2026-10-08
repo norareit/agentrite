@@ -230,6 +230,12 @@ This repository's instructions:
       removes one changes the document in the same unit; the two tables are kept up to date in the same way; and
       the documents say what there is and how to use it, with the why in the unit under `changes/` (R15)
 
+On the human's word, after the tasks above were done:
+
+- [x] Give the commands part of `README.md` and of `CONTRIBUTING.md` the title `## Commands`, a `###` heading per
+      command and a table of its arguments and options, with the environment variables in a table of their own,
+      in place of the nested list. Name "Commands" wherever "The commands" is pointed to (R5)
+
 ## Verification
 
 - [x] `npm test` passes on the final tree (R17)

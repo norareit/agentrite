@@ -192,6 +192,20 @@ timestamp: 2026-10-07T22:40:04Z
 - 2026-10-08T12:20:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the planner's row of the table
   in "How it works" say that the plan is the ordered tasks the implementer then follows. What a plan holds besides stays
   in `process.md`, by requirement 3
+- 2026-10-08T12:25:51Z [human] found "The commands" odd as a heading and its nested list odd as a form, had a table in
+  mind, as a man page has, and asked how other projects do it. Took the implementer's proposal to try: a part named
+  "Commands", with a heading per command and a table of its arguments and options. Said that the branch can be set back
+  to `285d06b` if it does not please
+- 2026-10-08T12:25:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, rewrote the part in `README.md` and
+  the one in `CONTRIBUTING.md` so, in one commit, and added the task to the plan. Each command has a heading, its forms
+  in a code block, one or two sentences, a table with a row per argument and option, a second table for the environment
+  variables where it reads any, and the titles of where more is said. A cell is one line, so three things moved from the
+  entries of `run` and `./agent.sh` to where the rest is said: how the unit of `run` may be written and the two examples
+  of a model id, to "Running a role", and that a number with no branch gets its branch first, to "The sandbox". The
+  pointers in `SANDBOX.md`, in `CONTRIBUTING.md` and in the lists below name "Commands". Requirement 5 says "one list",
+  and this is a part of sections with tables, in which each command still stands once, with its description right after
+  it and no overview. The spec is not changed: whether it is corrected for this form, or the form goes back, is the
+  human's to decide. Not checked: how the tables render on Bitbucket
 
 ## What the three documents leave out
 
@@ -203,13 +217,13 @@ stood in. Each list names the line of requirement 9 that its statements went by,
 Now said elsewhere:
 
 * The rows for `tests/`, `infra/`, `RELEASING.md` and `deploy.sh`, which are in the table of `CONTRIBUTING.md`
-* The sentence on the four commands of `agentrite`, which "The commands" says
+* The sentence on the four commands of `agentrite`, which "Commands" says
 
 ### Installing it into a project
 
 Went as why a behavior was chosen or how it is brought about, or is now said elsewhere:
 
-* That `deploy.sh` prints the URL of a release when it makes one, which "The commands" of `CONTRIBUTING.md` says
+* That `deploy.sh` prints the URL of a release when it makes one, which "Commands" of `CONTRIBUTING.md` says
 * What a project receives, by the paths that `files` lists, `scripts/agentrite.mjs`, `scripts/agentrite-roles.mjs`
   and `scripts/agentrite-run.mjs` among them, which "What is here" says by directory, and what it does not receive,
   which the table of `CONTRIBUTING.md` says
@@ -220,7 +234,7 @@ Went as why a behavior was chosen or how it is brought about, or is now said els
   what survives, is in "Updating a project to a newer kit"
 * That `init` decides on the `.dockerignore` exception by the rules BuildKit applies
 * That the npm script is one way to wire the check and that a project may run the kit's script from a command of
-  its own. "The commands" gives both forms
+  its own. "Commands" gives both forms
 
 ### Installing on a fresh clone
 

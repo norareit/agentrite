@@ -1,7 +1,7 @@
 # The sandbox
 
 The reference of the agent sandbox: what a run mounts, writes, refuses and leaves behind. The commands that start
-it, with every argument and option, are in "The commands" of [`README.md`](README.md), and what the sandbox confines
+it, with every argument and option, are in "Commands" of [`README.md`](README.md), and what the sandbox confines
 is in "The sandbox" there.
 
 ## Working on a clone

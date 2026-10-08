@@ -27,45 +27,64 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `.dockerignore`, `.gitignore` | What the image build and git leave out                                 |
 | `.editorconfig`               | The formatting that editors apply                                      |
 
-## The commands
+## Commands
 
 The commands that only this repository has. Those a project has too, `./agent.sh` and `npm run check-changes` among
-them, are in "The commands" of `README.md`.
+them, are in "Commands" of `README.md`.
 
-* `npm test`
+### npm test
 
-  Runs node's built-in test runner over `tests/`. It takes no argument. See "The kit's own tests".
+```sh
+npm test
+```
 
-* ```sh
-  ./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
-  ./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
-  ./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-  ./agent-dev.sh --connect UNIT [COMMAND...]
-  ```
+Runs node's built-in test runner over `tests/`. It takes no argument.
 
-  Runs the sandbox from the working copy, in place of the installed release's. It runs on the host.
+See "The kit's own tests".
 
-    * Every argument and option is that of `./agent.sh`, as "The commands" of `README.md` gives them, and so is
-      every environment variable
-    * `--rebuild` changes nothing: the image is built on every start of a run without it
-    * `AGENT_PROJECT_NAME` names the Compose project and the image in `agent/compose.project.yml`. The command sets
-      it to `ritenoar-agentrite-agent-dev`, whatever the environment holds. Unset, as it is for `./agent.sh`, the
-      name is `ritenoar-agentrite-agent`
+### agent-dev.sh
 
-  See "Trying the working copy's sandbox".
+```sh
+./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+./agent-dev.sh --connect UNIT [COMMAND...]
+```
 
-* ```sh
-  ./deploy.sh
-  npm run deploy
-  ```
+Runs the sandbox from the working copy, in place of the installed release's. It runs on the host.
 
-  Releases the kit: deploys `infra/` and uploads the packed kit, at the version in `package.json`, and prints the
-  URL of the release. It takes no argument, runs on the host, and runs `npm ci` itself. See "Releasing".
+| Argument or option        | What it is                                                                    |
+|---------------------------|-------------------------------------------------------------------------------|
+| Every one of `./agent.sh` | As "Commands" of `README.md` gives them, its environment variables among them |
+| `--rebuild`               | Changes nothing: the image is built on every start of a run without it        |
 
-* `/release`
+| Environment variable | What it is                                                                                   |
+|----------------------|----------------------------------------------------------------------------------------------|
+| `AGENT_PROJECT_NAME` | Names the Compose project and the image. The command sets it, whatever the environment holds |
 
-  The skill that makes a release, in a Claude Code session on the host, on `master`. It takes no argument. See
-  "Releasing".
+See "Trying the working copy's sandbox".
+
+### deploy.sh
+
+```sh
+./deploy.sh
+npm run deploy
+```
+
+Releases the kit: deploys `infra/` and uploads the packed kit, at the version in `package.json`, and prints the URL
+of the release. It takes no argument, runs on the host, and runs `npm ci` itself.
+
+See "Releasing".
+
+### /release
+
+```
+/release
+```
+
+The skill that makes a release, in a Claude Code session on the host, on `master`. It takes no argument.
+
+See "Releasing".
 
 ## The kit's own tests
 
@@ -117,7 +136,8 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
 * It takes the harness versions as `./agent.sh` does. It builds on every start of a run, so on a host without a
   harness it asks the registry at every such start and gets the latest published version of that harness
 * It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
-  `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. The image
+  `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. Unset, as it
+  is for `./agent.sh`, the name is `ritenoar-agentrite-agent`. The image
   and the home volume of `./agent.sh`, with Claude Code's login in it, are not touched, and both sandboxes can run
   at once
 * It shares its log directory with `./agent.sh`, because both run from one project root:
