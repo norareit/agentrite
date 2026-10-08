@@ -52,16 +52,18 @@ that say what there is and how to use it.
 6. Every argument, option and environment variable that a command's own usage text or argument parser accepts is
    named in the README. This is checked against the code, not against the present README: the present README names
    neither `AGENT_MEM_LIMIT` nor `AGENT_CPUS`, which a project's compose file reads
-7. The reference of the sandbox is `SANDBOX.md`, which ships in the package. It holds what the present README says
-   under "Running the sandbox" that requirement 1 does not place in the README: working on a clone, connecting to a
-   unit run, another working directory, extra directories, the shared `node_modules`, the home volume, the harness
-   logs, the harness versions, the status line, logging in to a model provider, egress and the local model server
-8. Working on the kit itself is in `CONTRIBUTING.md`, which does not ship in the package. It holds what the present
-   README says under "The kit's own tests", "The kit's own copy of the kit", "Trying the working copy's sandbox" and
-   "Releasing", and describes the commands that only this repository has, each with every argument and option, as
-   requirement 5 asks of the README. It also has a table of what the repository holds that the package does not,
-   with a row for every such file and directory that is tracked at the root of the repository. Files that only
-   configure a tool may share one row
+7. The reference of the sandbox is `SANDBOX.md`, which ships in the package. It covers the subjects of the present
+   README's "Running the sandbox" that requirement 1 does not place in the README: working on a clone, connecting
+   to a unit run, another working directory, extra directories, the shared `node_modules`, the home volume, the
+   harness logs, the harness versions, the status line, logging in to a model provider, egress and the local model
+   server. Its text is not copied from the present README: it is written anew by requirements 9 and 10, as the
+   README's is
+8. Working on the kit itself is in `CONTRIBUTING.md`, which does not ship in the package. It covers the subjects of
+   the present README's "The kit's own tests", "The kit's own copy of the kit", "Trying the working copy's sandbox"
+   and "Releasing", written anew by requirements 9 and 10 and not copied. It describes the commands that only this
+   repository has, each with every argument and option, as requirement 5 asks of the README. It also has a table of
+   what the repository holds that the package does not, with a row for every such file and directory that is
+   tracked at the root of the repository. Files that only configure a tool may share one row
 9. The three documents say what there is and how to use it, and not why it is so. What stays, and what goes:
     * Stays: what a command, a file or the sandbox does; what a reader types; what a reader then sees or finds, and
       where; what is refused, and how to recover; what a reader must do or must not do, and the one clause of

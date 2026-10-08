@@ -73,5 +73,11 @@ timestamp: 2026-10-07T22:40:04Z
 - 2026-10-08T10:57:11Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, rewrote requirement 5 for that. As
   it stood it meant the first reading. It now asks for one list in which each command stands once, says what an
   entry holds and in which order, and has a decision beside it. Status left at `draft`
+- 2026-10-08T11:03:57Z [human] asked whether `SANDBOX.md` is the present README's text copied over, and so still a
+  lot of prose and of explaining why
+- 2026-10-08T11:03:57Z [Claude Code, anthropic/claude-opus-5-5] as the specifier. It is not: requirements 9 and 10
+  hold for all three documents. Requirements 7 and 8 said that the two new documents hold what the present README
+  says, which reads as a copy, so both now say that they cover its subjects and are written anew by requirements 9
+  and 10. Status left at `draft`
 
 ## Amendments
