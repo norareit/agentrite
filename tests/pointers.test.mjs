@@ -56,9 +56,11 @@ test('the agentrite-roles pointer says there is no such command any more and wha
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
   assert.match(result.stderr, /AgentRite has no command named agentrite-roles any more/);
-  assert.match(result.stderr, /agentrite init/);
-  assert.match(result.stderr, /agentrite refresh/);
+  assert.match(result.stderr, /`npx agentrite init claude opencode`/);
+  assert.match(result.stderr, /`npx agentrite refresh claude opencode`/);
   assert.match(result.stderr, /--no-sandbox/);
+  // A `|` in a command to run starts another command in a shell.
+  assert.doesNotMatch(result.stderr, /\|/);
   assert.match(result.stderr, /https:\/\/bitbucket\.org\/ritenoar\/agentrite$/m);
   assert.doesNotMatch(result.stderr, /is not installed in this project/);
 });
@@ -67,19 +69,22 @@ test('the agentrite-roles pointer README says what the message says', () => {
   const readme = readFileSync(join(ROLES_POINTER, 'README.md'), 'utf-8');
 
   assert.match(readme, /no command named `?agentrite-roles`? any more/);
-  assert.match(readme, /agentrite init/);
-  assert.match(readme, /agentrite refresh/);
+  assert.match(readme, /`npx agentrite init claude opencode`/);
+  assert.match(readme, /`npx agentrite refresh claude opencode`/);
   assert.match(readme, /--no-sandbox/);
+  assert.doesNotMatch(readme, /\|/);
 });
 
-test('the agentrite pointer is the one on master', () => {
-  for (const file of ['pointer.mjs', 'package.json']) {
-    const onMaster = spawnSync('git', ['show', `master:pointers/agentrite/${file}`], {
-      cwd: join(import.meta.dirname, '..'),
-      encoding: 'utf-8',
-    });
-    assert.equal(onMaster.status, 0, onMaster.stderr);
+// The pointer of `agentrite` is unchanged by unit 0038 (R4): the version published, and the message it prints.
+test('the agentrite pointer is still version 1.0.0 and prints its message as published', () => {
+  const { version } = JSON.parse(readFileSync(join(pointers, 'agentrite', 'package.json'), 'utf-8'));
+  const result = spawnSync(process.execPath, [join(pointers, 'agentrite', 'pointer.mjs')], { encoding: 'utf-8' });
 
-    assert.equal(readFileSync(join(pointers, 'agentrite', file), 'utf-8'), onMaster.stdout, file);
-  }
+  assert.equal(version, '1.0.0');
+  assert.equal(
+    result.stderr,
+    'agentrite is not installed in this project.\n' +
+      'AgentRite is the package @ritenoar/agentrite. It is installed from a release URL, not from the npm registry.\n' +
+      'The command to install it is in the README at https://bitbucket.org/ritenoar/agentrite\n',
+  );
 });

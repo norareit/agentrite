@@ -75,7 +75,8 @@ are left. Unit 0037 is implemented, so the README names the command only in the 
   commands the package has. In `pointers.test.mjs` replace "the two pointers run the same script" with tests that the
   `agentrite-roles` pointer has a version above `1.0.0`, exits 1, prints that AgentRite has no command of that name any
   more, names `agentrite init` and `agentrite refresh` and `--no-sandbox`, and ends with the address of the kit, and
-  that the `agentrite` pointer's `pointer.mjs` and `package.json` are the ones on `master` (R1, R4, R12)
+  that the `agentrite` pointer is still version 1.0.0 and prints its message as published (R1, R3, R4, R12). The
+  fixtures of the wrappers in this file stay as they are and verify R3
 - [x] Move `parseHarnesses` into `scripts/agentrite.mjs`, with the option parsing and the one usage function, and
   remove the command from `scripts/agentrite-roles.mjs`, `package.json` and the root `bin` of `package-lock.json` (R1,
   R2, R5)

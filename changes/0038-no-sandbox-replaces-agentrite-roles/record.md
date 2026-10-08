@@ -68,5 +68,11 @@ timestamp: 2026-10-08T17:40:00Z
   `agentrite` with no argument, `bad`, `init`, `roles x`, `run`, `refresh --no-sandbox` and
   `init --no-sandbox=1 claude`: none prints `agentrite-roles`. Not checked: publishing the pointer, the review, and
   the run of `agentrite run` with a stale wrapper. Status left at `in-progress`, for the review
+- 2026-10-08T19:06:09Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0038 at commit
+  `5bfeca830f4dbb09330987f909cd4a494f9fdf9c`, a full review against merge base
+  `1916d7ee2d527963299327734d5b3bf8c5fe4247`. Returned S1, P1 and C1; the complete findings are in
+  `.reviews/0038-no-sandbox-replaces-agentrite-roles/2026-10-08T190609Z-full-review.md`. Ran the host suite,
+  the committed change check, the suite in a fresh unit-style clone, and packed-install command checks. Did not
+  verify publication of the registry pointer, an actual Docker run or real harness sessions
 
 ## Amendments
