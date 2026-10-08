@@ -208,8 +208,8 @@ With `--connect` it starts nothing, and runs beside a unit run that is under way
 | `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                     |
 | `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                       |
 
-See "The sandbox", and in `SANDBOX.md` "Working on a clone", "Connecting to a unit run", "Another working
-directory", "Extra directories" and "The harness logs".
+See "The sandbox", and in `SANDBOX.md` "Running a unit", "Getting the work back", "Two agents on one unit",
+"Running on the tree as it is" and "Where things are kept on the host".
 
 ## Running a role
 
@@ -349,7 +349,7 @@ The files a project is expected to edit are these:
 * `agent/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
   `package.json`, the `PLAYWRIGHT_VERSION` build argument when the project has Playwright, the memory and CPU limits,
   and the project's `ALLOWLIST`. The allowlist lists only what the project needs beyond what the kit admits itself.
-  See "Egress" of [`SANDBOX.md`](SANDBOX.md)
+  See "Reaching more hosts" of [`SANDBOX.md`](SANDBOX.md)
 * The role wrappers, to pin a model per role
 
 `CLAUDE.md` is best left as written. `agent.sh` is not a file to edit, and of what a project adds to a role wrapper
@@ -410,8 +410,9 @@ A fresh clone of a project has no kit. `npm ci` installs it with the project's o
 release and integrity hash `package-lock.json` records, and fails rather than install anything else.
 
 Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike:
-the sandbox admits the hosts they need itself. See "Egress" of `SANDBOX.md`. A project's `agent.sh` runs the wrapper
-from `node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can start.
+the sandbox admits the hosts they need itself. See "Reaching more hosts" of `SANDBOX.md`. A project's `agent.sh`
+runs the wrapper from `node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can
+start.
 
 ## Updating a project to a newer kit
 
@@ -469,8 +470,8 @@ What a run needs:
 What a run does:
 
 * A unit run, as `./agent.sh 0029`, mounts a clone of that unit's branch. It is the way to implement and to review a
-  unit. A number that no branch holds and that is a unit on `master` gets its branch first. See "Working on a clone"
-  of `SANDBOX.md`
+  unit. A number that no branch holds and that is a unit on `master` gets its branch first. See "Running a unit" of
+  `SANDBOX.md`
 * A run with `--in-place` mounts the project as it is on the host, so the agent works in the developer's own
   checkout, `.git` and `node_modules` included. It is the way to run something on the tree as it is, such as the
   suite
@@ -478,7 +479,7 @@ What a run does:
   the shell, as in `./agent.sh 0029 claude` and `./agent.sh --in-place npm test`
 * `./agent.sh --in-place --rebuild` builds the image again before running
 * `./agent.sh --connect 0029` mounts and starts nothing: it runs a command in the container of the unit run that is
-  under way for the unit, beside what runs there. See "Connecting to a unit run" of `SANDBOX.md`
+  under way for the unit, beside what runs there. See "Two agents on one unit" of `SANDBOX.md`
 
 What it confines:
 
@@ -486,19 +487,19 @@ What it confines:
   project's log directory on the host and `/tmp`
 * `/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
   that runs what it writes to the temporary directory works as on the host
-* Egress is bounded by hostname: HTTPS on port 443 to the allowlisted hosts, and little else. See "Egress" of
-  `SANDBOX.md`
+* Egress is bounded by hostname: HTTPS on port 443 to the allowlisted hosts, and little else. See "Reaching more
+  hosts" of `SANDBOX.md`
 * Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`
 
 Nothing of the host is reachable but what is mounted at `/work`, with these exceptions:
 
-| Of the host                                  | Mounted    | In `SANDBOX.md`          |
-|----------------------------------------------|------------|--------------------------|
-| The developer's `~/.gitconfig`               | Read-only  |                          |
-| The developer's Claude Code status line      | Read-only  | "The status line"        |
-| The project's log directory                  | Read-write | "The harness logs"       |
-| The local model server's port                |            | "The local model server" |
-| The project's `.reviews`, in a unit run only | Read-write | "Working on a clone"     |
+| Of the host                                  | Mounted    | In `SANDBOX.md`                     |
+|----------------------------------------------|------------|-------------------------------------|
+| The developer's `~/.gitconfig`               | Read-only  |                                     |
+| The developer's Claude Code status line      | Read-only  | "The status line"                   |
+| The project's log directory                  | Read-write | "Where things are kept on the host" |
+| The local model server's port                |            | "The local model server"            |
+| The project's `.reviews`, in a unit run only | Read-write | "Running a unit"                    |
 
 The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
 

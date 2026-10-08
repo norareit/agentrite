@@ -274,20 +274,20 @@ messages, and `CONTRIBUTING.md`.
 
 The move:
 
-- [ ] Write `SANDBOX.md` with the title `# The sandbox`, the opening, a table of contents, and the thirteen
+- [x] Write `SANDBOX.md` with the title `# The sandbox`, the opening, a table of contents, and the thirteen
       sections of requirement 1 as `##` headings, with their titles and in their order, and with no `###`. The
       table of contents links to each of the thirteen, in that order (R1)
-- [ ] Put every paragraph, list item, table and code block of the base document under the section that "Where each
+- [x] Put every paragraph, list item, table and code block of the base document under the section that "Where each
       base section goes" gives it, unchanged and with its line breaks as they are. What becomes a row or a cell
       later stands in "When something goes wrong" or "Where things are kept on the host" as the text it is, under
       a line in bold that names the row. So does every refusal of the table of refusals above, in "When something
       goes wrong", whatever its message says (R1, R3, R4, R5, R9, R10, R13)
-- [ ] Make every sentence inside `SANDBOX.md` that names a section by title name the title its text is now under
+- [x] Make every sentence inside `SANDBOX.md` that names a section by title name the title its text is now under
       (R11)
-- [ ] Change the titles in `README.md`, `templates/project/agent/compose.project.yml` and
+- [x] Change the titles in `README.md`, `templates/project/agent/compose.project.yml` and
       `agent/compose.project.yml` as "The titles outside `SANDBOX.md`" lists them, and nothing else in those
       files. Run "The titles" of "Verification" to find any place this plan does not list (R15)
-- [ ] Check the move: every line of the base document is in `SANDBOX.md`, apart from its headings, its table of
+- [x] Check the move: every line of the base document is in `SANDBOX.md`, apart from its headings, its table of
       contents, the first sentence of the opening, and the lines in which a title changed. The command is "The
       move" under "Verification" (R13)
 
@@ -395,7 +395,7 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 - [ ] `grep '^## ' SANDBOX.md` prints the thirteen titles of requirement 1 in their order, `grep -c '^### '
       SANDBOX.md` prints 0, and every link of the table of contents is the anchor of one of them. The anchor of the
       last is `#moving-from-a-release-up-to-400` (R1)
-- [ ] "The move", run after the move and before the form, prints only headings, lines of the table of contents,
+- [x] "The move", run after the move and before the form, prints only headings, lines of the table of contents,
       the first sentence of the opening and lines in which a title changed (R13)
 - [ ] "What was tried" prints nothing (R12)
 - [ ] "The places" prints lines of "Where things are kept on the host" and of "Moving from a release up to 4.0.0"
@@ -415,7 +415,7 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 ## Commit Points
 
 - [x] `feature-0039 Plan the slimming of the sandbox reference`: the plan and the record
-- [ ] `feature-0039 Move the sandbox reference into the sections of its reader`: the move, in `SANDBOX.md`,
+- [x] `feature-0039 Move the sandbox reference into the sections of its reader`: the move, in `SANDBOX.md`,
       `README.md` and the two `compose.project.yml` files
 - [ ] `feature-0039 Put the places and the failures of the sandbox in two tables`: the form, in `SANDBOX.md`, and
       the record's new statements

@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-08T13:27:02Z
 ---
 
@@ -136,5 +136,22 @@ timestamp: 2026-10-08T13:27:02Z
        requirement 5, beside the six it names
     7. The work is three commits on `SANDBOX.md`: a move that loses nothing, the form, and the cuts with the list
        of requirement 14
+- 2026-10-08T15:24:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, in the main checkout on the unit's branch at `08c374f`. Read `process.md` and `roles/implementer.md` of the
+  installed release 4.2.0, the spec, the plan, this record, `AGENTS.md`, `SANDBOX.md`, the passages of `README.md`
+  that name a section of `SANDBOX.md`, and `container/agent.sh`, `container/unit-clone.sh` and
+  `container/entrypoint.sh` in full. Set the status to `in-progress`
+- 2026-10-08T15:24:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the move. `SANDBOX.md` was
+  put together by a script from line ranges of the base document, so that no line was typed again. "The move" of
+  the plan's "Verification" prints the base document's headings, its table of contents, the first line of the
+  opening, and the ten lines in which a title changed, and nothing else. One of those ten was wrapped again,
+  because the longer title took it over 120 characters. "The titles" prints nothing for each of its three
+  commands, and `npm test` passes with 403 tests on that tree. Where the move differs from the plan's words,
+  because two of its tasks cannot both hold for a line: the move leaves every line as it is, and four refusals
+  share a line or a list item with a statement that stays. A name that no branch has, a number that names several
+  branches, a second run of a branch whose container runs, and an address in an allowlist therefore stand in the
+  section of their subject after the move and not in "When something goes wrong", and are taken apart in the form.
+  For the same reason the paragraph on the shared `node_modules` stands whole with its row, and what the base
+  document says of a refused home volume under "Moving from a release up to 4.0.0" stands in that section
 
 ## Amendments

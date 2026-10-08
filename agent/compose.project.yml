@@ -29,7 +29,8 @@ services:
       # KIT_ALLOWLIST in the kit's container/compose.yml. Everything else is denied.
       # Comments and blank lines are ignored. Entries are hostnames only; the
       # entrypoint refuses an address or a CIDR range, and fails to start if a listed
-      # host is unreachable. The kit's SANDBOX.md explains the boundary under "Egress".
+      # host is unreachable. The kit's SANDBOX.md explains the boundary under "Reaching
+      # more hosts".
       ALLOWLIST: |
         # Add the hosts this project needs, one per line: the API host of each model
         # provider its agents use besides Anthropic, such as api.openai.com, and what
