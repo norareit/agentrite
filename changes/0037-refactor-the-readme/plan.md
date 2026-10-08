@@ -221,11 +221,11 @@ What names the README:
 
 This repository's instructions:
 
-- [ ] In `AGENTS.md`, replace the sentence that names the README as the source of truth for all of it by which
+- [x] In `AGENTS.md`, replace the sentence that names the README as the source of truth for all of it by which
       document is the source of truth on what: `README.md` on what the kit is and how a project uses it,
       `SANDBOX.md` on what the sandbox does, `CONTRIBUTING.md` on working on the kit, with `RELEASING.md` as it is
       named today (R15)
-- [ ] Add a section `## The documents` to `AGENTS.md`, before "Releasing", with the three rules of requirement
+- [x] Add a section `## The documents` to `AGENTS.md`, before "Releasing", with the three rules of requirement
       15: the commands are complete in `README.md` and in `CONTRIBUTING.md` and a unit that adds, changes or
       removes one changes the document in the same unit; the two tables are kept up to date in the same way; and
       the documents say what there is and how to use it, with the why in the unit under `changes/` (R15)
@@ -249,6 +249,6 @@ This repository's instructions:
       record's list
 - [x] `feature-0037 Rebuild the README around the commands`: the README and the record's list
 - [x] `feature-0037 Name the document where the README was named`: the comments and the message
-- [ ] `feature-0037 Say in AGENTS.md how the three documents are kept`: `AGENTS.md`
+- [x] `feature-0037 Say in AGENTS.md how the three documents are kept`: `AGENTS.md`
 - [ ] `feature-0037 Record the implementation and what was run`: the record, with the last read against the base
       README and the suites on the final tree

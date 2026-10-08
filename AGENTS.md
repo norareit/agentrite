@@ -7,8 +7,11 @@ before any change: the changes process in `changes/`, the status progression and
 documentation rules, and the code and testing standards. This file holds only what is specific to this project, and
 nothing is stated in both places.
 
-Read [README.md](README.md) before making changes. It is the source of truth for the project overview, architecture,
-local development, testing, content authoring, and deployment.
+Read before making changes, each for what it is the source of truth on:
+
+* [README.md](README.md): what the kit is and how a project uses it
+* [SANDBOX.md](SANDBOX.md): what the sandbox does
+* [CONTRIBUTING.md](CONTRIBUTING.md): working on the kit itself
 
 ## General guidelines
 
@@ -16,6 +19,21 @@ local development, testing, content authoring, and deployment.
 
 The default line wrapping of IntelliJ is used: 120 characters. Make sure all code and text are wrapped at 120
 characters.
+
+## The documents
+
+`README.md`, `SANDBOX.md` and `CONTRIBUTING.md` are kept as follows.
+
+* The commands are complete. Every command a project can run is described in `README.md`, with every argument,
+  option and environment variable, and a unit that adds, changes or removes one changes `README.md` in the same
+  unit. The same holds for `CONTRIBUTING.md` and this repository's own commands
+* The two tables are kept up to date: "What is here" in `README.md`, for what the package holds, and "What the
+  repository holds besides the package" in `CONTRIBUTING.md`. A unit that adds, removes or renames a file or
+  directory at the root of the repository, or changes whether it is in the package, changes the table it belongs
+  in, in the same unit
+* The three documents say what there is and how to use it: what a command, a file or the sandbox does, what a
+  reader types, sees, must do or must not do, what is refused and how to recover. The why of a change is written in
+  its unit under `changes/` and not in them
 
 ## Releasing
 
