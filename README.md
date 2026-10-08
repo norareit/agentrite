@@ -307,7 +307,7 @@ The kit is the npm package `@ritenoar/agentrite`. It is served as a tarball from
 from a registry, so a project adds it by the URL of a release:
 
 ```sh
-npm install https://agentrite.ritenoar.com/ritenoar-agentrite-4.2.0.tgz
+npm install https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz
 ```
 
 npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
@@ -418,7 +418,7 @@ start.
 Install the newer release by its URL:
 
 ```sh
-npm install https://agentrite.ritenoar.com/ritenoar-agentrite-4.2.0.tgz
+npm install https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz
 ```
 
 That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing

@@ -5,6 +5,121 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 5.0.0
+
+### What changed
+
+* What starts the sandbox is `sandbox.sh`, and no longer `agent.sh`. Everything that named the sandbox `agent` is
+  named `sandbox`: the shim at the project root, the kit's `container/sandbox.sh` that it runs, the project's half of
+  the configuration at `sandbox/compose.project.yml`, and the Compose service in both compose files. `sandbox.sh`
+  takes every form, option and environment variable `agent.sh` took and does the same with each. Its messages open
+  with `sandbox.sh:`. No old name keeps working (0041)
+* `init` writes `sandbox.sh` and `sandbox/compose.project.yml`. The compose file it writes configures the service
+  `sandbox`, names the Compose project and the image `<name>-sandbox` where it wrote `<name>-agent`, and reads the
+  limits from `SANDBOX_MEM_LIMIT` and `SANDBOX_CPUS` where it wrote `AGENT_MEM_LIMIT` and `AGENT_CPUS`. `refresh`
+  writes and refreshes `sandbox.sh` (0041)
+* `sandbox.sh` refuses a project whose compose file still configures a service named `agent`. It builds and starts
+  nothing, says which line to rename and exits with 2 (0041)
+* What names the agent keeps its name: the account `agent` in the container, its home `/home/agent`, the home
+  volume `<project>_agent-home`, and the build arguments `AGENT_UID` and `AGENT_GID`. The clones of unit runs and
+  the project's log directory are where they were (0041)
+* The package has one command, `agentrite`. `agentrite-roles` is gone, and nothing in the package does what it did
+  (0038)
+* `init` and `refresh` take `--no-sandbox`, at any place among the harnesses, for a project that wants the process
+  and the roles without the sandbox. `init --no-sandbox` writes the role wrappers, `AGENTS.md`, `CLAUDE.md` and the
+  `check-changes` script, and leaves out `sandbox.sh`, `sandbox/compose.project.yml` and `.dockerignore`. It runs
+  when `package.json` has no `name`, and does not read `package-lock.json`. `refresh --no-sandbox` refreshes the
+  role wrappers and leaves `sandbox.sh` out. The usage of both commands names the option (0038)
+* The README is rebuilt, and is one of three documents. `README.md` says what the kit is, what the four roles are,
+  and has a part "Commands" with a section for each command a project runs, each with a table of every argument,
+  option and environment variable, then "Running a role", installing, updating and the sandbox in brief. The
+  reference of the sandbox is `SANDBOX.md`, which is new in the package, at
+  `node_modules/@ritenoar/agentrite/SANDBOX.md`. Working on the kit itself is in `CONTRIBUTING.md`, which is not in
+  the package. The documents say what there is and how to use it, and no longer why it is so (0037)
+* `SANDBOX.md` is ordered by what a reader does: "Running a unit", "Getting the work back", "Two agents on one
+  unit", "Running on the tree as it is", "Logging in", "Reaching more hosts", "Holding a harness version", "The
+  status line", "The local model server". "Where things are kept on the host" is the one place for the clone of a
+  unit run, the project's log directory, the home volume and the image, with where each is and how it is removed.
+  "What the sandbox defends against" is the one place for that. "When something goes wrong" has an entry for every
+  failure a reader recovers from, each with what is seen, why and what to do (0039)
+* The README names `SANDBOX_MEM_LIMIT` and `SANDBOX_CPUS`, the two limits a project's compose file reads from the
+  environment, which the README before did not name under either name (0037, 0041)
+* The message of the entrypoint for a home volume it refuses says that removing the volume discards Claude Code's
+  saved login, where it said the harnesses' saved logins. OpenCode's login is in the project's log directory since
+  4.1.0 (0039)
+* `process.md` says how an entry of a record is written, with an example: the timestamp written bare, who made it
+  in square brackets, as `[human]` or `[Claude Code, anthropic/claude-opus-5-5]`, then `as the <role>` for an agent
+  that acts in a role, then the text. `templates/changes/record.md` has the role in its two entry lines (0040)
+* `process.md` says under "How code is written" that one-character variables are never used
+* Not in the package: `CONTRIBUTING.md`, the rules on the three documents in this repository's `AGENTS.md`, and the
+  reworded package that holds the name `agentrite-roles` on the npm registry (0037, 0038, 0039). This repository's
+  own `sandbox-dev.sh`, which was `agent-dev.sh`, and its own compose file and names (0041)
+
+### Worth knowing when you update
+
+* **The update needs these steps in a project that has the sandbox, and its sandbox does not start without them.**
+  From the project root, after the install:
+
+  ```sh
+  npx agentrite refresh claude opencode
+  git rm agent.sh
+  git mv agent sandbox
+  ```
+
+  Name the harnesses the project uses in the first. It prints `wrote sandbox.sh`, and leaves `agent.sh` where it
+  is, which is why the second removes it. Then, in `sandbox/compose.project.yml`, rename the service: the line
+  `agent:` under `services:` becomes `sandbox:`. Everything under it stays as it is, a held harness version under
+  `build:` and `args:` among it. Commit the four changes with `package.json` and `package-lock.json` (0041)
+* What happens when a step is left out. An `agent.sh` that was left fails with the shell's "No such file or
+  directory", since the script it ran is gone. Without `sandbox/compose.project.yml`, `sandbox.sh` names that path
+  as missing and exits with 2. With the service still named `agent`, `sandbox.sh` refuses as above (0041)
+* Whatever of the project's own names `./agent.sh` or `agent/compose.project.yml` is the project's to change: its
+  `AGENTS.md` and other documents, its scripts, its CI, an alias in a shell. Nothing of the kit finds these. The
+  comments in the project's compose file name the old paths too, and harm nothing (0041)
+* Leave `name:` and `image:` in the project's compose file as they are, `<name>-agent` in a project that `init`
+  set up before this release. The home volume, with Claude Code's login in it, the image and the clones of unit
+  runs are found by that name, so they are the ones the project had. The name is seen in `docker` listings and
+  nowhere else. Changing it to `<name>-sandbox` is allowed and costs this: a new and empty home volume, so Claude
+  Code is logged in again, an image built anew, a clone that an earlier unit run left is no longer found, and the
+  old volume, image and network stay until removed by hand, as "Where things are kept on the host" in `SANDBOX.md`
+  gives for the first two (0041)
+* The limits are read from the variables the project's compose file names. A file that says `AGENT_MEM_LIMIT` and
+  `AGENT_CPUS` goes on reading those, and the README now describes `SANDBOX_MEM_LIMIT` and `SANDBOX_CPUS`. To have
+  the names the README gives, rename the two in the file, and wherever the project sets them (0041)
+* Build the image once after the steps, with `./sandbox.sh --in-place --rebuild true`. The wrapper does not build
+  by itself for this update: the image's name and the harness versions are unchanged. An image built before this
+  release holds an entrypoint whose messages name `agent/compose.project.yml` and the harnesses' saved logins.
+  Starting this release on such an image, without the build, was not tried (0041, 0039)
+* The steps were tested in the kit's suite on the two files as `init` of 4.2.0 writes them, with Docker replaced
+  by a stand-in, and the refusal and the renamed service were tried with Docker Compose 2.39.2 on Linux. Not
+  tested: the steps in a real project with Docker, a project set up by a release before 4.2.0, an update while a
+  unit run is under way or while a clone of one is kept, and anything on macOS (0041)
+* A project that runs `agentrite-roles` runs `agentrite init` or `agentrite refresh` in its place, each with
+  `--no-sandbox` when it has no sandbox. After the update `npx agentrite-roles` finds no command in the project and
+  asks the npm registry, where the name is held by a package that installs nothing of the kit and exits with 1
+  (0038)
+* A project without the sandbox gives `--no-sandbox` on every `refresh`. The option is not remembered, and a
+  `refresh` without it prints `wrote sandbox.sh` and writes the file, which is then deleted by hand. The remedy
+  `agentrite run` prints for a wrapper that is missing or out of date, `npx agentrite refresh <harness>`, does not
+  name the option (0038)
+* What the README held on the sandbox is in `SANDBOX.md`, under other titles, and the notes of earlier releases
+  below name sections of the README as they were. "Working on a clone" is "Running a unit" and "Getting the work
+  back", "Egress" is "Reaching more hosts", "The home volume" and "The harness logs" are in "Where things are kept
+  on the host", and `--connect` is in "Two agents on one unit" (0037, 0039)
+* Some of what the README said is in no document any more: why a behavior was chosen, how the egress proxy works
+  inside, on which system something was tried, the lists of what a command does not do, and every refusal whose
+  own message says both why it refused and what to do. The command that copies the harness logs out of a home
+  volume from a release up to 4.0.0, which the notes of 4.1.0 below point to, is among what went. The tarball of
+  4.2.0 still holds it in its README (0037, 0039)
+* "When something goes wrong" in `SANDBOX.md` gives a recovery for failures the README gave none for. Not tried
+  among them: what to do when the entrypoint's canary is reached or its hostname is not refused, a host without
+  network, and connecting to a unit whose branch a run cut, from the cutting run to the connected command, with
+  Docker. How the project's log directory and the image are removed is new too, and was tried on Linux with no
+  sandbox running and no container of the image (0039)
+* How the three documents render on Bitbucket, GitHub or npm was not checked (0037, 0039)
+* The form of a record's entries is an instruction to agents. Nothing checks it, and records that exist are not
+  changed (0040)
+
 ## 4.2.0
 
 ### What changed
