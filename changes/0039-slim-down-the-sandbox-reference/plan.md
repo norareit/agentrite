@@ -344,7 +344,7 @@ The cuts:
 
 The rule:
 
-- [ ] In "The documents" of `AGENTS.md`, add the four rules of requirement 16: that `SANDBOX.md` is kept complete
+- [x] In "The documents" of `AGENTS.md`, add the four rules of requirement 16: that `SANDBOX.md` is kept complete
       for its reader, with the unit that changes what a developer does with the sandbox or meets in it; that it is
       ordered by what a reader does, and that an addition goes in the section of what the reader is doing; that a
       refusal whose message names why and what to do is not described in it; and that a failure a reader recovers
@@ -421,5 +421,5 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
       the record's new statements
 - [x] `feature-0039 Take out of the sandbox reference what a reader does not need`: the cuts, in `SANDBOX.md`, and
       the record's list
-- [ ] `feature-0039 Say in AGENTS.md how the sandbox reference is kept`: `AGENTS.md`
+- [x] `feature-0039 Say in AGENTS.md how the sandbox reference is kept`: `AGENTS.md`
 - [ ] `feature-0039 Record the implementation and what was run`: the record, with the suites on the final tree

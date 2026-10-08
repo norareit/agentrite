@@ -32,8 +32,18 @@ characters.
   directory at the root of the repository, or changes whether it is in the package, changes the table it belongs
   in, in the same unit
 * The three documents say what there is and how to use it: what a command, a file or the sandbox does, what a
-  reader types, sees, must do or must not do, what is refused and how to recover. The why of a change is written in
-  its unit under `changes/` and not in them
+  reader types, sees, must do or must not do, what is refused and how to recover. The rule on refusals below is
+  the exception for `SANDBOX.md`. The why of a change is written in its unit under `changes/` and not in them
+* `SANDBOX.md` is kept complete for its reader, who uses the sandbox and wants to know how. A unit that adds,
+  changes or removes something a developer does with the sandbox, or meets in it, changes `SANDBOX.md` in the same
+  unit
+* `SANDBOX.md` is ordered by what a reader does. A unit that adds to it puts the text in the section of what the
+  reader is doing, and not in a section for the part of the sandbox that changed
+* A refusal whose message names both why it refused and what to do is not described in `SANDBOX.md`. One whose
+  message leaves either out is a row of "When something goes wrong"
+* A failure of the sandbox that a reader recovers from by doing something is a row of "When something goes wrong"
+  in `SANDBOX.md`, and is described nowhere else in it. The table of "Where things are kept on the host" is kept
+  up to date. A unit that changes either changes the table in the same unit
 
 ## Releasing
 
