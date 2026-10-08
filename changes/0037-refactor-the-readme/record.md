@@ -88,5 +88,18 @@ timestamp: 2026-10-07T22:40:04Z
   `master` at `17cef2f`, said that it is
 - 2026-10-08T11:15:04Z [Claude Code, anthropic/claude-opus-5-5] in the main session on the Linux host, on `master` at
   `17cef2f`, set the status to `approved`
+- 2026-10-08T11:21:56Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session on the Linux
+  host. Cut `feature-0037-refactor-the-readme` from `master` at `4bcf21f`, and read `process.md` and
+  `roles/planner.md` of the installed release 4.2.0, the spec, this record and the README. Found two things the plan
+  needs and the spec left open, wrote no plan, and asked the human. The spec gave no place to what "Running a role"
+  says of `agentrite run` beyond its options: requirement 1 closed the README's parts, requirement 5 limits an
+  entry of the list, and requirement 9 keeps such statements. And requirement 2 asks for a row for every entry at
+  the root of the package, while the present table has two rows for `templates/`
+- 2026-10-08T11:21:56Z [human] decided both: "Running a role" is a part of the README of its own, right after the
+  commands, and the two rows for `templates/` stay
+- 2026-10-08T11:21:56Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the same session, on the
+  unit's branch, read `roles/specifier.md` and changed `spec.md` for that: requirement 1 has the part as its fifth,
+  so the parts after it are the sixth to the eighth, requirement 2 names the two rows, and each has a decision. No
+  requirement was renumbered. The status stays `approved`, since both are the human's own decisions
 
 ## Amendments

@@ -22,13 +22,17 @@ that say what there is and how to use it.
     2. "What is here"
     3. How it works: what each of the four roles is, and a usual workflow
     4. The commands: one list of every command a project runs, each with every argument and option it takes
-    5. Installing the kit into a project, a fresh clone included
-    6. Updating a project to a newer kit
-    7. The sandbox, in brief: what it is for, what it confines, the files a project configures it with, and where
+    5. "Running a role": what the present README's "Running a role" says of `agentrite run` beyond its arguments
+       and options, such as resuming a session, stopping a run, the wrapper the command needs and how it is
+       repaired, and the status it exits with, as far as requirement 9 keeps it
+    6. Installing the kit into a project, a fresh clone included
+    7. Updating a project to a newer kit
+    8. The sandbox, in brief: what it is for, what it confines, the files a project configures it with, and where
        the reference is
 2. "What is here" lists what the package holds, and nothing else: a row for every file and directory at the root of
    the package. What the repository holds besides, such as `tests/`, `infra/`, `RELEASING.md` and `deploy.sh`, which
-   the present table lists, is not in it
+   the present table lists, is not in it. The present table's two rows for `templates/changes/` and
+   `templates/project/` stay, and are the rows of `templates/`
 3. "How it works" describes each role briefly and in general terms: what it is given, what it produces, and where it
    stands in the order of the work. It states no rule that `process.md` or a role file states, and points to them
    for the rules
@@ -135,6 +139,13 @@ decision, and a later review treats it as settled.
 * **The install examples name the present release, on the human's word.** They go out of date at the next release,
   and it does no harm to bring them along now. A placeholder was rejected because the command could then not be
   pasted
+* **"Running a role" is a part of its own, on the human's word.** An entry of the list holds the form, a
+  description and a line per option, and what the present README says of `agentrite run` besides is more than
+  that and stays by requirement 9. It is no subject of the sandbox, so `SANDBOX.md` is not its place. Widening the
+  entry of `run` alone was rejected because the list would grow long at that entry, and letting the statements go
+  was rejected because they are what a reader types and what is refused
+* **Two rows for `templates/`, on the human's word.** The two directories in it are for two readers, a unit's
+  author and `init`, and the present rows say so. One row for the directory was rejected for that
 * **Complete means the commands.** The README describes every command a project runs, in full. It does not hold
   every consequence of every command: what a unit run does to the host's branches when the container exits is in
   `SANDBOX.md`. The line is that whatever a developer types is in the README, and whatever happens as a result may be
