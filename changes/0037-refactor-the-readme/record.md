@@ -79,5 +79,10 @@ timestamp: 2026-10-07T22:40:04Z
   hold for all three documents. Requirements 7 and 8 said that the two new documents hold what the present README
   says, which reads as a copy, so both now say that they cover its subjects and are written anew by requirements 9
   and 10. Status left at `draft`
+- 2026-10-08T11:13:07Z [human] took the last entry of "Beyond the request" into the unit: the release in the install
+  examples. It will be out of date soon, and it does no harm to bring it along
+- 2026-10-08T11:13:07Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, moved it into `spec.md` as
+  requirement 16, with a decision, and the requirement on the suites is 17. One entry is left under "Beyond the
+  request", the test for an option the README does not name. Status left at `draft`
 
 ## Amendments

@@ -94,7 +94,9 @@ that say what there is and how to use it.
     * that the three documents say what there is and how to use it, as requirement 9 has it, and that the why of a
       change is written in its unit under `changes/` and not in them
     * which of the three documents is the source of truth on what, where it now names the README for all of it
-16. The suites pass, and the package holds `README.md` and `SANDBOX.md` and does not hold `CONTRIBUTING.md`
+16. The examples that install the kit by the URL of a release, of which the present README has two, at 2.0.0 and at
+    2.1.0, name the release that this repository depends on when the unit is built
+17. The suites pass, and the package holds `README.md` and `SANDBOX.md` and does not hold `CONTRIBUTING.md`
 
 ## For the reviewer
 
@@ -130,6 +132,9 @@ decision, and a later review treats it as settled.
 * **One list of commands, on the human's word.** An overview followed by a description of each would say every
   command twice and grow long again. So the list is the description, and what a command does at length is in the
   section it belongs to, which the entry names
+* **The install examples name the present release, on the human's word.** They go out of date at the next release,
+  and it does no harm to bring them along now. A placeholder was rejected because the command could then not be
+  pasted
 * **Complete means the commands.** The README describes every command a project runs, in full. It does not hold
   every consequence of every command: what a unit run does to the host's branches when the container exits is in
   `SANDBOX.md`. The line is that whatever a developer types is in the README, and whatever happens as a result may be
@@ -162,8 +167,9 @@ decision, and a later review treats it as settled.
 * A change to `CHANGELOG.md`. Earlier release notes name sections of the README by title, as they were when those
   notes were written. The notes of the release that carries this unit say where the text went, and are written when
   that release is made
-* Correcting the content on the way, apart from the two tables of what is where. A statement of the present README
-  that is out of date is moved as it is, when it stays at all, and named in the record for the human
+* Correcting the content on the way, apart from the two tables of what is where and the release in the install
+  examples. Another statement of the present README that is out of date is moved as it is, when it stays at all,
+  and named in the record for the human
 * Making the repository open source, or anything that would take: a licence, a code of conduct, a public remote
 
 ## Beyond the request
@@ -172,7 +178,3 @@ decision, and a later review treats it as settled.
   hold by itself instead of by an instruction to agents. Its cost is a test that reads the usage text of four
   commands and the argument parsing of a shell script, which has no usage text to read in one place. Without it, a
   missing option is found by whoever looks for it in the README and does not find it, and is fixed then
-* The two install examples name the releases 2.0.0 and 2.1.0, and the kit is at 4.2.0. Changing them to the present
-  release costs one line each and goes out of date at the next release. Changing them to a placeholder makes the
-  command one that cannot be pasted. Without either, a reader who pastes the example installs an old release, and
-  `deploy.sh` prints the right URL at every release
