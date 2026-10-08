@@ -74,5 +74,21 @@ timestamp: 2026-10-08T17:40:00Z
   `.reviews/0038-no-sandbox-replaces-agentrite-roles/2026-10-08T190609Z-full-review.md`. Ran the host suite,
   the committed change check, the suite in a fresh unit-style clone, and packed-install command checks. Did not
   verify publication of the registry pointer, an actual Docker run or real harness sessions
+- 2026-10-08T19:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, read the review in
+  `.reviews/0038-no-sandbox-replaces-agentrite-roles/2026-10-08T190609Z-full-review.md` and checked each finding
+  against the tree. All three hold, and I agree with all three. Outcomes:
+    * S1 (blocking), applied: the pointer's message and README printed `claude | opencode` as a command, which a shell
+      reads as a pipe. They now give `npx agentrite init claude opencode` and `npx agentrite refresh claude opencode`
+      and say in prose to name only the harnesses the project uses. The pointer tests check the two commands and that
+      neither the message nor the README holds a `|`
+    * C1 (blocking), applied: the test that ran `git show master:...` is replaced by explicit expectations for the
+      `agentrite` pointer, which is version 1.0.0 and prints its message as published (R4). No test names `master`
+      now. Verified in a fresh clone made as `container/unit-clone.sh` makes it (`--branch` the unit branch, no local
+      `master`): `npm test` reports 411 tests, 411 pass, 0 fail
+    * P1 (not blocking), applied: R3 is added to the pointers-and-module test task of `plan.md`, which says the wrapper
+      fixtures stay and verify it; the task's description of the `agentrite` pointer test is brought to what the test
+      does. The plan is not frozen
+  `npm test` on the host reports 411 tests, 411 pass, 0 fail on the tree after the fixes. Status left at
+  `in-progress`: it is the human's to decide the findings before `implemented`
 
 ## Amendments
