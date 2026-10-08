@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-10-08T19:25:31Z
 ---
 
@@ -71,3 +71,5 @@ release.
   specifier's reading of the human's form and not the human's in those words. The template is now part of the task
   for its two entry lines. Still a task: the form is the human's, and nothing is left to decide. Status left at
   `draft`
+- 2026-10-08T19:36:49Z [human] read the description with the role in it, said that the role on every entry is fine, and asked for the
+  task to be implemented, which approves it. The status is `approved`
