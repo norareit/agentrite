@@ -587,3 +587,50 @@ test('refresh --no-sandbox does not look at what is at the path of sandbox.sh', 
   assert.equal(without.status, 1);
   assert.match(without.stderr, /left sandbox\.sh, which is not a regular file/);
 });
+
+// R5: an `agent.sh` that a project holds is not read, changed or mentioned.
+
+const OLD_SHIM = '#!/bin/sh\necho old\n';
+
+function withOldShim(t, make) {
+  const made = project(t);
+  make(join(made.base, 'agent.sh'));
+  return made;
+}
+
+function assertNothingSaid(result) {
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout + result.stderr, /agent\.sh/);
+}
+
+test('refresh writes the missing sandbox.sh beside an agent.sh, and leaves the agent.sh as it is', (t) => {
+  const { base, run } = withOldShim(t, (path) => {
+    writeFileSync(path, OLD_SHIM);
+    chmodSync(path, 0o750);
+  });
+
+  const result = run('refresh', 'claude');
+
+  assertNothingSaid(result);
+  assert.match(result.stdout, /^wrote sandbox\.sh$/m);
+  assert.equal(readFileSync(join(base, 'agent.sh'), 'utf-8'), OLD_SHIM);
+  assert.equal(statSync(join(base, 'agent.sh')).mode & 0o777, 0o750);
+});
+
+test('refresh leaves an agent.sh that is a directory, or a dangling link, and exits 0', (t) => {
+  for (const make of [(path) => mkdirSync(path), (path) => symlinkSync('no-such-target', path)]) {
+    const { run } = withOldShim(t, make);
+    assertNothingSaid(run('refresh', 'claude'));
+  }
+});
+
+test('refresh --no-sandbox writes no sandbox.sh and says nothing of an agent.sh', (t) => {
+  const { base, run } = withOldShim(t, (path) => writeFileSync(path, OLD_SHIM));
+
+  const result = run('refresh', '--no-sandbox', 'claude');
+
+  assertNothingSaid(result);
+  assert.doesNotMatch(result.stdout, /sandbox\.sh/);
+  assert.equal(lstatSync(join(base, 'agent.sh')).isFile(), true);
+  assert.throws(() => lstatSync(join(base, 'sandbox.sh')));
+});

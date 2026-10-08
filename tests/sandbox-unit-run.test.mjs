@@ -965,3 +965,23 @@ test('--connect is refused as root, like a run', (t) => {
   assert.match(result.stderr, /sandbox\.sh: refusing to run as root/);
   assert.deepEqual(host.dockerCalls(), []);
 });
+
+// A project whose compose file still configures the service `agent` is refused for a unit run and for --connect
+// alike, before a clone, a container or a call of Docker besides the reading of the configuration.
+for (const [what, args] of [
+  ['a unit run', [branch, 'echo', 'hi']],
+  ['--connect', ['--connect', branch, 'echo', 'hi']],
+]) {
+  test(`the wrapper refuses a project whose service is still agent, given ${what}`, (t) => {
+    const { root, state, run, dockerCalls } = setUp(t);
+    writeFileSync(join(root, 'sandbox', 'compose.project.yml'), 'services:\n  agent:\n    mem_limit: 8g\n');
+    const result = run(args);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /^sandbox\.sh: /);
+    assert.ok(result.stderr.includes(`${root}/sandbox/compose.project.yml`), result.stderr);
+    assert.match(result.stderr, /service is named sandbox/);
+    assert.match(result.stderr, /rename agent: under services: to sandbox:/);
+    assert.deepEqual(dockerCalls(), []);
+    assert.equal(existsSync(join(state, 'agentrite')), false);
+  });
+}

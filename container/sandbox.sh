@@ -374,6 +374,12 @@ unit_container_running() {
 # gives none, and anything else is the project's own value, also when it equals the
 # host's. Captured first, so that a configuration Compose refuses stops here with
 # Compose's own error. node reads the result; the host has node for npm already.
+#
+# A service named agent is looked for first, because the kit's file configures none: the
+# only one there is the project's, from before the sandbox was named. Compose merges it
+# beside the kit's service sandbox without an error, and sandbox then has none of the
+# image name, the limits, the allowlist and the harness versions the project gave, so the
+# sandbox would start without them and say nothing.
 unheld="sandbox.sh/no-version-from-the-project"
 read_merged_configuration() {
   local config merged
@@ -384,13 +390,23 @@ read_merged_configuration() {
     process.stdin.on("data", (chunk) => (json += chunk));
     process.stdin.on("end", () => {
       const merged = JSON.parse(json);
+      if (merged.services.agent) {
+        console.log("refused");
+        return;
+      }
       const sandbox = merged.services.sandbox;
       const args = sandbox.build?.args ?? {};
-      const lines = [sandbox.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
+      const lines = ["merged", sandbox.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
       console.log(lines.join("\n"));
     });
   ' <<< "$config")"
+  if [ "$merged" = "refused" ]; then
+    echo "sandbox.sh: $project_compose configures a service named agent." >&2
+    echo "The service is named sandbox, so rename agent: under services: to sandbox: in that file." >&2
+    exit 2
+  fi
   {
+    read -r outcome
     read -r image
     read -r claude_code_wanted
     read -r opencode_wanted

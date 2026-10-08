@@ -742,3 +742,50 @@ test('init without the option, in a project set up with it, writes the three fil
   assert.match(result.stdout, /^skipped package\.json\b/m);
   assert.equal(read('sandbox/compose.project.yml'), fileAt(files(['claude']), 'sandbox/compose.project.yml').content);
 });
+
+// R4: a project that holds the files of the release before is not read, changed or mentioned.
+
+// The old shim and compose file of a project, with a mode and a content that a write over them would change.
+function withOldSandboxFiles(base) {
+  mkdirSync(join(base, 'agent'), { recursive: true });
+  writeFileSync(join(base, 'agent.sh'), '#!/bin/sh\necho old\n');
+  chmodSync(join(base, 'agent.sh'), 0o750);
+  writeFileSync(join(base, 'agent', 'compose.project.yml'), 'name: my-app-agent\n');
+  chmodSync(join(base, 'agent', 'compose.project.yml'), 0o640);
+}
+
+function assertOldSandboxFilesKept(base, result) {
+  assert.equal(readFileSync(join(base, 'agent.sh'), 'utf-8'), '#!/bin/sh\necho old\n');
+  assert.equal(statSync(join(base, 'agent.sh')).mode & 0o777, 0o750);
+  assert.equal(readFileSync(join(base, 'agent', 'compose.project.yml'), 'utf-8'), 'name: my-app-agent\n');
+  assert.equal(statSync(join(base, 'agent', 'compose.project.yml')).mode & 0o777, 0o640);
+  for (const output of result.stdout.split('\n')) assert.doesNotMatch(output, /agent\.sh|agent\//);
+}
+
+test('init writes the sandbox of this release beside the files of the release before, and leaves them', (t) => {
+  const { base, run, read } = project(t);
+  withOldSandboxFiles(base);
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^wrote sandbox\.sh$/m);
+  assert.match(result.stdout, /^wrote sandbox\/compose\.project\.yml$/m);
+  const compose = read('sandbox/compose.project.yml');
+  assert.match(compose, /^ {2}sandbox:$/m);
+  assert.equal(compose.match(/my-app-sandbox/g).length, 2);
+  assert.ok(compose.includes('${SANDBOX_MEM_LIMIT:-8g}') && compose.includes('${SANDBOX_CPUS:-6}'));
+  assertOldSandboxFilesKept(base, result);
+});
+
+test('init --no-sandbox writes neither file of this release beside the files of the release before', (t) => {
+  const { base, run } = project(t);
+  withOldSandboxFiles(base);
+
+  const result = run('init', OPTION, 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(exists(join(base, 'sandbox.sh')), false);
+  assert.equal(exists(join(base, 'sandbox')), false);
+  assertOldSandboxFilesKept(base, result);
+});

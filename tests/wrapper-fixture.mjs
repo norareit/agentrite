@@ -67,7 +67,9 @@ export function writeCommand(bin, name, script) {
 //     * `config --format json`, with the merged configuration: the image name, and the build arguments the base
 //       Compose file takes from the wrapper's two variables with the JSON object in `projectBuildArgs` over them,
 //       which stands for what the project's Compose file gives. An empty file stands for a configuration Compose
-//       refuses
+//       refuses. The name and the services come from the file of the last `-f` of the call: a line
+//       `name: <name>` at the left margin gives the name and the image, and a line `  agent:` makes a service
+//       `agent` beside a `sandbox` that has no image, as Compose merges the two files
 //     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
 //       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image
 //     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
@@ -115,6 +117,10 @@ if [ "$1" = "ps" ]; then
 fi
 if [[ " $* " == *" config --format json "* ]]; then
   [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
+  for argument in "$@"; do
+    [ "$previous" != "-f" ] || export PROJECT_COMPOSE="$argument"
+    previous="$argument"
+  done
   exec node -e '
     let json = "";
     process.stdin.on("data", (chunk) => (json += chunk));
@@ -124,8 +130,14 @@ if [[ " $* " == *" config --format json "* ]]; then
         OPENCODE_VERSION: process.env.SANDBOX_OPENCODE_VERSION,
         ...JSON.parse(json),
       };
-      const sandbox = { image: "image", build: { args } };
-      console.log(JSON.stringify({ name: "project-sandbox", services: { sandbox } }));
+      const file = process.env.PROJECT_COMPOSE;
+      const project = file && require("fs").existsSync(file) ? require("fs").readFileSync(file, "utf-8") : "";
+      const literal = project.match(/^name: (\\S+)$/m)?.[1];
+      const name = literal ?? "project-sandbox";
+      const sandbox = { image: literal ?? "image", build: { args } };
+      // Compose merges a service the project still names agent beside the kit, which gives no image
+      const services = /^  agent:$/m.test(project) ? { agent: sandbox, sandbox: { build: { args } } } : { sandbox };
+      console.log(JSON.stringify({ name, services }));
     });
   ' < "${projectBuildArgs}"
 fi

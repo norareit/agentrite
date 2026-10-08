@@ -145,18 +145,18 @@ The rename of the code:
 
 The old names:
 
-- [ ] In `tests/wrapper-fixture.mjs`, make the fake `docker` answer `config --format json` from the project's
+- [x] In `tests/wrapper-fixture.mjs`, make the fake `docker` answer `config --format json` from the project's
   compose file as "Approach" says, and describe it in the comment of `fakeHost`. `npm test` passes unchanged (R11)
-- [ ] In `tests/sandbox-wrapper.test.mjs`, add the failing tests of the refusal, for a project whose
+- [x] In `tests/sandbox-wrapper.test.mjs`, add the failing tests of the refusal, for a project whose
   `sandbox/compose.project.yml` holds `services:` with `  agent:` under it: with `--in-place` and with `--rebuild
   --in-place`, on a host where the image is missing, the status is 2, the error opens with `sandbox.sh:`, holds the
   path of the file, that the service is named `sandbox` and that `agent:` under `services:` is to be renamed, the
   fake `docker` recorded no call, `npm` was asked nothing, and no log directory was made (R6, R11)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, add the failing tests of the refusal for a unit run and for `--connect`:
+- [x] In `tests/sandbox-unit-run.test.mjs`, add the failing tests of the refusal for a unit run and for `--connect`:
   status 2, the same message, no recorded call, and no clone in the state directory (R6, R11)
-- [ ] In `container/sandbox.sh`, add the refusal to `read_merged_configuration` as "Approach" says, and say in the
+- [x] In `container/sandbox.sh`, add the refusal to `read_merged_configuration` as "Approach" says, and say in the
   comment above the function why a service `agent` is looked for. The tests of the two tasks before pass (R6, R9)
-- [ ] Add `tests/sandbox-update.test.mjs`. It makes a git repository that holds `package.json` named `my-app`, the
+- [x] Add `tests/sandbox-update.test.mjs`. It makes a git repository that holds `package.json` named `my-app`, the
   two files of the release before as "Approach" gives them, and the working copy's `container/sandbox.sh` and
   `container/unit-clone.sh` under `node_modules/@ritenoar/agentrite/container`, on the host of `fakeHost`. It then
   asserts, in this order (R7, R11):
@@ -171,19 +171,19 @@ The old names:
     - a unit run of a branch of that repository then names its container `my-app-agent-<branch>` and makes its
       clone under `agentrite/my-app-agent/` of the state directory, and the file still reads
       `${AGENT_MEM_LIMIT:-8g}` and `${AGENT_CPUS:-6}`
-- [ ] In `tests/agentrite-init.test.mjs`, add an end to end test of `init claude` in a project that holds an
+- [x] In `tests/agentrite-init.test.mjs`, add an end to end test of `init claude` in a project that holds an
   `agent.sh` and an `agent/compose.project.yml` of its own: it writes `sandbox.sh` and `sandbox/compose.project.yml`
   and prints `wrote` for each, the compose file configures the service `sandbox`, names `my-app-sandbox` twice and
   reads `SANDBOX_MEM_LIMIT` and `SANDBOX_CPUS`, the two old files keep their content and mode, and no line of the
   output holds `agent.sh` or `agent/`. Add the same for `init --no-sandbox claude`, which writes neither new file.
   The tests of a project without the old files are the ones the rename changed (R4, R11)
-- [ ] In `tests/agentrite-refresh.test.mjs`, add an end to end test of `refresh claude` in a project that holds an
+- [x] In `tests/agentrite-refresh.test.mjs`, add an end to end test of `refresh claude` in a project that holds an
   `agent.sh` and no `sandbox.sh`: it writes `sandbox.sh` and prints `wrote sandbox.sh`, `agent.sh` keeps its content
   and mode, and no line of the output holds `agent.sh`. Add one where `agent.sh` is a directory and one where it is
   a dangling symbolic link, which `refresh` leaves and exits 0 for, and one of `refresh --no-sandbox claude`, which
   writes no `sandbox.sh` and prints nothing for either path. The tests of a project without `agent.sh` are the ones
   the rename changed (R5, R11)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 The documents:
 

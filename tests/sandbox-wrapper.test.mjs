@@ -159,6 +159,27 @@ test("the wrapper stops with Compose's own error when Compose refuses the config
   assert.deepEqual(dockerCalls(), []);
 });
 
+// A project whose compose file still configures the service `agent`, as every project set up before the sandbox was
+// named so does. Compose merges it beside the kit's service `sandbox` without an error, and `sandbox` then has none of
+// what the project configured, so the wrapper refuses before it builds or starts anything.
+const oldServiceFile = 'services:\n  agent:\n    mem_limit: 8g\n';
+
+for (const options of [['--in-place'], ['--rebuild', '--in-place']]) {
+  test(`the wrapper refuses a project whose service is still agent, given ${options.join(' ')}`, (t) => {
+    const { root, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+    writeFileSync(join(root, 'sandbox', 'compose.project.yml'), oldServiceFile);
+    const result = run(root, ...options, 'true');
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /^sandbox\.sh: /);
+    assert.ok(result.stderr.includes(`${root}/sandbox/compose.project.yml`), result.stderr);
+    assert.match(result.stderr, /service is named sandbox/);
+    assert.match(result.stderr, /rename agent: under services: to sandbox:/);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+    assert.equal(existsSync(homeLogs(root)), false);
+  });
+}
+
 // The harness versions. Each is the first of: what the project's Compose file gives, and what the host's command
 // reports. A harness with neither keeps the version the image's label records, and gets the latest published one,
 // which the wrapper asks `npm` for, when the image is built. The wrapper hands Compose the version the image is
