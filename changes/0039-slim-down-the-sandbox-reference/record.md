@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-08T13:27:02Z
 ---
 
@@ -107,5 +107,34 @@ timestamp: 2026-10-08T13:27:02Z
   say how a clone is discarded. The fifth: requirement 3 has the two cells written new, tried and named in the record,
   and the non-goal says so. Each has a decision. No requirement was renumbered. The status stays `approved`, since all
   are the human's own decisions
+- 2026-10-08T15:19:37Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host that
+  the main session started, on the unit's branch at `947bb57`, on which `npm test` passes with 403 tests and
+  `npm run check-changes` exits 0. Read `process.md` and `roles/planner.md` of the installed release 4.2.0, the
+  rewritten spec, this record, `AGENTS.md`, `README.md`, `SANDBOX.md`, `CONTRIBUTING.md`, and the messages of
+  `container/agent.sh`, `container/unit-clone.sh` and `container/entrypoint.sh`. `process.md` has a correction of
+  the spec made on the unit's branch after the approval and asks for no second approval, so the spec was planned
+  as it stands. Checked each of the five points against it: all five are decided. Checked the earlier planner's
+  findings against the tree: the places outside `SANDBOX.md` that name a section of it are as recorded, and its
+  reading of the messages holds as a first reading, which the plan gives beside each refusal for the implementer
+  to check. Wrote `plan.md` and set the status to `planned`
+- 2026-10-08T15:19:37Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the same session, what in the
+  plan is the planner's reading and not the spec's words, for the human:
+    1. The two tables are HTML tables. A row holds more than a line of 120 characters can, a pipe table cannot be
+       wrapped, and `AGENTS.md` has all text wrapped at 120 characters
+    2. A refusal that stays as a row by requirement 6, and whose recovery neither its message nor today's document
+       gives, has an empty "What to do". The non-goals have nothing new written but the two cells of requirement
+       3. The implementer names every such row in the record
+    3. A statement that no requirement takes out stays, also when it is none of the things requirement 2 names as
+       staying, since requirement 14 asks for the requirement of every statement that left
+    4. "Getting the work back" says that the commits wait at `sandbox/<branch>` when the host's branch cannot be
+       fast-forwarded, which requirement 1 asks of it, and the two causes and the command are in the row, which
+       requirement 5 asks
+    5. Where each harness keeps its login is stated in the table of where things are kept, in what the home
+       volume and the log directory hold
+    6. Two projects whose root directories have one name, a build that fails although an image exists, the
+       removal of a clone that fails, and what is seen when a harness version breaks something, are rows by
+       requirement 5, beside the six it names
+    7. The work is three commits on `SANDBOX.md`: a move that loses nothing, the form, and the cuts with the list
+       of requirement 14
 
 ## Amendments
