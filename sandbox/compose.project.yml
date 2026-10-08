@@ -4,23 +4,23 @@
 # varies with the project: its names, what it is allowed to reach, how much of the host
 # it may use, and, when it has browser tests, the Playwright version they were rendered with.
 #
-# The kit's container/agent.sh passes both files to Compose with --project-directory set
+# The kit's container/sandbox.sh passes both files to Compose with --project-directory set
 # to this repository, so relative paths resolve from the repository root.
 #
-# The Compose project and the image are named after AGENT_PROJECT_NAME, which is unset
-# for ./agent.sh, so its names are the ones below. ./agent-dev.sh sets it, so that the
+# The Compose project and the image are named after SANDBOX_PROJECT_NAME, which is unset
+# for ./sandbox.sh, so its names are the ones below. ./sandbox-dev.sh sets it, so that the
 # sandbox of the working copy has an image and a home volume of its own and replaces
 # neither the image nor the home volume of the released kit's sandbox. The two share
 # the project's log directory on the host, and with it OpenCode's login.
-name: ${AGENT_PROJECT_NAME:-ritenoar-agentrite-agent}
+name: ${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}
 
 services:
-  agent:
-    image: ${AGENT_PROJECT_NAME:-ritenoar-agentrite-agent}
+  sandbox:
+    image: ${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}
 
     # Leave the host usable. Overridable from the environment for a heavier run.
-    mem_limit: ${AGENT_MEM_LIMIT:-8g}
-    cpus: ${AGENT_CPUS:-6}
+    mem_limit: ${SANDBOX_MEM_LIMIT:-8g}
+    cpus: ${SANDBOX_CPUS:-6}
 
     environment:
       # Reachable hosts, over HTTPS on port 443 only, besides those the kit admits

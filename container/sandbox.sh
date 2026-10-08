@@ -5,7 +5,7 @@
 # `docker compose run --volume` options, adds the developer's Claude Code status line
 # when the host has one and the two directories of the host that hold the harnesses'
 # logs, and passes the rest through. It sets nothing that confines the container; every
-# such setting is in container/compose.yml and the project's agent/compose.project.yml,
+# such setting is in container/compose.yml and the project's sandbox/compose.project.yml,
 # and the firewall is in container/entrypoint.sh.
 #
 # The logs are Claude Code's sessions and OpenCode's data directory. In every run they
@@ -48,12 +48,12 @@
 # either file resolves from there.
 #
 # Usage:
-#   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
-#   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
-#   agent.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-#   agent.sh PROJECT_ROOT --connect UNIT [COMMAND...]
+#   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+#   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+#   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+#   sandbox.sh PROJECT_ROOT --connect UNIT [COMMAND...]
 #
-#   PROJECT_ROOT     the project's root, which the project's agent.sh shim passes
+#   PROJECT_ROOT     the project's root, which the project's sandbox.sh shim passes
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
 #                    name, or by a unit's number that one branch name holds. A number
 #                    that no branch holds and that is a unit of changes/ on master gets
@@ -77,16 +77,16 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # sits under node_modules depends on the scope, on hoisting and on the package manager,
 # so counting directories up from here would be a guess.
 if [ $# -lt 1 ] || [ ! -d "$1" ]; then
-  echo "agent.sh: the first argument must be the project root." >&2
-  echo "A project's own agent.sh shim passes it; run that rather than this file." >&2
+  echo "sandbox.sh: the first argument must be the project root." >&2
+  echo "A project's own sandbox.sh shim passes it; run that rather than this file." >&2
   exit 2
 fi
 root="$(cd "$1" && pwd)"
 shift
-project_compose="$root/agent/compose.project.yml"
+project_compose="$root/sandbox/compose.project.yml"
 
 if [ ! -f "$project_compose" ]; then
-  echo "agent.sh: $project_compose not found." >&2
+  echo "sandbox.sh: $project_compose not found." >&2
   echo "Each project supplies its own compose file at that path, holding the Compose" >&2
   echo "project name, the image name, the egress allowlist, the resource limits and" >&2
   echo "the Playwright version, if it has one." >&2
@@ -100,7 +100,7 @@ fi
 case "$here" in
   "$root"/*) ;;
   *)
-    echo "agent.sh: the kit at $here is not inside the project root $root," >&2
+    echo "sandbox.sh: the kit at $here is not inside the project root $root," >&2
     echo "so the image build cannot reach it. Install it as the project's dependency." >&2
     exit 2
     ;;
@@ -132,7 +132,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --workdir)
-      [ $# -ge 2 ] || { echo "agent.sh: --workdir needs a directory" >&2; exit 2; }
+      [ $# -ge 2 ] || { echo "sandbox.sh: --workdir needs a directory" >&2; exit 2; }
       workdir="$2"
       workdir_given=1
       shift 2
@@ -142,7 +142,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --mount)
-      [ $# -ge 2 ] || { echo "agent.sh: --mount needs a path" >&2; exit 2; }
+      [ $# -ge 2 ] || { echo "sandbox.sh: --mount needs a path" >&2; exit 2; }
       mount_specs+=("$2")
       shift 2
       ;;
@@ -166,14 +166,14 @@ if [ "$connect" -eq 1 ]; then
   [ "$rebuild" -eq 0 ] || run_options+=(--rebuild)
   if [ "${#run_options[@]}" -gt 0 ]; then
     for run_option in "${run_options[@]}"; do
-      echo "agent.sh: --connect cannot be given together with $run_option." >&2
+      echo "sandbox.sh: --connect cannot be given together with $run_option." >&2
     done
     echo "That is an option of a run, and --connect starts none." >&2
     exit 2
   fi
   if [ $# -eq 0 ]; then
-    echo "agent.sh: --connect needs a unit." >&2
-    echo "  agent.sh --connect UNIT [COMMAND...]" >&2
+    echo "sandbox.sh: --connect needs a unit." >&2
+    echo "  sandbox.sh --connect UNIT [COMMAND...]" >&2
     exit 2
   fi
 fi
@@ -196,15 +196,15 @@ done
 # with the one that mounts nothing, --connect, for whoever wanted a second shell.
 mount_forms() {
   echo "Say what to mount at /work, as one of:" >&2
-  echo "  agent.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch." >&2
+  echo "  sandbox.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch." >&2
   echo "                                       An ID with no branch gets one, cut from master" >&2
-  echo "  agent.sh --in-place [COMMAND...]     the project root as it is" >&2
-  echo "  agent.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
+  echo "  sandbox.sh --in-place [COMMAND...]     the project root as it is" >&2
+  echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
   echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
-  echo "  agent.sh --connect UNIT [COMMAND...]" >&2
+  echo "  sandbox.sh --connect UNIT [COMMAND...]" >&2
 }
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
-  echo "agent.sh: nothing to mount at /work was given." >&2
+  echo "sandbox.sh: nothing to mount at /work was given." >&2
   mount_forms
   exit 2
 fi
@@ -224,7 +224,7 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   if [ "$connect" -eq 1 ]; then
     branch="$(find_unit_branch "$root" "$unit")" || resolved=$?
     if [ "$resolved" -eq 1 ]; then
-      echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
+      echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
       echo "So there is no run to connect to." >&2
     fi
     [ "$resolved" -eq 0 ] || exit 2
@@ -263,7 +263,7 @@ AGENT_GID="$(id -g)"
 # group; the real fix is group membership, not privilege. container/Dockerfile refuses
 # this too, so a direct `docker compose build` bypassing this wrapper is still caught.
 if [ "$AGENT_UID" -eq 0 ] || [ "$AGENT_GID" -eq 0 ]; then
-  echo "agent.sh: refusing to run as root (uid/gid 0)." >&2
+  echo "sandbox.sh: refusing to run as root (uid/gid 0)." >&2
   echo "The sandbox's 'agent' user would then be root, defeating the sandbox." >&2
   echo "If Docker needs elevated permissions, add your user to the docker group" >&2
   echo "instead of running this with sudo." >&2
@@ -307,7 +307,7 @@ host_version() {
 installed_version() {
   local harness_command="$1" harness="$2" version
   if ! version="$(host_version "$harness_command")"; then
-    echo "agent.sh: '$harness_command --version' printed no version," \
+    echo "sandbox.sh: '$harness_command --version' printed no version," \
       "so $harness counts as not installed on the host." >&2
     return 0
   fi
@@ -322,9 +322,9 @@ latest_published() {
   local harness="$1" package="$2" argument="$3" output version
   output="$(npm view "$package" version --fetch-retries=0 </dev/null 2>/dev/null)" || output=""
   if ! version="$(version_printed "$output")"; then
-    echo "agent.sh: could not find the latest published version of $harness:" \
+    echo "sandbox.sh: could not find the latest published version of $harness:" \
       "'npm view $package version' gave none." >&2
-    echo "Give a version in agent/compose.project.yml, under services.agent.build.args as $argument," \
+    echo "Give a version in sandbox/compose.project.yml, under services.sandbox.build.args as $argument," \
       "or install $harness on the host." >&2
     return 1
   fi
@@ -337,9 +337,9 @@ differs_from_image() {
   local harness="$1" held="$2" wanted="$3" origin="$4"
   [ "$held" != "$wanted" ] || return 1
   if [ -n "$held" ]; then
-    echo "agent.sh: the image holds $harness $held and $wanted is wanted, from $origin. Rebuilding." >&2
+    echo "sandbox.sh: the image holds $harness $held and $wanted is wanted, from $origin. Rebuilding." >&2
   else
-    echo "agent.sh: the image records no $harness version and $wanted is wanted, from $origin. Rebuilding." >&2
+    echo "sandbox.sh: the image records no $harness version and $wanted is wanted, from $origin. Rebuilding." >&2
   fi
 }
 
@@ -361,7 +361,7 @@ needs_build() {
 unit_container_running() {
   local found
   if ! found="$(docker ps --quiet --filter "name=^/$container_name\$")"; then
-    echo "agent.sh: could not ask Docker whether the container $container_name is running." >&2
+    echo "sandbox.sh: could not ask Docker whether the container $container_name is running." >&2
     return 2
   fi
   [ -n "$found" ]
@@ -374,19 +374,19 @@ unit_container_running() {
 # gives none, and anything else is the project's own value, also when it equals the
 # host's. Captured first, so that a configuration Compose refuses stops here with
 # Compose's own error. node reads the result; the host has node for npm already.
-unheld="agent.sh/no-version-from-the-project"
+unheld="sandbox.sh/no-version-from-the-project"
 read_merged_configuration() {
   local config merged
-  config="$(AGENT_CLAUDE_CODE_VERSION="$unheld" AGENT_OPENCODE_VERSION="$unheld" \
+  config="$(SANDBOX_CLAUDE_CODE_VERSION="$unheld" SANDBOX_OPENCODE_VERSION="$unheld" \
     "${compose[@]}" config --format json)"
   merged="$(node -e '
     let json = "";
     process.stdin.on("data", (chunk) => (json += chunk));
     process.stdin.on("end", () => {
       const merged = JSON.parse(json);
-      const agent = merged.services.agent;
-      const args = agent.build?.args ?? {};
-      const lines = [agent.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
+      const sandbox = merged.services.sandbox;
+      const args = sandbox.build?.args ?? {};
+      const lines = [sandbox.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
       console.log(lines.join("\n"));
     });
   ' <<< "$config")"
@@ -416,7 +416,7 @@ unit_container_name() {
 # with no group so that Docker takes its groups from the container's own account files,
 # HOME, USER, LOGNAME and PATH are the values the entrypoint exports, /work is the
 # working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. A
-# test in tests/agent-unit-run.test.mjs reads the three files and holds this call
+# test in tests/sandbox-unit-run.test.mjs reads the three files and holds this call
 # against them. Without --user the command would be root, with the capabilities the
 # entrypoint keeps for the firewall.
 #
@@ -430,8 +430,8 @@ if [ "$connect" -eq 1 ]; then
   running=0
   unit_container_running || running=$?
   if [ "$running" -eq 1 ]; then
-    echo "agent.sh: no run is under way for '$unit': the container $container_name is not running." >&2
-    echo "Start one with 'agent.sh $unit'." >&2
+    echo "sandbox.sh: no run is under way for '$unit': the container $container_name is not running." >&2
+    echo "Start one with 'sandbox.sh $unit'." >&2
     exit 2
   fi
   if [ "$running" -eq 2 ]; then
@@ -464,9 +464,9 @@ if [ -n "$branch" ]; then
   running=0
   unit_container_running || running=$?
   if [ "$running" -eq 0 ]; then
-    echo "agent.sh: the container $container_name is running, so a run for $branch is under way." >&2
+    echo "sandbox.sh: the container $container_name is running, so a run for $branch is under way." >&2
     echo "Two runs never work on one branch. Wait for it, or stop it with 'docker stop $container_name'." >&2
-    echo "To run a command beside it: 'agent.sh --connect $unit [COMMAND...]'." >&2
+    echo "To run a command beside it: 'sandbox.sh --connect $unit [COMMAND...]'." >&2
     exit 2
   fi
   if [ "$running" -eq 2 ]; then
@@ -535,11 +535,11 @@ if [ -z "$opencode_origin" ]; then
   fi
 fi
 if [ -n "$claude_code_latest" ]; then
-  echo "agent.sh: neither the project nor the host gives a version of Claude Code," \
+  echo "sandbox.sh: neither the project nor the host gives a version of Claude Code," \
     "so the image is built with the latest published, $claude_code_latest." >&2
 fi
 if [ -n "$opencode_latest" ]; then
-  echo "agent.sh: neither the project nor the host gives a version of OpenCode," \
+  echo "sandbox.sh: neither the project nor the host gives a version of OpenCode," \
     "so the image is built with the latest published, $opencode_latest." >&2
 fi
 
@@ -548,9 +548,9 @@ fi
 # The names are the wrapper's own: Claude Code exports variables named CLAUDE_CODE_...
 # into the shells it starts, and agents run the wrapper from those. Where the project's
 # file gives the argument, Compose uses that and not the variable.
-export AGENT_CLAUDE_CODE_VERSION AGENT_OPENCODE_VERSION
-AGENT_CLAUDE_CODE_VERSION="$claude_code_wanted"
-AGENT_OPENCODE_VERSION="$opencode_wanted"
+export SANDBOX_CLAUDE_CODE_VERSION SANDBOX_OPENCODE_VERSION
+SANDBOX_CLAUDE_CODE_VERSION="$claude_code_wanted"
+SANDBOX_OPENCODE_VERSION="$opencode_wanted"
 
 if [ "$build" -eq 1 ]; then
   "${compose[@]}" build
@@ -577,7 +577,7 @@ if [ -z "$branch" ]; then
   exec "${compose[@]}" run --rm \
     --volume "$workdir:/work" \
     ${mounts[@]+"${mounts[@]}"} \
-    agent "$@"
+    sandbox "$@"
 fi
 
 # The clone is made only now, so that a build that failed left none behind. Both
@@ -598,7 +598,7 @@ status=0
   --volume "$clone:/work" \
   --volume "$root/.reviews:/work/.reviews" \
   ${mounts[@]+"${mounts[@]}"} \
-  agent "$@" || status=$?
+  sandbox "$@" || status=$?
 
 # A container that outlived its `run`, as one does whose terminal was closed, still
 # writes the clone, so nothing is fetched or removed under it, and neither when Docker
@@ -606,7 +606,7 @@ status=0
 running=0
 unit_container_running || running=$?
 if [ "$running" -eq 0 ]; then
-  echo "agent.sh: the container $container_name is still running, so nothing was fetched." >&2
+  echo "sandbox.sh: the container $container_name is still running, so nothing was fetched." >&2
   echo "Its clone is at $clone. Once it has stopped, the same command resumes the clone." >&2
   exit "$status"
 fi

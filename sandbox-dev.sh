@@ -6,10 +6,10 @@
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# agent/compose.project.yml names the Compose project and the image after this variable,
+# sandbox/compose.project.yml names the Compose project and the image after this variable,
 # so the working copy's sandbox gets an image and a home volume of its own and leaves
-# those of ./agent.sh alone.
-export AGENT_PROJECT_NAME=ritenoar-agentrite-agent-dev
+# those of ./sandbox.sh alone.
+export SANDBOX_PROJECT_NAME=ritenoar-agentrite-sandbox-dev
 # Build before every run: the wrapper otherwise reuses an image built before the change
 # under test. Not for --connect, which starts no run and which the wrapper refuses
 # together with --rebuild. Whether --connect is given is read as the wrapper reads its
@@ -30,4 +30,4 @@ while [ "$index" -lt $# ]; do
     *) break ;;
   esac
 done
-exec "$here/container/agent.sh" "$here" ${rebuild[@]+"${rebuild[@]}"} "$@"
+exec "$here/container/sandbox.sh" "$here" ${rebuild[@]+"${rebuild[@]}"} "$@"

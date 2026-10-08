@@ -122,7 +122,7 @@ name of requirement 1, and stays.
 
 The rename of the code:
 
-- [ ] Move the three test files with `git mv`, and in them and in `tests/wrapper-fixture.mjs`,
+- [x] Move the three test files with `git mv`, and in them and in `tests/wrapper-fixture.mjs`,
   `tests/harness-versions.test.mjs`, `tests/compose-allowlist.test.mjs`, `tests/compose-tmpfs.test.mjs` and
   `tests/dockerfile-log-directories.test.mjs` change every expectation to the names of requirement 1: the paths the
   tests read and write, `sandbox.sh:` and `sandbox.sh ` in the messages they match, the service `sandbox` at the end
@@ -130,18 +130,18 @@ The rename of the code:
   read, `SANDBOX_PROJECT_NAME`, `ritenoar-agentrite-sandbox` and `-sandbox-dev`, `project-sandbox`, the temporary
   directories' prefixes, the titles and the comments. Keep what plays the agent and what names the account. The
   suite fails now (R1, R2, R3, R9, R11)
-- [ ] In `tests/agentrite-init.test.mjs` and `tests/agentrite-refresh.test.mjs`, change every expectation to
+- [x] In `tests/agentrite-init.test.mjs` and `tests/agentrite-refresh.test.mjs`, change every expectation to
   `sandbox.sh`, `sandbox/compose.project.yml`, `sandboxName`, `<name>-sandbox`, `SANDBOX_MEM_LIMIT` and
   `SANDBOX_CPUS`, the titles and comments among them, and the fake kit script of the test of the written shim to
   `container/sandbox.sh` (R4, R5, R9, R11)
-- [ ] Move `container/agent.sh` to `container/sandbox.sh` and change it, `container/compose.yml`,
+- [x] Move `container/agent.sh` to `container/sandbox.sh` and change it, `container/compose.yml`,
   `container/unit-clone.sh`, `container/Dockerfile` and `container/entrypoint.sh` as "Files" says. Every message is
   the one it was but for the names, and no exit status changes (R1, R2, R3, R9)
-- [ ] Move the two templates, and change them and `scripts/agentrite.mjs` as "Files" says, the JSDoc of the renamed
+- [x] Move the two templates, and change them and `scripts/agentrite.mjs` as "Files" says, the JSDoc of the renamed
   function among it (R1, R4, R5, R9)
-- [ ] Move `agent.sh` to `sandbox.sh`, `agent/` to `sandbox/` and `agent-dev.sh` to `sandbox-dev.sh`, and change
+- [x] Move `agent.sh` to `sandbox.sh`, `agent/` to `sandbox/` and `agent-dev.sh` to `sandbox-dev.sh`, and change
   them as "Files" says. `sandbox.sh` keeps its executable bit, and so does `sandbox-dev.sh` (R1, R2, R8, R9)
-- [ ] Run `npm test`, which passes with the 411 tests it had, and commit
+- [x] Run `npm test`, which passes with the 411 tests it had, and commit
 
 The old names:
 

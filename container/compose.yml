@@ -1,20 +1,20 @@
 # Base runtime configuration for the agent sandbox, shared by every project that vendors
 # this kit. Every confinement setting lives here. container/entrypoint.sh is the one
 # exception and holds only the start-up firewall, because iptables rules are kernel state
-# in a network namespace that does not exist until the container runs. container/agent.sh
+# in a network namespace that does not exist until the container runs. container/sandbox.sh
 # is a wrapper that adds only the per-run working directory, which for a unit run is a
 # clone of the unit's branch with the host's .reviews mounted in it, any extra mounts, the
 # two directories of the host that hold the harnesses' logs and the versions of the two
 # harnesses the image is built with; it sets nothing that confines the container.
 #
-# A project layers its own compose file over this one, at agent/compose.project.yml,
+# A project layers its own compose file over this one, at sandbox/compose.project.yml,
 # holding what varies per project: the Compose project name, the image name, the egress
 # allowlist, the resource limits and, if it has browser tests, the Playwright version.
-# container/agent.sh passes both files to Compose, with --project-directory set to the
+# container/sandbox.sh passes both files to Compose, with --project-directory set to the
 # project root, so every relative path in either file resolves from there.
 
 services:
-  agent:
+  sandbox:
     build:
       # The context is the project root rather than this directory: the Dockerfile
       # copies the kit's entrypoint from under it and, for a project with Playwright,
@@ -23,18 +23,18 @@ services:
       # package.json and package-lock.json in the context.
       context: .
       # The kit's container directory relative to the project root, which
-      # container/agent.sh works out from where the kit is installed.
-      dockerfile: ${AGENTRITE_CONTAINER:?run the sandbox through the project's agent.sh}/Dockerfile
+      # container/sandbox.sh works out from where the kit is installed.
+      dockerfile: ${AGENTRITE_CONTAINER:?run the sandbox through the project's sandbox.sh}/Dockerfile
       args:
         KIT_CONTAINER: ${AGENTRITE_CONTAINER}
         AGENT_UID: ${AGENT_UID:-1000}
         AGENT_GID: ${AGENT_GID:-1000}
-        # The harness versions, which container/agent.sh works out at each start: the
+        # The harness versions, which container/sandbox.sh works out at each start: the
         # version the host has, or else the latest published when the image is built.
         # A project that holds a version gives the same argument in its own compose
         # file, which replaces the value here.
-        CLAUDE_CODE_VERSION: ${AGENT_CLAUDE_CODE_VERSION:?run the sandbox through the project's agent.sh}
-        OPENCODE_VERSION: ${AGENT_OPENCODE_VERSION:?run the sandbox through the project's agent.sh}
+        CLAUDE_CODE_VERSION: ${SANDBOX_CLAUDE_CODE_VERSION:?run the sandbox through the project's sandbox.sh}
+        OPENCODE_VERSION: ${SANDBOX_OPENCODE_VERSION:?run the sandbox through the project's sandbox.sh}
     working_dir: /work
     init: true
     stdin_open: true
@@ -44,7 +44,7 @@ services:
     shm_size: 1gb
 
     # The root filesystem is read-only. The agent can write only the mounted working
-    # directory, its home volume, the two directories of the host that container/agent.sh
+    # directory, its home volume, the two directories of the host that container/sandbox.sh
     # mounts in that home for the harnesses' logs, and the /tmp and /dev/shm scratch
     # tmpfs (/dev/shm is sized by shm_size above). /run is a tmpfs too but stays
     # root-owned.
@@ -113,7 +113,7 @@ services:
       # safe.directory names it, and Docker Desktop for macOS shows the root of every
       # bind mount as owned by root, 0:0, while everything inside it keeps the host
       # user's uid, which is the agent's. Git would therefore refuse /work and every
-      # `agent.sh --mount` path. The check guards a user against a repository that
+      # `sandbox.sh --mount` path. The check guards a user against a repository that
       # someone else controls, whose configuration could run commands. It protects
       # nothing here: the only user that writes to a mounted repository is the agent,
       # which can already change that repository's .git/config, and the mounts are the
@@ -128,7 +128,7 @@ services:
       GIT_CONFIG_VALUE_0: "*"
 
     volumes:
-      # Default working directory: the project root. container/agent.sh always gives
+      # Default working directory: the project root. container/sandbox.sh always gives
       # the source itself: the clone of a unit run, with the host's .reviews at
       # /work/.reviews, or the project root with --in-place, or the directory of
       # --workdir. It adds extra mounts too, all as `docker compose run -v` flags.
@@ -137,7 +137,7 @@ services:
       # settings, whatever else a harness keeps there and the npm cache, so
       # authentication happens once. One volume rather than one per harness: the
       # read-only root filesystem already requires the home to be a volume. Two
-      # directories in it are not of the volume: container/agent.sh mounts
+      # directories in it are not of the volume: container/sandbox.sh mounts
       # ~/.claude/projects and ~/.local/share/opencode from the project's log directory
       # on the host. So both harnesses' sessions are not in the volume, and neither is
       # OpenCode's login, which OpenCode keeps in its data directory.
@@ -145,7 +145,7 @@ services:
       # The developer's git identity, read-only, so commits from inside carry the same
       # name and email as on the host. Mounted as the system git config, the lowest
       # precedence, so the agent's own ~/.gitconfig stays writable. It is the only
-      # host dotfile this file mounts. container/agent.sh adds the developer's Claude
+      # host dotfile this file mounts. container/sandbox.sh adds the developer's Claude
       # Code status line script when the host has one, and in every run the two log
       # directories named above, read-write.
       - ${HOME}/.gitconfig:/etc/gitconfig:ro

@@ -6,29 +6,29 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fakeHost, logDirectory, logMounts } from './wrapper-fixture.mjs';
 
-const shim = new URL('../agent-dev.sh', import.meta.url).pathname;
-const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
+const shim = new URL('../sandbox-dev.sh', import.meta.url).pathname;
+const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
 const unitClone = new URL('../container/unit-clone.sh', import.meta.url).pathname;
 const dockerfile = new URL('../container/Dockerfile', import.meta.url).pathname;
-const projectCompose = readFileSync(new URL('../agent/compose.project.yml', import.meta.url), 'utf-8');
+const projectCompose = readFileSync(new URL('../sandbox/compose.project.yml', import.meta.url), 'utf-8');
 
-const devName = 'ritenoar-agentrite-agent-dev';
-const nameFromVariable = '${AGENT_PROJECT_NAME:-ritenoar-agentrite-agent}';
+const devName = 'ritenoar-agentrite-sandbox-dev';
+const nameFromVariable = '${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}';
 
 // A checkout holding copies of the shim and of the working copy's wrapper and Dockerfile, and the host of
-// `fakeHost`, whose `docker` says the image exists and records each call with the AGENT_PROJECT_NAME and the
+// `fakeHost`, whose `docker` says the image exists and records each call with the SANDBOX_PROJECT_NAME and the
 // AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
 // home of whoever runs the suite holds.
 function setUp(t) {
-  const base = mkdtempSync(join(tmpdir(), 'agent-dev-'));
+  const base = mkdtempSync(join(tmpdir(), 'sandbox-dev-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, 'checkout');
-  mkdirSync(join(root, 'agent'), { recursive: true });
-  writeFileSync(join(root, 'agent', 'compose.project.yml'), '');
+  mkdirSync(join(root, 'sandbox'), { recursive: true });
+  writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
   mkdirSync(join(root, 'container'));
   for (const [from, to] of [
-    [shim, join(root, 'agent-dev.sh')],
-    [wrapper, join(root, 'container', 'agent.sh')],
+    [shim, join(root, 'sandbox-dev.sh')],
+    [wrapper, join(root, 'container', 'sandbox.sh')],
   ]) {
     copyFileSync(from, to);
     chmodSync(to, 0o755);
@@ -36,13 +36,13 @@ function setUp(t) {
   copyFileSync(dockerfile, join(root, 'container', 'Dockerfile'));
   const home = join(base, 'home');
   mkdirSync(home);
-  const { bin, dockerCalls } = fakeHost(base, ['AGENT_PROJECT_NAME', 'AGENTRITE_CONTAINER']);
+  const { bin, dockerCalls } = fakeHost(base, ['SANDBOX_PROJECT_NAME', 'AGENTRITE_CONTAINER']);
   const run = (args, env = {}) =>
-    spawnSync(join(root, 'agent-dev.sh'), args, { encoding: 'utf-8', env: { ...env, HOME: home, PATH: bin } });
+    spawnSync(join(root, 'sandbox-dev.sh'), args, { encoding: 'utf-8', env: { ...env, HOME: home, PATH: bin } });
   // What every recorded call opens with: the dev name, and Compose run by the checkout's own wrapper.
   const prefix =
-    `AGENT_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker compose ` +
-    `--project-directory ${root} -f ${root}/container/compose.yml -f ${root}/agent/compose.project.yml`;
+    `SANDBOX_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker compose ` +
+    `--project-directory ${root} -f ${root}/container/compose.yml -f ${root}/sandbox/compose.project.yml`;
   // The flags of the checkout's log directory, which is named after the checkout and not after the dev name.
   const logs = logMounts(logDirectory(join(home, '.local', 'share'), root));
   return { base, root, run, dockerCalls, prefix, logs };
@@ -54,15 +54,15 @@ test("the shim runs the checkout's own wrapper, and builds before it runs althou
   const { root, run, dockerCalls, prefix, logs } = setUp(t);
   const result = run(['--in-place']);
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}agent`]);
+  assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}sandbox`]);
 });
 
 // The release sandbox's image and home volume are safe only while the name is the shim's to set.
 test('the shim sets the dev name over one the caller had set', (t) => {
   const { root, run, dockerCalls, prefix, logs } = setUp(t);
-  const result = run(['--in-place'], { AGENT_PROJECT_NAME: 'ritenoar-agentrite-agent' });
+  const result = run(['--in-place'], { SANDBOX_PROJECT_NAME: 'ritenoar-agentrite-sandbox' });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}agent`]);
+  assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}sandbox`]);
 });
 
 test("the shim passes the wrapper's options and the command on", (t) => {
@@ -75,7 +75,7 @@ test("the shim passes the wrapper's options and the command on", (t) => {
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [
     `${prefix} build`,
-    `${prefix} run --rm --volume ${workdir}:/work --volume ${mounted}:/mnt/mounted:ro ${logs}agent echo hi`,
+    `${prefix} run --rm --volume ${workdir}:/work --volume ${mounted}:/mnt/mounted:ro ${logs}sandbox echo hi`,
   ]);
 });
 
@@ -104,9 +104,9 @@ test('the shim connects to a unit run under the dev name, and asks for no build'
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
   assert.deepEqual(host.dockerCalls(), [
-    `AGENT_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker exec --interactive --user agent ` +
+    `SANDBOX_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker exec --interactive --user agent ` +
       '--workdir /work --env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
-      `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin project-agent-${unitBranch} echo hi`,
+      `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin project-sandbox-${unitBranch} echo hi`,
   ]);
 });
 
@@ -132,7 +132,7 @@ for (const [what, args, command] of [
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(dockerCalls(), [
       `${prefix} build`,
-      `${prefix} run --rm --volume ${root}:/work ${logs}agent ${command}`,
+      `${prefix} run --rm --volume ${root}:/work ${logs}sandbox ${command}`,
     ]);
   });
 }
@@ -145,10 +145,10 @@ test('the shim builds for a unit run whose command holds --connect', (t) => {
   assert.equal(result.status, 0, result.stderr);
   const calls = host.dockerCalls();
   assert.equal(calls[0], `${host.prefix} build`);
-  assert.match(calls.at(-1), / run --rm --name project-agent-task-0026-doc .* agent echo --connect$/);
+  assert.match(calls.at(-1), / run --rm --name project-sandbox-task-0026-doc .* sandbox echo --connect$/);
 });
 
-// With the variable unset both resolve to the names ./agent.sh has always used, and with the shim's value to a
+// With the variable unset both resolve to the names ./sandbox.sh has always used, and with the shim's value to a
 // project, an image and so a home volume of their own.
 test("this repository's project Compose file names its project and its image after the variable", () => {
   const lines = projectCompose.split('\n');

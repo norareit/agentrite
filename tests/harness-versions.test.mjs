@@ -49,8 +49,8 @@ test("the Dockerfile's last stage records both versions as labels, after it inst
 test("the base Compose file gives both build arguments from the wrapper's own variables", () => {
   const lines = compose.split('\n').map((line) => line.trim());
   for (const { argument } of harnesses) {
-    const given = lines.filter((line) => line.startsWith(`${argument}: \${AGENT_${argument}:?`));
-    assert.equal(given.length, 1, `${argument} comes from AGENT_${argument}`);
+    const given = lines.filter((line) => line.startsWith(`${argument}: \${SANDBOX_${argument}:?`));
+    assert.equal(given.length, 1, `${argument} comes from SANDBOX_${argument}`);
   }
 });
 
@@ -88,7 +88,7 @@ test('the search for a version of a harness passes by an argument with no versio
   for (const text of [
     'ARG CLAUDE_CODE_VERSION',
     'ARG OPENCODE_VERSION',
-    "CLAUDE_CODE_VERSION: ${AGENT_CLAUDE_CODE_VERSION:?run the sandbox through the project's agent.sh}",
+    "CLAUDE_CODE_VERSION: ${SANDBOX_CLAUDE_CODE_VERSION:?run the sandbox through the project's sandbox.sh}",
     '"opencode-ai@${OPENCODE_VERSION}"',
     'com.ritenoar.agentrite.opencode-version="${OPENCODE_VERSION}"',
     'OpenCode fetches its model catalog from it',

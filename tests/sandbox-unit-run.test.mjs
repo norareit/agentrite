@@ -21,25 +21,25 @@ const kitContainer = new URL('../container/', import.meta.url).pathname;
 const kitPath = 'node_modules/@ritenoar/agentrite/container';
 
 const branch = 'task-0026-doc';
-const containerName = `project-agent-${branch}`;
+const containerName = `project-sandbox-${branch}`;
 const sandboxRef = `refs/remotes/sandbox/${branch}`;
 
 // A project that is a git repository, with the kit's wrapper and its unit-clone.sh installed under its ignored
-// `node_modules`, and the host of `fakeHost`, whose Compose project is `project-agent`. The repository is on
+// `node_modules`, and the host of `fakeHost`, whose Compose project is `project-sandbox`. The repository is on
 // `master` and has three more branches, of which `task-0026-doc` is one commit ahead of `master`. It ignores
 // `node_modules`, `.reviews` and `.env`, and holds a file that is not committed, `draft.txt`. The home has a git
 // identity and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run`
 // runs the wrapper with the project root and `args`, and `git` runs the real git in the repository.
 function setUp(t, { imageExists = true } = {}) {
-  const base = mkdtempSync(join(tmpdir(), 'agent-unit-run-'));
+  const base = mkdtempSync(join(tmpdir(), 'sandbox-unit-run-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });
-  for (const file of ['agent.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
-  chmodSync(join(container, 'agent.sh'), 0o755);
-  mkdirSync(join(root, 'agent'));
-  writeFileSync(join(root, 'agent', 'compose.project.yml'), '');
+  for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
+  chmodSync(join(container, 'sandbox.sh'), 0o755);
+  mkdirSync(join(root, 'sandbox'));
+  writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
   writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\n');
   const home = join(base, 'home');
   mkdirSync(home);
@@ -62,16 +62,16 @@ function setUp(t, { imageExists = true } = {}) {
   writeFileSync(join(root, 'draft.txt'), 'not committed\n');
 
   const state = join(home, '.local', 'state');
-  const clone = join(state, 'agentrite', 'project-agent', branch);
+  const clone = join(state, 'agentrite', 'project-sandbox', branch);
   const run = (args, env = {}) =>
-    spawnSync(join(container, 'agent.sh'), [root, ...args], {
+    spawnSync(join(container, 'sandbox.sh'), [root, ...args], {
       encoding: 'utf-8',
       env: { ...env, HOME: home, PATH: host.bin },
     });
   // What every recorded Compose call opens with.
   const compose =
     `AGENTRITE_CONTAINER=${kitPath} docker compose --project-directory ${root} ` +
-    `-f ${container}/compose.yml -f ${root}/agent/compose.project.yml`;
+    `-f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml`;
   // The project's log directory, which is named after the root and lies in the home's data directory unless a run
   // sets XDG_DATA_HOME.
   const logs = logDirectory(join(home, '.local', 'share'), root);
@@ -80,7 +80,7 @@ function setUp(t, { imageExists = true } = {}) {
   const unitRun = (mounted, mounts = '', logDirectory = logs) => [
     `AGENTRITE_CONTAINER=${kitPath} docker rm ${containerName}`,
     `${compose} run --rm --name ${containerName} --volume ${mounted}:/work ` +
-      `--volume ${root}/.reviews:/work/.reviews ${mounts}${logMounts(logDirectory)}agent echo hi`,
+      `--volume ${root}/.reviews:/work/.reviews ${mounts}${logMounts(logDirectory)}sandbox echo hi`,
   ];
   // The script the stand-in `docker` runs as the agent, in the directory mounted at /work.
   const agent = (script) => writeFileSync(host.agentScript, `set -e\n${script}\n`);
@@ -128,7 +128,7 @@ for (const unit of ['claude', 'feature-0031-cut-me']) {
       result.stderr,
     );
     assert.doesNotMatch(result.stderr, /made on the host/);
-    assert.match(result.stderr, /agent\.sh --in-place /);
+    assert.match(result.stderr, /sandbox\.sh --in-place /);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
     assert.equal(existsSync(state), false);
@@ -167,14 +167,14 @@ for (const [kind, prefix] of [
 
     assert.equal(result.status, 0, result.stderr);
     assert.ok(
-      result.stderr.includes(`agent.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
+      result.stderr.includes(`sandbox.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
       result.stderr,
     );
     assert.equal(git('rev-parse', `refs/heads/${cut}`), git('rev-parse', 'refs/heads/master'));
-    const calls = unitRun(join(state, 'agentrite', 'project-agent', cut));
+    const calls = unitRun(join(state, 'agentrite', 'project-sandbox', cut));
     assert.deepEqual(
       dockerCalls(),
-      calls.map((call) => call.replaceAll(containerName, `project-agent-${cut}`)),
+      calls.map((call) => call.replaceAll(containerName, `project-sandbox-${cut}`)),
     );
     assert.equal(existsSync(join(root, '.git', 'refs', 'remotes', 'sandbox')), false);
   });
@@ -189,10 +189,10 @@ test('the wrapper cuts the branch before it builds: a build that fails leaves th
   const result = run(['0031', 'echo', 'hi']);
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /^agent\.sh: cut feature-0031-cut-me from master at /m);
+  assert.match(result.stderr, /^sandbox\.sh: cut feature-0031-cut-me from master at /m);
   assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/master'));
   assert.equal(dockerCalls().filter((call) => / run /.test(call)).length, 0);
-  assert.ok(result.stderr.indexOf('agent.sh: cut ') < result.stderr.indexOf('failed to solve'), result.stderr);
+  assert.ok(result.stderr.indexOf('sandbox.sh: cut ') < result.stderr.indexOf('failed to solve'), result.stderr);
 });
 
 test('cutting a branch leaves the checked out branch, the tree, the index and every other branch as they were', (t) => {
@@ -214,7 +214,7 @@ test('cutting a branch leaves the checked out branch, the tree, the index and ev
   const result = run(['0031', 'echo', 'hi']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stderr, /^agent\.sh: cut feature-0031-cut-me from master at /m);
+  assert.match(result.stderr, /^sandbox\.sh: cut feature-0031-cut-me from master at /m);
   const cutRef = `${git('rev-parse', 'master')} commit\trefs/heads/feature-0031-cut-me`;
   assert.deepEqual(
     {
@@ -323,7 +323,7 @@ for (const { name, unit, arrange, says } of noCut) {
 
     assert.equal(result.status, 2, result.stderr);
     for (const said of says) assert.match(result.stderr, said);
-    assert.doesNotMatch(result.stderr, /made on the host|agent\.sh: cut /);
+    assert.doesNotMatch(result.stderr, /made on the host|sandbox\.sh: cut /);
     assert.equal(git('for-each-ref'), refs);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
@@ -341,7 +341,7 @@ for (const unit of [branch, '0026']) {
     assert.ok(result.stderr.includes(containerName), result.stderr);
     assert.match(result.stderr, /is running/);
     assert.ok(result.stderr.includes(`'docker stop ${containerName}'`), result.stderr);
-    assert.ok(result.stderr.includes(`'agent.sh --connect ${unit} [COMMAND...]'`), result.stderr);
+    assert.ok(result.stderr.includes(`'sandbox.sh --connect ${unit} [COMMAND...]'`), result.stderr);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
     assert.equal(existsSync(state), false);
@@ -354,7 +354,7 @@ test('the wrapper puts the clone under XDG_STATE_HOME when that is set', (t) => 
   const state = join(base, 'state');
   const result = run([branch, 'echo', 'hi'], { XDG_STATE_HOME: state });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), unitRun(join(state, 'agentrite', 'project-agent', branch)));
+  assert.deepEqual(dockerCalls(), unitRun(join(state, 'agentrite', 'project-sandbox', branch)));
   assert.equal(existsSync(join(home, '.local', 'state')), false);
 });
 
@@ -574,7 +574,7 @@ test('the wrapper says that the fetch failed, keeps the clone and exits non-zero
   agent('rm -rf .git\necho orphan > orphan.txt');
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /agent\.sh: fetching .* failed/);
+  assert.match(result.stderr, /sandbox\.sh: fetching .* failed/);
   assert.ok(result.stderr.includes(clone), result.stderr);
   assert.equal(git('rev-parse', branch), before);
   assert.equal(existsSync(join(clone, 'orphan.txt')), true);
@@ -657,7 +657,7 @@ test('the wrapper starts nothing when Docker cannot say whether the container is
   writeFileSync(psFails, '');
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 2);
-  assert.match(result.stderr, /agent\.sh: could not ask Docker whether/);
+  assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
   assert.ok(result.stderr.includes(containerName), result.stderr);
   assert.deepEqual(dockerCalls(), []);
   assert.deepEqual(npmCalls(), []);
@@ -670,7 +670,7 @@ test('the wrapper fetches and removes nothing when Docker cannot say whether the
   agent(`${commitWork}\necho > "${psFails}"`);
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 1);
-  assert.match(result.stderr, /agent\.sh: could not ask Docker whether/);
+  assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
   assert.ok(result.stderr.includes(clone), result.stderr);
   assert.equal(git('rev-parse', branch), before);
   assert.equal(hasRef(git, sandboxRef), false);
@@ -687,7 +687,7 @@ test('the wrapper says that removing the clone failed, exits non-zero, and does 
   try {
     const result = run([branch, 'echo', 'hi']);
     assert.equal(result.status, 1);
-    assert.match(result.stderr, /agent\.sh: removing the clone failed/);
+    assert.match(result.stderr, /sandbox\.sh: removing the clone failed/);
     assert.ok(result.stderr.includes(join(left)), result.stderr);
     assert.equal(existsSync(clone), false);
     assert.equal(existsSync(locked), true);
@@ -781,7 +781,7 @@ test('--connect gives the command a terminal when the wrapper is run from one', 
   }
   const host = setUp(t);
   markRunning(host);
-  const wrapper = `'${join(host.container, 'agent.sh')}' '${host.root}' --connect ${branch} echo hi`;
+  const wrapper = `'${join(host.container, 'sandbox.sh')}' '${host.root}' --connect ${branch} echo hi`;
   const result = spawnSync(script, ['--quiet', '--return', '--command', wrapper, '/dev/null'], {
     encoding: 'utf-8',
     env: { HOME: host.home, PATH: host.bin },
@@ -826,7 +826,7 @@ test('--connect builds, asks, clones, cuts and fetches nothing, and makes no dir
 test('a unit run to which commands were connected lands its work and removes the clone as it does without', (t) => {
   const host = setUp(t);
   const { root, container, clone, run, git, agent, runningContainer, dockerCalls, unitRun } = host;
-  const connect = (word) => `"${join(container, 'agent.sh')}" "${root}" --connect ${branch} echo ${word}`;
+  const connect = (word) => `"${join(container, 'sandbox.sh')}" "${root}" --connect ${branch} echo ${word}`;
   agent(
     `echo 0123456789ab > "${runningContainer}"\n${connect('one')}\n${connect('two')}\n` +
       `rm "${runningContainer}"\n${commitWork}`,
@@ -855,8 +855,8 @@ test('--connect with no unit is refused, and names --connect and its form', (t) 
   markRunning(host);
   const result = host.run(['--connect']);
   assertNothingRan(host, result);
-  assert.ok(result.stderr.includes('agent.sh: --connect needs a unit.\n'), result.stderr);
-  assert.ok(result.stderr.includes('agent.sh --connect UNIT [COMMAND...]\n'), result.stderr);
+  assert.ok(result.stderr.includes('sandbox.sh: --connect needs a unit.\n'), result.stderr);
+  assert.ok(result.stderr.includes('sandbox.sh --connect UNIT [COMMAND...]\n'), result.stderr);
 });
 
 for (const unit of ['claude', '0031']) {
@@ -867,10 +867,10 @@ for (const unit of ['claude', '0031']) {
     const refs = host.git('for-each-ref');
     const result = host.run(['--connect', unit, 'echo', 'hi']);
     assertNothingRan(host, result);
-    assert.ok(result.stderr.includes(`agent.sh: '${unit}' names no local branch`), result.stderr);
+    assert.ok(result.stderr.includes(`sandbox.sh: '${unit}' names no local branch`), result.stderr);
     assert.ok(result.stderr.includes('So there is no run to connect to.\n'), result.stderr);
     assert.doesNotMatch(result.stderr, /cut/);
-    assert.doesNotMatch(result.stderr, /agent\.sh --in-place /);
+    assert.doesNotMatch(result.stderr, /sandbox\.sh --in-place /);
     assert.equal(host.git('for-each-ref'), refs);
   });
 }
@@ -891,11 +891,11 @@ for (const unit of [branch, '0026']) {
     assertNothingRan(host, result);
     assert.ok(
       result.stderr.includes(
-        `agent.sh: no run is under way for '${unit}': the container ${containerName} is not running.\n`,
+        `sandbox.sh: no run is under way for '${unit}': the container ${containerName} is not running.\n`,
       ),
       result.stderr,
     );
-    assert.ok(result.stderr.includes(`Start one with 'agent.sh ${unit}'.\n`), result.stderr);
+    assert.ok(result.stderr.includes(`Start one with 'sandbox.sh ${unit}'.\n`), result.stderr);
   });
 }
 
@@ -905,7 +905,7 @@ test('--connect is refused when Docker cannot say whether the container is runni
   writeFileSync(host.psFails, '');
   const result = host.run(['--connect', branch, 'echo', 'hi']);
   assertNothingRan(host, result);
-  assert.match(result.stderr, /agent\.sh: could not ask Docker whether/);
+  assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
   assert.ok(result.stderr.includes('Nothing was run.\n'), result.stderr);
 });
 
@@ -925,7 +925,7 @@ for (const [option, value] of [
       const result = host.run([...order([option, ...value(host.base)]), branch, 'echo', 'hi']);
       assertNothingRan(host, result);
       assert.ok(
-        result.stderr.includes(`agent.sh: --connect cannot be given together with ${option}.\n`),
+        result.stderr.includes(`sandbox.sh: --connect cannot be given together with ${option}.\n`),
         result.stderr,
       );
       assert.ok(result.stderr.includes('That is an option of a run, and --connect starts none.\n'), result.stderr);
@@ -946,7 +946,7 @@ for (const option of ['--workdir', '--mount']) {
       const result = host.run([...order([option, missing]), branch, 'echo', 'hi']);
       assertNothingRan(host, result);
       assert.ok(
-        result.stderr.includes(`agent.sh: --connect cannot be given together with ${option}.\n`),
+        result.stderr.includes(`sandbox.sh: --connect cannot be given together with ${option}.\n`),
         result.stderr,
       );
       assert.doesNotMatch(result.stderr, /No such file or directory/);
@@ -962,6 +962,6 @@ test('--connect is refused as root, like a run', (t) => {
   writeCommand(host.bin, 'id', 'echo 0');
   const result = host.run(['--connect', branch, 'echo', 'hi']);
   assert.equal(result.status, 2, result.stderr);
-  assert.match(result.stderr, /agent\.sh: refusing to run as root/);
+  assert.match(result.stderr, /sandbox\.sh: refusing to run as root/);
   assert.deepEqual(host.dockerCalls(), []);
 });

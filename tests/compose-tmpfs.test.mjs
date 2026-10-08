@@ -4,12 +4,12 @@ import { test } from 'node:test';
 
 const compose = readFileSync(new URL('../container/compose.yml', import.meta.url), 'utf-8');
 
-// The entries of the agent service's `tmpfs:` list, read by indentation since the kit has no YAML parser: the
+// The entries of the sandbox service's `tmpfs:` list, read by indentation since the kit has no YAML parser: the
 // lines after `    tmpfs:` that open with `      - `, up to the first that does not.
 function tmpfsEntries(text) {
   const lines = text.split('\n');
   const start = lines.indexOf('    tmpfs:');
-  assert.notEqual(start, -1, 'the agent service has a tmpfs list');
+  assert.notEqual(start, -1, 'the sandbox service has a tmpfs list');
   const entries = [];
   for (const line of lines.slice(start + 1)) {
     if (!line.startsWith('      - ')) break;

@@ -4,13 +4,13 @@ import { test } from 'node:test';
 
 const compose = readFileSync(new URL('../container/compose.yml', import.meta.url), 'utf-8');
 
-// The hosts of the agent service's `KIT_ALLOWLIST`, read by indentation since the kit has no YAML parser: the lines
+// The hosts of the sandbox service's `KIT_ALLOWLIST`, read by indentation since the kit has no YAML parser: the lines
 // after `      KIT_ALLOWLIST: |` up to the first that has text and is not indented deeper than the key, with
 // comments and blank lines dropped the way the entrypoint drops them.
 function kitAllowlistHosts(text) {
   const lines = text.split('\n');
   const start = lines.indexOf('      KIT_ALLOWLIST: |');
-  assert.notEqual(start, -1, 'the agent service has a KIT_ALLOWLIST block');
+  assert.notEqual(start, -1, 'the sandbox service has a KIT_ALLOWLIST block');
   const hosts = [];
   for (const line of lines.slice(start + 1)) {
     if (line.trim() === '') continue;

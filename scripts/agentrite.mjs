@@ -20,7 +20,7 @@ const KIT_CONTAINER = 'node_modules/@ritenoar/agentrite/container';
 // Names the files, not only the directory: BuildKit would not let a directory's exception reach a file that a
 // pattern excluded by name.
 const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}/**`;
-const COMPOSE_FILE = 'agent/compose.project.yml';
+const COMPOSE_FILE = 'sandbox/compose.project.yml';
 
 const DOCKERIGNORE =
   "# Keeps node_modules out of the image build context, except AgentRite's container/\n" +
@@ -163,12 +163,12 @@ export function fillTemplate(template, values) {
  * @param {string} packageName
  * @returns {string}
  */
-export function agentName(packageName) {
+export function sandboxName(packageName) {
   const reduced = packageName
     .toLowerCase()
     .replace(/[^a-z0-9_-]+/g, '-')
     .replace(/^[-_]+|[-_]+$/g, '');
-  return `${reduced}-agent`;
+  return `${reduced}-sandbox`;
 }
 
 /**
@@ -203,7 +203,7 @@ function roleWrapperDirectories(harnesses) {
  * @returns {{ path: string, content: string, executable: boolean }}
  */
 function shimFile(templates) {
-  return { path: 'agent.sh', content: fillTemplate(templates['agent.sh'], {}), executable: true };
+  return { path: 'sandbox.sh', content: fillTemplate(templates['sandbox.sh'], {}), executable: true };
 }
 
 /**
@@ -264,7 +264,7 @@ export function processFiles({ templates, harnesses }) {
  */
 function sandboxFiles({ templates, packageName, playwrightVersion }) {
   const compose = fillTemplate(templates[COMPOSE_FILE], {
-    agent_name: agentName(packageName),
+    sandbox_name: sandboxName(packageName),
     playwright_build: playwrightVersion === undefined ? '' : playwrightBuildBlock(playwrightVersion),
   });
   return [shimFile(templates), { path: COMPOSE_FILE, content: compose }];
@@ -542,7 +542,7 @@ function readLockfile(root) {
  * @returns {Record<string, string>}
  */
 function readTemplates() {
-  const paths = ['AGENTS.md', 'CLAUDE.md', 'agent.sh', COMPOSE_FILE];
+  const paths = ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', COMPOSE_FILE];
   return Object.fromEntries(
     paths.map((path) => [path, readFileSync(new URL(`../templates/project/${path}`, import.meta.url), 'utf-8')]),
   );

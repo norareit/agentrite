@@ -25,7 +25,7 @@ import {
   writeCommand,
 } from './wrapper-fixture.mjs';
 
-const wrapper = new URL('../container/agent.sh', import.meta.url).pathname;
+const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
 const kitPath = 'project/node_modules/@ritenoar/agentrite/container';
 
 // What an image built earlier holds, where a test needs it to differ from what the fake host has and from what
@@ -37,8 +37,8 @@ const builtBefore = { claude: '0.1.0', opencode: '0.2.0' };
 function composeCalls(root, container, versions, ...commands) {
   const opening =
     'AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container ' +
-    `AGENT_CLAUDE_CODE_VERSION=${versions.claude} AGENT_OPENCODE_VERSION=${versions.opencode} docker compose ` +
-    `--project-directory ${root} -f ${container}/compose.yml -f ${root}/agent/compose.project.yml`;
+    `SANDBOX_CLAUDE_CODE_VERSION=${versions.claude} SANDBOX_OPENCODE_VERSION=${versions.opencode} docker compose ` +
+    `--project-directory ${root} -f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml`;
   return commands.map((command) => `${opening} ${command}`);
 }
 
@@ -49,7 +49,7 @@ const homeLogs = (root) => logDirectory(join(dirname(root), 'home', '.local', 's
 // The `run` of a wrapper given `echo hi` for the project at `root`: `mounted` at /work, then `mounts`, and last the
 // two directories of `logs`.
 const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root)) =>
-  `run --rm --volume ${mounted}:/work ${mounts}${logMounts(logs)}agent echo hi`;
+  `run --rm --volume ${mounted}:/work ${mounts}${logMounts(logs)}sandbox echo hi`;
 
 // A project with the kit's wrapper installed at `kitPath` under `root`, and nothing else of the kit beside it,
 // and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER and the two version
@@ -64,22 +64,22 @@ function setUp(
   buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
   imageExists = true,
 ) {
-  const base = mkdtempSync(join(tmpdir(), 'agent-wrapper-'));
+  const base = mkdtempSync(join(tmpdir(), 'sandbox-wrapper-'));
   t.after(() => rmSync(base, { recursive: true, force: true }));
   const root = join(base, 'project');
-  mkdirSync(join(root, 'agent'), { recursive: true });
-  writeFileSync(join(root, 'agent', 'compose.project.yml'), '');
+  mkdirSync(join(root, 'sandbox'), { recursive: true });
+  writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
   const container = join(base, kitPath);
   mkdirSync(container, { recursive: true });
-  copyFileSync(wrapper, join(container, 'agent.sh'));
-  chmodSync(join(container, 'agent.sh'), 0o755);
+  copyFileSync(wrapper, join(container, 'sandbox.sh'));
+  chmodSync(join(container, 'sandbox.sh'), 0o755);
   const home = join(base, 'home');
   mkdirSync(home);
-  const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'AGENT_CLAUDE_CODE_VERSION', 'AGENT_OPENCODE_VERSION']);
+  const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'SANDBOX_CLAUDE_CODE_VERSION', 'SANDBOX_OPENCODE_VERSION']);
   writeFileSync(host.projectBuildArgs, buildArgs === null ? '' : JSON.stringify(buildArgs));
   if (!imageExists) rmSync(host.imageLabels);
   const runWith = ({ env = {}, cwd }, ...args) =>
-    spawnSync(join(container, 'agent.sh'), args, {
+    spawnSync(join(container, 'sandbox.sh'), args, {
       encoding: 'utf-8',
       cwd,
       env: { ...env, HOME: home, PATH: host.bin },
@@ -93,7 +93,7 @@ test('the wrapper refuses to run without a project root, naming the shim', (t) =
   const result = run();
   assert.equal(result.status, 2);
   assert.match(result.stderr, /first argument must be the project root/);
-  assert.match(result.stderr, /agent\.sh shim/);
+  assert.match(result.stderr, /sandbox\.sh shim/);
   assert.deepEqual(dockerCalls(), []);
 });
 
@@ -168,18 +168,18 @@ const runOnly = (root, container, versions) =>
 const buildAndRun = (root, container, versions) =>
   composeCalls(root, container, versions, 'build', runCommand(root));
 const noVersionLine = (command, harness) =>
-  `agent.sh: '${command} --version' printed no version, so ${harness} counts as not installed on the host.\n`;
+  `sandbox.sh: '${command} --version' printed no version, so ${harness} counts as not installed on the host.\n`;
 const holdsLine = (harness, held, wanted, source) =>
-  `agent.sh: the image holds ${harness} ${held} and ${wanted} is wanted, from ${source}. Rebuilding.\n`;
+  `sandbox.sh: the image holds ${harness} ${held} and ${wanted} is wanted, from ${source}. Rebuilding.\n`;
 const recordsNoneLine = (harness, wanted, source) =>
-  `agent.sh: the image records no ${harness} version and ${wanted} is wanted, from ${source}. Rebuilding.\n`;
+  `sandbox.sh: the image records no ${harness} version and ${wanted} is wanted, from ${source}. Rebuilding.\n`;
 const latestLine = (harness, version) =>
-  `agent.sh: neither the project nor the host gives a version of ${harness}, so the image is built with the ` +
+  `sandbox.sh: neither the project nor the host gives a version of ${harness}, so the image is built with the ` +
   `latest published, ${version}.\n`;
 const notFoundLines = (harness, npmPackage, argument) =>
-  `agent.sh: could not find the latest published version of ${harness}: 'npm view ${npmPackage} version' gave ` +
+  `sandbox.sh: could not find the latest published version of ${harness}: 'npm view ${npmPackage} version' gave ` +
   'none.\n' +
-  `Give a version in agent/compose.project.yml, under services.agent.build.args as ${argument}, or install ` +
+  `Give a version in sandbox/compose.project.yml, under services.sandbox.build.args as ${argument}, or install ` +
   `${harness} on the host.\n`;
 const askedOf = (npmPackage) => `npm view ${npmPackage} version --fetch-retries=0`;
 const askedOfBoth = [askedOf('@anthropic-ai/claude-code'), askedOf('opencode-ai')];
@@ -294,7 +294,7 @@ test('the wrapper builds with the latest published version of a harness on the h
 test("the wrapper gives the host's command no input", (t) => {
   const { root, container, home, bin, dockerCalls } = setUp(t, kitPath);
   writeCommand(bin, 'claude', `cat; echo ${hostVersions.claude}`);
-  const result = spawnSync(join(container, 'agent.sh'), [root, '--in-place', 'echo', 'hi'], {
+  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
     encoding: 'utf-8',
     env: { HOME: home, PATH: bin },
     input: '7.7.7\n',
@@ -306,9 +306,9 @@ test("the wrapper gives the host's command no input", (t) => {
 
 test("the wrapper does not use a version the caller's environment holds", (t) => {
   const { root, container, home, bin, dockerCalls } = setUp(t, kitPath);
-  const result = spawnSync(join(container, 'agent.sh'), [root, '--in-place', 'echo', 'hi'], {
+  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
     encoding: 'utf-8',
-    env: { HOME: home, PATH: bin, AGENT_CLAUDE_CODE_VERSION: '0.0.1', AGENT_OPENCODE_VERSION: '0.0.2' },
+    env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
   });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -320,9 +320,9 @@ test("the wrapper does not use a version the caller's environment holds for a ha
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
   writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
-  const result = spawnSync(join(container, 'agent.sh'), [root, '--in-place', 'echo', 'hi'], {
+  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
     encoding: 'utf-8',
-    env: { HOME: home, PATH: bin, AGENT_CLAUDE_CODE_VERSION: '0.0.1', AGENT_OPENCODE_VERSION: '0.0.2' },
+    env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
   });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -558,7 +558,7 @@ test("the wrapper stops with the build's own error when the build fails, and run
 
 test('the wrapper runs with no Dockerfile beside it to read a version from', (t) => {
   const { root, container, run, dockerCalls } = setUp(t, kitPath);
-  assert.deepEqual(readdirSync(container), ['agent.sh']);
+  assert.deepEqual(readdirSync(container), ['sandbox.sh']);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
@@ -603,7 +603,7 @@ test('the wrapper mounts neither when a directory is where the status line scrip
 });
 
 // What is mounted at /work. The wrapper has no default: a run names a unit, whose branch it clones, or says
-// --in-place or --workdir. The unit run is in tests/agent-unit-run.test.mjs.
+// --in-place or --workdir. The unit run is in tests/sandbox-unit-run.test.mjs.
 for (const [what, args] of [
   ['the project root alone', () => []],
   ['--rebuild alone', () => ['--rebuild']],
@@ -614,10 +614,10 @@ for (const [what, args] of [
     rmSync(join(bin, 'claude'));
     const result = run(root, ...args(base));
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /agent\.sh UNIT /);
-    assert.match(result.stderr, /agent\.sh --in-place /);
-    assert.match(result.stderr, /agent\.sh --workdir DIR /);
-    assert.match(result.stderr, /agent\.sh --connect UNIT /);
+    assert.match(result.stderr, /sandbox\.sh UNIT /);
+    assert.match(result.stderr, /sandbox\.sh --in-place /);
+    assert.match(result.stderr, /sandbox\.sh --workdir DIR /);
+    assert.match(result.stderr, /sandbox\.sh --connect UNIT /);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
   });

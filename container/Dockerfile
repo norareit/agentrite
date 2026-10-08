@@ -5,7 +5,7 @@
 # project's README.md describes how that project runs it.
 
 # Harness versions. The kit names none: the last stage's CLAUDE_CODE_VERSION and
-# OPENCODE_VERSION have no default, and container/agent.sh hands the build both. Each is
+# OPENCODE_VERSION have no default, and container/sandbox.sh hands the build both. Each is
 # the version the project's compose file gives, or else the one the host has, or else
 # the latest published at the time of the build, which the wrapper asks the registry for
 # and hands over as an exact version.
@@ -85,7 +85,7 @@ RUN npm install -g --no-audit --no-fund \
       "opencode-ai@${OPENCODE_VERSION}" \
     && rm -rf /root/.npm
 
-# The two versions this image was built with. container/agent.sh reads them at each
+# The two versions this image was built with. container/sandbox.sh reads them at each
 # start and builds again when they are not the versions it wants. After the install, so
 # that they are no part of what decides whether the install runs again.
 LABEL com.ritenoar.agentrite.claude-code-version="${CLAUDE_CODE_VERSION}" \
@@ -107,14 +107,14 @@ RUN mkdir -p /etc/opencode \
 # "dialout"; `-o` lets the agent group and user take an id that is already in use so the
 # build still succeeds, while the group stays named "agent" for the privilege drop.
 #
-# Refuse 0: `sudo ./agent.sh` (a foreseeable fix when Docker is not in the caller's
+# Refuse 0: `sudo ./sandbox.sh` (a foreseeable fix when Docker is not in the caller's
 # group) forwards uid/gid 0 into the build. Without this check the "agent" account is
 # root, and the entrypoint's later drop from root to root is a no-op that leaves the
 # firewall capabilities in place. The sandbox needs an account that is actually
 # unprivileged, not one merely named "agent".
 RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
       echo "AGENT_UID/AGENT_GID must not be 0: the agent account would be root." >&2; \
-      echo "Do not run agent.sh with sudo; add your user to the docker group instead." >&2; \
+      echo "Do not run sandbox.sh with sudo; add your user to the docker group instead." >&2; \
       exit 1; \
     fi \
     && userdel -r node 2>/dev/null || true \
@@ -123,7 +123,7 @@ RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
     && mkdir -p /work \
     && chown "${AGENT_UID}:${AGENT_GID}" /work /home/agent
 
-# The two directories that container/agent.sh mounts from the host for the harnesses'
+# The two directories that container/sandbox.sh mounts from the host for the harnesses'
 # logs, and every directory above them in the home, as the agent's. Docker fills a new
 # home volume from the image, ownership included, before it mounts anything inside it,
 # so the mount points are found there. A mount point that a volume lacks is made by
@@ -147,7 +147,7 @@ WORKDIR /work
 # egress proxy; the entrypoint drops to the agent user before running the command. Every
 # confinement setting other than the firewall lives in the compose files.
 # KIT_CONTAINER is this directory relative to the build context, the project root. It
-# depends on where the kit is installed, so container/agent.sh supplies it.
+# depends on where the kit is installed, so container/sandbox.sh supplies it.
 ARG KIT_CONTAINER
 COPY ${KIT_CONTAINER}/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY ${KIT_CONTAINER}/egress-proxy.mjs ${KIT_CONTAINER}/sni.mjs /usr/local/lib/egress-proxy/

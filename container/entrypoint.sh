@@ -54,7 +54,7 @@ home_volume_recovery() {
   cat <<'RECOVERY'
 Recover by removing the project's agent-home volume, which discards Claude Code's saved login, and starting again.
 The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
-agent/compose.project.yml. Find the exact name with docker volume ls, then:
+sandbox/compose.project.yml. Find the exact name with docker volume ls, then:
   docker volume rm <project>_agent-home
 RECOVERY
 }
@@ -79,7 +79,7 @@ $(home_volume_recovery)"
 }
 check_home_owner "$agent_uid" /home/agent
 
-# container/agent.sh mounts two directories of the host inside the home, for the
+# container/sandbox.sh mounts two directories of the host inside the home, for the
 # harnesses' logs: .claude/projects and .local/share/opencode. The image holds both
 # mount points as the agent's, so a home volume filled from it has them. A volume that
 # an earlier release filled has them only when a harness made them, and where one is

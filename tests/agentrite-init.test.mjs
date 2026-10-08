@@ -19,7 +19,7 @@ import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import {
   AGENTS_SECTIONS,
-  agentName,
+  sandboxName,
   agentsNotice,
   CLAUDE_NOTICE,
   dockerignore,
@@ -30,7 +30,7 @@ import {
   withCheckChangesScript,
 } from '../scripts/agentrite.mjs';
 
-const TEMPLATE_PATHS = ['AGENTS.md', 'CLAUDE.md', 'agent.sh', 'agent/compose.project.yml'];
+const TEMPLATE_PATHS = ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', 'sandbox/compose.project.yml'];
 const templates = Object.fromEntries(
   TEMPLATE_PATHS.map((path) => [
     path,
@@ -228,39 +228,39 @@ test('the notice for an existing CLAUDE.md names the @AGENTS.md import', () => {
 
 // R6
 
-test('agent.sh is planned executable, and execs the kit wrapper with its own directory first', () => {
-  const shim = fileAt(files(['claude']), 'agent.sh');
+test('sandbox.sh is planned executable, and execs the kit wrapper with its own directory first', () => {
+  const shim = fileAt(files(['claude']), 'sandbox.sh');
   assert.equal(shim.executable, true);
   assert.match(
     shim.content,
-    /^exec "\$here\/node_modules\/@ritenoar\/agentrite\/container\/agent\.sh" "\$here" "\$@"$/m,
+    /^exec "\$here\/node_modules\/@ritenoar\/agentrite\/container\/sandbox\.sh" "\$here" "\$@"$/m,
   );
 });
 
 // R7
 
-test('agentName derives the names from an unscoped and a scoped package name', () => {
-  assert.equal(agentName('norareit'), 'norareit-agent');
-  assert.equal(agentName('@ritenoar/agentrite'), 'ritenoar-agentrite-agent');
+test('sandboxName derives the names from an unscoped and a scoped package name', () => {
+  assert.equal(sandboxName('norareit'), 'norareit-sandbox');
+  assert.equal(sandboxName('@ritenoar/agentrite'), 'ritenoar-agentrite-sandbox');
 });
 
-test('agentName reduces a package name to the characters Compose accepts in a project name', () => {
+test('sandboxName reduces a package name to the characters Compose accepts in a project name', () => {
   for (const name of ['my.app', '@scope/My_App~2', 'a--b', '_leading']) {
-    assert.match(agentName(name), /^[a-z0-9][a-z0-9_-]*$/, name);
+    assert.match(sandboxName(name), /^[a-z0-9][a-z0-9_-]*$/, name);
   }
-  assert.equal(agentName('my.app'), 'my-app-agent');
+  assert.equal(sandboxName('my.app'), 'my-app-sandbox');
 });
 
 test('the compose file carries the names, the Playwright version, the limits and no host the kit supplies', () => {
   const compose = fileAt(
     files(['claude', 'opencode'], { packageName: '@acme/shop' }),
-    'agent/compose.project.yml',
+    'sandbox/compose.project.yml',
   ).content;
-  assert.match(compose, /^name: acme-shop-agent$/m);
-  assert.match(compose, /^ {4}image: acme-shop-agent$/m);
+  assert.match(compose, /^name: acme-shop-sandbox$/m);
+  assert.match(compose, /^ {4}image: acme-shop-sandbox$/m);
   assert.match(compose, /^ {8}PLAYWRIGHT_VERSION: 1\.59\.1$/m);
-  assert.match(compose, /^ {4}mem_limit: \$\{AGENT_MEM_LIMIT:-8g\}$/m);
-  assert.match(compose, /^ {4}cpus: \$\{AGENT_CPUS:-6\}$/m);
+  assert.match(compose, /^ {4}mem_limit: \$\{SANDBOX_MEM_LIMIT:-8g\}$/m);
+  assert.match(compose, /^ {4}cpus: \$\{SANDBOX_CPUS:-6\}$/m);
   const allowlist = compose.slice(compose.indexOf('ALLOWLIST: |'));
   const hosts = allowlist
     .split('\n')
@@ -294,10 +294,10 @@ test('playwrightVersion is undefined for a lockfile without playwright and for n
 });
 
 test('the compose file without a Playwright version has the names, the limits and no build arguments', () => {
-  const compose = fileAt(files(['claude'], { playwrightVersion: undefined }), 'agent/compose.project.yml').content;
-  assert.match(compose, /^name: my-app-agent$/m);
-  assert.match(compose, /^ {4}image: my-app-agent$/m);
-  assert.match(compose, /^ {4}mem_limit: \$\{AGENT_MEM_LIMIT:-8g\}$/m);
+  const compose = fileAt(files(['claude'], { playwrightVersion: undefined }), 'sandbox/compose.project.yml').content;
+  assert.match(compose, /^name: my-app-sandbox$/m);
+  assert.match(compose, /^ {4}image: my-app-sandbox$/m);
+  assert.match(compose, /^ {4}mem_limit: \$\{SANDBOX_MEM_LIMIT:-8g\}$/m);
   assert.match(compose, /^ {6}ALLOWLIST: \|$/m);
   assert.doesNotMatch(compose, /^\s*build:/m);
   assert.doesNotMatch(compose, /PLAYWRIGHT_VERSION/);
@@ -305,8 +305,8 @@ test('the compose file without a Playwright version has the names, the limits an
 });
 
 test('the compose file with a Playwright version holds the build block under the image', () => {
-  const compose = fileAt(files(['claude']), 'agent/compose.project.yml').content;
-  const block = /^ {4}image: my-app-agent\n {4}build:\n {6}args:\n(?: {8}#.*\n)+ {8}PLAYWRIGHT_VERSION: 1\.59\.1\n/m;
+  const compose = fileAt(files(['claude']), 'sandbox/compose.project.yml').content;
+  const block = /^ {4}image: my-app-sandbox\n {4}build:\n {6}args:\n(?: {8}#.*\n)+ {8}PLAYWRIGHT_VERSION: 1\.59\.1\n/m;
   assert.match(compose, block);
 });
 
@@ -430,7 +430,7 @@ test('no file init plans holds a line over 120 characters, whatever the harnesse
 
 test('every project template is filled from templates/project/', () => {
   for (const path of TEMPLATE_PATHS) assert.ok(files(['claude']).some((file) => file.path === path), path);
-  assert.match(templates['agent/compose.project.yml'], /^ {4}\{\{playwright_build\}\}$/m);
+  assert.match(templates['sandbox/compose.project.yml'], /^ {4}\{\{playwright_build\}\}$/m);
 });
 
 test('the AGENTS.md template holds the three headings the notice cuts by', () => {
@@ -481,24 +481,24 @@ test('a fresh project gets every file, listed as written, and exits 0', (t) => {
     assert.equal(read(file.path), file.content, file.path);
     assert.match(result.stdout, new RegExp(`^wrote ${file.path.replaceAll('.', '\\.')}$`, 'm'));
   }
-  assert.match(read('agent/compose.project.yml'), /^name: my-app-agent$/m);
+  assert.match(read('sandbox/compose.project.yml'), /^name: my-app-sandbox$/m);
   assert.equal(JSON.parse(read('package.json')).scripts['check-changes'], CHECK_CHANGES);
   assert.match(result.stdout, /^changed package\.json$/m);
   assert.equal(read('.dockerignore'), ignore(undefined));
   assert.match(result.stdout, /^wrote \.dockerignore$/m);
   assert.doesNotMatch(result.stdout, /skipped/);
-  assert.notEqual(statSync(join(base, 'agent.sh')).mode & 0o111, 0);
+  assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o111, 0);
 });
 
-test('the written agent.sh execs the kit wrapper with the project root and every other argument', (t) => {
+test('the written sandbox.sh execs the kit wrapper with the project root and every other argument', (t) => {
   const { base, run } = project(t);
   assert.equal(run('init', 'claude').status, 0);
   const kitContainer = join(base, 'node_modules', '@ritenoar', 'agentrite', 'container');
   mkdirSync(kitContainer, { recursive: true });
-  writeFileSync(join(kitContainer, 'agent.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$@"\n');
-  chmodSync(join(kitContainer, 'agent.sh'), 0o755);
+  writeFileSync(join(kitContainer, 'sandbox.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$@"\n');
+  chmodSync(join(kitContainer, 'sandbox.sh'), 0o755);
 
-  const result = spawnSync(join(base, 'agent.sh'), ['--rebuild', 'echo hi'], { encoding: 'utf-8' });
+  const result = spawnSync(join(base, 'sandbox.sh'), ['--rebuild', 'echo hi'], { encoding: 'utf-8' });
 
   assert.equal(result.status, 0, result.stderr);
   const [root, ...rest] = result.stdout.trimEnd().split('\n');
@@ -512,7 +512,7 @@ test('a project with some files present gets the rest; the present ones are skip
     'AGENTS.md': '# Our own instructions\n',
     'CLAUDE.md': 'our own\n',
     '.claude/agents/reviewer.md': 'our reviewer\n',
-    'agent.sh': '#!/bin/sh\necho ours\n',
+    'sandbox.sh': '#!/bin/sh\necho ours\n',
     '.dockerignore': `node_modules\n${EXCEPTION}\n`,
   };
   for (const [path, content] of Object.entries(present)) {
@@ -531,7 +531,7 @@ test('a project with some files present gets the rest; the present ones are skip
   }
   assert.equal(read('package.json'), packageJson);
   assert.match(result.stdout, /^skipped package\.json\b/m);
-  for (const path of ['.claude/agents/planner.md', '.claude/agents/implementer.md', 'agent/compose.project.yml']) {
+  for (const path of ['.claude/agents/planner.md', '.claude/agents/implementer.md', 'sandbox/compose.project.yml']) {
     assert.ok(exists(join(base, path)), path);
     assert.match(result.stdout, new RegExp(`^wrote ${path.replaceAll('.', '\\.')}$`, 'm'));
   }
@@ -555,9 +555,9 @@ test('a project without playwright gets every file, the compose file without the
     const result = run('init', 'claude');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
-    assert.match(result.stdout, /^wrote agent\/compose\.project\.yml$/m);
-    assert.doesNotMatch(read('agent/compose.project.yml'), /PLAYWRIGHT_VERSION|build:/);
-    for (const path of ['AGENTS.md', 'CLAUDE.md', 'agent.sh', '.dockerignore', '.claude/agents/planner.md']) {
+    assert.match(result.stdout, /^wrote sandbox\/compose\.project\.yml$/m);
+    assert.doesNotMatch(read('sandbox/compose.project.yml'), /PLAYWRIGHT_VERSION|build:/);
+    for (const path of ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', '.dockerignore', '.claude/agents/planner.md']) {
       assert.ok(exists(join(base, path)), path);
     }
     assert.match(result.stdout, /^changed package\.json$/m);
@@ -566,13 +566,13 @@ test('a project without playwright gets every file, the compose file without the
 
 test('a project without playwright whose compose file exists keeps it, and exits 0', (t) => {
   const { base, run, read } = project(t, { lockfile: null });
-  mkdirSync(join(base, 'agent'));
-  writeFileSync(join(base, 'agent', 'compose.project.yml'), 'ours\n');
+  mkdirSync(join(base, 'sandbox'));
+  writeFileSync(join(base, 'sandbox', 'compose.project.yml'), 'ours\n');
   const result = run('init', 'claude');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
-  assert.equal(read('agent/compose.project.yml'), 'ours\n');
-  assert.match(result.stdout, /^skipped agent\/compose\.project\.yml\b/m);
+  assert.equal(read('sandbox/compose.project.yml'), 'ours\n');
+  assert.match(result.stdout, /^skipped sandbox\/compose\.project\.yml\b/m);
   assert.ok(exists(join(base, 'AGENTS.md')));
 });
 
@@ -582,7 +582,7 @@ test('a usage error writes nothing and exits non-zero', (t) => {
     const result = run(...args);
     assert.notEqual(result.status, 0, args.join(' '));
     assert.match(result.stderr, /usage: agentrite init/);
-    for (const path of ['AGENTS.md', 'CLAUDE.md', 'agent.sh', '.dockerignore', '.claude', 'agent']) {
+    for (const path of ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', '.dockerignore', '.claude', 'sandbox']) {
       assert.equal(exists(join(base, path)), false, path);
     }
     assert.doesNotMatch(read('package.json'), /check-changes/);
@@ -611,7 +611,7 @@ test('the command runs through a node_modules bin symlink the way npx does', (t)
 
 // --no-sandbox
 
-const SANDBOX_FILES = ['agent.sh', 'agent/compose.project.yml', '.dockerignore'];
+const SANDBOX_FILES = ['sandbox.sh', 'sandbox/compose.project.yml', '.dockerignore'];
 const PROCESS_PATHS = [...plannedFiles(['claude']).map((file) => file.path), 'AGENTS.md', 'CLAUDE.md'];
 
 function line(word, path, end) {
@@ -630,10 +630,10 @@ function noticesOf(result) {
 
 // The files of the sandbox as a project that has it holds them.
 function withSandboxFiles(base) {
-  mkdirSync(join(base, 'agent'), { recursive: true });
-  writeFileSync(join(base, 'agent.sh'), '#!/bin/sh\necho ours\n');
-  chmodSync(join(base, 'agent.sh'), 0o755);
-  writeFileSync(join(base, 'agent', 'compose.project.yml'), 'ours\n');
+  mkdirSync(join(base, 'sandbox'), { recursive: true });
+  writeFileSync(join(base, 'sandbox.sh'), '#!/bin/sh\necho ours\n');
+  chmodSync(join(base, 'sandbox.sh'), 0o755);
+  writeFileSync(join(base, 'sandbox', 'compose.project.yml'), 'ours\n');
   writeFileSync(join(base, '.dockerignore'), 'ours\n');
 }
 
@@ -677,8 +677,8 @@ test('init --no-sandbox prints the same lines and notices for what exists, and l
   assert.ok(result.stdout.includes(agentsNotice(fileAt(files(['claude']), 'AGENTS.md').content)));
   assert.ok(result.stdout.includes(CLAUDE_NOTICE));
   assert.equal(noticesOf(result), noticesOf(withSandbox));
-  assert.equal(read('agent.sh'), '#!/bin/sh\necho ours\n');
-  assert.equal(read('agent/compose.project.yml'), 'ours\n');
+  assert.equal(read('sandbox.sh'), '#!/bin/sh\necho ours\n');
+  assert.equal(read('sandbox/compose.project.yml'), 'ours\n');
   assert.equal(read('.dockerignore'), 'ours\n');
   for (const path of SANDBOX_FILES) {
     assert.equal(statSync(join(base, path)).mode, modes[path], path);
@@ -740,5 +740,5 @@ test('init without the option, in a project set up with it, writes the three fil
   for (const path of SANDBOX_FILES) assert.match(result.stdout, line('wrote', path, '$'));
   for (const path of PROCESS_PATHS) assert.match(result.stdout, line('skipped', path, '\\b'));
   assert.match(result.stdout, /^skipped package\.json\b/m);
-  assert.equal(read('agent/compose.project.yml'), fileAt(files(['claude']), 'agent/compose.project.yml').content);
+  assert.equal(read('sandbox/compose.project.yml'), fileAt(files(['claude']), 'sandbox/compose.project.yml').content);
 });

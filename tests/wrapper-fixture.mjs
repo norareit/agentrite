@@ -120,11 +120,12 @@ if [[ " $* " == *" config --format json "* ]]; then
     process.stdin.on("data", (chunk) => (json += chunk));
     process.stdin.on("end", () => {
       const args = {
-        CLAUDE_CODE_VERSION: process.env.AGENT_CLAUDE_CODE_VERSION,
-        OPENCODE_VERSION: process.env.AGENT_OPENCODE_VERSION,
+        CLAUDE_CODE_VERSION: process.env.SANDBOX_CLAUDE_CODE_VERSION,
+        OPENCODE_VERSION: process.env.SANDBOX_OPENCODE_VERSION,
         ...JSON.parse(json),
       };
-      console.log(JSON.stringify({ name: "project-agent", services: { agent: { image: "image", build: { args } } } }));
+      const sandbox = { image: "image", build: { args } };
+      console.log(JSON.stringify({ name: "project-sandbox", services: { sandbox } }));
     });
   ' < "${projectBuildArgs}"
 fi

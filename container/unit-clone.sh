@@ -1,4 +1,4 @@
-# The git work of a unit run: the functions container/agent.sh calls to find the unit's
+# The git work of a unit run: the functions container/sandbox.sh calls to find the unit's
 # branch, to make the clone it mounts at /work and to bring the work back. Sourced by
 # the wrapper when it is given a unit, and holds no top-level code: the wrapper orders
 # the steps and talks to Docker.
@@ -20,18 +20,18 @@
 cut_unit_branch() {
   local root="$1" unit="$2" directories directory record line kind="" prefix name
   if ! git -C "$root" show-ref --verify --quiet refs/heads/master; then
-    echo "agent.sh: '$unit' names no local branch, and there is no local branch master to cut one from." >&2
+    echo "sandbox.sh: '$unit' names no local branch, and there is no local branch master to cut one from." >&2
     return 3
   fi
   directories="$(git -C "$root" ls-tree -d --name-only master changes/ | grep -E "^changes/$unit-")" \
     || directories=""
   if [ -z "$directories" ]; then
-    echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
+    echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
     echo "master holds no unit of that number in changes/, so there is no branch to cut." >&2
     return 1
   fi
   if [ "$(grep -c '' <<< "$directories")" -gt 1 ]; then
-    echo "agent.sh: '$unit' names no local branch, and master holds more than one unit of that number:" >&2
+    echo "sandbox.sh: '$unit' names no local branch, and master holds more than one unit of that number:" >&2
     echo "  ${directories//$'\n'/$'\n'  }" >&2
     echo "So no branch is cut." >&2
     return 3
@@ -39,7 +39,7 @@ cut_unit_branch() {
   directory="${directories#changes/}"
   record="changes/$directory/record.md"
   if ! git -C "$root" cat-file -e "master:$record" 2>/dev/null; then
-    echo "agent.sh: $record cannot be read on master, so no branch is cut for '$unit'." >&2
+    echo "sandbox.sh: $record cannot be read on master, so no branch is cut for '$unit'." >&2
     return 3
   fi
   while IFS= read -r line; do
@@ -53,17 +53,17 @@ cut_unit_branch() {
     bug) prefix="bugfix" ;;
     task) prefix="task" ;;
     *)
-      echo "agent.sh: $record on master names no kind the kit has, which are feature, bug and task," >&2
+      echo "sandbox.sh: $record on master names no kind the kit has, which are feature, bug and task," >&2
       echo "so no branch is cut for '$unit'." >&2
       return 3
       ;;
   esac
   name="$prefix-$directory"
   if ! git -C "$root" branch --quiet --no-track "$name" master; then
-    echo "agent.sh: cutting $name from master failed." >&2
+    echo "sandbox.sh: cutting $name from master failed." >&2
     return 3
   fi
-  echo "agent.sh: cut $name from master at $(git -C "$root" rev-parse --short master), for changes/$directory." >&2
+  echo "sandbox.sh: cut $name from master at $(git -C "$root" rev-parse --short master), for changes/$directory." >&2
   echo "$name"
 }
 
@@ -84,7 +84,7 @@ find_unit_branch() {
   fi
   [ -n "$matches" ] || return 1
   if [ "$(grep -c '' <<< "$matches")" -gt 1 ]; then
-    echo "agent.sh: '$unit' names more than one branch. Give one by its name:" >&2
+    echo "sandbox.sh: '$unit' names more than one branch. Give one by its name:" >&2
     while read -r match; do
       echo "  $match" >&2
     done <<< "$matches"
@@ -106,7 +106,7 @@ resolve_unit_branch() {
     cut_unit_branch "$root" "$unit"
     return
   fi
-  echo "agent.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
+  echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
   echo "A unit's branch is cut from master when the unit is given by its number." >&2
   return 1
 }
@@ -120,7 +120,7 @@ refuse_unlanded() {
   [ ! -e "$clone" ] || return 0
   git -C "$root" show-ref --verify --quiet "$ref" || return 0
   [ -n "$(git -C "$root" rev-list --max-count=1 "refs/heads/$branch..$ref")" ] || return 0
-  echo "agent.sh: sandbox/$branch holds commits of an earlier run that $branch does not have," >&2
+  echo "sandbox.sh: sandbox/$branch holds commits of an earlier run that $branch does not have," >&2
   echo "and a new run would overwrite them. Merge it first, with 'git merge sandbox/$branch'," >&2
   echo "or delete it, with 'git branch --remotes --delete sandbox/$branch'." >&2
   return 1
@@ -132,7 +132,7 @@ refuse_unlanded() {
 prepare_clone() {
   local root="$1" branch="$2" clone="$3"
   if [ -e "$clone" ]; then
-    echo "agent.sh: resuming the clone of $branch that an earlier run left at $clone." >&2
+    echo "sandbox.sh: resuming the clone of $branch that an earlier run left at $clone." >&2
     return 0
   fi
   mkdir -p "$(dirname "$clone")"
@@ -154,7 +154,7 @@ fast_forward_branch() {
     else
       git -C "$root" fetch --quiet . "$ref:refs/heads/$branch" 2>/dev/null || return 1
     fi
-    echo "agent.sh: $branch is now at $(git -C "$root" rev-parse --short "refs/heads/$branch")." >&2
+    echo "sandbox.sh: $branch is now at $(git -C "$root" rev-parse --short "refs/heads/$branch")." >&2
   fi
   git -C "$root" update-ref -d "$ref"
 }
@@ -196,12 +196,12 @@ discard_clone() {
   aside="$(dirname "$clone")/.discarded-$(basename "$clone")"
   rm -rf "$aside" 2>/dev/null || true
   if [ -e "$aside" ] || ! mv "$clone" "$aside"; then
-    echo "agent.sh: removing the clone failed: $aside, the remains of an earlier one, is in the way." >&2
+    echo "sandbox.sh: removing the clone failed: $aside, the remains of an earlier one, is in the way." >&2
     echo "The clone is at $clone and holds nothing the host lacks. Remove both by hand." >&2
     return 1
   fi
   if ! rm -rf "$aside"; then
-    echo "agent.sh: removing the clone failed. It held nothing the host lacks." >&2
+    echo "sandbox.sh: removing the clone failed. It held nothing the host lacks." >&2
     echo "Its remains are at $aside. Remove them by hand." >&2
     return 1
   fi
@@ -216,27 +216,27 @@ land_clone() {
   local root="$1" branch="$2" clone="$3"
   local ref="refs/remotes/sandbox/$branch" commit files refs
   if ! git -C "$root" fetch --quiet --no-tags --no-recurse-submodules "$clone" "+refs/heads/$branch:$ref"; then
-    echo "agent.sh: fetching $branch from the clone failed. The clone is kept at $clone." >&2
+    echo "sandbox.sh: fetching $branch from the clone failed. The clone is kept at $clone." >&2
     return 1
   fi
   commit="$(git -C "$root" rev-parse --verify "$ref^{commit}")"
   if ! fast_forward_branch "$root" "$branch"; then
-    echo "agent.sh: $branch cannot be fast-forwarded to the commits of this run, which are at sandbox/$branch." >&2
+    echo "sandbox.sh: $branch cannot be fast-forwarded to the commits of this run, which are at sandbox/$branch." >&2
     echo "With $branch checked out, merge them with 'git merge sandbox/$branch'." >&2
   fi
   if ! files="$(clone_changed_files "$root" "$clone" "$commit")"; then
-    echo "agent.sh: comparing the clone's files with $branch failed. The clone is kept at $clone." >&2
+    echo "sandbox.sh: comparing the clone's files with $branch failed. The clone is kept at $clone." >&2
     return 1
   fi
   if ! refs="$(clone_unfetched_refs "$root" "$clone")"; then
-    echo "agent.sh: listing the clone's refs failed. The clone is kept at $clone." >&2
+    echo "sandbox.sh: listing the clone's refs failed. The clone is kept at $clone." >&2
     return 1
   fi
   if [ -z "$files$refs" ]; then
     discard_clone "$clone"
     return
   fi
-  echo "agent.sh: the clone is kept at $clone, because it holds what the host does not." >&2
+  echo "sandbox.sh: the clone is kept at $clone, because it holds what the host does not." >&2
   if [ -n "$files" ]; then
     echo "Files that are not committed on $branch:" >&2
     echo "  ${files//$'\n'/$'\n'  }" >&2

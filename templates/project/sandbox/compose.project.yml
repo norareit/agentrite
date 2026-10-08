@@ -4,18 +4,18 @@
 # varies with the project: its names, what it is allowed to reach, how much of the host
 # it may use, and, when it has browser tests, the Playwright version they were rendered with.
 #
-# The kit's container/agent.sh passes both files to Compose with --project-directory set
+# The kit's container/sandbox.sh passes both files to Compose with --project-directory set
 # to this repository, so relative paths resolve from the repository root.
-name: {{agent_name}}
+name: {{sandbox_name}}
 
 services:
-  agent:
-    image: {{agent_name}}
+  sandbox:
+    image: {{sandbox_name}}
     {{playwright_build}}
 
     # Leave the host usable. Overridable from the environment for a heavier run.
-    mem_limit: ${AGENT_MEM_LIMIT:-8g}
-    cpus: ${AGENT_CPUS:-6}
+    mem_limit: ${SANDBOX_MEM_LIMIT:-8g}
+    cpus: ${SANDBOX_CPUS:-6}
 
     environment:
       # Reachable hosts, over HTTPS on port 443 only, besides those the kit admits
