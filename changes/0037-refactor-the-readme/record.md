@@ -150,6 +150,35 @@ timestamp: 2026-10-07T22:40:04Z
   describe. Left out of the README as the plan has it: `AGENT_UID`, `AGENT_GID`, `AGENTRITE_CONTAINER`,
   `AGENT_CLAUDE_CODE_VERSION` and `AGENT_OPENCODE_VERSION`, which the wrapper sets itself, and `HOME`. Not checked: the
   options by running each command with them, apart from the three usage texts
+- 2026-10-08T12:08:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the fourth and fifth commits:
+  the comments in `agent.sh`, `templates/project/agent.sh`, the two `compose.project.yml`, `container/Dockerfile`,
+  `agent-dev.sh` and `tests/harness-versions.test.mjs` name the document that now holds what they point to, the message
+  of `container/agent.sh` for a missing `agent/compose.project.yml` ends in the title of the section, on a line of its
+  own, and `AGENTS.md` has "The documents" and names which document is the source of truth on what. Both `git grep`
+  searches of the plan were run, and every line they found names a document that holds what the line says. What follows
+  for a project: `templates/project/agent.sh` changed by its comment, so `refresh` reports `agent.sh` as refreshed in
+  every project at the next release
+- 2026-10-08T12:08:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished the plan's tasks across the
+  three documents. Searched them for `auth.openai.com`, `rewrites`, `PLAYWRIGHT_VERSION` and `!node_modules`: the first
+  is in "Egress" of `SANDBOX.md` alone, the second in "Updating a project to a newer kit" alone, and the last two are
+  stated in "Installing it into a project", with `PLAYWRIGHT_VERSION` named besides in the two lists of what
+  `agent/compose.project.yml` holds. Took every code span and every line of a code block of the base README with a
+  script and looked for each in the three documents: 6 code spans and 22 lines of code blocks are in none, and each
+  belongs to a statement listed below, the base README's two install examples at 2.0.0 and 2.1.0 apart, which
+  requirement 16 replaced. Read the base README once more by section beside the three documents. Not done by a tool: the
+  comparison of prose statements, which is by reading, so a statement may be missing from the lists, and the reviewer's
+  own comparison is what finds it
+- 2026-10-08T12:08:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification on `7cf3949`:
+  `npm test` passes with 403 tests; `npm pack --dry-run --json` lists `README.md` and `SANDBOX.md` at the root and not
+  `CONTRIBUTING.md`; `npm run check-changes` exits 0; no file the branch changed has a line over 120 characters or an em
+  dash; none of the three documents has a table of contents. The commit that holds this entry changes this record and
+  the ticks of the plan and nothing else. Two concerns for the human. The three documents are not shorter than the base
+  README taken together: it has 1027 lines and 10707 words, and they have 1189 lines and 10978 words, of which
+  `README.md` 474 lines and 4154 words, `SANDBOX.md` 567 and 5577, and `CONTRIBUTING.md` 148 and 1247. What requirement
+  9 lets go was a small part of the reference of the sandbox, most of which says what the sandbox does, refuses and
+  leaves behind, and the lists and the new parts took the room that the why gave up. A shorter `SANDBOX.md` takes a
+  decision on what of that a reader does not need. And "How it works" holds the human's text with the three differences
+  the entry of the third move names. Status stays `in-progress`: the review has not been done
 
 ## What the three documents leave out
 
@@ -309,5 +338,10 @@ Went as why a behavior was chosen, or is now said elsewhere:
 * That the certificate is in us-east-1 because CloudFront takes no other. That it is there stays
 * The paragraph that opens with "In short", which gave the steps of a release and who takes each. `RELEASING.md`
   holds every step, and `CONTRIBUTING.md` names it and holds none
+
+### Out of date, moved as it is
+
+No statement that stayed was found to be out of date. None was looked for beyond what the reading for the three
+moves showed, and no statement was tried against the code but the commands, their arguments and their options.
 
 ## Amendments

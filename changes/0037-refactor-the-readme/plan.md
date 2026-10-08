@@ -193,12 +193,12 @@ The README:
 
 Across the three documents:
 
-- [ ] For each of the four facts of requirement 11, search the three documents for it, with `git grep -n` for
+- [x] For each of the four facts of requirement 11, search the three documents for it, with `git grep -n` for
       `auth.openai.com`, `rewrites`, `PLAYWRIGHT_VERSION` and `!node_modules`, and see that it is stated in the
       one place the table above gives and is a pointer by title everywhere else (R11)
-- [ ] Take every code span of the base README, with `grep -o` for text between backticks, and see of each that it
+- [x] Take every code span of the base README, with `grep -o` for text between backticks, and see of each that it
       is in one of the three documents letter for letter, or belongs to a statement that `record.md` lists (R12)
-- [ ] Read the base README once more from its first line to its last, section by section, beside the three
+- [x] Read the base README once more from its first line to its last, section by section, beside the three
       documents, and add to the lists in `record.md` every statement that is in none of them and not listed yet.
       See of every statement that stayed that it is as strong as it was: refused is refused, "best kept" is
       "best kept" (R12, R13)
@@ -232,13 +232,13 @@ This repository's instructions:
 
 ## Verification
 
-- [ ] `npm test` passes on the final tree (R17)
-- [ ] `npm pack --dry-run --json` lists `README.md` and `SANDBOX.md` and does not list `CONTRIBUTING.md` (R17)
-- [ ] `npm run check-changes` exits 0, run after the last commit
-- [ ] No line of a changed or new file is over 120 characters, and none holds an em dash
-- [ ] None of the three documents has a table of contents, and each section that is pointed to is named by its
+- [x] `npm test` passes on the final tree (R17)
+- [x] `npm pack --dry-run --json` lists `README.md` and `SANDBOX.md` and does not list `CONTRIBUTING.md` (R17)
+- [x] `npm run check-changes` exits 0, run after the last commit
+- [x] No line of a changed or new file is over 120 characters, and none holds an em dash
+- [x] None of the three documents has a table of contents, and each section that is pointed to is named by its
       title alone (R10)
-- [ ] Every requirement of the spec has a ticked task that names it
+- [x] Every requirement of the spec has a ticked task that names it
 
 ## Commit Points
 
@@ -250,5 +250,5 @@ This repository's instructions:
 - [x] `feature-0037 Rebuild the README around the commands`: the README and the record's list
 - [x] `feature-0037 Name the document where the README was named`: the comments and the message
 - [x] `feature-0037 Say in AGENTS.md how the three documents are kept`: `AGENTS.md`
-- [ ] `feature-0037 Record the implementation and what was run`: the record, with the last read against the base
+- [x] `feature-0037 Record the implementation and what was run`: the record, with the last read against the base
       README and the suites on the final tree
