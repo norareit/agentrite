@@ -284,6 +284,22 @@ timestamp: 2026-10-08T13:27:02Z
   printed before and `docker image rm <image>`, which the table now holds as well as the code block under the image.
   `SANDBOX.md` is 572 lines and 5080 words. Not reviewed: this commit and the one before it, which came after the delta
   review of `58a46b9`. The status stays `in-progress`
+- 2026-10-08T16:28:15Z [human] asked for the spec and the plan to be changed for what was decided after them
+- 2026-10-08T16:28:15Z [Claude Code, anthropic/claude-opus-5-5] as the specifier and then the planner, in the main
+  session on the Linux host, on the unit's branch at `5c7a266`, having read `roles/specifier.md` of the installed
+  release 4.2.0. Changed `spec.md` for three decisions the human took after it, each of which this record holds above:
+  requirement 1 has twelve sections, and requirement 10 has the document say nothing of moving from a release up to
+  4.0.0; requirements 3, 5, 6 and 16 have the places as a table with text under each name and the failures as entries,
+  where they had one table each and rows; and two requirements are new, 18 for no HTML and 19 for which login a removed
+  home volume discards, with the non-goals naming that message and that statement as exceptions. No requirement was
+  renumbered. Each has a decision, and the decisions for a table of failures and for keeping the copy command are
+  replaced by them. Changed `plan.md` to follow: a passage at the head of "Approach" that says which three things stand
+  above the plan as first written, "The form of the two sections" as the document is, a task for the section that was
+  taken out, the requirements the later tasks answer to, and the checks of "Verification" for twelve titles, no HTML and
+  the corrected login. The passes and their ticked tasks are left as they were, since they are how the document was
+  built. Nothing outside the two documents and this record is changed. Run on this tree: the two new checks of
+  "Verification" print nothing, the titles are twelve in the spec's order, and no line of the three documents is over
+  120 characters. The status stays `in-progress`
 
 ## What SANDBOX.md leaves out
 

@@ -9,6 +9,18 @@ The document everything is measured against is the `SANDBOX.md` of the merge bas
 `git show "$(git merge-base master HEAD)":SANDBOX.md`. It is called the base document below, and its sections the
 base sections. Line numbers below are those of the base document.
 
+What follows, up to the task lists added "on the human's word", is the plan as it was written for the first spec
+and is how the document was built. The human decided three things after it, which the spec now holds and which
+stand above it wherever the two differ:
+
+* The places and the failures are written with no HTML, by requirements 3, 5 and 18. Where this plan says a row
+  or a cell of "When something goes wrong", the document has an entry or a part of one. "The form of the two
+  sections" below says how
+* The document has no section on moving from a release up to 4.0.0, by requirement 10, so it has twelve sections
+  and not thirteen. What this plan says of that section holds for the passes and not for the document as it is
+* Which login a removed home volume discards is corrected, in the document and in the entrypoint's message, by
+  requirement 19
+
 The work on `SANDBOX.md` is three passes, each its own commit, so that a reviewer can check each for one thing:
 
 1. **The move.** The thirteen sections of requirement 1 with every paragraph, list item, table and code block of
@@ -61,11 +73,22 @@ which is the case for "What to do" of a refusal whose recovery neither its messa
 the cell is left empty, and the row is named in the record for the human. The non-goals leave no other way: such
 a refusal stays in the document, and correcting the content is no part of the unit.
 
-### The form of the two tables
+### The form of the two sections
 
-A row of either table holds more than a line of 120 characters can, a code block among it, and a pipe table cannot
-be wrapped. `AGENTS.md` has all text wrapped at 120 characters, and no line of the three documents is longer
-today. So each of the two tables is written as an HTML table, which is one table and wraps:
+As the document is, by requirements 3, 5 and 18:
+
+* "Where things are kept on the host" opens with a Markdown table of the four places, with the columns "What",
+  "Where it is" and "How it is removed", whose lines fit in 120 characters. Under it each place has its name in
+  bold, then what it is, what its placeholders are, what it holds and what there is to know of removing it
+* "When something goes wrong" opens with one line that says how an entry is read. Each failure is what is seen,
+  in bold, then a paragraph that opens with "Why:", then one that opens with "What to do:". A failure with
+  several causes has one list, with each cause and its recovery in one item
+* Neither holds an HTML tag
+
+As it was first built, and as the tasks of the form below describe it: a row of either table holds more than a line of
+120 characters can, a code block among it, and a pipe table cannot be wrapped. `AGENTS.md` has all text wrapped at 120
+characters, and no line of the three documents is longer today. So each of the two tables is written as an HTML table,
+which is one table and wraps:
 
 * `<table>`, `<tr>`, `<th>`, `<td>` and their closing tags each stand alone on a line, at the start of the line
 * What a cell holds is Markdown, with an empty line after `<td>` and before `</td>`, so that code spans, lists and
@@ -360,7 +383,7 @@ The correction, added on the human's word after the tasks above were done:
       directory. In "How it is removed" of the home volume in `SANDBOX.md`, and in the message of
       `home_volume_recovery` in `container/entrypoint.sh`, which says the same. Change the two assertions of
       `tests/entrypoint-home-owner.test.mjs` on that message first and see them fail. Bring the message the record
-      quotes, and its `### Out of date, left as it is`, along
+      quotes, and its `### Out of date, left as it is`, along (R19)
 
 The cells with no recovery, added on the human's word after the tasks above were done:
 
@@ -391,14 +414,19 @@ The review, added after the review of `790d0a0`:
       cuts the branch is started with the unit's number, since no branch is cut for a name. Try it, and bring
       the record's list of the cells written new along (R5)
 
-The form of the two sections, added on the human's word after the reviews. It stands above "The form of the two
-tables" and the tasks of the form above, which describe the HTML tables as they were first built:
+The section on moving from a release up to 4.0.0, which the human took out after the reviews:
+
+- [x] Take the section's line out of the table of contents, see that nothing else names the section, and list the
+      section in the record under what the document leaves out (R10)
+
+The form of the two sections, added on the human's word after the reviews. It stands above the tasks of the form
+above, which describe the HTML tables as they were first built:
 
 - [x] Write "Where things are kept on the host" and "When something goes wrong" with no HTML. The places are a
       Markdown table of where each is and how it is removed, with what each is and holds as text under its name.
       Each failure is what is seen, in bold, then why, then what to do, and a failure with several causes has
       each cause with its recovery. Every statement of the two tables stays. Say in `AGENTS.md` that the document
-      holds no HTML, and name an entry where it names a row. Run "Verification" again (R3, R5, R16, R17)
+      holds no HTML, and name an entry where it names a row. Run "Verification" again (R3, R5, R16, R17, R18)
 
 Finishing:
 
@@ -440,16 +468,18 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 
 - [x] `npm test` passes on the final tree (R17)
 - [x] `npm run check-changes` exits 0, run after the last commit (R17)
-- [x] `grep '^## ' SANDBOX.md` prints the thirteen titles of requirement 1 in their order, `grep -c '^### '
+- [x] `grep '^## ' SANDBOX.md` prints the twelve titles of requirement 1 in their order, `grep -c '^### '
       SANDBOX.md` prints 0, and every link of the table of contents is the anchor of one of them. The anchor of the
-      last is `#moving-from-a-release-up-to-400` (R1)
+      last is `#when-something-goes-wrong` (R1, R10)
+- [x] `grep -n -E '</?(table|tr|th|td|br)>' SANDBOX.md` prints nothing (R18)
+- [x] `git grep -n "harnesses' saved logins" -- . ':!changes' ':!CHANGELOG.md'` prints nothing (R19)
 - [x] "The move", run after the move and before the form, prints only headings, lines of the table of contents,
       the first sentence of the opening and lines in which a title changed (R13)
 - [x] "What was tried" prints nothing (R12)
-- [x] "The places" prints lines of "Where things are kept on the host" and of "Moving from a release up to 4.0.0"
-      only (R3)
+- [x] "The places" prints lines of "Where things are kept on the host" only (R3)
 - [x] "The titles" prints nothing, for each of its three commands (R11, R15)
-- [x] "The spellings" prints only the titles of sections and what the record names under `### New statements`
+- [x] "The spellings" prints only what the record names under `### New statements` and under the recoveries
+      written new
       (R13)
 - [x] `git diff "$base" --stat` names `SANDBOX.md`, `README.md`, `AGENTS.md`, the two `compose.project.yml` files
       and the unit's own documents, and, for the correction, `container/entrypoint.sh` and
@@ -477,6 +507,8 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
       test, and the record, with the suites on the final tree
 - [x] `feature-0039 Say what to do for the failures that had no recovery`: `SANDBOX.md` and the record, with the
       suites on the final tree
+- [x] `feature-0039 Take the move from a release up to 4.0.0 out of the sandbox reference`: `SANDBOX.md` and the
+      record
 - [x] `feature-0039 Write the places and the failures of the sandbox without HTML`: `SANDBOX.md`, `AGENTS.md`, the
       plan and the record, with the suites on the final tree
 - [x] `feature-0039 Start the unit run that a --connect waits for by its number`: `SANDBOX.md`, the plan and the
