@@ -293,32 +293,32 @@ The move:
 
 The form:
 
-- [ ] Write "Where things are kept on the host" as one HTML table, in the form above, with the four rows and the
+- [x] Write "Where things are kept on the host" as one HTML table, in the form above, with the four rows and the
       four columns of "The rows of 'Where things are kept on the host'", from the text the move put there. No
       text stays in the section outside the table but one line that introduces it (R3)
-- [ ] Write the two new cells from the code: how the project's log directory is removed, and how the image is.
+- [x] Write the two new cells from the code: how the project's log directory is removed, and how the image is.
       Try each on the host with `./agent-dev.sh`, which has an image and a Compose project of its own, and with
       `XDG_DATA_HOME` set to a directory in a temporary place, so that the developer's own image, home volume and
       logs are not touched: remove it, start a run, and see what the run does without it. Where Docker cannot be
       run, leave this task open and say so to the human. Name both cells in the record under `### New statements`,
       with what was run and what it showed (R3)
-- [ ] State where each harness keeps its login in "What it holds" of the home volume and of the log directory,
+- [x] State where each harness keeps its login in "What it holds" of the home volume and of the log directory,
       and take it out of every other place, leaving the title of the table there (R11)
-- [ ] Write "When something goes wrong" as one HTML table, in the form above, with the six rows requirement 5
+- [x] Write "When something goes wrong" as one HTML table, in the form above, with the six rows requirement 5
       names and the other failures of "The rows of 'When something goes wrong'", from the text the move put
       there. Each section a row came from names "When something goes wrong" by its title, in one sentence, and
       says no more of the failure (R5, R9)
-- [ ] Read the message of every refusal in the table of refusals above, in the code. Make a row of each whose
+- [x] Read the message of every refusal in the table of refusals above, in the code. Make a row of each whose
       message leaves out why or what to do, with "What to do" from the base document or empty. Leave each refusal
       whose message names both below the table, as the text the move put there, for the cuts. Log in `record.md`
       where the reading differs from the planner's (R5, R6)
-- [ ] Give each of the sections 1 to 9 the form of requirement 2: the command of "The opening command of each
+- [x] Give each of the sections 1 to 9 the form of requirement 2: the command of "The opening command of each
       section" first, in a code block, then what happens, then what a reader needs to know, with what is done in
       an order as a numbered list (R2)
-- [ ] Take out of every section outside the table where the clone, the log directory, the home volume and the
+- [x] Take out of every section outside the table where the clone, the log directory, the home volume and the
       image are and how each is removed, leaving the title of the table where a reader needs it. "Moving from a
       release up to 4.0.0" keeps its command and what its two placeholders are (R3, R10)
-- [ ] Bring what the sandbox defends against and does not into "What the sandbox defends against" as one text:
+- [x] Bring what the sandbox defends against and does not into "What the sandbox defends against" as one text:
       for a unit run, for the project's log directory, for a process started with `docker exec`, and for egress,
       with the supported usage (R4)
 
@@ -417,7 +417,7 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 - [x] `feature-0039 Plan the slimming of the sandbox reference`: the plan and the record
 - [x] `feature-0039 Move the sandbox reference into the sections of its reader`: the move, in `SANDBOX.md`,
       `README.md` and the two `compose.project.yml` files
-- [ ] `feature-0039 Put the places and the failures of the sandbox in two tables`: the form, in `SANDBOX.md`, and
+- [x] `feature-0039 Put the places and the failures of the sandbox in two tables`: the form, in `SANDBOX.md`, and
       the record's new statements
 - [ ] `feature-0039 Take out of the sandbox reference what a reader does not need`: the cuts, in `SANDBOX.md`, and
       the record's list

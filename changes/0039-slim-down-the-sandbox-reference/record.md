@@ -153,5 +153,50 @@ timestamp: 2026-10-08T13:27:02Z
   section of their subject after the move and not in "When something goes wrong", and are taken apart in the form.
   For the same reason the paragraph on the shared `node_modules` stands whole with its row, and what the base
   document says of a refused home volume under "Moving from a release up to 4.0.0" stands in that section
+- 2026-10-08T15:31:36Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave the document its form:
+  the two HTML tables, and the sections 1 to 9 as requirement 2 has them. Nothing of the base document leaves in
+  this commit: what the cuts take out stands in its section, or below the table of "When something goes wrong"
+  for a refusal. Read the message of every refusal of the plan's table in the code. The reading is the planner's
+  for each of the twenty, so nine are in the table and eleven go with the cuts. The nine are three rows, since
+  those that share what is seen are one row: a unit run that starts nothing, with a name that no branch has and
+  the four causes for which no branch is cut, a `--connect` that runs nothing, with its three causes, and the
+  checks of the boundary at start-up
+- 2026-10-08T15:31:36Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, tried the two new cells of
+  requirement 3 on the Linux host with Docker 28.4.0, with `XDG_DATA_HOME` set to a temporary directory and the
+  image and the Compose project of `./agent-dev.sh`. What was run and what it showed is under `### New statements`
+  below. The last of those runs was started with `container/agent.sh` and `AGENT_PROJECT_NAME` set as
+  `agent-dev.sh` sets it, and not with `./agent-dev.sh`, which gives `--rebuild` and so would have built whether or
+  not the image was there
+
+## What SANDBOX.md leaves out
+
+### New statements
+
+The two cells of "Where things are kept on the host" that the base document has no statement for.
+
+* How the project's log directory is removed: "With no sandbox of the project running, remove the directory with
+  `rm -rf`. The sessions of both harnesses and OpenCode's login go with it. The next run makes the directory
+  again, empty." Tried: `./agent-dev.sh --in-place true` made `<data>/agentrite/agentrite` with
+  `.claude/projects` and `.local/share/opencode` in it. With no sandbox running, a file was put in
+  `.claude/projects` and the directory removed with `rm -rf`. The next run, `--in-place true`, started as before
+  and made the directory again with the two directories in it, both empty. Not tried: removing it while a sandbox
+  runs, which is why the cell names the condition. That the sessions and OpenCode's login go with it was not
+  tried with a harness: it follows from what the base document says the directory holds
+* How the image is removed: "`docker image rm <image>`" and "The next start builds the image again." Tried:
+  `docker image rm ritenoar-agentrite-agent-dev`, with no container of it, untagged and deleted the image, and
+  `docker image inspect` of it then failed. The next start, `--in-place true` without `--rebuild`, built the
+  image by itself, verified the firewall and ran the command. Not tried: removing an image while a container of
+  it runs
+
+`docker image rm` is the one spelling in the document that the base document does not hold.
+
+### Rows with no "What to do"
+
+Three rows of "When something goes wrong" have an empty "What to do", for the human. Their messages say why and
+not what to do, so they stay by requirement 6, and the base document gives no recovery for them:
+
+* a unit run for which the wrapper refuses the unit or cuts no branch
+* a `--connect` that runs nothing, for its three causes that stay
+* an entrypoint that refuses to start because a check of the boundary fails
 
 ## Amendments
