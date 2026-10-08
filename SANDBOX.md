@@ -489,12 +489,21 @@ For a unit run, the wrapper says why and starts nothing: it refuses the unit, or
 One of:
 
 * the unit is given by a name that no branch has, which is refused
-* the unit is given by a number that names no branch, and the wrapper cuts none: `master` holds no unit of that
-  number, the unit's record on `master` cannot be read or names no kind the kit has, or there is no local branch
-  `master`
+* the unit is given by a number that names no branch, and `master` holds no unit of that number
+* the unit is given by such a number, and the unit's record on `master` cannot be read or names no kind the kit has
+* the unit is given by such a number, and there is no local branch `master`
 
 </td>
 <td>
+
+In that order:
+
+* Give the unit by the name of a branch that exists, which `git branch` lists, or by its number. A command that is
+  given with no unit before it, as in `./agent.sh claude`, is taken for the unit: say what to mount first
+* Specify the unit and commit it on `master` first: the wrapper cuts a branch for a unit whose directory is in
+  `changes/` on `master`. Or give the number of a unit that is there
+* Commit a `record.md` for the unit on `master` whose frontmatter names its `kind` as `feature`, `bug` or `task`
+* Make a local branch `master`, for example with `git branch master origin/master`
 
 </td>
 </tr>
@@ -572,6 +581,13 @@ One of:
 
 </td>
 <td>
+
+In that order:
+
+* Start a unit run of the unit first, with `./agent.sh <unit>`, and connect to it while it runs
+* See that Docker runs and that the user may use it: Docker's own error is printed above the wrapper's. Then give
+  the command again
+* Leave the option out: `--connect` takes the unit and a command, and nothing else
 
 </td>
 </tr>
@@ -684,6 +700,17 @@ fails:
 
 </td>
 <td>
+
+The message names the check that failed. In that order:
+
+* When the canary is reached, nothing a reader does repairs it: egress is not confined. Do not work around it, for
+  example by naming another canary, and report it to whoever maintains the kit. When the message says that the
+  canary does not resolve, see that the host has network and DNS
+* When a host is not reached, the message names it. See that the host machine has network. For a host of the
+  project's `ALLOWLIST`, see that its name is right and that it answers HTTPS on port 443, and correct it or take
+  it out
+* When the canary's hostname is not refused, the same holds as when the canary is reached: egress is not bounded
+  by hostname, so do not work around it, and report it
 
 </td>
 </tr>

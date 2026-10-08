@@ -215,6 +215,18 @@ timestamp: 2026-10-08T13:27:02Z
   added it to `plan.md` as three tasks and a commit point, unticked, for the implementer, with the recoveries the
   specifier proposed as what is checked against the code and not taken from the plan. Nothing of `SANDBOX.md` is changed
   by this. Not checked: any of the proposed recoveries against the code or by trying it. The status stays `in-progress`
+- 2026-10-08T15:47:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `57dcf93`, read the spec and the plan as the specifier changed them, and the message of
+  each cause of the three rows in `container/agent.sh`, `container/unit-clone.sh` and `container/entrypoint.sh`. Wrote a
+  recovery for each cause into the three "What to do" cells of `SANDBOX.md`, so that no cell of the table is empty, and
+  split the causes of a unit run that starts nothing into four, one for each recovery. No cause leaves a row by
+  requirement 6. What was tried of each and what was not is under the section of the cells written new, which replaces
+  the list of the rows that had none. The trials changed nothing that is committed: the line added to
+  `agent/compose.project.yml` was taken out again. Ran the checks of the plan's "Verification" again on that tree: `npm
+  test` passes with 403 tests, `npm run check-changes` exits 0, the thirteen titles are in their order with no `###`,
+  "What was tried", "The titles" and "The line length and the dashes" print nothing, "The places" prints lines of the
+  two sections it may, and "The spellings" prints `<project>_agent-home` and the six spellings named in that section.
+  Not checked: how the tables are rendered. The status stays `in-progress`
 
 ## What SANDBOX.md leaves out
 
@@ -432,14 +444,57 @@ The two cells of "Where things are kept on the host" that the base document has 
 the plan's "Verification" prints `<project>_agent-home` alone: the base document holds it inside
 `docker volume rm <project>_agent-home` and in its code blocks, and the table names the volume by it.
 
-### Rows with no "What to do"
+### The "What to do" cells written new
 
-Three rows of "When something goes wrong" have an empty "What to do", for the human. Their messages say why and
-not what to do, so they stay by requirement 6, and the base document gives no recovery for them:
+Three rows of "When something goes wrong" had an empty "What to do": their messages say why and not what to do, so
+they stay by requirement 6, and the base document gives no recovery for them. Each cell is written new, from the
+cause and the code, with one recovery for each cause in the row's "Why", in its order. Tried on the Linux host
+with Docker 28.4.0. Those of a unit run were tried with the functions of `container/unit-clone.sh` in a scratch
+repository, under `bash`, and those that need Docker with `./agent-dev.sh` and a temporary `XDG_DATA_HOME`.
 
-* a unit run for which the wrapper refuses the unit or cuts no branch
-* a `--connect` that runs nothing, for its three causes that stay
-* an entrypoint that refuses to start because a check of the boundary fails
+A unit run that starts nothing:
+
+* A name that no branch has: give a branch that exists or the unit's number, and say what to mount before a
+  command. Tried: `nosuch` was refused, the name of a branch that exists and its number were taken, and
+  `./agent-dev.sh claude` was refused with the forms. A close call for requirement 6: the message says how a branch
+  is cut and lists the forms, and names no branch to give. It stays, as the planner read it
+* No unit of the number on `master`: specify the unit and commit it on `master`, or give a number that is there.
+  Tried: `0008` was refused, and after a commit on `master` of `changes/0008-thing/record.md` with `kind: feature`
+  the branch `feature-0008-thing` was cut
+* A record that cannot be read or names no kind: commit a `record.md` with a `kind` of `feature`, `bug` or `task`
+  on `master`. Tried: a unit with no `record.md` was refused, one with `kind: chore` was refused, and with
+  `kind: task` the branch was cut
+* No local branch `master`: make one, for example with `git branch master origin/master`. Tried: with `master`
+  deleted the unit was refused, and after that command its branch was cut
+
+A `--connect` that runs nothing:
+
+* The unit names no local branch: start a unit run of the unit first and connect while it runs. Tried:
+  `--connect nosuch` was refused, and with `./agent-dev.sh 0039 sleep 45` running, `./agent-dev.sh --connect 0039
+  id -un` printed `agent` and exited 0. The run then ended with 0 and left no clone and no `sandbox/` branch. Not
+  tried: a unit that got its branch from that same run
+* Docker could not be asked: see that Docker runs and may be used. Tried: with `DOCKER_HOST` set to a socket that
+  is not there, Docker's own error was printed above the wrapper's, and without it the command went on
+* An option of a run: leave it out. Tried: `--connect --rebuild 0039 true` was refused, and without `--rebuild`
+  the wrapper went on to look for the run
+
+An entrypoint that refuses on a check of the boundary:
+
+* The canary is reached: nothing a reader does repairs it, so it is not worked around and is reported. Not tried,
+  since trying it takes breaking the confinement. The cell also has the canary that does not resolve, which is a
+  message of the same check and is what a host without DNS meets: see to the network and DNS. Not tried. The
+  document names nowhere to report to, so the cell says "whoever maintains the kit"
+* A host that is not reached: see to the network, and correct or take out a host of the project's `ALLOWLIST`.
+  Tried: with `no-such-host.invalid` added to `ALLOWLIST` in `agent/compose.project.yml` the entrypoint ended on
+  "allowlisted host no-such-host.invalid is not reachable; see /run/egress-proxy.log", and with the line taken out
+  again the sandbox started. Not tried: a host without network, and the probe host not reached. Not taken from
+  the specifier's proposal: the proxy's log, which the message names too. It is a file of the container, and the
+  wrapper starts the container with `run --rm`, so it is taken to be gone once the entrypoint has refused. That
+  was not looked at
+* The canary's hostname is not refused: as for a canary that is reached. Not tried, for the same reason
+
+The spellings these cells bring that the base document does not hold: `git branch`,
+`git branch master origin/master`, `./agent.sh claude`, `./agent.sh <unit>`, `record.md` and `bug`.
 
 ### Out of date, left as it is
 
