@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: planned
-timestamp: 2026-10-08T16:48:43Z
+status: in-progress
+timestamp: 2026-10-08T17:05:00Z
 ---
 
 # 0038 `--no-sandbox` replaces `agentrite-roles`
@@ -50,5 +50,9 @@ timestamp: 2026-10-08T16:48:43Z
   open: the module `scripts/agentrite-roles.mjs` keeps its name and loses only what made it a command; the parsing of
   the harnesses moves into `scripts/agentrite.mjs`; the pointer goes to version 2.0.0. Found no contradiction in the
   spec. Wrote no code and ran no suite. Status set to `planned`
+- 2026-10-08T17:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in the main session on the Linux
+  host, on the branch `feature-0038-no-sandbox-replaces-agentrite-roles` at `99e441d`. Read `process.md`,
+  `roles/implementer.md`, `spec.md`, `plan.md` and `record.md`. Ran `npm test` before any change: 403 tests, all
+  passing. Status set to `in-progress`
 
 ## Amendments

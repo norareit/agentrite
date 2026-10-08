@@ -56,15 +56,48 @@ function fileAt(list, path) {
 
 // R1
 
-test('parseArgs takes the command and the harnesses after it, as agentrite-roles takes them', () => {
-  assert.deepEqual(parseArgs(['init', 'claude']), { command: 'init', harnesses: ['claude'] });
+const OPTION = '--no-sandbox';
+
+test('parseArgs takes the command and the harnesses after it, and the sandbox is wanted', () => {
+  assert.deepEqual(parseArgs(['init', 'claude']), { command: 'init', harnesses: ['claude'], sandbox: true });
   assert.deepEqual(parseArgs(['init', 'opencode', 'claude', 'claude']), {
     command: 'init',
     harnesses: ['opencode', 'claude'],
+    sandbox: true,
   });
   assert.deepEqual(parseArgs(['refresh', 'claude', 'opencode']), {
     command: 'refresh',
     harnesses: ['claude', 'opencode'],
+    sandbox: true,
+  });
+});
+
+test('parseArgs takes --no-sandbox before, between and after the harnesses, for init and for refresh', () => {
+  for (const command of ['init', 'refresh']) {
+    for (const rest of [
+      [OPTION, 'claude', 'opencode'],
+      ['claude', OPTION, 'opencode'],
+      ['claude', 'opencode', OPTION],
+    ]) {
+      assert.deepEqual(
+        parseArgs([command, ...rest]),
+        { command, harnesses: ['claude', 'opencode'], sandbox: false },
+        rest.join(' '),
+      );
+    }
+  }
+});
+
+test('parseArgs counts --no-sandbox given more than once as given once', () => {
+  assert.deepEqual(parseArgs(['init', OPTION, 'claude', OPTION, OPTION]), {
+    command: 'init',
+    harnesses: ['claude'],
+    sandbox: false,
+  });
+  assert.deepEqual(parseArgs(['refresh', OPTION, OPTION, 'opencode', 'opencode']), {
+    command: 'refresh',
+    harnesses: ['opencode'],
+    sandbox: false,
   });
 });
 
@@ -73,22 +106,44 @@ test('parseArgs gives the usage of the command alone for no harness and for an u
     ['init', 'refresh'],
     ['refresh', 'init'],
   ]) {
-    for (const args of [[command], [command, 'codex'], [command, 'claude', 'toString']]) {
+    const cases = [
+      [command],
+      [command, 'codex'],
+      [command, 'claude', 'toString'],
+      [command, OPTION],
+      [command, OPTION, 'codex'],
+      [command, 'claude', `${OPTION}=1`],
+    ];
+    for (const args of cases) {
       assert.throws(() => parseArgs(args), (error) => {
-        assert.match(error.message, new RegExp(`^usage: agentrite ${command} claude \\| opencode$`, 'm'));
+        assert.match(
+          error.message,
+          new RegExp(`^usage: agentrite ${command} \\[--no-sandbox\\] claude \\| opencode$`, 'm'),
+        );
         assert.doesNotMatch(error.message, new RegExp(`agentrite ${other}`));
         assert.doesNotMatch(error.message, /agentrite-roles/);
         return true;
       });
     }
     assert.throws(() => parseArgs([command, 'codex']), /unknown harness: codex/);
+    assert.throws(() => parseArgs([command, 'claude', `${OPTION}=1`]), /unknown harness: --no-sandbox=1/);
   }
+});
+
+test('parseArgs gives roles and run what they print for an argument they do not take, --no-sandbox included', () => {
+  assert.throws(() => parseArgs(['roles', OPTION]), { message: 'usage: agentrite roles [--json]' });
+  assert.throws(() => parseArgs(['roles', '--json', OPTION]), { message: 'usage: agentrite roles [--json]' });
+  assert.throws(() => parseArgs(['run', 'planner', 'claude', '0001', OPTION]), (error) => {
+    assert.match(error.message, new RegExp(`${OPTION}`));
+    assert.match(error.message, /^usage: agentrite run /m);
+    return true;
+  });
 });
 
 test('parseArgs gives the usage of every command for no command and for one that is none of them', () => {
   const usage =
-    'usage: agentrite init claude | opencode\n' +
-    '       agentrite refresh claude | opencode\n' +
+    'usage: agentrite init [--no-sandbox] claude | opencode\n' +
+    '       agentrite refresh [--no-sandbox] claude | opencode\n' +
     '       agentrite roles [--json]\n' +
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
@@ -100,7 +155,7 @@ test('parseArgs gives the usage of every command for no command and for one that
 
 // R2
 
-test('the role wrappers are exactly those agentrite-roles writes', () => {
+test('the role wrappers are exactly those the kit renders', () => {
   for (const harnesses of HARNESS_LISTS) {
     const planned = files(harnesses);
     for (const wrapper of plannedFiles(harnesses)) assert.deepEqual(fileAt(planned, wrapper.path), wrapper);
@@ -552,4 +607,138 @@ test('the command runs through a node_modules bin symlink the way npx does', (t)
   const result = spawnSync(process.execPath, [bin, 'init', 'claude'], { cwd: base, encoding: 'utf-8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(read('CLAUDE.md'), templates['CLAUDE.md']);
+});
+
+// --no-sandbox
+
+const SANDBOX_FILES = ['agent.sh', 'agent/compose.project.yml', '.dockerignore'];
+const PROCESS_PATHS = [...plannedFiles(['claude']).map((file) => file.path), 'AGENTS.md', 'CLAUDE.md'];
+
+function line(word, path, end) {
+  return new RegExp(`^${word} ${path.replaceAll('.', '\\.')}${end}`, 'm');
+}
+
+// The lines of an init's output without the notices, which follow a blank line.
+function linesOf(result) {
+  return result.stdout.split('\n\n')[0].split('\n');
+}
+
+// The notices of an init's output, which follow its lines.
+function noticesOf(result) {
+  return result.stdout.split('\n\n').slice(1).join('\n\n');
+}
+
+// The files of the sandbox as a project that has it holds them.
+function withSandboxFiles(base) {
+  mkdirSync(join(base, 'agent'), { recursive: true });
+  writeFileSync(join(base, 'agent.sh'), '#!/bin/sh\necho ours\n');
+  chmodSync(join(base, 'agent.sh'), 0o755);
+  writeFileSync(join(base, 'agent', 'compose.project.yml'), 'ours\n');
+  writeFileSync(join(base, '.dockerignore'), 'ours\n');
+}
+
+test('init --no-sandbox writes what init writes but the three files of the sandbox, in a project with none', (t) => {
+  const { base, run, read } = project(t);
+  const full = project(t);
+  const withSandbox = full.run('init', 'claude');
+
+  const result = run('init', OPTION, 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  const expected = linesOf(withSandbox).filter((line) => !SANDBOX_FILES.some((path) => line.endsWith(` ${path}`)));
+  assert.deepEqual(linesOf(result), expected);
+  for (const path of PROCESS_PATHS) assert.equal(read(path), full.read(path), path);
+  assert.equal(read('package.json'), full.read('package.json'));
+  for (const path of SANDBOX_FILES) {
+    assert.equal(exists(join(base, path)), false, path);
+    assert.doesNotMatch(result.stdout, new RegExp(path.replaceAll('.', '\\.')));
+  }
+});
+
+test('init --no-sandbox prints the same lines and notices for what exists, and leaves the sandbox alone', (t) => {
+  const { base, run, read } = project(t);
+  const full = project(t);
+  for (const made of [{ base }, full]) {
+    writeFileSync(join(made.base, 'AGENTS.md'), '# Our own instructions\n');
+    writeFileSync(join(made.base, 'CLAUDE.md'), 'our own\n');
+  }
+  const withSandbox = full.run('init', 'claude');
+  withSandboxFiles(base);
+  const modes = Object.fromEntries(SANDBOX_FILES.map((path) => [path, statSync(join(base, path)).mode]));
+
+  const result = run('init', 'claude', OPTION);
+
+  assert.equal(result.status, 0, result.stderr);
+  const expected = linesOf(withSandbox).filter((line) => !SANDBOX_FILES.some((path) => line.endsWith(` ${path}`)));
+  assert.deepEqual(linesOf(result), expected);
+  assert.match(result.stdout, /^skipped AGENTS\.md, which exists$/m);
+  assert.match(result.stdout, /^skipped CLAUDE\.md, which exists$/m);
+  assert.ok(result.stdout.includes(agentsNotice(fileAt(files(['claude']), 'AGENTS.md').content)));
+  assert.ok(result.stdout.includes(CLAUDE_NOTICE));
+  assert.equal(noticesOf(result), noticesOf(withSandbox));
+  assert.equal(read('agent.sh'), '#!/bin/sh\necho ours\n');
+  assert.equal(read('agent/compose.project.yml'), 'ours\n');
+  assert.equal(read('.dockerignore'), 'ours\n');
+  for (const path of SANDBOX_FILES) {
+    assert.equal(statSync(join(base, path)).mode, modes[path], path);
+    assert.doesNotMatch(result.stdout, new RegExp(path.replaceAll('.', '\\.')));
+  }
+});
+
+test('init --no-sandbox runs with a package.json that has no name, and with no lockfile', (t) => {
+  const { base, run, read } = project(t, { lockfile: null });
+  writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n');
+
+  const result = run('init', 'claude', OPTION);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.match(result.stdout, /^changed package\.json$/m);
+  assert.equal(JSON.parse(read('package.json')).scripts['check-changes'], CHECK_CHANGES);
+  assert.ok(exists(join(base, 'AGENTS.md')));
+});
+
+test('init --no-sandbox does not read the lockfile, so one that cannot be read does not stop it', (t) => {
+  const { base, run } = project(t, { lockfile: 'not json' });
+
+  const withOption = run('init', OPTION, 'claude');
+  assert.equal(withOption.status, 0, withOption.stderr);
+  assert.equal(withOption.stderr, '');
+  assert.ok(exists(join(base, 'CLAUDE.md')));
+
+  const other = project(t, { lockfile: 'not json' });
+  const without = other.run('init', 'claude');
+  assert.notEqual(without.status, 0);
+  assert.match(without.stderr, /package-lock\.json/);
+});
+
+test('init --no-sandbox with no package.json, or one that is not JSON, is refused and writes nothing', (t) => {
+  for (const manifest of [null, 'not json']) {
+    const { base, run } = project(t);
+    rmSync(join(base, 'package.json'));
+    if (manifest !== null) writeFileSync(join(base, 'package.json'), manifest);
+
+    const result = run('init', 'claude', OPTION);
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /cannot read .*package\.json/);
+    assert.equal(result.stdout, '');
+    for (const path of [...PROCESS_PATHS, ...SANDBOX_FILES, '.claude']) {
+      assert.equal(exists(join(base, path)), false, path);
+    }
+  }
+});
+
+test('init without the option, in a project set up with it, writes the three files and skips the rest', (t) => {
+  const { run, read } = project(t);
+  assert.equal(run('init', 'claude', OPTION).status, 0);
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  for (const path of SANDBOX_FILES) assert.match(result.stdout, line('wrote', path, '$'));
+  for (const path of PROCESS_PATHS) assert.match(result.stdout, line('skipped', path, '\\b'));
+  assert.match(result.stdout, /^skipped package\.json\b/m);
+  assert.equal(read('agent/compose.project.yml'), fileAt(files(['claude']), 'agent/compose.project.yml').content);
 });

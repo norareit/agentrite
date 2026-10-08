@@ -509,3 +509,81 @@ test('refresh runs through a node_modules bin symlink the way npx does', (t) => 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(read('.claude/agents/planner.md'), rendered('claude', 'planner'));
 });
+
+// --no-sandbox
+
+const OPTION = '--no-sandbox';
+const WRAPPER_PATHS = WRAPPERS.map((file) => file.path);
+
+test('refresh --no-sandbox refreshes the wrappers, keeps a pinned model and prints no line for agent.sh', (t) => {
+  const { run, read, pinnedPath } = staleProject(t);
+  const shimBefore = read('agent.sh');
+
+  const result = run('refresh', OPTION, 'claude', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  for (const file of WRAPPERS) {
+    const expected =
+      file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
+    assert.equal(read(file.path), expected, file.path);
+    assert.match(result.stdout, line('refreshed', file.path));
+  }
+  assert.equal(result.stdout.trimEnd().split('\n').length, WRAPPER_PATHS.length);
+  assert.doesNotMatch(result.stdout, /agent\.sh/);
+  assert.equal(read('agent.sh'), shimBefore);
+});
+
+test('refresh --no-sandbox, in any place among the harnesses, writes what it writes in the others', (t) => {
+  const outputs = [
+    ['claude', 'opencode', OPTION],
+    ['claude', OPTION, 'opencode'],
+    [OPTION, 'claude', 'opencode', OPTION],
+  ].map((args) => {
+    const { base, run } = project(t);
+    const result = run('refresh', ...args);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(exists(join(base, 'agent.sh')), false);
+    return result.stdout;
+  });
+
+  assert.equal(outputs[1], outputs[0]);
+  assert.equal(outputs[2], outputs[0]);
+});
+
+test('refresh --no-sandbox leaves a missing agent.sh missing, and refresh without it writes one', (t) => {
+  const { base, run } = project(t);
+
+  const without = run('refresh', 'claude', OPTION);
+  assert.equal(without.status, 0, without.stderr);
+  assert.equal(exists(join(base, 'agent.sh')), false);
+  assert.doesNotMatch(without.stdout, /agent\.sh/);
+
+  const result = run('refresh', 'claude');
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, line('wrote', 'agent.sh'));
+  assert.equal(readFileSync(join(base, 'agent.sh'), 'utf-8'), SHIM);
+});
+
+test('refresh --no-sandbox does not look at what is at the path of agent.sh', (t) => {
+  const plain = project(t);
+  const expected = plain.run('refresh', 'claude', OPTION);
+
+  const link = project(t);
+  symlinkSync('/no/such/target', join(link.base, 'agent.sh'));
+  const directory = project(t);
+  mkdirSync(join(directory.base, 'agent.sh'));
+
+  for (const made of [link, directory]) {
+    const result = made.run('refresh', OPTION, 'claude');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.equal(result.stdout, expected.stdout);
+  }
+  assert.equal(lstatSync(join(link.base, 'agent.sh')).isSymbolicLink(), true);
+  assert.equal(lstatSync(join(directory.base, 'agent.sh')).isDirectory(), true);
+
+  const without = link.run('refresh', 'claude');
+  assert.equal(without.status, 1);
+  assert.match(without.stderr, /left agent\.sh, which is not a regular file/);
+});

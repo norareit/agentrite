@@ -874,8 +874,8 @@ test('a file beside the unit whose name opens with the same digits does not make
 test('agentrite alone and with a command it does not know print the usage of every command and exit 2', (t) => {
   const { agentrite } = project(t);
   const usage =
-    'usage: agentrite init claude | opencode\n' +
-    '       agentrite refresh claude | opencode\n' +
+    'usage: agentrite init [--no-sandbox] claude | opencode\n' +
+    '       agentrite refresh [--no-sandbox] claude | opencode\n' +
     '       agentrite roles [--json]\n' +
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
