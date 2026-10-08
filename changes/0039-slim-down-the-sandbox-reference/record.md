@@ -247,6 +247,25 @@ timestamp: 2026-10-08T13:27:02Z
   applied. On that tree `npm test` passes with 403 tests, no changed file has a line over 120 characters or an em dash,
   and "The spellings" prints `<project>_agent-home` and the six spellings that section names. The review's own entry
   above is committed with this one. The status stays `in-progress`
+- 2026-10-08T16:13:11Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of unit 0039 at
+  `58a46b9d6ae1c2c65c10d614b118887381f04e01`, from the previously reviewed commit
+  `790d0a0910b69685ec59b60aa661b6b3278760e5`. Checked the correction of S1 and the delta on all three axes.
+  Returned no new findings. Complete findings are in
+  `.reviews/0039-slim-down-the-sandbox-reference/delta-58a46b9-20261008T161220Z.md`.
+  `npm test` passes with 403 tests and none skipped, `npm run check-changes` exits 0, and the delta's
+  `git diff --check` exits 0. Reproduced numeric branch creation and subsequent connections by name and number
+  with real git and the existing wrapper fixture's modeled running container. Not independently verified:
+  branch creation followed by a connection to the same live run with real Docker
+- 2026-10-08T16:22:08Z [human] after the delta review returned no findings, took "Moving from a release up to 4.0.0" out
+  of `SANDBOX.md`, as no longer relevant, and found the two tables, which are HTML, ugly
+- 2026-10-08T16:22:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `58a46b9`, took the section's line out of the table of contents, which was the one thing
+  left that named it: no file outside `changes/` and `CHANGELOG.md` does. Listed the section under `## What SANDBOX.md
+  leaves out`. `spec.md` still asks for the section, in requirements 1 and 10 and in a decision, and the plan's
+  "Verification" for thirteen titles: neither is changed here, the spec not being the implementer's, so the human's
+  removal above is what stands. The notes of 4.1.0 in `CHANGELOG.md` send a reader to the README's "The harness logs"
+  for the command, which no document holds now. The delta review's own entry above is committed with this one. The form
+  of the two tables is open, with the human
 
 ## What SANDBOX.md leaves out
 
@@ -375,6 +394,14 @@ By requirement 6, which names it:
   when it is the agent's, and that one which even the agent cannot read is refused in the same way, with what the
   read said in place of an owner. The message, in the same function: "$directory could not be examined as the
   agent, so the agent cannot be shown to write it: $owner", followed by that of `home_volume_recovery`
+
+On the human's word, after the reviews:
+
+* The whole section as the cuts left it: the command that copies the logs out of a home volume, what its two
+  placeholders are, that it is run from the project root while no sandbox of the project runs and before the first
+  start with the later release, that it overwrites nothing the log directory holds, and that a home volume the
+  entrypoint refuses still allows it, so that a developer who wants that volume's logs copies them before removing
+  it. The document has twelve sections with it gone
 
 ### The harness versions
 

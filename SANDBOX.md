@@ -15,7 +15,6 @@ option, are in "Commands" of [`README.md`](README.md), and what the sandbox conf
 * [Where things are kept on the host](#where-things-are-kept-on-the-host)
 * [What the sandbox defends against](#what-the-sandbox-defends-against)
 * [When something goes wrong](#when-something-goes-wrong)
-* [Moving from a release up to 4.0.0](#moving-from-a-release-up-to-400)
 
 ## Running a unit
 
@@ -799,29 +798,3 @@ Renaming one of the roots ends it.
 </td>
 </tr>
 </table>
-
-## Moving from a release up to 4.0.0
-
-To have the volume's logs in the log directory, copy them by hand, from the project root, while no sandbox of the
-project runs. `<project>` is the Compose project's name, the `name:` of the project's `agent/compose.project.yml`,
-and `<image>` is its `image:`:
-
-```sh
-logs="${XDG_DATA_HOME:-$HOME/.local/share}/agentrite/$(basename "$PWD")"
-mkdir -p "$logs/.claude/projects" "$logs/.local/share/opencode"
-docker run --rm --network none --entrypoint bash --user "$(id -u):$(id -g)" \
-  --volume <project>_agent-home:/from:ro --volume "$logs:/to" <image> -c '
-    cd /from
-    sessions=.claude/projects
-    opencode=.local/share/opencode
-    if [ -d "$sessions" ]; then cp -Rnv "$sessions/." "/to/$sessions/"; fi
-    if [ -e "/to/$opencode/opencode.db" ]; then
-      echo "The log directory holds a database of OpenCode, so the data of OpenCode was not copied."
-    elif [ -d "$opencode" ]; then cp -Rnv "$opencode/." "/to/$opencode/"; fi'
-```
-
-* Run it before the first start with the later release
-* It overwrites nothing that the log directory already holds
-* A home volume that the entrypoint refuses still allows it. A developer who wants that volume's logs copies them
-  first, with the command above, and removes the volume after. How it is removed is in "Where things are kept on
-  the host"
