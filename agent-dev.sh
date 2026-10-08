@@ -2,7 +2,7 @@
 #
 # Runs the sandbox of this working copy rather than the released kit's, to try a change
 # to container/ before it is released. Only this repository has this file; it is not
-# part of the kit. README.md describes it under "Trying the working copy's sandbox".
+# part of the kit. CONTRIBUTING.md describes it under "Trying the working copy's sandbox".
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

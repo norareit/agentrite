@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 #
 # The agent sandbox image. Builds Claude Code and OpenCode into one Debian container
-# that can run the project's own suites. The kit's README.md describes the sandbox; the
+# that can run the project's own suites. The kit's SANDBOX.md describes the sandbox; the
 # project's README.md describes how that project runs it.
 
 # Harness versions. The kit names none: the last stage's CLAUDE_CODE_VERSION and

@@ -205,16 +205,16 @@ Across the three documents:
 
 What names the README:
 
-- [ ] In `templates/project/agent.sh` and in `agent.sh`, make the comment say that the command is described in the
+- [x] In `templates/project/agent.sh` and in `agent.sh`, make the comment say that the command is described in the
       kit's `README.md` and the sandbox in its `SANDBOX.md`. The two files stay equal (R14)
-- [ ] In `templates/project/agent/compose.project.yml` and in `agent/compose.project.yml`, make the comment name
+- [x] In `templates/project/agent/compose.project.yml` and in `agent/compose.project.yml`, make the comment name
       "Egress" of the kit's `SANDBOX.md` (R14)
-- [ ] In `container/Dockerfile`, make the comment at its head name the kit's `SANDBOX.md` for the sandbox (R14)
-- [ ] In `container/agent.sh`, make the message for a missing `agent/compose.project.yml` end in
+- [x] In `container/Dockerfile`, make the comment at its head name the kit's `SANDBOX.md` for the sandbox (R14)
+- [x] In `container/agent.sh`, make the message for a missing `agent/compose.project.yml` end in
       `See "Installing it into a project" in the kit's README.md.` (R14)
-- [ ] In `agent-dev.sh`, make the comment name `CONTRIBUTING.md` for "Trying the working copy's sandbox" (R14)
-- [ ] In `tests/harness-versions.test.mjs`, make the comment on the example versions name `SANDBOX.md` (R14)
-- [ ] Run `git grep -n -I -i readme -- . ':!README.md' ':!changes' ':!CHANGELOG.md' ':!package-lock.json'` and
+- [x] In `agent-dev.sh`, make the comment name `CONTRIBUTING.md` for "Trying the working copy's sandbox" (R14)
+- [x] In `tests/harness-versions.test.mjs`, make the comment on the example versions name `SANDBOX.md` (R14)
+- [x] Run `git grep -n -I -i readme -- . ':!README.md' ':!changes' ':!CHANGELOG.md' ':!package-lock.json'` and
       `git grep -n -I -e '"Running the sandbox"' -e '"Starting it"' -e '"Where to run it"' -- . ':!changes'
       ':!CHANGELOG.md'`, and see of every line found that what it names is where it says. The two pointer
       packages under `pointers/` name the README for the command that installs, which stays true (R14)
@@ -248,7 +248,7 @@ This repository's instructions:
 - [x] `feature-0037 Move working on the kit to CONTRIBUTING.md`: the test, `CONTRIBUTING.md`, the README and the
       record's list
 - [x] `feature-0037 Rebuild the README around the commands`: the README and the record's list
-- [ ] `feature-0037 Name the document where the README was named`: the comments and the message
+- [x] `feature-0037 Name the document where the README was named`: the comments and the message
 - [ ] `feature-0037 Say in AGENTS.md how the three documents are kept`: `AGENTS.md`
 - [ ] `feature-0037 Record the implementation and what was run`: the record, with the last read against the base
       README and the suites on the final tree

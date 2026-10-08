@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 #
 # The sandbox is AgentRite's. This shim keeps it one command from the repository
-# root; it holds no configuration of its own. The wrapper is documented in the kit's
-# README.md, and this project's half of the configuration is in
-# agent/compose.project.yml.
+# root; it holds no configuration of its own. The command is described in the kit's
+# README.md and the sandbox in its SANDBOX.md, and this project's half of the
+# configuration is in agent/compose.project.yml.
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

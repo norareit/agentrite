@@ -99,7 +99,7 @@ test('the search for a version of a harness passes by an argument with no versio
   }
 });
 
-// The versions the README holds are examples and are not searched.
+// The versions SANDBOX.md holds are examples and are not searched.
 test('no file under container/ or templates/ names a version of either harness', () => {
   const searched = [...filesUnder(join(repository, 'container')), ...filesUnder(join(repository, 'templates'))];
   const holding = searched

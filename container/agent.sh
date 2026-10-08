@@ -89,7 +89,8 @@ if [ ! -f "$project_compose" ]; then
   echo "agent.sh: $project_compose not found." >&2
   echo "Each project supplies its own compose file at that path, holding the Compose" >&2
   echo "project name, the image name, the egress allowlist, the resource limits and" >&2
-  echo "the Playwright version, if it has one. See the kit's README.md." >&2
+  echo "the Playwright version, if it has one." >&2
+  echo "See \"Installing it into a project\" in the kit's README.md." >&2
   exit 2
 fi
 
