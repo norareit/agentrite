@@ -32,8 +32,7 @@ The unit is a local branch, named in one of two ways:
 
 * By its name
 * By a number that its name holds as a whole number: `0029` names `feature-0029-sandbox-clone-of-the-branch`, and
-  `29` and `002` name nothing. When a number names several branches, the wrapper lists them and asks for one by its
-  name
+  `29` and `002` name nothing
 
 When a number names no branch, the wrapper cuts one, which the first unit run of a unit does:
 
@@ -43,9 +42,6 @@ When a number names no branch, the wrapper cuts one, which the first unit run of
    `master`, then a dash and the directory's name
 3. The wrapper says what it cut, from which commit and for which unit, before it builds an image or starts a
    container
-
-Cutting checks nothing out and moves no branch that exists, so the host's checkout, its working tree and its index
-are as they were.
 
 Before the container starts, the wrapper clones the repository, with that branch checked out at the commit the
 host's branch is at:
@@ -66,8 +62,8 @@ Several runs:
 
 * Two units run side by side, each on its own clone, in its own container, and each container has the full memory
   and CPU limits of the project's compose file
-* Two runs never work on one branch: the container is named after the Compose project and the branch, and a second
-  run for a branch whose container is running is refused. That refusal names `--connect`
+* Two runs never work on one branch: the container is named after the Compose project and the branch. See "Two
+  agents on one unit"
 * Two checkouts of one project on one host share a branch's clone
 
 For a unit run that starts nothing, see "When something goes wrong".
@@ -121,8 +117,6 @@ And in another, while that runs:
 * Any number of commands may be connected to one run at a time. Two harnesses in one clone write the same files and
   commit on the same branch, and keeping them out of each other's way is the developer's, as it is with two
   terminals on the host
-* `--connect` starts no container and stops none, builds no image, asks npm nothing, makes no clone, cuts no branch
-  and fetches nothing, and it changes nothing in the host's repository
 
 The first command owns the container, so end the first shell last:
 
@@ -135,9 +129,6 @@ The first command owns the container, so end the first shell last:
 
 Only a unit run can be connected to. A run with `--in-place` or `--workdir` has a container whose name Compose made
 up, and no unit to give.
-
-`--connect` was shown on Linux with Docker 28.4.0. It was not shown with a harness in each of two shells, and not
-on macOS.
 
 For a `--connect` that runs nothing, see "When something goes wrong".
 
@@ -200,28 +191,8 @@ in a project, and a kit release that needs another host adds it there, with no c
 or left out. Add the API host of any other model provider the project's agents use, and whatever its tools and
 tests reach. A provider's login may need further hosts. See "When something goes wrong".
 
-Every outbound connection on port 443 goes to `container/egress-proxy.mjs`, which runs as its own unprivileged
-account:
-
-* It reads the hostname from the TLS ClientHello and admits the connection only if that host is allowlisted
-* It resolves the host itself and connects there, never to the address the client asked for, so an allowlisted name
-  sent to some other address does not reach that address
-* It terminates no TLS and installs no certificate: it forwards the connection's bytes unchanged, and the client
-  validates the origin's own certificate
-* It logs one line for each connection it allows or refuses to `/run/egress-proxy.log`, which the agent can read
-
-What follows from that:
-
-* Another host served from the same address as an allowlisted one is refused. So is plain HTTP, and so is TLS on any
-  port but 443
-* Allowlist entries are hostnames, matched exactly. A subdomain needs its own entry, and an address or CIDR range is
-  refused at start-up
-* A host whose addresses rotate stays reachable, because the proxy resolves it per connection
-* Encrypted ClientHello is judged by its outer hostname, the one sent in the clear. Chromium sends the extension as
-  GREASE and puts the real hostname there, so it is checked like any other. A genuine ECH connection carries the
-  provider's public name there, and is refused unless that public name is itself allowlisted, in which case the real
-  hostname inside is not seen
-* If the proxy stops, egress stops. The redirect still points at its port and nothing else admits port 443
+* Allowlist entries are hostnames, matched exactly. A subdomain needs its own entry
+* Plain HTTP is refused, also to an allowlisted host, and so is TLS on any port but 443
 
 For a connection that is refused, and for a sandbox that the entrypoint refuses to start, see "When something goes
 wrong".
@@ -238,16 +209,14 @@ services:
 ```
 
 A project holds a version by adding the build argument to its `agent/compose.project.yml`, for either harness or
-for both. Give an exact version. The value is passed to npm as it is, so a tag such as `latest` is installed once,
-when the image is built, and not again.
+for both. Give an exact version.
 
 The image holds Claude Code and OpenCode. For each on its own, the version is the first of these that exists:
 
 1. the version the project's `agent/compose.project.yml` gives
 2. the version installed on the host
 
-The kit names no version of either harness. With neither of the two, the image gets the latest published version
-at the time it is built, and the wrapper says which, in one line.
+With neither of the two, the image gets the latest published version at the time it is built.
 
 The host's version:
 
@@ -265,40 +234,18 @@ A newer version:
   built again, whatever is published in the meantime. `./agent.sh --in-place --rebuild` builds it again, and is how
   such a sandbox gets a newer one. A build for another reason, such as an update of the other harness on the host,
   brings the latest too
-* The wrapper finds the latest with `npm view <package> version` on the host, so the build needs `npm` on the host
-  for this
-* It asks only when it is about to build: a start that builds nothing asks the registry nothing, and neither does a
-  build for which the project or the host gives both versions
-* For a harness with neither source there is nothing to compare: the sandbox keeps the version the image records,
-  and the wrapper builds only when the image records none
-* An image built by a release that did not write the labels records no version, and is built again at the first
-  start
 
-To see what an image holds, read its labels, where `<image>` is the `image:` of the project's
-`agent/compose.project.yml`, or ask the harness in the sandbox:
+To see what an image holds, read its labels, where `<image>` is as "Where things are kept on the host" has it, or
+ask the harness in the sandbox:
 
 ```sh
 docker image inspect --format '{{ json .Config.Labels }}' <image>
 ./agent.sh --in-place claude --version
 ```
 
-The versions and the image are worked out from the checkout the command is run from, also for a unit run. See
-"Running a unit".
-
-What follows from that:
-
-* The image is per machine. Two developers on one project run what their own hosts have, until the project holds a
-  version
-* On a host without a harness, the sandbox's version of it is the latest of the day the image was last built
-* Self-update stays off inside the sandbox, for both harnesses: its root filesystem is read-only, and holds what
-  the build installed
-
-The kit checks no version of either harness. What it promises for a harness version:
-
-* For any version: the confinement, which depends on no harness's version. The firewall, the proxy, the read-only
-  root, the capabilities and the mounts are the same whichever version is installed, and a harness that contacts a
-  host the kit does not admit is refused as before. And that the image holds exactly the version the rules above
-  name, or the start fails
+The image is per machine. Two developers on one project run what their own hosts have, until the project holds a
+version. The versions and the image are worked out from the checkout the command is run from, also for a unit run.
+See "Running a unit".
 
 For a build that fails, and for a version of a harness that breaks something, see "When something goes wrong".
 
@@ -382,9 +329,6 @@ mounted at `/work`, the wrapper mounts two directories of the host over the two 
 
 Every run of one project root uses that directory: a unit run of any branch, `--in-place` and `--workdir` alike.
 The wrapper makes it, with the two directories in it, as the developer, before the container starts.
-
-The mounts were shown to work on macOS 15.1.1 with Docker Desktop 4.26.0 and VirtioFS as its file sharing. They
-were shown with no other file sharing of Docker Desktop for macOS, so neither with gRPC FUSE nor with osxfs.
 
 </td>
 <td>
@@ -828,50 +772,7 @@ Renaming one of the roots ends it.
 </tr>
 </table>
 
-**Nothing fetched while the container may run**
-
-When the container exits, the wrapper neither fetches nor fast-forwards while the container is still running, or
-when Docker cannot say whether it is.
-
-**A new run while `sandbox/<branch>` holds commits**
-
-A new run is refused while `sandbox/<branch>` holds commits the branch does not have: merge it or delete it first.
-
-**`--connect` that runs nothing**
-
-`--connect` also runs nothing, says why and exits with 2 when:
-
-* no unit is given
-* the unit names several branches, which it lists, as a unit run does
-* no container of the unit's run is running. It says that no run is under way for the unit, and names the command
-  that starts one
-* it is run with uid or gid 0, as every form of the wrapper is
-
-**A home volume the agent cannot write**
-
-The agent is always the host user's uid, set when the image is built. A home volume that was first filled by an
-image whose agent had another uid stays owned by that uid, and the agent cannot write it. The entrypoint then
-refuses to start, naming both uids and how to recover.
-
-The entrypoint refuses one more home volume, in the same way and with the same recovery: one in which a directory
-above the two mounted log directories is not the agent's.
-
-**The latest version that cannot be found**
-
-When the latest cannot be found, because the registry is not reached, `npm` is not on the `PATH`, or its answer
-is not a version, the wrapper stops. It builds nothing and starts nothing, although an image may exist, and says
-which harness and which command gave no version. Either gets past it: a version in the project's file, under
-`services.agent.build.args`, or the harness on the host.
-
 ## Moving from a release up to 4.0.0
-
-Releases up to 4.0.0 kept the logs in the home volume. Moving a project that has such a volume to a later release
-does this:
-
-* The sessions in the volume are no longer listed or continued, because the harnesses now look in the log directory
-* OpenCode asks for its login once more
-* Nothing is deleted. The volume holds what it held, under the mounted directories, where a container no longer
-  sees it
 
 To have the volume's logs in the log directory, copy them by hand, from the project root, while no sandbox of the
 project runs. `<project>` is the Compose project's name, the `name:` of the project's `agent/compose.project.yml`,
@@ -891,27 +792,8 @@ docker run --rm --network none --entrypoint bash --user "$(id -u):$(id -g)" \
     elif [ -d "$opencode" ]; then cp -Rnv "$opencode/." "/to/$opencode/"; fi'
 ```
 
-* It copies Claude Code's sessions and OpenCode's data directory, each when the volume holds it, and prints every
-  file it copied
-* The volume is mounted read-only, and the container has no network and does not run the sandbox's entrypoint, so
-  it installs no firewall
-* It runs as the developer, so what it writes is the developer's
+* Run it before the first start with the later release
 * It overwrites nothing that the log directory already holds
-* Of OpenCode it copies nothing at all once the log directory holds a database, and says so. Run it before the
-  first start with the later release for that reason: once OpenCode has held a session in a sandbox, the log
-  directory holds a new database
-
-A home volume in which a harness was never started may be refused after the move:
-
-* Such a volume lacks `.claude`, or `.local/share`, so the mount point inside it, and every missing directory above
-  it, is root's, and the agent cannot write them
-* The entrypoint then refuses to start, before the command runs, naming the first such directory, its owner and the
-  agent's uid
-* Removing the volume is the way on, with `docker volume rm <project>_agent-home`, as "Where things are kept on
-  the host" has it. The next start makes a new one from the image, which holds both mount points and every
-  directory above them as the agent's
-* A developer who wants the volume's logs copies them first, with the command above, which a refused volume still
-  allows
-* A directory that admits its owner alone, as tools that follow the XDG convention make `.local`, passes when it is
-  the agent's. One that even the agent cannot read is refused in the same way, with what the read said in place of
-  an owner
+* A home volume that the entrypoint refuses still allows it. A developer who wants that volume's logs copies them
+  first, with the command above, and removes the volume after. How it is removed is in "Where things are kept on
+  the host"

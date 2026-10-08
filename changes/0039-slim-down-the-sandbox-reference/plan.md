@@ -324,21 +324,21 @@ The form:
 
 The cuts:
 
-- [ ] Take out every statement of on which system something was shown to work or was not tried (R12)
-- [ ] Take out every refusal whose message names why and what to do, with what the base document says only to
+- [x] Take out every statement of on which system something was shown to work or was not tried (R12)
+- [x] Take out every refusal whose message names why and what to do, with what the base document says only to
       explain it, the two of the home volume among them (R6)
-- [ ] In the sections 1 to 6, 8 and 9, take out what lists what a command does not do and what says what the
+- [x] In the sections 1 to 6, 8 and 9, take out what lists what a command does not do and what says what the
       wrapper, the entrypoint or the proxy does inside that a reader cannot observe, by rule 7 of "How the rules
       of the spec are applied" (R2)
-- [ ] Cut "Holding a harness version" to the six things of requirement 7 (R7)
-- [ ] Cut "Reaching more hosts" to the four things of requirement 8 (R8)
-- [ ] Cut "Moving from a release up to 4.0.0" to what requirement 10 lists (R10)
-- [ ] Read the whole document once for a fact that is stated twice, keep it in the section of its subject, and
+- [x] Cut "Holding a harness version" to the six things of requirement 7 (R7)
+- [x] Cut "Reaching more hosts" to the four things of requirement 8 (R8)
+- [x] Cut "Moving from a release up to 4.0.0" to what requirement 10 lists (R10)
+- [x] Read the whole document once for a fact that is stated twice, keep it in the section of its subject, and
       put the title of that section in the other place (R11)
-- [ ] Write `## What SANDBOX.md leaves out` in `record.md`, as "The record" above describes it. Make it from
+- [x] Write `## What SANDBOX.md leaves out` in `record.md`, as "The record" above describes it. Make it from
       the base document and not from memory of the passes: read the base document from its first line to its
       last, and look for each statement in the whole of the new one (R14)
-- [ ] Compare every command, path, option, host name and file name of the new document with the base document,
+- [x] Compare every command, path, option, host name and file name of the new document with the base document,
       with "The spellings" under "Verification", and read every statement that stayed for its strength: a "must", a
       "never", a "refused" or an "only" of the base document is still one (R13)
 
@@ -419,7 +419,7 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
       `README.md` and the two `compose.project.yml` files
 - [x] `feature-0039 Put the places and the failures of the sandbox in two tables`: the form, in `SANDBOX.md`, and
       the record's new statements
-- [ ] `feature-0039 Take out of the sandbox reference what a reader does not need`: the cuts, in `SANDBOX.md`, and
+- [x] `feature-0039 Take out of the sandbox reference what a reader does not need`: the cuts, in `SANDBOX.md`, and
       the record's list
 - [ ] `feature-0039 Say in AGENTS.md how the sandbox reference is kept`: `AGENTS.md`
 - [ ] `feature-0039 Record the implementation and what was run`: the record, with the suites on the final tree

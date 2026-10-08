@@ -167,8 +167,208 @@ timestamp: 2026-10-08T13:27:02Z
   below. The last of those runs was started with `container/agent.sh` and `AGENT_PROJECT_NAME` set as
   `agent-dev.sh` sets it, and not with `./agent-dev.sh`, which gives `--rebuild` and so would have built whether or
   not the image was there
+- 2026-10-08T15:33:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the cuts, and listed under
+  `## What SANDBOX.md leaves out` what left, by the section of the base document it stood in. The list was made by
+  reading the base document from its first line to its last and looking for each statement in the new one. Every
+  message quoted there was read in the script it names. Close calls, where a statement stayed: that a subdomain
+  needs its own entry, as what "matched exactly" asks of a reader, by requirement 8; that the agent can read
+  `/run/egress-proxy.log`, with where a refused connection is logged, by requirement 5; and the three the plan
+  names. Requirements 1 and 7 both have it said that the versions are those of the checkout the command is run
+  from: "Running a unit" says it, and "Holding a harness version" says it in one sentence and names that section
 
 ## What SANDBOX.md leaves out
+
+Every statement of the `SANDBOX.md` of the merge base that is not in the document afterwards, under the section it
+stood in, with the requirement it went by. A statement that moved, into another section or into one of the two
+tables, is not listed. A message is quoted as the script holds it, with the script's own variables.
+
+### The opening
+
+* Its first sentence, "The reference of the agent sandbox: what a run mounts, writes, refuses and leaves behind",
+  is written anew, as the plan has it, since the document is no longer ordered that way (requirement 1)
+
+### Working on a clone
+
+By requirement 6:
+
+* That the wrapper lists the branches and asks for one by its name when a number names several. The message, in
+  `find_unit_branch` of `container/unit-clone.sh`, followed by the branches: "agent.sh: '$unit' names more than
+  one branch. Give one by its name:"
+* That the wrapper neither fetches nor fast-forwards while the container is still running, or when Docker cannot
+  say whether it is. The messages, at the end of `container/agent.sh`: "agent.sh: the container $container_name is
+  still running, so nothing was fetched." with "Its clone is at $clone. Once it has stopped, the same command
+  resumes the clone.", and, after "agent.sh: could not ask Docker whether the container $container_name is
+  running." of `unit_container_running`: "It may still be running, so nothing was fetched. Its clone is at $clone,"
+  with "and the same command resumes it."
+* That a new run is refused while `sandbox/<branch>` holds commits the branch does not have, and that it is merged
+  or deleted first. The message, in `refuse_unlanded` of `container/unit-clone.sh`: "agent.sh: sandbox/$branch
+  holds commits of an earlier run that $branch does not have," with "and a new run would overwrite them. Merge it
+  first, with 'git merge sandbox/$branch'," and "or delete it, with 'git branch --remotes --delete
+  sandbox/$branch'."
+* That a second run for a branch whose container is running is refused, and that the refusal names `--connect`.
+  The message, in `container/agent.sh` where the unit run's container is named: "agent.sh: the container
+  $container_name is running, so a run for $branch is under way." with "Two runs never work on one branch. Wait
+  for it, or stop it with 'docker stop $container_name'." and "To run a command beside it: 'agent.sh --connect
+  $unit [COMMAND...]'."
+
+By requirement 2, as what a command does not do:
+
+* That cutting checks nothing out and moves no branch that exists, so that the host's checkout, its working tree
+  and its index are as they were
+
+### Connecting to a unit run
+
+By requirement 6, of the cases in which `--connect` runs nothing:
+
+* No unit is given. The message, in `container/agent.sh` after the options are read: "agent.sh: --connect needs a
+  unit." with "  agent.sh --connect UNIT [COMMAND...]"
+* The unit names several branches, which it lists. The message is that of `find_unit_branch`, quoted above
+* No container of the unit's run is running, that it says no run is under way and names the command that starts
+  one. The message, in `container/agent.sh` where `--connect` ends: "agent.sh: no run is under way for '$unit': the
+  container $container_name is not running." with "Start one with 'agent.sh $unit'."
+* It is run with uid or gid 0, as every form of the wrapper is. The message, in `container/agent.sh`: "agent.sh:
+  refusing to run as root (uid/gid 0)." with "The sandbox's 'agent' user would then be root, defeating the
+  sandbox.", "If Docker needs elevated permissions, add your user to the docker group" and "instead of running
+  this with sudo."
+
+By requirement 2, which names it:
+
+* That `--connect` starts no container and stops none, builds no image, asks npm nothing, makes no clone, cuts no
+  branch and fetches nothing, and changes nothing in the host's repository
+
+By requirement 12:
+
+* That `--connect` was shown on Linux with Docker 28.4.0, and not with a harness in each of two shells, and not on
+  macOS
+
+### What a unit run defends against, Another working directory, Extra directories, The shared `node_modules`
+
+Nothing.
+
+### The home volume
+
+By requirement 6, which names both:
+
+* That the agent is always the host user's uid, set when the image is built, that a home volume first filled by an
+  image whose agent had another uid stays owned by that uid so that the agent cannot write it, and that the
+  entrypoint then refuses to start, naming both uids and how to recover. The message, in `check_home_owner` of
+  `container/entrypoint.sh`: "$home_path is owned by uid $home_owner, but the agent is uid $agent_uid, so the agent
+  cannot write its home.", followed by that of `home_volume_recovery`: "Recover by removing the project's
+  agent-home volume, which discards the harnesses' saved logins, and starting again.", "The volume is named
+  <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in",
+  "agent/compose.project.yml. Find the exact name with docker volume ls, then:" and "  docker volume rm
+  <project>_agent-home"
+* That the entrypoint refuses one more home volume in the same way and with the same recovery, one in which a
+  directory above the two mounted log directories is not the agent's. The message is quoted under "Moving from a
+  release up to 4.0.0" below
+
+### The harness logs
+
+By requirement 12:
+
+* That the mounts were shown to work on macOS 15.1.1 with Docker Desktop 4.26.0 and VirtioFS as its file sharing,
+  and with no other file sharing of Docker Desktop for macOS, so neither with gRPC FUSE nor with osxfs
+
+### Moving from a release up to 4.0.0
+
+By requirement 10:
+
+* That releases up to 4.0.0 kept the logs in the home volume
+* That after the move the sessions in the volume are no longer listed or continued, because the harnesses now look
+  in the log directory
+* That OpenCode asks for its login once more
+* That nothing is deleted: the volume holds what it held, under the mounted directories, where a container no
+  longer sees it
+* That the command copies Claude Code's sessions and OpenCode's data directory, each when the volume holds it, and
+  prints every file it copied
+* That the volume is mounted read-only, and that the container has no network and does not run the sandbox's
+  entrypoint, so that it installs no firewall
+* That it runs as the developer, so that what it writes is the developer's
+* That of OpenCode it copies nothing at all once the log directory holds a database, and says so, and that this is
+  why it is run before the first start with the later release: once OpenCode has held a session in a sandbox, the
+  log directory holds a new database. That it is run before that first start stays
+
+By requirement 6, which names it:
+
+* That a home volume in which a harness was never started may be refused after the move: that such a volume lacks
+  `.claude`, or `.local/share`, so that the mount point inside it and every missing directory above it is root's
+  and the agent cannot write them, that the entrypoint then refuses to start before the command runs, naming the
+  first such directory, its owner and the agent's uid, that removing the volume is the way on, and that the next
+  start makes a new one from the image, which holds both mount points and every directory above them as the
+  agent's. The message, in `check_log_directory_owners` of `container/entrypoint.sh`: "$directory is owned by uid
+  $owner, but the agent is uid $agent_uid, so the agent cannot write it.", "The home volume was made by an earlier
+  release, in which that directory was never made, so Docker made it as root" and "when it mounted the harnesses'
+  logs inside it.", followed by that of `home_volume_recovery`, quoted above
+* That a directory which admits its owner alone, as tools that follow the XDG convention make `.local`, passes
+  when it is the agent's, and that one which even the agent cannot read is refused in the same way, with what the
+  read said in place of an owner. The message, in the same function: "$directory could not be examined as the
+  agent, so the agent cannot be shown to write it: $owner", followed by that of `home_volume_recovery`
+
+### The harness versions
+
+By requirement 7, as none of the six things it lists:
+
+* That the kit names no version of either harness
+* That the wrapper says in one line which latest published version the image gets
+* That the value is passed to npm as it is, so that a tag such as `latest` is installed once, when the image is
+  built, and not again. That an exact version is given stays
+* That the wrapper finds the latest with `npm view <package> version` on the host, so that the build needs `npm`
+  on the host for this
+* That it asks only when it is about to build: a start that builds nothing asks the registry nothing, and neither
+  does a build for which the project or the host gives both versions
+* That for a harness with neither source there is nothing to compare: the sandbox keeps the version the image
+  records, and the wrapper builds only when the image records none
+* That an image built by a release that did not write the labels records no version, and is built again at the
+  first start
+* That on a host without a harness, the sandbox's version of it is the latest of the day the image was last built
+* That self-update stays off inside the sandbox, for both harnesses: its root filesystem is read-only, and holds
+  what the build installed
+* What the kit promises for any version: the confinement, which depends on no harness's version, with the
+  firewall, the proxy, the read-only root, the capabilities and the mounts the same whichever version is
+  installed, and a harness that contacts a host the kit does not admit refused as before. And that the image holds
+  exactly the version the rules name, or the start fails. What it promises for no version is in the row of a
+  harness version that breaks something
+
+By requirement 6:
+
+* That the wrapper stops when the latest cannot be found, because the registry is not reached, `npm` is not on the
+  `PATH`, or its answer is not a version, that it builds nothing and starts nothing although an image may exist,
+  that it says which harness and which command gave no version, and that either a version in the project's file,
+  under `services.agent.build.args`, or the harness on the host gets past it. The message, in `latest_published`
+  of `container/agent.sh`: "agent.sh: could not find the latest published version of $harness: 'npm view $package
+  version' gave none." with "Give a version in agent/compose.project.yml, under services.agent.build.args as
+  $argument, or install $harness on the host."
+
+### The status line, Logging in to a model provider, The local model server
+
+Nothing.
+
+### Egress
+
+By requirement 8, as none of the four things it lists:
+
+* That every outbound connection on port 443 goes to `container/egress-proxy.mjs`, which runs as its own
+  unprivileged account
+* That it reads the hostname from the TLS ClientHello and admits the connection only if that host is allowlisted
+* That it resolves the host itself and connects there, never to the address the client asked for, so that an
+  allowlisted name sent to some other address does not reach that address
+* That it terminates no TLS and installs no certificate: it forwards the connection's bytes unchanged, and the
+  client validates the origin's own certificate
+* That it logs one line for each connection it allows or refuses. The name of the log and that the agent can read
+  it stay, in the row of a connection that is refused
+* That another host served from the same address as an allowlisted one is refused
+* That a host whose addresses rotate stays reachable, because the proxy resolves it per connection
+* That Encrypted ClientHello is judged by its outer hostname, the one sent in the clear, that Chromium sends the
+  extension as GREASE and puts the real hostname there, so that it is checked like any other, and that a genuine
+  ECH connection carries the provider's public name there and is refused unless that public name is itself
+  allowlisted, in which case the real hostname inside is not seen
+* That egress stops if the proxy stops: the redirect still points at its port and nothing else admits port 443
+
+By requirement 6:
+
+* That an address or CIDR range in an allowlist is refused at start-up. The message, in `read_allowlist` of
+  `container/entrypoint.sh`: "$name entry $line is an address; egress is admitted by hostname only, so list the
+  host"
 
 ### New statements
 
@@ -188,7 +388,9 @@ The two cells of "Where things are kept on the host" that the base document has 
   image by itself, verified the firewall and ran the command. Not tried: removing an image while a container of
   it runs
 
-`docker image rm` is the one spelling in the document that the base document does not hold.
+`docker image rm` is the one spelling in the document that the base document does not hold. "The spellings" of
+the plan's "Verification" prints `<project>_agent-home` alone: the base document holds it inside
+`docker volume rm <project>_agent-home` and in its code blocks, and the table names the volume by it.
 
 ### Rows with no "What to do"
 
@@ -198,5 +400,18 @@ not what to do, so they stay by requirement 6, and the base document gives no re
 * a unit run for which the wrapper refuses the unit or cuts no branch
 * a `--connect` that runs nothing, for its three causes that stay
 * an entrypoint that refuses to start because a check of the boundary fails
+
+### Out of date, left as it is
+
+One statement that stays was found out of date, for the human:
+
+* "Removing the volume discards the harnesses' saved logins", of the home volume, in "Where things are kept on
+  the host". Since the logs are on the host, the volume holds Claude Code's login alone, and OpenCode's is in the
+  project's log directory, as the same table says. The message of `home_volume_recovery` in
+  `container/entrypoint.sh` says the same as the statement
+
+Looked at and not out of date: "at about 0.6 GB", of an image a rebuild left behind. `docker system df -v` on the
+Linux host gives 625.8MB as the unique size of an image whose harness layers differ from the others. No other
+statement was held against the code for being out of date.
 
 ## Amendments
