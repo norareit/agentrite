@@ -186,6 +186,12 @@ timestamp: 2026-10-07T22:40:04Z
   9 says that the branch on the host is fast-forwarded to the one from the container, and the status it names is
   `implemented`. Requirement 4 has the implementer write none of the text, and these words are the implementer's, asked
   for by the human
+- 2026-10-08T12:20:03Z [human] found that "How it works" names the plan and does not say what it is, and wanted it said
+  that it is the concrete plan the implementer follows. Took the implementer's proposal of one clause in the planner's
+  row
+- 2026-10-08T12:20:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the planner's row of the table
+  in "How it works" say that the plan is the ordered tasks the implementer then follows. What a plan holds besides stays
+  in `process.md`, by requirement 3
 
 ## What the three documents leave out
 

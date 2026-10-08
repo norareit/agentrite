@@ -44,26 +44,26 @@ A change is worked as a unit, a directory under `changes/`, by four roles in thi
 | Role        | Is given            | Produces                                                             |
 |-------------|---------------------|----------------------------------------------------------------------|
 | Specifier   | A request           | What the unit must make true: its `spec.md`, or a task's `record.md` |
-| Planner     | An approved unit    | The unit's `plan.md`                                                 |
+| Planner     | An approved unit    | The unit's `plan.md`: the ordered tasks the implementer then follows |
 | Implementer | A planned unit      | The implementation, with the plan ticked and the record kept         |
 | Reviewer    | An implemented unit | Its findings, which it returns and does not apply                    |
 
 The rules each role works by are in `process.md` and in the role's file under `roles/`.
 
-A usual workflow:
+The writers current workflow:
 
-1. Use Claude Code with Opus 5.5 as the `specifier` role and ask it to refine a feature (or bug or task) together
+1. Use Claude Code with Opus as the `specifier` role and ask it to refine a feature (or bug or task) together
 2. Read the `spec.md` that comes out of this, ask for a few clarifications or corrections if necessary and approve it
 3. Run the `agent.sh 0007` where `0007` is the change number. This cuts the branch and starts the container
-4. Run Claude Code with Opus 5.5 as the `planner` role and ask it to create a plan for feature 0007
-5. Run Claude Code with Sonnet 5.5 or OpenCode with Qwen 3.8 27b as the `implementer` role and ask it to implement the
+4. Run Claude Code with Opus as the `planner` role and ask it to create a plan for feature 0007
+5. Run Claude Code with Sonnet or OpenCode with Qwen 3.8 27b as the `implementer` role and ask it to implement the
    plan
-6. Run OpenCode with Sol 6.1 as the `reviewer` role and ask it to review the code
-7. Reopen Claude (`claude -c`) and ask the implementer to check the review and see which changes need to be made.
+6. Run OpenCode with GPT Sol as the `reviewer` role and ask it to review the code
+7. Reopen Claude (`claude -c`) and ask the implementer to check the review and see which changes need to be made
 8. Repeat step 6 and 7 until no more issues arise
 9. Exit the container. This will fast-forward the branch on the host to the one from the container (which was a
    separate checkout!). At this point it is up to you how to handle the rest. You can create a pull request and check
-   the changes yourself or you can simply mark the change `implemented` and merge it back to master.
+   the changes yourself, or you can simply mark the change `implemented` and merge it back to master
 
 ## The commands
 
