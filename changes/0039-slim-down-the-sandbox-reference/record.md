@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-08T13:27:02Z
 ---
 
@@ -35,5 +35,8 @@ timestamp: 2026-10-08T13:27:02Z
   so that a later feature of the sandbox ends up in it
 - 2026-10-08T14:56:21Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, added that to requirement 16 as its
   first rule, with a decision. No requirement was renumbered. Status left at `draft`
+- 2026-10-08T14:56:47Z [human] approved the spec as it stands on `master` at `bdba779`
+- 2026-10-08T14:56:47Z [Claude Code, anthropic/claude-opus-5-5] in the main session on the Linux host, on `master` at
+  `bdba779`, set the status to `approved`
 
 ## Amendments
