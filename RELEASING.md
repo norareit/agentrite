@@ -17,8 +17,8 @@ An agent runs steps 1 and 2, stops at step 3, and on the human's word runs step 
 ends step 4 by telling the human its two commands, and stops. On the human's word that `./deploy.sh` succeeded it
 runs step 6, and ends by telling the human the command of step 7, which it does not run. An agent asked only for
 the release notes runs step 2, stops at step 3, and on the human's word commits the section as step 4 gives it and
-nothing else. An agent asked only to move this repository to a release that is already made runs step 6 and
-nothing else.
+nothing else, the move of the README's version among it. An agent asked only to move this repository to a release
+that is already made runs step 6 and nothing else.
 
 ## 1. Before anything else
 
@@ -52,6 +52,9 @@ Releasing runs on the host only: `./deploy.sh` needs AWS credentials, which neve
   the kit as a devDependency, moved to the URL of the release `<tag>` names. Step 6 of that release made it. Do
   not name it to the human, and do not write it in the section, on either line: a project that installs the kit
   does not install the kit's devDependencies. Any other change to that line is a change like every other
+* Another is the version in the install commands of `README.md`, which step 4 of that release moved to its own
+  version. Treat it as the line above: do not name it to the human, and do not write it in the section. Any other
+  change to a version in `README.md` is a change like every other
 * Write the section at the top of `CHANGELOG.md`, above the last release's, headed `## <version>` with the version
   you propose and nothing else on the line. It has two parts:
     * `### What changed`: a line for each change a project gets, ending with the numbers of its units in
@@ -84,10 +87,14 @@ A release is not a unit and has no directory in `changes/`. Its commits are made
 which is this project's exception to working on a branch. On the human's word, with the version the human picked:
 
 1. Make sure the section is headed `## <version>` with that version
-2. Commit `CHANGELOG.md` as `Release notes for <version>`
+2. Move every reference to the version of the kit in `README.md` to that version: the URL of the tarball,
+   `ritenoar-agentrite-<version>.tgz`, in "Installing it into a project" and in "Updating a project to a newer kit".
+   Find them with `git grep -n 'ritenoar-agentrite-.*\.tgz' README.md`, and change nothing else in the file
+3. Commit `CHANGELOG.md` and `README.md` as `Release notes for <version>`
 
-Commit nothing else, and push nothing. The notes are committed first because `npm version` refuses a working tree
-that is not clean, and so the tree the tag names holds the section and the tarball does too.
+Commit nothing else, and push nothing. The notes and the README are committed first because `npm version` refuses a
+working tree that is not clean, and so the tree the tag names holds the section and the new version, and the tarball
+does too. A project that installs the kit reads the version it installs in its README.
 
 Then tell the human what is theirs now, as the two commands of step 5, with the part filled in, in that order. Do
 not run `npm version` or `./deploy.sh`. Say that the push comes after step 6, and ask the human to say when
