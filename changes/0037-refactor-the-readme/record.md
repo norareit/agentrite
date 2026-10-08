@@ -206,6 +206,15 @@ timestamp: 2026-10-07T22:40:04Z
   and this is a part of sections with tables, in which each command still stands once, with its description right after
   it and no overview. The spec is not changed: whether it is corrected for this form, or the form goes back, is the
   human's to decide. Not checked: how the tables render on Bitbucket
+- 2026-10-08T12:29:11Z [human] read the part "Commands" as built with a heading and a table per command, keeps it, and
+  asked for the spec and the plan to be changed so that it holds
+- 2026-10-08T12:29:11Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the same session, on the unit's
+  branch, read `roles/specifier.md` of the installed release 4.2.0 and changed `spec.md` for that: requirement 1 names
+  the part "Commands", requirement 5 asks for a section per command with its forms in a code block, a table of its
+  arguments and options and a second table of its environment variables, in place of one list, and there is a decision
+  on the form beside the one on each command standing once. No requirement was renumbered. The status stays
+  `in-progress`, since it is the human's own decision. Then, as the implementer, made the plan name `## Commands` among
+  the headings and say that the part was first built as one list
 
 ## What the three documents leave out
 

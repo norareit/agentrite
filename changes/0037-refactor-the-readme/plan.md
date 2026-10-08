@@ -39,12 +39,15 @@ Where each section of the base README goes:
 | The eleven after it, to its end     | `SANDBOX.md`, each under its present title                                   |
 | The last four, to "Releasing"       | `CONTRIBUTING.md`, each under its present title                              |
 
+The commands part was planned as one list under `## The commands`, and the tasks below that name it so were done
+so. It was then given the form the spec now asks for, by the task before "Verification".
+
 The titles of sections stay as they are wherever a section stays, because `CHANGELOG.md`, the comments and the
 messages of the kit name them.
 
 The headings of the three documents:
 
-* `README.md`: `# AgentRite`, then `## The name`, `## What is here`, `## How it works`, `## The commands`,
+* `README.md`: `# AgentRite`, then `## The name`, `## What is here`, `## How it works`, `## Commands`,
   `## Running a role`, `## Installing it into a project` with `### On a fresh clone`,
   `## Updating a project to a newer kit`, `## The sandbox`
 * `SANDBOX.md`: `# The sandbox`, then `## Working on a clone`, `## Connecting to a unit run`,
@@ -53,7 +56,7 @@ The headings of the three documents:
   `## The harness versions`, `## The status line`, `## Logging in to a model provider`, `## Egress`,
   `## The local model server`. The second and the third are today parts of "Working on a clone" with no heading
 * `CONTRIBUTING.md`: `# Working on AgentRite`, then `## What the repository holds besides the package`,
-  `## The commands`, `## The kit's own tests`, `## The kit's own copy of the kit`,
+  `## Commands`, `## The kit's own tests`, `## The kit's own copy of the kit`,
   `## Trying the working copy's sandbox`, `## Releasing`
 
 Where the four facts of requirement 11 are stated, each once, with every other mention a pointer by title:

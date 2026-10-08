@@ -21,7 +21,7 @@ that say what there is and how to use it.
     1. The introduction and "The name", worded as they are now
     2. "What is here"
     3. How it works: what each of the four roles is, and a usual workflow
-    4. The commands: one list of every command a project runs, each with every argument and option it takes
+    4. "Commands": every command a project runs, each with every argument and option it takes
     5. "Running a role": what the present README's "Running a role" says of `agentrite run` beyond its arguments
        and options, such as resuming a session, stopping a run, the wrapper the command needs and how it is
        repaired, and the status it exits with, as far as requirement 9 keeps it
@@ -38,13 +38,14 @@ that say what there is and how to use it.
    for the rules
 4. The usual workflow in "How it works" is the human's own text, on how the human uses the kit today. The implementer
    asks for it, places it as given apart from line wrapping, and writes none of it
-5. The commands part is one list, in which each command stands once, with its description right after it. There is
-   no overview beside that list, and no second place in the part where a command is described again. An entry
-   holds, in this order, and nothing else:
-    * the command as it is typed, in every form it is run in
+5. The part "Commands" has a section for each command, under a heading that names the command, in which the
+   command stands once, with its description right after it. There is no overview beside those sections, and no
+   second place in the part where a command is described again. A section holds, in this order, and nothing else:
+    * the command as it is typed, in every form it is run in, in a code block
     * what it does, in one or two sentences
-    * every argument, every option, and every environment variable a developer may set to change what it does, each
-      with one line on what it is. None is left out because it is rarely used
+    * a table with a row for every argument and every option, each with one line on what it is, and a second table
+      with a row for every environment variable a developer may set to change what the command does. None is left
+      out because it is rarely used, and a command that takes none has no table
     * where more is said, by the title of that section, when another part of the README or `SANDBOX.md` says what
       the command writes, refuses or leaves behind
 
@@ -133,16 +134,21 @@ decision, and a later review treats it as settled.
 * **"What is here" is the package, on the human's word.** The README ships, so "here" is what a project that
   installed the kit finds under `node_modules`. A row for `deploy.sh` or `infra/` tells that reader of something
   they do not have. Those rows move to `CONTRIBUTING.md`, whose reader has the repository
-* **One list of commands, on the human's word.** An overview followed by a description of each would say every
-  command twice and grow long again. So the list is the description, and what a command does at length is in the
-  section it belongs to, which the entry names
+* **Each command once, on the human's word.** An overview followed by a description of each would say every
+  command twice and grow long again. So a command's section is its description, and what a command does at length
+  is in the part it belongs to, which the section names
+* **A heading and a table per command, on the human's word.** The part was first built as one nested list, with
+  a code block and a list of options under each command. The human found that odd to read and had a table in
+  mind, as a man page has, and took this form once it was built. A table keeps each argument and option to one
+  line. One table for all commands was not built: the forms of a command and what it does do not fit a cell. The
+  title is "Commands", which is what a reader looks for, and not "The commands"
 * **The install examples name the present release, on the human's word.** They go out of date at the next release,
   and it does no harm to bring them along now. A placeholder was rejected because the command could then not be
   pasted
-* **"Running a role" is a part of its own, on the human's word.** An entry of the list holds the form, a
+* **"Running a role" is a part of its own, on the human's word.** A command's section in "Commands" holds the form, a
   description and a line per option, and what the present README says of `agentrite run` besides is more than
   that and stays by requirement 9. It is no subject of the sandbox, so `SANDBOX.md` is not its place. Widening the
-  entry of `run` alone was rejected because the list would grow long at that entry, and letting the statements go
+  section of `run` alone was rejected because the part would grow long there, and letting the statements go
   was rejected because they are what a reader types and what is refused
 * **Two rows for `templates/`, on the human's word.** The two directories in it are for two readers, a unit's
   author and `init`, and the present rows say so. One row for the directory was rejected for that
