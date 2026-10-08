@@ -88,9 +88,8 @@ Every entry under `## Log` and under `## Amendments` of `record.md` is a list it
 * It opens with the timestamp, in the same UTC format as the frontmatter, written bare
 * Then comes who made it, in square brackets: `[<harness>, <provider>/<model>]` for an agent, and `[human]` for a
   human-only action. The brackets are written, and are not a mark for something to fill in
-* Then, for an agent that acts in a role, comes `as the <role>`, with one of the four roles below. It is on every
-  entry the agent makes in that role and not only on its first. An entry of a human has none, and neither has one
-  of an agent that acts in no role
+* Then, for an agent that acts in a role, comes `as the <role>`, with one of the four roles below. An entry of a human
+  has none, and neither has one of an agent that acts in no role
 * Then comes the text
 * In `templates/changes/record.md` the brackets around who made the entry are the written ones, and its other
   brackets mark what is to be filled in

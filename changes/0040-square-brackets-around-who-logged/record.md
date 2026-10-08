@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-10-08T19:25:31Z
 ---
 
@@ -91,3 +91,12 @@ release.
   IntelliJ, and whether an agent in a new project now writes the brackets and the role. Not done: the
   `process.md` under `node_modules`, which is that of the installed release and gets this at a release. The status
   stays `in-progress`: the review is not this session's
+- 2026-10-08T19:41:48Z [human] read what the implementer answered and edited `process.md` in the working tree: took out
+  the sentence that the role is on every entry an agent makes in a role and not only on its first, so that the bullet
+  says that the role comes after the name and who has none. Approved the work and asked for the unit to be marked
+  implemented. No review was made of this unit, so none returned a finding to decide
+- 2026-10-08T19:41:48Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the unit's branch at `5807032`.
+  Committed the human's edit with this entry, with a double space and two trailing spaces taken out of it and
+  nothing else changed. The description above still asks for the sentence, and this entry is where it is said that
+  the human took it out. The unit is a task and has no `plan.md`, so no task is left to tick. Run on the final tree,
+  with Node 26.9.0: `npm test`, 411 of 411 passed, none skipped. The status is `implemented`
