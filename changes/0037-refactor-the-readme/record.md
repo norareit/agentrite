@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-07T22:40:04Z
 ---
 
@@ -84,5 +84,9 @@ timestamp: 2026-10-07T22:40:04Z
 - 2026-10-08T11:13:07Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, moved it into `spec.md` as
   requirement 16, with a decision, and the requirement on the suites is 17. One entry is left under "Beyond the
   request", the test for an option the README does not name. Status left at `draft`
+- 2026-10-08T11:15:04Z [human] asked for the unit to be planned. Asked whether the spec is approved as it stands on
+  `master` at `17cef2f`, said that it is
+- 2026-10-08T11:15:04Z [Claude Code, anthropic/claude-opus-5-5] in the main session on the Linux host, on `master` at
+  `17cef2f`, set the status to `approved`
 
 ## Amendments
