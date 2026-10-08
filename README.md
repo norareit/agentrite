@@ -40,7 +40,7 @@ The "rite" is also Ritenoar's, whose projects carry it.
 | `roles/`             | The specifier, planner, implementer and reviewer instructions                             |
 | `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
 | `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
-| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` and `agentrite-roles` commands |
+| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` command                        |
 | `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper         |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
@@ -82,30 +82,43 @@ takes.
 ### agentrite init
 
 ```sh
-npx agentrite init <harness>...
+npx agentrite init [--no-sandbox] <harness>...
 ```
 
-Sets a project up, from its root: writes the role wrappers, the project's agent instructions and the sandbox's two
-files, and prints each file it wrote, changed or skipped.
+Sets a project up, from its root: writes the role wrappers, the project's agent instructions and the sandbox's files,
+and prints each file it wrote, changed or skipped.
 
-| Argument or option | What it is                                                              |
-|--------------------|-------------------------------------------------------------------------|
-| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses |
+| Argument or option | What it is                                                                                     |
+|--------------------|------------------------------------------------------------------------------------------------|
+| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses                        |
+| `--no-sandbox`     | For a project without the sandbox. Leaves out what is only for it, as the paragraph below says |
+
+With `--no-sandbox`, `init` writes the role wrappers, `AGENTS.md` and `CLAUDE.md`, and amends `package.json`, and
+prints the same lines and notices for them. It does not write, change or read `agent.sh`, `agent/compose.project.yml`
+or `.dockerignore`, prints no line for any of the three, and leaves one that exists as it is. It runs when
+`package.json` has no `name`, and does not read `package-lock.json`. It still refuses, writing nothing, when
+`package.json` is missing or cannot be read. The option goes at any place among the harnesses, and given more than once
+it counts as given once. It is not remembered: give it on every run, and on every `refresh`.
 
 See "Installing it into a project".
 
 ### agentrite refresh
 
 ```sh
-npx agentrite refresh <harness>...
+npx agentrite refresh [--no-sandbox] <harness>...
 ```
 
 Brings the kit's own files in a project up to date with the installed release, from the project root, and prints
-each file as written, refreshed or up to date.
+each file as written, refreshed or up to date. Without `--no-sandbox` it writes an `agent.sh` that is missing.
 
-| Argument or option | What it is                                                              |
-|--------------------|-------------------------------------------------------------------------|
-| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses |
+| Argument or option | What it is                                                                          |
+|--------------------|-------------------------------------------------------------------------------------|
+| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses             |
+| `--no-sandbox`     | For a project without the sandbox. Leaves `agent.sh` out: it is not read or written |
+
+With `--no-sandbox`, `refresh` does for the role wrappers what it does without it, a pinned model that survives
+included, and prints no line for `agent.sh`. What is at the path of `agent.sh`, a symbolic link or a directory
+included, changes neither what it prints nor its exit status. The option goes at any place among the harnesses.
 
 See "Updating a project to a newer kit".
 
@@ -145,21 +158,6 @@ usage.
 | `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
 
 See "Running a role".
-
-### agentrite-roles
-
-```sh
-npx agentrite-roles <harness>...
-```
-
-Writes the role wrappers and nothing else, for a project that wants only those. Unlike `init`, it refuses to
-overwrite a file that already exists.
-
-| Argument or option | What it is                          |
-|--------------------|-------------------------------------|
-| `<harness>...`     | `claude` or `opencode`, one or both |
-
-See "Installing it into a project".
 
 ### check-changes
 
@@ -333,12 +331,13 @@ It prints each file it wrote, changed or skipped. It writes:
 | `agent/compose.project.yml` | The project's half of the sandbox configuration                                      |
 
 * Every generated file is the project's own once written, and the project may edit any of them
+* A project without the sandbox runs `npx agentrite init --no-sandbox claude opencode`, which leaves out `agent.sh`,
+  `agent/compose.project.yml` and `.dockerignore`, as "agentrite init" in "Commands" says
 * `init` never regenerates one: a file it would create that already exists is left as it is and reported as
   skipped, so running it again only adds what is missing
-* The role wrappers are the ones `npx agentrite-roles claude opencode` writes
 * The OpenCode wrappers are written with `mode: all`, which makes each role both a primary agent and a subagent.
   The roles are therefore also offered among the primary agents in OpenCode's own interface
-* `init` refuses to run, writing nothing, when `package.json` has no `name`
+* `init` refuses to run, writing nothing, when `package.json` has no `name`, unless it is run with `--no-sandbox`
 
 The files a project is expected to edit are these:
 
@@ -437,7 +436,8 @@ npx agentrite refresh claude opencode
 
 It rewrites the role wrappers of those harnesses and `agent.sh` as the new release writes them, writes any that are
 missing, and prints each file as written, refreshed or up to date. Without it those copies stay as an older release
-wrote them, and nothing says so.
+wrote them, and nothing says so. A project without the sandbox runs `npx agentrite refresh --no-sandbox claude
+opencode`, which leaves `agent.sh` out, so that one it removed on purpose is not written back.
 
 * A model pinned in a wrapper survives: a line in its frontmatter that opens with `model:` is kept, as written,
   after the kit's own keys
