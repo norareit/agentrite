@@ -131,11 +131,87 @@ timestamp: 2026-10-07T22:40:04Z
   `.claude/skills/release/SKILL.md`. `deploy.sh` and `npm test` read no argument, and `agent-dev.sh` passes every
   argument on to the wrapper. `tests/release.test.mjs` failed on `CONTRIBUTING.md` before the file was there, and
   `npm test` passes after, with 403 tests. The four sections are out of the README
+- 2026-10-08T12:06:59Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the third move: the README is
+  rebuilt in the order of requirement 1. The introduction and "The name" are untouched, and `git diff` shows no changed
+  line in them. The human's text of the workflow is placed in "How it works" as given, and no line of it needed
+  wrapping. Three things in it differ from what the kit does, and are left as the human wrote them, for the human:
+  `agent.sh 007`, where a unit's number is four digits; "mark the change `complete`", where the status is `implemented`;
+  and "merge back", where the wrapper fast-forwards. Both install examples name 4.2.0, which `devDependencies` of
+  `package.json` names
+- 2026-10-08T12:06:59Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, checked the list of commands against
+  the code and not against the base README. Read: what `node scripts/agentrite.mjs`, `node scripts/agentrite.mjs run`
+  and `node scripts/agentrite-roles.mjs` print with no argument; `parseRunArgs` and `RUN_OPTIONS` of
+  `scripts/agentrite-run.mjs`; `parseHarnesses` of `scripts/agentrite-roles.mjs`; the entry point of
+  `scripts/check-changes.mjs`; the usage in the header of `container/agent.sh` and its `case` over the options; every
+  `${...}` of `container/agent.sh`, `container/unit-clone.sh`, `container/compose.yml` and
+  `templates/project/agent/compose.project.yml`; and `process.env` in the scripts, which none reads. The names the base
+  README did not hold: `AGENT_MEM_LIMIT`, `AGENT_CPUS`, `--model=<id>`, which the parser takes as it takes
+  `--prompt=<text>`, and the `--` of `./agent.sh` as an option, which the base README used in one example and did not
+  describe. Left out of the README as the plan has it: `AGENT_UID`, `AGENT_GID`, `AGENTRITE_CONTAINER`,
+  `AGENT_CLAUDE_CODE_VERSION` and `AGENT_OPENCODE_VERSION`, which the wrapper sets itself, and `HOME`. Not checked: the
+  options by running each command with them, apart from the three usage texts
 
 ## What the three documents leave out
 
 Every statement of the base README that is in none of the three documents, by the section of the base README it
 stood in. Each list names the line of requirement 9 that its statements went by, or where the same is now said.
+
+### What is here
+
+Now said elsewhere:
+
+* The rows for `tests/`, `infra/`, `RELEASING.md` and `deploy.sh`, which are in the table of `CONTRIBUTING.md`
+* The sentence on the four commands of `agentrite`, which "The commands" says
+
+### Installing it into a project
+
+Went as why a behavior was chosen or how it is brought about, or is now said elsewhere:
+
+* That `deploy.sh` prints the URL of a release when it makes one, which "The commands" of `CONTRIBUTING.md` says
+* What a project receives, by the paths that `files` lists, `scripts/agentrite.mjs`, `scripts/agentrite-roles.mjs`
+  and `scripts/agentrite-run.mjs` among them, which "What is here" says by directory, and what it does not receive,
+  which the table of `CONTRIBUTING.md` says
+* That what a kit release needs from every project is kept in the kit, where updating the kit delivers it
+* Why an OpenCode wrapper has `mode: all`: that OpenCode takes only a primary agent on its command line, which is
+  where `agentrite run` gives it the role, and that a role is also dispatched as a subagent from a session
+* That the role wrappers and `agent.sh` hold nothing but what the kit put there. That `refresh` rewrites them, and
+  what survives, is in "Updating a project to a newer kit"
+* That `init` decides on the `.dockerignore` exception by the rules BuildKit applies
+* That the npm script is one way to wire the check and that a project may run the kit's script from a command of
+  its own. "The commands" gives both forms
+
+### Installing on a fresh clone
+
+Went as why a behavior was chosen:
+
+* That the lockfile is authoritative, what installing the kit's latest on every run would mean for two people who
+  clone on different days, and that the lockfile makes a clone reproducible. That `npm ci` installs exactly what
+  the lockfile records stays
+
+### Updating a project to a newer kit
+
+Went as why a behavior was chosen:
+
+* That the URL is the pin, and that moving to a newer kit is a deliberate change to the project
+* What kind of change of a release reaches a project through `refresh`: a role's description, the line that points
+  at its role file, or the shim. That without it the copies stay as an older release wrote them stays
+
+### Running a role
+
+Went as why, or as a copy of what a command prints:
+
+* The example of what `npx agentrite roles --json` prints. What the document holds stays
+* That the kit has no session of its own
+* That the `--` in front of the prompt is there so that an option of the harness that takes several values does
+  not take the prompt for one
+* That the wrapper is what makes the harness read the role's file
+
+### Where to run it
+
+Now said elsewhere:
+
+* That the hosts are admitted through the kit's `KIT_ALLOWLIST`, and which two they are, which "Egress" of
+  `SANDBOX.md` says
 
 ### Running the sandbox
 

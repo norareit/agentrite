@@ -151,44 +151,44 @@ Working on the kit:
 
 The README:
 
-- [ ] Leave the introduction and "The name" as they are, to the letter: `git diff` shows no changed line in
+- [x] Leave the introduction and "The name" as they are, to the letter: `git diff` shows no changed line in
       them (R1)
-- [ ] In "What is here", make the table hold a row for `process.md`, `CHANGELOG.md`, `README.md`, `SANDBOX.md`,
+- [x] In "What is here", make the table hold a row for `process.md`, `CHANGELOG.md`, `README.md`, `SANDBOX.md`,
       `package.json`, `roles/`, `templates/changes/`, `templates/project/`, `scripts/` and `container/`, and no
       other. The rows that exist keep their wording. Compare the rows with `npm pack --dry-run --json`. The
       sentence on the four commands of `agentrite` goes, since the list says it (R1, R2, R11)
-- [ ] Write `## How it works`: one short paragraph or one row of a table per role, on what it is given, what it
+- [x] Write `## How it works`: one short paragraph or one row of a table per role, on what it is given, what it
       produces and where it stands in the order, with a pointer to `process.md` and to the role files for the
       rules. Read it against `process.md` and the four role files, and take out any sentence that states a rule
       of theirs (R1, R3)
-- [ ] Place the human's text of the usual workflow in "How it works", after the roles, as given apart from line
+- [x] Place the human's text of the usual workflow in "How it works", after the roles, as given apart from line
       wrapping (R4)
-- [ ] Write `## The commands` as one list, with these entries in this order: `npx agentrite init`,
+- [x] Write `## The commands` as one list, with these entries in this order: `npx agentrite init`,
       `npx agentrite refresh`, `npx agentrite roles`, `npx agentrite run`, `npx agentrite-roles`, the change
       check as `npm run check-changes` and as `node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs`,
       and `./agent.sh` in its four forms. Each entry holds what requirement 5 lists, in that order, and nothing
       else, and there is no text in the part besides one opening sentence and the list (R1, R5)
-- [ ] Check every entry against the code and not against the base README: the usage that
+- [x] Check every entry against the code and not against the base README: the usage that
       `node scripts/agentrite.mjs` and `node scripts/agentrite.mjs run` print, the parser of each of the four
       scripts, the usage in the header of `container/agent.sh` and its `case` over the options, and every `${...}`
       in `container/agent.sh`, `container/compose.yml` and `templates/project/agent/compose.project.yml`. Log in
       `record.md` what was read and each name the base README did not hold, `AGENT_MEM_LIMIT` and `AGENT_CPUS`
       among them (R6)
-- [ ] Write `## Running a role` from what the base README's section says beyond the arguments and options: where
+- [x] Write `## Running a role` from what the base README's section says beyond the arguments and options: where
       the harness is started and with which prompt, the status the command exits with, how a run is stopped, the
       order of what the harness is given, how a session is resumed in each harness with the commands as they are,
       the wrapper the command needs and the command that repairs it, what else makes it start nothing, and that it
       starts no sandbox. The entry of `run` names this part by its title (R1, R5, R9)
-- [ ] Write `## Installing it into a project`: the install by URL, `init` and the table of what it writes, which
+- [x] Write `## Installing it into a project`: the install by URL, `init` and the table of what it writes, which
       files a project edits, what `init` amends, what it leaves and what it refuses, and `### On a fresh clone`
       with `npm ci`, on the host before the sandbox can start. State the Playwright build argument and the
       `.dockerignore` exception here, and point to "Egress" of `SANDBOX.md` for the kit's hosts (R1, R9, R11)
-- [ ] Write `## Updating a project to a newer kit`: the install by URL, the changelog and where it is, `refresh`
+- [x] Write `## Updating a project to a newer kit`: the install by URL, the changelog and where it is, `refresh`
       and what it rewrites, keeps, never touches and reports, stated here and pointed to from "Installing it into
       a project", from the entry of `refresh` and from "Running a role" (R1, R9, R11)
-- [ ] In both examples that install by URL, name the release that `devDependencies` of `package.json` names at
+- [x] In both examples that install by URL, name the release that `devDependencies` of `package.json` names at
       that moment, which is 4.2.0 as this is written (R16)
-- [ ] List in `record.md` what the rebuilt README left out of the base README's sections from "What is here" to
+- [x] List in `record.md` what the rebuilt README left out of the base README's sections from "What is here" to
       "Where to run it" (R13)
 
 Across the three documents:
@@ -247,7 +247,7 @@ This repository's instructions:
       README's "The sandbox" and the record's list
 - [x] `feature-0037 Move working on the kit to CONTRIBUTING.md`: the test, `CONTRIBUTING.md`, the README and the
       record's list
-- [ ] `feature-0037 Rebuild the README around the commands`: the README and the record's list
+- [x] `feature-0037 Rebuild the README around the commands`: the README and the record's list
 - [ ] `feature-0037 Name the document where the README was named`: the comments and the message
 - [ ] `feature-0037 Say in AGENTS.md how the three documents are kept`: `AGENTS.md`
 - [ ] `feature-0037 Record the implementation and what was run`: the record, with the last read against the base
