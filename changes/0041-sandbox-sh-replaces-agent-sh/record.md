@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-08T21:05:00Z
+status: implemented
+timestamp: 2026-10-08T22:50:00Z
 ---
 
 # 0041 `sandbox.sh` replaces `agent.sh`
@@ -85,5 +85,37 @@ timestamp: 2026-10-08T21:05:00Z
   literals I took before were of `c818fa2`, which holds comment edits made after the release. C2: wrapped the
   implementer's entry of 20:41:00Z, with its text unchanged. Checked: no line of `record.md`, `plan.md` or the test
   passes 120 characters. `npm test` on the tree of this commit but for this entry: 421 tests, 421 passed, 0 failed
+- 2026-10-08T22:04:01Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0041 in a delta review on
+  `feature-0041-sandbox-sh-replaces-agent-sh` at `6689062777fc3e48537b2f4334cfc517948f33b8`, from delta base
+  `e51b5f10665ea27e7da2c189d6d070c94a209b0a`. Checked prior finding labels `C1` and `C2`; returned no new labels.
+  Saved the complete report at
+  `.reviews/0041-sandbox-sh-replaces-agent-sh/2026-10-08T220228Z-opencode-6689062-delta.md`.
+  Independently run on the reviewed committed tree: `npm test`, 421 passed and 0 failed; `npm run check-changes`,
+  exit 0 from the installed kit. Checked published 4.2.0 tarball integrity, template and rendered-fixture equality,
+  preservation of the wrapped entry's text, line lengths, JavaScript syntax and both diff ranges' whitespace.
+  Independently verified HEAD and the clean index and tree before review writes. Not verified: historical test
+  invocations and execution order, or earlier Docker startup, scratch-refusal, real-Compose and image claims.
+  Not run: live Docker startup, a scratch-checkout refusal, real external migration, live unit/clone or connected
+  sessions. The suite uses fake Docker for the wrapper paths. `./sandbox.sh` was not run: the installed target is
+  unavailable until release, as the spec decides. No implementation was edited, no snapshots were updated and no
+  commit was made
+- 2026-10-08T22:21:49Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0041 in a delta review on
+  `feature-0041-sandbox-sh-replaces-agent-sh` at `6689062777fc3e48537b2f4334cfc517948f33b8`, from delta base
+  `6689062777fc3e48537b2f4334cfc517948f33b8`. The implementation/document delta is empty. The only pending change
+  before review writes was the preceding review's own log entry, which is preserved unchanged. Returned labels:
+  none; no new findings on spec conformance, plan fidelity or code quality. Saved the complete report at
+  `.reviews/0041-sandbox-sh-replaces-agent-sh/2026-10-08T221934Z-opencode-6689062-delta.md`.
+  Newly run: Git identity, history, index, full working-tree and delta diffs, and whitespace checks. HEAD equals
+  the latest reviewed commit; the index is clean. No newly accepted finding followed the latest review.
+  Historical evidence only: the latest report's `npm test`, 421 passed and 0 failed, and `npm run check-changes`,
+  exit 0, plus its provenance, syntax and formatting checks. None of those checks was rerun in this session.
+  Not newly verified: runtime behavior, historical test invocations or execution order, or the host's Docker state.
+  Not run: live Docker startup, scratch-refusal, real external migration, live unit/clone or connected sessions,
+  or `./sandbox.sh`, whose unavailability until release is a settled spec decision. No implementation was fixed,
+  staged or committed, no snapshot was updated and no status transition was made
+- 2026-10-08T22:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on the Linux host, set the status
+  to `implemented`. The human reported that the re-review returned no new findings. The two findings of the first
+  review, C1 and C2, were applied and are logged above, and every task of `plan.md` is ticked. `npm test` on the tree
+  before this commit: 421 tests, 421 passed, 0 failed
 
 ## Amendments
