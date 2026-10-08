@@ -179,6 +179,13 @@ timestamp: 2026-10-07T22:40:04Z
   leaves behind, and the lists and the new parts took the room that the why gave up. A shorter `SANDBOX.md` takes a
   decision on what of that a reader does not need. And "How it works" holds the human's text with the three differences
   the entry of the third move names. Status stays `in-progress`: the review has not been done
+- 2026-10-08T12:14:16Z [human] read the three differences between the text of the workflow and what the kit does, and
+  asked for them to be corrected
+- 2026-10-08T12:14:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the three in "How it works"
+  of `README.md`, on the human's word, and nothing else of the text: the unit's number is `0007` in steps 3 and 4, step
+  9 says that the branch on the host is fast-forwarded to the one from the container, and the status it names is
+  `implemented`. Requirement 4 has the implementer write none of the text, and these words are the implementer's, asked
+  for by the human
 
 ## What the three documents leave out
 
