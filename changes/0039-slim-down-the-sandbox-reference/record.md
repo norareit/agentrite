@@ -38,5 +38,59 @@ timestamp: 2026-10-08T13:27:02Z
 - 2026-10-08T14:56:47Z [human] approved the spec as it stands on `master` at `bdba779`
 - 2026-10-08T14:56:47Z [Claude Code, anthropic/claude-opus-5-5] in the main session on the Linux host, on `master` at
   `bdba779`, set the status to `approved`
+- 2026-10-08T15:00:59Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host that
+  the main session started. Cut `feature-0039-slim-down-the-sandbox-reference` from `master` at `e5f58a1`, on which
+  `npm test` passes with 403 tests and `npm run check-changes` exits 0. Read `process.md` and `roles/planner.md` of
+  the installed release 4.2.0, the spec, this record, `AGENTS.md`, `SANDBOX.md`, `CONTRIBUTING.md`, the README from
+  "Commands" on, every message of `container/agent.sh`, `container/unit-clone.sh` and `container/entrypoint.sh`,
+  and every line outside `changes/`, `CHANGELOG.md` and `node_modules/` that names `SANDBOX.md` or a title of it.
+  Found five things the plan needs that the spec leaves open or says in two ways, wrote no `plan.md` and changed
+  nothing else. The status stays `approved`, and the unit goes back to the specifier and the human:
+    1. What leaves the sections that requirement 1 does not close. Requirements 7, 8 and 10 end in "and nothing
+       else" or "and no more". Requirement 1 says what the sections 1 to 6 hold and says neither, and gives 8 and
+       9 a title alone. The context says the unit "takes out what a reader does not act on", and no requirement
+       does. So a statement of today that is no refusal, no failure, no repetition and no report of what was
+       tried has no requirement to leave by, and requirement 14 asks for one for every statement that left.
+       Examples: that `--connect` "starts no container and stops none, builds no image, asks npm nothing", that
+       a connected command has "no capability and no way to gain one", that the host's other branches are in
+       the clone as `origin/*`, that sessions are under `.claude/projects/-work`, that the status line script
+       is mounted at each start. The plan needs to know whether such a statement stays, or leaves and by which
+       requirement. It decides most of the document's length
+    2. Requirement 5 against requirements 1 and 9. Requirement 5 asks for a row for every failure a reader
+       recovers from by doing something, and has a failure that is a row described nowhere else. Requirements 1
+       and 9 put five such failures in a section: what to do after a crash and how waiting commits are merged
+       in "Getting the work back", what an install removes for the other side and the two commands that restore
+       it in "Running on the tree as it is", the login that cannot complete in "Logging in", and where a
+       refused connection is logged in "Reaching more hosts". Each can be in its section or a row, not both.
+       The same question holds for the local model server behind a host firewall, which is all but two lines
+       of its section today
+    3. Requirement 6 against requirement 11. Requirement 11 has the refusal of a home volume in which a
+       directory is not the agent's stated once. Its messages, in `check_log_directory_owners` of
+       `container/entrypoint.sh` with `home_volume_recovery`, name the directory, its owner, the agent's uid,
+       why, and the command that removes the volume, so by requirement 6 the refusal is not in the document at
+       all. The refusal of a home owned by another uid, in `check_home_owner`, is the same. What today's text
+       says beyond the messages would go with them: that a developer who wants the volume's logs copies them
+       first, which a refused volume still allows
+    4. Requirement 3 against requirements 1 and 10. Where the clone is, and how it is removed, is to be said
+       nowhere but in the table, and requirement 1 has "Getting the work back" say how a kept clone is
+       discarded. A pointer to the table, by requirement 11, would serve both if that counts as saying it.
+       The command of requirement 10 spells the log directory's path and the home volume's name, which
+       it cannot do without
+    5. Two cells of the table of requirement 3 have no statement in today's document: how the project's log
+       directory is removed, and how the image is. Today's text removes only the images a rebuild left behind,
+       with `docker image prune`. The non-goals take out correcting the content, and these cells would be new
+       statements, written from the code
+- 2026-10-08T15:00:59Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the same session, for whoever
+  plans next, what was found and does not depend on the five. Outside `SANDBOX.md` a section of it is named by
+  title in the README, in "Commands" after the table of `./agent.sh`, in "Installing it into a project" and "On
+  a fresh clone" for "Egress", and in "The sandbox" in its text and in the last column of its table, and in the
+  comment above `ALLOWLIST` in `templates/project/agent/compose.project.yml` and in this repository's own
+  `agent/compose.project.yml`. `CONTRIBUTING.md` names none, no message of a command names one, and no test reads
+  the text of `SANDBOX.md`. The refusals whose messages name why and what to do, on a first reading that the
+  implementer still checks: the two of the home volume, a second run of a branch whose container runs, a new
+  run while `sandbox/<branch>` holds commits, a unit that names several branches, `--connect` with no run under
+  way, uid or gid 0, an address in an allowlist, and a latest version that cannot be found. Those that say why and
+  not what to do: `master` holds no unit of the number, a record on `master` that cannot be read, no local branch
+  `master`, and Docker that could not be asked
 
 ## Amendments
