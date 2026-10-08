@@ -385,6 +385,12 @@ The cells with no recovery, added on the human's word after the tasks above were
 - [x] Run the checks under "Verification" again on the final tree and log in `record.md` what was run and what
       it reported (R17)
 
+The review, added after the review of `790d0a0`:
+
+- [x] Correct the recovery of a `--connect` whose unit names no local branch, by finding S1: the unit run that
+      cuts the branch is started with the unit's number, since no branch is cut for a name. Try it, and bring
+      the record's list of the cells written new along (R5)
+
 Finishing:
 
 - [x] Run the checks under "Verification" on the final tree and log in `record.md` what was run and what it
@@ -462,3 +468,5 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
       test, and the record, with the suites on the final tree
 - [x] `feature-0039 Say what to do for the failures that had no recovery`: `SANDBOX.md` and the record, with the
       suites on the final tree
+- [x] `feature-0039 Start the unit run that a --connect waits for by its number`: `SANDBOX.md`, the plan and the
+      record, with the review's own entry and the suites on the final tree

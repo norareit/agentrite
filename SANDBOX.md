@@ -584,7 +584,8 @@ One of:
 
 In that order:
 
-* Start a unit run of the unit first, with `./agent.sh <unit>`, and connect to it while it runs
+* Start a unit run of the unit first, giving the unit by its number, as in `./agent.sh 0029`: a branch that is not
+  there yet is cut for a number and not for a name. Then connect to it while it runs
 * See that Docker runs and that the user may use it: Docker's own error is printed above the wrapper's. Then give
   the command again
 * Leave the option out: `--connect` takes the unit and a command, and nothing else

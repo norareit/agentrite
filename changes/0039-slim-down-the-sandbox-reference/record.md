@@ -227,6 +227,26 @@ timestamp: 2026-10-08T13:27:02Z
   "What was tried", "The titles" and "The line length and the dashes" print nothing, "The places" prints lines of the
   two sections it may, and "The spellings" prints `<project>_agent-home` and the six spellings named in that section.
   Not checked: how the tables are rendered. The status stays `in-progress`
+- 2026-10-08T15:59:01Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of unit 0039 at
+  `790d0a0910b69685ec59b60aa661b6b3278760e5`, against the merge base
+  `e5f58a1d8b4a42553f6790668ecfa0d5bf662099`. Returned S1. Complete findings are in
+  `.reviews/0039-slim-down-the-sandbox-reference/full-790d0a0-20261008T155707Z.md`.
+  `npm test` passes with 403 tests and none skipped, `npm run check-changes` exits 0, and
+  `git diff --check master...HEAD` exits 0. Compared the base document statement by statement and checked the
+  removal messages. Checked the tables with a local Markdown renderer and reproduced the named-unit recovery
+  with the existing wrapper fixture. Not independently verified: GitHub or npm rendering, the historical Docker
+  removal and recovery trials, and the historical test-first execution of the changed message assertions
+- 2026-10-08T16:04:00Z [human] gave the review of `790d0a0` to the implementer to check
+- 2026-10-08T16:04:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `790d0a0`, read the review in
+  `.reviews/0039-slim-down-the-sandbox-reference/full-790d0a0-20261008T155707Z.md`. It returned one finding, S1, which
+  blocks: the recovery of a `--connect` whose unit names no local branch said to start a unit run with `./agent.sh
+  <unit>`, and a unit run given the name of a branch that is not there cuts none. Reproduced it, found it right, and
+  corrected the cell in place: the unit run is started with the unit's number. The correction is a task of `plan.md`,
+  and what was tried is with the cell under the section of the cells written new. The outcome of S1 is that it is
+  applied. On that tree `npm test` passes with 403 tests, no changed file has a line over 120 characters or an em dash,
+  and "The spellings" prints `<project>_agent-home` and the six spellings that section names. The review's own entry
+  above is committed with this one. The status stays `in-progress`
 
 ## What SANDBOX.md leaves out
 
@@ -469,10 +489,14 @@ A unit run that starts nothing:
 
 A `--connect` that runs nothing:
 
-* The unit names no local branch: start a unit run of the unit first and connect while it runs. Tried:
-  `--connect nosuch` was refused, and with `./agent-dev.sh 0039 sleep 45` running, `./agent-dev.sh --connect 0039
-  id -un` printed `agent` and exited 0. The run then ended with 0 and left no clone and no `sandbox/` branch. Not
-  tried: a unit that got its branch from that same run
+* The unit names no local branch: start a unit run of the unit first, by its number, and connect while it runs.
+  Tried: `--connect nosuch` was refused, and with `./agent-dev.sh 0039 sleep 45` running, `./agent-dev.sh --connect
+  0039 id -un` printed `agent` and exited 0. The run then ended with 0 and left no clone and no `sandbox/` branch.
+  That it takes the number is finding S1 of the review, and was tried with the functions of
+  `container/unit-clone.sh` in a scratch repository whose `master` holds `changes/0031-cut-me` and that has no
+  branch for it: by the name `feature-0031-cut-me` neither `--connect` nor a unit run found a branch, by `0031` a
+  unit run cut it, and after that `--connect` found it by the name and by the number. Not tried: that case with
+  Docker, from the cutting run to the connected command
 * Docker could not be asked: see that Docker runs and may be used. Tried: with `DOCKER_HOST` set to a socket that
   is not there, Docker's own error was printed above the wrapper's, and without it the command went on
 * An option of a run: leave it out. Tried: `--connect --rebuild 0039 true` was refused, and without `--rebuild`
@@ -494,7 +518,7 @@ An entrypoint that refuses on a check of the boundary:
 * The canary's hostname is not refused: as for a canary that is reached. Not tried, for the same reason
 
 The spellings these cells bring that the base document does not hold: `git branch`,
-`git branch master origin/master`, `./agent.sh claude`, `./agent.sh <unit>`, `record.md` and `bug`.
+`git branch master origin/master`, `./agent.sh claude`, `./agent.sh 0029`, `record.md` and `bug`.
 
 ### Out of date, left as it is
 
