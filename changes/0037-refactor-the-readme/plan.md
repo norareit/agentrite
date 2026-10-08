@@ -109,27 +109,27 @@ not the kit's. `RELEASING.md` reads the diff of `README.md`, `package.json` and 
 
 Before anything else:
 
-- [ ] Ask the human for the text of the usual workflow, and go on with the tasks below while it is written. Write
+- [x] Ask the human for the text of the usual workflow, and go on with the tasks below while it is written. Write
       none of it. The task that places it stays open until the human has given it (R4)
 
 The reference of the sandbox:
 
-- [ ] Add `tests/package-documents.test.mjs`, written as `tests/changelog.test.mjs` is: `files` of `package.json`
+- [x] Add `tests/package-documents.test.mjs`, written as `tests/changelog.test.mjs` is: `files` of `package.json`
       holds `SANDBOX.md`, `SANDBOX.md` is a file at the root of the repository, and `files` does not hold
       `CONTRIBUTING.md`. The suite now fails on the first two (R17)
-- [ ] Add `SANDBOX.md` to `files` in `package.json`, after `CHANGELOG.md` (R7, R17)
-- [ ] Write `SANDBOX.md` with the headings above, from "Working on a clone" up to "The local model server" of the
+- [x] Add `SANDBOX.md` to `files` in `package.json`, after `CHANGELOG.md` (R7, R17)
+- [x] Write `SANDBOX.md` with the headings above, from "Working on a clone" up to "The local model server" of the
       base README, by requirements 9 and 10. It opens with one sentence on what it is and that the commands are in
       the README. What a unit run defends against and does not, the supported usage, and every limit of what was
       tried stay (R7, R9, R10, R12)
-- [ ] State the kit's own allowlist hosts in "Egress" of `SANDBOX.md` and nowhere else in it (R11)
-- [ ] In `README.md`, put `## The sandbox` in place of "Running the sandbox" and all its subsections: what the
+- [x] State the kit's own allowlist hosts in "Egress" of `SANDBOX.md` and nowhere else in it (R11)
+- [x] In `README.md`, put `## The sandbox` in place of "Running the sandbox" and all its subsections: what the
       sandbox is for, that the host needs Docker, that it is never run with `sudo` and why in one clause, what it
       confines, which is the read-only root, what the agent writes, what of the host is reachable and the egress
       by hostname, the two files a project configures it with, and that the reference is `SANDBOX.md` (R1)
-- [ ] In what the README still holds, name `SANDBOX.md` and the title wherever a sentence points to a section that
+- [x] In what the README still holds, name `SANDBOX.md` and the title wherever a sentence points to a section that
       moved (R11, R14)
-- [ ] List in `record.md` what this move left out of the base README's "Running the sandbox", by subsection (R13)
+- [x] List in `record.md` what this move left out of the base README's "Running the sandbox", by subsection (R13)
 
 Working on the kit:
 
@@ -242,8 +242,8 @@ This repository's instructions:
 
 ## Commit Points
 
-- [ ] `feature-0037 Plan the rebuilding of the README`: the plan and the record
-- [ ] `feature-0037 Move the reference of the sandbox to SANDBOX.md`: the test, `package.json`, `SANDBOX.md`, the
+- [x] `feature-0037 Plan the rebuilding of the README`: the plan and the record
+- [x] `feature-0037 Move the reference of the sandbox to SANDBOX.md`: the test, `package.json`, `SANDBOX.md`, the
       README's "The sandbox" and the record's list
 - [ ] `feature-0037 Move working on the kit to CONTRIBUTING.md`: the test, `CONTRIBUTING.md`, the README and the
       record's list

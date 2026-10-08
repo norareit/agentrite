@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-07T22:40:04Z
 ---
 
@@ -111,5 +111,108 @@ timestamp: 2026-10-07T22:40:04Z
   stated, and that what the documents leave out is listed in a section of this record of its own, built up with
   each move. Not done: the full list of options against the code, which is a task of the plan, and the text of
   the workflow, which the implementer asks the human for. Status `planned`
+- 2026-10-08T12:02:07Z [human] gave the text of the usual workflow, nine numbered steps, in the session,
+  and said that it has not been spell-checked
+- 2026-10-08T12:02:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on the unit's branch at `6dd984b`, in the main checkout. Read `process.md` and `roles/implementer.md` of the
+  installed release 4.2.0, the spec, the plan and this record, and the base README in full. Status `in-progress`. Asked
+  the human for the text of the workflow before the first task. Made the first move: `SANDBOX.md` is written anew from
+  "Working on a clone" up to "The local model server", `package.json` lists it in `files`, the README has "The sandbox"
+  in place of "Running the sandbox", and what the move left out is listed below. Three statements that the plan places
+  in "Installing it into a project" were put there now, so that no commit is without them: the kit's hosts as a pointer
+  to "Egress", the `.dockerignore` exception, and that the build argument alone decides on the browser. `SANDBOX.md` has
+  one heading the plan does not name, `### Moving from a release up to 4.0.0` under "The harness logs", for the steps of
+  moving away from the home volume. `tests/package-documents.test.mjs` failed on `SANDBOX.md` before `package.json`
+  named it, and `npm test` passes after, with 403 tests
+
+## What the three documents leave out
+
+Every statement of the base README that is in none of the three documents, by the section of the base README it
+stood in. Each list names the line of requirement 9 that its statements went by, or where the same is now said.
+
+### Running the sandbox
+
+Its opening. Went as why a behavior was chosen, or as how it is brought about where a reader does not act on it:
+
+* That `container/agent.sh` layers a project's compose file over the kit's base and runs the container
+* That the shim exists so that the documented command stays one command from the repository root, and that the
+  wrapper takes the root from its caller because how deep the kit sits under `node_modules` is npm's to decide
+* Why the build context is the project root and not the kit directory, that the wrapper passes
+  `--project-directory`, and that it passes the kit's `container/` directory as `AGENTRITE_CONTAINER`
+* The rule of BuildKit by which an exception for a directory reaches its files only when the directory itself was
+  excluded. What a project must write, and that the directory alone does not do, stays
+* The pointer to "The harness versions". The README now points to `SANDBOX.md` as a whole
+
+"Starting it": nothing is left out. Its forms are for the list of commands, which the third move writes.
+
+"Working on a clone". Went as why, as how, as a copy of what a command prints, or as evidence of what was tried:
+
+* That the branch is cut on the first unit run so that the plan is written against what `master` holds by then
+* The line the wrapper prints when it cut a branch. That it says what it cut, from which commit and for which unit,
+  stays
+* That the clone's place is outside the project and in a directory that a restart does not empty
+* That a new run is refused while `sandbox/<branch>` holds commits so that an earlier run's commits are not
+  overwritten. The refusal and the recovery stay
+* How a process of `docker exec` comes to be root: that the capabilities are those the entrypoint keeps to install
+  the firewall and to leave root, that such a process does not pass through the entrypoint, and that `--connect`
+  names the agent for the process it starts
+* What was shown of a connected command on Linux: its user, groups, environment, working directory and capability
+  sets, that it could not become root or read the firewall's rules, and that it was refused a host that is not on
+  the allowlist. Where it was shown and where not stays
+* The words "anything the sandbox did not defend against before", which went as what an earlier release did. The
+  two things they introduced stay
+
+"Another working directory" and "Extra directories": nothing is left out.
+
+"The shared `node_modules`". Went as how a behavior is brought about:
+
+* That npm installs a package that is limited to some platforms only on those platforms, and that `npm ci` removes
+  `node_modules` before it installs
+* That the container has no `node_modules` of its own, which "share one `node_modules`" now says
+
+"The home volume". Went as how, or as a copy of what a command prints:
+
+* That Docker fills a named volume from the image, ownership included, only the first time an empty volume is
+  mounted, and never changes it afterwards
+* That the entrypoint checks the owner of `/home/agent` before it drops to the agent
+* The five lines the entrypoint prints. What they name and the two commands stay
+* That a mismatched home is a one-off state, which "The next start creates a new volume owned by the agent" now
+  says
+
+"The harness logs". Went as why, as what an earlier release did, as a copy, or as evidence:
+
+* That the log directory reads as a home that holds nothing but the two directories
+* That OpenCode's login is "no longer" in the home volume
+* Why nothing of OpenCode is copied once the log directory holds a database: that the database is one file with
+  companions that belong to it alone
+* That it is Docker that makes the missing mount points as root. That they are root's stays
+* The six lines the entrypoint prints for such a volume. What they name stays
+* What was shown on macOS: both harnesses with their logs on the mounted directories, two containers writing at
+  the same time, and the host reading while a container wrote. The system and the limit stay
+
+"The harness versions". Went as copies of what the wrapper prints, of which the section says what each means:
+
+* The line that names the latest published version the image is built with
+* The two lines for a latest version that could not be found
+* The line for a command that printed no version
+* The two lines that say why the image is built again
+
+"The status line". Went as what an earlier release did:
+
+* That with no such file on the host "the sandbox is as it was". That neither file is mounted stays
+
+"Logging in to a model provider". Went as why, or is now said elsewhere:
+
+* That the browser is on the host and the harness listens inside the container, and that it is deliberate that
+  nothing reaches into the sandbox from outside
+* The names of the two hosts of the ChatGPT login and what each is for, which "Egress" of `SANDBOX.md` now says,
+  with a pointer from here
+
+"Egress". Went as how:
+
+* That it is the entrypoint that redirects the connections on port 443 to the proxy, and that the hostname travels
+  in the clear in the TLS ClientHello
+
+"The local model server": nothing is left out.
 
 ## Amendments

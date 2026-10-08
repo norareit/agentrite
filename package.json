@@ -6,6 +6,7 @@
   "files": [
     "process.md",
     "CHANGELOG.md",
+    "SANDBOX.md",
     "roles",
     "templates",
     "scripts/check-changes.mjs",
