@@ -175,6 +175,20 @@ timestamp: 2026-10-08T13:27:02Z
   `/run/egress-proxy.log`, with where a refused connection is logged, by requirement 5; and the three the plan
   names. Requirements 1 and 7 both have it said that the versions are those of the checkout the command is run
   from: "Running a unit" says it, and "Holding a harness version" says it in one sentence and names that section
+- 2026-10-08T15:33:49Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the rules of requirement 16 to
+  "The documents" of `AGENTS.md`, and ran the checks of the plan's "Verification" on the tree at `c9edab5`, which holds
+  everything but this entry and the last ticks of the plan. `npm test` passes with 403 tests, and `npm run
+  check-changes` exits 0. `grep '^## ' SANDBOX.md` prints the thirteen titles in their order, there is no `###`, and the
+  thirteen links of the table of contents are the anchors of the thirteen titles. "What was tried" prints nothing. "The
+  places" prints lines of "Where things are kept on the host" and of "Moving from a release up to 4.0.0" only. "The
+  titles" prints nothing for each of its three commands. "The spellings" prints `<project>_agent-home`, which is
+  accounted for under `### New statements`. "The line length and the dashes" prints nothing. `git diff --stat` against
+  the merge base names `SANDBOX.md`, `README.md`, `AGENTS.md`, the two `compose.project.yml` files and the unit's three
+  documents. `SANDBOX.md` is 799 lines and 4965 words, where the base document is 581 lines and 5635 words: the two HTML
+  tables take a line for each tag and each cell. Not checked: how the two HTML tables are rendered, on GitHub or on npm,
+  since nothing here renders them. The status stays `in-progress`, for the review. For the human, besides the review:
+  the three rows with no "What to do", the statement found out of date, and the two new cells, all under `## What
+  SANDBOX.md leaves out`
 
 ## What SANDBOX.md leaves out
 

@@ -354,7 +354,7 @@ The rule:
 
 Finishing:
 
-- [ ] Run the checks under "Verification" on the final tree and log in `record.md` what was run and what it
+- [x] Run the checks under "Verification" on the final tree and log in `record.md` what was run and what it
       reported (R17)
 
 ## Verification
@@ -390,27 +390,27 @@ git diff --name-only "$base" | xargs awk 'length > 120 { print FILENAME ": " FNR
 git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 ```
 
-- [ ] `npm test` passes on the final tree (R17)
-- [ ] `npm run check-changes` exits 0, run after the last commit (R17)
-- [ ] `grep '^## ' SANDBOX.md` prints the thirteen titles of requirement 1 in their order, `grep -c '^### '
+- [x] `npm test` passes on the final tree (R17)
+- [x] `npm run check-changes` exits 0, run after the last commit (R17)
+- [x] `grep '^## ' SANDBOX.md` prints the thirteen titles of requirement 1 in their order, `grep -c '^### '
       SANDBOX.md` prints 0, and every link of the table of contents is the anchor of one of them. The anchor of the
       last is `#moving-from-a-release-up-to-400` (R1)
 - [x] "The move", run after the move and before the form, prints only headings, lines of the table of contents,
       the first sentence of the opening and lines in which a title changed (R13)
-- [ ] "What was tried" prints nothing (R12)
-- [ ] "The places" prints lines of "Where things are kept on the host" and of "Moving from a release up to 4.0.0"
+- [x] "What was tried" prints nothing (R12)
+- [x] "The places" prints lines of "Where things are kept on the host" and of "Moving from a release up to 4.0.0"
       only (R3)
-- [ ] "The titles" prints nothing, for each of its three commands (R11, R15)
-- [ ] "The spellings" prints only the titles of sections and what the record names under `### New statements`
+- [x] "The titles" prints nothing, for each of its three commands (R11, R15)
+- [x] "The spellings" prints only the titles of sections and what the record names under `### New statements`
       (R13)
-- [ ] `git diff "$base" --stat` names `SANDBOX.md`, `README.md`, `AGENTS.md`, the two `compose.project.yml` files
+- [x] `git diff "$base" --stat` names `SANDBOX.md`, `README.md`, `AGENTS.md`, the two `compose.project.yml` files
       and the unit's own documents, and no other file. The diff of `README.md` and of the two
       `compose.project.yml` files changes titles and the layout of one table, and nothing else (R15)
-- [ ] Every refusal the record lists under requirement 6 has its message quoted, and the quoted message names why
+- [x] Every refusal the record lists under requirement 6 has its message quoted, and the quoted message names why
       and what to do (R6, R14)
-- [ ] "The line length and the dashes" prints nothing: no line of a changed file is over 120 characters, and none
+- [x] "The line length and the dashes" prints nothing: no line of a changed file is over 120 characters, and none
       holds an em dash
-- [ ] Every requirement of the spec has a ticked task that names it
+- [x] Every requirement of the spec has a ticked task that names it
 
 ## Commit Points
 
@@ -422,4 +422,4 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 - [x] `feature-0039 Take out of the sandbox reference what a reader does not need`: the cuts, in `SANDBOX.md`, and
       the record's list
 - [x] `feature-0039 Say in AGENTS.md how the sandbox reference is kept`: `AGENTS.md`
-- [ ] `feature-0039 Record the implementation and what was run`: the record, with the suites on the final tree
+- [x] `feature-0039 Record the implementation and what was run`: the record, with the suites on the final tree
