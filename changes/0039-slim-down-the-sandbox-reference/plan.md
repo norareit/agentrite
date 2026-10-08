@@ -362,6 +362,29 @@ The correction, added on the human's word after the tasks above were done:
       `tests/entrypoint-home-owner.test.mjs` on that message first and see them fail. Bring the message the record
       quotes, and its `### Out of date, left as it is`, along
 
+The cells with no recovery, added on the human's word after the tasks above were done:
+
+- [ ] Fill "What to do" of the three rows of "When something goes wrong" that have none: a unit run that starts
+      nothing, a `--connect` that runs nothing, and an entrypoint that refuses on a boundary check. Write one
+      recovery for each cause in the row's "Why", in the order of that list. Read the message of each cause first,
+      in `container/agent.sh`, `container/unit-clone.sh` and `container/entrypoint.sh`. A cause whose message
+      names why and what to do after all leaves the row by requirement 6, with its message quoted in the record.
+      Where nothing a reader does repairs the cause, as when the canary is reached, say so and what to do
+      instead. What the specifier proposed, which the implementer checks against the code and does not take from
+      here: for a name no branch has, give the unit's number or a branch that exists; for a number that is no unit
+      on `master`, specify the unit and commit it on `master` first; for a record that cannot be read or names no
+      kind, correct its frontmatter on `master`; for no local branch `master`, make one; for `--connect` with no
+      local branch, start a unit run of the unit first; for Docker that could not be asked, see that Docker runs;
+      for `--connect` with an option of a run, leave the option out; for an allowlisted host that is not reached,
+      see the network and the proxy's log, and correct or remove the host in `ALLOWLIST`; for a canary that is
+      reached or a hostname that is not refused, the confinement does not hold, so do not work around it and
+      report it (R5)
+- [ ] Try each recovery that can be tried without breaking the confinement, and say in the record of each
+      whether it was tried. Replace `### Rows with no "What to do"` in the record by the list of the cells
+      written new (R5)
+- [ ] Run the checks under "Verification" again on the final tree and log in `record.md` what was run and what
+      it reported (R17)
+
 Finishing:
 
 - [x] Run the checks under "Verification" on the final tree and log in `record.md` what was run and what it
@@ -437,3 +460,5 @@ git diff --name-only "$base" | xargs grep -n -P '\x{2014}'
 - [x] `feature-0039 Plan the correction of which login a home volume holds`: the plan and the record
 - [x] `feature-0039 Say which login a removed home volume discards`: `SANDBOX.md`, `container/entrypoint.sh`, its
       test, and the record, with the suites on the final tree
+- [ ] `feature-0039 Say what to do for the failures that had no recovery`: `SANDBOX.md` and the record, with the
+      suites on the final tree

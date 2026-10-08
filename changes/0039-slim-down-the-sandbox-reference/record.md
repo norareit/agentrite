@@ -205,6 +205,16 @@ timestamp: 2026-10-08T13:27:02Z
   outside `changes/` and `CHANGELOG.md` holds the earlier wording. Not tried: a container started on a home volume that
   the entrypoint refuses, so the message was seen in the tests' output only. The entrypoint is in the image, so a
   sandbox prints the corrected message once its image is built again. The status stays `in-progress`
+- 2026-10-08T15:43:05Z [human] read that three rows of "When something goes wrong" have an empty "What to do", asked how
+  to handle it, and took the specifier's proposal: the cells are written new, from the cause and the code. Asked whether
+  the plan changes too
+- 2026-10-08T15:43:05Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the main session on the Linux host,
+  on the unit's branch at `1444541`, changed `spec.md` for that: requirement 5 has no empty "What to do" cell and has a
+  cell with no source written new, tried where it can be and named in the record, the non-goal on correcting the content
+  names the exception, and there is a decision. No requirement was renumbered. Then, since the work is not in the plan,
+  added it to `plan.md` as three tasks and a commit point, unticked, for the implementer, with the recoveries the
+  specifier proposed as what is checked against the code and not taken from the plan. Nothing of `SANDBOX.md` is changed
+  by this. Not checked: any of the proposed recoveries against the code or by trying it. The status stays `in-progress`
 
 ## What SANDBOX.md leaves out
 

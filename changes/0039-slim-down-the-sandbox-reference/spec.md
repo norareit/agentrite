@@ -71,6 +71,10 @@ on the host and the failures each in one table.
     * a login that sends the browser back to a port on `localhost`, with the login that needs no callback
     * a connection that is refused, with where it is logged
     * a local model server that is not reached from a Linux host whose firewall denies incoming traffic
+   No "What to do" cell of the table is empty. Where the present document gives no recovery for a failure that is
+   a row, the cell is a new statement: the implementer writes it from the cause the row names and from the code,
+   one recovery for each cause, tries it where it can be tried, and names it in the record as new, saying of each
+   whether it was tried. Where nothing a reader does repairs the cause, the cell says so, and what to do instead
 6. A refusal is not in `SANDBOX.md` when the message the wrapper or the entrypoint prints for it names both why it
    refused and what to do. This is checked against the message in the code, for every refusal that is taken out.
    A refusal stays, as a row of the table, when its message leaves either out. The two refusals of a home volume,
@@ -161,6 +165,13 @@ decision, and a later review treats it as settled.
 * **Two new cells, on the human's word.** How the log directory and the image are removed is not in the present
   document, and the table would have two empty cells without it. It is the one place where this unit writes
   something the document did not say
+* **No row without a recovery, on the human's word.** As first built, three rows had an empty "What to do": a
+  unit run that starts nothing, a `--connect` that runs nothing, and an entrypoint that refuses on a boundary
+  check. Their messages say why and not what to do, so requirement 6 keeps them, and the present document gives
+  no recovery, so nothing was allowed to be written. A row that names a failure and not the way out of it is of no
+  use to the reader the table is for. Taking the rows out was rejected: the reader would have a message that does
+  not say what to do and a document that says nothing. Making the messages say it is the better end, and is not
+  this unit's, which changes no message
 * **The places on the host in one table.** The clone, the log directory, the home volume and the image are each
   described in a section of their own today, and a reader who wants to find or remove one reads that section for
   one line of it
@@ -193,7 +204,8 @@ decision, and a later review treats it as settled.
   stays in the document
 * A change to `README.md` or `CONTRIBUTING.md`, apart from a pointer of requirement 15
 * A change to `CHANGELOG.md`
-* Correcting the content on the way, apart from the two cells of requirement 3. A statement that is out of date
+* Correcting the content on the way, apart from the two cells of requirement 3 and the "What to do" cells of
+  requirement 5 that have no source. A statement that is out of date
   and stays is left as it is, and named in the record for the human
 
 ## Beyond the request
