@@ -4,6 +4,20 @@ The reference of the agent sandbox: what a run mounts, writes, refuses and leave
 it, with every argument and option, are in "Commands" of [`README.md`](README.md), and what the sandbox confines
 is in "The sandbox" there.
 
+* [Working on a clone](#working-on-a-clone)
+* [Connecting to a unit run](#connecting-to-a-unit-run)
+* [What a unit run defends against](#what-a-unit-run-defends-against)
+* [Another working directory](#another-working-directory)
+* [Extra directories](#extra-directories)
+* [The shared `node_modules`](#the-shared-node_modules)
+* [The home volume](#the-home-volume)
+* [The harness logs](#the-harness-logs)
+* [The harness versions](#the-harness-versions)
+* [The status line](#the-status-line)
+* [Logging in to a model provider](#logging-in-to-a-model-provider)
+* [Egress](#egress)
+* [The local model server](#the-local-model-server)
+
 ## Working on a clone
 
 A unit run mounts a clone of the unit's branch at `/work`, not the developer's checkout. It is for the planner, the

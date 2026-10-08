@@ -416,3 +416,7 @@ No statement that stayed was found to be out of date. None was looked for beyond
 moves showed, and no statement was tried against the code but the commands, their arguments and their options.
 
 ## Amendments
+- 2026-10-08T14:46:14Z [Claude Code, anthropic/claude-opus-5-5] on the human's word, in the main session on the Linux
+  host, on `master`: added a table of contents to `README.md`, `SANDBOX.md` and `CONTRIBUTING.md`, as a list of
+  links to the `##` headings, between the introduction and the first heading. The human asked for it as a small
+  follow-up, without a unit of its own. `RELEASING.md` has none, because its opening already sums up what it holds

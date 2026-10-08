@@ -3,6 +3,13 @@
 For whoever changes the kit. What the kit is and how a project uses it is in [`README.md`](README.md), and what the
 sandbox does is in [`SANDBOX.md`](SANDBOX.md). This document is not in the package.
 
+* [What the repository holds besides the package](#what-the-repository-holds-besides-the-package)
+* [Commands](#commands)
+* [The kit's own tests](#the-kits-own-tests)
+* [The kit's own copy of the kit](#the-kits-own-copy-of-the-kit)
+* [Trying the working copy's sandbox](#trying-the-working-copys-sandbox)
+* [Releasing](#releasing)
+
 ## What the repository holds besides the package
 
 What the package holds is in "What is here" of `README.md`. The repository holds besides:

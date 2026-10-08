@@ -6,6 +6,15 @@ The shared instructions and tooling that coding agents work under, in one place 
 rather than once per project. Projects install it as the npm package `@ritenoar/agentrite` and keep only what is
 specific to them.
 
+* [The name](#the-name)
+* [What is here](#what-is-here)
+* [How it works](#how-it-works)
+* [Commands](#commands)
+* [Running a role](#running-a-role)
+* [Installing it into a project](#installing-it-into-a-project)
+* [Updating a project to a newer kit](#updating-a-project-to-a-newer-kit)
+* [The sandbox](#the-sandbox)
+
 ## The name
 
 A rite is a prescribed way of doing something, and that is what this kit is at its core. `process.md` lays down how
