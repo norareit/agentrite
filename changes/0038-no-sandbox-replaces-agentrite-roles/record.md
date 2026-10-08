@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-08T10:54:55Z
 ---
 
@@ -34,5 +34,8 @@ timestamp: 2026-10-08T10:54:55Z
     * that there is no release that warns first, and that the release that carries the unit is a major one
     * that nothing of unit 0037 is changed here, though its requirement 5 lists `agentrite-roles`
   Status left at `draft`
+- 2026-10-08T16:45:17Z [human] approved the spec as it stands on `master` at `8be0136`
+- 2026-10-08T16:45:17Z [Claude Code, anthropic/claude-sonnet-5-5] in the main session on the Linux host, on `master`
+  at `8be0136`, set the status to `approved`
 
 ## Amendments
