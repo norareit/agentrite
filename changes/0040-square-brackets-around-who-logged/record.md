@@ -71,9 +71,23 @@ release.
   specifier's reading of the human's form and not the human's in those words. The template is now part of the task
   for its two entry lines. Still a task: the form is the human's, and nothing is left to decide. Status left at
   `draft`
-- 2026-10-08T19:36:49Z [human] read the description with the role in it, said that the role on every entry is fine, and asked for the
-  task to be implemented, which approves it. The status is `approved`
+- 2026-10-08T19:36:49Z [human] read the description with the role in it, said that the role on every entry is fine,
+  and asked for the task to be implemented, which approves it. The status is `approved`
 - 2026-10-08T19:37:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
   host, in the main checkout. Read `roles/implementer.md` and this record in full. Cut
   `task-0040-square-brackets-around-who-logged` from `master` at `05d68a2`, on which `npm test` passes with 411
   tests. The status is `in-progress`
+- 2026-10-08T19:37:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, implemented the description in
+  `7445c5a`. In `process.md`, under "Changes", after the paragraph on the frontmatter: that every entry of `## Log`
+  and of `## Amendments` is a list item, the example of one entry of a human and one of an agent, and five bullets,
+  on the bare timestamp, the name in written square brackets, `as the <role>` on every entry an agent makes in a
+  role, the text, and which brackets of the template are the written ones. The bullet on `record.md` lost its second
+  sentence, on the timestamp and the name, which the new text states, so that it is said once. In
+  `templates/changes/record.md`, both entry lines have `as the [role],` between the name and the text, whose
+  placeholder begins in lower case now that it follows a comma. No test was written: the unit changes two documents
+  and no code, and no test reads either. What was run, on the host with Node 26.9.0, on the tree of `7445c5a`:
+  `npm test`, 411 of 411 passed, none skipped; `npm run check-changes`, which printed no finding and exited 0. No
+  line of the two files is longer than 120 characters. Not checked: how the example and the template render in
+  IntelliJ, and whether an agent in a new project now writes the brackets and the role. Not done: the
+  `process.md` under `node_modules`, which is that of the installed release and gets this at a release. The status
+  stays `in-progress`: the review is not this session's
