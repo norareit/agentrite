@@ -9,8 +9,8 @@ supersedes: [change directory name]
 
 ## Log
 
-- [YYYY-MM-DDTHH:MM:SSZ] [[harness], [provider/model] | human] [Status transition or outcome]
+- [YYYY-MM-DDTHH:MM:SSZ] [[harness], [provider/model] | human] as the [role], [status transition or outcome]
 
 ## Amendments
 
-- [YYYY-MM-DDTHH:MM:SSZ] [[harness], [provider/model] | human] [What changed and why]
+- [YYYY-MM-DDTHH:MM:SSZ] [[harness], [provider/model] | human] as the [role], [what changed and why]

@@ -71,13 +71,29 @@ Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`.
 * `spec.md` states what should be true: context, requirements, decisions with rationale, non-goals, and what the
   specifier left out as beyond the request. It has no file paths or task order
 * `plan.md` states how the work will be done: approach, files, ordered tasks, tests first, and commit points
-* `record.md` states what happened: frontmatter, timestamped status transitions, and amendments. Every log and
-  amendment entry opens with the same UTC timestamp format as the frontmatter, then names the harness and
-  provider/model that made it, or `human` for a human-only action
+* `record.md` states what happened: frontmatter, timestamped status transitions, and amendments
 
 Use the frontmatter in `templates/changes/record.md`. Its `kind`, `status`, and `timestamp` fields are required, and
 `supersedes` names an older unit when applicable. The timestamp is an ISO 8601 instant in UTC ending in `Z`, so that
 sorting it lexicographically orders the whole set chronologically.
+
+Every entry under `## Log` and under `## Amendments` of `record.md` is a list item, written as these two are:
+
+```markdown
+- 2026-10-07T11:51:06Z [human] approved the spec. The status is `approved`
+- 2026-10-07T11:51:36Z [Claude Code, anthropic/claude-opus-5-5] as the planner, wrote `plan.md`. The status is
+  `planned`
+```
+
+* It opens with the timestamp, in the same UTC format as the frontmatter, written bare
+* Then comes who made it, in square brackets: `[<harness>, <provider>/<model>]` for an agent, and `[human]` for a
+  human-only action. The brackets are written, and are not a mark for something to fill in
+* Then, for an agent that acts in a role, comes `as the <role>`, with one of the four roles below. It is on every
+  entry the agent makes in that role and not only on its first. An entry of a human has none, and neither has one
+  of an agent that acts in no role
+* Then comes the text
+* In `templates/changes/record.md` the brackets around who made the entry are the written ones, and its other
+  brackets mark what is to be filled in
 
 Status progresses from `draft` to `approved` to `planned` to `in-progress` to `implemented`. `approved` says that the
 human approved what the specifier wrote. `planned` says that the planner is done with the unit: its plan is written,
