@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-08T17:40:00Z
+status: implemented
+timestamp: 2026-10-08T19:30:00Z
 ---
 
 # 0038 `--no-sandbox` replaces `agentrite-roles`
@@ -90,5 +90,16 @@ timestamp: 2026-10-08T17:40:00Z
       does. The plan is not frozen
   `npm test` on the host reports 411 tests, 411 pass, 0 fail on the tree after the fixes. Status left at
   `in-progress`: it is the human's to decide the findings before `implemented`
+- 2026-10-08T19:18:59Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0038 at commit
+  `139057585ae5bbdd55c80e70d53bb3eb8b6ab8ed`, a delta review from
+  `5bfeca830f4dbb09330987f909cd4a494f9fdf9c`. Returned no findings; the complete review is in
+  `.reviews/0038-no-sandbox-replaces-agentrite-roles/2026-10-08T191859Z-delta-review.md`. Ran `npm test` on the
+  host and in a fresh unit-style clone, `npm run check-changes` on the committed tree, and the delta whitespace check.
+  No unresolved verification blockers for the delta
+- 2026-10-08T19:30:00Z [human] decided the findings: the delta review returned none, and S1, C1 and P1 of the full
+  review were applied. Said the unit can be marked implemented
+- 2026-10-08T19:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ticked the last commit point of
+  `plan.md`, so that none is open, and set the status to `implemented`. Ran `npm test` on the tree with these edits:
+  411 tests, 411 pass, 0 fail. `npm run check-changes` is run on the committed tree, as it reads committed content
 
 ## Amendments

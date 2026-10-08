@@ -116,4 +116,4 @@ are left. Unit 0037 is implemented, so the README names the command only in the 
   agentrite-roles by --no-sandbox`
 - [x] The pointer: `feature-0038 Reword the agentrite-roles pointer`
 - [x] The documents: `feature-0038 Describe --no-sandbox and drop agentrite-roles from the documents`
-- [ ] Ticked plan and status: `feature-0038 Mark the unit implemented`, by the implementer after the review
+- [x] Ticked plan and status: `feature-0038 Mark the unit implemented`, by the implementer after the review
