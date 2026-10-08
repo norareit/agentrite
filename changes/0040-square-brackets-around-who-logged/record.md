@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-10-08T19:25:31Z
 ---
 
@@ -73,3 +73,7 @@ release.
   `draft`
 - 2026-10-08T19:36:49Z [human] read the description with the role in it, said that the role on every entry is fine, and asked for the
   task to be implemented, which approves it. The status is `approved`
+- 2026-10-08T19:37:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, in the main checkout. Read `roles/implementer.md` and this record in full. Cut
+  `task-0040-square-brackets-around-who-logged` from `master` at `05d68a2`, on which `npm test` passes with 411
+  tests. The status is `in-progress`
