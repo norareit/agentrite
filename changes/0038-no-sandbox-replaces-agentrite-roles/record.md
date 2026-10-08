@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: approved
-timestamp: 2026-10-08T10:54:55Z
+status: planned
+timestamp: 2026-10-08T16:48:43Z
 ---
 
 # 0038 `--no-sandbox` replaces `agentrite-roles`
@@ -37,5 +37,18 @@ timestamp: 2026-10-08T10:54:55Z
 - 2026-10-08T16:45:17Z [human] approved the spec as it stands on `master` at `8be0136`
 - 2026-10-08T16:45:17Z [Claude Code, anthropic/claude-sonnet-5-5] in the main session on the Linux host, on `master`
   at `8be0136`, set the status to `approved`
+- 2026-10-08T16:48:43Z [Claude Code, anthropic/claude-sonnet-5-5] as the planner, in a session on the Linux host, cut
+  the branch `feature-0038-no-sandbox-replaces-agentrite-roles` from `master` at `1916d7e`. Read `process.md`,
+  `roles/planner.md`, `spec.md` and `record.md`, and wrote `plan.md` against the tree. Units 0037 and 0039 are
+  implemented on `master`, so the spec's remark that 0037 is a draft is out of date and requirement 11 falls in the
+  documents as they are. Re-checked every file that names `agentrite-roles`: `README.md` (the "What is here" row, the
+  `agentrite-roles` section of "Commands", one line of "Installing it into a project"), `CONTRIBUTING.md` (the row of
+  `pointers/`), `package.json` and `package-lock.json` (the root `bin`; the entry of the installed release 4.2.0 in the
+  lock is not this repository's and stays), `scripts/agentrite-roles.mjs`, `scripts/agentrite.mjs` and
+  `scripts/agentrite-run.mjs` (imports), `pointers/agentrite-roles/`, and `tests/`. `AGENTS.md`, `SANDBOX.md`,
+  `RELEASING.md`, `CHANGELOG.md`, `templates/` and `container/` do not name it. Decided in the plan, the spec leaving it
+  open: the module `scripts/agentrite-roles.mjs` keeps its name and loses only what made it a command; the parsing of
+  the harnesses moves into `scripts/agentrite.mjs`; the pointer goes to version 2.0.0. Found no contradiction in the
+  spec. Wrote no code and ran no suite. Status set to `planned`
 
 ## Amendments
