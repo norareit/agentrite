@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-08T19:58:16Z
 ---
 
@@ -28,5 +28,8 @@ timestamp: 2026-10-08T19:58:16Z
   host: `docker compose config` with the kit's service renamed and this repository's file as it is, which merged without
   an error into two services. Not checked: what the script then does with an empty image name, and how far the suites
   can test requirements 6 and 7 without Docker, which is the planner's. Status left at `draft`
+- 2026-10-08T20:24:52Z [human] approved the spec as it stands on `master` at `ab0d8bf`
+- 2026-10-08T20:24:52Z [Claude Code, anthropic/claude-opus-5-5] in the main session on the Linux host, on `master` at
+  `ab0d8bf`, set the status to `approved`
 
 ## Amendments
