@@ -187,22 +187,22 @@ The old names:
 
 The documents:
 
-- [ ] `README.md`: the heading `### sandbox.sh` and its four forms, the table of environment variables with
+- [x] `README.md`: the heading `### sandbox.sh` and its four forms, the table of environment variables with
   `SANDBOX_MEM_LIMIT` and `SANDBOX_CPUS`, the two rows of "What is here", and every other mention of the shim, the
   compose file, `services.sandbox.build.args` and the kit's script, with every form, option and variable that is
   there now. Lines 97 and 330 are brought under the limit (R10)
-- [ ] `SANDBOX.md`: every command and path, and the service in the two YAML examples, under "Reaching more hosts"
+- [x] `SANDBOX.md`: every command and path, and the service in the two YAML examples, under "Reaching more hosts"
   and "Holding a harness version". `/home/agent` and `<project>_agent-home` stay. It gets no entry for the refusal
   (R10)
-- [ ] `CONTRIBUTING.md`: the three rows of "What the repository holds besides the package", the heading
+- [x] `CONTRIBUTING.md`: the three rows of "What the repository holds besides the package", the heading
   `### sandbox-dev.sh` and its forms, `SANDBOX_PROJECT_NAME`, `ritenoar-agentrite-sandbox` and
   `ritenoar-agentrite-sandbox-dev` in the names of the project, the image, the home volume, the network and the
   state directory, and every other mention. Lines 70 and 146 are brought under the limit (R10)
-- [ ] `RELEASING.md`: `./sandbox.sh` in step 6, in its five commands, in what is said of each and in what the step
+- [x] `RELEASING.md`: `./sandbox.sh` in step 6, in its five commands, in what is said of each and in what the step
   reports (R10)
-- [ ] Read the four once more against `git diff master`: every form, option, variable and table row that was there
+- [x] Read the four once more against `git diff master`: every form, option, variable and table row that was there
   is there, no line passes 120 characters, and none says what a name was or how a project moves (R10)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 ## Verification
 

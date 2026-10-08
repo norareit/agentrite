@@ -30,18 +30,18 @@ The "rite" is also Ritenoar's, whose projects carry it.
 
 ## What is here
 
-| Path                 | What it holds                                                                             |
-|----------------------|-------------------------------------------------------------------------------------------|
-| `process.md`         | How work is done: the changes process, the commit conventions, the code standards         |
-| `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it                  |
-| `README.md`          | What the kit is and how a project uses it                                                 |
-| `SANDBOX.md`         | The reference of the sandbox                                                              |
-| `package.json`       | The package's name, its version and the commands it installs                              |
-| `roles/`             | The specifier, planner, implementer and reviewer instructions                             |
-| `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
-| `templates/project/` | The files `agentrite init` fills in and writes into a project                             |
-| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` command                        |
-| `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper         |
+| Path                 | What it holds                                                                     |
+|----------------------|-----------------------------------------------------------------------------------|
+| `process.md`         | How work is done: the changes process, the commit conventions, the code standards |
+| `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it          |
+| `README.md`          | What the kit is and how a project uses it                                         |
+| `SANDBOX.md`         | The reference of the sandbox                                                      |
+| `package.json`       | The package's name, its version and the commands it installs                      |
+| `roles/`             | The specifier, planner, implementer and reviewer instructions                     |
+| `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit               |
+| `templates/project/` | The files `agentrite init` fills in and writes into a project                     |
+| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` command                |
+| `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
 project's own `AGENTS.md`, which links here for the rest.
@@ -63,7 +63,7 @@ The writers current workflow:
 
 1. Use Claude Code with Opus as the `specifier` role and ask it to refine a feature (or bug or task) together
 2. Read the `spec.md` that comes out of this, ask for a few clarifications or corrections if necessary and approve it
-3. Run the `agent.sh 0007` where `0007` is the change number. This cuts the branch and starts the container
+3. Run the `sandbox.sh 0007` where `0007` is the change number. This cuts the branch and starts the container
 4. Run Claude Code with Opus as the `planner` role and ask it to create a plan for feature 0007
 5. Run Claude Code with Sonnet or OpenCode with Qwen 3.8 27b as the `implementer` role and ask it to implement the
    plan
@@ -94,11 +94,11 @@ and prints each file it wrote, changed or skipped.
 | `--no-sandbox`     | For a project without the sandbox. Leaves out what is only for it, as the paragraph below says |
 
 With `--no-sandbox`, `init` writes the role wrappers, `AGENTS.md` and `CLAUDE.md`, and amends `package.json`, and
-prints the same lines and notices for them. It does not write, change or read `agent.sh`, `agent/compose.project.yml`
-or `.dockerignore`, prints no line for any of the three, and leaves one that exists as it is. It runs when
-`package.json` has no `name`, and does not read `package-lock.json`. It still refuses, writing nothing, when
-`package.json` is missing or cannot be read. The option goes at any place among the harnesses, and given more than once
-it counts as given once. It is not remembered: give it on every run, and on every `refresh`.
+prints the same lines and notices for them. It does not write, change or read `sandbox.sh`,
+`sandbox/compose.project.yml` or `.dockerignore`, prints no line for any of the three, and leaves one that exists as
+it is. It runs when `package.json` has no `name`, and does not read `package-lock.json`. It still refuses, writing
+nothing, when `package.json` is missing or cannot be read. The option goes at any place among the harnesses, and given
+more than once it counts as given once. It is not remembered: give it on every run, and on every `refresh`.
 
 See "Installing it into a project".
 
@@ -109,15 +109,15 @@ npx agentrite refresh [--no-sandbox] <harness>...
 ```
 
 Brings the kit's own files in a project up to date with the installed release, from the project root, and prints
-each file as written, refreshed or up to date. Without `--no-sandbox` it writes an `agent.sh` that is missing.
+each file as written, refreshed or up to date. Without `--no-sandbox` it writes a `sandbox.sh` that is missing.
 
-| Argument or option | What it is                                                                          |
-|--------------------|-------------------------------------------------------------------------------------|
-| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses             |
-| `--no-sandbox`     | For a project without the sandbox. Leaves `agent.sh` out: it is not read or written |
+| Argument or option | What it is                                                                            |
+|--------------------|---------------------------------------------------------------------------------------|
+| `<harness>...`     | `claude` or `opencode`, one or both, for the harnesses the project uses               |
+| `--no-sandbox`     | For a project without the sandbox. Leaves `sandbox.sh` out: it is not read or written |
 
 With `--no-sandbox`, `refresh` does for the role wrappers what it does without it, a pinned model that survives
-included, and prints no line for `agent.sh`. What is at the path of `agent.sh`, a symbolic link or a directory
+included, and prints no line for `sandbox.sh`. What is at the path of `sandbox.sh`, a symbolic link or a directory
 included, changes neither what it prints nor its exit status. The option goes at any place among the harnesses.
 
 See "Updating a project to a newer kit".
@@ -175,13 +175,13 @@ list of the offending units when a frozen `spec.md` or `plan.md` changed or an i
 
 See "Installing it into a project".
 
-### agent.sh
+### sandbox.sh
 
 ```sh
-./agent.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
-./agent.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
-./agent.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-./agent.sh --connect UNIT [COMMAND...]
+./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+./sandbox.sh --connect UNIT [COMMAND...]
 ```
 
 Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
@@ -199,12 +199,12 @@ With `--connect` it starts nothing, and runs beside a unit run that is under way
 | `--`               | Ends the options, so that what follows is the unit or the command                            |
 | `COMMAND...`       | Runs this instead of the shell                                                               |
 
-| Environment variable | What it is                                                                               |
-|----------------------|------------------------------------------------------------------------------------------|
-| `AGENT_MEM_LIMIT`    | The memory limit, in place of the `8g` that `init` writes in `agent/compose.project.yml` |
-| `AGENT_CPUS`         | The CPU limit, in place of the `6` that `init` writes in `agent/compose.project.yml`     |
-| `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                     |
-| `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                       |
+| Environment variable | What it is                                                                                 |
+|----------------------|--------------------------------------------------------------------------------------------|
+| `SANDBOX_MEM_LIMIT`  | The memory limit, in place of the `8g` that `init` writes in `sandbox/compose.project.yml` |
+| `SANDBOX_CPUS`       | The CPU limit, in place of the `6` that `init` writes in `sandbox/compose.project.yml`     |
+| `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                       |
+| `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                         |
 
 See "The sandbox", and in `SANDBOX.md` "Running a unit", "Getting the work back", "Two agents on one unit",
 "Running on the tree as it is" and "Where things are kept on the host".
@@ -226,7 +226,7 @@ npx agentrite run reviewer opencode 0032
 * The command waits for the harness, and exits with the status the harness exited with, or with a status other than
   0 when a signal ended the harness
 * The command starts no sandbox: it starts the harness where it is run, on the host or inside the sandbox, and
-  `./agent.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there after
+  `./sandbox.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there after
   `npm ci` in the clone, like the role files
 
 The options, which may stand anywhere among the arguments before a `--`:
@@ -321,18 +321,18 @@ npx agentrite init claude opencode
 
 It prints each file it wrote, changed or skipped. It writes:
 
-| File                        | What it is for                                                                       |
-|-----------------------------|--------------------------------------------------------------------------------------|
-| `.claude/agents/*.md`       | For `claude`: a wrapper per role for Claude Code, pointing at the kit's role file    |
-| `.opencode/agents/*.md`     | For `opencode`: the same for OpenCode                                                |
-| `AGENTS.md`                 | The project's agent instructions, pointing at the kit's `process.md` and role files  |
-| `CLAUDE.md`                 | The bridge that imports `AGENTS.md` into Claude Code, written whatever the harnesses |
-| `agent.sh`                  | The shim that runs the kit's sandbox from the project root. See "The sandbox"         |
-| `agent/compose.project.yml` | The project's half of the sandbox configuration                                      |
+| File                          | What it is for                                                                       |
+|-------------------------------|--------------------------------------------------------------------------------------|
+| `.claude/agents/*.md`         | For `claude`: a wrapper per role for Claude Code, pointing at the kit's role file    |
+| `.opencode/agents/*.md`       | For `opencode`: the same for OpenCode                                                |
+| `AGENTS.md`                   | The project's agent instructions, pointing at the kit's `process.md` and role files  |
+| `CLAUDE.md`                   | The bridge that imports `AGENTS.md` into Claude Code, written whatever the harnesses |
+| `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "The sandbox"        |
+| `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                      |
 
 * Every generated file is the project's own once written, and the project may edit any of them
-* A project without the sandbox runs `npx agentrite init --no-sandbox claude opencode`, which leaves out `agent.sh`,
-  `agent/compose.project.yml` and `.dockerignore`, as "agentrite init" in "Commands" says
+* A project without the sandbox runs `npx agentrite init --no-sandbox claude opencode`, which leaves out `sandbox.sh`,
+  `sandbox/compose.project.yml` and `.dockerignore`, as "agentrite init" in "Commands" says
 * `init` never regenerates one: a file it would create that already exists is left as it is and reported as
   skipped, so running it again only adds what is missing
 * The OpenCode wrappers are written with `mode: all`, which makes each role both a primary agent and a subagent.
@@ -345,13 +345,13 @@ The files a project is expected to edit are these:
   how its tests run, and keeps only that: what holds for every project is in the kit. The three sections above it,
   Development Guidelines, Roles and Changes in this project, are what make the kit's instructions reach an agent, and
   are best kept
-* `agent/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
+* `sandbox/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
   `package.json`, the `PLAYWRIGHT_VERSION` build argument when the project has Playwright, the memory and CPU limits,
   and the project's `ALLOWLIST`. The allowlist lists only what the project needs beyond what the kit admits itself.
   See "Reaching more hosts" of [`SANDBOX.md`](SANDBOX.md)
 * The role wrappers, to pin a model per role
 
-`CLAUDE.md` is best left as written. `agent.sh` is not a file to edit, and of what a project adds to a role wrapper
+`CLAUDE.md` is best left as written. `sandbox.sh` is not a file to edit, and of what a project adds to a role wrapper
 only a pinned model lasts. See "Updating a project to a newer kit".
 
 A file that already exists:
@@ -361,7 +361,7 @@ A file that already exists:
   in whichever it lacks
 * When `CLAUDE.md` already exists, it is left untouched too, and must import `AGENTS.md` with a line holding
   `@AGENTS.md`
-* An existing `agent/compose.project.yml` is left as it is
+* An existing `sandbox/compose.project.yml` is left as it is
 
 `init` also amends two files, adding only what is missing:
 
@@ -390,14 +390,14 @@ not bring back a kit file that a pattern excluded by name.
 
 A project that depends on Playwright gets a sandbox with its browser:
 
-* `init` takes the version from `package-lock.json` and writes it into `agent/compose.project.yml` as the
+* `init` takes the version from `package-lock.json` and writes it into `sandbox/compose.project.yml` as the
   `PLAYWRIGHT_VERSION` build argument. When the lockfile resolves no `playwright`, `init` writes the compose file
   without the argument, and the sandbox is built without a browser. `init` exits 0 either way
 * The browser is in the image when the project's compose file gives `PLAYWRIGHT_VERSION` under
-  `services.agent.build.args`, and not otherwise: the build argument alone decides
+  `services.sandbox.build.args`, and not otherwise: the build argument alone decides
 * A project that starts using Playwright adds the argument by hand, as the version its `package-lock.json`
-  resolves, and one that stops removes it, and both rebuild with `./agent.sh --in-place --rebuild`. `init` and
-  `refresh` never rewrite `agent/compose.project.yml`, which is the project's own
+  resolves, and one that stops removes it, and both rebuild with `./sandbox.sh --in-place --rebuild`. `init` and
+  `refresh` never rewrite `sandbox/compose.project.yml`, which is the project's own
 
 `init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
 `node_modules/@ritenoar/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
@@ -409,7 +409,7 @@ A fresh clone of a project has no kit. `npm ci` installs it with the project's o
 release and integrity hash `package-lock.json` records, and fails rather than install anything else.
 
 Installing and updating are `npm ci` and `npm install`, which run on the host and inside a project's sandbox alike:
-the sandbox admits the hosts they need itself. See "Reaching more hosts" of `SANDBOX.md`. A project's `agent.sh`
+the sandbox admits the hosts they need itself. See "Reaching more hosts" of `SANDBOX.md`. A project's `sandbox.sh`
 runs the wrapper from `node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can
 start.
 
@@ -434,17 +434,17 @@ Then bring the kit's own files in the project up to date, from the project root,
 npx agentrite refresh claude opencode
 ```
 
-It rewrites the role wrappers of those harnesses and `agent.sh` as the new release writes them, writes any that are
+It rewrites the role wrappers of those harnesses and `sandbox.sh` as the new release writes them, writes any that are
 missing, and prints each file as written, refreshed or up to date. Without it those copies stay as an older release
 wrote them, and nothing says so. A project without the sandbox runs `npx agentrite refresh --no-sandbox claude
-opencode`, which leaves `agent.sh` out, so that one it removed on purpose is not written back.
+opencode`, which leaves `sandbox.sh` out, so that one it removed on purpose is not written back.
 
 * A model pinned in a wrapper survives: a line in its frontmatter that opens with `model:` is kept, as written,
   after the kit's own keys
-* Everything else in a wrapper, and all of `agent.sh`, is replaced, other keys a project added to the frontmatter
+* Everything else in a wrapper, and all of `sandbox.sh`, is replaced, other keys a project added to the frontmatter
   among them. The wrappers are tracked files, so `git diff` shows what a refresh changed, and git has what it
   replaced
-* `AGENTS.md`, `CLAUDE.md`, `agent/compose.project.yml`, `package.json` and `.dockerignore` are never touched, and
+* `AGENTS.md`, `CLAUDE.md`, `sandbox/compose.project.yml`, `package.json` and `.dockerignore` are never touched, and
   never created
 * A path that holds something other than a regular file, such as a symbolic link, is left as it is and named on
   standard error. The other files are still refreshed, and the command exits non-zero
@@ -456,7 +456,7 @@ improvement reaches that project, and every other, as a new release that each on
 ## The sandbox
 
 The sandbox is a Docker container that a harness is run in, with a clone of a unit's branch or the project mounted
-read-write at `/work`. `./agent.sh` starts it, in the forms "Commands" gives. The reference is
+read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" gives. The reference is
 [`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/@ritenoar/agentrite/SANDBOX.md`.
 
 What a run needs:
@@ -469,16 +469,16 @@ What a run needs:
 
 What a run does:
 
-* A unit run, as `./agent.sh 0029`, mounts a clone of that unit's branch. It is the way to implement and to review a
+* A unit run, as `./sandbox.sh 0029`, mounts a clone of that unit's branch. It is the way to implement and to review a
   unit. A number that no branch holds and that is a unit on `master` gets its branch first. See "Running a unit" of
   `SANDBOX.md`
 * A run with `--in-place` mounts the project as it is on the host, so the agent works in the developer's own
   checkout, `.git` and `node_modules` included. It is the way to run something on the tree as it is, such as the
   suite
 * Either builds the image on first use and opens a shell in the container. A command appended to it runs instead of
-  the shell, as in `./agent.sh 0029 claude` and `./agent.sh --in-place npm test`
-* `./agent.sh --in-place --rebuild` builds the image again before running
-* `./agent.sh --connect 0029` mounts and starts nothing: it runs a command in the container of the unit run that is
+  the shell, as in `./sandbox.sh 0029 claude` and `./sandbox.sh --in-place npm test`
+* `./sandbox.sh --in-place --rebuild` builds the image again before running
+* `./sandbox.sh --connect 0029` mounts and starts nothing: it runs a command in the container of the unit run that is
   under way for the unit, beside what runs there. See "Two agents on one unit" of `SANDBOX.md`
 
 What it confines:
@@ -505,7 +505,7 @@ The `~/.gitconfig` makes commits from inside carry the same name and email as on
 
 A project configures the sandbox with two files:
 
-* `agent.sh` at the project root, a shim that execs `node_modules/@ritenoar/agentrite/container/agent.sh` with the
+* `sandbox.sh` at the project root, a shim that execs `node_modules/@ritenoar/agentrite/container/sandbox.sh` with the
   project root as its first argument
-* `agent/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
+* `sandbox/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
   allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument

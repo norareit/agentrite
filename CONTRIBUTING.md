@@ -27,16 +27,16 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `CLAUDE.md`                   | The bridge that imports `AGENTS.md` into Claude Code                   |
 | `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill            |
 | `.opencode/`                  | The role wrappers for OpenCode                                         |
-| `agent.sh`                    | The shim that runs the sandbox of the installed release                |
-| `agent/`                      | This repository's `compose.project.yml`                                |
-| `agent-dev.sh`                | Runs the sandbox of the working copy                                   |
+| `sandbox.sh`                  | The shim that runs the sandbox of the installed release                |
+| `sandbox/`                    | This repository's `compose.project.yml`                                |
+| `sandbox-dev.sh`              | Runs the sandbox of the working copy                                   |
 | `package-lock.json`           | The lockfile, which pins the installed release of the kit              |
 | `.dockerignore`, `.gitignore` | What the image build and git leave out                                 |
 | `.editorconfig`               | The formatting that editors apply                                      |
 
 ## Commands
 
-The commands that only this repository has. Those a project has too, `./agent.sh` and `npm run check-changes` among
+The commands that only this repository has. Those a project has too, `./sandbox.sh` and `npm run check-changes` among
 them, are in "Commands" of `README.md`.
 
 ### npm test
@@ -49,25 +49,25 @@ Runs node's built-in test runner over `tests/`. It takes no argument.
 
 See "The kit's own tests".
 
-### agent-dev.sh
+### sandbox-dev.sh
 
 ```sh
-./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
-./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
-./agent-dev.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-./agent-dev.sh --connect UNIT [COMMAND...]
+./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+./sandbox-dev.sh --connect UNIT [COMMAND...]
 ```
 
 Runs the sandbox from the working copy, in place of the installed release's. It runs on the host.
 
-| Argument or option        | What it is                                                                    |
-|---------------------------|-------------------------------------------------------------------------------|
-| Every one of `./agent.sh` | As "Commands" of `README.md` gives them, its environment variables among them |
-| `--rebuild`               | Changes nothing: the image is built on every start of a run without it        |
+| Argument or option          | What it is                                                                    |
+|-----------------------------|-------------------------------------------------------------------------------|
+| Every one of `./sandbox.sh` | As "Commands" of `README.md` gives them, its environment variables among them |
+| `--rebuild`                 | Changes nothing: the image is built on every start of a run without it        |
 
-| Environment variable | What it is                                                                                   |
-|----------------------|----------------------------------------------------------------------------------------------|
-| `AGENT_PROJECT_NAME` | Names the Compose project and the image. The command sets it, whatever the environment holds |
+| Environment variable   | What it is                                                                                 |
+|------------------------|--------------------------------------------------------------------------------------------|
+| `SANDBOX_PROJECT_NAME` | Names the Compose project and the image. The command sets it, whatever the environment has |
 
 See "Trying the working copy's sandbox".
 
@@ -124,7 +124,7 @@ The kit is also a devDependency of itself, installed from a release by its URL l
 * The installed copy moves to a newer release only by a deliberate update, as "Updating a project to a newer kit"
   of `README.md` has it. A release makes that update as one of its own steps, which [`RELEASING.md`](RELEASING.md)
   gives
-* The repository also runs the kit's sandbox, from the installed release, with `./agent.sh`, as any project does.
+* The repository also runs the kit's sandbox, from the installed release, with `./sandbox.sh`, as any project does.
   Work on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's: a
   change to `container/` does not alter the sandbox the agent making it runs in. Trying such a change is done from
   the host. See "Trying the working copy's sandbox"
@@ -132,31 +132,30 @@ The kit is also a devDependency of itself, installed from a release by its URL l
 
 ## Trying the working copy's sandbox
 
-`./agent-dev.sh` runs the sandbox from the working copy: `container/agent.sh`, `container/compose.yml`, the
+`./sandbox-dev.sh` runs the sandbox from the working copy: `container/sandbox.sh`, `container/compose.yml`, the
 Dockerfile, the entrypoint and the proxy as they are in the working tree, with the repository's
-`agent/compose.project.yml`. It takes what `./agent.sh` takes, for example `./agent-dev.sh --in-place npm test`.
+`sandbox/compose.project.yml`. It takes what `./sandbox.sh` takes, for example `./sandbox-dev.sh --in-place npm test`.
 
 * It is this repository's own file. It is not in the package, and `init` and `refresh` do not write it
 * It builds the image on every start of a run, so a change is in the sandbox that starts. With `--connect` it
-  builds nothing, as `./agent.sh --connect` builds nothing: the command runs in the container that the run it
+  builds nothing, as `./sandbox.sh --connect` builds nothing: the command runs in the container that the run it
   connects to started, with the image that run built
-* It takes the harness versions as `./agent.sh` does. It builds on every start of a run, so on a host without a
+* It takes the harness versions as `./sandbox.sh` does. It builds on every start of a run, so on a host without a
   harness it asks the registry at every such start and gets the latest published version of that harness
-* It has its own Compose project and image, `ritenoar-agentrite-agent-dev`, and its own home volume,
-  `ritenoar-agentrite-agent-dev_agent-home`, through `AGENT_PROJECT_NAME` in `agent/compose.project.yml`. Unset, as it
-  is for `./agent.sh`, the name is `ritenoar-agentrite-agent`. The image
-  and the home volume of `./agent.sh`, with Claude Code's login in it, are not touched, and both sandboxes can run
-  at once
-* It shares its log directory with `./agent.sh`, because both run from one project root:
+* It has its own Compose project and image, `ritenoar-agentrite-sandbox-dev`, and its own home volume,
+  `ritenoar-agentrite-sandbox-dev_agent-home`, through `SANDBOX_PROJECT_NAME` in `sandbox/compose.project.yml`.
+  Unset, as it is for `./sandbox.sh`, the name is `ritenoar-agentrite-sandbox`. The image and the home volume of
+  `./sandbox.sh`, with Claude Code's login in it, are not touched, and both sandboxes can run at once
+* It shares its log directory with `./sandbox.sh`, because both run from one project root:
   `~/.local/share/agentrite/agentrite`. So the two sandboxes list and continue each other's sessions, and share one
   OpenCode login
 * A unit run of it has clones of its own, under its own Compose project name:
-  `~/.local/state/agentrite/ritenoar-agentrite-agent-dev/<branch>`
+  `~/.local/state/agentrite/ritenoar-agentrite-sandbox-dev/<branch>`
 * It runs on the host. A sandbox has no Docker, so an agent working inside one cannot run it
 * The home volume starts as the image fills it and lasts. To start it anew:
-  `docker volume rm ritenoar-agentrite-agent-dev_agent-home`. That leaves the log directory as it is
-* To remove what it alone created: that volume, `docker network rm ritenoar-agentrite-agent-dev_default` and
-  `docker image rm ritenoar-agentrite-agent-dev`. The log directory is `./agent.sh`'s too, and stays
+  `docker volume rm ritenoar-agentrite-sandbox-dev_agent-home`. That leaves the log directory as it is
+* To remove what it alone created: that volume, `docker network rm ritenoar-agentrite-sandbox-dev_default` and
+  `docker image rm ritenoar-agentrite-sandbox-dev`. The log directory is `./sandbox.sh`'s too, and stays
 
 ## Releasing
 

@@ -19,8 +19,8 @@ option, are in "Commands" of [`README.md`](README.md), and what the sandbox conf
 ## Running a unit
 
 ```sh
-./agent.sh 0029 claude
-./agent.sh feature-0029-sandbox-clone-of-the-branch claude
+./sandbox.sh 0029 claude
+./sandbox.sh feature-0029-sandbox-clone-of-the-branch claude
 ```
 
 A unit run mounts a clone of the unit's branch at `/work`, not the developer's checkout. It is for the planner, the
@@ -53,7 +53,7 @@ host's branch is at:
 * The host's `.reviews` directory is mounted at `/work/.reviews`, so what the reviewer writes there is on the host
   as it is written
 * The image, the allowlist, the limits and the harness versions are those of the checkout the command is run
-  from, on whatever branch that is, and not those of the clone. A unit that changes `agent/compose.project.yml`
+  from, on whatever branch that is, and not those of the clone. A unit that changes `sandbox/compose.project.yml`
   runs without its own change until that is checked out on the host
 * Where the clone is on the host is in "Where things are kept on the host"
 
@@ -86,7 +86,7 @@ For commits that wait, a crash during a unit run and a removal that fails, see "
 ## Two agents on one unit
 
 ```sh
-./agent.sh --connect <unit> [COMMAND...]
+./sandbox.sh --connect <unit> [COMMAND...]
 ```
 
 A second command is run beside the first command of a unit run with `--connect`, from another terminal on the host.
@@ -95,13 +95,13 @@ command it opens the shell a unit run opens. That is how two harnesses work on o
 implementer in one and the reviewer in the other. In one terminal:
 
 ```sh
-./agent.sh 0029 claude
+./sandbox.sh 0029 claude
 ```
 
 And in another, while that runs:
 
 ```sh
-./agent.sh --connect 0029 opencode
+./sandbox.sh --connect 0029 opencode
 ```
 
 * The unit is given as a unit run takes it: by its branch's name, or by a number that one local branch's name
@@ -134,8 +134,8 @@ For a `--connect` that runs nothing, see "When something goes wrong".
 ## Running on the tree as it is
 
 ```sh
-./agent.sh --workdir /path/to/other/clone
-./agent.sh --in-place --mount ~/reference:ro --mount ~/scratch
+./sandbox.sh --workdir /path/to/other/clone
+./sandbox.sh --in-place --mount ~/reference:ro --mount ~/scratch
 ```
 
 * In place, with `--in-place`, the sandbox mounts the project at `/work` as it is on the host, `node_modules`
@@ -176,17 +176,17 @@ The allowlist is two lists together. Both are checked the same way, and a host i
 `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit itself needs. They need no listing
 in a project, and a kit release that needs another host adds it there, with no change to any project:
 
-| Host                     | What it is for                                                      |
-|--------------------------|---------------------------------------------------------------------|
-| `api.anthropic.com`      | The probe host, and the API Claude Code uses                        |
-| `platform.claude.com`    | Claude Code contacts it at start-up when it holds no saved login    |
-| `models.opencode.ai`     | OpenCode fetches its model catalog from it                          |
-| `auth.openai.com`        | OpenCode logged in with a ChatGPT account signs in there            |
-| `chatgpt.com`            | OpenCode logged in with a ChatGPT account sends its prompts there   |
-| The npm registry         | `npm ci` and `npm install` inside the container                     |
-| `agentrite.ritenoar.com` | The kit's releases, which npm installs by URL                       |
+| Host                     | What it is for                                                    |
+|--------------------------|-------------------------------------------------------------------|
+| `api.anthropic.com`      | The probe host, and the API Claude Code uses                      |
+| `platform.claude.com`    | Claude Code contacts it at start-up when it holds no saved login  |
+| `models.opencode.ai`     | OpenCode fetches its model catalog from it                        |
+| `auth.openai.com`        | OpenCode logged in with a ChatGPT account signs in there          |
+| `chatgpt.com`            | OpenCode logged in with a ChatGPT account sends its prompts there |
+| The npm registry         | `npm ci` and `npm install` inside the container                   |
+| `agentrite.ritenoar.com` | The kit's releases, which npm installs by URL                     |
 
-`ALLOWLIST`, in the project's `agent/compose.project.yml`, holds what the project needs besides, and may be empty
+`ALLOWLIST`, in the project's `sandbox/compose.project.yml`, holds what the project needs besides, and may be empty
 or left out. Add the API host of any other model provider the project's agents use, and whatever its tools and
 tests reach. A provider's login may need further hosts. See "When something goes wrong".
 
@@ -200,19 +200,19 @@ wrong".
 
 ```yaml
 services:
-  agent:
+  sandbox:
     build:
       args:
         CLAUDE_CODE_VERSION: 2.1.288
         OPENCODE_VERSION: 1.18.33
 ```
 
-A project holds a version by adding the build argument to its `agent/compose.project.yml`, for either harness or
+A project holds a version by adding the build argument to its `sandbox/compose.project.yml`, for either harness or
 for both. Give an exact version.
 
 The image holds Claude Code and OpenCode. For each on its own, the version is the first of these that exists:
 
-1. the version the project's `agent/compose.project.yml` gives
+1. the version the project's `sandbox/compose.project.yml` gives
 2. the version installed on the host
 
 With neither of the two, the image gets the latest published version at the time it is built.
@@ -220,7 +220,7 @@ With neither of the two, the image gets the latest published version at the time
 The host's version:
 
 * It is what `claude --version` and `opencode --version` print, for the command on the `PATH` of whoever runs
-  `./agent.sh`
+  `./sandbox.sh`
 * A harness that is not there, or that is reached only through a shell alias, counts as not installed
 * So does one whose command is there and prints no version, and the wrapper says so at each start
 
@@ -230,7 +230,7 @@ A newer version:
   holds as two labels, and builds the image again by itself when they differ, saying which harness and why. So no
   flag is needed after a harness is updated on the host
 * A harness with neither source has the latest published version. The sandbox keeps that version until the image is
-  built again, whatever is published in the meantime. `./agent.sh --in-place --rebuild` builds it again, and is how
+  built again, whatever is published in the meantime. `./sandbox.sh --in-place --rebuild` builds it again, and is how
   such a sandbox gets a newer one. A build for another reason, such as an update of the other harness on the host,
   brings the latest too
 
@@ -239,7 +239,7 @@ ask the harness in the sandbox:
 
 ```sh
 docker image inspect --format '{{ json .Config.Labels }}' <image>
-./agent.sh --in-place claude --version
+./sandbox.sh --in-place claude --version
 ```
 
 The image is per machine. Two developers on one project run what their own hosts have, until the project holds a
@@ -327,7 +327,7 @@ OpenCode's login go with it. The next run makes the directory again, empty.
 The agent's home, `/home/agent`, is a named volume in `container/compose.yml`, which survives a container.
 
 `<project>` is not the repository's name but the Compose project's, the `name:` key in the project's own
-`agent/compose.project.yml`. `docker volume ls` shows the exact name.
+`sandbox/compose.project.yml`. `docker volume ls` shows the exact name.
 
 It holds:
 
@@ -348,7 +348,7 @@ Removing the volume discards Claude Code's saved login. The next start creates a
 **The image**
 
 What the wrapper builds for the project's sandbox. `<image>` is the `image:` of the project's
-`agent/compose.project.yml`. It holds Claude Code and OpenCode. For which versions, see "Holding a harness version".
+`sandbox/compose.project.yml`. It holds Claude Code and OpenCode. For which versions, see "Holding a harness version".
 
 ```sh
 docker image rm <image>
@@ -360,8 +360,8 @@ The next start builds the image again. Each rebuild leaves the image it replaced
 ## What the sandbox defends against
 
 A unit run defends the host's repository against an agent that was misled, for example by an instruction injected
-through a dependency, and that writes whatever it likes under `/work`, the clone's `.git` included. Against that
-agent:
+through a dependency, and that writes whatever it likes under `/work`, the clone's `.git` included. Against
+that agent:
 
 * nothing it writes is run on the host by the wrapper
 * nothing reaches the host's repository but the commits of the unit's branch and the files under `.reviews`
@@ -406,7 +406,7 @@ Why, and what to do for each:
 
 * The unit is given by a name that no branch has, which is refused. Give the unit by the name of a branch that
   exists, which `git branch` lists, or by its number. A command that is given with no unit before it, as in
-  `./agent.sh claude`, is taken for the unit: say what to mount first
+  `./sandbox.sh claude`, is taken for the unit: say what to mount first
 * The unit is given by a number that names no branch, and `master` holds no unit of that number. Specify the unit
   and commit it on `master` first: the wrapper cuts a branch for a unit whose directory is in `changes/` on
   `master`. Or give the number of a unit that is there
@@ -420,7 +420,7 @@ Why, and what to do for each:
 
 Why: after a crash, the clone is still there and nothing has been fetched.
 
-What to do: `./agent.sh <unit> true` resumes it, runs nothing of note and brings its commits back.
+What to do: `./sandbox.sh <unit> true` resumes it, runs nothing of note and brings its commits back.
 
 **The host's branch is left as it is, the commits wait at `sandbox/<branch>`, and the wrapper names the command
 that merges them.**
@@ -447,7 +447,7 @@ Why, and what to do for each:
 
 * The unit names no local branch. A number that no branch holds is refused although `master` holds a unit of that
   number: a unit with no branch has no run to connect to, and only a unit run cuts the branch. Start a unit run of
-  the unit first, giving the unit by its number, as in `./agent.sh 0029`: a branch that is not there yet is cut for
+  the unit first, giving the unit by its number, as in `./sandbox.sh 0029`: a branch that is not there yet is cut for
   a number and not for a name. Then connect to it while it runs
 * Docker could not be asked whether the container is running. See that Docker runs and that the user may use it:
   Docker's own error is printed above the wrapper's. Then give the command again
@@ -478,7 +478,7 @@ npm ci
 And for the sandbox:
 
 ```sh
-./agent.sh --in-place -- npm ci
+./sandbox.sh --in-place -- npm ci
 ```
 
 Use `npm ci` rather than `npm install`. `npm install` swaps the platform-limited packages but leaves every package
@@ -534,7 +534,7 @@ fails. The message names the check that failed. The checks, and what to do for e
 
 Why: a build that the wrapper started by itself failed, for example with no network.
 
-What to do: holding the versions the image already has, in the project's `agent/compose.project.yml`, without
+What to do: holding the versions the image already has, in the project's `sandbox/compose.project.yml`, without
 committing the edit, is how to start the sandbox while a build cannot run.
 
 **A version of a harness breaks something.**
@@ -556,7 +556,7 @@ Why: the kit checks no version of either harness. What it promises for no versio
 * that the environment variables and the configuration file the image sets do switch self-update off
 
 What to do, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that
-works in the project's `agent/compose.project.yml`.
+works in the project's `sandbox/compose.project.yml`.
 
 **The container cannot reach the model of the local model server.**
 

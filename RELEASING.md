@@ -133,7 +133,7 @@ would delete versions that a project still installs.
 ## 6. The kit's own dependency
 
 This repository installs its own release as a devDependency, so that work on the kit follows the released process
-and `./agent.sh` runs the released sandbox. A release moves that dependency to itself, so that no unit has to
+and `./sandbox.sh` runs the released sandbox. A release moves that dependency to itself, so that no unit has to
 afterwards. The tarball is installed from its URL, so this step comes after `./deploy.sh`, on the human's word that
 it succeeded.
 
@@ -153,16 +153,16 @@ npm install --save-dev https://agentrite.ritenoar.com/ritenoar-agentrite-<versio
 npx agentrite refresh claude opencode
 npm test
 npm run check-changes
-./agent.sh --in-place --rebuild true
+./sandbox.sh --in-place --rebuild true
 ```
 
 * `npm install` fetches the tarball `./deploy.sh` uploaded and fails when it is not served. When the session may
   not run it, ask the human to, and go on from its result
-* `refresh` brings the role wrappers and `agent.sh` to what the release writes, and prints each file as written,
+* `refresh` brings the role wrappers and `sandbox.sh` to what the release writes, and prints each file as written,
   refreshed or up to date
 * `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
   it shows that the installed check starts, and no more
-* `./agent.sh --in-place --rebuild true` starts the sandbox of the release just installed, through this
+* `./sandbox.sh --in-place --rebuild true` starts the sandbox of the release just installed, through this
   repository's own shim, and runs a command in it that does nothing. It needs Docker on the host. `--rebuild`
   builds the image every time, which can take minutes, so that the container holds the files of this release and
   not those of an image an earlier release left. It exits 0 when the container passed its own start-up checks,
@@ -194,7 +194,7 @@ it what was seen:
 * How many tests passed
 * That the change check exited 0
 * What `refresh` reported: the files written and refreshed, or that every file was up to date
-* That `./agent.sh --in-place --rebuild true` exited 0
+* That `./sandbox.sh --in-place --rebuild true` exited 0
 
 Commit nothing else, and push nothing.
 
