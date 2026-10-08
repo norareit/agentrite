@@ -206,12 +206,12 @@ The documents:
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes, run after the last commit
-- [ ] `cmp sandbox.sh templates/project/sandbox.sh` prints nothing, and `test -x sandbox.sh -a -x sandbox-dev.sh`
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes, run after the last commit
+- [x] `cmp sandbox.sh templates/project/sandbox.sh` prints nothing, and `test -x sandbox.sh -a -x sandbox-dev.sh`
   holds (R8)
-- [ ] `git ls-files -- . ':!changes' | grep -E '(^|/)agent([-./]|$)'` prints nothing (R8, R9)
-- [ ] This prints lines of two kinds only: those of the refusal in `container/sandbox.sh` and of the tests of
+- [x] `git ls-files -- . ':!changes' | grep -E '(^|/)agent([-./]|$)'` prints nothing (R8, R9)
+- [x] This prints lines of two kinds only: those of the refusal in `container/sandbox.sh` and of the tests of
   requirements 4 to 7, and `history-0036-install-the-agent-kit` in `tests/agentrite-run.test.mjs` (R9):
 
   ```sh
@@ -221,22 +221,22 @@ The documents:
     -e 'services\.agent|^ *agent:|agent service' -- . ':!changes' ':!CHANGELOG.md' ':!package-lock.json'
   ```
 
-- [ ] `git grep -n -w agent -- container templates sandbox sandbox.sh sandbox-dev.sh README.md SANDBOX.md
+- [x] `git grep -n -w agent -- container templates sandbox sandbox.sh sandbox-dev.sh README.md SANDBOX.md
   CONTRIBUTING.md RELEASING.md` is read line by line: each line names the agent, its account or its home, or is of
   the refusal (R3, R9, R10)
-- [ ] `git diff master --stat -- CHANGELOG.md` is empty, and so is `git diff master --stat -- changes` but for this
+- [x] `git diff master --stat -- CHANGELOG.md` is empty, and so is `git diff master --stat -- changes` but for this
   unit
-- [ ] With Docker on the host, `./sandbox-dev.sh --in-place true` exits 0, and `docker image ls` holds
+- [x] With Docker on the host, `./sandbox-dev.sh --in-place true` exits 0, and `docker image ls` holds
   `ritenoar-agentrite-sandbox-dev`. `./sandbox.sh` is not run: it fails here until the release, as the spec decides.
   Where the session has no Docker, log that it was not run (R2, R8)
-- [ ] With Docker on the host, in a copy of `sandbox/compose.project.yml` whose service is named `agent`, given to
+- [x] With Docker on the host, in a copy of `sandbox/compose.project.yml` whose service is named `agent`, given to
   `./sandbox-dev.sh --in-place true` in a scratch checkout, the refusal is what is printed and nothing is built.
   Where the session has no Docker, log that it was not run (R6)
 
 ## Commit Points
 
 - [x] `feature-0041 Plan the renaming of what names the sandbox agent`: `plan.md` and `record.md`
-- [ ] `feature-0041 Rename what names the sandbox agent`: the first six tasks
-- [ ] `feature-0041 Refuse a service named agent, and test what is left of the old names`: the next eight
-- [ ] `feature-0041 Describe sandbox.sh in the documents`: the last six
-- [ ] `feature-0041 Log the work and what was run`: `record.md`, and the ticks of this plan
+- [x] `feature-0041 Rename what names the sandbox agent`: the first six tasks
+- [x] `feature-0041 Refuse a service named agent, and test what is left of the old names`: the next eight
+- [x] `feature-0041 Describe sandbox.sh in the documents`: the last six
+- [x] `feature-0041 Log the work and what was run`: `record.md`, and the ticks of this plan

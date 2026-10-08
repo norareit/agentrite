@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-08T20:41:00Z
+timestamp: 2026-10-08T21:05:00Z
 ---
 
 # 0041 `sandbox.sh` replaces `agent.sh`
@@ -49,5 +49,19 @@ timestamp: 2026-10-08T20:41:00Z
 - 2026-10-08T20:41:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in the main session on the Linux host, on
   `feature-0041-sandbox-sh-replaces-agent-sh` at `baf1562`. Read `process.md`, `roles/implementer.md` and the three
   documents of the unit. Set the status to `in-progress`
+- 2026-10-08T21:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on the Linux host. Built the
+  plan in three commits, `3d0a17e` (the rename), `3a3566a` (the refusal, and the tests of requirements 4 to 7) and
+  `8d36947` (the four documents). Did the rename with `git mv` and a `sed` over the tracked files outside `changes/`,
+  then read what `git grep` still held. Decisions of the work, not of the plan: the node block of
+  `read_merged_configuration` prints `refused` alone or a first line `merged` before the four values, so that no line is
+  empty; the fake `docker` finds the project's file as the argument after the last `-f`. Tables whose cell grew were
+  aligned again by a script, and the diff shows no table changed besides those with a new name; the one cell reworded to
+  stay under 120 characters is `SANDBOX_PROJECT_NAME`'s in `CONTRIBUTING.md`, "holds" to "has". Run: `npm test` on
+  `8d36947` reported 421 tests, 421 passed, 0 failed (411 before, plus the 10 added). On the host, with Docker,
+  `./sandbox-dev.sh --in-place true` exited 0 and `docker image ls` holds `ritenoar-agentrite-sandbox-dev`. In a scratch
+  clone whose `sandbox/compose.project.yml` named the service `agent`, `./sandbox-dev.sh --in-place true` printed the
+  refusal and exited 2 without a build. The grep of the plan's verification printed only the refusal, the tests of
+  requirements 4 to 7 and `history-0036-install-the-agent-kit`. Not run: `./sandbox.sh`, which fails here until the
+  release as the spec decides. The review is not started. The status stays `in-progress`
 
 ## Amendments
