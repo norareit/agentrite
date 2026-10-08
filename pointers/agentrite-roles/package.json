@@ -1,7 +1,7 @@
 {
   "name": "agentrite-roles",
-  "version": "1.0.0",
-  "description": "Points to AgentRite, the package @ritenoar/agentrite, which is installed from a release URL",
+  "version": "2.0.0",
+  "description": "Holds the name of a command AgentRite no longer has, and points to AgentRite, @ritenoar/agentrite",
   "type": "module",
   "bin": {
     "agentrite-roles": "pointer.mjs"

@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-import { readFileSync } from 'node:fs';
 
-// Reached only when the kit is not installed in the project: npx then fetches the registry package of the command's
-// name, which is this one. The name comes from the manifest so that every pointer runs the same script.
-const { name } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf-8'));
-
+// Reached when `npx agentrite-roles` finds no such command in the project: npx then fetches the registry package of
+// that name, which is this one. AgentRite had a command of that name once and has not any more.
 console.error(
-  `${name} is not installed in this project.\n` +
+  'AgentRite has no command named agentrite-roles any more.\n' +
+    'To write the role wrappers, run `npx agentrite init claude | opencode` in a project that has AgentRite, and\n' +
+    '`npx agentrite refresh claude | opencode` to bring them up to date. Add `--no-sandbox` to either for a project\n' +
+    'without the sandbox.\n' +
     'AgentRite is the package @ritenoar/agentrite. It is installed from a release URL, not from the npm registry.\n' +
     'The command to install it is in the README at https://bitbucket.org/ritenoar/agentrite',
 );
