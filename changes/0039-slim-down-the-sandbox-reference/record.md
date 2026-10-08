@@ -92,5 +92,20 @@ timestamp: 2026-10-08T13:27:02Z
   way, uid or gid 0, an address in an allowlist, and a latest version that cannot be found. Those that say why and
   not what to do: `master` holds no unit of the number, a record on `master` that cannot be read, no local branch
   `master`, and Docker that could not be asked
+- 2026-10-08T15:09:00Z [human] read the planner's five findings and decided, on four questions of the specifier. A
+  statement in a section of what a reader does stays when a reader can observe it, and not only when a reader acts on
+  it. Every failure a reader recovers from is a row of the table and is in no section. The two refusals of a home volume
+  leave the document, and the advice to copy a volume's logs first stays, with the copy command. The two cells that
+  today's document has no statement for are written new
+- 2026-10-08T15:09:00Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the main session on the Linux host,
+  on the unit's branch at `2e4652b`, changed `spec.md` for that. The first: requirement 2 has the rule for what stays in
+  sections 1 to 6, 8 and 9 and what goes, with the planner's three examples decided by it. The second: requirement 5
+  names the six failures as rows, and requirements 1, 8 and 9 no longer have them in a section. The third: requirement 6
+  names the two refusals as going, requirement 11 no longer has one of them stated once, and requirement 10 holds the
+  advice. The fourth, which was not put to the human since it has one answer: by requirement 3 a section that needs a
+  place names the table by its title, which is not saying it, and requirement 1 no longer has "Getting the work back"
+  say how a clone is discarded. The fifth: requirement 3 has the two cells written new, tried and named in the record,
+  and the non-goal says so. Each has a decision. No requirement was renumbered. The status stays `approved`, since all
+  are the human's own decisions
 
 ## Amendments
