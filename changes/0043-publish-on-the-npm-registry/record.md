@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-09T10:45:52Z
 ---
 
@@ -31,3 +31,4 @@ timestamp: 2026-10-09T10:45:52Z
   order of the human's steps. Left the proposed pointer at `@ritenoar/agentrite` out, for the reason the spec
   gives. Numbered 0043: the plain directories run from 0001 to 0042 without a gap, and the `history-` directories
   do not count. Wrote `spec.md`. The status is `draft`
+- 2026-10-09T12:44:12Z [human] read the spec and approved it. The status is `approved`
