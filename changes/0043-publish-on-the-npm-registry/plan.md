@@ -241,7 +241,7 @@ What the registry shows:
 
 - [x] In `tests/package-documents.test.mjs`, add the failing tests of what `package.json` holds: the `name` is
   `agentrite`; there is no key `private`; `license` is `MIT`; `repository` is exactly
-  `{ type: 'git', url: 'git+https://github.com/ritenoar/agentrite.git' }`; `description`, `keywords`, `homepage`
+  `{ type: 'git', url: 'git+https://github.com/norareit/agentrite.git' }`; `description`, `keywords`, `homepage`
   and `bugs` are exactly what requirement 21 gives, the keywords in its order; `bin` is exactly
   `{ agentrite: 'scripts/agentrite.mjs' }`; and `files` is exactly the ten entries it has now, in their order.
   Add one that `LICENSE` is a file at the root that holds the line `Copyright (c) 2026 Stef Klaassen` and opens
@@ -314,12 +314,12 @@ The pointers:
       `/@ritenoar/`. No expectation names the address the README was at before
     - the message still exits 1 with nothing on standard output, still holds what it says of `init`, `refresh`
       and `--no-sandbox`, still holds no `|`, and holds `AgentRite is the package agentrite`,
-      `npm install agentrite` and, at the end of a line, `https://github.com/ritenoar/agentrite`
+      `npm install agentrite` and, at the end of a line, `https://github.com/norareit/agentrite`
     - the `README.md` holds the same three
 - [x] Remove `pointers/agentrite/` with `git rm` (R9)
 - [x] In `pointers/agentrite-roles/pointer.mjs`, make the last two lines of the message
   ``AgentRite is the package agentrite. Install it with `npm install agentrite`.`` and
-  `Its README is at https://github.com/ritenoar/agentrite`. In its `README.md`, make the paragraph that names the
+  `Its README is at https://github.com/norareit/agentrite`. In its `README.md`, make the paragraph that names the
   package say the same in two sentences. In its `package.json`, set `version` to `2.0.1` and `description` to
   `Holds the name of a command AgentRite no longer has, and points to AgentRite, the package agentrite`. The exit
   status, the comment and the first four lines of the message stay (R14)
@@ -510,24 +510,24 @@ These are the human's, taken once the unit is on `master`, in this order. They a
 checkboxes because they come after the unit is `implemented`, and the change check counts every open box in this
 file. `<version>` is the version of the release of step 3, which is `6.0.0` when no other release is made first.
 
-1. **Create the repository on GitHub.** At `https://github.com/new`: the owner `ritenoar`, the name `agentrite`,
+1. **Create the repository on GitHub.** At `https://github.com/new`: the owner `norareit`, the name `agentrite`,
    Public, and none of "Add a README file", "Add .gitignore" and "Choose a license", so that the first push is not
    refused. With the GitHub CLI it is one command:
 
    ```sh
-   gh repo create ritenoar/agentrite --public \
+   gh repo create norareit/agentrite --public \
      --description "A kit for running coding agents by a fixed process"
    ```
 
-   It has worked when `git ls-remote git@github.com:ritenoar/agentrite.git` exits 0 and prints nothing. It asks for
+   It has worked when `git ls-remote git@github.com:norareit/agentrite.git` exits 0 and prints nothing. It asks for
    an SSH key of this computer on the GitHub account. With HTTPS in place of SSH, the address in every command
-   below is `https://github.com/ritenoar/agentrite.git`
+   below is `https://github.com/norareit/agentrite.git`
 2. **On this computer, point `origin` at GitHub, with Bitbucket as a second address to push to, and push.** In the
    repository root, on `master`, with the unit merged:
 
    ```sh
-   git remote set-url origin git@github.com:ritenoar/agentrite.git
-   git remote set-url --add --push origin git@github.com:ritenoar/agentrite.git
+   git remote set-url origin git@github.com:norareit/agentrite.git
+   git remote set-url --add --push origin git@github.com:norareit/agentrite.git
    git remote set-url --add --push origin git@bitbucket.org:ritenoar/agentrite.git
    git remote -v
    ```
@@ -536,8 +536,8 @@ file. `<version>` is the version of the release of step 3, which is `6.0.0` when
    address. `git remote -v` then prints three lines:
 
    ```
-   origin  git@github.com:ritenoar/agentrite.git (fetch)
-   origin  git@github.com:ritenoar/agentrite.git (push)
+   origin  git@github.com:norareit/agentrite.git (fetch)
+   origin  git@github.com:norareit/agentrite.git (push)
    origin  git@bitbucket.org:ritenoar/agentrite.git (push)
    ```
 
@@ -550,7 +550,7 @@ file. `<version>` is the version of the release of step 3, which is `6.0.0` when
    ```
 
    Each push prints two answers, GitHub's with `* [new branch]` or `* [new tag]` and Bitbucket's with what it did
-   not have yet. `https://github.com/ritenoar/agentrite` then shows the README and the MIT license, and
+   not have yet. `https://github.com/norareit/agentrite` then shows the README and the MIT license, and
    `git ls-remote --tags origin` lists `v5.0.0` among the tags. `git fetch --prune` drops the remote-tracking
    branches `origin/feature-0010-init`, `origin/feature-0010-init2` and `origin/feature-0010-init3` here, which
    GitHub does not have. They stay on Bitbucket
@@ -610,7 +610,7 @@ file. `<version>` is the version of the release of step 3, which is `6.0.0` when
    npx --yes agentrite roles
    ```
 
-   The first prints the new text, with `npm install agentrite` and `https://github.com/ritenoar/agentrite` in it,
+   The first prints the new text, with `npm install agentrite` and `https://github.com/norareit/agentrite` in it,
    and exits 1. The second runs the kit's command: it lists the four roles and exits 0. When either prints what
    the pointers printed before, npx took an older copy from its cache: run it as `npx --yes agentrite-roles@latest`
    and `npx --yes agentrite@latest roles`
@@ -632,8 +632,8 @@ file. `<version>` is the version of the release of step 3, which is `6.0.0` when
 6. **On the other computer, set the remotes as in step 2.** In the repository there:
 
    ```sh
-   git remote set-url origin git@github.com:ritenoar/agentrite.git
-   git remote set-url --add --push origin git@github.com:ritenoar/agentrite.git
+   git remote set-url origin git@github.com:norareit/agentrite.git
+   git remote set-url --add --push origin git@github.com:norareit/agentrite.git
    git remote set-url --add --push origin git@bitbucket.org:ritenoar/agentrite.git
    git remote -v
    git fetch --prune origin

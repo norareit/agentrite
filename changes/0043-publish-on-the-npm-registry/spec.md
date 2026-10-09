@@ -29,7 +29,7 @@ the human takes, and the unit writes them down.
 ## Requirements
 
 1. The `name` in `package.json` is `agentrite`. The file has no `private` field. It has `"license": "MIT"` and a
-   `repository` of type `git` with the URL `git+https://github.com/ritenoar/agentrite.git`. Its `bin` and its
+   `repository` of type `git` with the URL `git+https://github.com/norareit/agentrite.git`. Its `bin` and its
    `files` are unchanged
 2. `LICENSE` is a file at the root of the repository. It holds the text of the MIT License as the SPDX identifier
    `MIT` gives it, with the line `Copyright (c) 2026 Stef Klaassen`. "What is here" of `README.md` has a row for it
@@ -92,7 +92,7 @@ the human takes, and the unit writes them down.
     It says that `npm outdated` reports a newer release. No command in `README.md` names a version of the kit
 14. The pointer `agentrite-roles` says, in what it prints and in its `README.md`, that AgentRite is the package
     `agentrite`, that it is installed with `npm install agentrite`, and that its README is at
-    `https://github.com/ritenoar/agentrite`. It does not say that the kit is installed from a release URL or that
+    `https://github.com/norareit/agentrite`. It does not say that the kit is installed from a release URL or that
     it is not on the npm registry, and neither does the `description` of its `package.json`. It still exits with
     the status it exits with now. Its version is `2.0.1`
 15. `RELEASING.md` describes a release through the registry:
@@ -128,7 +128,7 @@ the human takes, and the unit writes them down.
 20. `plan.md` has a section "Human steps". It holds what the human does once the unit is on `master`, as a numbered
     list and not as tasks to tick, each step with the exact commands it takes, what it waits for and what is seen
     when it has worked. The steps are these, in this order:
-    1. Create the repository `ritenoar/agentrite` on GitHub, public and empty: with no README, no license and no
+    1. Create the repository `norareit/agentrite` on GitHub, public and empty: with no README, no license and no
        `.gitignore`, so that the first push is not refused
     2. On this computer, make GitHub the remote that `origin` fetches from and give `origin` two addresses to push
        to, GitHub's and Bitbucket's, so that one `git push` reaches both. Then push `master` and every tag
@@ -147,8 +147,8 @@ the human takes, and the unit writes them down.
 21. `package.json` has these four fields:
     * `description`: `A kit for running coding agents by a fixed process`
     * `keywords`: `agents`, `coding-agents`, `claude-code`, `opencode`, `sandbox`, `process`
-    * `homepage`: `https://github.com/ritenoar/agentrite#readme`
-    * `bugs`, with the `url` `https://github.com/ritenoar/agentrite/issues`
+    * `homepage`: `https://github.com/norareit/agentrite#readme`
+    * `bugs`, with the `url` `https://github.com/norareit/agentrite/issues`
 22. `npm publish`, run at the root, refuses a working tree in which a tracked file holds a change that is not
     committed. It refuses before anything is sent to the registry, exits with a status other than 0, and its
     message says both why and what to do: which files are changed, and to commit the changes or put them aside and
@@ -178,6 +178,9 @@ the human takes, and the unit writes them down.
   `com.ritenoar.agentrite.claude-code-version` and `com.ritenoar.agentrite.opencode-version` are a namespace of
   their own, and the wrapper reads them from images that exist. This repository's Compose project,
   `ritenoar-agentrite-sandbox`, names its home volume, which holds a login
+* **The repository is `norareit/agentrite` on GitHub, on the human's word.** The human publishes their recent
+  projects under the name Nora Reit, and made the repository under that account. The package, the copyright holder
+  and what is named after Ritenoar keep their names
 * **MIT, with Stef Klaassen as the copyright holder, on the human's word.** The year is that of the first public
   release, 2026
 * **The checks of `deploy.sh` move into `npm publish`, on the human's word.** `deploy.sh` did four things besides

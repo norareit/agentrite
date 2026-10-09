@@ -125,3 +125,10 @@ timestamp: 2026-10-09T13:04:25Z
 - 2026-10-09T13:42:28Z [human] decided that `package-lock.json` changes with `package.json`, as it was built: the
   change is needed to change the package at all, and requirement 18 does not stand in its way. `infra/cdk.out/` was
   removed from this computer
+- 2026-10-09T13:46:05Z [human] made the repository on GitHub as `norareit/agentrite`, and not as `ritenoar/agentrite`,
+  which the spec named: "I've been publishing all my recent projects under the Nora Reit moniker." Human step 1 is
+  thereby taken
+- 2026-10-09T13:46:05Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's word, while the review
+  runs. Changed the address of the repository in `spec.md`, in requirements 1, 14, 20 and 21, and added the decision.
+  Nothing else in the spec changed. As the implementer, changed the same address in `plan.md`, in its tasks and in
+  the human steps. The status stays `in-progress`
