@@ -39,7 +39,7 @@ test('RELEASING.md exists', () => {
   assert.ok(existsSync(join(repository, releasing)));
 });
 
-for (const path of [skill, 'AGENTS.md', 'CONTRIBUTING.md', 'deploy.sh']) {
+for (const path of [skill, 'AGENTS.md', 'CONTRIBUTING.md', 'publish-check.mjs']) {
   test(`${path} names RELEASING.md`, () => {
     assert.ok(read(path).includes(releasing));
   });

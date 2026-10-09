@@ -61,3 +61,26 @@ test('LICENSE is the MIT License at the root, with the copyright holder', () => 
   assert.equal(lines[0], 'MIT License');
   assert.ok(lines.includes('Copyright (c) 2026 Stef Klaassen'), 'LICENSE holds the copyright line');
 });
+
+// npm runs `prepublishOnly` on `npm publish` alone. Every other lifecycle script named here runs on an install or
+// a pack as well, in this repository or in a project that installs the kit.
+test('package.json checks a release in prepublishOnly, and holds no script that an install or a pack runs', () => {
+  assert.equal(packageJson.scripts.prepublishOnly, 'node publish-check.mjs && npm test');
+  for (const name of [
+    'preinstall',
+    'install',
+    'postinstall',
+    'prepublish',
+    'preprepare',
+    'prepare',
+    'postprepare',
+    'prepack',
+    'postpack',
+  ]) {
+    assert.ok(!Object.hasOwn(packageJson.scripts, name), `scripts holds no ${name}`);
+  }
+});
+
+test('the package does not ship the check of npm publish', () => {
+  assert.ok(!packageJson.files.includes('publish-check.mjs'), `files holds ${packageJson.files.join(', ')}`);
+});
