@@ -1,7 +1,24 @@
 {
   "name": "agentrite",
   "version": "5.0.0",
-  "private": true,
+  "description": "A kit for running coding agents by a fixed process",
+  "keywords": [
+    "agents",
+    "coding-agents",
+    "claude-code",
+    "opencode",
+    "sandbox",
+    "process"
+  ],
+  "homepage": "https://github.com/ritenoar/agentrite#readme",
+  "bugs": {
+    "url": "https://github.com/ritenoar/agentrite/issues"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ritenoar/agentrite.git"
+  },
   "type": "module",
   "files": [
     "process.md",

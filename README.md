@@ -35,6 +35,7 @@ The "rite" is also Ritenoar's, whose projects carry it.
 | `process.md`         | How work is done: the changes process, the commit conventions, the code standards |
 | `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it          |
 | `README.md`          | What the kit is and how a project uses it                                         |
+| `LICENSE`            | The MIT License, which the kit is open source under                               |
 | `SANDBOX.md`         | The reference of the sandbox                                                      |
 | `package.json`       | The package's name, its version and the commands it installs                      |
 | `roles/`             | The specifier, planner, implementer and reviewer instructions                     |
