@@ -74,27 +74,27 @@ kit, everything in the package, and everything under `tests/`.
 
 ## Tasks
 
-- [ ] 1. Run `npm uninstall @ritenoar/agentrite`, then `npm install --save-dev --save-exact agentrite@6.0.0`.
+- [x] 1. Run `npm uninstall @ritenoar/agentrite`, then `npm install --save-dev --save-exact agentrite@6.0.0`.
   Both exit 0. `git diff package.json` shows the one line of the devDependency, and `git diff package-lock.json`
   shows the entry as "Approach" gives it. Stop and log it when the version, the host of `resolved` or the
   integrity is another (R1, R2)
-- [ ] 2. Check that `git diff v6.0.0 -- scripts roles templates` prints nothing, then run
+- [x] 2. Check that `git diff v6.0.0 -- scripts roles templates` prints nothing, then run
   `npx agentrite refresh claude opencode`. It prints `refreshed` for the eight wrappers and for `sandbox.sh`, and
   `git status --short` shows those nine files changed and no other besides the two of task 1 (R3)
-- [ ] 3. In `AGENTS.md`, replace `node_modules/@ritenoar/agentrite` with `node_modules/agentrite`, in the text of
+- [x] 3. In `AGENTS.md`, replace `node_modules/@ritenoar/agentrite` with `node_modules/agentrite`, in the text of
   the link and in its target, both in line 5. No line is wrapped again (R4)
-- [ ] 4. In `.dockerignore`, make line 4 `!node_modules/agentrite/container/**` (R4)
-- [ ] 5. In `sandbox/compose.project.yml`, make line 2
+- [x] 4. In `.dockerignore`, make line 4 `!node_modules/agentrite/container/**` (R4)
+- [x] 5. In `sandbox/compose.project.yml`, make line 2
   `# at node_modules/agentrite/container/compose.yml, which holds everything` (R4)
-- [ ] 6. In `package.json`, make the `check-changes` script
+- [x] 6. In `package.json`, make the `check-changes` script
   `node node_modules/agentrite/scripts/check-changes.mjs`. `git diff package.json` then shows two lines changed
   and no other (R1)
-- [ ] 7. In `sandbox/compose.project.yml`, in the comment above `ALLOWLIST`, make the line
+- [x] 7. In `sandbox/compose.project.yml`, in the comment above `ALLOWLIST`, make the line
   `# auth.openai.com, chatgpt.com, the npm registry and the kit's release host. See` read
   `# auth.openai.com, chatgpt.com and the npm registry. See`, at the same indentation, which is what
   `templates/project/sandbox/compose.project.yml` of the release has there. The lines around it stay as they are.
   `git diff master -- sandbox/compose.project.yml` then shows this line and that of task 5, and no other (R5)
-- [ ] 8. In `CONTRIBUTING.md`, under "The kit's own copy of the kit", replace the two lines of the first sentence
+- [x] 8. In `CONTRIBUTING.md`, under "The kit's own copy of the kit", replace the two lines of the first sentence
   with these two, and leave the four list items below them as they are (R6):
 
   ```markdown
@@ -104,31 +104,31 @@ kit, everything in the package, and everything under `tests/`.
 
 ## Verification
 
-- [ ] `git diff master -- package.json` shows the devDependency and the `check-changes` script, and nothing else
+- [x] `git diff master -- package.json` shows the devDependency and the `check-changes` script, and nothing else
   (R1)
-- [ ] `rm -rf node_modules && npm ci` exits 0, `node_modules/agentrite/package.json` has the version `6.0.0`, and
+- [x] `rm -rf node_modules && npm ci` exits 0, `node_modules/agentrite/package.json` has the version `6.0.0`, and
   `node_modules/@ritenoar` does not exist. `git grep -n '@ritenoar' -- package-lock.json` finds nothing (R2)
-- [ ] `npx agentrite refresh claude opencode`, run again on the committed tree, leaves `git status --short` empty
+- [x] `npx agentrite refresh claude opencode`, run again on the committed tree, leaves `git status --short` empty
   (R3)
-- [ ] `git diff master --stat` names the files of "Files" and no other, and the diff of `AGENTS.md` and of
+- [x] `git diff master --stat` names the files of "Files" and no other, and the diff of `AGENTS.md` and of
   `.dockerignore` is one line each (R4)
-- [ ] `git diff master -- sandbox/compose.project.yml` shows the two comment lines and no other, so `name`, `image`,
+- [x] `git diff master -- sandbox/compose.project.yml` shows the two comment lines and no other, so `name`, `image`,
   the limits and `ALLOWLIST` are as they were (R5)
-- [ ] `git diff master -- CONTRIBUTING.md` shows the two lines of task 8 and no other (R6)
-- [ ] `git grep -n -e '@ritenoar/agentrite' -e 'agentrite\.ritenoar\.com' -- ':!changes' ':!CHANGELOG.md'` finds
+- [x] `git diff master -- CONTRIBUTING.md` shows the two lines of task 8 and no other (R6)
+- [x] `git grep -n -e '@ritenoar/agentrite' -e 'agentrite\.ritenoar\.com' -- ':!changes' ':!CHANGELOG.md'` finds
   nothing (R7)
-- [ ] `npm test` passes, with the 426 tests of `master`. `npm run check-changes` exits 0, and the command it
+- [x] `npm test` passes, with the 426 tests of `master`. `npm run check-changes` exits 0, and the command it
   prints is `node node_modules/agentrite/scripts/check-changes.mjs` (R8)
-- [ ] On the host, with Docker: `./sandbox.sh --in-place --rebuild true` exits 0, and then
+- [x] On the host, with Docker: `./sandbox.sh --in-place --rebuild true` exits 0, and then
   `./sandbox-dev.sh --in-place npm ci` exits 0. The implementer runs both where its session has Docker, and asks
   the human to where it has none. What each printed at its end, and its exit status, go into `record.md` (R9)
-- [ ] No line of a changed file passes 120 characters, but for those of `package-lock.json`, which npm writes
+- [x] No line of a changed file passes 120 characters, but for those of `package-lock.json`, which npm writes
 
 ## Commit Points
 
-- [ ] `feature-0044 Start the implementation`: `record.md` alone, with the status `in-progress`
-- [ ] `feature-0044 Install the kit from the npm registry`, after task 6: `package.json`, `package-lock.json`, the
+- [x] `feature-0044 Start the implementation`: `record.md` alone, with the status `in-progress`
+- [x] `feature-0044 Install the kit from the npm registry`, after task 6: `package.json`, `package-lock.json`, the
   eight wrappers, `sandbox.sh`, `AGENTS.md`, `.dockerignore` and `sandbox/compose.project.yml`
-- [ ] `feature-0044 Say where the kit is installed from`, after task 8: `sandbox/compose.project.yml` and
+- [x] `feature-0044 Say where the kit is installed from`, after task 8: `sandbox/compose.project.yml` and
   `CONTRIBUTING.md`
-- [ ] The log of what "Verification" showed, in `record.md`, as the implementer's role has it
+- [x] The log of what "Verification" showed, in `record.md`, as the implementer's role has it

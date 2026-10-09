@@ -35,5 +35,38 @@ timestamp: 2026-10-09T18:42:52Z
   host, on `feature-0044-this-repository-installs-the-kit-from-the-registry` at `b7e073f`, with npm 11.19.1, node
   26.9.0 and Docker 28.4.0. Read `process.md` and `roles/implementer.md` of the installed release 5.0.0, and the three
   documents of the unit. Set the status to `in-progress`
+- 2026-10-09T18:44:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built tasks 1 to 8 of the plan as
+  written, in two commits. `2d1b3b1` is the move. `npm uninstall @ritenoar/agentrite` and
+  `npm install --save-dev --save-exact agentrite@6.0.0` both exited 0, and the entry of `package-lock.json` is the one
+  the plan gives: version `6.0.0`, resolved from `https://registry.npmjs.org/agentrite/-/agentrite-6.0.0.tgz`, with the
+  integrity the plan names and the line `"license": "MIT"`. `git diff v6.0.0 -- scripts roles templates` printed
+  nothing, and `npx agentrite refresh claude opencode` printed `refreshed` for the eight wrappers and `sandbox.sh` and
+  changed no other file. The path was replaced in `AGENTS.md`, `.dockerignore`, `sandbox/compose.project.yml` and the
+  `check-changes` script. `e5cee39` is the comment above `ALLOWLIST` and the sentence of `CONTRIBUTING.md`. The ticks
+  of `plan.md` are in the commit of this entry and not in those two, so each holds the files its commit point names
+- 2026-10-09T18:44:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, "Verification", on the tree of
+  `e5cee39` with the ticks of `plan.md` not yet committed, on the host:
+  * R1: `git diff master -- package.json` shows the devDependency and the `check-changes` script, and no other line
+  * R2: `rm -rf node_modules && npm ci` exited 0, `node_modules/agentrite/package.json` has the version `6.0.0`,
+    `node_modules/@ritenoar` does not exist, and `git grep -n '@ritenoar' -- package-lock.json` finds nothing
+  * R3: `npx agentrite refresh claude opencode`, run again, printed `up to date` for the nine files and changed none
+  * R4: `git diff master --stat` names the files of "Files" and `plan.md`, which the list leaves out and which is the
+    unit's own. The diff of `AGENTS.md` and of `.dockerignore` is one line each
+  * R5: `git diff master -- sandbox/compose.project.yml` shows the two comment lines and no other
+  * R6: `git diff master -- CONTRIBUTING.md` shows the two lines of task 8 and no other
+  * R7: `git grep -n -e '@ritenoar/agentrite' -e 'agentrite\.ritenoar\.com' -- ':!changes' ':!CHANGELOG.md'` finds
+    nothing
+  * R8: `npm test` passes with 426 tests and none failing. `npm run check-changes` exited 0 and printed
+    `node node_modules/agentrite/scripts/check-changes.mjs` as its command. It reads committed content, and was run
+    before the commit of this entry
+  * R9, with Docker 28.4.0: `./sandbox.sh --in-place --rebuild true` exited 0. Its build took 11 steps from the cache
+    and ended with `ritenoar-agentrite-sandbox  Built`, and the entrypoint ended with
+    `firewall verified; dropping to the agent user`. Then `./sandbox-dev.sh --in-place npm ci` exited 0: the same last
+    line of the entrypoint, then `added 1 package, and audited 2 packages` and `found 0 vulnerabilities`. Afterwards
+    `node_modules/agentrite/package.json` has the version `6.0.0` and `git status --short` shows no file but `plan.md`
+  * No line of a changed file but `package-lock.json` passes 120 characters, checked with `awk` over the files that
+    `git diff master --name-only` names, before this entry was written
+  Not checked: a unit run of `./sandbox-dev.sh`, which the spec names as waiting for this unit and no requirement
+  asks for. The status stays `in-progress` until the review
 
 ## Amendments
