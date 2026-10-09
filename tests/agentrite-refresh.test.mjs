@@ -199,7 +199,7 @@ function line(word, path) {
 function staleProject(t) {
   const made = project(t);
   for (const file of WRAPPERS) {
-    made.write(file.path, file.content.replace('@ritenoar/agentrite', '@ritenoar/agent-kit'));
+    made.write(file.path, file.content.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit'));
   }
   const pinnedPath = '.opencode/agents/reviewer.md';
   made.write(pinnedPath, withFrontmatter(made.read(pinnedPath), 'mode:', ['model: some/model']));
@@ -397,7 +397,7 @@ test('a model set off from its colon by a tab survives the command, in LF and in
     const path = `.${harness}/agents/reviewer.md`;
     const wrapper = rendered(harness, 'reviewer');
     const pinned = wrapper.replace('\n---\n\n', '\nmodel:\tsome/model\n---\n\n');
-    write(path, pinned.replace('@ritenoar/agentrite', '@ritenoar/agent-kit').replaceAll('\n', ending));
+    write(path, pinned.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit').replaceAll('\n', ending));
 
     const result = run('refresh', harness);
 

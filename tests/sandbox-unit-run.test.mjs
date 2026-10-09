@@ -18,7 +18,7 @@ import { test } from 'node:test';
 import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
 
 const kitContainer = new URL('../container/', import.meta.url).pathname;
-const kitPath = 'node_modules/@ritenoar/agentrite/container';
+const kitPath = 'node_modules/agentrite/container';
 
 const branch = 'task-0026-doc';
 const containerName = `project-sandbox-${branch}`;

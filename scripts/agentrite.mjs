@@ -14,9 +14,9 @@ import {
   unitPrompt,
 } from './agentrite-run.mjs';
 
-const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
+const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
-const KIT_CONTAINER = 'node_modules/@ritenoar/agentrite/container';
+const KIT_CONTAINER = 'node_modules/agentrite/container';
 // Names the files, not only the directory: BuildKit would not let a directory's exception reach a file that a
 // pattern excluded by name.
 const KIT_CONTAINER_EXCEPTION = `!${KIT_CONTAINER}/**`;

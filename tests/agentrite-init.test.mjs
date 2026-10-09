@@ -41,8 +41,8 @@ const templates = Object.fromEntries(
 const CONTAINER_FILES = readdirSync(new URL('../container/', import.meta.url));
 const ignore = (existing) => dockerignore(existing, CONTAINER_FILES);
 const HARNESS_LISTS = [['claude'], ['opencode'], ['claude', 'opencode']];
-const CHECK_CHANGES = 'node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs';
-const KIT_CONTAINER = 'node_modules/@ritenoar/agentrite/container';
+const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
+const KIT_CONTAINER = 'node_modules/agentrite/container';
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
@@ -170,17 +170,17 @@ test('AGENTS.md holds the three sections, naming process.md, the role files and 
   const headings = agents.split('\n').filter((line) => /^#{1,2} /.test(line));
   assert.deepEqual(headings.slice(0, 3), AGENTS_SECTIONS);
   assert.equal(agents.split('\n')[0], '# Development Guidelines');
-  assert.match(agents, /node_modules\/@ritenoar\/agentrite\/process\.md.*\n?.*\*\*required reading\*\*/);
+  assert.match(agents, /node_modules\/agentrite\/process\.md.*\n?.*\*\*required reading\*\*/);
   assert.match(agents, /\[README\.md\]\(README\.md\)/);
   assert.match(agents, /`npm ci` installs it/);
   assert.match(agents, /never under\n?\s*`node_modules\/`/);
   const roles = ['specifier', 'planner', 'implementer', 'reviewer'];
   assert.deepEqual(
-    [...agents.matchAll(/^\* \[`node_modules\/@ritenoar\/agentrite\/roles\/(\w+)\.md`\]\((.*)\)$/gm)].map((link) => [
+    [...agents.matchAll(/^\* \[`node_modules\/agentrite\/roles\/(\w+)\.md`\]\((.*)\)$/gm)].map((link) => [
       link[1],
       link[2],
     ]),
-    roles.map((role) => [role, `node_modules/@ritenoar/agentrite/roles/${role}.md`]),
+    roles.map((role) => [role, `node_modules/agentrite/roles/${role}.md`]),
   );
   assert.match(agents, /^The four roles that do the work in `changes\/` are the kit's:$/m);
   assert.match(agents, /`npm run check-changes`, which runs the kit's script/);
@@ -233,7 +233,7 @@ test('sandbox.sh is planned executable, and execs the kit wrapper with its own d
   assert.equal(shim.executable, true);
   assert.match(
     shim.content,
-    /^exec "\$here\/node_modules\/@ritenoar\/agentrite\/container\/sandbox\.sh" "\$here" "\$@"$/m,
+    /^exec "\$here\/node_modules\/agentrite\/container\/sandbox\.sh" "\$here" "\$@"$/m,
   );
 });
 
@@ -241,7 +241,7 @@ test('sandbox.sh is planned executable, and execs the kit wrapper with its own d
 
 test('sandboxName derives the names from an unscoped and a scoped package name', () => {
   assert.equal(sandboxName('norareit'), 'norareit-sandbox');
-  assert.equal(sandboxName('@ritenoar/agentrite'), 'ritenoar-agentrite-sandbox');
+  assert.equal(sandboxName('@acme/my-kit'), 'acme-my-kit-sandbox');
 });
 
 test('sandboxName reduces a package name to the characters Compose accepts in a project name', () => {
@@ -364,7 +364,7 @@ test('.dockerignore that excludes the kit by a wildcard, or before its exception
 });
 
 test('.dockerignore that lets only one file of the kit container back in gets the directory exception', () => {
-  const existing = 'node_modules\n!node_modules/@ritenoar/agentrite/container/entrypoint.sh\n';
+  const existing = 'node_modules\n!node_modules/agentrite/container/entrypoint.sh\n';
   assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`);
 });
 
@@ -394,9 +394,9 @@ test('.dockerignore that excludes node_modules and lets the kit directory back i
 
 test('.dockerignore that keeps the kit out without excluding node_modules also gets the exception', () => {
   for (const existing of [
-    'node_modules/@ritenoar/agentrite/container/sni.mjs\n',
-    'node_modules/@ritenoar\n',
-    'node_modules\n!node_modules\nnode_modules/@ritenoar\n',
+    'node_modules/agentrite/container/sni.mjs\n',
+    'node_modules/agentrite\n',
+    'node_modules\n!node_modules\nnode_modules/agentrite\n',
   ]) {
     assert.equal(ignore(existing), `${existing}${EXCEPTION}\n`, existing);
   }
@@ -406,7 +406,7 @@ test('.dockerignore that holds the exception, or does not exclude node_modules, 
   assert.equal(ignore(`node_modules\n${EXCEPTION}\n`), undefined);
   assert.equal(ignore('.git\n*/node_modules\n'), undefined);
   assert.equal(ignore('node_modules_cache\n# node_modules\n'), undefined);
-  assert.equal(ignore('node_modules/**\n!node_modules/@ritenoar/agentrite/container/**\n'), undefined);
+  assert.equal(ignore('node_modules/**\n!node_modules/agentrite/container/**\n'), undefined);
   assert.equal(ignore(''), undefined);
 });
 
@@ -493,7 +493,7 @@ test('a fresh project gets every file, listed as written, and exits 0', (t) => {
 test('the written sandbox.sh execs the kit wrapper with the project root and every other argument', (t) => {
   const { base, run } = project(t);
   assert.equal(run('init', 'claude').status, 0);
-  const kitContainer = join(base, 'node_modules', '@ritenoar', 'agentrite', 'container');
+  const kitContainer = join(base, 'node_modules', 'agentrite', 'container');
   mkdirSync(kitContainer, { recursive: true });
   writeFileSync(join(kitContainer, 'sandbox.sh'), '#!/usr/bin/env bash\nprintf "%s\\n" "$@"\n');
   chmodSync(join(kitContainer, 'sandbox.sh'), 0o755);

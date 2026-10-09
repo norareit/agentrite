@@ -26,7 +26,7 @@ import {
 } from './wrapper-fixture.mjs';
 
 const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
-const kitPath = 'project/node_modules/@ritenoar/agentrite/container';
+const kitPath = 'project/node_modules/agentrite/container';
 
 // What an image built earlier holds, where a test needs it to differ from what the fake host has and from what
 // the fake `npm` gives as the latest.
@@ -36,7 +36,7 @@ const builtBefore = { claude: '0.1.0', opencode: '0.2.0' };
 // what every call opens with.
 function composeCalls(root, container, versions, ...commands) {
   const opening =
-    'AGENTRITE_CONTAINER=node_modules/@ritenoar/agentrite/container ' +
+    'AGENTRITE_CONTAINER=node_modules/agentrite/container ' +
     `SANDBOX_CLAUDE_CODE_VERSION=${versions.claude} SANDBOX_OPENCODE_VERSION=${versions.opencode} docker compose ` +
     `--project-directory ${root} -f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml`;
   return commands.map((command) => `${opening} ${command}`);
@@ -60,7 +60,7 @@ const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root)) =>
 // besides and in the working directory `cwd`.
 function setUp(
   t,
-  kitPath = 'node_modules/@ritenoar/agentrite/container',
+  kitPath = 'node_modules/agentrite/container',
   buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
   imageExists = true,
 ) {

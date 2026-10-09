@@ -5,5 +5,5 @@ description: >-
   approved the unit's spec and the unit is next to be built, not before. Dispatch it with the unit directory.
 ---
 
-Read `node_modules/@ritenoar/agentrite/roles/planner.md` in the project root and follow it. It is your instruction; this
-file holds none of its own.
+Read `node_modules/agentrite/roles/planner.md` in the project root and follow it. It is your instruction; this file
+holds none of its own.

@@ -89,7 +89,7 @@ test('plannedFiles for opencode carries the claude description, the mode all and
     assert.ok(frontmatterBlock.includes('mode: all\n'));
     assert.ok(frontmatterBlock.indexOf('description:') < frontmatterBlock.indexOf('mode:'));
     assert.equal(body, fixtureBody);
-    assert.match(body, new RegExp('^Read `node_modules/@ritenoar/agentrite/roles/.*\\.md`'));
+    assert.match(body, new RegExp('^Read `node_modules/agentrite/roles/.*\\.md`'));
     assert.ok(file.content.endsWith('\n'));
     assert.equal(file.content, `${file.content.trimEnd()}\n`);
   }
@@ -123,11 +123,11 @@ test('no line of a planned wrapper is over 120 characters, and its text is what 
     assert.equal(unfoldedDescription(file.content), descriptions[name], file.path);
     assert.equal(
       bodyOf(file.content).split('\n').join(' '),
-      `Read \`node_modules/@ritenoar/agentrite/roles/${name}.md\` in the project root and follow it. ` +
+      `Read \`node_modules/agentrite/roles/${name}.md\` in the project root and follow it. ` +
         'It is your instruction; this file holds none of its own.',
       file.path,
     );
-    assert.ok(file.content.includes(`\`node_modules/@ritenoar/agentrite/roles/${name}.md\``), file.path);
+    assert.ok(file.content.includes(`\`node_modules/agentrite/roles/${name}.md\``), file.path);
   }
 });
 

@@ -18,11 +18,12 @@ import { fakeHost } from './wrapper-fixture.mjs';
 
 // R7: a project that release 4.2.0 set up starts its sandbox after the four steps of the release notes and no
 // others. The two files below are what `init` of that release wrote for a package named `my-app` with no
-// Playwright, and the old names in them are what the steps are for.
+// Playwright, but for the path the kit is installed at, which is today's. The old names in them are what the steps
+// are for.
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const kitContainer = join(import.meta.dirname, '..', 'container');
-const kitPath = 'node_modules/@ritenoar/agentrite/container';
+const kitPath = 'node_modules/agentrite/container';
 const branch = 'task-0001-update';
 
 const OLD_SHIM = `#!/usr/bin/env bash
@@ -36,11 +37,11 @@ set -euo pipefail
 here="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
 # The kit's wrapper takes the project root as its first argument, because where npm
 # installs the kit says nothing reliable about where the project is.
-exec "$here/node_modules/@ritenoar/agentrite/container/agent.sh" "$here" "$@"
+exec "$here/node_modules/agentrite/container/agent.sh" "$here" "$@"
 `;
 
 const OLD_COMPOSE = `# This project's half of the agent sandbox configuration. It layers over the kit's base
-# at node_modules/@ritenoar/agentrite/container/compose.yml, which holds everything
+# at node_modules/agentrite/container/compose.yml, which holds everything
 # that confines the container and is the same for every project. Here is only what
 # varies with the project: its names, what it is allowed to reach, how much of the host
 # it may use, and, when it has browser tests, the Playwright version they were rendered with.

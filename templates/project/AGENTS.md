@@ -1,11 +1,10 @@
 # Development Guidelines
 
 How work is done here is not specific to this project. It lives in AgentRite, installed as the npm package
-`@ritenoar/agentrite`, and
-[`node_modules/@ritenoar/agentrite/process.md`](node_modules/@ritenoar/agentrite/process.md)
-is **required reading** before any change: the changes process in `changes/`, the status progression and the freeze,
-the commit conventions, the documentation rules, and the code and testing standards. This file holds only what is
-specific to this project, and nothing is stated in both places.
+`agentrite`, and [`node_modules/agentrite/process.md`](node_modules/agentrite/process.md) is **required reading**
+before any change: the changes process in `changes/`, the status progression and the freeze, the commit conventions,
+the documentation rules, and the code and testing standards. This file holds only what is specific to this project,
+and nothing is stated in both places.
 
 Read [README.md](README.md) before making changes. It is the source of truth for the project itself.
 
@@ -17,10 +16,10 @@ change to `package.json` and `package-lock.json`. An improvement to it is made i
 
 The four roles that do the work in `changes/` are the kit's:
 
-* [`node_modules/@ritenoar/agentrite/roles/specifier.md`](node_modules/@ritenoar/agentrite/roles/specifier.md)
-* [`node_modules/@ritenoar/agentrite/roles/planner.md`](node_modules/@ritenoar/agentrite/roles/planner.md)
-* [`node_modules/@ritenoar/agentrite/roles/implementer.md`](node_modules/@ritenoar/agentrite/roles/implementer.md)
-* [`node_modules/@ritenoar/agentrite/roles/reviewer.md`](node_modules/@ritenoar/agentrite/roles/reviewer.md)
+* [`node_modules/agentrite/roles/specifier.md`](node_modules/agentrite/roles/specifier.md)
+* [`node_modules/agentrite/roles/planner.md`](node_modules/agentrite/roles/planner.md)
+* [`node_modules/agentrite/roles/implementer.md`](node_modules/agentrite/roles/implementer.md)
+* [`node_modules/agentrite/roles/reviewer.md`](node_modules/agentrite/roles/reviewer.md)
 
 The harnesses reach them through the role wrappers in these directories. Each wrapper is a pointer to one kit role
 file and holds no instructions of its own:

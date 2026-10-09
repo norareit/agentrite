@@ -1,5 +1,5 @@
 const BODY_LINE =
-  'Read `node_modules/@ritenoar/agentrite/roles/{name}.md` in the project root and follow it. ' +
+  'Read `node_modules/agentrite/roles/{name}.md` in the project root and follow it. ' +
   'It is your instruction; this file holds none of its own.';
 
 const SPECIFIER_DESCRIPTION =

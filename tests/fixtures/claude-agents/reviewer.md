@@ -7,5 +7,5 @@ description: >-
   suites itself.
 ---
 
-Read `node_modules/@ritenoar/agentrite/roles/reviewer.md` in the project root and follow it. It is your instruction;
-this file holds none of its own.
+Read `node_modules/agentrite/roles/reviewer.md` in the project root and follow it. It is your instruction; this file
+holds none of its own.

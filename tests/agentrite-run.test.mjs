@@ -728,7 +728,7 @@ test('a wrapper that is missing, or is not what refresh would leave, stops the r
     const asWritten = read(path);
     const changed = {
       'a key of the project own': asWritten.replace('\n---\n', '\nsteps: 5\n---\n'),
-      'an earlier package name': asWritten.replace('@ritenoar/agentrite', '@ritenoar/agent-kit'),
+      'an earlier package name': asWritten.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit'),
       'no frontmatter': 'Review it.\n',
       // The wrappers of the other harness hold no mode, and this one is then left out below.
       'mode: subagent': asWritten.replace('mode: all\n', 'mode: subagent\n'),
