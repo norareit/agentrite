@@ -6,5 +6,5 @@ description: >-
   exists already.
 ---
 
-Read `node_modules/@ritenoar/agentrite/roles/specifier.md` in the project root and follow it. It is your instruction;
-this file holds none of its own.
+Read `node_modules/agentrite/roles/specifier.md` in the project root and follow it. It is your instruction; this file
+holds none of its own.

@@ -1,5 +1,5 @@
 # This project's half of the agent sandbox configuration. It layers over the kit's base
-# at node_modules/@ritenoar/agentrite/container/compose.yml, which holds everything
+# at node_modules/agentrite/container/compose.yml, which holds everything
 # that confines the container and is the same for every project. Here is only what
 # varies with the project: its names, what it is allowed to reach, how much of the host
 # it may use, and, when it has browser tests, the Playwright version they were rendered with.

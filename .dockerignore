@@ -1,4 +1,4 @@
 # Keeps node_modules out of the image build context, except AgentRite's container/
 # directory, from which the image build copies the entrypoint and the egress proxy.
 node_modules
-!node_modules/@ritenoar/agentrite/container/**
+!node_modules/agentrite/container/**
