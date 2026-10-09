@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: planned
-timestamp: 2026-10-09T10:45:52Z
+status: in-progress
+timestamp: 2026-10-09T13:04:25Z
 ---
 
 # 0043 The kit is published on the npm registry
@@ -55,3 +55,6 @@ timestamp: 2026-10-09T10:45:52Z
   `agentrite` and `agentrite-roles` at `1.0.0` alone, so the `2.0.0` of `agentrite-roles` was never published;
   `npm pack --dry-run` packs 28 files on `master`. Not run: anything that builds or starts a container, and
   `npm publish` in any form. The status is `planned`
+- 2026-10-09T13:04:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on `feature-0043-publish-on-the-npm-registry` at `c1ab376`, where `npm test` passes with 421 tests. Read
+  `process.md`, `roles/implementer.md` and the three documents of the unit. Set the status to `in-progress`
