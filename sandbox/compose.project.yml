@@ -25,7 +25,7 @@ services:
     environment:
       # Reachable hosts, over HTTPS on port 443 only, besides those the kit admits
       # itself: the Anthropic API, platform.claude.com, models.opencode.ai,
-      # auth.openai.com, chatgpt.com, the npm registry and the kit's release host. See
+      # auth.openai.com, chatgpt.com and the npm registry. See
       # KIT_ALLOWLIST in the kit's container/compose.yml. Everything else is denied.
       # Comments and blank lines are ignored. Entries are hostnames only; the
       # entrypoint refuses an address or a CIDR range, and fails to start if a listed

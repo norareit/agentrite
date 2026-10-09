@@ -113,8 +113,8 @@ It runs the check from the released kit in `node_modules`, not from this reposit
 
 ## The kit's own copy of the kit
 
-The kit is also a devDependency of itself, installed from a release by its URL like in any project, so
-`node_modules/@ritenoar/agentrite/` exists here too.
+The kit is also a devDependency of itself, installed from the npm registry at one pinned version, so
+`node_modules/agentrite/` exists here too.
 
 * `AGENTS.md` sends agents to the process and roles there, so work on the kit follows the released instructions
   rather than the working copy it may be changing
