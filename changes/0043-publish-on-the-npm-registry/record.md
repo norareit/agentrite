@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-09T13:04:25Z
+status: implemented
+timestamp: 2026-10-09T14:12:32Z
 ---
 
 # 0043 The kit is published on the npm registry
@@ -136,3 +136,16 @@ timestamp: 2026-10-09T13:04:25Z
   `github.com/norareit/agentrite` in `package.json`, in the pointer `agentrite-roles` and in the two test files that
   hold it, the expectations first: three tests failed, then none. `npm test` passes with 426 tests on the tree of
   this commit. No tracked file outside this record names `github.com/ritenoar`
+- 2026-10-09T13:53:13Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0043 at
+  `76e7118304671c2c29a287925831acb7b46766dc`, a full review against the merge base with `master`,
+  `996db03c5b65d7695ad7f20b625a2e86700a85be`. Returned no findings on spec conformance, plan fidelity or code
+  quality. Saved the complete review in
+  `.reviews/0043-publish-on-the-npm-registry/20261009T135135Z-opencode-gpt-6.1-sol-full.md`.
+  Independently ran `npm test` and the clean `npm run prepublishOnly`, each with 426 tests passing;
+  `npm run check-changes`, `git diff --check master...HEAD`, `npm pack --dry-run --json` and
+  `./sandbox-dev.sh --in-place true` passed. Not independently verified: the recorded four-step migration trial,
+  `npm ci`, registry publication or rejection, an actual publication stopped by a failing test, harness login,
+  a prompt, a unit run, a Playwright project's migration or the external effects of the human steps
+- 2026-10-09T14:12:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the
+  review came back with no remarks. It returned no findings, so none is open, and every task of `plan.md` is ticked.
+  The status is `implemented`
