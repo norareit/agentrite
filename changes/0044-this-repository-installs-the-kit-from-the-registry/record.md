@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: planned
-timestamp: 2026-10-09T18:32:07Z
+status: in-progress
+timestamp: 2026-10-09T18:42:52Z
 ---
 
 # 0044 This repository installs the kit from the npm registry
@@ -31,5 +31,9 @@ timestamp: 2026-10-09T18:32:07Z
   0 in a package itself named `agentrite`, `refresh` rewrites the eight wrappers and `sandbox.sh`, the `git grep` of
   requirement 7 finds nothing, and `npm ci`, `npm test` with 426 tests and `npm run check-changes` pass. Not run:
   anything that builds or starts a container. The test of "Beyond the request" is in no task. The status is `planned`
+- 2026-10-09T18:42:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, on `feature-0044-this-repository-installs-the-kit-from-the-registry` at `b7e073f`, with npm 11.19.1, node
+  26.9.0 and Docker 28.4.0. Read `process.md` and `roles/implementer.md` of the installed release 5.0.0, and the three
+  documents of the unit. Set the status to `in-progress`
 
 ## Amendments
