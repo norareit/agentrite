@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-09T10:45:52Z
 ---
 
@@ -32,3 +32,26 @@ timestamp: 2026-10-09T10:45:52Z
   gives. Numbered 0043: the plain directories run from 0001 to 0042 without a gap, and the `history-` directories
   do not count. Wrote `spec.md`. The status is `draft`
 - 2026-10-09T12:44:12Z [human] read the spec and approved it. The status is `approved`
+- 2026-10-09T12:54:55Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in an agent of a session on the Linux
+  host. Cut `feature-0043-publish-on-the-npm-registry` from `master` at `996db03`, where `npm test` passes with 421
+  tests. Read `roles/planner.md` and `process.md` of the installed release 5.0.0. Wrote `plan.md`: the name in one
+  commit, then the fields of `package.json` with `LICENSE`, the checks of `npm publish`, the removal of the host,
+  the pointers and the documents, each a commit of its own, then the trial of requirement 5, and the human's eight
+  steps as a list. The planner's, on how and not on what: the two checks are a script at the root,
+  `publish-check.mjs`, which is not in `files`, and `prepublishOnly` runs it and then `npm test`, in the order
+  release notes, working tree, suite. Requirement 5 gets no test in the suite, because requirement 10 leaves no
+  tracked file to hold the files of release 5.0.0 in, and its proof is the trial the requirement itself names.
+  `RELEASING.md` gets a way on from a failing test, from a working tree that is not clean and from a version the
+  registry has, which the spec names without giving them, each ending with the tag on the published commit. Read
+  where two requirements meet, and built the plan on the reading: requirement 18 lists `package-lock.json` as
+  unchanged, while requirements 1 and 9 change what it is written from, so the plan keeps the entry of the kit's
+  own devDependency byte for byte and lets the rest follow `package.json`, without which `npm ci` refuses; and
+  requirement 15 has step 7 of `RELEASING.md` unchanged, while one sentence of it names `deploy.sh`, which
+  requirement 10 lets no tracked file name, so that one name becomes `npm publish`. Both are the human's to
+  overrule before the implementation starts. Tried in scratch directories, with npm 11.19.1 and node 26.9.0:
+  `npm install --save-dev --save-exact agentrite@1.0.0` and then `npm ci` work in a package that is itself named
+  `agentrite`, which the spec has as not established; `npx agentrite` at the root of a package with a `bin` of that
+  name runs the package's own file, under the old name of the package as under the new; the registry holds
+  `agentrite` and `agentrite-roles` at `1.0.0` alone, so the `2.0.0` of `agentrite-roles` was never published;
+  `npm pack --dry-run` packs 28 files on `master`. Not run: anything that builds or starts a container, and
+  `npm publish` in any form. The status is `planned`
