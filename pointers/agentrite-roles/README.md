@@ -8,6 +8,6 @@ bring them up to date. Name only the harnesses the project uses, and add `--no-s
 without the sandbox.
 
 AgentRite is the package `agentrite`, which is installed with `npm install agentrite`. Its README is at
-https://github.com/ritenoar/agentrite
+https://github.com/norareit/agentrite
 
 `npx agentrite-roles` fetches this package, which prints the above and exits with an error.

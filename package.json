@@ -10,14 +10,14 @@
     "sandbox",
     "process"
   ],
-  "homepage": "https://github.com/ritenoar/agentrite#readme",
+  "homepage": "https://github.com/norareit/agentrite#readme",
   "bugs": {
-    "url": "https://github.com/ritenoar/agentrite/issues"
+    "url": "https://github.com/norareit/agentrite/issues"
   },
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/ritenoar/agentrite.git"
+    "url": "git+https://github.com/norareit/agentrite.git"
   },
   "type": "module",
   "files": [

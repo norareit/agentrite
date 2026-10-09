@@ -24,7 +24,7 @@ test('package.json names the package agentrite, with no private field', () => {
 
 test('package.json says what the package is, where it lives and under which license', () => {
   assert.equal(packageJson.license, 'MIT');
-  assert.deepEqual(packageJson.repository, { type: 'git', url: 'git+https://github.com/ritenoar/agentrite.git' });
+  assert.deepEqual(packageJson.repository, { type: 'git', url: 'git+https://github.com/norareit/agentrite.git' });
   assert.equal(packageJson.description, 'A kit for running coding agents by a fixed process');
   assert.deepEqual(packageJson.keywords, [
     'agents',
@@ -34,8 +34,8 @@ test('package.json says what the package is, where it lives and under which lice
     'sandbox',
     'process',
   ]);
-  assert.equal(packageJson.homepage, 'https://github.com/ritenoar/agentrite#readme');
-  assert.deepEqual(packageJson.bugs, { url: 'https://github.com/ritenoar/agentrite/issues' });
+  assert.equal(packageJson.homepage, 'https://github.com/norareit/agentrite#readme');
+  assert.deepEqual(packageJson.bugs, { url: 'https://github.com/norareit/agentrite/issues' });
 });
 
 test('package.json keeps the one command and the files the package holds', () => {

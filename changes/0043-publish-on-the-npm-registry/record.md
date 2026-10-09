@@ -132,3 +132,7 @@ timestamp: 2026-10-09T13:04:25Z
   runs. Changed the address of the repository in `spec.md`, in requirements 1, 14, 20 and 21, and added the decision.
   Nothing else in the spec changed. As the implementer, changed the same address in `plan.md`, in its tasks and in
   the human steps. The status stays `in-progress`
+- 2026-10-09T13:46:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the address to
+  `github.com/norareit/agentrite` in `package.json`, in the pointer `agentrite-roles` and in the two test files that
+  hold it, the expectations first: three tests failed, then none. `npm test` passes with 426 tests on the tree of
+  this commit. No tracked file outside this record names `github.com/ritenoar`

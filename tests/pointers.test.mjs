@@ -47,7 +47,7 @@ test('the agentrite-roles pointer says which package the kit is, how to install 
 
   assert.match(stderr, /AgentRite is the package agentrite/);
   assert.match(stderr, /`npm install agentrite`/);
-  assert.match(stderr, /https:\/\/github\.com\/ritenoar\/agentrite$/m);
+  assert.match(stderr, /https:\/\/github\.com\/norareit\/agentrite$/m);
 });
 
 test('the agentrite-roles pointer README says what the message says', () => {
@@ -58,7 +58,7 @@ test('the agentrite-roles pointer README says what the message says', () => {
   assert.doesNotMatch(readme, /\|/);
   assert.match(readme, /AgentRite is the package `agentrite`/);
   assert.match(readme, /`npm install agentrite`/);
-  assert.match(readme, /https:\/\/github\.com\/ritenoar\/agentrite$/m);
+  assert.match(readme, /https:\/\/github\.com\/norareit\/agentrite$/m);
 });
 
 test('the agentrite-roles pointer names the package in its description', () => {
