@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-09T18:32:07Z
 ---
 
@@ -18,5 +18,6 @@ timestamp: 2026-10-09T18:32:07Z
   human step 5 of unit 0043. Added to them: the comment in `sandbox/compose.project.yml` that names the kit's release
   host, and `npm ci` inside the working copy's sandbox as something to see. Not checked: that the working copy of
   `scripts/` is what 6.0.0 shipped, which the spec leaves to the planner. The status is `draft`
+- 2026-10-09T18:40:39Z [human] approved the spec. The status is `approved`
 
 ## Amendments
