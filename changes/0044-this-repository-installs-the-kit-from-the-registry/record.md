@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-09T18:42:52Z
+status: implemented
+timestamp: 2026-10-09T18:51:26Z
 ---
 
 # 0044 This repository installs the kit from the npm registry
@@ -68,5 +68,15 @@ timestamp: 2026-10-09T18:42:52Z
     `git diff master --name-only` names, before this entry was written
   Not checked: a unit run of `./sandbox-dev.sh`, which the spec names as waiting for this unit and no requirement
   asks for. The status stays `in-progress` until the review
+- 2026-10-09T18:48:50Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a full review of unit 0044 at
+  `18db2e5a2c4ca7d47a9521768e1920fb1bab6d49`, against merge base `f00617f53a499dbee112e44019783a9711021d5f`.
+  Returned no findings on spec conformance, plan fidelity or code quality. Verified all nine requirements,
+  including the 426 tests, the change check, both required host Docker commands, a clean install and both refresh
+  entry points. No required final-state check remained unverified. Saved the full review at
+  `.reviews/0044-this-repository-installs-the-kit-from-the-registry/review-20261009T184850Z-18db2e5.md`
+- 2026-10-09T18:51:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the
+  review came back with no issues. It returned no findings, so none is open, and every task of `plan.md` is ticked.
+  Nothing but this record changed since `18db2e5`, the tree the review and the suites ran on. The status is
+  `implemented`
 
 ## Amendments
