@@ -98,8 +98,6 @@ services:
         chatgpt.com
         # npm registry: npm ci inside the container
         registry.npmjs.org
-        # AgentRite's release tarballs, which npm ci installs by URL
-        agentrite.ritenoar.com
       #
       # The local model server on the host, reached through the Docker gateway. Only
       # this host and port are allowed, nothing else on the host.

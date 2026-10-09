@@ -35,13 +35,25 @@ test('the kit admits the hosts its harnesses need, besides those it already admi
     'chatgpt.com',
     'api.anthropic.com',
     'registry.npmjs.org',
-    'agentrite.ritenoar.com',
   ];
   assert.deepEqual(
     needed.filter((host) => !hosts.includes(host)),
     [],
     `KIT_ALLOWLIST holds ${hosts.join(', ')}`,
   );
+});
+
+// A host the kit admits is one every sandbox of every project reaches, so the list holds what the harnesses and
+// npm need and nothing besides.
+test('the kit admits no host besides those', () => {
+  assert.deepEqual(kitAllowlistHosts(compose), [
+    'api.anthropic.com',
+    'platform.claude.com',
+    'models.opencode.ai',
+    'auth.openai.com',
+    'chatgpt.com',
+    'registry.npmjs.org',
+  ]);
 });
 
 // YAML keeps a block scalar going over an empty line, which carries no indentation, so the block ends only at a

@@ -23,7 +23,7 @@ function parse({ kit, project, canary = 'example.com' }) {
   return { ...result, hosts: result.stdout.split('\n').filter(Boolean) };
 }
 
-const KIT = 'api.anthropic.com\nregistry.npmjs.org\nagentrite.ritenoar.com\n';
+const KIT = 'api.anthropic.com\nregistry.npmjs.org\nmodels.opencode.ai\n';
 
 test('the hosts of both lists are admitted, lowercased, each once', { skip }, () => {
   const result = parse({
@@ -35,7 +35,7 @@ test('the hosts of both lists are admitted, lowercased, each once', { skip }, ()
   assert.deepEqual(result.hosts, [
     'api.anthropic.com',
     'registry.npmjs.org',
-    'agentrite.ritenoar.com',
+    'models.opencode.ai',
     'github.com',
     'models.dev',
   ]);
@@ -44,13 +44,13 @@ test('the hosts of both lists are admitted, lowercased, each once', { skip }, ()
 test('an empty project list admits the kit\'s hosts alone', { skip }, () => {
   const result = parse({ kit: KIT, project: '' });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(result.hosts, ['api.anthropic.com', 'registry.npmjs.org', 'agentrite.ritenoar.com']);
+  assert.deepEqual(result.hosts, ['api.anthropic.com', 'registry.npmjs.org', 'models.opencode.ai']);
 });
 
 test('a missing project list admits the kit\'s hosts alone', { skip }, () => {
   const result = parse({ kit: KIT, project: undefined });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(result.hosts, ['api.anthropic.com', 'registry.npmjs.org', 'agentrite.ritenoar.com']);
+  assert.deepEqual(result.hosts, ['api.anthropic.com', 'registry.npmjs.org', 'models.opencode.ai']);
 });
 
 test('no host in either list is refused', { skip }, () => {

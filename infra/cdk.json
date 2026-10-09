@@ -1,7 +1,0 @@
-{
-  "app": "npx tsx bin/app.ts",
-  "context": {
-    "@aws-cdk/aws-cloudfront:defaultSecurityPolicyTLSv1.2_2021": true,
-    "@aws-cdk/core:defaultCrossStackReferences": "strong"
-  }
-}

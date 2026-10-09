@@ -38,15 +38,9 @@
   "scripts": {
     "test": "node --test tests/*.test.mjs",
     "prepublishOnly": "node publish-check.mjs && npm test",
-    "check-changes": "node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs",
-    "deploy": "./deploy.sh"
+    "check-changes": "node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs"
   },
   "devDependencies": {
-    "@ritenoar/agentrite": "https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz",
-    "aws-cdk": "^2.1143.0",
-    "aws-cdk-lib": "^2.270.0",
-    "constructs": "^10.8.1",
-    "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "@ritenoar/agentrite": "https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz"
   }
 }
