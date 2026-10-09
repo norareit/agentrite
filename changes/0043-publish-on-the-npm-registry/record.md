@@ -58,3 +58,67 @@ timestamp: 2026-10-09T13:04:25Z
 - 2026-10-09T13:04:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
   host, on `feature-0043-publish-on-the-npm-registry` at `c1ab376`, where `npm test` passes with 421 tests. Read
   `process.md`, `roles/implementer.md` and the three documents of the unit. Set the status to `in-progress`
+- 2026-10-09T13:13:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the Linux
+  host, with npm 11.19.1, node 26.9.0 and Docker. Built the six steps of the plan, each a commit, tests first, from
+  `721aff6` to `d402d4d`. `npm test` passes on `d402d4d` with 426 tests: the 421, four more of `package.json` and
+  `LICENSE`, fifteen of the checks of `npm publish`, less the twelve of `deploy.sh` and `infra/`, less two of the
+  pointers on balance. Three things are not as the plan words them:
+    - The plan's commit points had none for the status, so `a868174`, which sets `in-progress`, was added to them
+    - The three makers of "an earlier package name" in the tests put `node_modules/@ritenoar/agent-kit` in the place
+      of `node_modules/agentrite`, and not the bare `@ritenoar/agent-kit`, so that the wrapper they make is one an
+      earlier release wrote
+    - In "Human steps", step 3 said that `npm publish` "runs the three checks and the suite". The suite is the third
+      check, so it now says "runs the three checks, the suite last". Nothing else in the eight steps differed from
+      the tree: `agentrite roles` lists the four roles and exits 0, the pointer prints the text step 4 names and
+      exits 1, `origin` is Bitbucket alone with the three `feature-0010` branches, and `v5.0.0` is a tag. None of
+      the steps was taken
+- 2026-10-09T13:13:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, the trial of requirement 5, in a
+  scratch directory on the host, as "Verification" gives it. Each command exited 0 unless said:
+    - `npm init --yes`, `npm install https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz` and
+      `npx agentrite init claude opencode` made the project, named `kit-trial`: `init` wrote the eight wrappers,
+      `AGENTS.md`, `CLAUDE.md`, `sandbox.sh`, `sandbox/compose.project.yml` and `.dockerignore`, and changed
+      `package.json`. 22 lines of it named `@ritenoar`. Committed
+    - `npm pack` of this repository at `d402d4d` made `agentrite-5.0.0.tgz` with 29 files
+    - Step 1: `npm uninstall @ritenoar/agentrite` removed one package, and `npm install ../agentrite-5.0.0.tgz` added
+      one. Neither ran a test or printed anything of `publish-check.mjs`. npm left an empty directory
+      `node_modules/@ritenoar` behind, which nothing reads
+    - Step 2: `npx agentrite refresh claude opencode` printed the eight wrappers and `sandbox.sh` as refreshed
+    - Step 3: the two `sed` commands. Then `grep -rn '@ritenoar' --exclude-dir=node_modules --exclude-dir=.git .`
+      printed nothing and exited 1, and `ls` of every `node_modules/agentrite/*.md` path that `AGENTS.md`,
+      `CLAUDE.md` and the eight wrappers name listed `process.md` and the four role files with no error
+    - Committed, then `npm run check-changes` ran `node node_modules/agentrite/scripts/check-changes.mjs`
+    - Step 4: `./sandbox.sh --in-place --rebuild true` built the image `kit-trial-sandbox`, copying
+      `node_modules/agentrite/container/entrypoint.sh`, `egress-proxy.mjs` and `sni.mjs`, and the entrypoint ended
+      with "firewall verified; dropping to the agent user"
+
+  So the roles are found, the change check runs and the sandbox starts, after the four steps and no others. Not
+  seen: a harness started in that sandbox, a unit run of it, or a project with Playwright. The install was of the
+  packed tarball and not from the registry, as the requirement says. Removed afterwards: the directory, the image,
+  the volume, the network and `~/.local/share/agentrite/kit-trial`
+- 2026-10-09T13:13:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, the rest of "Verification", on
+  `d402d4d`:
+    - `npm run check-changes` exits 0. It ran before this entry was committed, and the commit that holds this entry
+      adds only it and the ticks of the plan
+    - `npm pack --dry-run --json` names `agentrite-5.0.0.tgz` with 29 files: `LICENSE` and the 28 the plan lists. It
+      ran no test and printed nothing of `publish-check.mjs`
+    - `npm run prepublishOnly`, with the ticks of the plan put aside by `git stash` so that the tree was clean,
+      exited 0 after the suite passed with 426 tests. With an empty line added to `README.md` it exited 1 with the
+      message of requirement 22, naming `README.md`, and ran no test. The file was put back with `git restore`.
+      `npm publish` was not run, with no option
+    - The pattern of the plan prints `CONTRIBUTING.md:117` alone over the tree, and the two lines of `package.json`.
+      `git grep -n -i bitbucket` outside `changes/` and `CHANGELOG.md` prints nothing
+    - `git diff master --stat` over `CHANGELOG.md`, `AGENTS.md`, `CLAUDE.md`, the wrappers, `sandbox.sh`,
+      `sandbox-dev.sh`, `.dockerignore`, `sandbox/compose.project.yml`, `process.md`, `roles` and
+      `templates/changes` prints nothing, and over `changes` names this unit alone
+    - The entry `node_modules/@ritenoar/agentrite` of `package-lock.json` is what it is on `master`, compared as
+      parsed JSON, and `npm ci` exits 0 with the lockfile of two entries
+    - The pattern for a version in `README.md` prints nothing
+    - `./sandbox-dev.sh --in-place true` exits 0: the working copy's sandbox passes its start-up checks without the
+      old host. Not tried: `npm ci` inside it, which the plan says fails until this repository has moved
+    - Not run: the refusal of a version that the registry holds, which is the registry's
+- 2026-10-09T13:13:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, two things for the human.
+  `infra/cdk.out/` is still on this computer: it was ignored by the line `cdk.out/` that requirement 9 removes, so
+  `git status` now shows `infra/` as untracked. It is what the CDK wrote when it deployed, and it was left as it is.
+  And `package-lock.json` is not unchanged, which requirement 18 says of it: the plan's reading was built, with the
+  entry of the kit's own devDependency kept and the rest following `package.json`. The review is not started. The
+  status stays `in-progress`

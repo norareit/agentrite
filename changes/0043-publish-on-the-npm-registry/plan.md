@@ -219,7 +219,7 @@ SOFTWARE.
 
 The name:
 
-- [ ] In the seven test files that "Files" lists for the name, change every expectation from
+- [x] In the seven test files that "Files" lists for the name, change every expectation from
   `node_modules/@ritenoar/agentrite` to `node_modules/agentrite`: the constants `CHECK_CHANGES`, `KIT_CONTAINER`
   and `kitPath`, the regular expressions that hold the path with its slashes escaped, the directory a test makes
   with `join(base, 'node_modules', '@ritenoar', 'agentrite', 'container')`, and the recorded
@@ -227,37 +227,37 @@ The name:
   "an earlier package name", the two strings and the comment of `tests/sandbox-update.test.mjs`, the cases of a
   `.dockerignore` that excludes the scope's directory, and the scoped name given to `sandboxName`. The suite fails
   now (R4, R10)
-- [ ] Change `BODY_LINE`, `CHECK_CHANGES` and `KIT_CONTAINER`, and the four templates as "Files" says, without the
+- [x] Change `BODY_LINE`, `CHECK_CHANGES` and `KIT_CONTAINER`, and the four templates as "Files" says, without the
   comment above `ALLOWLIST`, which is a later task's (R4)
-- [ ] Write the four files of `tests/fixtures/claude-agents/` anew as `plannedFiles(['claude'])` gives them, and
+- [x] Write the four files of `tests/fixtures/claude-agents/` anew as `plannedFiles(['claude'])` gives them, and
   read each: its frontmatter is what it was, and its body names `node_modules/agentrite/roles/<role>.md` (R4, R10)
-- [ ] Set `name` of `package.json` to `agentrite`, and write `package-lock.json` with
+- [x] Set `name` of `package.json` to `agentrite`, and write `package-lock.json` with
   `npm install --package-lock-only --ignore-scripts`. Read `git diff package-lock.json`: the two lines that hold
   the name changed, and nothing else. When npm changed a line of the entry `node_modules/@ritenoar/agentrite`,
   put that entry back as it was (R1, R18)
-- [ ] Run `npm test`, which passes with the 421 tests it had, and commit
+- [x] Run `npm test`, which passes with the 421 tests it had, and commit
 
 What the registry shows:
 
-- [ ] In `tests/package-documents.test.mjs`, add the failing tests of what `package.json` holds: the `name` is
+- [x] In `tests/package-documents.test.mjs`, add the failing tests of what `package.json` holds: the `name` is
   `agentrite`; there is no key `private`; `license` is `MIT`; `repository` is exactly
   `{ type: 'git', url: 'git+https://github.com/ritenoar/agentrite.git' }`; `description`, `keywords`, `homepage`
   and `bugs` are exactly what requirement 21 gives, the keywords in its order; `bin` is exactly
   `{ agentrite: 'scripts/agentrite.mjs' }`; and `files` is exactly the ten entries it has now, in their order.
   Add one that `LICENSE` is a file at the root that holds the line `Copyright (c) 2026 Stef Klaassen` and opens
   with `MIT License` (R1, R2, R21)
-- [ ] Change `package.json` so that they pass, with the new keys in npm's usual order: `description` after
+- [x] Change `package.json` so that they pass, with the new keys in npm's usual order: `description` after
   `version`, then `keywords`, `homepage`, `bugs`, `license` and `repository`, and `type` and what follows it as
   they are. Write `package-lock.json` as before, and read its diff: the root entry gained `"license": "MIT"`, and
   nothing else changed (R1, R21, R18)
-- [ ] Add `LICENSE` as "Files" gives it (R2)
-- [ ] In "What is here" of `README.md`, add the row `LICENSE`, after the row of `README.md`, with "The MIT License,
+- [x] Add `LICENSE` as "Files" gives it (R2)
+- [x] In "What is here" of `README.md`, add the row `LICENSE`, after the row of `README.md`, with "The MIT License,
   which the kit is open source under" as what it holds (R2)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 The checks of `npm publish`:
 
-- [ ] Add `tests/publish-check.test.mjs` with the failing tests of the two functions, given plain text (R6, R22):
+- [x] Add `tests/publish-check.test.mjs` with the failing tests of the two functions, given plain text (R6, R22):
     - `missingReleaseNotes` returns `undefined` for a changelog with the line `## 5.0.0`, at its top and in its
       middle. It returns the message for a changelog without it, for one that holds only `### 5.0.0`, `## 5.0.01`,
       `## 15.0.0` or `## 5.0.0 and more`, and for `undefined`. The message holds `CHANGELOG.md`, `"## 5.0.0"`,
@@ -265,7 +265,7 @@ The checks of `npm publish`:
     - `uncommittedChanges` returns `undefined` for the empty string. For ` M README.md\nA  new file.txt\n` it
       returns a message that holds `README.md` and `new file.txt` on a line each, "is not committed", "Commit the
       changes or put them aside" and "run npm publish again"
-- [ ] In the same file, add the failing tests of the script as it is run, with the working directory at a scratch
+- [x] In the same file, add the failing tests of the script as it is run, with the working directory at a scratch
   git repository that holds a committed `package.json` at version `5.0.0` and a committed `CHANGELOG.md`, made the
   way `tests/check-changes.test.mjs` makes its repository (R6, R22):
     - with the section and a clean tree: status 0, and nothing on standard error
@@ -276,36 +276,36 @@ The checks of `npm publish`:
     - with the section and an untracked file: status 0
     - with the section, a clean tree and another branch checked out than `master`: status 0
     - without the section and with a changed file: the message of the release notes, and not the other
-- [ ] In `tests/package-documents.test.mjs`, add the failing tests that `scripts.prepublishOnly` is exactly
+- [x] In `tests/package-documents.test.mjs`, add the failing tests that `scripts.prepublishOnly` is exactly
   `node publish-check.mjs && npm test`, that `scripts` holds none of `preinstall`, `install`, `postinstall`,
   `prepublish`, `preprepare`, `prepare`, `postprepare`, `prepack` and `postpack`, and that `files` does not hold
   `publish-check.mjs` (R3, R7, R8)
-- [ ] Add `publish-check.mjs` as "Approach" says, and the script `prepublishOnly` to `package.json`, after `test`.
+- [x] Add `publish-check.mjs` as "Approach" says, and the script `prepublishOnly` to `package.json`, after `test`.
   The tests of the three tasks before pass (R6, R7, R8, R22)
-- [ ] In `tests/release.test.mjs`, in the list of the files that name `RELEASING.md`, put `publish-check.mjs` in
+- [x] In `tests/release.test.mjs`, in the list of the files that name `RELEASING.md`, put `publish-check.mjs` in
   the place of `deploy.sh` (R9)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 The host goes:
 
-- [ ] In `tests/compose-allowlist.test.mjs`, take the host out of `needed`, and add the failing test that the hosts
+- [x] In `tests/compose-allowlist.test.mjs`, take the host out of `needed`, and add the failing test that the hosts
   of `KIT_ALLOWLIST` are exactly `api.anthropic.com`, `platform.claude.com`, `models.opencode.ai`,
   `auth.openai.com`, `chatgpt.com` and `registry.npmjs.org`. In `tests/entrypoint-allowlist.test.mjs`, put
   `models.opencode.ai` in the place of the host, in `KIT` and in the four expectations (R10, R11)
-- [ ] In `container/compose.yml`, remove the host and the comment line above it from `KIT_ALLOWLIST`. In
+- [x] In `container/compose.yml`, remove the host and the comment line above it from `KIT_ALLOWLIST`. In
   `templates/project/sandbox/compose.project.yml`, change the comment above `ALLOWLIST` as "Files" says, with its
   lines no longer than those beside them (R11)
-- [ ] Remove `infra/`, `deploy.sh`, `tests/deploy.test.mjs` and `tests/record-name.test.mjs` with `git rm`, the
+- [x] Remove `infra/`, `deploy.sh`, `tests/deploy.test.mjs` and `tests/record-name.test.mjs` with `git rm`, the
   script `deploy` and the five devDependencies from `package.json`, and the line `cdk.out/` from `.gitignore`
   (R9)
-- [ ] Write `package-lock.json` as before and read its diff: the root entry lost the five devDependencies, every
+- [x] Write `package-lock.json` as before and read its diff: the root entry lost the five devDependencies, every
   entry under `packages` is gone but the root's and `node_modules/@ritenoar/agentrite`, and that entry is byte for
   byte what it was. Then run `npm ci`, which exits 0, and `npm run check-changes`, which starts (R9, R18)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 The pointers:
 
-- [ ] In `tests/pointers.test.mjs`, change the expectations, which fail now (R9, R14):
+- [x] In `tests/pointers.test.mjs`, change the expectations, which fail now (R9, R14):
     - the loop over the two names, the test that `agentrite` is not installed and the test of the pointer
       `agentrite` at `1.0.0` go, and the comment at the top of the file says what the one pointer is for
     - the manifest of `agentrite-roles` is still a publishable package with the one command, and its `version` is
@@ -316,35 +316,35 @@ The pointers:
       and `--no-sandbox`, still holds no `|`, and holds `AgentRite is the package agentrite`,
       `npm install agentrite` and, at the end of a line, `https://github.com/ritenoar/agentrite`
     - the `README.md` holds the same three
-- [ ] Remove `pointers/agentrite/` with `git rm` (R9)
-- [ ] In `pointers/agentrite-roles/pointer.mjs`, make the last two lines of the message
+- [x] Remove `pointers/agentrite/` with `git rm` (R9)
+- [x] In `pointers/agentrite-roles/pointer.mjs`, make the last two lines of the message
   ``AgentRite is the package agentrite. Install it with `npm install agentrite`.`` and
   `Its README is at https://github.com/ritenoar/agentrite`. In its `README.md`, make the paragraph that names the
   package say the same in two sentences. In its `package.json`, set `version` to `2.0.1` and `description` to
   `Holds the name of a command AgentRite no longer has, and points to AgentRite, the package agentrite`. The exit
   status, the comment and the first four lines of the message stay (R14)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 The documents:
 
-- [ ] `README.md`, the name: `agentrite` and `node_modules/agentrite/` in the opening paragraph, in the second form
+- [x] `README.md`, the name: `agentrite` and `node_modules/agentrite/` in the opening paragraph, in the second form
   of "check-changes", in the JSON of the `check-changes` script, in the two lines of the `.dockerignore` example
   and in the sentence under it, in the path of `templates/project/`, in the path of `CHANGELOG.md`, in the path of
   `SANDBOX.md`, and in the path the shim execs. Every form, option, variable and table row stays (R4)
-- [ ] `README.md`, "Installing it into a project": the first paragraph says that the kit is the package `agentrite`
+- [x] `README.md`, "Installing it into a project": the first paragraph says that the kit is the package `agentrite`
   on the npm registry, and that a project adds it by its name. The command is `npm install agentrite`. The
   paragraph after it says that npm writes the package, with a range from the version it installed, into the
   project's `package.json`, and the version, its address on the registry and an integrity hash into
   `package-lock.json`. Its sentence that the kit assumes npm stays as it is. "On a fresh clone" stays as it is
   (R12)
-- [ ] `README.md`, "Updating a project to a newer kit": it opens with "Install the newest release:" and
+- [x] `README.md`, "Updating a project to a newer kit": it opens with "Install the newest release:" and
   `npm install agentrite@latest`. The paragraph after it keeps that only `package.json` and `package-lock.json`
   change and are committed, and says that `npm outdated` reports when a newer release exists, in the place of the
   sentence that nothing does. The rest of the section stays (R13)
-- [ ] `SANDBOX.md`: remove the row of the host from the table under "Reaching more hosts", and narrow the table's
+- [x] `SANDBOX.md`: remove the row of the host from the table under "Reaching more hosts", and narrow the table's
   first column to its widest cell in every row. Nothing else in the file changes, and it gets no entry in "When
   something goes wrong" (R11)
-- [ ] `CONTRIBUTING.md` (R17):
+- [x] `CONTRIBUTING.md` (R17):
     - "What the repository holds besides the package": the rows of `infra/` and `deploy.sh` go. A row
       `publish-check.mjs` comes where `deploy.sh` was, with "What `npm publish` checks before it publishes". The
       row of `pointers/` says "The package that holds the name `agentrite-roles`"
@@ -363,7 +363,7 @@ The documents:
       which a project installs by its name. The sentence about `infra/` and its four bullets go. The paragraph
       about the `/release` skill stays. The last paragraph says that releasing runs on the host only: it needs the
       npm login that owns the package, and that never enters the sandbox
-- [ ] `RELEASING.md`, the opening and steps 1 to 4 (R15):
+- [x] `RELEASING.md`, the opening and steps 1 to 4 (R15):
     - the list: step 5 is "What the human runs: `npm version` and `npm publish`"
     - the paragraph under it: `npm publish` wherever it names `./deploy.sh`, and the clause "the move of the
       README's version among it" goes
@@ -377,7 +377,7 @@ The documents:
       `npm version` refuses a working tree that is not clean, and so the tree the tag names holds the section, and
       the package does too. Its sentence about the README goes. The last paragraph names `npm publish` where it
       names `./deploy.sh`
-- [ ] `RELEASING.md`, step 5 (R15): the two commands are `npm version <patch|minor|major>` and `npm publish`, run
+- [x] `RELEASING.md`, step 5 (R15): the two commands are `npm version <patch|minor|major>` and `npm publish`, run
   from the root, on the host, with the npm login that owns the package `agentrite`, which never enters the
   sandbox. An agent runs neither. It keeps what it says of `npm version`, with the reason for the bump being that
   the registry takes a version once. It says that `npm publish` checks three things before anything is sent, in
@@ -385,7 +385,7 @@ The documents:
   has worked. It gives the four refusals and the way on from each as "Approach" has them, and keeps the paragraph
   on why the tag stays an annotated one. Everything about `aws`, the stacks, the bucket, the upload and the fetch
   of the URL goes
-- [ ] `RELEASING.md`, steps 6 and 7 (R15): in step 6 the first command is
+- [x] `RELEASING.md`, steps 6 and 7 (R15): in step 6 the first command is
   `npm install --save-dev --save-exact agentrite@<version>`, the release is installed from the registry and so
   the step comes after `npm publish`, on the human's word that it succeeded, the devDependency is named
   `agentrite`, what is said of `npm install` is that it fetches the version `npm publish` published and fails
@@ -393,38 +393,38 @@ The documents:
   the version is public once `npm publish` ends. The other four commands, what is read afterwards, the three
   reasons to stop, the putting back and the commit stay word for word. In step 7 the one `deploy.sh` becomes
   `npm publish`, and nothing else changes
-- [ ] In `tests/release.test.mjs`, change the `description` of the expected frontmatter to end "and once it is
+- [x] In `tests/release.test.mjs`, change the `description` of the expected frontmatter to end "and once it is
   published moves this repository to the release.", which fails. Then change `.claude/skills/release/SKILL.md` to
   that (R16)
-- [ ] Read the four documents once more against `git diff master`: every form, option, variable and table row that
+- [x] Read the four documents once more against `git diff master`: every form, option, variable and table row that
   was there and is not of the host is there, no line passes 120 characters, `SANDBOX.md` holds no HTML, no command
   in `README.md` names a version of the kit, and none of the four says why the kit moved (R12, R13, R15, R17)
-- [ ] Run `npm test` and commit
+- [x] Run `npm test` and commit
 
 The trial and the log:
 
-- [ ] Do the trial of requirement 5 as "Verification" gives it, and log in `record.md` each command, its exit
+- [x] Do the trial of requirement 5 as "Verification" gives it, and log in `record.md` each command, its exit
   status and what was seen. When a step fails, or the project needs a step that is not one of the four, stop: the
   requirement does not hold, and that goes back to the specifier and the human (R5)
-- [ ] Read "Human steps" below against the tree as it was built: every command in it names a file, a script, a
+- [x] Read "Human steps" below against the tree as it was built: every command in it names a file, a script, a
   version and a message that are there. Correct in this plan what the implementation made different, and log the
   correction. Take none of the steps (R20)
-- [ ] Do everything else under "Verification", log what was run and what was not, and commit `record.md` and the
+- [x] Do everything else under "Verification", log what was run and what was not, and commit `record.md` and the
   ticks of this plan (R3, R10, R18, R19)
 
 ## Verification
 
-- [ ] `npm test` passes. Log how many tests
-- [ ] `npm run check-changes` exits 0, with everything committed
-- [ ] `npm pack --dry-run --json` names `agentrite-5.0.0.tgz` and lists 29 files: `LICENSE`, and the 28 that
+- [x] `npm test` passes. Log how many tests
+- [x] `npm run check-changes` exits 0, with everything committed
+- [x] `npm pack --dry-run --json` names `agentrite-5.0.0.tgz` and lists 29 files: `LICENSE`, and the 28 that
   `master` packs, which are `CHANGELOG.md`, `README.md`, `SANDBOX.md`, `package.json`, `process.md`, the eight
   files of `container/`, the four of `roles/`, the four of `scripts/` that `files` names, the three of
   `templates/changes/` and the four of `templates/project/`. It runs no test and prints nothing of
   `publish-check.mjs` (R3, R8)
-- [ ] With a clean tree, `npm run prepublishOnly` exits 0 after running the suite. Then, with one tracked file
+- [x] With a clean tree, `npm run prepublishOnly` exits 0 after running the suite. Then, with one tracked file
   changed and not committed, it exits 1 with the message of requirement 22 and runs no test. Put the file back
   with `git restore`. `npm publish` is not run, with no option (R7, R22)
-- [ ] This prints the lines of "The kit's own copy of the kit" of `CONTRIBUTING.md` that name
+- [x] This prints the lines of "The kit's own copy of the kit" of `CONTRIBUTING.md` that name
   `node_modules/@ritenoar/agentrite/`, and no other line (R10, R18):
 
   ```sh
@@ -433,22 +433,22 @@ The trial and the log:
     ':!.opencode/agents' ':!sandbox.sh' ':!.dockerignore' ':!sandbox/compose.project.yml'
   ```
 
-- [ ] The same pattern over `package.json` prints two lines, the `check-changes` script and the devDependency, and
+- [x] The same pattern over `package.json` prints two lines, the `check-changes` script and the devDependency, and
   `git grep -n -i bitbucket -- . ':!changes' ':!CHANGELOG.md'` prints nothing (R10, R14, R18)
-- [ ] This prints nothing (R18, R19):
+- [x] This prints nothing (R18, R19):
 
   ```sh
   git diff master --stat -- CHANGELOG.md AGENTS.md CLAUDE.md .claude/agents .opencode/agents sandbox.sh \
     sandbox-dev.sh .dockerignore sandbox/compose.project.yml process.md roles templates/changes
   ```
 
-- [ ] `git diff master -- package-lock.json` holds no changed line inside the entry
+- [x] `git diff master -- package-lock.json` holds no changed line inside the entry
   `node_modules/@ritenoar/agentrite`, and `git diff master --stat -- changes` names this unit alone (R18)
-- [ ] `git grep -n -E 'agentrite@[0-9]|[0-9]+\.[0-9]+\.[0-9]+\.tgz' -- README.md` prints nothing (R13)
-- [ ] With Docker on the host, `./sandbox-dev.sh --in-place true` exits 0: the working copy's sandbox starts
+- [x] `git grep -n -E 'agentrite@[0-9]|[0-9]+\.[0-9]+\.[0-9]+\.tgz' -- README.md` prints nothing (R13)
+- [x] With Docker on the host, `./sandbox-dev.sh --in-place true` exits 0: the working copy's sandbox starts
   without the host. Where the session has no Docker, ask the human to run it, and log the result or that it was
   not run (R11)
-- [ ] The trial of requirement 5, on the host, where Docker is. The project is made as release 5.0.0 sets one up,
+- [x] The trial of requirement 5, on the host, where Docker is. The project is made as release 5.0.0 sets one up,
   which needs the old host, so it is done before human step 8:
 
   ```sh
@@ -495,13 +495,14 @@ The trial and the log:
 ## Commit Points
 
 - [x] `feature-0043 Plan publishing on the npm registry`: `plan.md` and `record.md`
-- [ ] `feature-0043 Name the package agentrite`: the tasks of the name
-- [ ] `feature-0043 Describe the package for the registry, with its license`: the tasks of what the registry shows
-- [ ] `feature-0043 Check the release notes, the working tree and the suite in npm publish`: the tasks of the checks
-- [ ] `feature-0043 Remove the release host and what deployed it`: the tasks of the host
-- [ ] `feature-0043 Point agentrite-roles at the package, and drop the pointer agentrite`: the tasks of the pointers
-- [ ] `feature-0043 Describe the registry in the documents`: the tasks of the documents
-- [ ] `feature-0043 Log the work and what was run`: `record.md`, and the ticks of this plan
+- [x] `feature-0043 Start the implementation`: `record.md`, with the status `in-progress`
+- [x] `feature-0043 Name the package agentrite`: the tasks of the name
+- [x] `feature-0043 Describe the package for the registry, with its license`: the tasks of what the registry shows
+- [x] `feature-0043 Check the release notes, the working tree and the suite in npm publish`: the tasks of the checks
+- [x] `feature-0043 Remove the release host and what deployed it`: the tasks of the host
+- [x] `feature-0043 Point agentrite-roles at the package, and drop the pointer agentrite`: the tasks of the pointers
+- [x] `feature-0043 Describe the registry in the documents`: the tasks of the documents
+- [x] `feature-0043 Log the work and what was run`: `record.md`, and the ticks of this plan
 
 ## Human steps
 
@@ -573,7 +574,7 @@ file. `<version>` is the version of the release of step 3, which is `6.0.0` when
    ```
 
    `npm whoami` prints a name that `npm owner ls agentrite` lists. When it does not, `npm login` first.
-   `npm publish` runs the three checks and the suite, asks for a one-time password when the account has two-factor
+   `npm publish` runs the three checks, the suite last, asks for a one-time password when the account has two-factor
    authentication, and ends with `+ agentrite@<version>`. Then `npm view agentrite dist-tags` prints
    `{ latest: '<version>' }`.
 
