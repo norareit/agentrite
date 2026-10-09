@@ -176,15 +176,14 @@ The allowlist is two lists together. Both are checked the same way, and a host i
 `KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit itself needs. They need no listing
 in a project, and a kit release that needs another host adds it there, with no change to any project:
 
-| Host                     | What it is for                                                    |
-|--------------------------|-------------------------------------------------------------------|
-| `api.anthropic.com`      | The probe host, and the API Claude Code uses                      |
-| `platform.claude.com`    | Claude Code contacts it at start-up when it holds no saved login  |
-| `models.opencode.ai`     | OpenCode fetches its model catalog from it                        |
-| `auth.openai.com`        | OpenCode logged in with a ChatGPT account signs in there          |
-| `chatgpt.com`            | OpenCode logged in with a ChatGPT account sends its prompts there |
-| The npm registry         | `npm ci` and `npm install` inside the container                   |
-| `agentrite.ritenoar.com` | The kit's releases, which npm installs by URL                     |
+| Host                  | What it is for                                                    |
+|-----------------------|-------------------------------------------------------------------|
+| `api.anthropic.com`   | The probe host, and the API Claude Code uses                      |
+| `platform.claude.com` | Claude Code contacts it at start-up when it holds no saved login  |
+| `models.opencode.ai`  | OpenCode fetches its model catalog from it                        |
+| `auth.openai.com`     | OpenCode logged in with a ChatGPT account signs in there          |
+| `chatgpt.com`         | OpenCode logged in with a ChatGPT account sends its prompts there |
+| The npm registry      | `npm ci` and `npm install` inside the container                   |
 
 `ALLOWLIST`, in the project's `sandbox/compose.project.yml`, holds what the project needs besides, and may be empty
 or left out. Add the API host of any other model provider the project's agents use, and whatever its tools and

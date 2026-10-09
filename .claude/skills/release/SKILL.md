@@ -2,7 +2,7 @@
 name: release
 description: >-
   Makes a release of the kit, on the host: sees that the suite passes, drafts the release notes, on the human's word
-  commits them, names the commands the human runs, and once it is deployed moves this repository to the release.
+  commits them, names the commands the human runs, and once it is published moves this repository to the release.
 disable-model-invocation: true
 ---
 

@@ -9,16 +9,16 @@ A release is made on the host, on `master`, from the repository root, in this or
 2. The release notes: a section is added to `CHANGELOG.md`
 3. The human reads, corrects and picks the version
 4. The commit
-5. What the human runs: `npm version` and `./deploy.sh`
+5. What the human runs: `npm version` and `npm publish`
 6. The kit's own dependency: this repository moves to the release
 7. The push, which the human runs
 
 An agent runs steps 1 and 2, stops at step 3, and on the human's word runs step 4. It runs nothing of step 5: it
-ends step 4 by telling the human its two commands, and stops. On the human's word that `./deploy.sh` succeeded it
+ends step 4 by telling the human its two commands, and stops. On the human's word that `npm publish` succeeded it
 runs step 6, and ends by telling the human the command of step 7, which it does not run. An agent asked only for
 the release notes runs step 2, stops at step 3, and on the human's word commits the section as step 4 gives it and
-nothing else, the move of the README's version among it. An agent asked only to move this repository to a release
-that is already made runs step 6 and nothing else.
+nothing else. An agent asked only to move this repository to a release that is already made runs step 6 and nothing
+else.
 
 ## 1. Before anything else
 
@@ -26,11 +26,12 @@ Stop, say why and change nothing when one of these does not hold. Do not repair 
 
 * The branch is `master`
 * `git status --short` shows no change to a tracked file. `npm version` refuses a working tree that is not clean
-* `npm test` passes. `./deploy.sh` runs the suite too, but only after `npm version` has made its commit and its
+* `npm test` passes. `npm publish` runs the suite too, but only after `npm version` has made its commit and its
   tag, which is late to learn that a test fails. When one fails, say which and what it printed. A test is repaired
   in a unit in `changes/`, on a branch, and not by the release
 
-Releasing runs on the host only: `./deploy.sh` needs AWS credentials, which never enter the sandbox.
+Releasing runs on the host only: `npm publish` needs the npm login that owns the package `agentrite`, which never
+enters the sandbox.
 
 ## 2. The release notes
 
@@ -49,12 +50,9 @@ Releasing runs on the host only: `./deploy.sh` needs AWS credentials, which neve
   human as well: whether the release waits for that unit is theirs to decide. A consequence nobody wrote down is
   found only here
 * One change in that diff is the last release's own and belongs to no unit: the line of `package.json` that names
-  the kit as a devDependency, moved to the URL of the release `<tag>` names. Step 6 of that release made it. Do
+  the kit as a devDependency, moved to the version `<tag>` names. Step 6 of that release made it. Do
   not name it to the human, and do not write it in the section, on either line: a project that installs the kit
   does not install the kit's devDependencies. Any other change to that line is a change like every other
-* Another is the version in the install commands of `README.md`, which step 4 of that release moved to its own
-  version. Treat it as the line above: do not name it to the human, and do not write it in the section. Any other
-  change to a version in `README.md` is a change like every other
 * Write the section at the top of `CHANGELOG.md`, above the last release's, headed `## <version>` with the version
   you propose and nothing else on the line. It has two parts:
     * `### What changed`: a line for each change a project gets, ending with the numbers of its units in
@@ -68,7 +66,7 @@ Releasing runs on the host only: `./deploy.sh` needs AWS credentials, which neve
 * Write for a reader who has the package and not this repository: what changed and what it means for them, not how
   it was found
 * A section of an earlier release may be corrected in place, for example for a consequence found later. The
-  released tarball keeps what it shipped with
+  published version keeps what it shipped with
 
 ## 3. The human reads
 
@@ -87,55 +85,62 @@ A release is not a unit and has no directory in `changes/`. Its commits are made
 which is this project's exception to working on a branch. On the human's word, with the version the human picked:
 
 1. Make sure the section is headed `## <version>` with that version
-2. Move every reference to the version of the kit in `README.md` to that version: the URL of the tarball,
-   `ritenoar-agentrite-<version>.tgz`, in "Installing it into a project" and in "Updating a project to a newer kit".
-   Find them with `git grep -n 'ritenoar-agentrite-.*\.tgz' README.md`, and change nothing else in the file
-3. Commit `CHANGELOG.md` and `README.md` as `Release notes for <version>`
+2. Commit `CHANGELOG.md` alone as `Release notes for <version>`
 
-Commit nothing else, and push nothing. The notes and the README are committed first because `npm version` refuses a
-working tree that is not clean, and so the tree the tag names holds the section and the new version, and the tarball
-does too. A project that installs the kit reads the version it installs in its README.
+Commit nothing else, and push nothing. The notes are committed first because `npm version` refuses a working tree
+that is not clean, and so the tree the tag names holds the section, and the package does too.
 
 Then tell the human what is theirs now, as the two commands of step 5, with the part filled in, in that order. Do
-not run `npm version` or `./deploy.sh`. Say that the push comes after step 6, and ask the human to say when
-`./deploy.sh` has succeeded. Stop until then.
+not run `npm version` or `npm publish`. Say that the push comes after step 6, and ask the human to say when
+`npm publish` has succeeded. Stop until then.
 
 ## 5. What the human runs
 
-From the repository root, on `master`, with AWS credentials for the account:
+From the repository root, on `master`, on the host, with the npm login that owns the package `agentrite`:
 
 ```sh
 npm version <patch|minor|major>
-./deploy.sh
+npm publish
 ```
 
-An agent runs neither. `./deploy.sh` publishes, and what it publishes is never replaced.
+An agent runs neither. `npm publish` publishes, and what it publishes is never replaced. It runs on the host because
+it needs that npm login, which never enters the sandbox.
 
 `npm version`, with the part that gives the version of the section's heading, updates `package.json` and
-`package-lock.json`, and commits and tags the change. The bump is not optional: the tarball's name comes from the
-version, and `deploy.sh` refuses to upload a name that is already released, so a release without a bump fails.
+`package-lock.json`, and commits and tags the change. The bump is not optional: the registry takes a version once,
+so a release without a bump fails.
 
-`deploy.sh` refuses, before it does anything else, a version whose section is missing from `CHANGELOG.md`, which is
-also what a wrong part gives; then write the notes, commit them, move the tag with
-`git tag -fa v<version> -m "<version>"` and run it again. The tag has to stay an annotated one, with the version as
-its message, as `npm version` made it: `git tag -f` alone replaces it with a plain tag, and the push of step 7
-takes annotated tags only and leaves a plain one behind without saying so.
+`npm publish` checks three things before anything is sent to the registry, in this order:
 
-`deploy.sh` signs in with `aws sso login` if needed, deploys the two stacks, packs the kit with `npm pack`, and
-uploads the tarball under the name `npm pack` gives it, which carries the version. Then it fetches the tarball's URL
-with no credential and fails unless it is served, and prints the line to put in a project's `package.json`.
+1. `CHANGELOG.md` has a section headed `## <version>`, with the `version` of `package.json`
+2. No tracked file holds a change that is not committed
+3. `npm test` passes
 
-A released tarball is never replaced or removed. Projects pin it by its integrity hash, and two projects may sit on
-different versions indefinitely, so the script refuses to upload over a name that already exists. It uploads with
-`aws s3 cp` rather than a CDK `BucketDeployment` for the same reason: a `BucketDeployment` prunes by default and
-would delete versions that a project still installs.
+Then it packs the kit and sends it, and prints `+ agentrite@<version>` when it has worked.
+
+It refuses in four cases, and publishes nothing in any of them:
+
+* The section is missing from `CHANGELOG.md`, which is also what a wrong part gives. Write the notes, commit them,
+  move the tag with `git tag -fa v<version> -m "<version>"` and run `npm publish` again
+* A tracked file holds a change that is not committed, and the message names each. Commit a change that belongs in
+  the release, and move the tag in the same way. Put one that does not aside with `git stash`. Then run
+  `npm publish` again
+* A test fails. It is repaired in a unit in `changes/`, on a branch, as step 1 says of a test that fails there, and
+  not by the release. When that unit is on `master`, add it to the section, commit that, move the tag in the same
+  way and run `npm publish` again
+* The version is on the registry already, which is what a forgotten `npm version` gives. The registry refuses it
+  itself, with npm's error, and a published version is never replaced. Run `npm version` and then `npm publish`
+
+The tag has to stay an annotated one, with the version as its message, as `npm version` made it: `git tag -f` alone
+replaces it with a plain tag, and the push of step 7 takes annotated tags only and leaves a plain one behind without
+saying so.
 
 ## 6. The kit's own dependency
 
 This repository installs its own release as a devDependency, so that work on the kit follows the released process
 and `./sandbox.sh` runs the released sandbox. A release moves that dependency to itself, so that no unit has to
-afterwards. The tarball is installed from its URL, so this step comes after `./deploy.sh`, on the human's word that
-it succeeded.
+afterwards. The release is installed from the registry, so this step comes after `npm publish`, on the human's word
+that it succeeded.
 
 `<version>` is the `version` in `package.json`, which `npm version` wrote. Stop, say why and change nothing when
 one of these does not hold:
@@ -143,21 +148,21 @@ one of these does not hold:
 * The branch is `master`
 * `git status --short` shows no change to a tracked file
 
-When the devDependency `@ritenoar/agentrite` in `package.json` already names `<version>`, there is nothing to
-move. Say so, change nothing, and go on to the end of this step.
+When the devDependency `agentrite` in `package.json` already names `<version>`, there is nothing to move. Say so,
+change nothing, and go on to the end of this step.
 
 Run these five, in this order, and nothing else that changes a file:
 
 ```sh
-npm install --save-dev https://agentrite.ritenoar.com/ritenoar-agentrite-<version>.tgz
+npm install --save-dev --save-exact agentrite@<version>
 npx agentrite refresh claude opencode
 npm test
 npm run check-changes
 ./sandbox.sh --in-place --rebuild true
 ```
 
-* `npm install` fetches the tarball `./deploy.sh` uploaded and fails when it is not served. When the session may
-  not run it, ask the human to, and go on from its result
+* `npm install` fetches the version `npm publish` published and fails when the registry does not have it. When the
+  session may not run it, ask the human to, and go on from its result
 * `refresh` brings the role wrappers and `sandbox.sh` to what the release writes, and prints each file as written,
   refreshed or up to date
 * `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
@@ -171,7 +176,7 @@ npm run check-changes
 
 Then read `git status --short` and `git diff package.json`. The tree holds changes to `package.json`,
 `package-lock.json` and the files `refresh` printed as written or refreshed, and to nothing else, and
-`package.json` differs by the one URL.
+`package.json` differs by the one version.
 
 Then read "Worth knowing when you update" in the section of `<version>` in `CHANGELOG.md`, as a project that
 updates does, and look in this repository's own files for what it asks of a project beyond the install and the
@@ -180,7 +185,7 @@ updates does, and look in this repository's own files for what it asks of a proj
 The step is those five commands. Stop, commit nothing and repair nothing when:
 
 * One of the five fails. Say which and what it printed
-* The tree holds another change, or `package.json` differs by more than the URL. Say what
+* The tree holds another change, or `package.json` differs by more than the version. Say what
 * The release asks this repository for more than the five commands. Name the file and the line
 
 Then put the repository back: `git restore .`, remove each file `refresh` printed as written, and run `npm ci`,
@@ -199,7 +204,7 @@ it what was seen:
 Commit nothing else, and push nothing.
 
 The start shows that the released sandbox builds and starts in this repository, and no more. It does not stop a
-release: the tarball is public once `./deploy.sh` ends, and is never replaced. A start that fails is found here,
+release: the version is public once `npm publish` ends, and is never replaced. A start that fails is found here,
 before the push and before another project updates, and its repair is a unit and a release after this one. Say so
 to the human when it fails.
 
@@ -215,7 +220,7 @@ git push --follow-tags origin master
 The human runs it. An agent does not.
 
 The push comes last. `--follow-tags` pushes `master` and, with it, the annotated tag `npm version` made. A tag that
-is not pushed yet can still be moved, which is what a refusal by `deploy.sh` asks for.
+is not pushed yet can still be moved, which is what a refusal by `npm publish` asks for.
 
 With step 6 done, `master` is one commit past the tag, and the one push carries the release's commits, the tag and
 the move. The push does not wait for step 6: when that step stopped, or is left for later, push all the same, and

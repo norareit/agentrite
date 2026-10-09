@@ -14,25 +14,24 @@ sandbox does is in [`SANDBOX.md`](SANDBOX.md). This document is not in the packa
 
 What the package holds is in "What is here" of `README.md`. The repository holds besides:
 
-| Path                          | What it holds                                                          |
-|-------------------------------|------------------------------------------------------------------------|
-| `tests/`                      | The kit's own unit tests, run by node's built-in test runner           |
-| `infra/`                      | The CDK app that serves release tarballs from `agentrite.ritenoar.com` |
-| `RELEASING.md`                | How a release of the kit is made, which the `/release` skill follows   |
-| `deploy.sh`                   | The release script, which deploys `infra/` and uploads the packed kit  |
-| `CONTRIBUTING.md`             | This document                                                          |
-| `changes/`                    | The kit's own change units                                             |
-| `pointers/`                   | The two packages that hold the names `agentrite` and `agentrite-roles` |
-| `AGENTS.md`                   | This repository's own instructions for agents                          |
-| `CLAUDE.md`                   | The bridge that imports `AGENTS.md` into Claude Code                   |
-| `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill            |
-| `.opencode/`                  | The role wrappers for OpenCode                                         |
-| `sandbox.sh`                  | The shim that runs the sandbox of the installed release                |
-| `sandbox/`                    | This repository's `compose.project.yml`                                |
-| `sandbox-dev.sh`              | Runs the sandbox of the working copy                                   |
-| `package-lock.json`           | The lockfile, which pins the installed release of the kit              |
-| `.dockerignore`, `.gitignore` | What the image build and git leave out                                 |
-| `.editorconfig`               | The formatting that editors apply                                      |
+| Path                          | What it holds                                                        |
+|-------------------------------|----------------------------------------------------------------------|
+| `tests/`                      | The kit's own unit tests, run by node's built-in test runner         |
+| `RELEASING.md`                | How a release of the kit is made, which the `/release` skill follows |
+| `publish-check.mjs`           | What `npm publish` checks before it publishes                        |
+| `CONTRIBUTING.md`             | This document                                                        |
+| `changes/`                    | The kit's own change units                                           |
+| `pointers/`                   | The package that holds the name `agentrite-roles`                    |
+| `AGENTS.md`                   | This repository's own instructions for agents                        |
+| `CLAUDE.md`                   | The bridge that imports `AGENTS.md` into Claude Code                 |
+| `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill          |
+| `.opencode/`                  | The role wrappers for OpenCode                                       |
+| `sandbox.sh`                  | The shim that runs the sandbox of the installed release              |
+| `sandbox/`                    | This repository's `compose.project.yml`                              |
+| `sandbox-dev.sh`              | Runs the sandbox of the working copy                                 |
+| `package-lock.json`           | The lockfile, which pins the installed release of the kit            |
+| `.dockerignore`, `.gitignore` | What the image build and git leave out                               |
+| `.editorconfig`               | The formatting that editors apply                                    |
 
 ## Commands
 
@@ -71,15 +70,16 @@ Runs the sandbox from the working copy, in place of the installed release's. It 
 
 See "Trying the working copy's sandbox".
 
-### deploy.sh
+### npm publish
 
 ```sh
-./deploy.sh
-npm run deploy
+npm publish
 ```
 
-Releases the kit: deploys `infra/` and uploads the packed kit, at the version in `package.json`, and prints the URL
-of the release. It takes no argument, runs on the host, and runs `npm ci` itself.
+Publishes the package, at the version in `package.json`, on the npm registry. Before anything is sent it refuses a
+version with no section in `CHANGELOG.md` and a working tree with a change to a tracked file that is not committed,
+and runs `npm test`, publishing nothing when a test fails. The kit adds no argument, option or environment variable
+of its own to it. It runs on the host, with the npm login that owns the package. An agent does not run it.
 
 See "Releasing".
 
@@ -101,8 +101,6 @@ npm test
 
 * It runs node's built-in test runner over `tests/`
 * The tests need no install
-* Releasing does: `infra/` needs `aws-cdk-lib` and the CDK CLI, which are the kit's devDependencies, so run `npm ci`
-  first. `deploy.sh` does that itself
 
 The kit's own `changes/` go through the change check like any project's, wired the same way:
 
@@ -128,7 +126,8 @@ The kit is also a devDependency of itself, installed from a release by its URL l
   Work on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's: a
   change to `container/` does not alter the sandbox the agent making it runs in. Trying such a change is done from
   the host. See "Trying the working copy's sandbox"
-* `./deploy.sh` stays on the host: releasing needs AWS credentials and hosts the sandbox does not reach
+* `npm publish` stays on the host: releasing needs the npm login that owns the package, which never enters the
+  sandbox
 
 ## Trying the working copy's sandbox
 
@@ -159,16 +158,10 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
 
 ## Releasing
 
-A release is a tarball of the kit served from `https://agentrite.ritenoar.com/`, which a project installs from its
-URL. `infra/` is the CDK app that serves it, and none of it ships to a project:
-
-* a private bucket
-* a CloudFront distribution in front of it
-* a certificate in us-east-1
-* the DNS record in the existing `ritenoar.com` hosted zone, which it looks up rather than owns
+A release is a version of the package `agentrite` on the npm registry, which a project installs by its name.
 
 A release is made with the `/release` skill, in a Claude Code session on the host, on `master`. The skill is
 `.claude/skills/release/SKILL.md`, which holds one line that sends the agent to [`RELEASING.md`](RELEASING.md). That
 file holds every step, and a human, or an agent in another harness, follows it directly.
 
-Releasing runs on the host only. It needs AWS credentials, and those never enter the sandbox.
+Releasing runs on the host only. It needs the npm login that owns the package, and that never enters the sandbox.

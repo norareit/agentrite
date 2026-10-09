@@ -3,7 +3,7 @@
 A kit for running coding agents by a fixed process.
 
 The shared instructions and tooling that coding agents work under, in one place so that an improvement is made once
-rather than once per project. Projects install it as the npm package `@ritenoar/agentrite` and keep only what is
+rather than once per project. Projects install it as the npm package `agentrite` and keep only what is
 specific to them.
 
 * [The name](#the-name)
@@ -164,7 +164,7 @@ See "Running a role".
 
 ```sh
 npm run check-changes
-node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs [<repository root>]
+node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]
 ```
 
 The change check. It compares the committed work on the current branch with `master`, and exits non-zero with a
@@ -304,15 +304,15 @@ The command starts nothing when:
 
 ## Installing it into a project
 
-The kit is the npm package `@ritenoar/agentrite`. It is served as a tarball from `agentrite.ritenoar.com` rather than
-from a registry, so a project adds it by the URL of a release:
+The kit is the package `agentrite` on the npm registry, and a project adds it by its name:
 
 ```sh
-npm install https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz
+npm install agentrite
 ```
 
-npm writes the URL into the project's `package.json`, and the resolved URL with an integrity hash into
-`package-lock.json`. The kit assumes npm: `init` reads `package-lock.json`, and the sandbox's image installs from it.
+npm writes the package, with a range from the version it installed, into the project's `package.json`, and the
+version, its address on the registry and an integrity hash into `package-lock.json`. The kit assumes npm: `init`
+reads `package-lock.json`, and the sandbox's image installs from it.
 
 Then set the project up from its root, naming only the harnesses it uses:
 
@@ -371,7 +371,7 @@ A file that already exists:
 
   ```json
   "scripts": {
-    "check-changes": "node node_modules/@ritenoar/agentrite/scripts/check-changes.mjs"
+    "check-changes": "node node_modules/agentrite/scripts/check-changes.mjs"
   }
   ```
 
@@ -383,10 +383,10 @@ A project whose `.dockerignore` excludes `node_modules` must let that one direct
 
 ```
 node_modules
-!node_modules/@ritenoar/agentrite/container/**
+!node_modules/agentrite/container/**
 ```
 
-The exception names the files rather than the directory: `!node_modules/@ritenoar/agentrite/container` alone does
+The exception names the files rather than the directory: `!node_modules/agentrite/container` alone does
 not bring back a kit file that a pattern excluded by name.
 
 A project that depends on Playwright gets a sandbox with its browser:
@@ -401,7 +401,7 @@ A project that depends on Playwright gets a sandbox with its browser:
   `refresh` never rewrite `sandbox/compose.project.yml`, which is the project's own
 
 `init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
-`node_modules/@ritenoar/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
+`node_modules/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
 files, filling in each `{{placeholder}}` itself.
 
 ### On a fresh clone
@@ -416,17 +416,17 @@ start.
 
 ## Updating a project to a newer kit
 
-Install the newer release by its URL:
+Install the newest release:
 
 ```sh
-npm install https://agentrite.ritenoar.com/ritenoar-agentrite-5.0.0.tgz
+npm install agentrite@latest
 ```
 
-That changes only `package.json` and `package-lock.json`, which the project commits like any other change. Nothing
-reports that a newer release exists: `npm outdated` has no registry to ask.
+That changes only `package.json` and `package-lock.json`, which the project commits like any other change.
+`npm outdated` reports when a newer release exists.
 
 What a release changed, and what is worth knowing when updating to it, is in the kit's `CHANGELOG.md`, which after
-the install is at `node_modules/@ritenoar/agentrite/CHANGELOG.md`. It holds one section per release, newest first. A
+the install is at `node_modules/agentrite/CHANGELOG.md`. It holds one section per release, newest first. A
 project that skips releases reads every section between its old version and the new one.
 
 Then bring the kit's own files in the project up to date, from the project root, naming the harnesses it uses:
@@ -458,7 +458,7 @@ improvement reaches that project, and every other, as a new release that each on
 
 The sandbox is a Docker container that a harness is run in, with a clone of a unit's branch or the project mounted
 read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" gives. The reference is
-[`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/@ritenoar/agentrite/SANDBOX.md`.
+[`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/agentrite/SANDBOX.md`.
 
 What a run needs:
 
@@ -506,7 +506,7 @@ The `~/.gitconfig` makes commits from inside carry the same name and email as on
 
 A project configures the sandbox with two files:
 
-* `sandbox.sh` at the project root, a shim that execs `node_modules/@ritenoar/agentrite/container/sandbox.sh` with the
+* `sandbox.sh` at the project root, a shim that execs `node_modules/agentrite/container/sandbox.sh` with the
   project root as its first argument
 * `sandbox/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
   allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
