@@ -122,3 +122,6 @@ timestamp: 2026-10-09T13:04:25Z
   And `package-lock.json` is not unchanged, which requirement 18 says of it: the plan's reading was built, with the
   entry of the kit's own devDependency kept and the rest following `package.json`. The review is not started. The
   status stays `in-progress`
+- 2026-10-09T13:42:28Z [human] decided that `package-lock.json` changes with `package.json`, as it was built: the
+  change is needed to change the package at all, and requirement 18 does not stand in its way. `infra/cdk.out/` was
+  removed from this computer
