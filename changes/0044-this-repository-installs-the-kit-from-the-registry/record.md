@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-09T18:32:07Z
 ---
 
@@ -19,5 +19,17 @@ timestamp: 2026-10-09T18:32:07Z
   host, and `npm ci` inside the working copy's sandbox as something to see. Not checked: that the working copy of
   `scripts/` is what 6.0.0 shipped, which the spec leaves to the planner. The status is `draft`
 - 2026-10-09T18:40:39Z [human] approved the spec. The status is `approved`
+- 2026-10-09T18:41:40Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in the main session on the Linux host.
+  Cut `feature-0044-this-repository-installs-the-kit-from-the-registry` from `master` at `f00617f`, where `npm test`
+  passes with 426 tests. Read `roles/planner.md` and `process.md` of the installed release 5.0.0. Wrote `plan.md`: the
+  move in one commit, which is the install, what `refresh` writes and the path in the project's own files, then the
+  comment above `ALLOWLIST` and the sentence of `CONTRIBUTING.md` in a second, then the verification, of which the two
+  commands of requirement 9 need Docker on the host. Checked what the spec left to the planner: the tarball of
+  `agentrite@6.0.0` from `registry.npmjs.org`, with the shasum that `npm view` gives, has 29 files, and `diff -r` of
+  each against the tree shows no difference, so `npx agentrite` at this root writes what the release writes. Tried tasks
+  1 to 6 in a scratch copy made with `git archive`, with npm 11.19.1 and node 26.9.0: the uninstall and the install exit
+  0 in a package itself named `agentrite`, `refresh` rewrites the eight wrappers and `sandbox.sh`, the `git grep` of
+  requirement 7 finds nothing, and `npm ci`, `npm test` with 426 tests and `npm run check-changes` pass. Not run:
+  anything that builds or starts a container. The test of "Beyond the request" is in no task. The status is `planned`
 
 ## Amendments
