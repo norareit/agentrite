@@ -5,6 +5,83 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 6.0.0
+
+### What changed
+
+* The kit is the package `agentrite` on the npm registry, and no longer `@ritenoar/agentrite` from a URL on
+  `agentrite.ritenoar.com`. A project installs it with `npm install agentrite` and updates it with
+  `npm install agentrite@latest`, and `npm outdated` reports when a newer release exists. This is the first version
+  on the registry: the releases before it are not there (0043)
+* The kit's files are in a project at `node_modules/agentrite/`, where they were at
+  `node_modules/@ritenoar/agentrite/`. Everything the kit writes or reads names the new path: the role wrappers that
+  `init` and `refresh` write, the `AGENTS.md`, `CLAUDE.md`, `sandbox.sh` and `sandbox/compose.project.yml` that
+  `init` writes, the `check-changes` script it adds to `package.json`, and the exception it writes into
+  `.dockerignore` and looks for in one that exists. What a command does is otherwise unchanged. No old path keeps
+  working (0043)
+* The kit is open source under the MIT License, and `LICENSE` is in the package. Its repository is
+  `https://github.com/norareit/agentrite`, which `package.json` names together with a description, keywords and
+  where issues go (0043)
+* The sandbox no longer admits `agentrite.ritenoar.com` by itself. The hosts the kit admits are the Anthropic API,
+  `platform.claude.com`, `models.opencode.ai`, `auth.openai.com`, `chatgpt.com` and the npm registry, and the table
+  in `SANDBOX.md` and the comment in the compose file `init` writes say so (0043)
+* "Installing it into a project" and "Updating a project to a newer kit" of the README give the two commands above,
+  and no command in the README names a version of the kit (0043)
+* Not in the package: `npm publish` in the place of `deploy.sh`, with its checks of the release notes, the working
+  tree and the suite, the removal of `infra/` and of the package that held the name `agentrite` on the registry,
+  the reworded package that holds the name `agentrite-roles`, and `RELEASING.md` and `CONTRIBUTING.md` (0043)
+
+### Worth knowing when you update
+
+* **The update needs these steps, and without them the roles are not found, the change check does not run and the
+  sandbox does not start.** From the project root, naming the harnesses the project uses in the third:
+
+  ```sh
+  npm uninstall @ritenoar/agentrite
+  npm install agentrite
+  npx agentrite refresh claude opencode
+  sed -i 's#node_modules/@ritenoar/agentrite#node_modules/agentrite#g' \
+    AGENTS.md CLAUDE.md .dockerignore sandbox/compose.project.yml package.json
+  sed -i 's#@ritenoar/agentrite#agentrite#g' AGENTS.md
+  ./sandbox.sh --in-place --rebuild true
+  ```
+
+  A project that holds the kit as a devDependency installs it with `npm install --save-dev agentrite`. `refresh`
+  prints the role wrappers and `sandbox.sh` as refreshed. The two `sed` commands change the path in the files that
+  are the project's own, which `refresh` never touches, and the name of the package where `AGENTS.md` gives it. A
+  project without the sandbox gives `--no-sandbox` to `refresh`, leaves `.dockerignore` and
+  `sandbox/compose.project.yml` out of the first `sed`, and has no last command. Commit the changes with
+  `package.json` and `package-lock.json` (0043)
+* These are the steps from 5.0.0. A project on an older release reads the sections between first: the steps of
+  5.0.0, which rename `agent.sh` to `sandbox.sh`, are not among the ones above (0043)
+* What happens when the `sed` commands are left out. The `check-changes` script runs a file that is not there, and
+  node says that it cannot find the module. The links in `AGENTS.md` and `CLAUDE.md` lead nowhere, so an agent does
+  not find `process.md`. The build of the image fails on a file it cannot copy, because `.dockerignore` still lets
+  back in the old directory and keeps the new one out. Nothing of the kit names the step that was skipped. None of
+  the three was tried (0043)
+* Whatever else of the project's own names `node_modules/@ritenoar/agentrite` or `@ritenoar/agentrite` is the
+  project's to change: its other documents, its scripts, its CI. Nothing of the kit finds these (0043)
+* npm writes a range into `package.json`, `^6.0.0`, where it wrote the URL of one release. `package-lock.json`
+  still pins one version with its integrity hash, and `npm ci` installs exactly that. `npm install agentrite@latest`
+  is what moves a project to a newer major version (0043)
+* The releases up to 5.0.0 are installed from `agentrite.ritenoar.com`, and that host is taken down once the
+  projects that use the kit have moved. After that `npm ci` fails on every commit of a project from before its
+  move, and those releases cannot be installed any more (0043)
+* A project that still needs `agentrite.ritenoar.com` inside its sandbox, for as long as the host answers, lists it
+  in the `ALLOWLIST` of its `sandbox/compose.project.yml` (0043)
+* `npx agentrite` in a project that has not installed the kit now fetches the kit from the registry and runs its
+  command, where it fetched a package that said the kit was not installed and exited with an error. So
+  `npx agentrite init` there writes files that name `node_modules/agentrite/`, which the project does not have, and
+  exits 0. The first thing that then fails is `./sandbox.sh`, with the shell's "No such file or directory".
+  `npm install agentrite` repairs it. Install first, as the README says (0043)
+* The registry holds one older version under this name, `agentrite@1.0.0`. It is not a release of the kit: it is
+  the package that held the name, and it is marked as deprecated (0043)
+* The steps were tried once, by hand, in a project that `init` of 5.0.0 set up with both harnesses and no
+  Playwright, with Docker on Linux: the role files were found, `npm run check-changes` ran and the sandbox was
+  built and started. The kit was installed there from the packed tarball and not from the registry. Not tested: the
+  install from the registry, a harness or a unit run in the sandbox after the move, a project with Playwright, a
+  project without the sandbox, a project set up by a release before 5.0.0, and anything on macOS (0043)
+
 ## 5.0.0
 
 ### What changed
