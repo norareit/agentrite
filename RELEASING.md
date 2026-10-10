@@ -90,7 +90,8 @@ which is this project's exception to working on a branch. On the human's word, w
 Commit nothing else, and push nothing. The notes are committed first because `npm version` refuses a working tree
 that is not clean, and so the tree the tag names holds the section, and the package does too.
 
-Then tell the human what is theirs now, as the two commands of step 5, with the part filled in, in that order. Do
+Then tell the human what is theirs now, as the two commands of step 5, with the part filled in, in that order. When
+the pointer has a version the registry does not have, as step 5 says, name its commands after those two. Do
 not run `npm version` or `npm publish`. Say that the push comes after step 6, and ask the human to say when
 `npm publish` has succeeded. Stop until then.
 
@@ -134,6 +135,20 @@ It refuses in four cases, and publishes nothing in any of them:
 The tag has to stay an annotated one, with the version as its message, as `npm version` made it: `git tag -f` alone
 replaces it with a plain tag, and the push of step 7 takes annotated tags only and leaves a plain one behind without
 saying so.
+
+The pointer `agentrite-roles` is a package of its own, in `pointers/agentrite-roles`, and `npm publish` of the kit
+does not publish it. A unit that changes what the pointer says gives it a new version. When the `version` in
+`pointers/agentrite-roles/package.json` is not what `npm view agentrite-roles version` prints, the human publishes
+the pointer too, after `npm publish` of the kit has succeeded, since the pointer names the kit's commands as this
+release takes them:
+
+```sh
+cd pointers/agentrite-roles
+npm publish
+```
+
+An agent does not publish the pointer, and steps 6 and 7 do not wait for it. Once it is published,
+`npx agentrite-roles`, run in an empty directory, prints the new text.
 
 ## 6. The kit's own dependency
 
