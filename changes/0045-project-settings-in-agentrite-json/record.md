@@ -48,5 +48,12 @@ timestamp: 2026-10-10T22:14:15Z
   0038 and 0043. `CONTRIBUTING.md` has only the row of `pointers/` and `RELEASING.md` names no pointer, so the
   version and the publish follow what those two units did. `npm view agentrite-roles versions` gives `1.0.0` and
   `2.0.1`. `pointers/` holds no other package. The status stays `draft`
+- 2026-10-10T22:34:57Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the same session, on `master`
+  at `2c37719`, on the human's two further answers as the agent that started the session gave them. The publish of
+  a changed pointer is in step 5 of `RELEASING.md` since `2c37719`, which is on `master` and no part of this unit,
+  so requirement 49 names that step where it spelled the publish out, the plan holds nothing for it, and the item
+  left "Beyond the request". The version `2.0.2` is confirmed, and is the human's in "Decisions". Read `2c37719`:
+  it leaves step 6 as it was, so requirement 43 stands as written. No requirement was added or renumbered. The
+  status stays `draft`
 
 ## Amendments

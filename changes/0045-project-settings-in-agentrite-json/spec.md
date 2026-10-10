@@ -283,10 +283,8 @@ The pointer package:
     tests of the pointer hold this for the message and for the README. It is the one package under `pointers/`
 49. Its version is `2.0.2`, which the test that holds `2.0.1` now holds. The registry has `1.0.0` and `2.0.1` and
     takes a version once. The unit leaves the pointer in the tree at that version, with the new text and not
-    published, and is `implemented` without the publish. Publishing it is the human's step and no agent's: after
-    the release that holds this unit is published, because the pointer names commands as that release takes
-    them, with `npm publish` run in the pointer's directory. `plan.md` gives that step for the human, with its
-    command and what is seen when it has worked, as text and not as a task to tick
+    published, and is `implemented` without the publish. Publishing it is the human's, with the release that
+    holds this unit, as step 5 of `RELEASING.md` gives it. The plan holds no task for it
 
 ## Decisions
 
@@ -333,7 +331,11 @@ On the human's word:
 * **`init` says what it wrote into the file.** It costs little, and it is the one moment at which a project on
   `main` can notice, before something refuses
 * **The pointer package is brought along in this unit,** so that it does not go stale: it would otherwise send a
-  reader to a `refresh` with harnesses, which this unit refuses, and to an install as a regular dependency
+  reader to a `refresh` with harnesses, which this unit refuses, and to an install as a regular dependency. Its
+  version is `2.0.2`, a patch for new text, as unit 0043 moved it. The human publishes it by step 5 of
+  `RELEASING.md`, which got that passage on `master` before this unit, on the human's word. Until then the
+  registry's `2.0.1` names `refresh claude opencode`, which the release refuses with a message that says where the
+  harnesses are named
 * **The cost to a project that updates is one command,** and the unit is described by that and by the steps of
   requirement 44. Which version the release is, is decided when it is made, and its notes are written then
 
@@ -377,11 +379,6 @@ The specifier's:
   not depend on its options, and the notice comes only when `master` was written unasked. The notice does not
   name `--default-branch` as the way to change it: the file is there by then, and `init` refuses the option from
   then on. `init` asks git nothing. See "Beyond the request"
-* **The pointer moves by a patch, to `2.0.2`, and is published after the release.** No document of this
-  repository says how a pointer is versioned or published. Units 0038 and 0043 did it this way: the unit sets the
-  version and a test holds it, unit 0043 moved it by a patch for new text, and the human published it after the
-  release it points to. Until the human publishes, the registry's `2.0.1` names `refresh claude opencode`, which
-  the release refuses with a message that says where the harnesses are named
 * **The update gives `--save-dev` too.** Tried with npm 11.19.1 in scratch projects: `npm install agentrite@latest`
   keeps the package in the section it is in, `devDependencies` and `dependencies` alike. With `--save-dev` it stays
   under `devDependencies`, and a package that an earlier `npm install agentrite` put under `dependencies` moves
@@ -426,9 +423,6 @@ The specifier's:
   git would not take, such as one with a space, is refused where it is used, as a branch that does not exist
 * **`--default-branch=<name>`,** the form with the equals sign that `agentrite run` takes for its own options.
   Without it, `init` prints `unknown harness: --default-branch=main` and its usage
-* **A line in `RELEASING.md` for the pointer.** No step of a release says that a pointer whose text changed is
-  published after it. It would cost a sentence in a file that is the human's own procedure. Without it, the step
-  is in this unit's plan and record, as it was in unit 0043's
 * **`./sandbox.sh` that refuses in a project whose file says `sandbox` `false`.** It would have the wrapper read
   the file in every run. Without it, a `sandbox.sh` that was left in such a project starts the sandbox as it does
   today
