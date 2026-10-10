@@ -87,6 +87,11 @@ The file:
       given in
     * `sandbox` is `false` when `--no-sandbox` is given and `true` when it is not
     * `defaultBranch` is the name given with `--default-branch`, and `master` when the option is not given
+
+   At the end of what it prints, with its notices, it prints the content of the file as it wrote it, as `config`
+   does. When `--default-branch` was not given it prints a notice besides, which says that `master` was written
+   as the default branch because none was named, and that a project whose default branch is another changes
+   `defaultBranch` in `agentrite.json`. An `init` that wrote no `agentrite.json` prints neither
 9. The file `init` writes is the default file with those values in place of its own: the same keys in the same
    order, the same indentation, the list on one line, and one line break at the end. `init claude opencode` writes
    byte for byte the default file
@@ -115,12 +120,12 @@ The file:
     nothing and exits 2
 17. In a project with no `agentrite.json` it writes the default file, byte for byte the template, and exits 0. It
     reads nothing else of the project, and runs in one that has no `package.json`
-18. It then prints `wrote agentrite.json`, each of the three settings with the value it wrote, and a notice that
-    says: that these are the kit's defaults and that nothing of the project was looked at to find them, that each
-    is to be checked against the project, that `agentrite.json` is edited by hand where one is wrong, and that the
-    file is committed
+18. It then prints `wrote agentrite.json`, the content of the file as it wrote it, and a notice that says: that
+    these are the kit's defaults and that nothing of the project was looked at to find them, that each is to be
+    checked against the project, that `agentrite.json` is edited by hand where one is wrong, and that the file is
+    committed
 19. In a project where something is at the path of `agentrite.json`, a file that is not valid among it, `config`
-    leaves it as it is, prints `skipped agentrite.json, which exists`, prints no settings and no notice, and exits
+    leaves it as it is, prints `skipped agentrite.json, which exists`, prints no content and no notice, and exits
     0
 
 `refresh`:
@@ -248,7 +253,8 @@ Proof:
     with a key the kit does not know, a missing file, and every kind of file that requirement 3 names as not valid
 46. Tested end to end, in temporary projects and repositories:
     * `init`: the file it writes for each combination of harnesses, `--no-sandbox` and `--default-branch`, the
-      option at each place; the default file for `init claude opencode` and for `init opencode claude`; a project
+      option at each place; the default file for `init claude opencode` and for `init opencode claude`; what it
+      prints for the file, with `--default-branch` and without; a project
       with a file and no argument, for a file with one harness and for one with `sandbox` `false` and a
       `package.json` with no `name`; the refusals of requirements 10, 12 and 13, with nothing written; a file that
       is not valid
@@ -267,9 +273,24 @@ Proof:
     template, and what reads the file, for `npx agentrite`, for `npm run check-changes` and for the wrapper. The
     suite holds that the package's list of files covers them
 
+The pointer package:
+
+48. The pointer package `agentrite-roles` gives, in what it prints and in its `README.md`, the commands as this
+    unit leaves them: `npm install --save-dev agentrite` to install the kit, `npx agentrite init claude opencode`
+    to set a project up, and `npx agentrite refresh` to bring the wrappers up to date. It gives `refresh` no
+    harness and no `--no-sandbox`, names `--no-sandbox` for `init` alone, and nowhere gives `npm install agentrite`
+    without `--save-dev`. Everything else it says, its exit status of 1 and its `description` are unchanged. The
+    tests of the pointer hold this for the message and for the README. It is the one package under `pointers/`
+49. Its version is `2.0.2`, which the test that holds `2.0.1` now holds. The registry has `1.0.0` and `2.0.1` and
+    takes a version once. The unit leaves the pointer in the tree at that version, with the new text and not
+    published, and is `implemented` without the publish. Publishing it is the human's step and no agent's: after
+    the release that holds this unit is published, because the pointer names commands as that release takes
+    them, with `npm publish` run in the pointer's directory. `plan.md` gives that step for the human, with its
+    command and what is seen when it has worked, as text and not as a task to tick
+
 ## Decisions
 
-The file, on the human's word:
+On the human's word:
 
 * **One file for the kit's settings, `agentrite.json` at the project root, in JSON.** The kit has no runtime
   dependency, and node reads JSON by itself. The sandbox's wrapper already reads JSON on the host through `node`,
@@ -298,19 +319,26 @@ The file, on the human's word:
 * **The kit is a development dependency.** It is a tool for working on the project. Nothing in the kit depends on
   which section of `package.json` declares it: the image build runs a plain `npm ci`, and `init` reads
   `package-lock.json`, which records the package either way
+* **Once a project has the file, `init` takes no setting from its arguments.** The specifier proposed it and the
+  human confirmed it, for arguments that say what the file says too. The arguments of `init` are what the file is
+  written from, and after that the file is the only source. Rejected: taking the arguments and skipping the file,
+  as `init` skips every file that exists. `init claude` in a project whose file says `sandbox` `false` would then
+  write a `sandbox.sh` that `refresh` never refreshes, and say nothing. Rejected too: taking arguments that say
+  what the file says. The absence of `--no-sandbox` and of `--default-branch` says "the sandbox" and "`master`",
+  so a second run in a project on `main` without the sandbox would have to repeat both options, which is the
+  typing this unit ends. This changes requirement 10 of unit 0038: a project set up without the sandbox gets one
+  by setting `sandbox` to `true` and running `npx agentrite init`
+* **An empty `harnesses` is not valid,** which the human confirmed. `init` has always asked for at least one
+  harness, and a `refresh` of no harness would write no wrapper and report nothing
+* **`init` says what it wrote into the file.** It costs little, and it is the one moment at which a project on
+  `main` can notice, before something refuses
+* **The pointer package is brought along in this unit,** so that it does not go stale: it would otherwise send a
+  reader to a `refresh` with harnesses, which this unit refuses, and to an install as a regular dependency
 * **The cost to a project that updates is one command,** and the unit is described by that and by the steps of
   requirement 44. Which version the release is, is decided when it is made, and its notes are written then
 
 The specifier's:
 
-* **Once a project has the file, `init` takes no setting from its arguments.** The arguments of `init` are what
-  the file is written from, and after that the file is the only source. Rejected: taking the arguments and
-  skipping the file, as `init` skips every file that exists. `init claude` in a project whose file says `sandbox`
-  `false` would then write a `sandbox.sh` that `refresh` never refreshes, and say nothing. Rejected too: taking
-  arguments that say what the file says. The absence of `--no-sandbox` and of `--default-branch` says "the sandbox"
-  and "`master`", so a second run in a project on `main` without the sandbox would have to repeat both options,
-  which is the typing this unit ends. This changes requirement 10 of unit 0038: a project set up without the
-  sandbox gets one by setting `sandbox` to `true` and running `npx agentrite init`
 * **`refresh` refuses an argument, and does not ignore it.** A `refresh claude` that silently refreshed both
   harnesses of the file would do something else than was asked. The refusal costs one run, and its message says
   where the harnesses are now
@@ -322,8 +350,6 @@ The specifier's:
   months with a `harnesses` that the next `refresh` refuses. All three keys are required, because a key with a
   default when it is missing is an implicit setting. A key the kit does not know is ignored: with all three
   required, a misspelled key shows as the missing one
-* **An empty `harnesses` is not valid.** `init` has always asked for at least one harness, and a `refresh` of no
-  harness would write no wrapper and report nothing
 * **`defaultBranch` is checked to be a string that is not empty, and no more, by the reader.** Whether it names a
   branch is said where the branch is used, by the change check and by the wrapper, each in a message that names
   the branch and `agentrite.json`. See "Beyond the request" for git's own rule of a branch name
@@ -345,6 +371,17 @@ The specifier's:
   nothing else
 * **The harnesses are written in the kit's order.** The file is then the same for one set of harnesses however
   they were typed, and `init claude opencode` writes exactly the default file
+* **`init` prints the file, and its notice names the file and not the option.** Both commands that write the
+  file print its content as written: one form for the same three values, and the reader sees what there is to
+  edit. It is printed whether or not `--default-branch` was given, so that what `init` prints for the file does
+  not depend on its options, and the notice comes only when `master` was written unasked. The notice does not
+  name `--default-branch` as the way to change it: the file is there by then, and `init` refuses the option from
+  then on. `init` asks git nothing. See "Beyond the request"
+* **The pointer moves by a patch, to `2.0.2`, and is published after the release.** No document of this
+  repository says how a pointer is versioned or published. Units 0038 and 0043 did it this way: the unit sets the
+  version and a test holds it, unit 0043 moved it by a patch for new text, and the human published it after the
+  release it points to. Until the human publishes, the registry's `2.0.1` names `refresh claude opencode`, which
+  the release refuses with a message that says where the harnesses are named
 * **The update gives `--save-dev` too.** Tried with npm 11.19.1 in scratch projects: `npm install agentrite@latest`
   keeps the package in the section it is in, `devDependencies` and `dependencies` alike. With `--save-dev` it stays
   under `devDependencies`, and a package that an earlier `npm install agentrite` put under `dependencies` moves
@@ -380,20 +417,18 @@ The specifier's:
 
 ## Beyond the request
 
-* **`init` that says which default branch it wrote when `--default-branch` was not given,** or that looks whether
-  the branch exists. It would cost a notice and its test, or a call to git in a command that needs none today.
-  Without it, a project on `main` that runs `init claude opencode` gets `master` in its file. `README.md` names
-  the option where it gives the command, and the first unit run or change check refuses with a message that names
+* **`init` that looks whether the default branch it writes exists.** It would cost a call to git in a command
+  that needs none today, and a rule for a project that is no repository yet. Without it, `init` says what it
+  wrote, and a branch that is not there is refused by the first unit run or change check, in a message that names
   the branch and `agentrite.json`
 * **Judging `defaultBranch` by git's own rule for a branch name,** as `git check-ref-format --branch` decides it.
   It would cost a call to git in every command that reads the file, `refresh` among them. Without it, a name that
   git would not take, such as one with a space, is refused where it is used, as a branch that does not exist
 * **`--default-branch=<name>`,** the form with the equals sign that `agentrite run` takes for its own options.
   Without it, `init` prints `unknown harness: --default-branch=main` and its usage
-* **The pointer package `agentrite-roles`,** whose message and README name `npx agentrite refresh claude opencode`
-  and `npm install agentrite`. Rewording it costs a new version of the pointer, which the human publishes.
-  Without it, whoever follows the pointer gets the refusal of requirement 21, which says where the harnesses are
-  named, and a kit installed as a regular dependency, which works
+* **A line in `RELEASING.md` for the pointer.** No step of a release says that a pointer whose text changed is
+  published after it. It would cost a sentence in a file that is the human's own procedure. Without it, the step
+  is in this unit's plan and record, as it was in unit 0043's
 * **`./sandbox.sh` that refuses in a project whose file says `sandbox` `false`.** It would have the wrapper read
   the file in every run. Without it, a `sandbox.sh` that was left in such a project starts the sandbox as it does
   today

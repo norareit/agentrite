@@ -37,5 +37,16 @@ timestamp: 2026-10-10T22:14:15Z
   is macOS's temporary directory and no part of this unit.
   Not checked: that `npx agentrite` at this root runs the working copy, which is taken from unit 0044, and
   anything that needs Docker. The status is `draft`
+- 2026-10-10T22:30:55Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the same session, on `master`
+  at `656faec`, on the human's answers as the agent that started the session gave them. Two confirm the draft and
+  are now the human's in "Decisions": `init` refuses a setting given as an argument once the file is there, also
+  one that says what the file says, and an empty `harnesses` is not valid. Two change it, and both left "Beyond the
+  request". `init` says what it wrote: requirement 8 has it print the content of the file, as `config` does in
+  requirement 18, and a notice when `master` was written unasked, and requirement 46 has the test. The pointer
+  package is in the unit: requirements 48 and 49, with the version `2.0.2` and the publish as the human's step
+  after the release. No requirement was renumbered. Read for it `pointers/agentrite-roles`, its test and units
+  0038 and 0043. `CONTRIBUTING.md` has only the row of `pointers/` and `RELEASING.md` names no pointer, so the
+  version and the publish follow what those two units did. `npm view agentrite-roles versions` gives `1.0.0` and
+  `2.0.1`. `pointers/` holds no other package. The status stays `draft`
 
 ## Amendments
