@@ -121,5 +121,32 @@ timestamp: 2026-10-11T21:40:31Z
   `git diff --check` passed; the root refresh reported nine files up to date and changed none. Reproduced S1 in a
   temporary project. Not independently verified: real Docker, the separate single-branch-clone suite run, packed
   tarball execution, or the claimed failing-test runs before implementation.
+- 2026-10-11T21:50:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on the review of `edf9960`, whose entry was in the working tree and not committed, and is committed as it was
+  written in `db6a4a7`. Read the findings in `.reviews/`. Added tasks 30 and 31 and their two commits to `plan.md`,
+  in `a0f4a95`, because the review asks for work that no task held. `spec.md` is as it was approved.
+  S1, applied in `30f9927`: `init` read `.dockerignore` after it had written its files, so a `.dockerignore` it
+  cannot read made it refuse with `agentrite.json` written. It now reads `.dockerignore` and decides what becomes
+  of it where the other files are planned, before the first write, and writes it and prints its line where it
+  did. The regression test, a directory at the path of `.dockerignore`, was seen to fail before the change and
+  passes after it. The reviewer's reproduction, run by hand in a scratch project, now exits 1 with nothing on
+  standard output and no file written.
+  P1, applied in `51b9aba`: `tests/package-documents.test.mjs` holds that the root's `agentrite.json` is the
+  template byte for byte, which task 9 named. The test passed as written, since the file is the template, and
+  was not seen to fail.
+  Run on `51b9aba`: `npm test` reports 495 tests, 495 passing. `node scripts/check-changes.mjs` and
+  `npm run check-changes` exit 0, `node scripts/agentrite.mjs refresh` at the root prints `up to date` for the
+  nine files and changes none, and `git diff --check master...HEAD` exits 0. No line of a file the branch changed
+  is over 120 characters.
+  Concern, for the human to decide: requirement 13 says "whenever `init` refuses", and S1 is corrected for what
+  `init` reads. An `init` that fails while it writes still leaves `agentrite.json`. Tried in a scratch project
+  with a regular file at `.claude`: `init claude` prints `wrote agentrite.json`, fails on the `mkdir` of
+  `.claude/agents` with `ENOTDIR`, exits 1 and leaves the file. That was so at `edf9960` too and no finding names
+  it. It is not changed here: whether a failed write is a refusal in the sense of requirement 13 is not the
+  implementer's to settle. Not tried: a directory that cannot be written, and a `package.json` that cannot be
+  written.
+  Not checked: the suite in a clone without `master`, the packed tarball and anything with real Docker, none of
+  which was run again after these two commits.
+  S1 blocks, and the human has not said that it is decided. The status stays `in-progress`
 
 ## Amendments
