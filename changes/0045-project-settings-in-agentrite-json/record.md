@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-10T22:14:15Z
 ---
 
@@ -55,5 +55,6 @@ timestamp: 2026-10-10T22:14:15Z
   left "Beyond the request". The version `2.0.2` is confirmed, and is the human's in "Decisions". Read `2c37719`:
   it leaves step 6 as it was, so requirement 43 stands as written. No requirement was added or renumbered. The
   status stays `draft`
+- 2026-10-11T20:43:31Z [human] approved the spec. The status is `approved`
 
 ## Amendments
