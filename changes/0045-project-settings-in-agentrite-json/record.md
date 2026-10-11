@@ -148,5 +148,8 @@ timestamp: 2026-10-11T21:40:31Z
   Not checked: the suite in a clone without `master`, the packed tarball and anything with real Docker, none of
   which was run again after these two commits.
   S1 blocks, and the human has not said that it is decided. The status stays `in-progress`
+- 2026-10-11T22:00:03Z [human] accepted S1, as it is applied in `30f9927`. Whether an `init` that fails while
+  it writes is a refusal in the sense of requirement 13, the concern of the entry before this one, is not
+  decided. The status stays `in-progress`
 
 ## Amendments
