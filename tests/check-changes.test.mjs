@@ -125,82 +125,171 @@ function specPath(repository) {
   return join(repository, 'changes', '0001-example', 'spec.md');
 }
 
-/** A repository on master holding one implemented unit, ready to be branched from. */
-function repositoryWithFrozenUnit() {
-  const repository = mkdtempSync(join(tmpdir(), 'check-changes-'));
+function settingsFor(defaultBranch) {
+  return `{\n  "defaultBranch": ${JSON.stringify(defaultBranch)},\n  "harnesses": ["claude"],\n  "sandbox": true\n}\n`;
+}
 
-  git(repository, 'init', '-b', 'master');
+/**
+ * A repository on `defaultBranch` holding one implemented unit and an agentrite.json that names the branch, ready
+ * to be branched from. It is removed when the test ends.
+ */
+function repositoryWithFrozenUnit(t, defaultBranch = 'main') {
+  const repository = mkdtempSync(join(tmpdir(), 'check-changes-'));
+  t.after(() => rmSync(repository, { recursive: true, force: true }));
+
+  git(repository, 'init', '-b', defaultBranch);
   git(repository, 'config', 'user.email', 'test@example.com');
   git(repository, 'config', 'user.name', 'Test User');
   mkdirSync(join(repository, 'changes', '0001-example'), { recursive: true });
   writeFileSync(join(repository, 'changes', '0001-example', 'record.md'), '---\nstatus: implemented\n---\n');
   writeFileSync(specPath(repository), 'original spec\n');
+  writeFileSync(join(repository, 'agentrite.json'), settingsFor(defaultBranch));
   git(repository, 'add', '.');
   git(repository, 'commit', '-m', 'base');
 
   return repository;
 }
 
+/** Commits a change of the frozen spec on a new branch `change`. */
+function changeFrozenSpec(repository) {
+  git(repository, 'checkout', '-b', 'change');
+  writeFileSync(specPath(repository), 'changed spec\n');
+  git(repository, 'commit', '-am', 'change spec');
+}
+
 function runChecker(repository) {
   return spawnSync(process.execPath, [checker, repository], { encoding: 'utf8' });
 }
 
-test('check-changes rejects a changed frozen spec in another repository', () => {
-  const repository = repositoryWithFrozenUnit();
+test('check-changes rejects a changed frozen spec in another repository', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  changeFrozenSpec(repository);
 
-  try {
-    git(repository, 'checkout', '-b', 'change');
-    writeFileSync(specPath(repository), 'changed spec\n');
-    git(repository, 'commit', '-am', 'change spec');
+  const result = runChecker(repository);
 
-    const result = runChecker(repository);
-
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
-  } finally {
-    rmSync(repository, { recursive: true, force: true });
-  }
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
 });
 
-test('check-changes rejects an implemented unit with an unticked task', () => {
-  const repository = repositoryWithFrozenUnit();
+test('check-changes passes on a branch that changed no frozen document', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  git(repository, 'checkout', '-b', 'change');
+  writeFileSync(join(repository, 'notes.md'), 'a note\n');
+  git(repository, 'add', '.');
+  git(repository, 'commit', '-m', 'add a note');
 
-  try {
-    git(repository, 'checkout', '-b', 'change');
-    mkdirSync(join(repository, 'changes', '0002-open'), { recursive: true });
-    writeFileSync(join(repository, 'changes', '0002-open', 'record.md'), '---\nstatus: implemented\n---\n');
-    writeFileSync(join(repository, 'changes', '0002-open', 'plan.md'), '- [x] done\n- [ ] still open\n');
-    git(repository, 'add', '.');
-    git(repository, 'commit', '-m', 'add an incomplete plan');
+  const result = runChecker(repository);
 
-    const result = runChecker(repository);
-
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /^- 0002-open: plan\.md has 1 unticked task$/m);
-  } finally {
-    rmSync(repository, { recursive: true, force: true });
-  }
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
 });
 
-test('check-changes falls back to origin/master when no local master exists', () => {
-  const origin = repositoryWithFrozenUnit();
+test('check-changes rejects an implemented unit with an unticked task', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  git(repository, 'checkout', '-b', 'change');
+  mkdirSync(join(repository, 'changes', '0002-open'), { recursive: true });
+  writeFileSync(join(repository, 'changes', '0002-open', 'record.md'), '---\nstatus: implemented\n---\n');
+  writeFileSync(join(repository, 'changes', '0002-open', 'plan.md'), '- [x] done\n- [ ] still open\n');
+  git(repository, 'add', '.');
+  git(repository, 'commit', '-m', 'add an incomplete plan');
+
+  const result = runChecker(repository);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^- 0002-open: plan\.md has 1 unticked task$/m);
+});
+
+// R25: the branch the file names is the base, and a branch master beside it is not read.
+test('check-changes compares with the default branch of agentrite.json, not with a branch master', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  changeFrozenSpec(repository);
+  // A master at the head of the change holds the changed spec, so a check against it would find nothing.
+  git(repository, 'branch', 'master');
+
+  const result = runChecker(repository);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
+});
+
+test('check-changes reads the branch master when the file names it', (t) => {
+  const repository = repositoryWithFrozenUnit(t, 'master');
+  changeFrozenSpec(repository);
+
+  const result = runChecker(repository);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
+});
+
+test('check-changes falls back to origin/<default branch> when no local default branch exists', (t) => {
+  const origin = repositoryWithFrozenUnit(t);
   const clone = mkdtempSync(join(tmpdir(), 'check-changes-clone-'));
+  t.after(() => rmSync(clone, { recursive: true, force: true }));
+  execFileSync('git', ['clone', origin, clone], { stdio: 'ignore' });
+  git(clone, 'config', 'user.email', 'test@example.com');
+  git(clone, 'config', 'user.name', 'Test User');
+  git(clone, 'checkout', '-b', 'change');
+  git(clone, 'branch', '-D', 'main');
+  writeFileSync(specPath(clone), 'changed spec\n');
+  git(clone, 'commit', '-am', 'change spec');
 
-  try {
-    execFileSync('git', ['clone', origin, clone], { stdio: 'ignore' });
-    git(clone, 'config', 'user.email', 'test@example.com');
-    git(clone, 'config', 'user.name', 'Test User');
-    git(clone, 'checkout', '-b', 'change');
-    git(clone, 'branch', '-D', 'master');
-    writeFileSync(specPath(clone), 'changed spec\n');
-    git(clone, 'commit', '-am', 'change spec');
+  const result = runChecker(clone);
 
-    const result = runChecker(clone);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
+});
 
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
-  } finally {
-    rmSync(origin, { recursive: true, force: true });
-    rmSync(clone, { recursive: true, force: true });
+// R6, R5
+test('check-changes refuses a repository with no agentrite.json, and names the command that writes one', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  rmSync(join(repository, 'agentrite.json'));
+
+  const result = runChecker(repository);
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, 'the project has no agentrite.json. Run: npx agentrite config, which writes one\n');
+});
+
+test('check-changes refuses an agentrite.json that is not valid, also in a key it does not use', (t) => {
+  for (const [settings, message] of [
+    ['not json', /^agentrite\.json is not JSON: /],
+    ['{ "defaultBranch": "main", "harnesses": [], "sandbox": true }', /^agentrite\.json: harnesses is \[\]\. /],
+  ]) {
+    const repository = repositoryWithFrozenUnit(t);
+    writeFileSync(join(repository, 'agentrite.json'), settings);
+
+    const result = runChecker(repository);
+
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, message);
+  }
+});
+
+// R26
+test('check-changes names both it tried, and where the name is from, for a default branch that is none', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  writeFileSync(join(repository, 'agentrite.json'), settingsFor('nowhere'));
+
+  const result = runChecker(repository);
+
+  assert.equal(result.status, 1);
+  assert.equal(
+    result.stderr,
+    'No common ancestor with nowhere or origin/nowhere to compare against. ' +
+      'The name is the defaultBranch of agentrite.json\n',
+  );
+});
+
+test('check-changes reads a default branch as a branch, and not as a tag or an option of git', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  git(repository, 'tag', 'released');
+  for (const name of ['released', '--all']) {
+    writeFileSync(join(repository, 'agentrite.json'), settingsFor(name));
+
+    const result = runChecker(repository);
+
+    assert.equal(result.status, 1, name);
+    assert.ok(result.stderr.startsWith(`No common ancestor with ${name} or origin/${name} `), result.stderr);
   }
 });

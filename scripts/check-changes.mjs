@@ -1,6 +1,7 @@
 import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { readSettings, SETTINGS_FILE } from './agentrite-settings.mjs';
 
 /**
  * @typedef {object} ChangeDocuments
@@ -124,22 +125,28 @@ function documentsAtRevision(root, revision) {
   }));
 }
 
-const BASE_REFERENCES = ['master', 'origin/master'];
-
 /**
+ * The commit the current branch left the default branch at. The local branch is asked first, and then the one of
+ * `origin`: a detached or shallow checkout, and the clone of a unit run, often have that and no local branch. Both
+ * are asked by their full names, so that a name is read as a branch or not at all.
+ *
  * @param {string} root
+ * @param {string} defaultBranch
  * @returns {string}
  */
-function mergeBaseWithMaster(root) {
-  for (const reference of BASE_REFERENCES) {
+function mergeBaseWithDefaultBranch(root, defaultBranch) {
+  for (const reference of [`refs/heads/${defaultBranch}`, `refs/remotes/origin/${defaultBranch}`]) {
     try {
       return git(root, ['merge-base', reference, 'HEAD']).trim();
     } catch {
-      // A detached or shallow checkout often has origin/master but no local master.
+      // The next one is tried.
     }
   }
 
-  throw new Error(`No common ancestor with ${BASE_REFERENCES.join(' or ')} to compare against`);
+  throw new Error(
+    `No common ancestor with ${defaultBranch} or origin/${defaultBranch} to compare against. ` +
+      `The name is the defaultBranch of ${SETTINGS_FILE}`,
+  );
 }
 
 /**
@@ -148,7 +155,7 @@ function mergeBaseWithMaster(root) {
  */
 export function run(root = process.cwd()) {
   const repository = resolve(root);
-  const mergeBase = mergeBaseWithMaster(repository);
+  const mergeBase = mergeBaseWithDefaultBranch(repository, readSettings(repository).defaultBranch);
   const head = documentsAtRevision(repository, 'HEAD');
   const violations = [
     ...findFrozenViolations(documentsAtRevision(repository, mergeBase), head),

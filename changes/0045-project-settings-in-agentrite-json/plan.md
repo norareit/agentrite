@@ -201,7 +201,7 @@ The commands:
 
 The default branch:
 
-- [ ] 15. Rewrite the end-to-end tests of `tests/check-changes.test.mjs`, failing. `repositoryWithFrozenUnit`
+- [x] 15. Rewrite the end-to-end tests of `tests/check-changes.test.mjs`, failing. `repositoryWithFrozenUnit`
   takes the name of the default branch and writes an `agentrite.json` that names it. Then (R25, R26, R46):
     * the three tests of today, on a default branch `main`
     * a repository whose default branch is `main` and that also has a branch `master`, which holds no unit: the
@@ -210,7 +210,7 @@ The default branch:
     * a missing file and a file that is not valid: a status other than 0 and the messages of task 1
     * a `defaultBranch` that names no branch: a status other than 0, and a message that names `nowhere` and
       `origin/nowhere` and says that the name is the `defaultBranch` of `agentrite.json`
-- [ ] 16. In `scripts/check-changes.mjs`, take the default branch from `readSettings` of the repository root, and
+- [x] 16. In `scripts/check-changes.mjs`, take the default branch from `readSettings` of the repository root, and
   ask git for the merge base with `refs/heads/<default branch>` and then `refs/remotes/origin/<default branch>`.
   Remove `BASE_REFERENCES`, name the function and its comment after the default branch, and give the failure the
   message of R26 (R25, R26, R32)
@@ -318,7 +318,7 @@ The update and the pointer:
 
 - [x] `feature-0045 Read and judge agentrite.json in one module`: tasks 1 to 5
 - [x] `feature-0045 Take the settings of init and refresh from agentrite.json, and add config`: tasks 6 to 14
-- [ ] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
+- [x] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
 - [ ] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
 - [ ] `feature-0045 Name the default branch in the process and the roles`: task 20
 - [ ] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
