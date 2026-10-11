@@ -170,7 +170,7 @@ Run these five, in this order, and nothing else that changes a file:
 
 ```sh
 npm install --save-dev --save-exact agentrite@<version>
-npx agentrite refresh claude opencode
+npx agentrite refresh
 npm test
 npm run check-changes
 ./sandbox.sh --in-place --rebuild true

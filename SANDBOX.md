@@ -24,8 +24,8 @@ option, are in "Commands" of [`README.md`](README.md), and what the sandbox conf
 ```
 
 A unit run mounts a clone of the unit's branch at `/work`, not the developer's checkout. It is for the planner, the
-implementer and the reviewer. Specifying is done on the host, on `master`: the specifier commits the unit's spec and
-record there, and the human approves them there.
+implementer and the reviewer. Specifying is done on the host, on the default branch: the specifier commits the unit's
+spec and record there, and the human approves them there.
 
 The unit is a local branch, named in one of two ways:
 
@@ -33,14 +33,20 @@ The unit is a local branch, named in one of two ways:
 * By a number that its name holds as a whole number: `0029` names `feature-0029-sandbox-clone-of-the-branch`, and
   `29` and `002` name nothing
 
-When a number names no branch, the wrapper cuts one, which the first unit run of a unit does:
+When a number names no branch, the wrapper cuts one from the default branch, which the first unit run of a unit
+does. The default branch is the local branch that `defaultBranch` names in `agentrite.json`:
 
-1. It looks at `changes/` as `master` holds it, and takes the one unit there whose directory opens with that number
-   and a dash
-2. The branch is cut from `master`. Its name is `feature`, `bugfix` or `task`, by the `kind` in the unit's record on
-   `master`, then a dash and the directory's name
-3. The wrapper says what it cut, from which commit and for which unit, before it builds an image or starts a
-   container
+1. The wrapper reads the `agentrite.json` of the checkout the command is run from, as it is in the working tree, on
+   whatever branch that checkout is and whether or not the file is committed. It is not the clone's
+2. It looks at `changes/` as the default branch holds it, and takes the one unit there whose directory opens with
+   that number and a dash
+3. The branch is cut from the default branch. Its name is `feature`, `bugfix` or `task`, by the `kind` in the unit's
+   record on the default branch, then a dash and the directory's name
+4. The wrapper says what it cut, from which branch and commit and for which unit, before it builds an image or
+   starts a container
+
+A run that cuts no branch does not read `agentrite.json`: a unit whose branch exists, `--in-place`, `--workdir` and
+`--connect`.
 
 Before the container starts, the wrapper clones the repository, with that branch checked out at the commit the
 host's branch is at:
@@ -48,8 +54,10 @@ host's branch is at:
 * The clone holds what is committed and nothing else. Uncommitted work, ignored files such as a `.env`, and
   `node_modules` stay on the host. So the first command in a new clone is `npm ci`, without which the role files
   under `node_modules` are not found and the suite does not run
-* The host's other branches are in the clone as `origin/*`, `origin/master` among them, which is the base the
-  change check compares with
+* The host's other branches are in the clone as `origin/*`. The default branch is among them, as
+  `origin/<default branch>`, which is the base the change check compares with
+* The change check inside the clone reads the clone's own `agentrite.json`, which is the one committed on the unit's
+  branch. So the file is committed: with none in the clone, the check refuses there
 * The host's `.reviews` directory is mounted at `/work/.reviews`, so what the reviewer writes there is on the host
   as it is written
 * The image, the allowlist, the limits and the harness versions are those of the checkout the command is run
@@ -406,14 +414,15 @@ Why, and what to do for each:
 * The unit is given by a name that no branch has, which is refused. Give the unit by the name of a branch that
   exists, which `git branch` lists, or by its number. A command that is given with no unit before it, as in
   `./sandbox.sh claude`, is taken for the unit: say what to mount first
-* The unit is given by a number that names no branch, and `master` holds no unit of that number. Specify the unit
-  and commit it on `master` first: the wrapper cuts a branch for a unit whose directory is in `changes/` on
-  `master`. Or give the number of a unit that is there
-* The unit is given by such a number, and the unit's record on `master` cannot be read or names no kind the kit
-  has. Commit a `record.md` for the unit on `master` whose frontmatter names its `kind` as `feature`, `bug` or
-  `task`
-* The unit is given by such a number, and there is no local branch `master`. Make a local branch `master`, for
-  example with `git branch master origin/master`
+* The unit is given by a number that names no branch, and the default branch holds no unit of that number. Specify
+  the unit and commit it on the default branch first: the wrapper cuts a branch for a unit whose directory is in
+  `changes/` on the default branch. Or give the number of a unit that is there
+* The unit is given by such a number, and the unit's record on the default branch cannot be read or names no kind
+  the kit has. Commit a `record.md` for the unit on the default branch whose frontmatter names its `kind` as
+  `feature`, `bug` or `task`
+* The unit is given by such a number, and the default branch that `agentrite.json` names is no local branch. Make
+  the local branch, for example with `git branch main origin/main` for a default branch `main`. Or, when the name
+  is not the project's default branch, correct `defaultBranch` in `agentrite.json`
 
 **The container, the wrapper or the host crashed during a unit run.**
 
@@ -444,10 +453,10 @@ What to do: remove the remains by hand.
 
 Why, and what to do for each:
 
-* The unit names no local branch. A number that no branch holds is refused although `master` holds a unit of that
-  number: a unit with no branch has no run to connect to, and only a unit run cuts the branch. Start a unit run of
-  the unit first, giving the unit by its number, as in `./sandbox.sh 0029`: a branch that is not there yet is cut for
-  a number and not for a name. Then connect to it while it runs
+* The unit names no local branch. A number that no branch holds is refused although the default branch holds a unit
+  of that number: a unit with no branch has no run to connect to, and only a unit run cuts the branch. Start a unit
+  run of the unit first, giving the unit by its number, as in `./sandbox.sh 0029`: a branch that is not there yet is
+  cut for a number and not for a name. Then connect to it while it runs
 * Docker could not be asked whether the container is running. See that Docker runs and that the user may use it:
   Docker's own error is printed above the wrapper's. Then give the command again
 * It is given together with `--in-place`, `--workdir`, `--mount` or `--rebuild`, which are options of a run. It

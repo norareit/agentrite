@@ -251,28 +251,28 @@ The prose and the documents:
   branch" wherever `master` is named, and say once in `process.md`, where "Changes" first names the branch, that
   the default branch is the one the project names as `defaultBranch` in `agentrite.json` at its root. Nothing
   else of the four changes (R31, R32)
-- [ ] 21. `README.md`, "Installing it into a project" and "On a fresh clone" (R33, R35, R38):
+- [x] 21. `README.md`, "Installing it into a project" and "On a fresh clone" (R33, R35, R38):
     * the install is `npm install --save-dev agentrite`, and the sentence after it says `devDependencies`
     * `agentrite.json` is in the table of what `init` writes, the example shows `--default-branch`, and the text
       refers to "The project's settings"
     * the bullets on `--no-sandbox` and on a `package.json` with no `name` say what holds now
     * "On a fresh clone" gains the passage of R35
-- [ ] 22. `README.md`, the new section "The project's settings", with its line in the list at the top: everything
+- [x] 22. `README.md`, the new section "The project's settings", with its line in the list at the top: everything
   R36 lists, and nothing on why the file exists (R36, R40)
-- [ ] 23. `README.md`, "Commands": `agentrite config` as a new entry, `agentrite init` in both forms with
+- [x] 23. `README.md`, "Commands": `agentrite config` as a new entry, `agentrite init` in both forms with
   `--default-branch <name>` and without "It is not remembered", `agentrite refresh` with no argument and no
   table of arguments, `check-changes` and `sandbox.sh` with the default branch. Then the rest of the document:
   the remedy under "Running a role" is `npx agentrite refresh`, "merge it back to master" and "a unit on
   `master`" name the default branch, and the row of `templates/project/` in "What is here" covers `config` (R23,
   R32, R37, R38)
-- [ ] 24. `README.md`, "Updating a project to a newer kit": `npm install --save-dev agentrite@latest`, `npx
+- [x] 24. `README.md`, "Updating a project to a newer kit": `npm install --save-dev agentrite@latest`, `npx
   agentrite refresh` with no argument and no `--no-sandbox`, and that a project with no `agentrite.json` first
   runs `npx agentrite config`, checks what it wrote and commits the file (R34, R37, R38, R44)
-- [ ] 25. `SANDBOX.md`: "Running a unit" says the three things of R39 and names the default branch wherever it
+- [x] 25. `SANDBOX.md`: "Running a unit" says the three things of R39 and names the default branch wherever it
   named `master`. The entries of "When something goes wrong" say "the default branch", and the entry for a
   default branch that is no local branch gives both remedies. No entry for the refusals of R5 and R6 (R32, R39,
   R40)
-- [ ] 26. `CONTRIBUTING.md` gains the row of `agentrite.json` in "What the repository holds besides the package",
+- [x] 26. `CONTRIBUTING.md` gains the row of `agentrite.json` in "What the repository holds besides the package",
   and changes in nothing else. Step 6 of `RELEASING.md` gives `npx agentrite refresh`, and changes in nothing
   else (R41, R43)
 
@@ -321,6 +321,6 @@ The update and the pointer:
 - [x] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
 - [x] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
 - [x] `feature-0045 Name the default branch in the process and the roles`: task 20
-- [ ] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
+- [x] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
 - [ ] `feature-0045 Test the steps of a project that updates`: task 27
 - [ ] `feature-0045 Bring the pointer package along`: tasks 28 and 29

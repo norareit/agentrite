@@ -26,6 +26,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `CLAUDE.md`                   | The bridge that imports `AGENTS.md` into Claude Code                 |
 | `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill          |
 | `.opencode/`                  | The role wrappers for OpenCode                                       |
+| `agentrite.json`              | This repository's own settings, which the kit's commands read        |
 | `sandbox.sh`                  | The shim that runs the sandbox of the installed release              |
 | `sandbox/`                    | This repository's `compose.project.yml`                              |
 | `sandbox-dev.sh`              | Runs the sandbox of the working copy                                 |
