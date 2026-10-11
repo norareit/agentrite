@@ -295,23 +295,23 @@ The update and the pointer:
 
 ## Verification
 
-- [ ] `npm test` passes, and the count is higher than 426
-- [ ] `node scripts/check-changes.mjs` at the root exits 0, and so does `npm run check-changes`
-- [ ] `node scripts/agentrite.mjs refresh` at the root prints `up to date` for nine files, and `git status
+- [x] `npm test` passes, and the count is higher than 426
+- [x] `node scripts/check-changes.mjs` at the root exits 0, and so does `npm run check-changes`
+- [x] `node scripts/agentrite.mjs refresh` at the root prints `up to date` for nine files, and `git status
   --short` shows nothing it changed (R42)
-- [ ] `grep -rnw master process.md roles templates scripts container README.md SANDBOX.md` gives the template's
+- [x] `grep -rnw master process.md roles templates scripts container README.md SANDBOX.md` gives the template's
   line and the lines of the documents that say `master` is what is written when nothing else is asked for, and
   no other (R32)
-- [ ] `grep -rn "agentrite.json" scripts container` shows no place but `scripts/agentrite-settings.mjs` that
+- [x] `grep -rn "agentrite.json" scripts container` shows no place but `scripts/agentrite-settings.mjs` that
   reads or judges the file (R4)
-- [ ] `npm pack --dry-run` lists `scripts/agentrite-settings.mjs` and `templates/project/agentrite.json`, and
+- [x] `npm pack --dry-run` lists `scripts/agentrite-settings.mjs` and `templates/project/agentrite.json`, and
   does not list the root's `agentrite.json` (R41, R47)
-- [ ] `grep -rn "refresh claude\|refresh opencode\|refresh --no-sandbox\|npm install agentrite" README.md
+- [x] `grep -rn "refresh claude\|refresh opencode\|refresh --no-sandbox\|npm install agentrite" README.md
   SANDBOX.md CONTRIBUTING.md RELEASING.md pointers` gives nothing (R37, R43, R48)
-- [ ] No new test runs git in the kit's own repository, read from the tests added (R45)
-- [ ] No line of a file this unit changed is over 120 characters, none holds an em dash, and `SANDBOX.md` holds
+- [x] No new test runs git in the kit's own repository, read from the tests added (R45)
+- [x] No line of a file this unit changed is over 120 characters, none holds an em dash, and `SANDBOX.md` holds
   no HTML (R40)
-- [ ] `git diff master -- CHANGELOG.md` is empty, and `RELEASING.md` and `CONTRIBUTING.md` differ by the one
+- [x] `git diff master -- CHANGELOG.md` is empty, and `RELEASING.md` and `CONTRIBUTING.md` differ by the one
   line and the one row
 
 ## Commit Points
