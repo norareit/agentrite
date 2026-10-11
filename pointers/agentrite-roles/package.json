@@ -1,6 +1,6 @@
 {
   "name": "agentrite-roles",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Holds the name of a command AgentRite no longer has, and points to AgentRite, the package agentrite",
   "type": "module",
   "bin": {

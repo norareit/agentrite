@@ -286,11 +286,11 @@ The update and the pointer:
   A second project without the sandbox and with one harness: after `config` and the edit of both keys, `refresh`
   prints its four wrappers and no line for `sandbox.sh`. It passes as written, on the work of tasks 1 to 19 (R44,
   R46)
-- [ ] 28. In `tests/pointers.test.mjs`, failing: the version is `2.0.2`, the message and the README hold `npm
+- [x] 28. In `tests/pointers.test.mjs`, failing: the version is `2.0.2`, the message and the README hold `npm
   install --save-dev agentrite`, `npx agentrite init claude opencode` and `npx agentrite refresh`, neither holds
   `refresh claude`, `refresh --no-sandbox` or an `npm install agentrite` with no `--save-dev`, and both name
   `--no-sandbox` for `init`. The exit status of 1 and the `description` are held as today (R48, R49)
-- [ ] 29. Change `pointers/agentrite-roles/pointer.mjs`, its `README.md` and the `version` in its
+- [x] 29. Change `pointers/agentrite-roles/pointer.mjs`, its `README.md` and the `version` in its
   `package.json` until task 28 passes. Nothing is published (R48, R49)
 
 ## Verification
@@ -323,4 +323,4 @@ The update and the pointer:
 - [x] `feature-0045 Name the default branch in the process and the roles`: task 20
 - [x] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
 - [x] `feature-0045 Test the steps of a project that updates`: task 27
-- [ ] `feature-0045 Bring the pointer package along`: tasks 28 and 29
+- [x] `feature-0045 Bring the pointer package along`: tasks 28 and 29
