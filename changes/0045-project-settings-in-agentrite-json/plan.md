@@ -293,6 +293,16 @@ The update and the pointer:
 - [x] 29. Change `pointers/agentrite-roles/pointer.mjs`, its `README.md` and the `version` in its
   `package.json` until task 28 passes. Nothing is published (R48, R49)
 
+The findings of the review:
+
+- [ ] 30. Finding S1. In `tests/agentrite-init.test.mjs`, failing: an `init claude` in a project with a directory
+  at the path of `.dockerignore` exits 1, prints nothing on standard output and leaves the project as it was,
+  with no `agentrite.json`. Then, in `scripts/agentrite.mjs`, read `.dockerignore` and decide what becomes of it
+  where the other files are planned, before the first file is written, and write it and print its line where
+  `init` does today (R13)
+- [ ] 31. Finding P1, which task 9 names and did not get: in `tests/package-documents.test.mjs`, hold that the
+  root's `agentrite.json` equals the template byte for byte (R41)
+
 ## Verification
 
 - [x] `npm test` passes, and the count is higher than 426
@@ -324,3 +334,5 @@ The update and the pointer:
 - [x] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
 - [x] `feature-0045 Test the steps of a project that updates`: task 27
 - [x] `feature-0045 Bring the pointer package along`: tasks 28 and 29
+- [ ] `feature-0045 Refuse for .dockerignore before init writes a file`: task 30
+- [ ] `feature-0045 Hold the root's agentrite.json equal to the template`: task 31
