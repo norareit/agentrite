@@ -278,7 +278,7 @@ The prose and the documents:
 
 The update and the pointer:
 
-- [ ] 27. Write `tests/settings-update.test.mjs`: a git repository on `main` with the eight wrappers, the files
+- [x] 27. Write `tests/settings-update.test.mjs`: a git repository on `main` with the eight wrappers, the files
   of the sandbox, a unit committed and no `agentrite.json`, with the kit's `container/` and `scripts/` copied in
   as `tests/sandbox-unit-run.test.mjs` does. `refresh`, the change check and a unit run by the unit's number
   each refuse and name `npx agentrite config`. Then `config`, an edit of `defaultBranch` to `main`, and a commit:
@@ -322,5 +322,5 @@ The update and the pointer:
 - [x] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
 - [x] `feature-0045 Name the default branch in the process and the roles`: task 20
 - [x] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
-- [ ] `feature-0045 Test the steps of a project that updates`: task 27
+- [x] `feature-0045 Test the steps of a project that updates`: task 27
 - [ ] `feature-0045 Bring the pointer package along`: tasks 28 and 29
