@@ -13,6 +13,7 @@ import {
   RUN_FORM,
   unitPrompt,
 } from './agentrite-run.mjs';
+import { parseSettings, readSettings, SETTINGS_FILE, settingsText } from './agentrite-settings.mjs';
 
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -34,6 +35,23 @@ export const CLAUDE_NOTICE =
   'CLAUDE.md exists and was left as it is. For Claude Code to read the instructions in AGENTS.md, it must import\n' +
   'that file with a line holding `@AGENTS.md`.\n';
 
+export const CONFIG_NOTICE =
+  "These are the kit's defaults, and nothing of the project was looked at to find them. Check each against the\n" +
+  `project, edit ${SETTINGS_FILE} by hand where one is wrong, and commit the file.\n`;
+
+/**
+ * What to tell a project whose `agentrite.json` got the default branch that is written when none is named.
+ *
+ * @param {string} branch
+ * @returns {string}
+ */
+export function defaultBranchNotice(branch) {
+  return (
+    `${branch} was written as the default branch, because none was named. A project whose default branch is\n` +
+    `another changes defaultBranch in ${SETTINGS_FILE}.\n`
+  );
+}
+
 /**
  * @param {unknown} error
  * @returns {string}
@@ -53,52 +71,65 @@ function usage() {
 }
 
 const NO_SANDBOX = '--no-sandbox';
+const DEFAULT_BRANCH = '--default-branch';
+
+// Its two forms: the one a project with no settings file is set up with, and the one that reads the file.
+const INIT_FORM =
+  `usage: agentrite init [${NO_SANDBOX}] [${DEFAULT_BRANCH} <name>] ${HARNESS_NAMES.join(' | ')}\n` +
+  '       agentrite init';
 
 /**
- * The one line that says how a command that takes harnesses and `--no-sandbox` is run.
- *
- * @param {string} command
- * @returns {string}
- */
-function sandboxForm(command) {
-  return `usage: agentrite ${command} [${NO_SANDBOX}] ${HARNESS_NAMES.join(' | ')}`;
-}
-
-/**
- * The harnesses named in `args`, each once, in the order they were given.
+ * What `init` is given: the harnesses, each once, in the order they were given, whether the sandbox is wanted, the
+ * default branch when one was named, and whether any argument was given at all. The options stand at any place among
+ * the harnesses and are told apart from one by an exact match, so `--no-sandbox=1` is an unknown harness. The word
+ * after `--default-branch` is the name whatever it is, and the last name given counts.
  *
  * @param {string[]} args
- * @param {string} form the usage to throw with
- * @returns {string[]}
+ * @returns {{ harnesses: string[], sandbox: boolean, defaultBranch: string | undefined, given: boolean }}
  */
-function parseHarnesses(args, form) {
-  if (args.length === 0) throw new Error(form);
+function parseInit(args) {
+  /** @type {string[]} */ const harnesses = [];
+  let sandbox = true;
+  /** @type {string | undefined} */ let defaultBranch;
 
-  const unknown = args.filter((name) => !HARNESS_NAMES.includes(name));
-  if (unknown.length > 0) {
-    throw new Error(`${unknown.map((name) => `unknown harness: ${name}`).join(', ')}\n${form}`);
+  for (let index = 0; index < args.length; index += 1) {
+    const word = args[index];
+    if (word === NO_SANDBOX) {
+      sandbox = false;
+    } else if (word === DEFAULT_BRANCH) {
+      index += 1;
+      defaultBranch = args[index];
+      if (defaultBranch === undefined || defaultBranch === '') {
+        throw new Error(`${DEFAULT_BRANCH} needs the name of a branch\n${INIT_FORM}`);
+      }
+    } else {
+      harnesses.push(word);
+    }
   }
 
-  return [...new Set(args)];
+  const unknown = harnesses.filter((name) => !HARNESS_NAMES.includes(name));
+  if (unknown.length > 0) {
+    throw new Error(`${unknown.map((name) => `unknown harness: ${name}`).join(', ')}\n${INIT_FORM}`);
+  }
+
+  return { harnesses: [...new Set(harnesses)], sandbox, defaultBranch, given: args.length > 0 };
 }
 
 /**
- * The parser of a command that takes harnesses and `--no-sandbox` at any place among them, whose errors hold the
- * usage of that command. The option is told apart from a harness by an exact match, so `--no-sandbox=1` is an unknown
- * harness.
+ * The parser of a command that takes no argument, which throws `refusal` for any.
  *
- * @param {string} command
- * @returns {(args: string[]) => { harnesses: string[], sandbox: boolean }}
+ * @param {string} refusal
+ * @returns {(args: string[]) => {}}
  */
-function harnessesAndSandboxOf(command) {
-  return (args) => ({
-    harnesses: parseHarnesses(
-      args.filter((arg) => arg !== NO_SANDBOX),
-      sandboxForm(command),
-    ),
-    sandbox: !args.includes(NO_SANDBOX),
-  });
+function noArgument(refusal) {
+  return (args) => {
+    if (args.length > 0) throw new Error(refusal);
+    return {};
+  };
 }
+
+const CONFIG_FORM = 'usage: agentrite config';
+const REFRESH_FORM = 'usage: agentrite refresh';
 
 const ROLES_FORM = 'usage: agentrite roles [--json]';
 
@@ -539,6 +570,15 @@ function readLockfile(root) {
 }
 
 /**
+ * The default `agentrite.json`, which `config` writes as it is.
+ *
+ * @returns {string}
+ */
+function readSettingsTemplate() {
+  return readFileSync(new URL(`../templates/project/${SETTINGS_FILE}`, import.meta.url), 'utf-8');
+}
+
+/**
  * @returns {Record<string, string>}
  */
 function readTemplates() {
@@ -586,17 +626,62 @@ function initDockerignore(root) {
 }
 
 /**
- * Writes what is missing in the project at `root`, prints what it did, and returns the exit status. Without the
- * sandbox it leaves out the files of the sandbox and says nothing of them.
+ * Prints the content of an `agentrite.json` that was just written, after an empty line.
+ *
+ * @param {string} content
+ */
+function printSettings(content) {
+  process.stdout.write(`\n${content}`);
+}
+
+const INIT_WITH_SETTINGS =
+  `the project has an ${SETTINGS_FILE}, and the settings are read from it, not from the arguments.\n` +
+  'To change a setting, edit the file. Then run: npx agentrite init, with no argument, which writes what is missing';
+
+/**
+ * The settings `init` writes into a project that has none: the harnesses in the kit's order, so that one set of
+ * harnesses gives one file however it was typed, and the template's own branch when none was named.
+ *
+ * @param {{ harnesses: string[], sandbox: boolean, defaultBranch: string | undefined }} given
+ * @param {string} templateBranch
+ * @returns {import('./agentrite-settings.mjs').Settings}
+ */
+function settingsToWrite({ harnesses, sandbox, defaultBranch }, templateBranch) {
+  return {
+    defaultBranch: defaultBranch ?? templateBranch,
+    harnesses: HARNESS_NAMES.filter((name) => harnesses.includes(name)),
+    sandbox,
+  };
+}
+
+/**
+ * Writes what is missing in the project at `root`, prints what it did, and returns the exit status. A project with
+ * an `agentrite.json` gives the harnesses and the sandbox setting in it, and no argument. One without is given them
+ * as arguments, and gets the file. Without the sandbox the files of the sandbox are left out and nothing is said of
+ * them.
  *
  * @param {string} root
- * @param {string[]} harnesses
- * @param {boolean} sandbox
+ * @param {ReturnType<typeof parseInit>} given
  * @returns {number}
  */
-function init(root, harnesses, sandbox) {
+function init(root, given) {
+  const hasSettings = exists(resolve(root, SETTINGS_FILE));
+  if (hasSettings && given.given) throw new Error(INIT_WITH_SETTINGS);
+  if (!hasSettings && given.harnesses.length === 0) {
+    console.error(INIT_FORM);
+    return 2;
+  }
+
+  const templateBranch = parseSettings(readSettingsTemplate()).defaultBranch;
+  const settings = hasSettings ? readSettings(root) : settingsToWrite(given, templateBranch);
+  // Every file but agentrite.json follows the order the harnesses were given in.
+  const harnesses = hasSettings ? settings.harnesses : given.harnesses;
   const manifest = readPackageJson(root);
-  const files = plannedProjectFiles(root, manifest, harnesses, sandbox);
+  // Planned before anything is written, the settings file among it: what init refuses on is read here.
+  const files = [
+    { path: SETTINGS_FILE, content: settingsText(settings) },
+    ...plannedProjectFiles(root, manifest, harnesses, settings.sandbox),
+  ];
   /** @type {string[]} */ const notices = [];
 
   for (const file of files) {
@@ -621,10 +706,36 @@ function init(root, harnesses, sandbox) {
     console.log('changed package.json');
   }
 
-  if (sandbox) initDockerignore(root);
+  if (settings.sandbox) initDockerignore(root);
 
   for (const notice of notices) console.log(`\n${notice}`);
 
+  if (!hasSettings) {
+    printSettings(files[0].content);
+    if (given.defaultBranch === undefined) process.stdout.write(`\n${defaultBranchNotice(templateBranch)}`);
+  }
+
+  return 0;
+}
+
+/**
+ * Writes the default `agentrite.json` into the project at `root` when nothing is at its path, prints what it did,
+ * and returns the exit status. It reads nothing of the project but whether the path is taken.
+ *
+ * @param {string} root
+ * @returns {number}
+ */
+function config(root) {
+  const path = resolve(root, SETTINGS_FILE);
+  if (exists(path)) {
+    console.log(`skipped ${SETTINGS_FILE}, which exists`);
+    return 0;
+  }
+  const content = readSettingsTemplate();
+  writeFileSync(path, content, { flag: 'wx' });
+  console.log(`wrote ${SETTINGS_FILE}`);
+  printSettings(content);
+  process.stdout.write(`\n${CONFIG_NOTICE}`);
   return 0;
 }
 
@@ -642,14 +753,15 @@ function kindOf(path) {
 
 /**
  * Makes the kit's own files in the project at `root` what this release writes, prints what it did to each, and
- * returns the exit status.
+ * returns the exit status. The harnesses and the sandbox setting are those of the project's `agentrite.json`, which
+ * is read and never written. With the sandbox setting false the shim is left out, so that nothing is read or
+ * printed of it.
  *
  * @param {string} root
- * @param {string[]} harnesses
- * @param {boolean} sandbox false leaves the shim out, so that nothing is read or printed of it
  * @returns {number}
  */
-function refresh(root, harnesses, sandbox) {
+function refresh(root) {
+  const { harnesses, sandbox } = readSettings(root);
   let status = 0;
   for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses, sandbox })) {
     const absolute = resolve(root, file.path);
@@ -718,7 +830,8 @@ function checkWrapper(root, harness, role) {
   const wrapper = plannedFiles([harness]).find((file) => basename(file.path) === `${role}.md`);
   if (wrapper === undefined) throw new Error(`the kit writes no wrapper of ${role} for ${harness}`);
   const absolute = resolve(root, wrapper.path);
-  const remedy = `Run: npx agentrite refresh ${harness}`;
+  const remedy =
+    `Run: npx agentrite refresh, which writes the wrappers of the harnesses that ${SETTINGS_FILE} names`;
   if (kindOf(absolute) !== 'file') throw new Error(`the project has no file ${wrapper.path}. ${remedy}`);
   const existing = readFileSync(absolute, 'utf-8');
   if (existing !== refreshedWrapper(existing, wrapper.content)) {
@@ -768,15 +881,12 @@ function run(root, { role, harness, unit, text, ...start }) {
  * @type {Record<string, Command<object>>}
  */
 const COMMANDS = {
-  init: {
-    form: sandboxForm('init'),
-    parse: harnessesAndSandboxOf('init'),
-    run: (root, { harnesses, sandbox }) => init(root, harnesses, sandbox),
-  },
+  init: { form: INIT_FORM, parse: parseInit, run: init },
+  config: { form: CONFIG_FORM, parse: noArgument(CONFIG_FORM), run: config },
   refresh: {
-    form: sandboxForm('refresh'),
-    parse: harnessesAndSandboxOf('refresh'),
-    run: (root, { harnesses, sandbox }) => refresh(root, harnesses, sandbox),
+    form: REFRESH_FORM,
+    parse: noArgument(`${REFRESH_FORM}\nThe harnesses and the sandbox setting are read from ${SETTINGS_FILE}`),
+    run: refresh,
   },
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
   run: { form: RUN_FORM, parse: parseRunArgs, run },

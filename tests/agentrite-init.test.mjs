@@ -17,11 +17,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { settingsText } from '../scripts/agentrite-settings.mjs';
 import {
   AGENTS_SECTIONS,
   sandboxName,
   agentsNotice,
   CLAUDE_NOTICE,
+  defaultBranchNotice,
   dockerignore,
   fillTemplate,
   parseArgs,
@@ -58,75 +60,102 @@ function fileAt(list, path) {
 
 const OPTION = '--no-sandbox';
 
-test('parseArgs takes the command and the harnesses after it, and the sandbox is wanted', () => {
-  assert.deepEqual(parseArgs(['init', 'claude']), { command: 'init', harnesses: ['claude'], sandbox: true });
-  assert.deepEqual(parseArgs(['init', 'opencode', 'claude', 'claude']), {
-    command: 'init',
-    harnesses: ['opencode', 'claude'],
-    sandbox: true,
-  });
-  assert.deepEqual(parseArgs(['refresh', 'claude', 'opencode']), {
-    command: 'refresh',
-    harnesses: ['claude', 'opencode'],
-    sandbox: true,
-  });
+const BRANCH = '--default-branch';
+const INIT_USAGE =
+  'usage: agentrite init [--no-sandbox] [--default-branch <name>] claude | opencode\n       agentrite init';
+
+function parsedInit(overrides) {
+  return { command: 'init', harnesses: [], sandbox: true, defaultBranch: undefined, given: true, ...overrides };
+}
+
+test('parseArgs takes the harnesses of init in the order given, each once, and the sandbox is wanted', () => {
+  assert.deepEqual(parseArgs(['init', 'claude']), parsedInit({ harnesses: ['claude'] }));
+  assert.deepEqual(
+    parseArgs(['init', 'opencode', 'claude', 'claude']),
+    parsedInit({ harnesses: ['opencode', 'claude'] }),
+  );
 });
 
-test('parseArgs takes --no-sandbox before, between and after the harnesses, for init and for refresh', () => {
-  for (const command of ['init', 'refresh']) {
-    for (const rest of [
-      [OPTION, 'claude', 'opencode'],
-      ['claude', OPTION, 'opencode'],
-      ['claude', 'opencode', OPTION],
-    ]) {
-      assert.deepEqual(
-        parseArgs([command, ...rest]),
-        { command, harnesses: ['claude', 'opencode'], sandbox: false },
-        rest.join(' '),
-      );
-    }
+test('parseArgs takes init with no argument, and says that none was given', () => {
+  assert.deepEqual(parseArgs(['init']), parsedInit({ given: false }));
+  assert.deepEqual(parseArgs(['init', OPTION]), parsedInit({ sandbox: false }));
+});
+
+test('parseArgs takes --no-sandbox before, between and after the harnesses, and more than once as once', () => {
+  for (const rest of [
+    [OPTION, 'claude', 'opencode'],
+    ['claude', OPTION, 'opencode'],
+    ['claude', 'opencode', OPTION],
+    [OPTION, 'claude', OPTION, 'opencode', OPTION],
+  ]) {
+    assert.deepEqual(
+      parseArgs(['init', ...rest]),
+      parsedInit({ harnesses: ['claude', 'opencode'], sandbox: false }),
+      rest.join(' '),
+    );
   }
 });
 
-test('parseArgs counts --no-sandbox given more than once as given once', () => {
-  assert.deepEqual(parseArgs(['init', OPTION, 'claude', OPTION, OPTION]), {
-    command: 'init',
-    harnesses: ['claude'],
-    sandbox: false,
-  });
-  assert.deepEqual(parseArgs(['refresh', OPTION, OPTION, 'opencode', 'opencode']), {
-    command: 'refresh',
-    harnesses: ['opencode'],
-    sandbox: false,
-  });
+// R10
+test('parseArgs takes --default-branch at any place, with the word after it as the name, the last one counting', () => {
+  for (const rest of [
+    [BRANCH, 'main', 'claude', 'opencode'],
+    ['claude', BRANCH, 'main', 'opencode'],
+    ['claude', 'opencode', BRANCH, 'main'],
+    [BRANCH, 'develop', 'claude', 'opencode', BRANCH, 'main'],
+  ]) {
+    assert.deepEqual(
+      parseArgs(['init', ...rest]),
+      parsedInit({ harnesses: ['claude', 'opencode'], defaultBranch: 'main' }),
+      rest.join(' '),
+    );
+  }
+  assert.deepEqual(parseArgs(['init', BRANCH, 'main']), parsedInit({ defaultBranch: 'main' }));
+  // The word after the option is the name whatever it is, also one that is an option or a harness elsewhere.
+  assert.deepEqual(
+    parseArgs(['init', 'claude', BRANCH, OPTION]),
+    parsedInit({ harnesses: ['claude'], defaultBranch: OPTION }),
+  );
+  assert.deepEqual(
+    parseArgs(['init', BRANCH, 'claude', 'opencode']),
+    parsedInit({ harnesses: ['opencode'], defaultBranch: 'claude' }),
+  );
+  assert.deepEqual(
+    parseArgs(['init', BRANCH, BRANCH, 'claude']),
+    parsedInit({ harnesses: ['claude'], defaultBranch: BRANCH }),
+  );
 });
 
-test('parseArgs gives the usage of the command alone for no harness and for an unknown one', () => {
-  for (const [command, other] of [
-    ['init', 'refresh'],
-    ['refresh', 'init'],
-  ]) {
-    const cases = [
-      [command],
-      [command, 'codex'],
-      [command, 'claude', 'toString'],
-      [command, OPTION],
-      [command, OPTION, 'codex'],
-      [command, 'claude', `${OPTION}=1`],
-    ];
-    for (const args of cases) {
-      assert.throws(() => parseArgs(args), (error) => {
-        assert.match(
-          error.message,
-          new RegExp(`^usage: agentrite ${command} \\[--no-sandbox\\] claude \\| opencode$`, 'm'),
-        );
-        assert.doesNotMatch(error.message, new RegExp(`agentrite ${other}`));
-        assert.doesNotMatch(error.message, /agentrite-roles/);
-        return true;
-      });
-    }
-    assert.throws(() => parseArgs([command, 'codex']), /unknown harness: codex/);
-    assert.throws(() => parseArgs([command, 'claude', `${OPTION}=1`]), /unknown harness: --no-sandbox=1/);
+test('parseArgs says why and gives the usage of init for --default-branch with no name or an empty one', () => {
+  for (const rest of [[BRANCH], ['claude', BRANCH], ['claude', BRANCH, ''], [BRANCH, '', 'claude']]) {
+    assert.throws(() => parseArgs(['init', ...rest]), {
+      message: `--default-branch needs the name of a branch\n${INIT_USAGE}`,
+    });
+  }
+});
+
+test('parseArgs gives the usage of init alone for an unknown harness', () => {
+  for (const rest of [['codex'], ['claude', 'toString'], [OPTION, 'codex'], ['claude', `${OPTION}=1`]]) {
+    assert.throws(() => parseArgs(['init', ...rest]), (error) => {
+      assert.ok(error.message.endsWith(`\n${INIT_USAGE}`), error.message);
+      assert.doesNotMatch(error.message, /agentrite (refresh|config|roles|run)/);
+      return true;
+    });
+  }
+  assert.throws(() => parseArgs(['init', 'codex']), /unknown harness: codex/);
+  assert.throws(() => parseArgs(['init', 'claude', `${OPTION}=1`]), /unknown harness: --no-sandbox=1/);
+  assert.throws(() => parseArgs(['init', `${BRANCH}=main`]), /unknown harness: --default-branch=main/);
+});
+
+// R16, R21
+test('parseArgs takes config and refresh with no argument, and gives each its own usage for any argument', () => {
+  assert.deepEqual(parseArgs(['config']), { command: 'config' });
+  assert.deepEqual(parseArgs(['refresh']), { command: 'refresh' });
+  for (const rest of [['claude'], [OPTION], [OPTION, 'claude'], ['codex'], ['']]) {
+    assert.throws(() => parseArgs(['config', ...rest]), { message: 'usage: agentrite config' });
+    assert.throws(() => parseArgs(['refresh', ...rest]), {
+      message: 'usage: agentrite refresh\nThe harnesses and the sandbox setting are read from agentrite.json',
+    });
   }
 });
 
@@ -142,8 +171,10 @@ test('parseArgs gives roles and run what they print for an argument they do not 
 
 test('parseArgs gives the usage of every command for no command and for one that is none of them', () => {
   const usage =
-    'usage: agentrite init [--no-sandbox] claude | opencode\n' +
-    '       agentrite refresh [--no-sandbox] claude | opencode\n' +
+    'usage: agentrite init [--no-sandbox] [--default-branch <name>] claude | opencode\n' +
+    '       agentrite init\n' +
+    '       agentrite config\n' +
+    '       agentrite refresh\n' +
     '       agentrite roles [--json]\n' +
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
@@ -676,7 +707,7 @@ test('init --no-sandbox prints the same lines and notices for what exists, and l
   assert.match(result.stdout, /^skipped CLAUDE\.md, which exists$/m);
   assert.ok(result.stdout.includes(agentsNotice(fileAt(files(['claude']), 'AGENTS.md').content)));
   assert.ok(result.stdout.includes(CLAUDE_NOTICE));
-  assert.equal(noticesOf(result), noticesOf(withSandbox));
+  assert.equal(noticesOf(result), noticesOf(withSandbox).replace('"sandbox": true', '"sandbox": false'));
   assert.equal(read('sandbox.sh'), '#!/bin/sh\necho ours\n');
   assert.equal(read('sandbox/compose.project.yml'), 'ours\n');
   assert.equal(read('.dockerignore'), 'ours\n');
@@ -730,17 +761,21 @@ test('init --no-sandbox with no package.json, or one that is not JSON, is refuse
   }
 });
 
-test('init without the option, in a project set up with it, writes the three files and skips the rest', (t) => {
-  const { run, read } = project(t);
+// R36: a project set up without the sandbox gets one by setting sandbox to true and running init.
+test('init with no argument, in a project whose file was set to sandbox true, writes the three files', (t) => {
+  const { base, run, read } = project(t);
   assert.equal(run('init', 'claude', OPTION).status, 0);
+  const edited = read('agentrite.json').replace('"sandbox": false', '"sandbox": true');
+  writeFileSync(join(base, 'agentrite.json'), edited);
 
-  const result = run('init', 'claude');
+  const result = run('init');
 
   assert.equal(result.status, 0, result.stderr);
   for (const path of SANDBOX_FILES) assert.match(result.stdout, line('wrote', path, '$'));
   for (const path of PROCESS_PATHS) assert.match(result.stdout, line('skipped', path, '\\b'));
   assert.match(result.stdout, /^skipped package\.json\b/m);
   assert.equal(read('sandbox/compose.project.yml'), fileAt(files(['claude']), 'sandbox/compose.project.yml').content);
+  assert.equal(read('agentrite.json'), edited);
 });
 
 // R4: a project that holds the files of the release before is not read, changed or mentioned.
@@ -788,4 +823,256 @@ test('init --no-sandbox writes neither file of this release beside the files of 
   assert.equal(exists(join(base, 'sandbox.sh')), false);
   assert.equal(exists(join(base, 'sandbox')), false);
   assertOldSandboxFilesKept(base, result);
+});
+
+// agentrite.json
+
+const SETTINGS_TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
+const KIT_ORDER = ['claude', 'opencode'];
+const WITH_FILE_REFUSAL =
+  'agentrite: the project has an agentrite.json, and the settings are read from it, not from the arguments.\n' +
+  'To change a setting, edit the file. Then run: npx agentrite init, with no argument, which writes what is missing\n';
+
+// Every path under `base`, node_modules apart, with what a file holds.
+function snapshot(base, directory = '') {
+  return readdirSync(join(base, directory), { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return [[path, null], ...snapshot(base, path)];
+    return [[path, entry.isFile() ? readFileSync(join(base, path), 'utf-8') : null]];
+  });
+}
+
+// R8, R9
+test('init writes the file for every combination of harnesses, --no-sandbox and --default-branch', (t) => {
+  for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode'], ['opencode', 'claude']]) {
+    for (const sandbox of [true, false]) {
+      for (const defaultBranch of [undefined, 'main']) {
+        const { run, read } = project(t);
+        const args = [
+          ...harnesses,
+          ...(sandbox ? [] : [OPTION]),
+          ...(defaultBranch === undefined ? [] : [BRANCH, defaultBranch]),
+        ];
+
+        const result = run('init', ...args);
+
+        assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+        const expected = settingsText({
+          defaultBranch: defaultBranch ?? 'master',
+          harnesses: KIT_ORDER.filter((harness) => harnesses.includes(harness)),
+          sandbox,
+        });
+        assert.equal(read('agentrite.json'), expected, args.join(' '));
+        assert.equal(result.stdout.split('\n')[0], 'wrote agentrite.json');
+      }
+    }
+  }
+});
+
+// R10
+test('init takes --default-branch before, between and after the harnesses, and the last one given', (t) => {
+  for (const args of [
+    [BRANCH, 'main', 'claude', 'opencode'],
+    ['claude', BRANCH, 'main', 'opencode'],
+    ['claude', 'opencode', BRANCH, 'main'],
+    [BRANCH, 'develop', 'claude', BRANCH, 'main', 'opencode'],
+  ]) {
+    const { run, read } = project(t);
+    assert.equal(run('init', ...args).status, 0, args.join(' '));
+    assert.equal(read('agentrite.json'), SETTINGS_TEMPLATE.replace('"master"', '"main"'), args.join(' '));
+  }
+});
+
+// R9, R15
+test('init claude opencode and init opencode claude both write the default file, byte for byte', (t) => {
+  const first = project(t);
+  assert.equal(first.run('init', 'claude', 'opencode').status, 0);
+  assert.equal(first.read('agentrite.json'), SETTINGS_TEMPLATE);
+
+  const second = project(t);
+  const result = second.run('init', 'opencode', 'claude');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(second.read('agentrite.json'), SETTINGS_TEMPLATE);
+  // Every other file is written and listed in the order the harnesses were given in, as before.
+  const wrappers = linesOf(result).filter((line) => line.includes('/agents/'));
+  assert.deepEqual(
+    wrappers,
+    plannedFiles(['opencode', 'claude']).map((file) => `wrote ${file.path}`),
+  );
+  assert.match(second.read('AGENTS.md'), /^\* `\.opencode\/agents\/`\n\* `\.claude\/agents\/`$/m);
+});
+
+// R8
+test('init prints the file it wrote after its notices, and the notice of the default branch last', (t) => {
+  const { base, run, read } = project(t);
+  writeFileSync(join(base, 'AGENTS.md'), '# Our own instructions\n');
+  writeFileSync(join(base, 'CLAUDE.md'), 'our own\n');
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(linesOf(result)[0], 'wrote agentrite.json');
+  const content = read('agentrite.json');
+  const notice = defaultBranchNotice('master');
+  assert.ok(result.stdout.endsWith(`\n${content}\n${notice}`), result.stdout);
+  assert.ok(result.stdout.indexOf(CLAUDE_NOTICE) < result.stdout.indexOf(content));
+  assert.ok(result.stdout.indexOf('AGENTS.md exists') < result.stdout.indexOf(CLAUDE_NOTICE));
+});
+
+test('the notice of the default branch says what was written and where it is changed, and not by which option', () => {
+  const notice = defaultBranchNotice('master').replaceAll('\n', ' ');
+  assert.match(notice, /master was written as the default branch, because none was named/);
+  assert.match(notice, /A project whose default branch is another changes defaultBranch in agentrite\.json/);
+  assert.doesNotMatch(notice, /--default-branch/);
+  for (const line of defaultBranchNotice('master').split('\n')) assert.ok(line.length <= 120, line);
+});
+
+test('init with --default-branch prints the file it wrote and no notice of the default branch', (t) => {
+  const { run, read } = project(t);
+
+  const result = run('init', 'claude', BRANCH, 'main');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stdout.endsWith(`\n\n${read('agentrite.json')}`), result.stdout);
+  assert.doesNotMatch(result.stdout, /was written as the default branch/);
+  // Also when the name given is the one that is written unasked.
+  const named = project(t);
+  assert.doesNotMatch(named.run('init', 'claude', BRANCH, 'master').stdout, /was written as the default branch/);
+  assert.equal(named.read('agentrite.json').includes('"defaultBranch": "master"'), true);
+});
+
+// R10
+test('init with --default-branch and no name, or an empty one, says why, writes nothing and exits 2', (t) => {
+  for (const args of [['claude', BRANCH], ['claude', BRANCH, ''], [BRANCH]]) {
+    const { base, run } = project(t);
+    const before = snapshot(base);
+
+    const result = run('init', ...args);
+
+    assert.equal(result.status, 2, args.join(' '));
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `--default-branch needs the name of a branch\n${INIT_USAGE}\n`);
+    assert.deepEqual(snapshot(base), before);
+  }
+});
+
+// R13
+test('init with no harness, in a project with no agentrite.json, prints its usage, writes nothing and exits 2', (t) => {
+  for (const args of [[], [OPTION], [BRANCH, 'main'], [OPTION, BRANCH, 'main']]) {
+    const { base, run } = project(t);
+    const before = snapshot(base);
+
+    const result = run('init', ...args);
+
+    assert.equal(result.status, 2, args.join(' '));
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `${INIT_USAGE}\n`);
+    assert.deepEqual(snapshot(base), before);
+  }
+});
+
+test('an init that refuses for package.json or the lockfile has written no agentrite.json', (t) => {
+  const breakers = [
+    (base) => rmSync(join(base, 'package.json')),
+    (base) => writeFileSync(join(base, 'package.json'), 'not json'),
+    (base) => writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n'),
+    (base) => writeFileSync(join(base, 'package-lock.json'), 'not json'),
+  ];
+  for (const breakIt of breakers) {
+    const { base, run } = project(t);
+    breakIt(base);
+    const before = snapshot(base);
+
+    const result = run('init', 'claude');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.deepEqual(snapshot(base), before);
+    assert.equal(exists(join(base, 'agentrite.json')), false);
+  }
+});
+
+// R11
+test('init with no argument takes the harnesses and the sandbox from the file, and leaves the file', (t) => {
+  const { base, run, read } = project(t);
+  const settings = settingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: true });
+  writeFileSync(join(base, 'agentrite.json'), settings);
+  const given = project(t);
+  const expected = given.run('init', 'opencode');
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(
+    result.stdout,
+    ['skipped agentrite.json, which exists', ...linesOf(expected).slice(1), ''].join('\n'),
+  );
+  assert.equal(read('agentrite.json'), settings);
+  for (const [path, content] of snapshot(given.base)) {
+    if (path !== 'agentrite.json') assert.equal(exists(join(base, path)), true, path);
+    if (path !== 'agentrite.json' && content !== null) assert.equal(read(path), content, path);
+  }
+  assert.equal(exists(join(base, '.claude')), false);
+  assert.doesNotMatch(result.stdout, /defaultBranch|was written as the default branch/);
+});
+
+// R11, R14
+test('init with no argument and sandbox false asks for no name and reads no lockfile', (t) => {
+  const { base, run, read } = project(t, { lockfile: 'not json' });
+  writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n');
+  const settings = settingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: false });
+  writeFileSync(join(base, 'agentrite.json'), settings);
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(linesOf(result)[0], 'skipped agentrite.json, which exists');
+  for (const path of PROCESS_PATHS) assert.match(result.stdout, line('wrote', path, '$'));
+  for (const path of SANDBOX_FILES) assert.equal(exists(join(base, path)), false, path);
+  assert.equal(read('agentrite.json'), settings);
+
+  // With sandbox true, the same project is refused for its name.
+  const other = project(t);
+  writeFileSync(join(other.base, 'package.json'), '{\n  "dependencies": {}\n}\n');
+  writeFileSync(join(other.base, 'agentrite.json'), settings.replace('false', 'true'));
+  const refused = other.run('init');
+  assert.equal(refused.status, 1);
+  assert.match(refused.stderr, /has no name/);
+});
+
+// R12
+test('init given an argument in a project with an agentrite.json refuses, and writes nothing', (t) => {
+  const valid = settingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
+  for (const settings of [valid, 'not json']) {
+    for (const args of [['claude'], [OPTION], [BRANCH, 'main'], ['claude', OPTION, BRANCH, 'main'], ['opencode']]) {
+      const { base, run } = project(t);
+      writeFileSync(join(base, 'agentrite.json'), settings);
+      const before = snapshot(base);
+
+      const result = run('init', ...args);
+
+      assert.equal(result.status, 1, args.join(' '));
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr, WITH_FILE_REFUSAL);
+      assert.deepEqual(snapshot(base), before);
+    }
+  }
+});
+
+// R5
+test('init with no argument in a project whose agentrite.json is not valid refuses, and writes nothing', (t) => {
+  for (const settings of ['not json', '{ "defaultBranch": "main", "harnesses": [], "sandbox": true }']) {
+    const { base, run } = project(t);
+    writeFileSync(join(base, 'agentrite.json'), settings);
+    const before = snapshot(base);
+
+    const result = run('init');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, /^agentrite: agentrite\.json/);
+    assert.deepEqual(snapshot(base), before);
+  }
 });

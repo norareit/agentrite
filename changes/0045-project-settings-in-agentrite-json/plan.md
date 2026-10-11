@@ -117,7 +117,7 @@ The settings module:
 
 The commands:
 
-- [ ] 6. Write `tests/agentrite-config.test.mjs`, failing (R16, R17, R18, R19, R46):
+- [x] 6. Write `tests/agentrite-config.test.mjs`, failing (R16, R17, R18, R19, R46):
     * with an argument, also `claude`: the usage `usage: agentrite config`, exit 2, nothing written
     * in an empty directory with no `package.json`: exit 0, `agentrite.json` byte for byte the template, and
       standard output is `wrote agentrite.json`, an empty line, the content, an empty line and the notice
@@ -125,7 +125,7 @@ The commands:
     * with a valid file, a file that is not valid and a directory at the path: exit 0, the path as it was,
       standard output exactly `skipped agentrite.json, which exists\n`
     * `refresh` run after `config` in the same directory exits 0 and writes the eight wrappers and `sandbox.sh`
-- [ ] 7. Rewrite the tests of `refresh` in `tests/agentrite-refresh.test.mjs`, failing. Its `project` helper gets
+- [x] 7. Rewrite the tests of `refresh` in `tests/agentrite-refresh.test.mjs`, failing. Its `project` helper gets
   a way to write `agentrite.json` from `settingsText`, and every end-to-end test runs `refresh` with no argument
   on a file that holds what the test gave as arguments before: the harnesses, and `sandbox` `false` where it gave
   `--no-sandbox`. Then add (R20, R21, R22, R46):
@@ -137,7 +137,7 @@ The commands:
     * every argument it took before, `claude`, `claude opencode`, `--no-sandbox` and `--no-sandbox claude`, and
       `codex`: exit 2, nothing written, `usage: agentrite refresh` and a line that says that the harnesses and the
       sandbox setting are read from `agentrite.json`. Also in a project with no file
-- [ ] 8. Rewrite the tests of `init` in `tests/agentrite-init.test.mjs`, failing. The `parseArgs` tests lose
+- [x] 8. Rewrite the tests of `init` in `tests/agentrite-init.test.mjs`, failing. The `parseArgs` tests lose
   `refresh` with harnesses and gain what task 10 returns. The end-to-end tests that compare every line `init`
   prints gain the line and the content of task 11. Then add (R8, R9, R10, R11, R12, R13, R14, R15, R46):
     * the file for every combination: each of the three harness lists, with and without `--no-sandbox`, with and
@@ -161,12 +161,12 @@ The commands:
       what the file says: exit 1, nothing written, and a message that says the four things of R12. Also when the
       file is not valid
     * a project with a file that is not valid and no argument: exit 1, nothing written
-- [ ] 9. Add the root's `agentrite.json`, byte for byte the template. In `tests/package-documents.test.mjs` hold
+- [x] 9. Add the root's `agentrite.json`, byte for byte the template. In `tests/package-documents.test.mjs` hold
   that it equals the template and that `files` does not name it. In `tests/agentrite-refresh.test.mjs` add a
   test that copies the root's `agentrite.json`, its eight wrappers and its `sandbox.sh`, with its mode, into a
   temporary directory, runs `refresh` there, and sees `up to date` for all nine and no file changed. It fails
   until task 12 (R41, R42)
-- [ ] 10. In `scripts/agentrite.mjs`, replace `sandboxForm` and `harnessesAndSandboxOf` by a parser of `init`
+- [x] 10. In `scripts/agentrite.mjs`, replace `sandboxForm` and `harnessesAndSandboxOf` by a parser of `init`
   alone. It reads the words in order: `--no-sandbox` anywhere, `--default-branch` with the word after it as the
   name whatever that word is, the last one counting, and every other word as a harness, unknown ones refused as
   today. It returns the harnesses in the order given, each once, `sandbox`, `defaultBranch`, which is `undefined`
@@ -174,7 +174,7 @@ The commands:
   for `--default-branch` with no word or an empty one. An empty list of harnesses is not a parse error any more.
   The `form` of `init` is two lines: `usage: agentrite init [--no-sandbox] [--default-branch <name>] claude |
   opencode` and, under it, `agentrite init` (R8, R10, R24)
-- [ ] 11. In `scripts/agentrite.mjs`, make `init` pass task 8 (R8, R9, R11, R12, R13, R14, R15):
+- [x] 11. In `scripts/agentrite.mjs`, make `init` pass task 8 (R8, R9, R11, R12, R13, R14, R15):
     * something at the path of `agentrite.json` and an argument given: throw the refusal of R12, before anything
       is read
     * a file and no argument: `readSettings`, then the files as today for its harnesses and its `sandbox`, with
@@ -186,13 +186,13 @@ The commands:
       today print the content, and then, when `--default-branch` was not given, the notice of R8
     * the content is printed by one function that `config` uses too, and both notices are exported, as
       `CLAUDE_NOTICE` is, with no line over 120 characters
-- [ ] 12. In `scripts/agentrite.mjs`, give `refresh` a parser that throws its usage and the line of R21 for any
+- [x] 12. In `scripts/agentrite.mjs`, give `refresh` a parser that throws its usage and the line of R21 for any
   argument, and have it take the harnesses and `sandbox` from `readSettings`, until tasks 7 and 9 pass. It
   writes nothing to `agentrite.json` (R20, R21, R22, R42)
-- [ ] 13. In `scripts/agentrite.mjs`, add `config` to `COMMANDS`, after `init`, until task 6 passes: no argument,
+- [x] 13. In `scripts/agentrite.mjs`, add `config` to `COMMANDS`, after `init`, until task 6 passes: no argument,
   the template copied with the flag `wx` when nothing is at the path, and the lines of R17 to R19. It reads
   nothing of the project but whether the path is taken (R16, R17, R18, R19)
-- [ ] 14. Change the remedy of `checkWrapper` to `Run: npx agentrite refresh, which writes the wrappers of the
+- [x] 14. Change the remedy of `checkWrapper` to `Run: npx agentrite refresh, which writes the wrappers of the
   harnesses that agentrite.json names`, for both of its messages. In `tests/agentrite-run.test.mjs`, first:
   the two messages, the usage of every command as R24 gives it, with `config` and the two lines of `init`, and
   the `project` helper, which writes an `agentrite.json` before its `refresh`. Add that `run` and `roles` do what
@@ -317,7 +317,7 @@ The update and the pointer:
 ## Commit Points
 
 - [x] `feature-0045 Read and judge agentrite.json in one module`: tasks 1 to 5
-- [ ] `feature-0045 Take the settings of init and refresh from agentrite.json, and add config`: tasks 6 to 14
+- [x] `feature-0045 Take the settings of init and refresh from agentrite.json, and add config`: tasks 6 to 14
 - [ ] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
 - [ ] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
 - [ ] `feature-0045 Name the default branch in the process and the roles`: task 20

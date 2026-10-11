@@ -549,6 +549,9 @@ exit "\${FAKE_STATUS:-0}"
 const UNIT = '0007-run-a-role';
 const UNIT_PROMPT = `The unit is changes/${UNIT}/.`;
 
+const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
+const REMEDY = 'Run: npx agentrite refresh, which writes the wrappers of the harnesses that agentrite.json names';
+
 function project(t, harnesses = ['claude', 'opencode']) {
   const base = emptyDirectory(t);
   const write = (path, content) => {
@@ -567,7 +570,9 @@ function project(t, harnesses = ['claude', 'opencode']) {
       input: options.input,
       env: { PATH: join(base, 'bin'), ...options.env },
     });
-  assert.equal(agentrite(['refresh', 'claude', 'opencode']).status, 0);
+  // Every harness has its wrappers, whichever of them has a command on the PATH.
+  write('agentrite.json', SETTINGS);
+  assert.equal(agentrite(['refresh']).status, 0);
   write(`changes/${UNIT}/record.md`, '# 0007\n');
   return { base, write, read, agentrite };
 }
@@ -744,7 +749,7 @@ test('a wrapper that is missing, or is not what refresh would leave, stops the r
       assert.equal(result.stdout, '', `${harness}, ${why}`);
       assert.equal(
         result.stderr,
-        `agentrite: ${path} is not the file refresh would leave there. Run: npx agentrite refresh ${harness}\n`,
+        `agentrite: ${path} is not the file refresh would leave there. ${REMEDY}\n`,
       );
     }
 
@@ -753,10 +758,7 @@ test('a wrapper that is missing, or is not what refresh would leave, stops the r
 
     assert.equal(missing.status, 1, harness);
     assert.equal(missing.stdout, '', harness);
-    assert.equal(
-      missing.stderr,
-      `agentrite: the project has no file ${path}. Run: npx agentrite refresh ${harness}\n`,
-    );
+    assert.equal(missing.stderr, `agentrite: the project has no file ${path}. ${REMEDY}\n`);
   }
 });
 
@@ -778,7 +780,7 @@ test('a wrapper with a pinned model does not stop the run, and the harness gets 
     // Where refresh puts a pin: at the end of the frontmatter.
     const pinned = read(path).replace('\n---\n', '\nmodel: some/model\n---\n');
     write(path, pinned);
-    assert.equal(agentrite(['refresh', harness]).stdout.includes(`up to date ${path}`), true);
+    assert.equal(agentrite(['refresh']).stdout.includes(`up to date ${path}`), true);
 
     const result = agentrite(['run', 'reviewer', harness, '0007', '--headless']);
 
@@ -874,8 +876,10 @@ test('a file beside the unit whose name opens with the same digits does not make
 test('agentrite alone and with a command it does not know print the usage of every command and exit 2', (t) => {
   const { agentrite } = project(t);
   const usage =
-    'usage: agentrite init [--no-sandbox] claude | opencode\n' +
-    '       agentrite refresh [--no-sandbox] claude | opencode\n' +
+    'usage: agentrite init [--no-sandbox] [--default-branch <name>] claude | opencode\n' +
+    '       agentrite init\n' +
+    '       agentrite config\n' +
+    '       agentrite refresh\n' +
     '       agentrite roles [--json]\n' +
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
@@ -890,4 +894,28 @@ test('agentrite alone and with a command it does not know print the usage of eve
   assert.equal(unknown.status, 2);
   assert.equal(unknown.stdout, '');
   assert.equal(unknown.stderr, `unknown command: list-roles\n${usage}`);
+});
+
+// R7: run and roles do not read agentrite.json.
+
+test('run and roles do what they do with no agentrite.json and with one that is not valid', (t) => {
+  const { base, agentrite, write } = project(t);
+  const expected = started('claude', STARTED.claude([], UNIT_PROMPT));
+  const withFile = agentrite(['run', 'reviewer', 'claude', '0007']);
+  assert.equal(withFile.stdout, expected);
+
+  for (const settings of [undefined, 'not json', '{ "defaultBranch": "", "harnesses": [], "sandbox": "no" }']) {
+    if (settings === undefined) rmSync(join(base, 'agentrite.json'));
+    else write('agentrite.json', settings);
+
+    const result = agentrite(['run', 'reviewer', 'claude', '0007']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, expected);
+    assert.equal(result.stderr, withFile.stderr);
+
+    const roles = agentrite(['roles']);
+    assert.equal(roles.status, 0, roles.stderr);
+    assert.equal(roles.stdout, rolesListing(ROLES));
+    assert.equal(roles.stderr, '');
+  }
 });

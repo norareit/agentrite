@@ -82,6 +82,10 @@ function setUp(t) {
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   mkdirSync(join(root, 'agent'));
   writeFileSync(join(root, 'package.json'), '{\n  "name": "my-app"\n}\n');
+  writeFileSync(
+    join(root, 'agentrite.json'),
+    '{\n  "defaultBranch": "master",\n  "harnesses": ["claude"],\n  "sandbox": true\n}\n',
+  );
   writeFileSync(join(root, 'agent.sh'), OLD_SHIM, { mode: 0o755 });
   writeFileSync(join(root, 'agent', 'compose.project.yml'), OLD_COMPOSE);
   const home = join(base, 'home');
@@ -95,7 +99,7 @@ function setUp(t) {
   git('add', '.');
   git('commit', '--quiet', '--message', 'the project');
   git('branch', branch);
-  const refresh = () => spawnSync(process.execPath, [script, 'refresh', 'claude'], { cwd: root, encoding: 'utf-8' });
+  const refresh = () => spawnSync(process.execPath, [script, 'refresh'], { cwd: root, encoding: 'utf-8' });
   const sandbox = (...args) => spawnSync(join(root, 'sandbox.sh'), args, { cwd: root, encoding: 'utf-8', env });
   return { base, root, home, refresh, sandbox, ...host };
 }
