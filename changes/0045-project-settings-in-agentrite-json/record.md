@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-11T21:40:31Z
+status: implemented
+timestamp: 2026-10-11T22:10:57Z
 ---
 
 # 0045 A project names its settings in `agentrite.json`
@@ -155,5 +155,23 @@ timestamp: 2026-10-11T21:40:31Z
   requirement 13, which is about what `init` reads and judges. Such a run leaves the `agentrite.json` it wrote,
   and nothing is changed for it. A delta review from `edf9960` comes before the unit is `implemented`. The status
   stays `in-progress`
+
+- 2026-10-11T22:03:39Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
+  `changes/0045-project-settings-in-agentrite-json/` at `475b8bda3e27205ddb9b47f81bf81e8d5057d412`, in a delta review
+  from `edf996026749dd70b302b819d906e66fc9814fcb`, with merge base `4d09d9bfa92ab6fd212315bd4ea441e2fd104186`.
+  Verified the corrections of S1 and P1 and returned no new findings on any of the three axes. Saved the complete
+  review in `.reviews/0045-project-settings-in-agentrite-json/2026-10-11-delta-475b8bd.md`.
+  Ran `npm test`: 495 tests passed. Both change checks, both diff whitespace checks and the shell syntax check
+  passed. Not independently verified in this review: real Docker, packed tarball execution, the separate suite
+  run in a single-branch clone, or the claimed failing regression run before the S1 correction.
+- 2026-10-11T22:10:57Z [Claude Code, anthropic/claude-opus-5-5] on the human's word, in a session on the macOS host, on
+  the unit's branch at `475b8bd`. The full review's findings S1 and P1 are corrected and the human's decisions on
+  them are logged above, the delta review at `475b8bd` returned no new findings, so none is open, and every task
+  of `plan.md` is ticked. Nothing but this record changed since `475b8bd`, the tree the delta review ran on.
+  Ran on this host at that commit: `npm test` reports 495 tests, 477 passing, 17 skipped and 1 failing, "the
+  wrapper mounts a relative XDG_DATA_HOME as the absolute path it names from its working directory", which
+  failed here before the unit too and is macOS's `/private/var`. `npm run check-changes` and
+  `node scripts/check-changes.mjs` exit 0, and `node scripts/agentrite.mjs refresh` prints `up to date` for the
+  eight wrappers and `sandbox.sh`. Not checked: anything that needs Docker. The status is `implemented`
 
 ## Amendments
