@@ -151,5 +151,9 @@ timestamp: 2026-10-11T21:40:31Z
 - 2026-10-11T22:00:03Z [human] accepted S1, as it is applied in `30f9927`. Whether an `init` that fails while
   it writes is a refusal in the sense of requirement 13, the concern of the entry before this one, is not
   decided. The status stays `in-progress`
+- 2026-10-11T22:01:56Z [human] decided that an `init` that fails while it writes does not refuse in the sense of
+  requirement 13, which is about what `init` reads and judges. Such a run leaves the `agentrite.json` it wrote,
+  and nothing is changed for it. A delta review from `edf9960` comes before the unit is `implemented`. The status
+  stays `in-progress`
 
 ## Amendments
