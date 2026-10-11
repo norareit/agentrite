@@ -113,4 +113,13 @@ timestamp: 2026-10-11T21:40:31Z
   is at `2.0.2` in the tree and is not published.
   The unit is not reviewed. The status stays `in-progress`
 
+- 2026-10-11T21:48:06Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
+  `changes/0045-project-settings-in-agentrite-json/` at `edf996026749dd70b302b819d906e66fc9814fcb`, in a full review
+  against merge base `4d09d9bfa92ab6fd212315bd4ea441e2fd104186`. Returned S1 and P1. Saved the complete findings in
+  `.reviews/0045-project-settings-in-agentrite-json/2026-10-11-full-edf9960.md`.
+  Ran `npm test`: 493 tests passed. Both change checks, the shell syntax check, the package dry run and
+  `git diff --check` passed; the root refresh reported nine files up to date and changed none. Reproduced S1 in a
+  temporary project. Not independently verified: real Docker, the separate single-branch-clone suite run, packed
+  tarball execution, or the claimed failing-test runs before implementation.
+
 ## Amendments
