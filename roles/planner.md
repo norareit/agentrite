@@ -14,7 +14,7 @@ is how to apply it.
 
 Read `spec.md` and `record.md` in full, and write the plan against the tree as it is on the unit's branch. Work on
 that branch. A unit run of the sandbox has cut it. On the host, when the unit has none, cut it yourself from the
-head of `master`, named as `process.md` says.
+head of the default branch, named as `process.md` says.
 
 * Never change `spec.md`, and decide nothing in the plan about what should be true. Where the spec is unclear,
   contradicts itself, leaves open something the plan needs, or no longer fits the tree, stop and log what you found

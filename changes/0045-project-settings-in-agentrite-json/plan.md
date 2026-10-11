@@ -247,7 +247,7 @@ The default branch:
 
 The prose and the documents:
 
-- [ ] 20. In `process.md`, `roles/planner.md`, `roles/specifier.md` and `roles/reviewer.md`, write "the default
+- [x] 20. In `process.md`, `roles/planner.md`, `roles/specifier.md` and `roles/reviewer.md`, write "the default
   branch" wherever `master` is named, and say once in `process.md`, where "Changes" first names the branch, that
   the default branch is the one the project names as `defaultBranch` in `agentrite.json` at its root. Nothing
   else of the four changes (R31, R32)
@@ -320,7 +320,7 @@ The update and the pointer:
 - [x] `feature-0045 Take the settings of init and refresh from agentrite.json, and add config`: tasks 6 to 14
 - [x] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
 - [x] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
-- [ ] `feature-0045 Name the default branch in the process and the roles`: task 20
+- [x] `feature-0045 Name the default branch in the process and the roles`: task 20
 - [ ] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
 - [ ] `feature-0045 Test the steps of a project that updates`: task 27
 - [ ] `feature-0045 Bring the pointer package along`: tasks 28 and 29

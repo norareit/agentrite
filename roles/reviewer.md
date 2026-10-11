@@ -123,7 +123,7 @@ notices. So the one thing you write, as your last act, is a single entry appende
 * The timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ`. Never a local clock: a local timezone puts entries out of order
   against the UTC ones around them
 * Your harness and provider/model, in the form the entries around it use
-* The unit and the **commit** you reviewed. A branch name does not say what was seen, and `master` moves
+* The unit and the **commit** you reviewed. A branch name does not say what was seen, and the default branch moves
 * Whether the review was a delta or a full one, and for a delta the commit it was taken from, so that the next
   reviewer knows what has been looked at and what has not
 * The labels of the findings you returned, and anything you could not verify

@@ -106,10 +106,11 @@ than leaving its box open. Once implemented, `spec.md` and `plan.md` are frozen.
 record misleading, create a new unit and set `supersedes:` to the old directory.
 
 Run the change check before submitting work. The kit ships it as `scripts/check-changes.mjs`, and each project wires
-it to a command of its own. It compares the committed work on the current branch with `master` and rejects changes to
-the `spec.md` or `plan.md` of any unit implemented on the merge base, and the deletion of any such unit. It also
-rejects an implemented unit whose `plan.md` still has unticked tasks. It reads committed content, so commit before
-trusting it.
+it to a command of its own. It compares the committed work on the current branch with the default branch and rejects
+changes to the `spec.md` or `plan.md` of any unit implemented on the merge base, and the deletion of any such unit. It
+also rejects an implemented unit whose `plan.md` still has unticked tasks. It reads committed content, so commit
+before trusting it. The default branch is the one the project names as `defaultBranch` in `agentrite.json` at its
+root.
 
 The reviewer saves its complete findings in the ignored `.reviews/<unit-directory>/` directory. Record the outcome
 of each finding, not the full review, in `record.md`: as timestamped log entries while the unit is not frozen, and
@@ -119,14 +120,15 @@ The spec is written when the human wants the unit described, and any number of u
 at one time. The plan is written when the unit is next to be built and not before, and nobody approves it: once the
 unit is `planned`, the implementer may begin.
 
-What the specifier writes, and the approval, are committed on `master`: a unit's `spec.md` and `record.md` while its
-status is `draft` or `approved`. Such a commit holds nothing but that unit's own documents. Everything after the
-approval is done on the unit's branch and never on `master`: the plan, the implementation, the record's further
-entries, and a correction of the spec. The branch is cut from the head of `master` when the planner starts, or the
-implementer for a task, and not earlier. Its name is the prefix of the unit's commits and its directory name, as
-`feature-0033-specifier-role`, with `bugfix` for a bug and `task` for a task. A unit run of the sandbox cuts it, and a
-role run on the host cuts it itself. Commit the change documents first, then the implementation. Work committed
-straight to `master` skips the freeze check entirely, and that holds for the specifier's commits too.
+What the specifier writes, and the approval, are committed on the default branch: a unit's `spec.md` and `record.md`
+while its status is `draft` or `approved`. Such a commit holds nothing but that unit's own documents. Everything after
+the approval is done on the unit's branch and never on the default branch: the plan, the implementation, the record's
+further entries, and a correction of the spec. The branch is cut from the head of the default branch when the planner
+starts, or the implementer for a task, and not earlier. Its name is the prefix of the unit's commits and its
+directory name, as `feature-0033-specifier-role`, with `bugfix` for a bug and `task` for a task. A unit run of the
+sandbox cuts it, and a role run on the host cuts it itself. Commit the change documents first, then the
+implementation. Work committed straight to the default branch skips the freeze check entirely, and that holds for the
+specifier's commits too.
 
 ### Features
 

@@ -67,5 +67,5 @@ the spec instead of guessing at the cause.
 Log in `record.md` that the unit's documents are written, and leave the status at `draft`. Approval is the human's,
 and the status moves on when they give it.
 
-Your documents are committed on `master`, in a commit that holds nothing but this unit's own documents, as
-`process.md` says. You write no plan: the planner writes it, once the unit is approved and is next to be built.
+Your documents are committed on the default branch, in a commit that holds nothing but this unit's own documents,
+as `process.md` says. You write no plan: the planner writes it, once the unit is approved and is next to be built.
