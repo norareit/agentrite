@@ -23,7 +23,8 @@
 #   fetches the clone's branch as sandbox/<branch>, fast-forwards the host's branch
 #   when it can, and removes the clone unless it holds work the host does not. A clone
 #   that is still there is resumed. A unit given by its number that has no branch yet
-#   gets one first, cut from master. The git work is in container/unit-clone.sh.
+#   gets one first, cut from the default branch, which is the one the project's
+#   agentrite.json names. The git work is in container/unit-clone.sh.
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
@@ -56,8 +57,8 @@
 #   PROJECT_ROOT     the project's root, which the project's sandbox.sh shim passes
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
 #                    name, or by a unit's number that one branch name holds. A number
-#                    that no branch holds and that is a unit of changes/ on master gets
-#                    its branch first, cut from the head of master
+#                    that no branch holds and that is a unit of changes/ on the default
+#                    branch gets its branch first, cut from the head of that branch
 #   --in-place       mount the project root at /work, as it is
 #   --workdir DIR    mount DIR at /work, as it is
 #   --connect UNIT   run the command in the container of the run that is under way for
@@ -197,7 +198,7 @@ done
 mount_forms() {
   echo "Say what to mount at /work, as one of:" >&2
   echo "  sandbox.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch." >&2
-  echo "                                       An ID with no branch gets one, cut from master" >&2
+  echo "                                       An ID with no branch gets one, cut from the default branch" >&2
   echo "  sandbox.sh --in-place [COMMAND...]     the project root as it is" >&2
   echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
   echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
@@ -209,11 +210,13 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   exit 2
 fi
 
-# The unit's branch, found with git alone, or cut from master for a unit that has none
-# yet, so that a unit that names none is refused as early. An empty branch says that
-# this is not a unit run. --connect finds the branch and cuts none: a unit with no
-# branch has no run to connect to. The unit is kept as it was given, for the messages
-# that name a command to run.
+# The unit's branch, found with git alone, or cut from the default branch for a unit
+# that has none yet, so that a unit that names none is refused as early. The default
+# branch is read from the project's agentrite.json, by the kit's reader of that file,
+# and only when a branch is cut: every other run starts whatever the file holds. An
+# empty branch says that this is not a unit run. --connect finds the branch and cuts
+# none: a unit with no branch has no run to connect to. The unit is kept as it was
+# given, for the messages that name a command to run.
 branch=""
 unit=""
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
@@ -229,10 +232,10 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
     fi
     [ "$resolved" -eq 0 ] || exit 2
   else
-    branch="$(resolve_unit_branch "$root" "$unit")" || resolved=$?
+    branch="$(resolve_unit_branch "$root" "$unit" "$here/../scripts/agentrite-settings.mjs")" || resolved=$?
     if [ "$resolved" -ne 0 ]; then
-      # A unit that names no branch, and no unit of master's to cut one for, may be a
-      # command given without saying what to mount.
+      # A unit that names no branch, and no unit of the default branch to cut one for,
+      # may be a command given without saying what to mount.
       [ "$resolved" -ne 1 ] || mount_forms
       exit 2
     fi

@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import {
   chmodSync,
   copyFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
@@ -18,15 +19,22 @@ import { test } from 'node:test';
 import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
 
 const kitContainer = new URL('../container/', import.meta.url).pathname;
+const kitScripts = new URL('../scripts/', import.meta.url).pathname;
 const kitPath = 'node_modules/agentrite/container';
+
+// An agentrite.json that names `defaultBranch`.
+function settingsFor(defaultBranch) {
+  return `{\n  "defaultBranch": "${defaultBranch}",\n  "harnesses": ["claude"],\n  "sandbox": true\n}\n`;
+}
 
 const branch = 'task-0026-doc';
 const containerName = `project-sandbox-${branch}`;
 const sandboxRef = `refs/remotes/sandbox/${branch}`;
 
-// A project that is a git repository, with the kit's wrapper and its unit-clone.sh installed under its ignored
-// `node_modules`, and the host of `fakeHost`, whose Compose project is `project-sandbox`. The repository is on
-// `master` and has three more branches, of which `task-0026-doc` is one commit ahead of `master`. It ignores
+// A project that is a git repository, with the kit's wrapper, its unit-clone.sh and its scripts installed under its
+// ignored `node_modules`, and the host of `fakeHost`, whose Compose project is `project-sandbox`. The repository is
+// on `master`, which its committed `agentrite.json` names as the default branch, and has three more branches, of
+// which `task-0026-doc` is one commit ahead of `master`. It ignores
 // `node_modules`, `.reviews` and `.env`, and holds a file that is not committed, `draft.txt`. The home has a git
 // identity and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run`
 // runs the wrapper with the project root and `args`, and `git` runs the real git in the repository.
@@ -38,6 +46,9 @@ function setUp(t, { imageExists = true } = {}) {
   mkdirSync(container, { recursive: true });
   for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
   chmodSync(join(container, 'sandbox.sh'), 0o755);
+  // The wrapper runs the reader of agentrite.json from the kit's scripts/, beside its container/.
+  cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
+  writeFileSync(join(root, 'agentrite.json'), settingsFor('master'));
   mkdirSync(join(root, 'sandbox'));
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
   writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\n');
@@ -124,9 +135,13 @@ for (const unit of ['claude', 'feature-0031-cut-me']) {
     assert.equal(result.status, 2);
     assert.ok(result.stderr.includes(`'${unit}'`), result.stderr);
     assert.ok(
-      result.stderr.includes("A unit's branch is cut from master when the unit is given by its number.\n"),
+      result.stderr.includes(
+        "A unit's branch is cut from the default branch when the unit is given by its number.\n",
+      ),
       result.stderr,
     );
+    assert.doesNotMatch(result.stderr, /master/);
+    assert.ok(result.stderr.includes('An ID with no branch gets one, cut from the default branch\n'), result.stderr);
     assert.doesNotMatch(result.stderr, /made on the host/);
     assert.match(result.stderr, /sandbox\.sh --in-place /);
     assert.deepEqual(dockerCalls(), []);
@@ -136,11 +151,12 @@ for (const unit of ['claude', 'feature-0031-cut-me']) {
   });
 }
 
-// The cutting of a unit's branch: `master` holds the unit's directory and no branch holds its number.
+// The cutting of a unit's branch: the default branch holds the unit's directory and no branch holds its number.
 
 const cutDirectory = '0031-cut-me';
 
-// Commits `files` as the unit's directory on `master`, which is checked out, and returns the commit, abbreviated.
+// Commits `files` as the unit's directory on the branch that is checked out, with whatever else the index holds,
+// and returns the commit, abbreviated.
 // The files are the record alone, with `frontmatter` between its two lines of dashes, unless others are given.
 function commitUnit({ root, git }, frontmatter, files = { 'record.md': `---\n${frontmatter}\n---\n\n# Cut me\n` }) {
   mkdirSync(join(root, 'changes', cutDirectory), { recursive: true });
@@ -149,7 +165,7 @@ function commitUnit({ root, git }, frontmatter, files = { 'record.md': `---\n${f
   }
   git('add', 'changes');
   git('commit', '--quiet', '--message', 'the spec of a unit');
-  return git('rev-parse', '--short', 'master');
+  return git('rev-parse', '--short', 'HEAD');
 }
 
 for (const [kind, prefix] of [
@@ -308,7 +324,54 @@ const noCut = [
       commitUnit(host, 'kind: feature');
       host.git('branch', '--move', 'master', 'main');
     },
-    says: [/no local branch master/],
+    says: [
+      /'0031' names no local branch, and there is no local branch master to cut one from\./,
+      /^agentrite\.json names master as the default branch\.$/m,
+    ],
+  },
+  {
+    name: 'a default branch that is a tag and no branch',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      host.git('tag', 'released');
+      writeFileSync(join(host.root, 'agentrite.json'), settingsFor('released'));
+    },
+    says: [/no local branch released to cut one from/, /^agentrite\.json names released as the default branch\.$/m],
+  },
+  {
+    name: 'a project with no agentrite.json',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      // The file stays committed on master: it is the one of the working tree that is read.
+      rmSync(join(host.root, 'agentrite.json'));
+    },
+    says: [
+      /^agentrite: the project has no agentrite\.json\. Run: npx agentrite config, which writes one$/m,
+      /^sandbox\.sh: so no branch is cut for '0031'\.$/m,
+    ],
+  },
+  {
+    name: 'an agentrite.json that is not JSON',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      writeFileSync(join(host.root, 'agentrite.json'), 'not json');
+    },
+    says: [/^agentrite: agentrite\.json is not JSON: /m, /^sandbox\.sh: so no branch is cut for '0031'\.$/m],
+  },
+  {
+    name: 'an agentrite.json that is not valid in a key the wrapper does not use',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('true', '"yes"'));
+    },
+    says: [
+      /^agentrite: agentrite\.json: sandbox is "yes"\. It must hold true or false$/m,
+      /^sandbox\.sh: so no branch is cut for '0031'\.$/m,
+    ],
   },
 ];
 
@@ -330,6 +393,162 @@ for (const { name, unit, arrange, says } of noCut) {
     assert.equal(existsSync(state), false);
   });
 }
+
+// A default branch that is not `master`, in a repository that also has a branch `master`.
+
+// Moves the repository of `setUp` to the default branch `main`, with an agentrite.json that names it and is in the
+// index for the next commit.
+function moveToMain({ root, git }) {
+  git('branch', '--move', 'master', 'main');
+  writeFileSync(join(root, 'agentrite.json'), settingsFor('main'));
+  git('add', 'agentrite.json');
+}
+
+test('the wrapper cuts from the default branch agentrite.json names, and not from a branch master', (t) => {
+  const host = setUp(t);
+  const { state, run, git, dockerCalls, unitRun } = host;
+  moveToMain(host);
+  // A master that does not hold the unit: a cut from it would be refused.
+  git('branch', 'master');
+  const commit = commitUnit(host, 'kind: feature');
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(
+    result.stderr.includes(`sandbox.sh: cut feature-0031-cut-me from main at ${commit}, for changes/0031-cut-me.\n`),
+    result.stderr,
+  );
+  assert.doesNotMatch(result.stderr, /master/);
+  assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/main'));
+  assert.notEqual(git('rev-parse', 'refs/heads/main'), git('rev-parse', 'refs/heads/master'));
+  const calls = unitRun(join(state, 'agentrite', 'project-sandbox', 'feature-0031-cut-me'));
+  assert.deepEqual(
+    dockerCalls(),
+    calls.map((call) => call.replaceAll(containerName, 'project-sandbox-feature-0031-cut-me')),
+  );
+});
+
+test('the wrapper names the default branch in what it says of a unit the branch does not hold', (t) => {
+  const host = setUpWithBuildDue(t);
+  moveToMain(host);
+  host.git('commit', '--quiet', '--message', 'the default branch is main');
+  host.git('branch', 'master');
+
+  const result = host.run(['0099', 'echo', 'hi']);
+
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /^main holds no unit of that number in changes\/, so there is no branch to cut\.$/m);
+  assert.doesNotMatch(result.stderr, /master/);
+  assert.deepEqual(host.dockerCalls(), []);
+});
+
+test('the wrapper reads the agentrite.json of the working tree, whatever is committed and checked out', (t) => {
+  const host = setUp(t);
+  const { root, run, git } = host;
+  // Committed, the file names master. The unit is on main alone, and the checkout is on a third branch.
+  git('checkout', '--quiet', '-b', 'main');
+  const commit = commitUnit(host, 'kind: feature');
+  git('checkout', '--quiet', 'feature-0010-init');
+  writeFileSync(join(root, 'agentrite.json'), settingsFor('main'));
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(result.stderr.includes(`sandbox.sh: cut feature-0031-cut-me from main at ${commit}, `), result.stderr);
+  assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/main'));
+  assert.equal(git('show', 'main:agentrite.json'), settingsFor('master').trim());
+  assert.equal(git('symbolic-ref', '--short', 'HEAD'), 'feature-0010-init');
+});
+
+// R7: the runs that cut no branch do not read the file.
+for (const [what, settings] of [
+  ['no agentrite.json', null],
+  ['an agentrite.json that is not valid', 'not json'],
+]) {
+  test(`a run that cuts no branch makes the calls it makes with a valid file, with ${what}`, (t) => {
+    const withFile = setUp(t);
+    const without = setUp(t);
+    if (settings === null) rmSync(join(without.root, 'agentrite.json'));
+    else writeFileSync(join(without.root, 'agentrite.json'), settings);
+
+    for (const args of [
+      [branch, 'echo', 'hi'],
+      ['0026', 'echo', 'hi'],
+      ['--in-place', 'echo', 'hi'],
+      ['--workdir', (host) => host.base, 'echo', 'hi'],
+      ['--connect', branch, 'echo', 'hi'],
+    ]) {
+      const results = [withFile, without].map((host) => {
+        const connects = args[0] === '--connect';
+        if (connects) markRunning(host);
+        const before = host.dockerCalls().length;
+        const result = host.run(args.map((arg) => (typeof arg === 'function' ? arg(host) : arg)));
+        if (connects) rmSync(host.runningContainer);
+        // The calls of this run, with what differs between the two hosts taken out.
+        const calls = host.dockerCalls().slice(before);
+        return { result, calls: calls.map((call) => call.replaceAll(host.base, '<base>')) };
+      });
+
+      assert.equal(results[1].result.status, 0, results[1].result.stderr);
+      assert.equal(results[0].result.status, 0, results[0].result.stderr);
+      assert.ok(results[0].calls.length > 0, args.join(' '));
+      assert.deepEqual(results[1].calls, results[0].calls);
+      assert.equal(
+        results[1].result.stderr.replaceAll(without.base, '<base>'),
+        results[0].result.stderr.replaceAll(withFile.base, '<base>'),
+      );
+    }
+  });
+}
+
+test('the forms the wrapper lists say the default branch, and are printed without reading the file', (t) => {
+  const { root, run } = setUpWithBuildDue(t);
+  rmSync(join(root, 'agentrite.json'));
+
+  const result = run([]);
+
+  assert.equal(result.status, 2);
+  assert.ok(result.stderr.includes('An ID with no branch gets one, cut from the default branch\n'), result.stderr);
+  assert.doesNotMatch(result.stderr, /master|agentrite\.json/);
+});
+
+// R30: inside the clone the change check reads the clone's own file and finds its base as origin/<default branch>.
+test('the change check inside the clone of a unit run compares with origin/<default branch>', (t) => {
+  const host = setUp(t);
+  const { base, root, run, git, agent } = host;
+  moveToMain(host);
+  git('commit', '--quiet', '--message', 'the default branch is main');
+  // A master that does not hold the frozen unit: a check against it would find nothing changed.
+  git('branch', 'master');
+  mkdirSync(join(root, 'changes', '0001-frozen'), { recursive: true });
+  writeFileSync(join(root, 'changes', '0001-frozen', 'record.md'), '---\nkind: feature\nstatus: implemented\n---\n');
+  writeFileSync(join(root, 'changes', '0001-frozen', 'spec.md'), 'the spec\n');
+  commitUnit(host, 'kind: feature\nstatus: approved');
+  const report = join(base, 'check-report');
+  agent(
+    [
+      // The clone has the default branch as origin/main alone, and its own committed agentrite.json.
+      `git for-each-ref --format='%(refname)' > "${report}"`,
+      `cat agentrite.json >> "${report}"`,
+      'echo changed > changes/0001-frozen/spec.md',
+      'git commit --quiet --all --message "change a frozen spec"',
+      'status=0',
+      `node "${kitScripts}check-changes.mjs" . >> "${report}" 2>&1 || status=$?`,
+      `echo "status $status" >> "${report}"`,
+    ].join('\n'),
+  );
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const reported = readFileSync(report, 'utf-8');
+  assert.match(reported, /^refs\/remotes\/origin\/main$/m);
+  assert.doesNotMatch(reported, /^refs\/heads\/(main|master)$/m);
+  assert.ok(reported.includes(settingsFor('main')), reported);
+  assert.match(reported, /^- 0001-frozen: spec\.md$/m);
+  assert.match(reported, /^status 1$/m);
+});
 
 for (const unit of [branch, '0026']) {
   test(`the wrapper refuses a second run of ${unit} while its container is running, and names --connect`, (t) => {

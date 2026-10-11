@@ -214,7 +214,7 @@ The default branch:
   ask git for the merge base with `refs/heads/<default branch>` and then `refs/remotes/origin/<default branch>`.
   Remove `BASE_REFERENCES`, name the function and its comment after the default branch, and give the failure the
   message of R26 (R25, R26, R32)
-- [ ] 17. Change `tests/sandbox-unit-run.test.mjs`, failing. `setUp` copies the kit's whole `scripts/` beside
+- [x] 17. Change `tests/sandbox-unit-run.test.mjs`, failing. `setUp` copies the kit's whole `scripts/` beside
   the copied `container/`, and commits an `agentrite.json` that names `master` in the first commit. The tests
   that hold a message of today hold it with the default branch's name or with "the default branch", as R29 says.
   Then add (R7, R27, R28, R29, R30, R46):
@@ -235,13 +235,13 @@ The default branch:
       unit's `spec.md`, commits, runs the working copy's `scripts/check-changes.mjs` on the clone, and writes
       its status and what it printed to a file outside the clone. The test finds the violation there, which
       shows that the base was `origin/main`
-- [ ] 18. In `container/unit-clone.sh`, give `cut_unit_branch` the default branch as its third argument and use
+- [x] 18. In `container/unit-clone.sh`, give `cut_unit_branch` the default branch as its third argument and use
   it wherever it reads `master`, as `refs/heads/<default branch>` for git and by its plain name in what is
   printed. Give `resolve_unit_branch` the reader's path as its third argument: for a unit of digits that no
   branch holds it runs `node <reader> <root>`, and when that fails it says that no branch is cut for the unit and
   returns 3. Word the messages as R29 says, and bring the comments of the file in line, its header on what it
   runs among them (R27, R28, R29, R32)
-- [ ] 19. In `container/sandbox.sh`, pass `$here/../scripts/agentrite-settings.mjs` to `resolve_unit_branch`,
+- [x] 19. In `container/sandbox.sh`, pass `$here/../scripts/agentrite-settings.mjs` to `resolve_unit_branch`,
   and say "the default branch" in `mount_forms` and in the comments of the header, of the usage and above the
   two places that name `master`, until task 17 passes (R27, R28, R29, R32)
 
@@ -319,7 +319,7 @@ The update and the pointer:
 - [x] `feature-0045 Read and judge agentrite.json in one module`: tasks 1 to 5
 - [x] `feature-0045 Take the settings of init and refresh from agentrite.json, and add config`: tasks 6 to 14
 - [x] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
-- [ ] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
+- [x] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19
 - [ ] `feature-0045 Name the default branch in the process and the roles`: task 20
 - [ ] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
 - [ ] `feature-0045 Test the steps of a project that updates`: task 27

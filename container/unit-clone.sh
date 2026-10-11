@@ -3,43 +3,49 @@
 # the wrapper when it is given a unit, and holds no top-level code: the wrapper orders
 # the steps and talks to Docker.
 #
+# It runs git, and node once, for the default branch, when a branch is cut.
+#
 # The clone is the agent's to write, its .git included, so nothing here runs git in
 # it: git run in a repository runs what that repository's configuration and hooks say.
 # The clone is only ever the source of a fetch, which runs nothing of its own, and its
 # tree is compared from the host's repository.
 
-# Cuts the branch of a unit that master holds and that has none, and prints its name.
-# The unit is given by its digits, and is the one directory of changes/ on master whose
-# name opens with them and a dash. The branch is named after the kind in the unit's
-# record and its directory, as process.md names a unit's branch, and is cut at the head
-# of master. Only master is read, never the working tree, and nothing is checked out, so
-# what the host has checked out and what it has not committed do not matter and are
-# left as they are. Says on standard error what it cut, because standard output is the
-# branch's name. Says why and fails otherwise, with 1 when master holds no such unit and
-# 3 when it holds one that no branch can be cut for.
+# Cuts the branch of a unit that the default branch holds and that has none, and prints
+# its name. The unit is given by its digits, and is the one directory of changes/ on the
+# default branch whose name opens with them and a dash. The default branch is given by
+# its name, and is read as a local branch and as nothing else. The unit's branch is named
+# after the kind in the unit's record and its directory, as process.md names a unit's
+# branch, and is cut at the head of the default branch. Only that branch is read, never
+# the working tree, and nothing is checked out, so what the host has checked out and what
+# it has not committed do not matter and are left as they are. Says on standard error
+# what it cut, because standard output is the branch's name. Says why and fails
+# otherwise, with 1 when the default branch holds no such unit and 3 when it holds one
+# that no branch can be cut for.
 cut_unit_branch() {
-  local root="$1" unit="$2" directories directory record line kind="" prefix name
-  if ! git -C "$root" show-ref --verify --quiet refs/heads/master; then
-    echo "sandbox.sh: '$unit' names no local branch, and there is no local branch master to cut one from." >&2
+  local root="$1" unit="$2" default_branch="$3" directories directory record line kind="" prefix name
+  local base="refs/heads/$default_branch"
+  if ! git -C "$root" show-ref --verify --quiet "$base"; then
+    echo "sandbox.sh: '$unit' names no local branch, and there is no local branch $default_branch to cut one from." >&2
+    echo "agentrite.json names $default_branch as the default branch." >&2
     return 3
   fi
-  directories="$(git -C "$root" ls-tree -d --name-only master changes/ | grep -E "^changes/$unit-")" \
+  directories="$(git -C "$root" ls-tree -d --name-only "$base" changes/ | grep -E "^changes/$unit-")" \
     || directories=""
   if [ -z "$directories" ]; then
     echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
-    echo "master holds no unit of that number in changes/, so there is no branch to cut." >&2
+    echo "$default_branch holds no unit of that number in changes/, so there is no branch to cut." >&2
     return 1
   fi
   if [ "$(grep -c '' <<< "$directories")" -gt 1 ]; then
-    echo "sandbox.sh: '$unit' names no local branch, and master holds more than one unit of that number:" >&2
+    echo "sandbox.sh: '$unit' names no local branch, and $default_branch holds more than one unit of that number:" >&2
     echo "  ${directories//$'\n'/$'\n'  }" >&2
     echo "So no branch is cut." >&2
     return 3
   fi
   directory="${directories#changes/}"
   record="changes/$directory/record.md"
-  if ! git -C "$root" cat-file -e "master:$record" 2>/dev/null; then
-    echo "sandbox.sh: $record cannot be read on master, so no branch is cut for '$unit'." >&2
+  if ! git -C "$root" cat-file -e "$base:$record" 2>/dev/null; then
+    echo "sandbox.sh: $record cannot be read on $default_branch, so no branch is cut for '$unit'." >&2
     return 3
   fi
   while IFS= read -r line; do
@@ -47,23 +53,24 @@ cut_unit_branch() {
       kind="${BASH_REMATCH[1]}"
       break
     fi
-  done < <(git -C "$root" show "master:$record")
+  done < <(git -C "$root" show "$base:$record")
   case "$kind" in
     feature) prefix="feature" ;;
     bug) prefix="bugfix" ;;
     task) prefix="task" ;;
     *)
-      echo "sandbox.sh: $record on master names no kind the kit has, which are feature, bug and task," >&2
+      echo "sandbox.sh: $record on $default_branch names no kind the kit has, which are feature, bug and task," >&2
       echo "so no branch is cut for '$unit'." >&2
       return 3
       ;;
   esac
   name="$prefix-$directory"
-  if ! git -C "$root" branch --quiet --no-track "$name" master; then
-    echo "sandbox.sh: cutting $name from master failed." >&2
+  if ! git -C "$root" branch --quiet --no-track "$name" "$base"; then
+    echo "sandbox.sh: cutting $name from $default_branch failed." >&2
     return 3
   fi
-  echo "sandbox.sh: cut $name from master at $(git -C "$root" rev-parse --short master), for changes/$directory." >&2
+  echo "sandbox.sh: cut $name from $default_branch at $(git -C "$root" rev-parse --short "$base")," \
+    "for changes/$directory." >&2
   echo "$name"
 }
 
@@ -95,19 +102,26 @@ find_unit_branch() {
 
 # Prints the branch a unit names, as find_unit_branch finds it, whose failure for
 # several branches is this function's too. A unit of digits that no branch holds gets
-# its branch cut from master, by cut_unit_branch, whose failures are this function's
-# too. Says why and fails otherwise, with 1 when no branch is named and 3 when several
-# are.
+# its branch cut from the default branch, by cut_unit_branch, whose failures are this
+# function's too. The default branch is read only then, from the agentrite.json in the
+# working tree of the project root, by the reader that is given as the third argument:
+# the kit's scripts/agentrite-settings.mjs, which node runs. A project with no file, or
+# with one that is not valid, gets the reader's own message and no branch, with 3. Says
+# why and fails otherwise, with 1 when no branch is named and 3 when several are.
 resolve_unit_branch() {
-  local root="$1" unit="$2" found=0
+  local root="$1" unit="$2" reader="$3" found=0 default_branch
   find_unit_branch "$root" "$unit" || found=$?
   [ "$found" -eq 1 ] || return "$found"
   if [[ "$unit" =~ ^[0-9]+$ ]]; then
-    cut_unit_branch "$root" "$unit"
+    if ! default_branch="$(node "$reader" "$root")"; then
+      echo "sandbox.sh: so no branch is cut for '$unit'." >&2
+      return 3
+    fi
+    cut_unit_branch "$root" "$unit" "$default_branch"
     return
   fi
   echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
-  echo "A unit's branch is cut from master when the unit is given by its number." >&2
+  echo "A unit's branch is cut from the default branch when the unit is given by its number." >&2
   return 1
 }
 
