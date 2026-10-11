@@ -1,7 +1,7 @@
 ---
 kind: feature
 status: in-progress
-timestamp: 2026-10-11T21:04:35Z
+timestamp: 2026-10-11T21:40:31Z
 ---
 
 # 0045 A project names its settings in `agentrite.json`
@@ -71,5 +71,46 @@ timestamp: 2026-10-11T21:04:35Z
   `refs/heads/<default branch>`. Ran nothing but reads: no test, and no command that changes a file. The working
   tree held a change to `README.md` that is not committed and not this session's, the heading `## Commands` as
   `## npCommands`. It was left as it is and is in no commit of the planner. The status is `planned`
+- 2026-10-11T21:40:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  the branch `feature-0045-project-settings-in-agentrite-json`, from `78c3e53`. Read `roles/implementer.md` and
+  `process.md` of the installed release 6.0.0, the spec, the plan and this record. The working tree was clean:
+  the change to `README.md` that the planner found was not there any more. Moved the status to `in-progress` and
+  worked the 29 tasks in order, each test written and seen to fail before its code, in the eight commits the plan
+  names, `add5266` to `720b906`, and ticked the verification in `a5c9421`. No task was added to the plan and none
+  removed, and `spec.md` is as it was approved.
+  Run on `a5c9421`: `npm test` reports 493 tests, 493 passing, where the tree before the unit had 426.
+  `node scripts/check-changes.mjs` at the root exits 0, and so does `npm run check-changes`, which runs the
+  installed 6.0.0. `node scripts/agentrite.mjs refresh` at the root prints `up to date` for the nine files and
+  changes none. The three greps and `npm pack --dry-run` of "Verification" give what the plan says they give, and
+  `git diff master` shows no change of `CHANGELOG.md`, one line of `RELEASING.md` and one row of `CONTRIBUTING.md`.
+  Tried besides, outside the suite: `npm test` in a clone that holds this branch alone and no `master` reports the
+  same 493 passing. The tarball of `npm pack`, installed with `--save-dev` into a scratch repository on `main`:
+  `npx agentrite init --default-branch main claude`, `npm run check-changes`, `npx agentrite refresh` and the
+  reader run with `node` all ran from `node_modules`.
+  What the plan left to the implementer, and what was chosen:
+  the messages of the reader, which are held word for word by `tests/agentrite-settings.test.mjs`; the refusal of
+  `init` in a project that has the file, in two lines; the two notices; and, for a file that the wrapper cannot
+  take, the line `sandbox.sh: so no branch is cut for '<unit>'.` under the reader's own message.
+  The reader run as the entry point with no argument, or with more than one, prints a usage and exits 2, which the
+  plan does not name.
+  Something at the path of `agentrite.json` that cannot be read, a directory or a dangling link, is refused as a
+  file that cannot be read and not as a missing one, so that it is never answered with `npx agentrite config`,
+  which skips such a path. Only the directory is tested.
+  Tests that held what the unit ends were replaced and not kept: `refresh --no-sandbox` at each place among the
+  harnesses, and `init` given a harness in a project set up without the sandbox, which is now `init` with no
+  argument after an edit of `sandbox`.
+  `README.md` says of `--default-branch=<name>` that it is refused as an unknown harness, which the spec has under
+  "Beyond the request" as what happens and no requirement asks to be documented.
+  Concerns:
+  the guard `isMain` is in `scripts/agentrite.mjs` and, as the plan asks, a second time in
+  `scripts/agentrite-settings.mjs`. Sharing it would take a third module in the package, which the plan does not
+  have.
+  The remedy of `agentrite run`, with the plan's words, makes its one line longer than 120 characters where a
+  wrapper's path is long. It is printed, and no line of a file.
+  Not checked: anything with real Docker, `./sandbox-dev.sh` among it. A unit run is tested with the stand-in of
+  `tests/wrapper-fixture.mjs` alone. `./sandbox.sh` at this root runs the installed 6.0.0 and was not run. No
+  `shellcheck` is on this host, and the two shell files were checked with `bash -n` and by the suite. The pointer
+  is at `2.0.2` in the tree and is not published.
+  The unit is not reviewed. The status stays `in-progress`
 
 ## Amendments
