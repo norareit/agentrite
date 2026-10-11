@@ -300,7 +300,7 @@ The findings of the review:
   with no `agentrite.json`. Then, in `scripts/agentrite.mjs`, read `.dockerignore` and decide what becomes of it
   where the other files are planned, before the first file is written, and write it and print its line where
   `init` does today (R13)
-- [ ] 31. Finding P1, which task 9 names and did not get: in `tests/package-documents.test.mjs`, hold that the
+- [x] 31. Finding P1, which task 9 names and did not get: in `tests/package-documents.test.mjs`, hold that the
   root's `agentrite.json` equals the template byte for byte (R41)
 
 ## Verification
@@ -335,4 +335,4 @@ The findings of the review:
 - [x] `feature-0045 Test the steps of a project that updates`: task 27
 - [x] `feature-0045 Bring the pointer package along`: tasks 28 and 29
 - [x] `feature-0045 Refuse for .dockerignore before init writes a file`: task 30
-- [ ] `feature-0045 Hold the root's agentrite.json equal to the template`: task 31
+- [x] `feature-0045 Hold the root's agentrite.json equal to the template`: task 31

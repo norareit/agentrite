@@ -78,6 +78,13 @@ test('the package ships the default agentrite.json, as a template', () => {
   assert.ok(existsSync(new URL('../templates/project/agentrite.json', import.meta.url)));
 });
 
+// The file is this repository's own and is right for it only while it is the default file.
+test('the root has an agentrite.json that is the default file byte for byte, and the package does not ship it', () => {
+  const template = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
+  assert.equal(readFileSync(new URL('../agentrite.json', import.meta.url), 'utf-8'), template);
+  assert.ok(!packageJson.files.includes('agentrite.json'), `files holds ${packageJson.files.join(', ')}`);
+});
+
 test('LICENSE is the MIT License at the root, with the copyright holder', () => {
   const license = new URL('../LICENSE', import.meta.url);
   assert.ok(existsSync(license), 'LICENSE is a file at the root');
