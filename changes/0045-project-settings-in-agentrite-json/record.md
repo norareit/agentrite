@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: approved
-timestamp: 2026-10-10T22:14:15Z
+status: planned
+timestamp: 2026-10-11T21:04:35Z
 ---
 
 # 0045 A project names its settings in `agentrite.json`
@@ -56,5 +56,20 @@ timestamp: 2026-10-10T22:14:15Z
   it leaves step 6 as it was, so requirement 43 stands as written. No requirement was added or renumbered. The
   status stays `draft`
 - 2026-10-11T20:43:31Z [human] approved the spec. The status is `approved`
+- 2026-10-11T21:04:35Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  the branch `feature-0045-project-settings-in-agentrite-json`, which was there already at `4d09d9b`, the head of
+  `master`.
+  Read `roles/planner.md` and `process.md` of the installed release 6.0.0, the spec and this record, and the tree:
+  the four scripts, the two files of the wrapper, the templates, the four documents, the pointer package and the
+  tests that run `init`, `refresh`, `run`, the change check and a unit run. Wrote `plan.md`: 29 tasks in eight
+  commits, each task with the requirements it delivers, and every requirement from 1 to 49 with a task. Found
+  nothing in the spec that is unclear or that the tree contradicts. Decided what the spec leaves to the how, each
+  with its reason under "Approach": one module, `scripts/agentrite-settings.mjs`, which the wrapper runs with
+  `node` for the default branch; the written file rendered, and held equal to the template by a test; `master` in
+  the template alone; the kit's order of the harnesses in the file, and the order given for every other file, by
+  requirement 15; a command line that cannot be parsed exits 2 before the file is looked at; and git asked for
+  `refs/heads/<default branch>`. Ran nothing but reads: no test, and no command that changes a file. The working
+  tree held a change to `README.md` that is not committed and not this session's, the heading `## Commands` as
+  `## npCommands`. It was left as it is and is in no commit of the planner. The status is `planned`
 
 ## Amendments
