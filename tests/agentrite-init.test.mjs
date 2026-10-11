@@ -992,6 +992,21 @@ test('an init that refuses for package.json or the lockfile has written no agent
   }
 });
 
+// R13. `.dockerignore` is the last thing init reads, so it is the one a refusal came too late for.
+test('an init that refuses for a .dockerignore it cannot read has written no agentrite.json', (t) => {
+  const { base, run } = project(t);
+  mkdirSync(join(base, '.dockerignore'));
+  const before = snapshot(base);
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /^agentrite: /);
+  assert.equal(result.stdout, '');
+  assert.deepEqual(snapshot(base), before);
+  assert.equal(exists(join(base, 'agentrite.json')), false);
+});
+
 // R11
 test('init with no argument takes the harnesses and the sandbox from the file, and leaves the file', (t) => {
   const { base, run, read } = project(t);

@@ -295,7 +295,7 @@ The update and the pointer:
 
 The findings of the review:
 
-- [ ] 30. Finding S1. In `tests/agentrite-init.test.mjs`, failing: an `init claude` in a project with a directory
+- [x] 30. Finding S1. In `tests/agentrite-init.test.mjs`, failing: an `init claude` in a project with a directory
   at the path of `.dockerignore` exits 1, prints nothing on standard output and leaves the project as it was,
   with no `agentrite.json`. Then, in `scripts/agentrite.mjs`, read `.dockerignore` and decide what becomes of it
   where the other files are planned, before the first file is written, and write it and print its line where
@@ -334,5 +334,5 @@ The findings of the review:
 - [x] `feature-0045 Describe agentrite.json and the commands in the documents`: tasks 21 to 26
 - [x] `feature-0045 Test the steps of a project that updates`: task 27
 - [x] `feature-0045 Bring the pointer package along`: tasks 28 and 29
-- [ ] `feature-0045 Refuse for .dockerignore before init writes a file`: task 30
+- [x] `feature-0045 Refuse for .dockerignore before init writes a file`: task 30
 - [ ] `feature-0045 Hold the root's agentrite.json equal to the template`: task 31

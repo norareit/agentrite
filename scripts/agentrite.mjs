@@ -609,20 +609,31 @@ function plannedProjectFiles(root, manifest, harnesses, sandbox) {
 }
 
 /**
- * Writes the `.dockerignore` the sandbox's image build needs, or amends the project's, and prints what it did.
+ * What becomes of the project's `.dockerignore`, which the sandbox's image build needs: the content to write, or
+ * `undefined` for one that is left as it is. Reading it is what init can refuse on.
  *
  * @param {string} root
+ * @returns {{ path: string, isNew: boolean, content: string | undefined }}
  */
-function initDockerignore(root) {
-  const ignorePath = resolve(root, '.dockerignore');
-  const existingIgnore = readIfPresent(ignorePath);
-  const ignore = dockerignore(existingIgnore, readdirSync(new URL('../container/', import.meta.url)));
-  if (ignore === undefined) {
+function plannedDockerignore(root) {
+  const path = resolve(root, '.dockerignore');
+  const existing = readIfPresent(path);
+  const content = dockerignore(existing, readdirSync(new URL('../container/', import.meta.url)));
+  return { path, isNew: existing === undefined, content };
+}
+
+/**
+ * Writes the planned `.dockerignore`, or leaves the project's, and prints what it did.
+ *
+ * @param {ReturnType<typeof plannedDockerignore>} planned
+ */
+function writeDockerignore({ path, isNew, content }) {
+  if (content === undefined) {
     console.log('skipped .dockerignore, which lets the kit into the build context or does not exclude node_modules');
     return;
   }
-  writeFileSync(ignorePath, ignore);
-  console.log(`${existingIgnore === undefined ? 'wrote' : 'changed'} .dockerignore`);
+  writeFileSync(path, content);
+  console.log(`${isNew ? 'wrote' : 'changed'} .dockerignore`);
 }
 
 /**
@@ -682,6 +693,7 @@ function init(root, given) {
     { path: SETTINGS_FILE, content: settingsText(settings) },
     ...plannedProjectFiles(root, manifest, harnesses, settings.sandbox),
   ];
+  const ignore = settings.sandbox ? plannedDockerignore(root) : undefined;
   /** @type {string[]} */ const notices = [];
 
   for (const file of files) {
@@ -706,7 +718,7 @@ function init(root, given) {
     console.log('changed package.json');
   }
 
-  if (settings.sandbox) initDockerignore(root);
+  if (ignore !== undefined) writeDockerignore(ignore);
 
   for (const notice of notices) console.log(`\n${notice}`);
 
