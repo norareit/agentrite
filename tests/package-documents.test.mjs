@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
+import { posix } from 'node:path';
 import { test } from 'node:test';
 
 const packageJson = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf-8'));
@@ -49,9 +50,32 @@ test('package.json keeps the one command and the files the package holds', () =>
     'scripts/check-changes.mjs',
     'scripts/agentrite-roles.mjs',
     'scripts/agentrite-run.mjs',
+    'scripts/agentrite-settings.mjs',
     'scripts/agentrite.mjs',
     'container',
   ]);
+});
+
+// A script of the package that imports a file the package does not hold fails in a project and passes here.
+test('every file that a listed script imports by a relative path is itself listed', () => {
+  const scripts = packageJson.files.filter((path) => path.startsWith('scripts/'));
+  /** @type {string[]} */ const found = [];
+  for (const script of scripts) {
+    const source = readFileSync(new URL(`../${script}`, import.meta.url), 'utf-8');
+    const imported = [...source.matchAll(/\bfrom '(\.[^']+)'/g)].map((match) => match[1]);
+    for (const specifier of imported) {
+      const path = posix.join(posix.dirname(script), specifier);
+      assert.ok(packageJson.files.includes(path), `${script} imports ${path}, which files does not list`);
+      found.push(path);
+    }
+  }
+  // The imports are found at all, so that the loop above does not pass on nothing.
+  assert.ok(found.includes('scripts/agentrite-roles.mjs'), `found ${found.join(', ')}`);
+});
+
+test('the package ships the default agentrite.json, as a template', () => {
+  assert.ok(packageJson.files.includes('templates'), `files holds ${packageJson.files.join(', ')}`);
+  assert.ok(existsSync(new URL('../templates/project/agentrite.json', import.meta.url)));
 });
 
 test('LICENSE is the MIT License at the root, with the copyright holder', () => {

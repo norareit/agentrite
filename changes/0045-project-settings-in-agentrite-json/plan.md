@@ -80,7 +80,7 @@ What the tree holds that the work must fit:
 
 The settings module:
 
-- [ ] 1. Write `tests/agentrite-settings.test.mjs`, failing, for `parseSettings`, `settingsText` and
+- [x] 1. Write `tests/agentrite-settings.test.mjs`, failing, for `parseSettings`, `settingsText` and
   `readSettings` (R1, R3, R5, R6, R45):
     * a valid file gives `{ defaultBranch, harnesses, sandbox }`. A harness named twice is there once. A key the
       kit does not know is ignored
@@ -97,20 +97,20 @@ The settings module:
       `agentrite.json` is itself a directory. No file throws exactly
       `the project has no agentrite.json. Run: npx agentrite config, which writes one`. What cannot be read
       throws a message with the file's name, the error and the sentence on the JSON object
-- [ ] 2. Add `templates/project/agentrite.json`, the default file of R2, ending in one line break. Add to the test
+- [x] 2. Add `templates/project/agentrite.json`, the default file of R2, ending in one line break. Add to the test
   file of task 1: the template is valid, and `settingsText(parseSettings(template))` is the template byte for byte
   (R2, R9)
-- [ ] 3. Write `scripts/agentrite-settings.mjs` until tasks 1 and 2 pass. It exports `SETTINGS_FILE`, which is
+- [x] 3. Write `scripts/agentrite-settings.mjs` until tasks 1 and 2 pass. It exports `SETTINGS_FILE`, which is
   `agentrite.json`, and the three functions. The harness names come from `HARNESS_NAMES` of
   `scripts/agentrite-roles.mjs`, and the text of what `harnesses` must hold is built from them. What is wrong is
   said as `is missing` or with `JSON.stringify` of the value found, and the first key at fault, in the order of
   R1, is the one named. No shebang (R3, R4, R5, R6)
-- [ ] 4. Add to the test file, failing, and then to the module, its entry point. `node
+- [x] 4. Add to the test file, failing, and then to the module, its entry point. `node
   scripts/agentrite-settings.mjs <project root>` prints the default branch and a line break and exits 0. For a
   missing file and for one that is not valid it prints nothing on standard output, prints `agentrite: ` and the
   message of `readSettings` on standard error, and exits 1. Imported, the module prints nothing. Guard the entry
   point as `isMain` of `scripts/agentrite.mjs` does (R4, R27)
-- [ ] 5. In `package.json`, add `scripts/agentrite-settings.mjs` to `files`. In
+- [x] 5. In `package.json`, add `scripts/agentrite-settings.mjs` to `files`. In
   `tests/package-documents.test.mjs`: add it to the list the test compares, hold that every file a listed file of
   `scripts/` imports by a relative path is itself listed, and hold that `templates/project/agentrite.json` exists
   under the listed `templates` (R47)
@@ -316,7 +316,7 @@ The update and the pointer:
 
 ## Commit Points
 
-- [ ] `feature-0045 Read and judge agentrite.json in one module`: tasks 1 to 5
+- [x] `feature-0045 Read and judge agentrite.json in one module`: tasks 1 to 5
 - [ ] `feature-0045 Take the settings of init and refresh from agentrite.json, and add config`: tasks 6 to 14
 - [ ] `feature-0045 Compare with the default branch in the change check`: tasks 15 and 16
 - [ ] `feature-0045 Cut a unit's branch from the default branch`: tasks 17 to 19

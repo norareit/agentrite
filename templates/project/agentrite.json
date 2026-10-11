@@ -1,0 +1,5 @@
+{
+  "defaultBranch": "master",
+  "harnesses": ["claude", "opencode"],
+  "sandbox": true
+}
