@@ -107,4 +107,14 @@ timestamp: 2026-10-12T15:10:00Z
   formatting of the new files with a formatter, since the repository has none configured. Lines of the changed
   files are within 120 characters (checked with `awk` over `tests/*.mjs` and `CONTRIBUTING.md`).
 
+- 2026-10-12T15:07:54Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of unit 0046 at commit
+  `446cbb5ddbdca8448fe91d507d8ce0749754a366`, against merge base `16131d5e845bd5148e45f59a893644e238dbb7e2`.
+  Returned C1 and P1. Findings saved in
+  `.reviews/0046-relative-xdg-data-home-test-fails-on-macos/2026-10-12-150546-full-446cbb5.md`.
+  Independently ran `npm test` on macOS: 500 tests, 483 passing, 17 skipped, none failing or cancelled; the named
+  relative `XDG_DATA_HOME` test: 1 passing; `./sandbox.sh --in-place npm test`: 500 passing, none skipped or failing.
+  Both change checks and `git diff --check master...HEAD` pass. Could not verify the exact historical mutation
+  failure output, the tests-first sequence or the saved historical comparison of skip names from the committed
+  artifacts. No wrapper mutation was made during the review.
+
 ## Amendments
