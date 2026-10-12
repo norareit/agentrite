@@ -119,7 +119,7 @@ timestamp: 2026-10-12T15:10:00Z
 - 2026-10-12T15:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, outcome of the review of
   `446cbb5`. The human decided C1 is fixed and P1 is ignored. C1: the test-context variable `t` of
   `tests/temporary-directory.mjs` and `tests/temporary-directory.test.mjs` is renamed `testContext`, committed as
-  `1c58216`. P1: ignored by the human's decision, no change. On `1c58216` on macOS, `npm test` reported 500 tests, 483
+  `6de78db`. P1: ignored by the human's decision, no change. On `6de78db` on macOS, `npm test` reported 500 tests, 483
   passing, 17 skipped, none failing or cancelled, and `npm run check-changes` passed. The sandbox run was not repeated
   after the rename.
 
@@ -131,5 +131,14 @@ timestamp: 2026-10-12T15:10:00Z
   `./sandbox.sh --in-place npm test`: 500 passing, none skipped, failing or cancelled. Both change checks and
   `git diff --check 446cbb5..HEAD` pass. The tests at `1c58216` are identical to those at `6de78db`.
   The historical tests-first sequence and mutation failure output cannot be verified from the committed artifacts.
+
+- 2026-10-12T16:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, outcome of the delta review of
+  `1431f08`. S1: accepted. The stray `tests/temporary-directory.mjs-E`, a `sed -i` backup of the old helper added by
+  `6de78db`, is removed in `13e5a07`. `git ls-files` lists no other file ending in `-E`, `~`, `.bak`, `.orig` or
+  `.rej`. The pattern `*-E` is added to `.gitignore`, so that a backup of this kind is not tracked again. The
+  reference to `1c58216`, a commit since rewritten, is corrected in place to `6de78db` in the entry of the review of
+  `446cbb5`. The reviewer's entry above names `1c58216` as that reviewer wrote it, and is left as it is. On macOS,
+  `npm test` reported 500 tests, 483 passing, 17 skipped, none failing or cancelled, and `npm run check-changes` and
+  `node scripts/check-changes.mjs` passed. Not checked: the sandbox run after these changes, which touch no code.
 
 ## Amendments
