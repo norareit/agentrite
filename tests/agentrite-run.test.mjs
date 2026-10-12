@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { HARNESS_NAMES, plannedFiles, ROLES } from '../scripts/agentrite-roles.mjs';
@@ -14,6 +13,7 @@ import {
   runUsage,
   unitPrompt,
 } from '../scripts/agentrite-run.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 
@@ -29,8 +29,7 @@ function wrapperDescription(wrapper) {
 }
 
 function emptyDirectory(t) {
-  const base = mkdtempSync(join(tmpdir(), 'agentrite-run-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'agentrite-run-');
   return base;
 }
 

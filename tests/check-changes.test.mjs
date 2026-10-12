@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { findFrozenViolations, findIncompletePlans } from '../scripts/check-changes.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 test('findFrozenViolations reports a changed frozen spec', () => {
   assert.deepEqual(
@@ -134,8 +134,7 @@ function settingsFor(defaultBranch) {
  * to be branched from. It is removed when the test ends.
  */
 function repositoryWithFrozenUnit(t, defaultBranch = 'main') {
-  const repository = mkdtempSync(join(tmpdir(), 'check-changes-'));
-  t.after(() => rmSync(repository, { recursive: true, force: true }));
+  const repository = temporaryDirectory(t, 'check-changes-');
 
   git(repository, 'init', '-b', defaultBranch);
   git(repository, 'config', 'user.email', 'test@example.com');
@@ -224,8 +223,7 @@ test('check-changes reads the branch master when the file names it', (t) => {
 
 test('check-changes falls back to origin/<default branch> when no local default branch exists', (t) => {
   const origin = repositoryWithFrozenUnit(t);
-  const clone = mkdtempSync(join(tmpdir(), 'check-changes-clone-'));
-  t.after(() => rmSync(clone, { recursive: true, force: true }));
+  const clone = temporaryDirectory(t, 'check-changes-clone-');
   execFileSync('git', ['clone', origin, clone], { stdio: 'ignore' });
   git(clone, 'config', 'user.email', 'test@example.com');
   git(clone, 'config', 'user.name', 'Test User');

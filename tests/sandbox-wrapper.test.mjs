@@ -5,14 +5,12 @@ import {
   copyFileSync,
   existsSync,
   mkdirSync,
-  mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import {
@@ -24,6 +22,7 @@ import {
   logMounts,
   writeCommand,
 } from './wrapper-fixture.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
 const kitPath = 'project/node_modules/agentrite/container';
@@ -64,8 +63,7 @@ function setUp(
   buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
   imageExists = true,
 ) {
-  const base = mkdtempSync(join(tmpdir(), 'sandbox-wrapper-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'sandbox-wrapper-');
   const root = join(base, 'project');
   mkdirSync(join(root, 'sandbox'), { recursive: true });
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');

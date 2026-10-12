@@ -8,16 +8,15 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
-  mkdtempSync,
   readFileSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { fakeHost } from './wrapper-fixture.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const kit = join(import.meta.dirname, '..');
 const agentrite = join(kit, 'scripts', 'agentrite.mjs');
@@ -28,8 +27,7 @@ const NAMES_CONFIG = /the project has no agentrite\.json\. Run: npx agentrite co
 
 // A project directory with the wrappers of `harnesses` as the kit writes them, and no agentrite.json.
 function project(t, harnesses) {
-  const base = mkdtempSync(join(tmpdir(), 'settings-update-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'settings-update-');
   const root = join(base, 'project');
   const write = (path, content) => {
     mkdirSync(dirname(join(root, path)), { recursive: true });

@@ -6,17 +6,16 @@ import {
   cpSync,
   existsSync,
   mkdirSync,
-  mkdtempSync,
   readdirSync,
   readFileSync,
   rmSync,
   statSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
 import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const kitContainer = new URL('../container/', import.meta.url).pathname;
 const kitScripts = new URL('../scripts/', import.meta.url).pathname;
@@ -39,8 +38,7 @@ const sandboxRef = `refs/remotes/sandbox/${branch}`;
 // identity and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run`
 // runs the wrapper with the project root and `args`, and `git` runs the real git in the repository.
 function setUp(t, { imageExists = true } = {}) {
-  const base = mkdtempSync(join(tmpdir(), 'sandbox-unit-run-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'sandbox-unit-run-');
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });

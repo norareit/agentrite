@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fakeHost, logDirectory, logMounts } from './wrapper-fixture.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const shim = new URL('../sandbox-dev.sh', import.meta.url).pathname;
 const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
@@ -20,8 +20,7 @@ const nameFromVariable = '${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}';
 // AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
 // home of whoever runs the suite holds.
 function setUp(t) {
-  const base = mkdtempSync(join(tmpdir(), 'sandbox-dev-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'sandbox-dev-');
   const root = join(base, 'checkout');
   mkdirSync(join(root, 'sandbox'), { recursive: true });
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');

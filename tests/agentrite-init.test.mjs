@@ -4,7 +4,6 @@ import {
   chmodSync,
   lstatSync,
   mkdirSync,
-  mkdtempSync,
   readdirSync,
   readFileSync,
   realpathSync,
@@ -13,7 +12,6 @@ import {
   symlinkSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
@@ -31,6 +29,7 @@ import {
   projectFiles,
   withCheckChangesScript,
 } from '../scripts/agentrite.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE_PATHS = ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', 'sandbox/compose.project.yml'];
 const templates = Object.fromEntries(
@@ -482,8 +481,7 @@ const LOCKFILE = JSON.stringify({ lockfileVersion: 3, packages: { 'node_modules/
 
 // A lockfile of `null` leaves the project without one.
 function project(t, { lockfile = LOCKFILE } = {}) {
-  const base = mkdtempSync(join(tmpdir(), 'agentrite-init-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'agentrite-init-');
   writeFileSync(
     join(base, 'package.json'),
     '{\n  "name": "my-app",\n  "scripts": {\n    "test": "node --test"\n  }\n}\n',

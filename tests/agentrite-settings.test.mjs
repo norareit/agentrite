@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { parseSettings, readSettings, SETTINGS_FILE, settingsText } from '../scripts/agentrite-settings.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const OBJECT_SENTENCE = 'The file must hold a JSON object with the keys defaultBranch, harnesses and sandbox';
@@ -145,8 +145,7 @@ test('the template is the default file, and settingsText of its own values is th
 // R5, R6: the one function that touches the file system.
 
 function directory(t) {
-  const base = mkdtempSync(join(tmpdir(), 'agentrite-settings-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'agentrite-settings-');
   return base;
 }
 

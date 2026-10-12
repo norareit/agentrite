@@ -5,16 +5,15 @@ import {
   copyFileSync,
   lstatSync,
   mkdirSync,
-  mkdtempSync,
   readFileSync,
   renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fakeHost } from './wrapper-fixture.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 // R7: a project that release 4.2.0 set up starts its sandbox after the four steps of the release notes and no
 // others. The two files below are what `init` of that release wrote for a package named `my-app` with no
@@ -73,8 +72,7 @@ services:
 `;
 
 function setUp(t) {
-  const base = mkdtempSync(join(tmpdir(), 'sandbox-update-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'sandbox-update-');
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });

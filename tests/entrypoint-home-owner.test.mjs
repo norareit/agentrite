@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { rmSync, mkdtempSync, mkdirSync, writeFileSync, chmodSync, existsSync, readFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { mkdirSync, writeFileSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { entrypointFunctions } from './entrypoint-function.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 // The guard references only die and stat, and stat is left real, so the one line that reads
 // the owner, stat -c %u, runs against a real directory. The home the agent would write is
@@ -20,8 +20,7 @@ import { entrypointFunctions } from './entrypoint-function.mjs';
 //
 // `prepare`, when given, is called with the home after it is made and before the guard runs.
 function runGuard(t, agentUid, guard = 'check_home_owner', prepare = () => {}) {
-  const base = mkdtempSync(join(tmpdir(), 'entrypoint-home-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'entrypoint-home-');
   const home = join(base, 'home');
   mkdirSync(join(home, '.claude'), { recursive: true });
   mkdirSync(join(home, '.local', 'share'), { recursive: true });

@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, readFileSync, rmSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles, wrapWords } from '../scripts/agentrite-roles.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 // The folded block under `description: >-`, as the string a YAML parser reads from it: its lines without their
 // indentation, joined by single spaces.
@@ -144,8 +144,7 @@ const scripts = join(import.meta.dirname, '..', 'scripts');
 const root = join(import.meta.dirname, '..');
 
 test('the module run by itself prints nothing and writes nothing', (t) => {
-  const base = mkdtempSync(join(tmpdir(), 'agentrite-roles-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'agentrite-roles-');
 
   for (const args of [[], ['claude'], ['claude', 'opencode']]) {
     const result = spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });

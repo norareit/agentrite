@@ -1,0 +1,58 @@
+import assert from 'node:assert/strict';
+import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join, relative } from 'node:path';
+import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { temporaryDirectory, temporaryDirectoryNames } from './temporary-directory.mjs';
+
+test('a directory is made under the real path of the temporary directory, whatever links lead to it', (t) => {
+  const first = temporaryDirectory(t, 'temporary-directory-test-');
+  mkdirSync(join(first, 'real'));
+  symlinkSync(join(first, 'real'), join(first, 'link'));
+  const original = process.env.TMPDIR;
+  t.after(() => {
+    if (original === undefined) delete process.env.TMPDIR;
+    else process.env.TMPDIR = original;
+  });
+  process.env.TMPDIR = join(first, 'link');
+
+  const second = temporaryDirectory(t, 'opens-with-');
+
+  assert.equal(dirname(second), join(first, 'real'));
+  assert.ok(second.slice(dirname(second).length + 1).startsWith('opens-with-'));
+});
+
+test('the directory is removed when the test that made it ends', async (t) => {
+  let made;
+  await t.test('makes it', (subtest) => {
+    made = temporaryDirectory(subtest, 'temporary-directory-removed-');
+    writeFileSync(join(made, 'file'), 'content');
+    assert.ok(existsSync(join(made, 'file')));
+  });
+  assert.equal(existsSync(made), false);
+});
+
+const testsDirectory = dirname(fileURLToPath(import.meta.url));
+const helperFile = fileURLToPath(new URL('./temporary-directory.mjs', import.meta.url));
+
+function moduleFiles(directory) {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (entry.isDirectory()) return moduleFiles(path);
+    return entry.name.endsWith('.mjs') ? [path] : [];
+  });
+}
+
+test('no file of the suite but the helper makes a temporary directory itself', () => {
+  const offenders = moduleFiles(testsDirectory)
+    .filter((file) => file !== helperFile && statSync(file).isFile())
+    .filter((file) => temporaryDirectoryNames.test(readFileSync(file, 'utf-8')))
+    .map((file) => relative(dirname(testsDirectory), file));
+  assert.deepEqual(
+    offenders,
+    [],
+    `${offenders.join(', ')} make a temporary directory themselves. Use temporaryDirectory of ` +
+      'tests/temporary-directory.mjs, which gives the path as the system names it, so that the test passes on a ' +
+      'host whose temporary directory is reached through a symbolic link, as on macOS',
+  );
+});

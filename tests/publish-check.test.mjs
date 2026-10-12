@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { missingReleaseNotes, uncommittedChanges } from '../publish-check.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'publish-check.mjs');
 
@@ -58,8 +58,7 @@ function git(cwd, ...args) {
 
 // A repository that holds a committed package.json at 5.0.0 and a committed CHANGELOG.md, or none when it is null.
 function repository(t, changelog = '# Changelog\n\n## 5.0.0\n\nNotes.\n') {
-  const root = mkdtempSync(join(tmpdir(), 'publish-check-'));
-  t.after(() => rmSync(root, { recursive: true, force: true }));
+  const root = temporaryDirectory(t, 'publish-check-');
 
   git(root, 'init', '-b', 'master');
   git(root, 'config', 'user.email', 'test@example.com');

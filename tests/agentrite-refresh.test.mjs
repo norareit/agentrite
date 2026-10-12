@@ -4,7 +4,6 @@ import {
   chmodSync,
   lstatSync,
   mkdirSync,
-  mkdtempSync,
   readFileSync,
   rmSync,
   statSync,
@@ -12,12 +11,12 @@ import {
   utimesSync,
   writeFileSync,
 } from 'node:fs';
-import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { settingsText } from '../scripts/agentrite-settings.mjs';
 import { refreshedWrapper } from '../scripts/agentrite.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const SHIM = readFileSync(new URL('../templates/project/sandbox.sh', import.meta.url), 'utf-8');
@@ -172,8 +171,7 @@ const PROJECT_OWNED = {
 };
 
 function project(t) {
-  const base = mkdtempSync(join(tmpdir(), 'agentrite-refresh-'));
-  t.after(() => rmSync(base, { recursive: true, force: true }));
+  const base = temporaryDirectory(t, 'agentrite-refresh-');
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
   const read = (path) => readFileSync(join(base, path), 'utf-8');
   const write = (path, content) => {
@@ -450,8 +448,7 @@ test('only the wrappers of the harnesses given are touched', (t) => {
 
 test('a symbolic link or a directory where a file would go is left, named, and the rest is refreshed', (t) => {
   const { base, refresh, read } = staleProject(t);
-  const outside = mkdtempSync(join(tmpdir(), 'agentrite-refresh-outside-'));
-  t.after(() => rmSync(outside, { recursive: true, force: true }));
+  const outside = temporaryDirectory(t, 'agentrite-refresh-outside-');
   const target = join(outside, 'target.md');
   writeFileSync(target, 'outside the project\n');
   const linked = '.claude/agents/planner.md';
