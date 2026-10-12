@@ -123,4 +123,13 @@ timestamp: 2026-10-12T15:10:00Z
   passing, 17 skipped, none failing or cancelled, and `npm run check-changes` passed. The sandbox run was not repeated
   after the rename.
 
+- 2026-10-12T15:31:46Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of unit 0046 at commit
+  `1431f08bebd5891e98284cbc8f74a4f5f76f26e2`, from the previously reviewed commit
+  `446cbb5ddbdca8448fe91d507d8ce0749754a366`. Returned S1. Findings saved in
+  `.reviews/0046-relative-xdg-data-home-test-fails-on-macos/2026-10-12-152939-delta-1431f08.md`.
+  Independently ran `npm test` on macOS: 500 tests, 483 passing, 17 skipped, none failing or cancelled;
+  `./sandbox.sh --in-place npm test`: 500 passing, none skipped, failing or cancelled. Both change checks and
+  `git diff --check 446cbb5..HEAD` pass. The tests at `1c58216` are identical to those at `6de78db`.
+  The historical tests-first sequence and mutation failure output cannot be verified from the committed artifacts.
+
 ## Amendments
