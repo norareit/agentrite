@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: approved
-timestamp: 2026-10-12T13:00:17Z
+status: planned
+timestamp: 2026-10-12T14:02:48Z
 ---
 
 # 0046 The test of a relative `XDG_DATA_HOME` fails on macOS
@@ -50,5 +50,25 @@ timestamp: 2026-10-12T13:00:17Z
   makes one in another way. The `--connect` test on macOS and the line at the end of the run stay under
   "Beyond the request". No requirement was renumbered. The status stays `draft`
 - 2026-10-12T13:59:58Z [human] approved the spec. The status is `approved`
+- 2026-10-12T14:02:48Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the macOS host, on the
+  human's word. Cut `bugfix-0046-relative-xdg-data-home-test-fails-on-macos` from `master` at `16131d5`, and
+  read the role file and `process.md` as installed under `node_modules/agentrite`, release 6.0.0, and `spec.md`
+  and this record in full. Read on the tree: the sixteen places that make a temporary directory, which are all
+  the same two lines, a `mkdtempSync` under `tmpdir()` and a `t.after` that removes it; the three places that
+  skip for what the host lacks; `tests/wrapper-fixture.mjs` and `tests/entrypoint-function.mjs`, the modules the
+  suite already shares; the lines of `container/sandbox.sh` that make the log directory; and "The kit's own
+  tests" of `CONTRIBUTING.md`. No test of the suite reads what `CONTRIBUTING.md` says.
+  Wrote `plan.md`. The unit gets a plan although it is a bug: it is three pieces of work in more than a couple
+  of steps. Decided in it, as how and not as what: the unit is implemented on the macOS host, in a role run
+  and not in a unit run of the sandbox, because requirements 5 and 9 ask for what macOS printed, and the Linux
+  run is made from there with `./sandbox.sh --in-place npm test`; the names the guard looks for are exported by
+  the helper, so the guard's own file needs no exception; the helper's test points `TMPDIR` at a symbolic
+  link, so it fails on Linux too while the helper does not resolve; requirement 2 is shown by breaking the
+  wrapper in the working tree twice and putting it back.
+  One thing the spec leaves to the proof and the plan does not add to: no test holds on a Linux host that the
+  three places make their reason with the helper, since none of them is skipped there. Requirement 9 gives the
+  run on macOS as the proof, and the helper's text is unit tested.
+  Checked on the host before writing: node gives the value of `TMPDIR` set in the process at the next call of
+  `tmpdir()`. Not run: any task of the plan. The status is `planned`
 
 ## Amendments
