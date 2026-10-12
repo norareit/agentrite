@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
+import { skipReason } from './skip-reason.mjs';
 import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -978,7 +979,8 @@ test('--connect exits with the status the connected command exited with', (t) =>
 });
 
 // `script` of util-linux runs a command on a terminal of its own. It is the suite's, not the wrapper's, so it is
-// taken from the suite's PATH and is not in the stand-in's `bin`.
+// taken from the suite's PATH and is not in the stand-in's `bin`. A host without it skips the test, and the reason
+// says where the whole suite runs.
 function utilLinuxScript() {
   const found = (process.env.PATH ?? '')
     .split(delimiter)
@@ -993,7 +995,7 @@ function utilLinuxScript() {
 test('--connect gives the command a terminal when the wrapper is run from one', (t) => {
   const script = utilLinuxScript();
   if (script === undefined) {
-    t.skip('script of util-linux, which runs the wrapper on a terminal, is not on the PATH of the suite');
+    t.skip(skipReason('script of util-linux, which runs the wrapper on a terminal, is not on the PATH of the suite'));
     return;
   }
   const host = setUp(t);

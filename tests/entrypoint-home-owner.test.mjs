@@ -4,6 +4,7 @@ import { mkdirSync, writeFileSync, chmodSync, existsSync, readFileSync } from 'n
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { entrypointFunctions } from './entrypoint-function.mjs';
+import { skipReason } from './skip-reason.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 // The guard references only die and stat, and stat is left real, so the one line that reads
@@ -52,12 +53,11 @@ exec "$@"
 const realOwner = () => String(process.getuid());
 
 // The guard reads the owner with GNU stat -c %u, which is what the Linux container provides.
-// On a BSD host (macOS) the same option is illegal, so run the guard only on Linux.
-const offLinux = process.platform !== 'linux';
+// On a BSD host (macOS) the same option is illegal, so run the guard only on Linux. A host that skips it says where
+// the whole suite runs.
+const skip = process.platform !== 'linux' ? skipReason('needs GNU stat, the guard runs in the Linux container') : false;
 
-test('a home owned by another uid is refused, naming both uids and the recovery', {
-  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
-}, (t) => {
+test('a home owned by another uid is refused, naming both uids and the recovery', { skip }, (t) => {
   const owner = realOwner();
   const agentUid = Number(owner) === 1000 ? 501 : 1000;
   const { status, stderr } = runGuard(t, agentUid);
@@ -67,9 +67,7 @@ test('a home owned by another uid is refused, naming both uids and the recovery'
   assert.match(stderr, /docker volume rm <project>_agent-home/);
 });
 
-test('a home the agent owns passes the guard, including a new one it owns', {
-  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
-}, (t) => {
+test('a home the agent owns passes the guard, including a new one it owns', { skip }, (t) => {
   const { status, stderr } = runGuard(t, realOwner());
   assert.equal(status, 0, stderr);
   assert.doesNotMatch(stderr, /is owned by uid/);
@@ -78,7 +76,7 @@ test('a home the agent owns passes the guard, including a new one it owns', {
 // The directories above the two log directories the wrapper mounts. Docker makes a mount point that the home volume
 // lacks, and every directory above it, as root, which is what a volume of an earlier release gets.
 test('a home in which the agent owns the directories above the log mounts passes, and nothing is said', {
-  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
+  skip,
 }, (t) => {
   const { status, stdout, stderr } = runGuard(t, realOwner(), 'check_log_directory_owners');
   assert.equal(status, 0, stderr);
@@ -86,7 +84,7 @@ test('a home in which the agent owns the directories above the log mounts passes
 });
 
 test('a home in which another uid owns a directory above a log mount is refused, naming it and the recovery', {
-  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
+  skip,
 }, (t) => {
   const owner = realOwner();
   const agentUid = Number(owner) === 1000 ? 501 : 1000;
@@ -110,9 +108,7 @@ test('a home in which another uid owns a directory above a log mount is refused,
 // convention make .local, is closed to it. The agent is the one who has to use these directories, so they are read
 // as the agent. The suite's user owns what it makes and is not root, so it can show that the read goes through the
 // user switch, and not the fault itself: that is shown on a real Docker, in the unit's record.
-test('the directories above the log mounts are read as the agent, and the top of the home is not', {
-  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
-}, (t) => {
+test('the directories above the log mounts are read as the agent, and the top of the home is not', { skip }, (t) => {
   const { home, status, stderr, setprivCalls } = runGuard(t, realOwner(), 'check_log_directory_owners');
   assert.equal(status, 0, stderr);
   assert.deepEqual(
@@ -125,7 +121,7 @@ test('the directories above the log mounts are read as the agent, and the top of
 });
 
 test('a directory above a log mount that cannot be examined is refused by the entrypoint, not by stat', {
-  skip: offLinux ? 'needs GNU stat, the guard runs in the Linux container' : false,
+  skip,
 }, (t) => {
   // Closed to its owner too, so that reading what is in it fails for the user running the suite as it would for
   // anyone. Opened again once the guard has run, so that the home can be removed.

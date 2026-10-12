@@ -2,11 +2,13 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { test } from 'node:test';
 import { entrypointFunctions } from './entrypoint-function.mjs';
+import { skipReason } from './skip-reason.mjs';
 
 // parse_allowlist lowercases with ${var,,}, which needs bash 4, and the container's bash is 5. macOS ships bash 3.2,
-// so the test runs only where bash is new enough, as it is in the container and on Linux.
+// so the test runs only where bash is new enough, as it is in the container and on Linux. A host that skips it
+// says where the whole suite runs.
 const bashMajor = Number(spawnSync('bash', ['-c', 'echo "${BASH_VERSINFO[0]}"'], { encoding: 'utf-8' }).stdout);
-const skip = bashMajor < 4 ? `needs bash 4 or newer for \${var,,}, found bash ${bashMajor}` : false;
+const skip = bashMajor < 4 ? skipReason(`needs bash 4 or newer for \${var,,}, found bash ${bashMajor}`) : false;
 
 // Runs the shipped parse_allowlist over the kit's list and the project's, the way the entrypoint does, with the
 // environment the compose files would give it. A project list of `undefined` leaves ALLOWLIST unset.
