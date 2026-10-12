@@ -10,8 +10,8 @@ export const temporaryDirectoryNames = /\b(?:mkdtemp(?:Sync)?|tmpdir)\b/;
 // with symbolic links resolved. A command started in the directory reports that path, and not the one node names
 // the temporary directory by: on macOS `/var` is a link to `/private/var`, so a test that expects the unresolved
 // path fails there and passes on Linux, where the two are the same.
-export function temporaryDirectory(t, prefix) {
+export function temporaryDirectory(testContext, prefix) {
   const directory = realpathSync(mkdtempSync(join(tmpdir(), prefix)));
-  t.after(() => rmSync(directory, { recursive: true, force: true }));
+  testContext.after(() => rmSync(directory, { recursive: true, force: true }));
   return directory;
 }

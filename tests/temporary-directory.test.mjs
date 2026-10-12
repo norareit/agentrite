@@ -5,26 +5,28 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { temporaryDirectory, temporaryDirectoryNames } from './temporary-directory.mjs';
 
-test('a directory is made under the real path of the temporary directory, whatever links lead to it', (t) => {
-  const first = temporaryDirectory(t, 'temporary-directory-test-');
+test('a directory is made under the real path of the temporary directory, whatever links lead to it', (
+  testContext,
+) => {
+  const first = temporaryDirectory(testContext, 'temporary-directory-test-');
   mkdirSync(join(first, 'real'));
   symlinkSync(join(first, 'real'), join(first, 'link'));
   const original = process.env.TMPDIR;
-  t.after(() => {
+  testContext.after(() => {
     if (original === undefined) delete process.env.TMPDIR;
     else process.env.TMPDIR = original;
   });
   process.env.TMPDIR = join(first, 'link');
 
-  const second = temporaryDirectory(t, 'opens-with-');
+  const second = temporaryDirectory(testContext, 'opens-with-');
 
   assert.equal(dirname(second), join(first, 'real'));
   assert.ok(second.slice(dirname(second).length + 1).startsWith('opens-with-'));
 });
 
-test('the directory is removed when the test that made it ends', async (t) => {
+test('the directory is removed when the test that made it ends', async (testContext) => {
   let made;
-  await t.test('makes it', (subtest) => {
+  await testContext.test('makes it', (subtest) => {
     made = temporaryDirectory(subtest, 'temporary-directory-removed-');
     writeFileSync(join(made, 'file'), 'content');
     assert.ok(existsSync(join(made, 'file')));
