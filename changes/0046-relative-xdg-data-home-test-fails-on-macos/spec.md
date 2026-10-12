@@ -92,9 +92,9 @@ an absolute path as that path was written.
 
 ## Fix
 
-The test expects the log directory under the working directory as the system names it, with symbolic links
-resolved, where it now expects it under the path node gave for the temporary directory. The wrapper does not
-change.
+Every test of the suite gets its temporary directory from one helper, which gives the path as the system names
+it, with symbolic links resolved. The failing test then expects the log directory under the path the wrapper
+reports, with nothing in it written for macOS, and so does any test written later. The wrapper does not change.
 
 ## Requirements
 
@@ -118,6 +118,13 @@ change.
    whole suite. It follows the rules that this repository's `AGENTS.md` gives for that document
 9. Requirement 6 is shown on a macOS host, in the unit's record: the reason one test of each of the three kinds
    printed, and what `./sandbox.sh --in-place npm test` reported
+10. The suite has one helper that makes a temporary directory for a test and gives its path with symbolic links
+    resolved, which is the path a command that is started in the directory reports for it. Every place in the
+    suite that makes a directory under the temporary directory makes it through that helper, the sixteen there are
+    today among them, and each test removes what it made as it does before this unit
+11. The suite holds a test that fails when a file of the suite other than the helper makes a temporary directory
+    itself. Its message names the file and the helper. So a test that is written on a Linux host, by someone who
+    does not think of macOS, either uses the helper or fails on the host it was written on
 
 ## Decisions
 
@@ -127,10 +134,19 @@ change.
   links. That would change what is mounted for a developer whose `XDG_DATA_HOME` is an absolute path through a
   symbolic link, who gets the path as they wrote it today, and it would be a change to the sandbox made to satisfy
   a test
-* **The test expects the path as the system names it, and is not given a `PWD`.** A wrapper started with `PWD` set
-  to its directory reports the unresolved path, so setting `PWD` in the test would make it pass too. But the test
-  would then pass by giving the wrapper an environment made to fit the expectation. Resolving the expected path
-  says what is true: the wrapper reports where it is as the system has it
+* **The suite's temporary directories come from one helper, with the path resolved.** On the human's word, who
+  wants the next test of this kind that is written on a Linux host to pass on macOS as it is. Resolving the path
+  in this one test would repair this test and leave the next one to fail in the same way. All sixteen places move
+  to the helper, although one of them fails today, so that there is one way to make such a directory and no
+  second one to copy from
+* **The path is resolved, and the wrapper is not given a `PWD`.** A wrapper started with `PWD` set to its directory
+  reports the unresolved path, so setting `PWD` in the test would make it pass too. But the test would then pass
+  by giving the wrapper an environment made to fit the expectation. The resolved path says what is true: the
+  wrapper reports where it is as the system has it
+* **A test holds that the helper is used.** The specifier's. The helper repairs only a test that uses it, and a
+  test that makes its directory itself passes on Linux, where nothing would say that it fails elsewhere. Rejected:
+  a line in `CONTRIBUTING.md` or `AGENTS.md` alone, which nothing reads at the moment a test is written, where a
+  failing test on the author's own host is read at once
 * **The proof is a run on macOS.** The suite on Linux cannot show the failure or its repair, since the two paths
   are the same there. So the record holds what a macOS host printed, as requirement 5 says
 * **The skipped tests stay skipped on a host that cannot run them, and say where they run.** On the human's word.
@@ -156,11 +172,6 @@ change.
 
 ## Beyond the request
 
-* **Resolving the temporary directory once, for every test that makes one.** Sixteen places in the suite make a
-  directory under the temporary directory, and only this test compares such a path with one a command worked out
-  from its working directory. It would cost a change to each of those places, or a helper they share, for a
-  failure none of them has. Without it, a later test of the same shape fails on macOS the first time the suite is
-  run there, with both paths in the assertion
 * **Running the `--connect` test on macOS, with BSD's `script`.** Unlike the other sixteen it tests the wrapper,
   which runs on the host, and macOS is a host the kit supports. It would cost a second way to start a command on a
   terminal in the test, since the two `script` commands take different arguments. Without it, that `--connect`

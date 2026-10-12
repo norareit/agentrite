@@ -39,5 +39,15 @@ timestamp: 2026-10-12T13:00:17Z
   decisions, of which that the tests stay skipped and say where they run is the human's, and two items under
   "Beyond the request", the `--connect` test on macOS and a line at the end of the run. The non-goal that said
   the skipped tests were not looked into is replaced. No requirement was renumbered. The status stays `draft`
+- 2026-10-12T13:57:01Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the same session, on `master` at
+  `e00d8a4`, on the human's word that the first item of "Beyond the request" is in the unit, with a helper, so
+  that the next test of this kind written on a Linux host passes on macOS too. Took "the first" for the first
+  item as `spec.md` listed them, the temporary directory resolved once for every test, which is the one that
+  named a helper. It left "Beyond the request" and is requirement 10, and "Fix" now gives the helper as the
+  repair. Added requirement 11 as the specifier's decision: a test that fails when a file of the suite makes a
+  temporary directory itself, since the helper repairs only a test that uses it. Counted for requirement 10:
+  sixteen places in fourteen files make a directory under the temporary directory, and no file of the suite
+  makes one in another way. The `--connect` test on macOS and the line at the end of the run stay under
+  "Beyond the request". No requirement was renumbered. The status stays `draft`
 
 ## Amendments
