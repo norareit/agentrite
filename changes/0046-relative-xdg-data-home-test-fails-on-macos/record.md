@@ -88,11 +88,13 @@ timestamp: 2026-10-12T15:10:00Z
   tests/sandbox-wrapper.test.mjs`, reported 1 test, 1 passing, 0 failing.
   R2 and R4: with line 589 of `container/sandbox.sh` taken out the test failed; with that line back and
   `/agentrite/` of line 587 made `/agentrite-other/` it failed again, the mounted source being
-  `.../data/agentrite-other/project/.claude/projects`. `git checkout container/sandbox.sh` put it back, and `git diff master -- container/`
+  `.../data/agentrite-other/project/.claude/projects`. `git checkout container/sandbox.sh` put it back, and
+  `git diff master -- container/`
   printed nothing. Not recorded: the exact text of the first failure beyond that it failed.
   R5, R7, R9 on macOS at the final tree: `npm test` reported 500 tests, 483 passing, 17 skipped, 0 failing; the
   tap report's seventeen `# SKIP` names are the same as before (compared with `diff` after sorting). The tests are
-  495 and five more: four of the helper and its guard, one of `skipReason`. The reasons as printed, one of each kind, each ending
+  495 and five more: four of the helper and its guard, one of `skipReason`. The reasons as printed, one of each
+  kind, each ending
   in `The whole suite runs in the sandbox: ./sandbox.sh --in-place npm test`:
 
   * `needs bash 4 or newer for ${var,,}, found bash 3.`
