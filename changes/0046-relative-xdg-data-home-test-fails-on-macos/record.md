@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-12T13:00:17Z
 ---
 
@@ -49,5 +49,6 @@ timestamp: 2026-10-12T13:00:17Z
   sixteen places in fourteen files make a directory under the temporary directory, and no file of the suite
   makes one in another way. The `--connect` test on macOS and the line at the end of the run stay under
   "Beyond the request". No requirement was renumbered. The status stays `draft`
+- 2026-10-12T13:59:58Z [human] approved the spec. The status is `approved`
 
 ## Amendments
