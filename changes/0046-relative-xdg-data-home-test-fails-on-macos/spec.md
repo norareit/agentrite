@@ -16,6 +16,21 @@ pass. On a macOS host no release can be made while this test fails, and `npm pub
 The test came with unit 0035, which moved the harnesses' logs to the host, and has been in every release since
 4.1.0. It is no leftover of the releases 4.0.0 or 6.0.0.
 
+The same run on macOS skips seventeen tests, which a Linux host runs. Each says why it is skipped, and none says
+what to do about it:
+
+| Tests | What they test                                      | Why a macOS host skips them                          |
+|-------|-----------------------------------------------------|------------------------------------------------------|
+| 10    | The entrypoint's reading of the two allowlists      | It needs bash 4 or newer, and macOS has bash 3.2     |
+| 6     | The entrypoint's check of who owns the agent's home | It needs GNU `stat`, and macOS has BSD's             |
+| 1     | That `--connect` gives the command a terminal       | The test needs `script` of util-linux, not BSD's     |
+
+They have been skipped on macOS since they were written, in units 0010, 0007 and 0034. The sixteen of the first
+two rows test the entrypoint, which runs in the Linux container and nowhere else. The whole suite runs on a macOS
+host in the sandbox, which is Linux: `./sandbox.sh --in-place npm test`, run on the macOS host on `master` at
+`6710873`, reports 495 tests, 495 passing, none skipped and none failing. The human asked that the skipped tests
+say so.
+
 ## Observed behavior
 
 On a macOS host, `npm test` reports one failing test, with an assertion that two lists of Docker calls differ. They
@@ -92,6 +107,17 @@ change.
 4. The wrapper, and what it passes to Docker for any `XDG_DATA_HOME`, are what they are before this unit
 5. Requirement 1 is shown on a macOS host, with what was run and what it printed in the unit's record: the one
    test by its name, and `npm test` with no failing test
+6. Every test that the suite skips because the host lacks what the test needs gives a reason that says two things:
+   what the host lacks, as it says now, and that the whole suite runs in the sandbox, with the command
+   `./sandbox.sh --in-place npm test`. That holds for each of the three reasons the suite skips for today: a bash
+   older than 4, a host that is not Linux, and no `script` of util-linux
+7. On a Linux host that runs all three kinds today, none of them is skipped after this unit, and a macOS host skips
+   the same seventeen tests as before it and no other
+8. "The kit's own tests" of `CONTRIBUTING.md` says that a host other than Linux skips tests, which ones by what
+   they need, that the reason of each names the command, and that `./sandbox.sh --in-place npm test` runs the
+   whole suite. It follows the rules that this repository's `AGENTS.md` gives for that document
+9. Requirement 6 is shown on a macOS host, in the unit's record: the reason one test of each of the three kinds
+   printed, and what `./sandbox.sh --in-place npm test` reported
 
 ## Decisions
 
@@ -107,14 +133,24 @@ change.
   says what is true: the wrapper reports where it is as the system has it
 * **The proof is a run on macOS.** The suite on Linux cannot show the failure or its repair, since the two paths
   are the same there. So the record holds what a macOS host printed, as requirement 5 says
+* **The skipped tests stay skipped on a host that cannot run them, and say where they run.** On the human's word.
+  Sixteen of them run the container's entrypoint with the tools of whatever host runs the suite, and the entrypoint
+  is written for the bash and the GNU tools of the image. Rejected: making them run on macOS. That means writing
+  the entrypoint for tools it never meets, or asking every developer on macOS to install others, for code that
+  runs in the container alone. The sandbox is the Linux a macOS host already has, and it runs them all
+* **The command is `./sandbox.sh --in-place npm test`.** It mounts the working tree as it is, so the tests that run
+  are the ones being worked on, and it is the command that was tried. `./sandbox-dev.sh --in-place npm test` runs
+  them in the working copy's sandbox, and is for work on the sandbox itself, which `CONTRIBUTING.md` already says
+* **The reason names the command, and not macOS.** A test is skipped for what the host lacks, and a macOS host with
+  a newer bash on its `PATH` runs the ten of the first kind today. What to do is the same whichever host it is
 * **A bug, although no behavior of the kit is wrong.** The suite is part of what a release checks, and a suite that
   fails on a supported host for a reason that is not a fault of the kit is a fault of the suite
 
 ## Non-goals
 
 * A change to the wrapper, to what the sandbox mounts or to `SANDBOX.md`
-* The seventeen tests that the suite skips on the macOS host. A skipped test does not stop a release, and why each
-  is skipped was not looked into for this unit
+* Making a test that is skipped on macOS run there. See "Beyond the request" for the one of `--connect`
+* A change to the entrypoint, or to when a test is skipped
 * Running the suite on macOS automatically, in CI or otherwise
 * A section in `CHANGELOG.md`, which is written when a release is made
 
@@ -125,3 +161,11 @@ change.
   from its working directory. It would cost a change to each of those places, or a helper they share, for a
   failure none of them has. Without it, a later test of the same shape fails on macOS the first time the suite is
   run there, with both paths in the assertion
+* **Running the `--connect` test on macOS, with BSD's `script`.** Unlike the other sixteen it tests the wrapper,
+  which runs on the host, and macOS is a host the kit supports. It would cost a second way to start a command on a
+  terminal in the test, since the two `script` commands take different arguments. Without it, that `--connect`
+  gives a terminal is shown on Linux alone, and on macOS by the run in the sandbox, which is Linux too
+* **One line at the end of `npm test` that says tests were skipped and names the command.** node's runner prints
+  each reason on the line of its test and ends with a count, `skipped 17`. A line of the suite's own would cost a
+  reporter, or a script around the runner, for a suite that today is one `node --test`. Without it, a reader who
+  sees the count finds the command on any skipped test's line

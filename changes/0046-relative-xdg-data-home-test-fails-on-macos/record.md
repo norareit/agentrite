@@ -29,5 +29,15 @@ timestamp: 2026-10-12T13:00:17Z
   Not checked: that the suite passes on a Linux host at `8c5f0da`, which is taken from the reviewer's entry in the
   record of unit 0045, why the seventeen skipped tests are skipped, and anything that needs Docker. The status is
   `draft`
+- 2026-10-12T13:39:01Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in the same session, on `master` at
+  `6710873`, on the human's question what the seventeen skipped tests are, and their word that the skipped tests
+  say that they are run in the sandbox. Looked into them: ten need bash 4 or newer, six need GNU `stat`, and one
+  needs `script` of util-linux, each skipped on macOS since the unit that wrote it, 0010, 0007 and 0034, which
+  `git log -S` on the three reasons gives. Ran `./sandbox.sh --in-place npm test` on the macOS host, with Docker
+  Desktop 24.0.7 and the sandbox of release 6.0.0: 495 tests, 495 passing, none skipped, none failing, and the
+  tree was left as it was. Added to `spec.md`: the three kinds in "Context", requirements 6 to 9, three
+  decisions, of which that the tests stay skipped and say where they run is the human's, and two items under
+  "Beyond the request", the `--connect` test on macOS and a line at the end of the run. The non-goal that said
+  the skipped tests were not looked into is replaced. No requirement was renumbered. The status stays `draft`
 
 ## Amendments
