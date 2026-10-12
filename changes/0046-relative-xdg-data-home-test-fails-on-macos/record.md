@@ -116,5 +116,11 @@ timestamp: 2026-10-12T15:10:00Z
   Both change checks and `git diff --check master...HEAD` pass. Could not verify the exact historical mutation
   failure output, the tests-first sequence or the saved historical comparison of skip names from the committed
   artifacts. No wrapper mutation was made during the review.
+- 2026-10-12T15:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, outcome of the review of
+  `446cbb5`. The human decided C1 is fixed and P1 is ignored. C1: the test-context variable `t` of
+  `tests/temporary-directory.mjs` and `tests/temporary-directory.test.mjs` is renamed `testContext`, committed as
+  `1c58216`. P1: ignored by the human's decision, no change. On `1c58216` on macOS, `npm test` reported 500 tests, 483
+  passing, 17 skipped, none failing or cancelled, and `npm run check-changes` passed. The sandbox run was not repeated
+  after the rename.
 
 ## Amendments
