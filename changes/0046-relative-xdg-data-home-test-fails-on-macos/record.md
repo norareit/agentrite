@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-12T15:10:00Z
 ---
 
@@ -140,5 +140,8 @@ timestamp: 2026-10-12T15:10:00Z
   `446cbb5`. The reviewer's entry above names `1c58216` as that reviewer wrote it, and is left as it is. On macOS,
   `npm test` reported 500 tests, 483 passing, 17 skipped, none failing or cancelled, and `npm run check-changes` and
   `node scripts/check-changes.mjs` passed. Not checked: the sandbox run after these changes, which touch no code.
+
+- 2026-10-12T16:20:00Z [human] asked to mark the unit implemented, after C1 and S1 were fixed and P1 was ignored by
+  their decision. Every task of `plan.md` is ticked. The status is `implemented`.
 
 ## Amendments
