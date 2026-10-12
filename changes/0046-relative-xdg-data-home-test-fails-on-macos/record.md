@@ -1,7 +1,7 @@
 ---
 kind: bug
-status: planned
-timestamp: 2026-10-12T14:02:48Z
+status: in-progress
+timestamp: 2026-10-12T14:20:00Z
 ---
 
 # 0046 The test of a relative `XDG_DATA_HOME` fails on macOS

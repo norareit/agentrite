@@ -103,6 +103,18 @@ npm test
 * It runs node's built-in test runner over `tests/`
 * The tests need no install
 
+A host other than Linux skips some of the tests. Each is skipped for what it needs and the host lacks:
+
+* The reading of the allowlists by the entrypoint needs bash 4 or newer, and macOS has bash 3.2
+* The check of who owns the agent's home needs GNU `stat`, and macOS has BSD's
+* The terminal that `--connect` gives the command needs `script` of util-linux, and macOS has BSD's
+
+The reason that each skipped test prints names the command that runs the whole suite in the sandbox, which is Linux:
+
+```sh
+./sandbox.sh --in-place npm test
+```
+
 The kit's own `changes/` go through the change check like any project's, wired the same way:
 
 ```sh
