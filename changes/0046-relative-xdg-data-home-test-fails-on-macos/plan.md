@@ -69,73 +69,73 @@ no other.
 
 ## Tasks
 
-- [ ] On the macOS host, on the tree as it is, show the fault and keep what the later tasks compare with. Run
+- [x] On the macOS host, on the tree as it is, show the fault and keep what the later tasks compare with. Run
   `node --test --test-name-pattern="relative XDG_DATA_HOME" tests/sandbox-wrapper.test.mjs`, which must fail with
   `/private/var` where `/var` is expected. Run `node --test --test-reporter=tap tests/*.test.mjs` and keep, in a
   scratch file outside the repository, the name of every line marked `# SKIP`, which must be seventeen. Log both
   (R1, R7)
-- [ ] Add `tests/temporary-directory.test.mjs` with two tests, failing because the module is not there yet. The
+- [x] Add `tests/temporary-directory.test.mjs` with two tests, failing because the module is not there yet. The
   first: a directory from the helper, in it a directory `real` and a symbolic link `link` to it, `TMPDIR` set to
   the link and put back in `t.after`, then a second directory from the helper, whose parent must be `real` under
   the first directory, and whose name opens with the prefix given. The second: a subtest makes a directory with
   the helper and writes a file in it, the directory exists inside the subtest, and is gone once the subtest has
   ended (R10)
-- [ ] Add `tests/temporary-directory.mjs` with `temporaryDirectory(t, prefix)` as "Approach" gives it, and a
+- [x] Add `tests/temporary-directory.mjs` with `temporaryDirectory(t, prefix)` as "Approach" gives it, and a
   comment that says why the path is resolved. Both tests pass (R10)
-- [ ] Add the guard to `tests/temporary-directory.test.mjs`, failing: it reads every `.mjs` file under `tests/`,
+- [x] Add the guard to `tests/temporary-directory.test.mjs`, failing: it reads every `.mjs` file under `tests/`,
   at any depth, but for `tests/temporary-directory.mjs`, and fails when one holds a name the helper's expression
   matches. Its message names each such file, and names `temporaryDirectory` of `tests/temporary-directory.mjs` as
   what to use. On the tree as it is, it must fail and name the fourteen files of "Files" and no other (R11)
-- [ ] In each of the fourteen files, replace the `mkdtempSync(join(tmpdir(), '<prefix>'))` and the `t.after` that
+- [x] In each of the fourteen files, replace the `mkdtempSync(join(tmpdir(), '<prefix>'))` and the `t.after` that
   removes it by `temporaryDirectory(t, '<prefix>')`, with the prefix it has, at all sixteen places. Take
   `mkdtempSync` and `tmpdir` out of the file's imports, and `rmSync` and `join` where nothing else in the file
   uses them. Change no assertion. The guard passes, and `grep -rnE "mkdtemp|tmpdir" tests --include="*.mjs"` names
   `tests/temporary-directory.mjs` alone (R10, R11)
-- [ ] On the macOS host, run the test of the first task again: it passes, with its assertions unchanged, which
+- [x] On the macOS host, run the test of the first task again: it passes, with its assertions unchanged, which
   `git diff master -- tests/sandbox-wrapper.test.mjs` shows (R1)
-- [ ] Show requirement 2, on the macOS host, by breaking the wrapper in the working tree. With line 589 of
+- [x] Show requirement 2, on the macOS host, by breaking the wrapper in the working tree. With line 589 of
   `container/sandbox.sh`, `logs="$(cd "$logs" && pwd)"`, taken out, the test must fail, on a source that is not
   absolute. With that line back and `/agentrite/` in line 587 made `/agentrite-other/`, it must fail again, on
   another directory. Then `git checkout container/sandbox.sh`, and `git diff master -- container/` prints
   nothing. Log what the test printed each time (R2, R4)
-- [ ] Add `tests/skip-reason.test.mjs`, failing because the module is not there yet: `skipReason('needs GNU stat')`
+- [x] Add `tests/skip-reason.test.mjs`, failing because the module is not there yet: `skipReason('needs GNU stat')`
   is exactly `needs GNU stat. The whole suite runs in the sandbox: ./sandbox.sh --in-place npm test` (R6)
-- [ ] Add `tests/skip-reason.mjs` with `skipReason(lacks)`. The test passes (R6)
-- [ ] Make the three reasons with it, each with the text it has today as its argument, unchanged. In
+- [x] Add `tests/skip-reason.mjs` with `skipReason(lacks)`. The test passes (R6)
+- [x] Make the three reasons with it, each with the text it has today as its argument, unchanged. In
   `tests/entrypoint-allowlist.test.mjs`, the `skip` of line 9. In `tests/entrypoint-home-owner.test.mjs`, one
   `skip` beside `offLinux`, which the six tests then take as `{ skip }` in place of the six ternaries. In
   `tests/sandbox-unit-run.test.mjs`, the argument of `t.skip` in the `--connect` test. The condition each skips on
   is left as it is. Bring the comment above each in line with what the reason now says (R6, R7)
-- [ ] In "The kit's own tests" of `CONTRIBUTING.md`, after the two points on `npm test`, say: that on a host other
+- [x] In "The kit's own tests" of `CONTRIBUTING.md`, after the two points on `npm test`, say: that on a host other
   than Linux the suite skips tests; which, by what they need, in three points, the reading of the allowlists that
   needs bash 4 or newer, the check of the home's owner that needs GNU `stat`, and the terminal of `--connect` that
   needs `script` of util-linux; that the reason each skipped test prints names the command; and that
   `./sandbox.sh --in-place npm test` runs the whole suite, in a code block. It says what there is and what to
   type, not why, and its lines fit 120 characters (R8)
-- [ ] On the macOS host, run `npm test`: no test fails, and seventeen are skipped. Run the tap report of the first
+- [x] On the macOS host, run `npm test`: no test fails, and seventeen are skipped. Run the tap report of the first
   task again and compare the names of its `# SKIP` lines with the kept ones: the same seventeen. Log the counts,
   and the full reason of one test of each of the three kinds as printed (R1, R5, R7, R9)
-- [ ] On the macOS host, run `./sandbox.sh --in-place npm test`: no test fails and none is skipped, and the number
+- [x] On the macOS host, run `./sandbox.sh --in-place npm test`: no test fails and none is skipped, and the number
   of tests is the one the host reported. Log what it reported (R3, R7, R9)
-- [ ] Log in `record.md` what was run and what it printed, for each task that says "log", and remove the scratch
+- [x] Log in `record.md` what was run and what it printed, for each task that says "log", and remove the scratch
   file
 
 ## Verification
 
-- [ ] `npm test` on the macOS host, on the final tree: no failing test, seventeen skipped
-- [ ] `./sandbox.sh --in-place npm test` on the final tree: no failing test, none skipped
-- [ ] `git diff master --stat -- container/ scripts/` prints nothing (R4)
-- [ ] `npm run check-changes` and `node scripts/check-changes.mjs` pass on the committed branch
-- [ ] Every line of the changed and new files is within 120 characters, and no changed text holds an em dash
-- [ ] Each requirement of the spec is met by the tree and the record, read one by one
+- [x] `npm test` on the macOS host, on the final tree: no failing test, seventeen skipped
+- [x] `./sandbox.sh --in-place npm test` on the final tree: no failing test, none skipped
+- [x] `git diff master --stat -- container/ scripts/` prints nothing (R4)
+- [x] `npm run check-changes` and `node scripts/check-changes.mjs` pass on the committed branch
+- [x] Every line of the changed and new files is within 120 characters, and no changed text holds an em dash
+- [x] Each requirement of the spec is met by the tree and the record, read one by one
 
 ## Commit Points
 
 - [x] `bugfix-0046 Plan the temporary directories and the skipped tests`: this plan and the record's entry, by the
   planner
-- [ ] `bugfix-0046 Make the suite's temporary directories through one helper`: the helper, its tests, the guard
+- [x] `bugfix-0046 Make the suite's temporary directories through one helper`: the helper, its tests, the guard
   and the fourteen files
-- [ ] `bugfix-0046 Say in the reason of a skipped test where the suite runs`: `skipReason`, its test and the three
+- [x] `bugfix-0046 Say in the reason of a skipped test where the suite runs`: `skipReason`, its test and the three
   files
-- [ ] `bugfix-0046 Describe the skipped tests in CONTRIBUTING.md`
-- [ ] `bugfix-0046 Record the runs on macOS and in the sandbox`: the record
+- [x] `bugfix-0046 Describe the skipped tests in CONTRIBUTING.md`
+- [x] `bugfix-0046 Record the runs on macOS and in the sandbox`: the record

@@ -1,7 +1,7 @@
 ---
 kind: bug
 status: in-progress
-timestamp: 2026-10-12T14:20:00Z
+timestamp: 2026-10-12T15:10:00Z
 ---
 
 # 0046 The test of a relative `XDG_DATA_HOME` fails on macOS
@@ -70,5 +70,39 @@ timestamp: 2026-10-12T14:20:00Z
   run on macOS as the proof, and the helper's text is unit tested.
   Checked on the host before writing: node gives the value of `TMPDIR` set in the process at the next call of
   `tmpdir()`. Not run: any task of the plan. The status is `planned`
+- 2026-10-12T15:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a session on the macOS host
+  (macOS, node 26.9.0, bash 3.2, Docker), on branch `bugfix-0046-relative-xdg-data-home-test-fails-on-macos`, from
+  `b0ada2f`. The status is `in-progress`: no review has run, so it is not `implemented`. Read the role file,
+  `process.md`, `spec.md`, `plan.md` and this record in full before beginning. Done in the order of the plan, with
+  commits `9d1c474` (helper, guard, fourteen files) and two after it, for the reasons and `CONTRIBUTING.md`.
+  Before: the one test, run alone, failed with `/private/var/...` where `/var/...` was expected, in the two log
+  `--volume` arguments. `node --test --test-reporter=tap tests/*.test.mjs` reported 495 tests, 477 passing, 17
+  skipped, 1 failing. The names of the seventeen `# SKIP` lines were kept.
+  Tests first: `tests/temporary-directory.test.mjs` failed with the module not found, and with the helper present
+  the guard failed naming exactly the fourteen files of the plan. `tests/skip-reason.test.mjs` failed with the
+  module not found, then passed. After the fourteen files moved to the helper, `grep -rnE "mkdtemp|tmpdir" tests`
+  names `tests/temporary-directory.mjs` alone.
+  No assertion of `tests/sandbox-wrapper.test.mjs` changed: its diff against `master` is the imports and the two
+  lines of the directory.
+  R1: the one test by name, `node --test --test-name-pattern="relative XDG_DATA_HOME"
+  tests/sandbox-wrapper.test.mjs`, reported 1 test, 1 passing, 0 failing.
+  R2 and R4: with line 589 of `container/sandbox.sh` taken out the test failed; with that line back and
+  `/agentrite/` of line 587 made `/agentrite-other/` it failed again, the mounted source being
+  `.../data/agentrite-other/project/.claude/projects`. `git checkout container/sandbox.sh` put it back, and `git diff master -- container/`
+  printed nothing. Not recorded: the exact text of the first failure beyond that it failed.
+  R5, R7, R9 on macOS at the final tree: `npm test` reported 500 tests, 483 passing, 17 skipped, 0 failing; the
+  tap report's seventeen `# SKIP` names are the same as before (compared with `diff` after sorting). The tests are
+  495 and five more: four of the helper and its guard, one of `skipReason`. The reasons as printed, one of each kind, each ending
+  in `The whole suite runs in the sandbox: ./sandbox.sh --in-place npm test`:
+
+  * `needs bash 4 or newer for ${var,,}, found bash 3.`
+  * `needs GNU stat, the guard runs in the Linux container.`
+  * `script of util-linux, which runs the wrapper on a terminal, is not on the PATH of the suite.`
+
+  R3, R7, R9 on Linux: `./sandbox.sh --in-place npm test` on the final tree exited 0 and reported 500 tests, 500
+  passing, 0 skipped, 0 failing.
+  Not checked: that a Linux host without the sandbox passes, other than through the sandbox run above, and the
+  formatting of the new files with a formatter, since the repository has none configured. Lines of the changed
+  files are within 120 characters (checked with `awk` over `tests/*.mjs` and `CONTRIBUTING.md`).
 
 ## Amendments
