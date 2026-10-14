@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: planned
+status: in-progress
 timestamp: 2026-10-14T12:21:25Z
 ---
 
@@ -50,5 +50,22 @@ timestamp: 2026-10-14T12:21:25Z
   with Desktop's buildx 0.12.0, and mounts a `run --volume` at `/work` over a file's `.:/work`. The host's own
   `docker compose` stays 2.23.3-desktop.2.
   Wrote `plan.md`. The status is `planned`
+- 2026-10-14T12:35:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the macOS host,
+  on the host rather than in the sandbox, on `bugfix-0050-unit-run-mounts-the-project-root-on-an-older-compose` at
+  `06f586a`. Read the role file as installed, release 6.0.0. The status is `in-progress`
+- 2026-10-14T12:35:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote
+  `tests/compose-work-volume.test.mjs` as the plan describes. On the tree of `06f586a` with the test added,
+  `node --test tests/compose-work-volume.test.mjs` on the host reports 4 tests, 3 passing and 1 failing: "the base
+  compose file declares no volume of the sandbox at /work", with `container/compose.yml declares - .:/work at
+  /work` and the reason, and `[ '- .:/work' ]` where `[]` is expected
+- 2026-10-14T12:53:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, removed `- .:/work` from
+  `container/compose.yml` and wrote the comment of the plan at the head of the service's `volumes:` list. The four
+  tests of `tests/compose-work-volume.test.mjs` pass. `docker compose config` of the base and the project's files,
+  with the variables the wrapper sets, lists the service's volumes as `agent-home` at `/home/agent` and the
+  developer's `.gitconfig` at `/etc/gitconfig`, and nothing at `/work`.
+  On that tree, `npm test` on the host reports 546 tests, 529 passing, 17 skipped and none failing. They are the
+  seventeen of unit 0046, which this unit leaves as they were: the new file skips none, and no other test file
+  changes. `./sandbox.sh --in-place npm test`, through the installed release 6.0.0 on Compose 2.23.3-desktop.2,
+  reports 546 tests, 546 passing, none skipped and none failing
 
 ## Amendments

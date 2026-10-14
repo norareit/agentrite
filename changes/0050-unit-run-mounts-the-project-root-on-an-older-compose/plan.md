@@ -98,13 +98,13 @@ wrapper, `container/unit-clone.sh` and the wrapper's tests.
 
 ## Tasks
 
-- [ ] Write `tests/compose-work-volume.test.mjs` as the Approach describes. Run it with
+- [x] Write `tests/compose-work-volume.test.mjs` as the Approach describes. Run it with
   `node --test tests/compose-work-volume.test.mjs` on the host and see test 1 fail, naming `- .:/work`, and tests
   2 to 4 pass. Log the failure in `record.md` (R7)
-- [ ] In `container/compose.yml`, remove `- .:/work` and the comment above it, and write the comment the Approach
+- [x] In `container/compose.yml`, remove `- .:/work` and the comment above it, and write the comment the Approach
   describes at the head of the service's `volumes:` list. Change nothing else in the file. See the four tests pass
   (R6, R7)
-- [ ] Run `npm test` on the host and see no test fail, with the same tests skipped as on `master`. Run the whole
+- [x] Run `npm test` on the host and see no test fail, with the same tests skipped as on `master`. Run the whole
   suite in the sandbox with `./sandbox.sh --in-place npm test`, which the bug does not touch, and see no test fail
   and none skipped. See that `git diff master -- container/sandbox.sh container/unit-clone.sh tests/` lists the new
   test file and nothing else (R5)

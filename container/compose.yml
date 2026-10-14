@@ -126,11 +126,14 @@ services:
       GIT_CONFIG_VALUE_0: "*"
 
     volumes:
-      # Default working directory: the project root. container/sandbox.sh always gives
-      # the source itself: the clone of a unit run, with the host's .reviews at
-      # /work/.reviews, or the project root with --in-place, or the directory of
-      # --workdir. It adds extra mounts too, all as `docker compose run -v` flags.
-      - .:/work
+      # Nothing is declared at /work. container/sandbox.sh passes the mount at /work for
+      # every run, as a `docker compose run --volume`: the clone of a unit run, with the
+      # host's .reviews at /work/.reviews, or the project root with --in-place, or the
+      # directory of --workdir. It adds extra mounts the same way. A Compose older than
+      # 2.35.0 mounts a volume this file declares at a target in place of a run's
+      # --volume to the same target, so a volume here at /work would have every unit run
+      # work in the project root rather than in its clone.
+      #
       # The agent's home, which survives a container. Holds Claude Code's login and
       # settings, whatever else a harness keeps there and the npm cache, so
       # authentication happens once. One volume rather than one per harness: the
