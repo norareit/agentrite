@@ -254,7 +254,7 @@ The `CLAUDE.md` that `init` writes:
 
 What does not change:
 
-- [ ] 9. In `tests/package-documents.test.mjs`, hold that each of the four files of `roles/` holds
+- [x] 9. In `tests/package-documents.test.mjs`, hold that each of the four files of `roles/` holds
   `Read [process.md](../process.md) first`. The test of `AGENTS.md` in `tests/agentrite-init.test.mjs` holds the
   required reading already, and is left as it is (R11)
 
@@ -327,6 +327,6 @@ In real sessions:
 - [x] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5
   and 6
 - [x] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8
-- [ ] `feature-0048 Hold that the role files still say to read process.md first`: task 9
+- [x] `feature-0048 Hold that the role files still say to read process.md first`: task 9
 - [ ] `feature-0048 Describe how the kit's instructions reach an agent`: tasks 10 to 14
 - [ ] `feature-0048 Record the check in real sessions`: task 15, the entry in `record.md`

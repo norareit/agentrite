@@ -117,3 +117,11 @@ test('package.json checks a release in prepublishOnly, and holds no script that 
 test('the package does not ship the check of npm publish', () => {
   assert.ok(!packageJson.files.includes('publish-check.mjs'), `files holds ${packageJson.files.join(', ')}`);
 });
+
+// R11 of unit 0048: the harness loads process.md, and the instruction to read it stays for what the loading misses.
+test('each of the four role files still says to read process.md first', () => {
+  for (const role of ['specifier', 'planner', 'implementer', 'reviewer']) {
+    const text = readFileSync(new URL(`../roles/${role}.md`, import.meta.url), 'utf-8');
+    assert.ok(text.includes('Read [process.md](../process.md) first'), `roles/${role}.md`);
+  }
+});
