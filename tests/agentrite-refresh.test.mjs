@@ -13,6 +13,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { settingsText } from '../scripts/agentrite-settings.mjs';
 import { refreshedWrapper } from '../scripts/agentrite.mjs';
@@ -168,6 +169,7 @@ const PROJECT_OWNED = {
   'sandbox/compose.project.yml': 'name: my-app-sandbox\n',
   'package.json': '{\n  "name": "my-app"\n}\n',
   '.dockerignore': 'node_modules\n',
+  'opencode.json': '{}\n',
 };
 
 function project(t) {
@@ -199,6 +201,16 @@ function line(word, path) {
   return new RegExp(`^${word} ${path.replaceAll('.', '\\.')}`, 'm');
 }
 
+// The lines refresh prints for the files, without the notices, which follow an empty line.
+function linesOf(result) {
+  return result.stdout.split('\n\n')[0].trimEnd().split('\n');
+}
+
+// The notices refresh prints after the lines, each after an empty line.
+function noticesOf(result) {
+  return result.stdout.split('\n\n').slice(1).join('\n\n');
+}
+
 // A project whose nine files are all out of date: the wrappers name the old package, one pins a model, and the
 // shim is another script that is not executable.
 function staleProject(t) {
@@ -228,7 +240,7 @@ test('stale wrappers and a stale shim are refreshed, a pinned model is kept, and
   assert.equal(read('sandbox.sh'), SHIM);
   assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o111, 0);
   for (const path of KIT_OWNED) assert.match(result.stdout, line('refreshed', path));
-  assert.equal(result.stdout.trimEnd().split('\n').length, KIT_OWNED.length);
+  assert.equal(linesOf(result).length, KIT_OWNED.length);
 });
 
 test('a wrapper that holds mode: subagent is refreshed to mode: all, and keeps its pinned model', (t) => {
@@ -282,7 +294,7 @@ test('a project with none of the files gets all nine, listed as written', (t) =>
   assert.equal(read('sandbox.sh'), SHIM);
   assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o111, 0);
   assert.match(result.stdout, line('wrote', 'sandbox.sh'));
-  assert.equal(result.stdout.trimEnd().split('\n').length, 9);
+  assert.equal(linesOf(result).length, 9);
 });
 
 // The descriptions the planner's and the implementer's wrappers held in the release before the specifier, as that
@@ -329,21 +341,17 @@ test('a project with the three wrappers of the release before gets the fourth, a
   const result = refresh(['claude', 'opencode']);
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    result.stdout,
-    [
-      'wrote .claude/agents/specifier.md',
-      'refreshed .claude/agents/planner.md',
-      'refreshed .claude/agents/implementer.md',
-      'up to date .claude/agents/reviewer.md',
-      'wrote .opencode/agents/specifier.md',
-      'refreshed .opencode/agents/planner.md',
-      'refreshed .opencode/agents/implementer.md',
-      'up to date .opencode/agents/reviewer.md',
-      'up to date sandbox.sh',
-      '',
-    ].join('\n'),
-  );
+  assert.deepEqual(linesOf(result), [
+    'wrote .claude/agents/specifier.md',
+    'refreshed .claude/agents/planner.md',
+    'refreshed .claude/agents/implementer.md',
+    'up to date .claude/agents/reviewer.md',
+    'wrote .opencode/agents/specifier.md',
+    'refreshed .opencode/agents/planner.md',
+    'refreshed .opencode/agents/implementer.md',
+    'up to date .opencode/agents/reviewer.md',
+    'up to date sandbox.sh',
+  ]);
   for (const file of WRAPPERS) {
     const expected =
       file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
@@ -555,7 +563,7 @@ test('refresh does for each value of the two settings what it did for the argume
       assert.equal(result.status, 0, result.stderr);
       const expected = plannedFiles(harnesses).map((file) => `wrote ${file.path}`);
       if (sandbox) expected.push('wrote sandbox.sh');
-      assert.deepEqual(result.stdout.trimEnd().split('\n'), expected);
+      assert.deepEqual(linesOf(result), expected);
       assert.equal(exists(join(base, 'sandbox.sh')), sandbox);
       for (const harness of ['claude', 'opencode']) {
         assert.equal(exists(join(base, `.${harness}`)), harnesses.includes(harness), harness);
@@ -578,7 +586,7 @@ test('the repository own agentrite.json, wrappers and sandbox.sh are up to date,
   const result = run('refresh');
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout, KIT_OWNED.map((path) => `up to date ${path}\n`).join(''));
+  assert.deepEqual(linesOf(result), KIT_OWNED.map((path) => `up to date ${path}`));
   for (const path of copied) {
     assert.equal(read(path), readFileSync(join(root, path), 'utf-8'), path);
     assert.equal(statSync(join(base, path)).mtimeMs, longAgo.getTime(), path);
@@ -617,7 +625,7 @@ test('refresh with sandbox false refreshes the wrappers, keeps a pinned model an
     assert.equal(read(file.path), expected, file.path);
     assert.match(result.stdout, line('refreshed', file.path));
   }
-  assert.equal(result.stdout.trimEnd().split('\n').length, WRAPPER_PATHS.length);
+  assert.equal(linesOf(result).length, WRAPPER_PATHS.length);
   assert.doesNotMatch(result.stdout, /sandbox\.sh/);
   assert.equal(read('sandbox.sh'), shimBefore);
 });
@@ -704,4 +712,132 @@ test('refresh with sandbox false writes no sandbox.sh and says nothing of an age
   assert.doesNotMatch(result.stdout, /sandbox\.sh/);
   assert.equal(lstatSync(join(base, 'agent.sh')).isFile(), true);
   assert.throws(() => lstatSync(join(base, 'sandbox.sh')));
+});
+
+// R9, R10: refresh reads CLAUDE.md and opencode.json, notices one that does not load process.md, and writes neither.
+
+const PROCESS = 'node_modules/agentrite/process.md';
+const IMPORT = `@${PROCESS}`;
+const CLAUDE_LOADS = `# Ours\n\n${IMPORT}\n@AGENTS.md\n`;
+const OPENCODE_LOADS = `{\n  "instructions": [\n    "${PROCESS}"\n  ]\n}\n`;
+
+// Puts `text` at `path` in the project: nothing for undefined, a directory for null, and a file otherwise.
+function place(made, path, text) {
+  if (text === null) mkdirSync(join(made.base, path));
+  else if (text !== undefined) made.write(path, text);
+}
+
+// What is at `path` in the project, in the terms `place` takes.
+function placed(made, path) {
+  if (!exists(join(made.base, path))) return undefined;
+  if (lstatSync(join(made.base, path)).isDirectory()) return null;
+  return made.read(path);
+}
+
+// Runs refresh in a project whose files are up to date, with `claude` and `opencode` at the paths of the two files,
+// and checks that it wrote neither and printed for the files what a project whose two files load process.md gets.
+function refreshWith(t, harnesses, { claude, opencode }) {
+  const loading = project(t);
+  loading.write('CLAUDE.md', CLAUDE_LOADS);
+  loading.write('opencode.json', OPENCODE_LOADS);
+  const expected = loading.refresh(harnesses);
+  assert.equal(noticesOf(expected), '');
+
+  const made = project(t);
+  place(made, 'CLAUDE.md', claude);
+  place(made, 'opencode.json', opencode);
+  const result = made.refresh(harnesses);
+
+  assert.equal(result.status, expected.status, result.stderr);
+  assert.deepEqual(linesOf(result), linesOf(expected));
+  assert.equal(placed(made, 'CLAUDE.md'), claude);
+  assert.equal(placed(made, 'opencode.json'), opencode);
+  return result;
+}
+
+test('refresh with claude notices a CLAUDE.md that is missing or lacks a line, after the lines of the files', (t) => {
+  const cases = [
+    [undefined, claudeRefreshNotice(true, [IMPORT, '@AGENTS.md'])],
+    ['@AGENTS.md\n', claudeRefreshNotice(false, [IMPORT])],
+    ['our own\n', claudeRefreshNotice(false, [IMPORT, '@AGENTS.md'])],
+  ];
+  for (const [claude, notice] of cases) {
+    const result = refreshWith(t, ['claude'], { claude });
+    assert.equal(noticesOf(result), `${notice}\n`, JSON.stringify(claude));
+    assert.ok(result.stdout.endsWith(`\n\n${notice}\n`), result.stdout);
+  }
+});
+
+test('refresh with claude prints nothing of a CLAUDE.md that holds both lines, in LF or in CRLF', (t) => {
+  for (const claude of [CLAUDE_LOADS, CLAUDE_LOADS.replaceAll('\n', '\r\n')]) {
+    const result = refreshWith(t, ['claude'], { claude });
+    assert.equal(noticesOf(result), '');
+    assert.doesNotMatch(result.stdout, /CLAUDE\.md/);
+  }
+});
+
+test('refresh with opencode notices an opencode.json that does not load process.md, with why', (t) => {
+  const cases = [
+    [undefined, 'it is missing'],
+    ['{\n  "model": "x"\n}\n', 'it has no instructions list'],
+    ['{ "instructions": ["a.md"] }\n', `its instructions list does not hold ${PROCESS}`],
+    ['not json\n', 'it is not JSON: '],
+    [null, 'it cannot be read: '],
+  ];
+  for (const [opencode, problem] of cases) {
+    const result = refreshWith(t, ['opencode'], { opencode });
+    const notices = noticesOf(result);
+    assert.ok(notices.startsWith(`opencode.json does not load the kit's instructions,\nbecause ${problem}`), notices);
+    if (!problem.endsWith(': ')) assert.equal(notices, `${opencodeRefreshNotice(problem)}\n`);
+    assert.match(notices, /refresh\ndoes not add it/);
+  }
+});
+
+test('refresh with opencode prints nothing of an opencode.json that loads process.md, also one with a comment', (t) => {
+  for (const opencode of [OPENCODE_LOADS, `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`]) {
+    const result = refreshWith(t, ['opencode'], { opencode });
+    assert.equal(noticesOf(result), '');
+    assert.doesNotMatch(result.stdout, /opencode\.json/);
+  }
+});
+
+test('refresh with both harnesses prints the notice of CLAUDE.md and then that of opencode.json', (t) => {
+  const result = refreshWith(t, ['claude', 'opencode'], { claude: undefined, opencode: undefined });
+  const claude = claudeRefreshNotice(true, [IMPORT, '@AGENTS.md']);
+  const opencode = opencodeRefreshNotice('it is missing');
+  assert.equal(noticesOf(result), `${claude}\n\n${opencode}\n`);
+});
+
+test('refresh with one harness says nothing of the file of the other, whatever is at its path', (t) => {
+  for (const other of [undefined, 'not json\n', '{}\n', null]) {
+    const claudeOnly = refreshWith(t, ['claude'], { claude: CLAUDE_LOADS, opencode: other });
+    assert.doesNotMatch(claudeOnly.stdout, /opencode\.json/, String(other));
+    assert.equal(noticesOf(claudeOnly), '');
+
+    const opencodeOnly = refreshWith(t, ['opencode'], { claude: other, opencode: OPENCODE_LOADS });
+    assert.doesNotMatch(opencodeOnly.stdout, /CLAUDE\.md/, String(other));
+    assert.equal(noticesOf(opencodeOnly), '');
+  }
+});
+
+test('the notices change neither what refresh writes nor its status, also when a wrapper is a symbolic link', (t) => {
+  const loading = project(t);
+  loading.write('CLAUDE.md', CLAUDE_LOADS);
+  loading.write('opencode.json', OPENCODE_LOADS);
+  const made = project(t);
+  for (const each of [loading, made]) {
+    mkdirSync(join(each.base, '.claude', 'agents'), { recursive: true });
+    symlinkSync('/no/such/target', join(each.base, '.claude', 'agents', 'planner.md'));
+  }
+
+  const expected = loading.refresh(['claude', 'opencode']);
+  const result = made.refresh(['claude', 'opencode']);
+
+  assert.equal(expected.status, 1);
+  assert.equal(result.status, 1);
+  assert.equal(result.stderr, expected.stderr);
+  assert.deepEqual(linesOf(result), linesOf(expected));
+  assert.match(noticesOf(result), /^CLAUDE\.md does not load/m);
+  assert.match(noticesOf(result), /^opencode\.json does not load/m);
+  for (const path of ['CLAUDE.md', 'opencode.json']) assert.equal(exists(join(made.base, path)), false, path);
 });

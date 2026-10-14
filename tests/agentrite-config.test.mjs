@@ -88,6 +88,8 @@ test('refresh runs on the file config wrote, and writes the eight wrappers and s
   assert.equal(result.status, 0, result.stderr);
   const paths = [...plannedFiles(['claude', 'opencode']).map((file) => file.path), 'sandbox.sh'];
   assert.equal(paths.length, 9);
-  assert.equal(result.stdout, paths.map((path) => `wrote ${path}\n`).join(''));
+  // The lines before the first empty line: the notices of CLAUDE.md and opencode.json, which the directory lacks,
+  // follow it.
+  assert.deepEqual(result.stdout.split('\n\n')[0].split('\n'), paths.map((path) => `wrote ${path}`));
   assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), TEMPLATE);
 });

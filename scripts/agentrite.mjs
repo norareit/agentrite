@@ -6,8 +6,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   claudeInitNotice,
   claudeLacks,
+  claudeRefreshNotice,
   OPENCODE_FILE,
   opencodeInitNotice,
+  opencodeRefreshNotice,
   opencodeVerdict,
   PROCESS_PATH,
   readProjectFile,
@@ -800,10 +802,33 @@ function kindOf(path) {
 }
 
 /**
+ * What to tell a project, with `harnesses`, whose `CLAUDE.md` or `opencode.json` does not load the kit's
+ * instructions, which `refresh` reads and never writes: the notice of each such file of a harness given.
+ *
+ * @param {string} root
+ * @param {string[]} harnesses
+ * @returns {string[]}
+ */
+function instructionNotices(root, harnesses) {
+  /** @type {string[]} */ const notices = [];
+  if (harnesses.includes('claude')) {
+    const read = readProjectFile(root, 'CLAUDE.md');
+    const lacks = claudeLacks(read);
+    if (lacks.length > 0) notices.push(claudeRefreshNotice(!read.found, lacks));
+  }
+  if (harnesses.includes('opencode')) {
+    const verdict = opencodeVerdict(readProjectFile(root, OPENCODE_FILE));
+    if (!verdict.loads) notices.push(opencodeRefreshNotice(verdict.problem));
+  }
+  return notices;
+}
+
+/**
  * Makes the kit's own files in the project at `root` what this release writes, prints what it did to each, and
  * returns the exit status. The harnesses and the sandbox setting are those of the project's `agentrite.json`, which
  * is read and never written. With the sandbox setting false the shim is left out, so that nothing is read or
- * printed of it.
+ * printed of it. After the files come the notices of a `CLAUDE.md` or an `opencode.json` that does not load the
+ * kit's instructions, which change neither what is written nor the status.
  *
  * @param {string} root
  * @returns {number}
@@ -835,6 +860,7 @@ function refresh(root) {
     if (file.executable) chmodSync(absolute, 0o755);
     console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${file.path}`);
   }
+  for (const notice of instructionNotices(root, harnesses)) console.log(`\n${notice}`);
   return status;
 }
 

@@ -59,5 +59,10 @@ timestamp: 2026-10-14T08:12:35Z
   as the plan gave it, the line is 133 characters for the problem of a list that lacks the path, and task 2 holds
   every notice under 120 for the problems that carry no error message. The plan contradicted itself there, and the
   break is the smallest change that keeps the text it gives
+- 2026-10-14T12:41:22Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to `plan.md` two tests
+  that compare every line `refresh` prints and that the plan did not name: "a project with the three wrappers of
+  the release before gets the fourth" in `tests/agentrite-refresh.test.mjs`, and "refresh runs on the file config
+  wrote" in `tests/agentrite-config.test.mjs`, which adds that file to "Files". Both failed on the notices of task
+  8, and now compare the lines before the first empty line, as the plan has the others do
 
 ## Amendments

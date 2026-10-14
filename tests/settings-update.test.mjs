@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { fakeHost } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -24,6 +25,11 @@ const checker = join(kit, 'scripts', 'check-changes.mjs');
 const TEMPLATE = readFileSync(join(kit, 'templates', 'project', 'agentrite.json'), 'utf-8');
 const SHIM = readFileSync(join(kit, 'templates', 'project', 'sandbox.sh'), 'utf-8');
 const NAMES_CONFIG = /the project has no agentrite\.json\. Run: npx agentrite config, which writes one/;
+
+// The lines refresh prints for the files, without the notices, which follow an empty line.
+function linesOf(result) {
+  return result.stdout.split('\n\n')[0].trimEnd().split('\n');
+}
 
 // A project directory with the wrappers of `harnesses` as the kit writes them, and no agentrite.json.
 function project(t, harnesses) {
@@ -102,7 +108,11 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   const refreshed = command('refresh');
   assert.equal(refreshed.status, 0, refreshed.stderr);
   const kitOwned = [...plannedFiles(['claude', 'opencode']).map((file) => file.path), 'sandbox.sh'];
-  assert.equal(refreshed.stdout, kitOwned.map((path) => `up to date ${path}\n`).join(''));
+  assert.deepEqual(linesOf(refreshed), kitOwned.map((path) => `up to date ${path}`));
+  // A project set up before the release that loads process.md has neither file that loads it, and is told so.
+  const claude = claudeRefreshNotice(true, ['@node_modules/agentrite/process.md', '@AGENTS.md']);
+  const opencode = opencodeRefreshNotice('it is missing');
+  assert.ok(refreshed.stdout.endsWith(`\n\n${claude}\n\n${opencode}\n`), refreshed.stdout);
   assert.equal(tracked(), '?? agentrite.json');
 
   // 4. the file committed on the default branch.
@@ -134,7 +144,7 @@ test('a project without the sandbox and with one harness edits both keys, and re
   assert.equal(refreshed.status, 0, refreshed.stderr);
   const wrappers = plannedFiles(['opencode']).map((file) => file.path);
   assert.equal(wrappers.length, 4);
-  assert.equal(refreshed.stdout, wrappers.map((path) => `up to date ${path}\n`).join(''));
+  assert.deepEqual(linesOf(refreshed), wrappers.map((path) => `up to date ${path}`));
   assert.equal(existsSync(join(root, 'sandbox.sh')), false);
   assert.equal(existsSync(join(root, '.claude')), false);
 });

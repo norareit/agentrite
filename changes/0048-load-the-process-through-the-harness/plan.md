@@ -122,8 +122,10 @@ What the tree holds that the work must fit:
   stale shim are refreshed", "a project with none of the files gets all nine", "refresh does for each value of the
   two settings", "the repository own agentrite.json, wrappers and sandbox.sh are up to date" and "refresh with
   sandbox false refreshes the wrappers", and in `tests/settings-update.test.mjs` the two that compare
-  `refreshed.stdout`. Task 7 has them compare the lines before the first empty line, as `linesOf` of the `init`
-  tests does, and assert the notices on their own
+  `refreshed.stdout`, and, found while implementing, "a project with the three wrappers of the release before gets
+  the fourth" in `tests/agentrite-refresh.test.mjs` and "refresh runs on the file config wrote" in
+  `tests/agentrite-config.test.mjs`. Task 7 has them compare the lines before the first empty line, as `linesOf`
+  of the `init` tests does, and assert the notices on their own
 * The tests of `init` that use `CLAUDE_NOTICE` take the notice function instead, and those that compare every line
   `init` prints for `opencode` gain the line of `opencode.json`: "init with no argument takes the harnesses and the
   sandbox from the file" compares two runs that both get it
@@ -149,6 +151,8 @@ What the tree holds that the work must fit:
 - `tests/agentrite-instructions.test.mjs`: new
 - `tests/agentrite-init.test.mjs`, `tests/agentrite-refresh.test.mjs`, `tests/settings-update.test.mjs`,
   `tests/package-documents.test.mjs`: changed
+- `tests/agentrite-config.test.mjs`: changed, added while implementing, for its one test that compares every line
+  `refresh` prints
 
 ## Tasks
 
@@ -229,7 +233,7 @@ The `CLAUDE.md` that `init` writes:
 
 `refresh`:
 
-- [ ] 7. Write the tests of `refresh`, failing, in `tests/agentrite-refresh.test.mjs`, and change the tests the
+- [x] 7. Write the tests of `refresh`, failing, in `tests/agentrite-refresh.test.mjs`, and change the tests the
   Approach names to compare the lines before the first empty line (R9):
     * with `claude`: a missing `CLAUDE.md`, one holding only `@AGENTS.md`, and one holding neither each get the
       notice with the lines lacked, after every line of the files. One with both lines, LF or CRLF, gets none
@@ -243,7 +247,7 @@ The `CLAUDE.md` that `init` writes:
       wrapper's path, where the status is 1
     * in `tests/settings-update.test.mjs`, the two comparisons of `refreshed.stdout` compare its lines, and the
       first holds that both notices are printed, since its project is one set up before this unit
-- [ ] 8. In `scripts/agentrite.mjs`, after the loop over the files, have `refresh` read `CLAUDE.md` with `claude`
+- [x] 8. In `scripts/agentrite.mjs`, after the loop over the files, have `refresh` read `CLAUDE.md` with `claude`
   and `opencode.json` with `opencode` among the harnesses, and print each notice the module gives for a file that
   does not load the instructions, each after an empty line. It writes neither file, and the status is the one
   the loop left (R9, R10)
@@ -322,7 +326,7 @@ In real sessions:
 - [x] `feature-0048 Import process.md in the CLAUDE.md that init writes`: task 4
 - [x] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5
   and 6
-- [ ] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8
+- [x] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8
 - [ ] `feature-0048 Hold that the role files still say to read process.md first`: task 9
 - [ ] `feature-0048 Describe how the kit's instructions reach an agent`: tasks 10 to 14
 - [ ] `feature-0048 Record the check in real sessions`: task 15, the entry in `record.md`
