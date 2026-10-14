@@ -174,4 +174,4 @@ being in it whole, so neither table of "What is here" changes.
 - [x] `bugfix-0049 Plan the passing of the host's terminal type`: `plan.md` and `record.md`
 - [x] `bugfix-0049 Pass the host's TERM and COLORTERM to the sandbox's commands`: the first group of tasks
 - [x] `bugfix-0049 Tell a command xterm-256color for a TERM the image does not describe`: the second group
-- [ ] `bugfix-0049 Record the checks in the sandbox and in the human's terminals`: `record.md`
+- [x] `bugfix-0049 Record the checks in the sandbox and in the human's terminals`: `record.md`
