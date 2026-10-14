@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: planned
 timestamp: 2026-10-14T12:22:07Z
 ---
 
@@ -21,3 +21,9 @@ timestamp: 2026-10-14T12:22:07Z
   Not reproduced: how the Terminal app shows 24-bit colour, which is taken from the screenshots, and anything on
   tmux on Linux. Wrote `spec.md`. The status is `draft`
 - 2026-10-14T20:43:46Z [human] approved the spec. The status is `approved`
+- 2026-10-14T20:46:11Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the macOS host, cut
+  `bugfix-0049-the-sandbox-drops-the-terminal-type` from `master` at `1a7baac`, which holds unit 0050, and wrote
+  `plan.md` against it. A plan, since the fix is two pieces with tests and documents: the wrapper passes the host's
+  `TERM` and `COLORTERM`, and a script in the image replaces a `TERM` it holds no description of, which the
+  entrypoint and `--connect` both run the command through. Every requirement has a task and every task traces to
+  one. The status is `planned`
