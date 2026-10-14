@@ -108,32 +108,32 @@ wrapper, `container/unit-clone.sh` and the wrapper's tests.
   suite in the sandbox with `./sandbox.sh --in-place npm test`, which the bug does not touch, and see no test fail
   and none skipped. See that `git diff master -- container/sandbox.sh container/unit-clone.sh tests/` lists the new
   test file and nothing else (R5)
-- [ ] On the host's Compose 2.23.3-desktop.2, note the checkout's branch, `git rev-parse HEAD` and
+- [x] On the host's Compose 2.23.3-desktop.2, note the checkout's branch, `git rev-parse HEAD` and
   `git status --porcelain`. Run `./sandbox-dev.sh 0050 sleep 120`, and while it is up inspect its container: the
   clone under `~/.local/state/agentrite/ritenoar-agentrite-sandbox-dev/` at `/work`, the host's `.reviews` at
   `/work/.reviews`, and nothing else at `/work`. After it exits, see the checkout's branch, `HEAD` and
   `git status --porcelain` as noted, no entry in `git reflog` from the time of the run, and the clone removed (R1)
-- [ ] On the same Compose, make a scratch directory outside the repository, run
+- [x] On the same Compose, make a scratch directory outside the repository, run
   `./sandbox-dev.sh --workdir <that directory> sleep 120`, and see the directory at `/work` and nothing else at
   `/work` (R2)
-- [ ] On the same Compose, run `./sandbox-dev.sh --in-place sleep 120`, and see the project root at `/work` and
+- [x] On the same Compose, run `./sandbox-dev.sh --in-place sleep 120`, and see the project root at `/work` and
   nothing else at `/work` (R3)
-- [ ] Make the Compose 2.39.2 of the Approach, or follow the Approach where it cannot be made, and repeat the three
+- [x] Make the Compose 2.39.2 of the Approach, or follow the Approach where it cannot be made, and repeat the three
   runs above with it: the unit run with the same checks of the checkout, `--workdir` and `--in-place` (R4)
-- [ ] Log in `record.md`, for each run: the Docker and Compose versions, the command, and the lines `docker inspect`
+- [x] Log in `record.md`, for each run: the Docker and Compose versions, the command, and the lines `docker inspect`
   listed at `/work` and under it. For the unit run on each Compose, what the checkout's branch, `HEAD`, status and
   reflog showed before and after (R8)
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with no more tests skipped than on `master`
-- [ ] `./sandbox.sh --in-place npm test` passes, with no test skipped
-- [ ] The runs of both Compose versions are in the record, with the versions and what `docker inspect` listed
-- [ ] `npm pack --dry-run` lists the same files as on `master`
-- [ ] `npm run check-changes` passes
+- [x] `npm test` passes on the host, with no more tests skipped than on `master`
+- [x] `./sandbox.sh --in-place npm test` passes, with no test skipped
+- [x] The runs of both Compose versions are in the record, with the versions and what `docker inspect` listed
+- [x] `npm pack --dry-run` lists the same files as on `master`
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
-- [ ] The regression test and the fix, in one commit, as `bugfix-0050 Declare nothing at /work in the base Compose
+- [x] The regression test and the fix, in one commit, as `bugfix-0050 Declare nothing at /work in the base Compose
   file`. The failure of the test before the fix is in the record, so the tree is never committed with a failing test
-- [ ] The record of the runs, as `bugfix-0050 Record the runs on Compose 2.23.3 and 2.39.2`
+- [x] The record of the runs, as `bugfix-0050 Record the runs on Compose 2.23.3 and 2.39.2`

@@ -67,5 +67,42 @@ timestamp: 2026-10-14T12:21:25Z
   seventeen of unit 0046, which this unit leaves as they were: the new file skips none, and no other test file
   changes. `./sandbox.sh --in-place npm test`, through the installed release 6.0.0 on Compose 2.23.3-desktop.2,
   reports 546 tests, 546 passing, none skipped and none failing
+- 2026-10-14T13:02:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the working copy's sandbox
+  through the wrapper on `d1a032d`, with `./sandbox-dev.sh`, on the macOS host with Docker Desktop 4.26.0 and Engine
+  24.0.7, on two Compose versions. Each run was inspected while its container was up with `docker inspect`, of
+  which the mounts at `/work` and under it are given here, and every run exited 0. The commands slept 120 seconds
+  for the first unit run, 30 for the second and 20 for the others, long enough for the inspection.
+  * On the host's own Compose 2.23.3-desktop.2:
+    * `./sandbox-dev.sh 0050 sleep 120`, in the container
+      `ritenoar-agentrite-sandbox-dev-bugfix-0050-unit-run-mounts-the-project-root-on-an-older-compose`:
+      `bind /Users/stef/.local/state/agentrite/ritenoar-agentrite-sandbox-dev/<the unit's branch> -> /work` and
+      `bind /Users/stef/projects/agentrite/.reviews -> /work/.reviews`, and nothing else at or under `/work`. In
+      the container, `git log -1` in `/work` gave `d1a032d` and `git rev-parse --show-toplevel` gave `/work`.
+      Before and after the run, the checkout was on the unit's branch at `d1a032d`, with nothing in
+      `git status --porcelain`, and the last entry of `git reflog` was the commit of `d1a032d`, made before the
+      run. After it, the clone's directory was gone and no ref under `refs/remotes/sandbox` was left
+    * `./sandbox-dev.sh --workdir <a directory made with mktemp -d> sleep 20`: that directory at `/work`, and
+      nothing else at or under it. `/work` held the file `marker` put there
+    * `./sandbox-dev.sh --in-place sleep 20`: `bind /Users/stef/projects/agentrite -> /work`, and nothing else at or
+      under it
+  * On Compose 2.39.2, the standalone binary of `docker/compose` as the CLI plugin of a scratch Docker configuration
+    directory, as the plan describes, against the same Docker Desktop. It reports each host path with Docker
+    Desktop's prefix `/host_mnt`, which 2.23.3 does not:
+    * `./sandbox-dev.sh 0050 sleep 30`, in the same container name: the clone at `/work` and the host's `.reviews`
+      at `/work/.reviews`, and nothing else at or under it. Before and after, the checkout was on the unit's
+      branch at `d1a032d`, `git status --porcelain` held the one line of this unit's `plan.md`, ticked and not yet
+      committed, and the last entry of `git reflog` was the commit of `d1a032d`. After it, the clone's directory
+      was gone and no ref under `refs/remotes/sandbox` was left
+    * `./sandbox-dev.sh --workdir <a directory in the scratch directory> sleep 20`: that directory at `/work`,
+      holding `marker`, and nothing else at or under it
+    * `./sandbox-dev.sh --in-place sleep 20`: the project root at `/work`, and nothing else at or under it
+  The scratch directories were removed afterwards, and no container of `ritenoar-agentrite-sandbox-dev` is left.
+  Not checked: a Linux host, and a Compose between 2.23.3 and 2.39.2 other than these two through the wrapper
+- 2026-10-14T13:09:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification of the plan
+  on the tree of `d1a032d` with this record and the ticks of `plan.md`, which change no code. `npm test` on the
+  host reports 546 tests, 529 passing, 17 skipped and none failing. `./sandbox.sh --in-place npm test` reports 546
+  tests, 546 passing, none skipped and none failing. `npm pack --dry-run` lists 33 files, the same as on `master`
+  at `193e7e7` in a worktree. `npm run check-changes` is run on the commit of this entry. Every task of the plan is
+  ticked. The status stays `in-progress` until the review: the unit has not been reviewed
 
 ## Amendments
