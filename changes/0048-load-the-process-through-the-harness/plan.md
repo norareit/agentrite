@@ -294,7 +294,7 @@ The documents:
 
 In real sessions:
 
-- [ ] 15. In a scratch project outside the repository, install the kit from `npm pack` of the working copy, run
+- [x] 15. In a scratch project outside the repository, install the kit from `npm pack` of the working copy, run
   `npx agentrite init --no-sandbox claude opencode`, and add a code word to the installed
   `node_modules/agentrite/process.md`. Ask a Claude Code session and an OpenCode session, each told not to read a
   file, for the code words in its context, and have each dispatch the planner wrapper as a subagent with the same
@@ -329,4 +329,4 @@ In real sessions:
 - [x] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8
 - [x] `feature-0048 Hold that the role files still say to read process.md first`: task 9
 - [x] `feature-0048 Describe how the kit's instructions reach an agent`: tasks 10 to 14
-- [ ] `feature-0048 Record the check in real sessions`: task 15, the entry in `record.md`
+- [x] `feature-0048 Record the check in real sessions`: task 15, the entry in `record.md`

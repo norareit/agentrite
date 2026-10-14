@@ -54,15 +54,35 @@ timestamp: 2026-10-14T08:12:35Z
   `feature-0048-load-the-process-through-the-harness` at `38d6568`, where `npm test` passes 500 tests. The working
   tree was clean: the uncommitted edit of `README.md` that the plan names was no longer there. The status is
   `in-progress`
-- 2026-10-14T12:08:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the notice of
+- 2026-10-14T11:55:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the notice of
   `refresh` for an `opencode.json` in `plan.md`, before writing it: its first line breaks before "because". Laid out
   as the plan gave it, the line is 133 characters for the problem of a list that lacks the path, and task 2 holds
   every notice under 120 for the problems that carry no error message. The plan contradicted itself there, and the
   break is the smallest change that keeps the text it gives
-- 2026-10-14T12:41:22Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to `plan.md` two tests
+- 2026-10-14T11:59:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to `plan.md` two tests
   that compare every line `refresh` prints and that the plan did not name: "a project with the three wrappers of
   the release before gets the fourth" in `tests/agentrite-refresh.test.mjs`, and "refresh runs on the file config
   wrote" in `tests/agentrite-config.test.mjs`, which adds that file to "Files". Both failed on the notices of task
   8, and now compare the lines before the first empty line, as the plan has the others do
+- 2026-10-14T12:02:50Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the check of task 15 in a
+  scratch project outside the repository, in the session's scratch directory on Linux: the kit installed from
+  `npm pack` of the working copy at `c9ed273`, `npx agentrite init --no-sandbox claude opencode`, which wrote
+  `opencode.json` as R3 gives it and `CLAUDE.md` with both lines, and the line "The code word of this file is
+  PERIWINKLE-0048." appended to the installed `node_modules/agentrite/process.md`. Each session was asked, without
+  reading a file or running a tool, for the code words in its context, and each subagent was dispatched by such a
+  session with the same question:
+    * Claude Code 2.1.299 with `claude-haiku-5-5`, run with `-p` and with Read, Bash, Grep, Glob and the Agent tool
+      disallowed: `PERIWINKLE-0048`
+    * Its subagent of the `planner` wrapper, the Agent tool allowed and the file tools not: `PERIWINKLE-0048`, read
+      from the tool result in the stream output, which reports 0 tool uses of the subagent
+    * Claude Code, the same, in a copy of the project whose `CLAUDE.md` lacks the line
+      `@node_modules/agentrite/process.md`: `NONE`. That is the row the spec's table has as not tested
+    * OpenCode 1.19.0 with `openai/gpt-5.6-luna`, run with `opencode run`: `PERIWINKLE-0048`, with no tool part in its
+      output
+    * Its subagent of the `planner` wrapper, through the task tool: `PERIWINKLE-0048`, read from the child session in
+      `opencode export`, which holds the prompt and the answer and no tool part
+  Not as the spec's check ran it: no local model could be reached from here, so OpenCode ran a hosted OpenAI model
+  and not Gemma 4 31B. `openai/gpt-5.4-mini` was tried first and refused by the account. Not checked: the sandbox,
+  and a session on macOS
 
 ## Amendments
