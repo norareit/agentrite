@@ -64,6 +64,8 @@ The test that holds `--connect` against what the first command gets reads the sc
 - `tests/sandbox-unit-run.test.mjs`: tests of a unit run and of `--connect` with the host's variables; `connectCall`
   and the test of what the first command gets take the script into account
 - `tests/known-terminal.test.mjs`: new, the script's own tests and the Dockerfile's install of it
+- `tests/sandbox-dev.test.mjs`: the call of `--connect` that the dev shim's test expects runs the command through the
+  script. Added during the work: the plan missed that this test holds the call too
 - `README.md`: two rows in the table of the environment variables of `sandbox.sh`
 - `SANDBOX.md`: a paragraph in "Running a unit", and the bullet of `--connect` that lists what the command has as the
   first command has it
@@ -110,32 +112,34 @@ being in it whole, so neither table of "What is here" changes.
 
 ### A `TERM` the image does not describe becomes `xterm-256color`
 
-- [ ] Write `tests/known-terminal.test.mjs`. Each test makes a temporary directory with the suite's helper, puts in
-  it a `bin` with a stand-in `infocmp` that exits 0 for the names of a file and 1 for any other, links `sh` and the
-  command the test runs into it, and runs `container/known-terminal.sh` with that `bin` as the whole PATH and an
-  environment the test gives, with a command that prints `TERM`, `COLORTERM` and its arguments, each told apart from
-  not set. Tests: a `TERM` the stand-in knows reaches the command unchanged; one it does not know reaches it as
-  `xterm-256color`, with `COLORTERM=truecolor` beside it unchanged; with no `TERM`, the command has none; with no
-  `COLORTERM`, the command has none; the arguments reach the command as they were given, one with a space among
-  them; the script exits with the status of the command. A last test reads `container/Dockerfile` and
-  `container/entrypoint.sh` and holds that the Dockerfile copies `known-terminal.sh` of the kit's container
-  directory to the path the entrypoint's last line runs the command through. Run them and see them fail (R4, R6)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, have `firstCommandGets` read the path the entrypoint's `exec setpriv`
+- [x] Write `tests/known-terminal.test.mjs`. Each test makes a temporary directory with the suite's helper, puts in it a
+  stand-in `infocmp`, `sh` with builtins alone, that exits 0 for the names the test gives and 1 for any other, and runs
+  `container/known-terminal.sh` with that directory as the whole PATH and an environment the test gives, with node as
+  the command, which prints `TERM`, `COLORTERM` and its arguments as its environment holds them, each told apart from
+  not set. The stand-in knows `dumb`, as the image does, since bash, which is `/bin/sh` on macOS, gives itself a
+  `TERM=dumb` when the environment holds none. Tests: a `TERM` the stand-in knows reaches the command unchanged; one it
+  does not know reaches it as `xterm-256color`, with `COLORTERM=truecolor` beside it unchanged; with no `TERM`, the
+  command has none; with no `COLORTERM`, the command has none; the arguments reach the command as they were given, one
+  with a space among them; the script exits with the status of the command. A last test reads `container/Dockerfile` and
+  `container/entrypoint.sh` and holds that the Dockerfile copies `known-terminal.sh` of the kit's container directory to
+  the path the entrypoint's last line runs the command through. Run them and see them fail (R4, R6)
+- [x] In `tests/sandbox-unit-run.test.mjs`, have `firstCommandGets` read the path the entrypoint's `exec setpriv`
   line runs the command through, and have the test of what the first command gets expect `--connect` to run
   `<container> <that path> <default command>`. Have `connectCall` put `/usr/local/bin/known-terminal.sh` before the
   command, so that every test of `--connect` expects it. Run them and see them fail (R2, R4, R6)
-- [ ] Write `container/known-terminal.sh` as the approach gives it, executable in git (R4)
-- [ ] In `container/entrypoint.sh`, run the command through the script on the last line, and say in the comment
+- [x] Write `container/known-terminal.sh` as the approach gives it, executable in git (R4)
+- [x] In `container/entrypoint.sh`, run the command through the script on the last line, and say in the comment
   above it why: the image knows which terminal descriptions it holds, and the wrapper does not (R4)
-- [ ] In `container/Dockerfile`, copy the script to `/usr/local/bin/known-terminal.sh` and make it executable,
+- [x] In `container/Dockerfile`, copy the script to `/usr/local/bin/known-terminal.sh` and make it executable,
   beside the entrypoint's `COPY` and `chmod` (R4)
-- [ ] In `README.md`, add to the row of `TERM` that one the image holds no description of is told as
+- [x] In `README.md`, add to the row of `TERM` that one the image holds no description of is told as
   `xterm-256color`. In `SANDBOX.md`, add to the paragraph of "Running a unit" that such a `TERM` is
   `xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. Moved here from the first group, so that
   no commit describes what it does not do (R9, R10)
-- [ ] In `container/sandbox.sh`, put `/usr/local/bin/known-terminal.sh` before the command of `--connect`, and say in
-  the comment of `--connect` that it is what the entrypoint runs the first command through. Run `npm test`: all pass
-  (R2, R4)
+- [x] In `container/sandbox.sh`, put `/usr/local/bin/known-terminal.sh` before the command of `--connect`, and say in
+  the comment of `--connect` that it is what the entrypoint runs the first command through. In
+  `tests/sandbox-dev.test.mjs`, expect the dev shim's `--connect` to run the command through it too. Run `npm test`:
+  all pass (R2, R4)
 
 ### Shown in the sandbox and in the human's terminals
 
@@ -167,5 +171,5 @@ being in it whole, so neither table of "What is here" changes.
 
 - [x] `bugfix-0049 Plan the passing of the host's terminal type`: `plan.md` and `record.md`
 - [x] `bugfix-0049 Pass the host's TERM and COLORTERM to the sandbox's commands`: the first group of tasks
-- [ ] `bugfix-0049 Tell a command xterm-256color for a TERM the image does not describe`: the second group
+- [x] `bugfix-0049 Tell a command xterm-256color for a TERM the image does not describe`: the second group
 - [ ] `bugfix-0049 Record the checks in the sandbox and in the human's terminals`: `record.md`

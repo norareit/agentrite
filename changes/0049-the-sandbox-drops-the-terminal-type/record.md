@@ -38,3 +38,10 @@ timestamp: 2026-10-14T12:22:07Z
 - 2026-10-14T21:09:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved the sentences of
   `README.md` and `SANDBOX.md` on a `TERM` the image does not describe from the first group of tasks to a new
   task of the second, which makes them true, so that no commit describes what it does not do. Written into the plan
+- 2026-10-14T21:20:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, extended the plan twice
+  in the second group. `tests/sandbox-dev.test.mjs` holds the call of `--connect` too, which the plan did not name,
+  and failed once the call ran the command through the script; it now expects the script. The tests of the script
+  print with node and not with `sh`, and their stand-in `infocmp` knows `dumb`: `/bin/sh` of macOS is bash, which
+  gave the test with no `TERM` a `TERM=dumb` of its own. In the image, `/bin/sh` is dash, which gives none, and
+  `infocmp dumb` succeeds there: `docker run` of the image printed `/bin/sh -> dash`, `[unset]` for
+  `${TERM-unset}` and `has dumb`, and `ncurses-base` and `ncurses-bin` are Essential in it. Written into the plan

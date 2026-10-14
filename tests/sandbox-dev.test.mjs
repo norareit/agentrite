@@ -105,7 +105,8 @@ test('the shim connects to a unit run under the dev name, and asks for no build'
   assert.deepEqual(host.dockerCalls(), [
     `SANDBOX_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker exec --interactive --user agent ` +
       '--workdir /work --env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
-      `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin project-sandbox-${unitBranch} echo hi`,
+      '--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ' +
+      `project-sandbox-${unitBranch} /usr/local/bin/known-terminal.sh echo hi`,
   ]);
 });
 

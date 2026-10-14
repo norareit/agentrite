@@ -923,7 +923,8 @@ test('the wrapper says that removing the clone failed, exits non-zero, and does 
 // Connecting: `--connect` runs a command in the container of the unit run that is under way, and starts nothing.
 
 // What the entrypoint, the compose file and the image give the first command of a container, read from the three
-// files. The wrapper holds them a second time, for the command it connects.
+// files, the script the entrypoint runs the command through among them. The wrapper holds them a second time, for
+// the command it connects.
 function firstCommandGets() {
   const read = (file) => readFileSync(join(kitContainer, file), 'utf-8');
   const entrypoint = read('entrypoint.sh');
@@ -934,18 +935,20 @@ function firstCommandGets() {
     user,
     logname,
     becomes: entrypoint.match(/^exec setpriv --reuid=(\S+) /m)[1],
+    through: entrypoint.match(/^exec setpriv .* -- (\S+) "\$@"$/m)[1],
     workingDirectory: read('compose.yml').match(/^ +working_dir: (\S+)$/m)[1],
     defaultCommand: read('Dockerfile').match(/^CMD \["([^"]+)"\]$/m)[1],
   };
 }
 
-// The one call of Docker a connect makes, as the stand-in records it: `command` in the unit run's container, with
-// a terminal when `tty` says so, and the flags of the host's terminal in `terminal`.
+// The one call of Docker a connect makes, as the stand-in records it: `command` in the unit run's container, run
+// through the script that makes the TERM one the image describes, with a terminal when `tty` says so, and the flags
+// of the host's terminal in `terminal`.
 const connectCall = (command, { tty = false, terminal = '' } = {}) =>
   `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive ${tty ? '--tty ' : ''}--user agent --workdir /work ` +
   '--env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
   `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${terminal}` +
-  `${containerName} ${command}`;
+  `${containerName} /usr/local/bin/known-terminal.sh ${command}`;
 
 // What the stand-in's `ps` prints for a container that is running.
 const markRunning = ({ runningContainer }) => writeFileSync(runningContainer, '0123456789ab\n');
@@ -1048,7 +1051,8 @@ test('--connect gives the command what the entrypoint, the compose file and the 
   assert.deepEqual(host.dockerCalls(), [
     `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive --user ${gets.becomes} ` +
       `--workdir ${gets.workingDirectory} --env HOME=${gets.home} --env USER=${gets.user} ` +
-      `--env LOGNAME=${gets.logname} --env PATH=${gets.path} ${containerName} ${gets.defaultCommand}`,
+      `--env LOGNAME=${gets.logname} --env PATH=${gets.path} ${containerName} ${gets.through} ` +
+      gets.defaultCommand,
   ]);
 });
 

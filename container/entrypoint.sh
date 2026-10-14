@@ -308,6 +308,9 @@ log "verifying $FIREWALL_CANARY is refused at $FIREWALL_PROBE's address ($probe_
 refused_at_probe_address "$FIREWALL_CANARY" "$probe_ip" \
   || die "$FIREWALL_CANARY was not refused at an allowlisted address; egress is not bounded by hostname"
 
+# The command runs through known-terminal.sh, which replaces a TERM the image holds no
+# description of: the wrapper passes the TERM of the developer's terminal, and only the
+# image knows which terminals it describes.
 log "firewall verified; dropping to the agent user"
 export HOME=/home/agent USER=agent LOGNAME=agent
-exec setpriv --reuid=agent --regid=agent --init-groups -- "$@"
+exec setpriv --reuid=agent --regid=agent --init-groups -- /usr/local/bin/known-terminal.sh "$@"

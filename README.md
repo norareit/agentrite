@@ -277,7 +277,7 @@ branch holds gets its branch first, cut from the default branch that `agentrite.
 |----------------------|--------------------------------------------------------------------------------------------|
 | `SANDBOX_MEM_LIMIT`  | The memory limit, in place of the `8g` that `init` writes in `sandbox/compose.project.yml` |
 | `SANDBOX_CPUS`       | The CPU limit, in place of the `6` that `init` writes in `sandbox/compose.project.yml`     |
-| `TERM`               | The terminal the command is told it runs in. Passed to it when set and not empty           |
+| `TERM`               | The terminal type, passed to the command. One the image lacks becomes `xterm-256color`     |
 | `COLORTERM`          | Whether the terminal shows 24-bit colour. Passed to the command when set and not empty     |
 | `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                       |
 | `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                         |

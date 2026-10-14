@@ -454,8 +454,10 @@ terminal_environment=()
 # working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. A
 # test in tests/sandbox-unit-run.test.mjs reads the three files and holds this call
 # against them. Without --user the command would be root, with the capabilities the
-# entrypoint keeps for the firewall. TERM and COLORTERM are not the first command's but
-# those of this wrapper's shell, since --connect may be run from another terminal.
+# entrypoint keeps for the firewall. The command runs through known-terminal.sh, as the
+# entrypoint runs the first, so that a TERM the image does not describe is replaced.
+# TERM and COLORTERM are not the first command's but those of this wrapper's shell,
+# since --connect may be run from another terminal.
 #
 # Standard input is always passed on, so that a command a script runs can be given
 # input. A terminal only when the wrapper has one on both its input and its output:
@@ -484,7 +486,7 @@ if [ "$connect" -eq 1 ]; then
     --env HOME=/home/agent --env USER=agent --env LOGNAME=agent \
     --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     ${terminal_environment[@]+"${terminal_environment[@]}"} \
-    "$container_name" "$@"
+    "$container_name" /usr/local/bin/known-terminal.sh "$@"
 fi
 
 claude_code_host="$(installed_version claude "Claude Code")"

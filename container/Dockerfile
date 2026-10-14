@@ -148,9 +148,12 @@ WORKDIR /work
 # confinement setting other than the firewall lives in the compose files.
 # KIT_CONTAINER is this directory relative to the build context, the project root. It
 # depends on where the kit is installed, so container/sandbox.sh supplies it.
+# known-terminal.sh is what the entrypoint, and a command of --connect, run the command
+# through, so that its TERM is one the image holds a description of.
 ARG KIT_CONTAINER
 COPY ${KIT_CONTAINER}/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY ${KIT_CONTAINER}/known-terminal.sh /usr/local/bin/known-terminal.sh
 COPY ${KIT_CONTAINER}/egress-proxy.mjs ${KIT_CONTAINER}/sni.mjs /usr/local/lib/egress-proxy/
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/known-terminal.sh
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]

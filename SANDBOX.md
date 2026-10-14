@@ -76,6 +76,9 @@ Several runs:
 Every command in the sandbox, of a unit run, of `--in-place`, of `--workdir` and of `--connect`, has the `TERM` and
 the `COLORTERM` of the terminal the wrapper was run from, so a harness draws in the colours it draws in there on the
 host. Run from a shell without a `TERM`, as a script may be, the command keeps the `TERM` Docker gives it, `xterm`.
+A `TERM` that the image holds no description of, as that of a terminal named after its own program may be, is
+`xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. `echo $TERM` in the sandbox shows which it
+is.
 
 For a unit run that starts nothing, see "When something goes wrong".
 
