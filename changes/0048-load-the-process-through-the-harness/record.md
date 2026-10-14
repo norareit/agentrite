@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-14T08:12:35Z
 ---
 
@@ -41,5 +41,14 @@ timestamp: 2026-10-14T08:12:35Z
   it in quotes. The requirements after 9 are renumbered. Rewrote the decision on `refresh`, added one on the rule,
   and added two entries to "Beyond the request". The status is `draft`
 - 2026-10-14T09:24:08Z [human] approved the spec. The status is `approved`
+- 2026-10-14T09:32:01Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the host, on
+  `feature-0048-load-the-process-through-the-harness`, which was there already at the head of `master`, `f43b190`.
+  Read the role file and `process.md` as installed under `node_modules/agentrite`, release 6.0.0. Wrote `plan.md`
+  against that tree, where `npm test` passes 500 tests. What the spec left to the plan, the plan decides: a module
+  `scripts/agentrite-instructions.mjs` that judges both files, the layout of an amended JSON file moved into
+  `scripts/agentrite-json.mjs` for `package.json` and `opencode.json` alike, the phrases and notices, where the
+  lines are printed, the heading of the README section, and that a `CLAUDE.md` that cannot be read lacks both
+  lines. Found in the working tree an uncommitted edit of `README.md` that is not this unit's, "instp-alled" in
+  the opening of "Commands". It was left as it is and not committed, for the human. The status is `planned`
 
 ## Amendments
