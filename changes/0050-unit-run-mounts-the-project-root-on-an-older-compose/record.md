@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-14T12:21:25Z
 ---
 
@@ -172,5 +172,23 @@ timestamp: 2026-10-14T12:21:25Z
   --dry-run` lists 33 files, the same as on `master` at `193e7e7`. `npm run check-changes` is run on the commit
   of this entry. Every task of the plan is ticked. The change for S2 has not been reviewed, so the status stays
   `in-progress` for the human to decide whether it is reviewed again
+- 2026-10-14T20:28:59Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0050 at
+  `428063c71736d533d02af5076fc389e407ace215`, a delta review from
+  `9bdfcf9838d7f3503fadf80f43729a3836395e04`. Verified the correction of S2 and that both original S1
+  reproductions remain detected. Returned no findings on spec conformance, plan fidelity or code quality.
+  The complete review is in
+  `.reviews/0050-unit-run-mounts-the-project-root-on-an-older-compose/20261014T202759Z-delta-review.md`.
+  Independently ran `npm test`: 547 tests, 530 passing, 17 skipped and none failing; and
+  `./sandbox.sh --in-place npm test` through a terminal: 547 passing, none skipped or failing. The change check,
+  package dry run and whitespace check passed. Ten in-memory injection checks of the actual regression test
+  gave the expected results, including the conservative comment match of the recorded approach. Not
+  independently verified: the historical test-first ordering of this correction. Runtime mount inspections
+  were not repeated in this delta; the first review's limits for the recorded Compose 2.39.2 runs and Linux
+  hosts remain
+- 2026-10-14T20:30:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the review of
+  `428063c`, which returned no findings, and in which the reviewer verified S2 resolved and S1 still resolved.
+  Both blocking findings of the reviews, S1 and S2, were decided by the human, who had each applied, and both are
+  resolved. Every task of `plan.md` is
+  ticked. The status is `implemented`
 
 ## Amendments
