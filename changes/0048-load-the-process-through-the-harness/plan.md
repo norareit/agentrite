@@ -260,7 +260,7 @@ What does not change:
 
 The documents:
 
-- [ ] 10. In `README.md`, add the section `### How the kit's instructions reach an agent` under "Installing it into
+- [x] 10. In `README.md`, add the section `### How the kit's instructions reach an agent` under "Installing it into
   a project", before "On a fresh clone". Its table, or a list where a row would not fit the line limit, gives for
   `AGENTS.md`, `CLAUDE.md` and `opencode.json` what each must hold and which harness reads it, as R12 lists them.
   Then the three things R12 says: what `init` puts in and where it only prints a notice, so that the project adds
@@ -268,17 +268,17 @@ The documents:
   instructions only if the model follows the link in `AGENTS.md`; and that `refresh` never adds them, and prints
   its notice on every run while one lacks them, also for a project that leaves them out on purpose. The lines of
   `CLAUDE.md` are shown in a fenced block, and the text says that in the file they are not (R12)
-- [ ] 11. In `README.md`, change "agentrite init" (R13, R14):
+- [x] 11. In `README.md`, change "agentrite init" (R13, R14):
     * the opening says that `init` writes or amends `opencode.json` with `opencode`
     * a paragraph says what it does with an `opencode.json` that exists, as R4 and R5 have it, the two `skipped`
       lines among it, and that no state of the file makes `init` refuse. And that it notices a `CLAUDE.md` that
       exists only with `claude` and only when it lacks one of the two lines
     * the paragraph on `--no-sandbox` names `opencode.json` among what is still written or amended
     * "See" gains the new section
-- [ ] 12. In `README.md`, change "agentrite refresh": it reads `CLAUDE.md` with `claude` and `opencode.json` with
+- [x] 12. In `README.md`, change "agentrite refresh": it reads `CLAUDE.md` with `claude` and `opencode.json` with
   `opencode`, never writes either, and prints after its lines a notice for one that does not load the kit's
   instructions, which changes neither what it writes nor its exit status. "See" gains the new section (R13, R14)
-- [ ] 13. In `README.md`, change "Installing it into a project" (R13, R14):
+- [x] 13. In `README.md`, change "Installing it into a project" (R13, R14):
     * the row of `CLAUDE.md` in the table says it imports the kit's `process.md` and `AGENTS.md`, and a row for
       `opencode.json` says it is for `opencode` and loads `process.md` into OpenCode
     * "`init` also amends two files" becomes three, with `opencode.json`: written when there is none, amended when
@@ -287,7 +287,7 @@ The documents:
       the item on `AGENTS.md` points to it too. A new item says what happens to an `opencode.json` that exists
     * the item on `AGENTS.md` among the files a project edits, and "`CLAUDE.md` is best left as written", point to
       the new section for what must stay
-- [ ] 14. In `README.md`, change "Updating a project to a newer kit": `opencode.json` is among the files `refresh`
+- [x] 14. In `README.md`, change "Updating a project to a newer kit": `opencode.json` is among the files `refresh`
   never touches or creates, it reads `CLAUDE.md` and `opencode.json` and prints the notices of task 12, and a
   project set up before this release runs `npx agentrite init` with no argument to get its `opencode.json`, or adds
   what the notices name by hand. It points to the new section (R13, R14)
@@ -328,5 +328,5 @@ In real sessions:
   and 6
 - [x] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8
 - [x] `feature-0048 Hold that the role files still say to read process.md first`: task 9
-- [ ] `feature-0048 Describe how the kit's instructions reach an agent`: tasks 10 to 14
+- [x] `feature-0048 Describe how the kit's instructions reach an agent`: tasks 10 to 14
 - [ ] `feature-0048 Record the check in real sessions`: task 15, the entry in `record.md`

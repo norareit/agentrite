@@ -89,9 +89,9 @@ npx agentrite init
 ```
 
 Sets a project up, from its root: writes `agentrite.json`, the role wrappers, the project's agent instructions and the
-sandbox's files, and prints each file it wrote, changed or skipped. The first form is for a project with no
-`agentrite.json`, and writes that file from its arguments. The second is for a project that has one, and takes the
-harnesses and the sandbox setting from it.
+sandbox's files, writes or amends `opencode.json` with `opencode`, and prints each file it wrote, changed or skipped.
+The first form is for a project with no `agentrite.json`, and writes that file from its arguments. The second is for
+a project that has one, and takes the harnesses and the sandbox setting from it.
 
 | Argument or option        | What it is                                                                              |
 |---------------------------|-----------------------------------------------------------------------------------------|
@@ -121,14 +121,30 @@ In a project with an `agentrite.json`:
   it writes nothing, exits 1, and says that the settings are read from the file, that a setting is changed by editing
   it, and that `npx agentrite init` with no argument then writes what is missing
 
+With `opencode` among the harnesses, `init` writes `opencode.json` when nothing is at its path, and prints
+`wrote opencode.json`. One that is a JSON object it amends, keeping every other key, their order, the indentation and
+whether it ends in a line break: it adds `node_modules/agentrite/process.md` at the end of the `instructions` list, or
+adds the list, and prints `changed opencode.json`. One whose list holds the path already, or that is not JSON and
+whose text holds `"node_modules/agentrite/process.md"` with the quotes, as one with a comment in it can, it leaves
+as it is, and prints `skipped opencode.json, which loads node_modules/agentrite/process.md`. Any other it leaves as
+it is, and prints `skipped opencode.json, which cannot be amended` and a notice that says why and what to add by
+hand: one that cannot be read, is not JSON, is not a JSON object, or has an `instructions` that is not a list. No
+state of the file makes `init` refuse, and it writes everything else as it would have. Without `opencode`, `init`
+does not read `opencode.json` and prints nothing of it.
+
+`CLAUDE.md` that exists is left as it is. With `claude` among the harnesses, and only when it lacks one of the lines
+`@node_modules/agentrite/process.md` and `@AGENTS.md`, `init` prints a notice that names the lines it lacks. A line
+counts when it is exactly that text, ending in LF or CRLF.
+
 With `--no-sandbox`, or with `sandbox` `false` in the file, `init` writes the role wrappers, `AGENTS.md` and
-`CLAUDE.md`, and amends `package.json`, and prints the same lines and notices for them. It does not write, change or
+`CLAUDE.md`, amends `package.json`, writes or amends `opencode.json` with `opencode`, and prints the same lines and
+notices for them. It does not write, change or
 read `sandbox.sh`, `sandbox/compose.project.yml` or `.dockerignore`, prints no line for any of the three, and leaves
 one that exists as it is. It runs when `package.json` has no `name`, and does not read `package-lock.json`. It still
 refuses, writing nothing, when `package.json` is missing or cannot be read. The option goes at any place among the
 harnesses, and given more than once it counts as given once.
 
-See "Installing it into a project" and "The project's settings".
+See "Installing it into a project", "How the kit's instructions reach an agent" and "The project's settings".
 
 ### agentrite config
 
@@ -165,7 +181,14 @@ It refreshes the role wrappers of the harnesses that `harnesses` names, a pinned
 is not read or written and no line is printed for it: what is at its path, a symbolic link or a directory included,
 changes neither what `refresh` prints nor its exit status.
 
-See "Updating a project to a newer kit" and "The project's settings".
+It reads `CLAUDE.md` with `claude` among the harnesses, and `opencode.json` with `opencode`, and never writes or
+creates either. After the lines of the files, it prints a notice, after an empty line, for each that does not load
+the kit's instructions: a `CLAUDE.md` that is missing or lacks one of the lines `@node_modules/agentrite/process.md`
+and `@AGENTS.md`, and an `opencode.json` that is missing or does not hold `node_modules/agentrite/process.md` in its
+`instructions` list, judged as `init` judges it. The notice names what is missing, or why the file could not be
+read, and says that `refresh` does not add it. It changes neither what `refresh` writes nor its exit status.
+
+See "Updating a project to a newer kit", "How the kit's instructions reach an agent" and "The project's settings".
 
 ### agentrite roles
 
@@ -385,7 +408,8 @@ It prints each file it wrote, changed or skipped. It writes:
 | `.claude/agents/*.md`         | For `claude`: a wrapper per role for Claude Code, pointing at the kit's role file    |
 | `.opencode/agents/*.md`       | For `opencode`: the same for OpenCode                                                |
 | `AGENTS.md`                   | The project's agent instructions, pointing at the kit's `process.md` and role files  |
-| `CLAUDE.md`                   | The bridge that imports `AGENTS.md` into Claude Code, written whatever the harnesses |
+| `CLAUDE.md`                   | Imports the kit's `process.md` and `AGENTS.md` into Claude Code, for any harnesses   |
+| `opencode.json`               | For `opencode`: loads the kit's `process.md` into OpenCode. Amended when it exists   |
 | `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "The sandbox"        |
 | `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                      |
 
@@ -407,26 +431,30 @@ The files a project is expected to edit are these:
 * `AGENTS.md` has a marked section for what is specific to the project, such as its house style, its code rules and
   how its tests run, and keeps only that: what holds for every project is in the kit. The three sections above it,
   Development Guidelines, Roles and Changes in this project, are what make the kit's instructions reach an agent, and
-  are best kept
+  are best kept. See "How the kit's instructions reach an agent"
 * `sandbox/compose.project.yml` holds the Compose project and image names, both derived from the `name` in
   `package.json`, the `PLAYWRIGHT_VERSION` build argument when the project has Playwright, the memory and CPU limits,
   and the project's `ALLOWLIST`. The allowlist lists only what the project needs beyond what the kit admits itself.
   See "Reaching more hosts" of [`SANDBOX.md`](SANDBOX.md)
 * The role wrappers, to pin a model per role
 
-`CLAUDE.md` is best left as written. `sandbox.sh` is not a file to edit, and of what a project adds to a role wrapper
+`CLAUDE.md` is best left as written, and what it must keep is in "How the kit's instructions reach an agent".
+`sandbox.sh` is not a file to edit, and of what a project adds to a role wrapper
 only a pinned model lasts. See "Updating a project to a newer kit".
 
 A file that already exists:
 
 * When `AGENTS.md` already exists, `init` leaves it untouched and prints the three sections it would have written,
   ready to be pasted in. An agent does not see the kit's instructions until the existing file holds them, so paste
-  in whichever it lacks
-* When `CLAUDE.md` already exists, it is left untouched too, and must import `AGENTS.md` with a line holding
-  `@AGENTS.md`
+  in whichever it lacks. See "How the kit's instructions reach an agent"
+* When `CLAUDE.md` already exists, it is left untouched too, and must hold the lines
+  `@node_modules/agentrite/process.md` and `@AGENTS.md`. With `claude` among the harnesses, `init` prints a notice
+  that names the ones it lacks. See "How the kit's instructions reach an agent"
+* When `opencode.json` already exists, with `opencode` among the harnesses, `init` amends it as said below, or leaves
+  it with a notice when it cannot
 * An existing `sandbox/compose.project.yml` is left as it is
 
-`init` also amends two files, adding only what is missing:
+`init` also amends three files, adding only what is missing:
 
 * `package.json` gains a `check-changes` script, unless it has one, keeping every other key, their order and the
   indentation:
@@ -440,6 +468,11 @@ A file that already exists:
 * `.dockerignore` is written when there is none. When it keeps any file of the kit's `container/` directory out of
   the build context, whatever its patterns, the exception is appended, so that the image build can reach the kit.
   Otherwise the file is left alone
+* `opencode.json`, with `opencode` among the harnesses, is written when there is none. When it is a JSON object,
+  `node_modules/agentrite/process.md` is added at the end of its `instructions` list, or the list is added, keeping
+  every other key, their order and the indentation. When it cannot be amended, because it cannot be read, is not
+  JSON, is not a JSON object, or has an `instructions` that is not a list, it is left with a notice of what to add
+  by hand. One that loads `process.md` already is left alone
 
 A project whose `.dockerignore` excludes `node_modules` must let that one directory's files back in:
 
@@ -465,6 +498,46 @@ A project that depends on Playwright gets a sandbox with its browser:
 `init` fills in the templates in the kit's `templates/project/`, which ship in the package, at
 `node_modules/agentrite/templates/project/`. A project set up or repaired by hand starts from the same
 files, filling in each `{{placeholder}}` itself.
+
+### How the kit's instructions reach an agent
+
+A harness loads the kit's `process.md` into every session, and an agent finds the role files from it, because of
+what three files of the project hold. Each file, what it must hold, and the harness that reads it:
+
+* `AGENTS.md`, read by Claude Code and OpenCode: the sections Development Guidelines, Roles and Changes in this
+  project, as `init` writes them. They call `process.md` required reading and name the role files
+* `CLAUDE.md`, read by Claude Code: the lines `@node_modules/agentrite/process.md` and `@AGENTS.md`, each on a line
+  of its own and outside a code span or a fenced block. From them Claude Code loads `process.md` and `AGENTS.md`
+  into every session
+* `opencode.json` at the project root, read by OpenCode, and needed only with `opencode` among the harnesses:
+  `node_modules/agentrite/process.md` in its `instructions` list. From it OpenCode loads `process.md` into every
+  session, beside `AGENTS.md`, which it reads by itself
+
+The two lines of `CLAUDE.md` are shown here in a block. In the file they are not in one, since Claude Code does not
+read a line inside a fenced block or a code span:
+
+```
+@node_modules/agentrite/process.md
+@AGENTS.md
+```
+
+The `opencode.json` that `init` writes into a project that has none:
+
+```json
+{
+  "instructions": [
+    "node_modules/agentrite/process.md"
+  ]
+}
+```
+
+* `init` puts these into each of the three files it writes, and into an `opencode.json` it can amend. For an
+  `AGENTS.md` or a `CLAUDE.md` that exists, and for an `opencode.json` it cannot amend, it only prints a notice of
+  what is missing. The project then adds that by hand
+* Neither harness reports a file that lacks them. There is no error: a session starts without the kit's
+  instructions in its context, and reads them only if the model follows the link to `process.md` in `AGENTS.md`
+* `refresh` never adds them to `CLAUDE.md` or `opencode.json`. It prints a notice on each run for as long as one of
+  them lacks them, so a project that leaves them out on purpose gets that notice on every `refresh`
 
 ### On a fresh clone
 
@@ -557,8 +630,13 @@ copies stay as an older release wrote them, and nothing says so. In a project wh
 * Everything else in a wrapper, and all of `sandbox.sh`, is replaced, other keys a project added to the frontmatter
   among them. The wrappers are tracked files, so `git diff` shows what a refresh changed, and git has what it
   replaced
-* `AGENTS.md`, `CLAUDE.md`, `sandbox/compose.project.yml`, `package.json` and `.dockerignore` are never touched, and
-  never created
+* `AGENTS.md`, `CLAUDE.md`, `opencode.json`, `sandbox/compose.project.yml`, `package.json` and `.dockerignore` are
+  never written, and never created
+* It reads `CLAUDE.md` with `claude` among the harnesses, and `opencode.json` with `opencode`, and after its lines
+  prints a notice for each that does not load the kit's instructions, as "agentrite refresh" in "Commands" says. A
+  project set up before the release that loads them runs `npx agentrite init` with no argument, which writes or
+  amends its `opencode.json`, and adds what the notices still name by hand. See "How the kit's instructions reach
+  an agent"
 * A path that holds something other than a regular file, such as a symbolic link, is left as it is and named on
   standard error. The other files are still refreshed, and the command exits non-zero
 
