@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-14T08:12:35Z
 ---
 
@@ -40,5 +40,6 @@ timestamp: 2026-10-14T08:12:35Z
   lacks a line, and requirement 5 counts an `opencode.json` that is not JSON as loading the path when its text holds
   it in quotes. The requirements after 9 are renumbered. Rewrote the decision on `refresh`, added one on the rule,
   and added two entries to "Beyond the request". The status is `draft`
+- 2026-10-14T09:24:08Z [human] approved the spec. The status is `approved`
 
 ## Amendments
