@@ -88,11 +88,29 @@ What does not change:
 
 The documents:
 
-11. `README.md` says, in "agentrite init" and in "Installing it into a project", that `init` writes or amends
-    `opencode.json` with `opencode` and what it puts in it, what it does with one that exists, and that `CLAUDE.md`
-    imports `process.md` as well as `AGENTS.md`. Its table of the files `init` writes has a row for `opencode.json`
-    and says in the row of `CLAUDE.md` what it imports. "Updating a project to a newer kit" names `opencode.json`
-    among the files `refresh` never touches
+11. `README.md` has a section of its own on how the kit's instructions reach an agent, under a heading that says so,
+    in "Installing it into a project". A reader finds it from the README's headings, without having seen a notice
+    of `init`. It holds, for each file, what that file must hold and which harness reads it:
+    * `AGENTS.md`: the sections Development Guidelines, Roles and Changes in this project, read by both harnesses
+    * `CLAUDE.md`: the lines `@node_modules/agentrite/process.md` and `@AGENTS.md`, each on a line of its own and
+      outside a code span or a fenced block, read by Claude Code
+    * `opencode.json` at the project root: `node_modules/agentrite/process.md` in its `instructions` list, read by
+      OpenCode, and needed only with `opencode` among the harnesses
+
+    And it says:
+    * That `init` puts these in a file it writes, and in an `opencode.json` it can amend, and that for an
+      `AGENTS.md` or a `CLAUDE.md` that exists, and an `opencode.json` it cannot amend, it only prints a notice,
+      once, which is kept nowhere. The project then adds what is missing by hand
+    * That nothing reports a file that lacks them: neither harness gives an error, and a session starts without the
+      kit's instructions in its context, which it then reads only if the model follows the link in `AGENTS.md`
+    * That `refresh` never adds them, and a project checks the three files against this section after an `init`
+      that printed a notice
+12. "agentrite init", the text of `README.md` on a file that exists, and "Updating a project to a newer kit" each
+    point to that section
+13. `README.md` says, in "agentrite init" and in "Installing it into a project", that `init` writes or amends
+    `opencode.json` with `opencode`, and what it does with one that exists. Its table of the files `init` writes has
+    a row for `opencode.json` and says in the row of `CLAUDE.md` that it imports `process.md` as well as
+    `AGENTS.md`. "Updating a project to a newer kit" names `opencode.json` among the files `refresh` never touches
 
 ## Decisions
 
@@ -136,6 +154,15 @@ The documents:
   `refresh` amending both, which makes it touch the project's own files for a step each project takes once. The
   third action, in which a project names its own style file, may need the loading kept in step with a setting, and
   decides then how
+* **What a project must hold is documented in one section, and not only in the notices.** The human asked for
+  this while the spec was a draft. A notice is printed once, among the other lines of `init`, and is kept nowhere,
+  so a reader who did not see it, or who set the project up before this unit, has nothing to go by. And a file
+  that lacks a line fails without a word, as the table above shows for a missing target, so the reader cannot
+  learn it from an error either. One section that lists every file and line is what a reader checks a project
+  against. It holds `AGENTS.md` too, whose sections the notice of `init` already lists, so that the section is the
+  whole of the wiring and not two thirds of it. Rejected: the facts spread over "agentrite init" and the text on
+  existing files, which is where they were in the first draft, and which a reader looking for the wiring has to
+  assemble
 * **The line goes before `@AGENTS.md`.** The kit's instructions first and the project's after them, the order in
   which `AGENTS.md` describes the two
 

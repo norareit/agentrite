@@ -24,5 +24,12 @@ timestamp: 2026-10-14T08:12:35Z
   takes neither file over, and `opencode.json` is written at the project root. The human was asked about neither,
   and approving the unit approves them. Not checked: the sandbox, where the same harnesses read the same files. The
   status is `draft`
+- 2026-10-14T08:56:58Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's remark that a
+  project may not see the notices of `init`, and that what must be in `CLAUDE.md` and `opencode.json` needs to be
+  documented well. Changed `spec.md`: requirements 11 and 12 are new, and ask for a section of its own in
+  `README.md` that lists every file and line that makes the kit's instructions reach an agent, says that a missing
+  one fails without a word, and is pointed to from "agentrite init", the text on existing files and "Updating a
+  project to a newer kit". What requirement 11 asked before is requirement 13. Added the decision with its
+  rationale. The status is `draft`
 
 ## Amendments
