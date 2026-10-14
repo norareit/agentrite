@@ -1,7 +1,7 @@
 # Claude Code Configuration
 
 This project uses the [AGENTS.md](https://agents.md/) convention as the canonical source of coding agent instructions.
-This CLAUDE.md file exists solely as a bridge to import that content into Claude Code.
+This CLAUDE.md file exists solely as a bridge that imports the kit's `process.md` and `AGENTS.md` into Claude Code.
 
 Instructions live in two places, and never in this file or `.claude/rules/`:
 
@@ -11,4 +11,5 @@ Instructions live in two places, and never in this file or `.claude/rules/`:
 
 ## Repository Instructions
 
+@node_modules/agentrite/process.md
 @AGENTS.md

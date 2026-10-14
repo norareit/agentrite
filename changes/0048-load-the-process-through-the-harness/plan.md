@@ -188,7 +188,7 @@ The module that judges:
 
 The `CLAUDE.md` that `init` writes:
 
-- [ ] 4. In `tests/agentrite-init.test.mjs`, extend "CLAUDE.md is planned for every harness list", failing: the
+- [x] 4. In `tests/agentrite-init.test.mjs`, extend "CLAUDE.md is planned for every harness list", failing: the
   planned `CLAUDE.md` holds a line that is exactly `@node_modules/agentrite/process.md` before the line
   `@AGENTS.md`, neither in a fenced block (no line opening with three backticks before either) nor in a code span,
   and `claudeLacks` of it lacks none. Then add the line to `templates/project/CLAUDE.md`, under
@@ -319,7 +319,7 @@ In real sessions:
 - [x] `feature-0048 Plan loading process.md through the harness`: this plan and the record
 - [x] `feature-0048 Lay out an amended JSON file in one place`: task 1
 - [x] `feature-0048 Judge whether CLAUDE.md and opencode.json load the process, in one module`: tasks 2 and 3
-- [ ] `feature-0048 Import process.md in the CLAUDE.md that init writes`: task 4
+- [x] `feature-0048 Import process.md in the CLAUDE.md that init writes`: task 4
 - [ ] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5
   and 6
 - [ ] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8

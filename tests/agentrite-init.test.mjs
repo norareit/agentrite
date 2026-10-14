@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { claudeLacks } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { settingsText } from '../scripts/agentrite-settings.mjs';
 import {
@@ -232,6 +233,23 @@ test('CLAUDE.md is planned for every harness list and imports AGENTS.md', () => 
     const claude = fileAt(files(harnesses), 'CLAUDE.md').content;
     assert.match(claude, /^@AGENTS\.md$/m);
     assert.match(claude, /AGENTS\.md.*canonical source/);
+  }
+});
+
+// R1
+
+test('CLAUDE.md imports process.md before AGENTS.md, outside a fenced block and a code span', () => {
+  for (const harnesses of HARNESS_LISTS) {
+    const claude = fileAt(files(harnesses), 'CLAUDE.md').content;
+    const lines = claude.split('\n');
+    const processLine = lines.indexOf('@node_modules/agentrite/process.md');
+    const agentsLine = lines.indexOf('@AGENTS.md');
+    assert.ok(processLine !== -1, 'CLAUDE.md has no line @node_modules/agentrite/process.md');
+    assert.ok(processLine < agentsLine, 'the import of process.md is not before the import of AGENTS.md');
+    const fence = lines.findIndex((line) => line.startsWith('```'));
+    assert.ok(fence === -1 || fence > agentsLine, 'a fenced block opens before the imports');
+    for (const line of [lines[processLine], lines[agentsLine]]) assert.ok(!line.includes('`'), line);
+    assert.deepEqual(claudeLacks({ found: true, text: claude }), []);
   }
 });
 
