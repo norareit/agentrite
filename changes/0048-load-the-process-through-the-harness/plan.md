@@ -151,7 +151,7 @@ What the tree holds that the work must fit:
 
 The JSON layout, as a refactoring:
 
-- [ ] 1. Write `tests/agentrite-json.test.mjs` for `formattedLike`: two-space and tab indentation kept, a
+- [x] 1. Write `tests/agentrite-json.test.mjs` for `formattedLike`: two-space and tab indentation kept, a
   trailing line break kept and its absence kept, key order as the value gives it, and an original with no
   indented line laid out with two spaces. Add `scripts/agentrite-json.mjs` with `formattedLike` until it passes,
   and have `withCheckChangesScript` use it. The tests of `package.json` in `tests/agentrite-init.test.mjs` pass
@@ -313,8 +313,8 @@ In real sessions:
 
 ## Commit Points
 
-- [ ] `feature-0048 Plan loading process.md through the harness`: this plan and the record
-- [ ] `feature-0048 Lay out an amended JSON file in one place`: task 1
+- [x] `feature-0048 Plan loading process.md through the harness`: this plan and the record
+- [x] `feature-0048 Lay out an amended JSON file in one place`: task 1
 - [ ] `feature-0048 Judge whether CLAUDE.md and opencode.json load the process, in one module`: tasks 2 and 3
 - [ ] `feature-0048 Import process.md in the CLAUDE.md that init writes`: task 4
 - [ ] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5

@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { formattedLike } from './agentrite-json.mjs';
 import { HARNESS_NAMES, plannedFiles, ROLES } from './agentrite-roles.mjs';
 import {
   harnessCommand,
@@ -384,9 +385,8 @@ export function agentsNotice(agents) {
 export function withCheckChangesScript(packageJson) {
   const manifest = JSON.parse(packageJson);
   if (manifest.scripts?.['check-changes'] !== undefined) return undefined;
-  const indent = packageJson.match(/^[ \t]+(?=")/m)?.[0] ?? '  ';
   const amended = { ...manifest, scripts: { ...manifest.scripts, 'check-changes': CHECK_CHANGES } };
-  return JSON.stringify(amended, null, indent) + (packageJson.endsWith('\n') ? '\n' : '');
+  return formattedLike(packageJson, amended);
 }
 
 /**

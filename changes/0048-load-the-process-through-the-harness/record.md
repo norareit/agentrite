@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-14T08:12:35Z
 ---
 
@@ -50,5 +50,9 @@ timestamp: 2026-10-14T08:12:35Z
   lines are printed, the heading of the README section, and that a `CLAUDE.md` that cannot be read lacks both
   lines. Found in the working tree an uncommitted edit of `README.md` that is not this unit's, "instp-alled" in
   the opening of "Commands". It was left as it is and not committed, for the human. The status is `planned`
+- 2026-10-14T11:53:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on
+  `feature-0048-load-the-process-through-the-harness` at `38d6568`, where `npm test` passes 500 tests. The working
+  tree was clean: the uncommitted edit of `README.md` that the plan names was no longer there. The status is
+  `in-progress`
 
 ## Amendments
