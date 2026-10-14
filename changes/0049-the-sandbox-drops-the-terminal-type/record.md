@@ -45,3 +45,24 @@ timestamp: 2026-10-14T12:22:07Z
   gave the test with no `TERM` a `TERM=dumb` of its own. In the image, `/bin/sh` is dash, which gives none, and
   `infocmp dumb` succeeds there: `docker run` of the image printed `/bin/sh -> dash`, `[unset]` for
   `${TERM-unset}` and `has dumb`, and `ncurses-base` and `ncurses-bin` are Essential in it. Written into the plan
+- 2026-10-14T21:25:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on `917f3fe` on the
+  macOS host: `npm test` reports 563 tests, 546 passing, 17 skipped, the same seventeen as before the unit, and none
+  failing; `npm run check-changes` exits 0.
+  Blocked: the checks of the last group of tasks need a sandbox that starts, and none does on this host. Docker was
+  updated here during the day, from 24.0.7 to 29.8.2, and since then the entrypoint stops at the local model
+  server with `iptables v1.8.9 (nf_tables): host/network 'fdc4:f303:9324::254' not found`, because
+  `getent hosts host.docker.internal` in a container on the Compose network now prints `fdc4:f303:9324::254`, an
+  IPv6 address, which the entrypoint hands to `iptables`. The installed release's `./sandbox.sh --in-place` stops
+  in the same way, so it is not of this unit, and it is left to a unit of its own.
+  Checked instead, without the entrypoint, in the image that `./sandbox-dev.sh` built from `917f3fe`, each on a
+  pseudo-terminal with `docker run -t`: with no `--env TERM` a command has `TERM=xterm`, and with
+  `--env TERM=xterm-256color` it has `xterm-256color`, so a TERM the wrapper passes stands above Docker's. The
+  image holds `/usr/local/bin/known-terminal.sh`, executable. Run as the agent through it, with `TERM` and
+  `COLORTERM` as given, a command printed: `xterm-256color` and none gave `[xterm-256color] [none] colors=256`;
+  `xterm-256color` and `truecolor` gave `[xterm-256color] [truecolor] colors=256`; `tmux-256color` and none gave
+  `[tmux-256color] [none] colors=256`; `xterm-ghostty` and `truecolor` gave `[xterm-256color] [truecolor]
+  colors=256`; `xterm-ghostty` and none gave `[xterm-256color] [none] colors=256`; and with neither and no
+  terminal, `[unset] [none]`.
+  Not checked: a run or a `--connect` through the wrapper end to end, OpenCode in the Terminal app (R7), and tmux on
+  Linux (R8), which the human has said cannot be checked in the coming days for want of a Linux machine. The tasks
+  of the last group stay open, and the status stays `in-progress`
