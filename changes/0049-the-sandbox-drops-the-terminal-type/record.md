@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-14T12:22:07Z
 ---
 
@@ -20,3 +20,4 @@ timestamp: 2026-10-14T12:22:07Z
   and `COLORTERM` on the host and in a run, the image's terminal descriptions, and `tput` on an unknown `TERM`.
   Not reproduced: how the Terminal app shows 24-bit colour, which is taken from the screenshots, and anything on
   tmux on Linux. Wrote `spec.md`. The status is `draft`
+- 2026-10-14T20:43:46Z [human] approved the spec. The status is `approved`
