@@ -305,17 +305,17 @@ In real sessions:
 
 ## Verification
 
-- [ ] `npm test` passes, and the count is higher than 500
-- [ ] `node scripts/check-changes.mjs` at the root exits 0
-- [ ] `node scripts/agentrite.mjs refresh` at the root prints `up to date` for the eight wrappers and `sandbox.sh`,
+- [x] `npm test` passes, and the count is higher than 500
+- [x] `node scripts/check-changes.mjs` at the root exits 0
+- [x] `node scripts/agentrite.mjs refresh` at the root prints `up to date` for the eight wrappers and `sandbox.sh`,
   and then the two notices, and `git status --short` shows nothing it changed (R9)
-- [ ] `grep -rn "agentrite/process.md" scripts` shows the path in `scripts/agentrite-instructions.mjs` alone, and
+- [x] `grep -rn "agentrite/process.md" scripts` shows the path in `scripts/agentrite-instructions.mjs` alone, and
   `grep -rn "opencode.json\|CLAUDE.md\|OPENCODE_FILE" scripts/agentrite.mjs` shows the template's path, the
   calls of `readProjectFile` and the lines printed, and no judging of either file (R10)
-- [ ] `npm pack --dry-run` lists `scripts/agentrite-json.mjs` and `scripts/agentrite-instructions.mjs`
-- [ ] The check of task 15 is logged in `record.md`, with what was not checked and why (R1, R8)
-- [ ] No line of a file this unit changed is over 120 characters, and none holds an em dash
-- [ ] `git diff master -- CHANGELOG.md CONTRIBUTING.md SANDBOX.md CLAUDE.md AGENTS.md process.md roles` is empty
+- [x] `npm pack --dry-run` lists `scripts/agentrite-json.mjs` and `scripts/agentrite-instructions.mjs`
+- [x] The check of task 15 is logged in `record.md`, with what was not checked and why (R1, R8)
+- [x] No line of a file this unit changed is over 120 characters, and none holds an em dash
+- [x] `git diff master -- CHANGELOG.md CONTRIBUTING.md SANDBOX.md CLAUDE.md AGENTS.md process.md roles` is empty
   (R11, Non-goals)
 
 ## Commit Points

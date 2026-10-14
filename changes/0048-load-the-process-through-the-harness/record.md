@@ -84,5 +84,18 @@ timestamp: 2026-10-14T08:12:35Z
   Not as the spec's check ran it: no local model could be reached from here, so OpenCode ran a hosted OpenAI model
   and not Gemma 4 31B. `openai/gpt-5.4-mini` was tried first and refused by the account. Not checked: the sandbox,
   and a session on macOS
+- 2026-10-14T12:03:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the plan's verification on
+  `b72b9d8`, the last commit that changes code; the commit after it changes only this unit's `plan.md` and
+  `record.md`. `npm test` passes 542 tests, against 500 before the unit. `node scripts/check-changes.mjs` exits 0.
+  `node scripts/agentrite.mjs refresh` at the root prints `up to date` for the eight wrappers and `sandbox.sh`, then
+  the notice of `CLAUDE.md`, which names `@node_modules/agentrite/process.md` alone, and the notice of an
+  `opencode.json` that is missing, exits 0, and leaves `git status --short` empty. `node_modules/agentrite/process.md`
+  is named in `scripts/` by `scripts/agentrite-instructions.mjs` alone, and `scripts/agentrite.mjs` judges neither
+  file itself. `npm pack --dry-run` lists both new modules. No file the unit changed has a line over 120 characters
+  or an em dash: the one the notices are checked for was a literal character in
+  `tests/agentrite-instructions.test.mjs`, and is an escape since `b72b9d8`, a commit the plan does not list.
+  `git diff master` of `CHANGELOG.md`, `CONTRIBUTING.md`, `SANDBOX.md`, `CLAUDE.md`, `AGENTS.md`, `process.md` and
+  `roles` is empty. Every task of `plan.md` is ticked. Not checked: the suites on macOS. The unit stays
+  `in-progress` until it is reviewed and the human has decided what the review blocks on
 
 ## Amendments
