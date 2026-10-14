@@ -22,10 +22,31 @@ function serviceVolumeLines(text) {
 
 const unquoted = (value) => value.replace(/^(["'])(.*)\1$/, '$2');
 
+// The line without its trailing comment, as YAML has one: from a # that follows whitespace and is outside quotes, to
+// the end. A quote counts only where it opens a value, after whitespace, so that one inside a plain value, as in
+// `./it's`, opens nothing.
+function withoutComment(line) {
+  let quote = '';
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    const afterWhitespace = index === 0 || /\s/.test(line[index - 1]);
+    if (quote) {
+      if (character === quote) quote = '';
+    } else if ((character === '"' || character === "'") && afterWhitespace) {
+      quote = character;
+    } else if (character === '#' && afterWhitespace) {
+      return line.slice(0, index).trimEnd();
+    }
+  }
+  return line;
+}
+
 // Whether a line of the list mounts at /work. A long-form entry does when one of its lines is `target: /work`. A
 // short-form entry, `- source:target[:mode]`, does when a field after the first is `/work`: any field and not only
-// the second, so that a source with a colon in it, as `${SOURCE:-.}`, is still caught.
-function mountsAtWork(line) {
+// the second, so that a source with a colon in it, as `${SOURCE:-.}`, is still caught. A trailing comment is no
+// part of either.
+function mountsAtWork(volumeLine) {
+  const line = withoutComment(volumeLine);
   const trimmed = line.trim();
   const target = /^(?:- )?target:(.*)$/.exec(trimmed);
   if (target) return unquoted(target[1].trim()) === '/work';
@@ -95,4 +116,26 @@ test('a volume under /work, from /work or elsewhere is not one at /work', () => 
     '        target: /work/.reviews',
   ]);
   assert.deepEqual(workVolumes(text), []);
+});
+
+// A comment at the end of the line does not hide the volume. A # is a comment only after whitespace and outside
+// quotes, as YAML has it, so one inside a quoted source or with no whitespace before it is part of the entry.
+test('a volume at /work is found with a trailing comment, and a # that is no comment is part of the entry', () => {
+  const text = composeWith([
+    '      - .:/work # the checkout',
+    '      - type: bind',
+    '        source: .',
+    '        target: /work # the checkout',
+    '      - "./a #b:/work"',
+    '      - ./a#b:/work',
+    "      - ./it's:/work # the checkout",
+    '      - "./a #b:/elsewhere"',
+  ]);
+  assert.deepEqual(workVolumes(text), [
+    '- .:/work # the checkout',
+    'target: /work # the checkout',
+    '- "./a #b:/work"',
+    '- ./a#b:/work',
+    "- ./it's:/work # the checkout",
+  ]);
 });

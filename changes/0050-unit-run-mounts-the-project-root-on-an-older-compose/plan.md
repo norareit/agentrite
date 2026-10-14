@@ -20,6 +20,10 @@ lines of the sandbox service's `volumes:` list that mount at `/work`:
 * A long-form entry mounts at `/work` when one of its lines is `target: /work`, with or without quotes, and whether
   the line opens the entry, as `      - target: /work`, or follows it, as `        target: /work`
 * A target under `/work`, such as `/work/.reviews`, and a source of `/work`, are not `/work`
+* A line is read without its trailing comment, as YAML has one: from a `#` that follows whitespace and is outside
+  quotes, to the end of the line. So `- .:/work # the checkout` and `target: /work # the checkout` mount at
+  `/work`, and a `#` inside a quoted source, or with no whitespace before it, is part of the entry. Added after the
+  review's S1, which found both forms missed when they carry a comment
 
 The tests of the file:
 
@@ -33,8 +37,12 @@ The tests of the file:
 4. `workVolumes` finds nothing in a text whose list holds `- .:/work/.reviews`, `- agent-home:/home/agent`,
    `- ${HOME}/.gitconfig:/etc/gitconfig:ro`, `- /work:/elsewhere` and a long-form entry with `target: /work/.reviews`,
    and whose top-level `volumes:` names a volume `work`
+5. `workVolumes` finds `- .:/work # the checkout`, a long-form entry with `target: /work # the checkout`,
+   `- "./a #b:/work"`, `- ./a#b:/work` and `- ./it's:/work # the checkout`, and not `- "./a #b:/elsewhere"`, in a
+   text whose list holds them all. A quote counts only where it opens a value, after whitespace, so the
+   apostrophe of `./it's` opens no quoted value that would hide the comment
 
-Tests 2 to 4 hold the function to both forms, which test 1 cannot do, since the kit's file holds the short form
+Tests 2 to 5 hold the function to both forms, which test 1 cannot do, since the kit's file holds the short form
 only.
 
 **The comment.** The comment above the volume, which opens the service's `volumes:` list, goes with it. In its
@@ -123,8 +131,15 @@ wrapper, `container/unit-clone.sh` and the wrapper's tests.
 - [x] Log in `record.md`, for each run: the Docker and Compose versions, the command, and the lines `docker inspect`
   listed at `/work` and under it. For the unit run on each Compose, what the checkout's branch, `HEAD`, status and
   reflog showed before and after (R8)
+- [x] For the review's S1: add test 5 of the Approach to `tests/compose-work-volume.test.mjs` and see it fail on
+  the commented forms. Then have `workVolumes` read each line without its trailing comment, as the Approach
+  describes, and see all five tests pass. Run the reviewer's reproduction of S1, which injects
+  `- .:/work # project checkout` into the compose text the test reads, and its long form, and see test 1 fail
+  for each. Log the failure and the outcome of S1 in `record.md` (R7)
 
 ## Verification
+
+The boxes below were ticked on `dbf901f`, and are run again on the tree with the change for S1.
 
 - [x] `npm test` passes on the host, with no more tests skipped than on `master`
 - [x] `./sandbox.sh --in-place npm test` passes, with no test skipped
@@ -137,3 +152,5 @@ wrapper, `container/unit-clone.sh` and the wrapper's tests.
 - [x] The regression test and the fix, in one commit, as `bugfix-0050 Declare nothing at /work in the base Compose
   file`. The failure of the test before the fix is in the record, so the tree is never committed with a failing test
 - [x] The record of the runs, as `bugfix-0050 Record the runs on Compose 2.23.3 and 2.39.2`
+- [x] The change for S1, with the review's entry, its outcome and the verification run again, as
+  `bugfix-0050 Read a volume at /work that carries a trailing comment`

@@ -104,5 +104,38 @@ timestamp: 2026-10-14T12:21:25Z
   tests, 546 passing, none skipped and none failing. `npm pack --dry-run` lists 33 files, the same as on `master`
   at `193e7e7` in a worktree. `npm run check-changes` is run on the commit of this entry. Every task of the plan is
   ticked. The status stays `in-progress` until the review: the unit has not been reviewed
+- 2026-10-14T19:59:29Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0050 at
+  `dbf901ffdd39b585a745046764d1c3ef6c9f5684`, a full review against merge base
+  `193e7e70b11d2e3245b2c16df7b24ebf3670970a`. Returned S1. The complete findings are in
+  `.reviews/0050-unit-run-mounts-the-project-root-on-an-older-compose/20261014T195743Z-full-review.md`.
+  Independently ran `npm test`: 546 tests, 529 passing, 17 skipped and none failing; the first attempt timed out,
+  and the repeat completed. Ran `./sandbox.sh --in-place npm test` through a terminal: 546 passing, none skipped
+  or failing. The change check and package dry run passed. Inspected all three forms of the working copy's
+  wrapper run on Docker Engine 24.0.7 and Compose 2.23.3-desktop.2, and compared the checkout's branch, HEAD,
+  status, staged-file listing and last HEAD reflog entry before and after. Not independently verified: the
+  recorded Compose 2.39.2 runs and their historical checkout observations, the historical order of writing the
+  regression test and applying the fix, or wrapper mounts on a Linux host
+- 2026-10-14T20:05:39Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted S1, which blocks: a
+  volume at `/work` that carries a trailing comment, in the short form or the long one, escapes the regression
+  test, which R7 does not allow. Reproduced on `dbf901f` with the reviewer's command, without editing a file:
+  `- .:/work # project checkout` injected into the compose text the test reads gives 4 tests passing and none
+  failing, and so does a long-form entry with `target: /work # project checkout`, while `- .:/work` gives 1
+  failing. The gap is in the plan's description of the parser, which the test follows. Added to `plan.md`, before
+  doing it, a rule of the parser for trailing comments, a fifth test, a task, a commit point, and the verification
+  to be run again on the new tree, on the human's word to apply the finding
+- 2026-10-14T20:08:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S1. Added test 5 to
+  `tests/compose-work-volume.test.mjs` and saw it fail, on `- .:/work # the checkout` and on the long form with
+  `target: /work # the checkout`, while its quoted `#` and its `#` with no whitespace before it were found already.
+  Then had `workVolumes` read each line without its trailing comment: from a `#` that follows whitespace and is
+  outside quotes, where a quote counts only where it opens a value, after whitespace. The five tests pass. The
+  case `- ./it's:/work # the checkout`, added to test 5 with that last rule, fails when a quote may open anywhere,
+  shown on a copy of the test outside the repository. The reviewer's reproduction of S1, with
+  `- .:/work # project checkout` and with its long form, now gives 4 tests passing and 1 failing, test 1, whose
+  message names the commented line. S1 is resolved.
+  On that tree, `npm test` on the host reports 547 tests, 530 passing, 17 skipped and none failing.
+  `./sandbox.sh --in-place npm test` reports 547 tests, 547 passing, none skipped and none failing. `npm pack
+  --dry-run` lists 33 files, the same as on `master` at `193e7e7`. `npm run check-changes` is run on the commit
+  of this entry. Every task of the plan is ticked. The change for S1 has not been reviewed, so the status stays
+  `in-progress` for the human to decide whether it is reviewed again
 
 ## Amendments
