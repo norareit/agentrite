@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-14T08:12:35Z
 ---
 
@@ -97,5 +97,21 @@ timestamp: 2026-10-14T08:12:35Z
   `git diff master` of `CHANGELOG.md`, `CONTRIBUTING.md`, `SANDBOX.md`, `CLAUDE.md`, `AGENTS.md`, `process.md` and
   `roles` is empty. Every task of `plan.md` is ticked. Not checked: the suites on macOS. The unit stays
   `in-progress` until it is reviewed and the human has decided what the review blocks on
+- 2026-10-14T12:08:34Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
+  `changes/0048-load-the-process-through-the-harness/` at `5179f2eea3947ad57be41ebb55f0699c5f6ab106`, a full
+  review against merge base `f43b190a75f62105125be884f0da75d26f7671b8`. Returned no finding labels on the three
+  axes. Saved the complete review in
+  `.reviews/0048-load-the-process-through-the-harness/2026-10-14T120834Z-full-5179f2e.md`. Independently ran
+  `npm test`: 542 passed, none failed or skipped; the change check and package dry-run exited 0, and refresh
+  printed the expected lines and notices without changing the tree. Could not independently verify the recorded
+  real-session parent/subagent loading experiments, local-model loading, macOS execution or sandbox harness loading
+- 2026-10-14T12:11:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took the outcome of the review
+  of 12:08:34Z: it returned no finding on any of the three axes and no blocking finding, so there is nothing to
+  apply and nothing for the human to decide. The residual risks it lists are the spec's own decisions and entries of
+  "Beyond the request". Ran the suites on `5179f2e`, with only this entry and the review's uncommitted in the
+  working tree: `npm test` passes 542 tests, `node scripts/check-changes.mjs` exits 0, and `node scripts/agentrite.mjs
+  refresh` prints `up to date` for the eight wrappers and `sandbox.sh`, then the notice of `CLAUDE.md` naming
+  `@node_modules/agentrite/process.md` and the notice of a missing `opencode.json`, exits 0 and changes no file.
+  Every task of `plan.md` is ticked. Not checked: the suites on macOS, the sandbox. The status is `implemented`
 
 ## Amendments
