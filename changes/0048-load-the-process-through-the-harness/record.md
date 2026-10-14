@@ -54,5 +54,10 @@ timestamp: 2026-10-14T08:12:35Z
   `feature-0048-load-the-process-through-the-harness` at `38d6568`, where `npm test` passes 500 tests. The working
   tree was clean: the uncommitted edit of `README.md` that the plan names was no longer there. The status is
   `in-progress`
+- 2026-10-14T12:08:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the notice of
+  `refresh` for an `opencode.json` in `plan.md`, before writing it: its first line breaks before "because". Laid out
+  as the plan gave it, the line is 133 characters for the problem of a list that lacks the path, and task 2 holds
+  every notice under 120 for the problems that carry no error message. The plan contradicted itself there, and the
+  break is the smallest change that keeps the text it gives
 
 ## Amendments

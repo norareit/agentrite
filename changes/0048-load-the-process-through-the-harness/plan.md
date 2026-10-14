@@ -103,10 +103,13 @@ not add them:
 See "How the kit's instructions reach an agent" in node_modules/agentrite/README.md.
 ```
 
-`refresh`, for an `opencode.json` that does not load the path, with `opencode` among the harnesses (R9):
+`refresh`, for an `opencode.json` that does not load the path, with `opencode` among the harnesses (R9). The line
+breaks before "because", added while implementing: on one line, the problem of a list that lacks the path makes it
+133 characters, over the limit task 2 holds the notices to:
 
 ```
-opencode.json does not load the kit's instructions, because <problem>.
+opencode.json does not load the kit's instructions,
+because <problem>.
 OpenCode does not read them without node_modules/agentrite/process.md in its instructions list, and refresh
 does not add it. See "How the kit's instructions reach an agent" in node_modules/agentrite/README.md.
 ```
@@ -160,7 +163,7 @@ The JSON layout, as a refactoring:
 
 The module that judges:
 
-- [ ] 2. Write `tests/agentrite-instructions.test.mjs`, failing (R2, R3, R4, R5, R9, R10):
+- [x] 2. Write `tests/agentrite-instructions.test.mjs`, failing (R2, R3, R4, R5, R9, R10):
     * `claudeLacks`: a text with both lines lacks none, in LF and in CRLF. Each line missing, alone and both. A line
       with a space after it, one indented, one inside a longer line and `@AGENTS.md` alone all lack what they do
       not hold exactly. `{ found: false }` and `{ found: true, error }` lack both. The lines lacked come in the
@@ -178,7 +181,7 @@ The module that judges:
       `node_modules/agentrite/process.md`. Both notices of `refresh` say that `refresh` does not add it. No notice
       holds an em dash
     * `readProjectFile` in a temporary directory: a file, nothing, a directory, and a dangling symbolic link
-- [ ] 3. Write `scripts/agentrite-instructions.mjs` until task 2 passes. It exports `PROCESS_PATH`,
+- [x] 3. Write `scripts/agentrite-instructions.mjs` until task 2 passes. It exports `PROCESS_PATH`,
   `CLAUDE_LINES`, `OPENCODE_FILE`, `readProjectFile`, `claudeLacks`, `opencodeVerdict` and the four notice
   functions, and imports `formattedLike`. No shebang. Add it to `files` in `package.json` and to the list in
   `tests/package-documents.test.mjs` (R3, R4, R5, R10)
@@ -315,7 +318,7 @@ In real sessions:
 
 - [x] `feature-0048 Plan loading process.md through the harness`: this plan and the record
 - [x] `feature-0048 Lay out an amended JSON file in one place`: task 1
-- [ ] `feature-0048 Judge whether CLAUDE.md and opencode.json load the process, in one module`: tasks 2 and 3
+- [x] `feature-0048 Judge whether CLAUDE.md and opencode.json load the process, in one module`: tasks 2 and 3
 - [ ] `feature-0048 Import process.md in the CLAUDE.md that init writes`: task 4
 - [ ] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5
   and 6

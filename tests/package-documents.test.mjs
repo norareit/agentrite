@@ -49,6 +49,7 @@ test('package.json keeps the one command and the files the package holds', () =>
     'templates',
     'scripts/check-changes.mjs',
     'scripts/agentrite-json.mjs',
+    'scripts/agentrite-instructions.mjs',
     'scripts/agentrite-roles.mjs',
     'scripts/agentrite-run.mjs',
     'scripts/agentrite-settings.mjs',
