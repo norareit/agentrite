@@ -156,7 +156,7 @@ being in it whole, so neither table of "What is here" changes.
 - [ ] Ask the human to run OpenCode with `./sandbox-dev.sh --in-place opencode` in the Terminal app of macOS 15, beside
   `opencode` on the host, and to compare the background and the tints of a diff. Write what they ran and saw in
   `record.md` (R7)
-- [ ] Ask the human to do the same in a tmux pane on Linux. Write what they ran and saw in `record.md`, or that it was
+- [x] Ask the human to do the same in a tmux pane on Linux. Write what they ran and saw in `record.md`, or that it was
   not checked and why (R8)
 
 ## Verification
