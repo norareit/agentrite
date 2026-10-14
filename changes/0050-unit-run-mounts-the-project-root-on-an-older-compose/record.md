@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-14T12:21:25Z
 ---
 
@@ -36,5 +36,6 @@ timestamp: 2026-10-14T12:21:25Z
   test is on the file and the proof is a run on a host with each kind of Compose. Left out, under "Beyond the
   request": the wrapper refusing a project's Compose file that declares a volume at `/work`.
   Not checked: the fix through the wrapper, which is the implementer's, and a Linux host. The status is `draft`
+- 2026-10-14T12:27:53Z [human] approved the spec. The status is `approved`
 
 ## Amendments
