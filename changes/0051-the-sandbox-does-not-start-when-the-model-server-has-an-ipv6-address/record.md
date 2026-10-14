@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-14T21:29:22Z
 ---
 
@@ -113,5 +113,18 @@ timestamp: 2026-10-14T21:29:22Z
   --dry-run` lists 33 files, the same as on `master` at `b6f80bf`. `npm run check-changes` is run on the commit of
   this entry. Every task of the plan is ticked. The change for C1 has not been reviewed, so the status stays
   `in-progress` for the human to decide whether it is reviewed again
+- 2026-10-14T22:07:59Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of unit 0051 at commit
+  `f915adbc27a38eb3a3de6ca3bfc718384104ee25`, from the previously reviewed commit
+  `ab5d8e3ce1e0bdace2301c57f8f5f59526044c41`. Returned no findings. Findings saved under
+  `.reviews/0051-the-sandbox-does-not-start-when-the-model-server-has-an-ipv6-address/`, in
+  `2026-10-14-220709-delta-f915adb.md`. Independently ran `npm test` on macOS: 552 tests, 535 passing, 17 skipped,
+  none failing or cancelled. `./sandbox-dev.sh --in-place npm test`: 552 passing, none skipped, failing or
+  cancelled. The committed change check and `git diff --check ab5d8e3..HEAD` pass; all three delta files fit
+  120 characters. The pack dry run lists 33 files with the same package SHA-1 as on `ab5d8e3`.
+  Could not independently verify the within-commit timing of the plan extension relative to the rename.
+- 2026-10-14T22:09:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the review of `f915adb`,
+  which returned no findings, and in which the reviewer verified C1 resolved. The one blocking finding of the
+  reviews, C1, was decided by the human, who had it applied, and it is resolved. Every task of `plan.md` is
+  ticked. The status is `implemented`
 
 ## Amendments
