@@ -36,8 +36,8 @@ const getentStandIn = [
 
 // Runs allow_model_server of the entrypoint for host.docker.internal on 11434, with the stand-in getent above and a
 // stand-in iptables first on the PATH. The iptables stand-in records its arguments, one call to a line, and exits 0.
-function allowModelServer(t, addresses) {
-  const base = temporaryDirectory(t, 'entrypoint-model-server-');
+function allowModelServer(testContext, addresses) {
+  const base = temporaryDirectory(testContext, 'entrypoint-model-server-');
   const bin = join(base, 'bin');
   const calls = join(base, 'iptables-calls');
   mkdirSync(bin);
@@ -68,36 +68,39 @@ const warningLine =
 
 // iptables takes no IPv6 address, and the firewall denies every IPv6 address but loopback's, so the model server is
 // admitted at the IPv4 address of its host whatever else the host has.
-test('a host with an IPv6 address before its IPv4 one is admitted at the IPv4 address', (t) => {
-  const result = allowModelServer(t, [ipv6, ipv4]);
+test('a host with an IPv6 address before its IPv4 one is admitted at the IPv4 address', (testContext) => {
+  const result = allowModelServer(testContext, [ipv6, ipv4]);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.iptablesCalls, admitted);
   assert.equal(result.stderr, allowedLine);
 });
 
-test('a host with an IPv4 address before its IPv6 one is admitted at the IPv4 address', (t) => {
-  const result = allowModelServer(t, [ipv4, ipv6]);
+test('a host with an IPv4 address before its IPv6 one is admitted at the IPv4 address', (testContext) => {
+  const result = allowModelServer(testContext, [ipv4, ipv6]);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.iptablesCalls, admitted);
   assert.equal(result.stderr, allowedLine);
 });
 
-test('a host with an IPv4 address alone is admitted at it', (t) => {
-  const result = allowModelServer(t, [ipv4]);
+test('a host with an IPv4 address alone is admitted at it', (testContext) => {
+  const result = allowModelServer(testContext, [ipv4]);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.iptablesCalls, admitted);
   assert.equal(result.stderr, allowedLine);
 });
 
-test('a host with an IPv6 address alone is not admitted, with the warning, and the entrypoint goes on', (t) => {
-  const result = allowModelServer(t, [ipv6]);
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(result.iptablesCalls, []);
-  assert.equal(result.stderr, warningLine);
-});
+test(
+  'a host with an IPv6 address alone is not admitted, with the warning, and the entrypoint goes on',
+  (testContext) => {
+    const result = allowModelServer(testContext, [ipv6]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(result.iptablesCalls, []);
+    assert.equal(result.stderr, warningLine);
+  },
+);
 
-test('a host with no address is not admitted, with the warning, and the entrypoint goes on', (t) => {
-  const result = allowModelServer(t, []);
+test('a host with no address is not admitted, with the warning, and the entrypoint goes on', (testContext) => {
+  const result = allowModelServer(testContext, []);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.iptablesCalls, []);
   assert.equal(result.stderr, warningLine);

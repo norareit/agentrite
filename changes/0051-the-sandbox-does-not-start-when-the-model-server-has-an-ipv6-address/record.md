@@ -84,5 +84,34 @@ timestamp: 2026-10-14T21:29:22Z
   `in-progress` until the review.
   Not checked: a Linux host, and a model server's host with an IPv6 address alone through the wrapper, which the
   regression test holds
+- 2026-10-14T21:54:36Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of unit 0051 at commit
+  `ab5d8e3ce1e0bdace2301c57f8f5f59526044c41`, against merge base `b6f80bf0b960ba92929c298369cca384dd7ccd96`.
+  Returned C1. Findings saved in
+  `.reviews/0051-the-sandbox-does-not-start-when-the-model-server-has-an-ipv6-address/2026-10-14-215307-full-ab5d8e3.md`
+  Independently ran `npm test` on macOS: 552 tests, 535 passing, 17 skipped, none failing or cancelled, after an
+  initial run exceeded the tool's 120-second limit. `./sandbox-dev.sh --in-place npm test`: 552 passing, none
+  skipped, failing or cancelled. On Docker Desktop 4.95.0, Engine 29.8.2 and Compose 5.6.0, both wrapper commands
+  of the plan exited 0 and logged the admitted IPv4 address; the connection to Ollama printed `Ollama is running`.
+  The real `getent hosts` gives the IPv6 address and `getent ahostsv4` the IPv4 one. Running the five regression
+  assertions against the functions from `adc8d14` in memory gives the recorded three failures and two passes.
+  `bash -n`, the committed change check and `git diff --check master...HEAD` pass. The pack dry run lists 33 files,
+  and the reviewed files fit 120 characters. Could not independently verify the historical tests-first chronology,
+  a physical Linux host or an IPv6-only model-server host through the real wrapper.
+- 2026-10-14T21:59:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted C1, which blocks:
+  `tests/entrypoint-model-server.test.mjs` names the test context `t`, in `allowModelServer` and in its five tests,
+  where `process.md` says that one-character variables are never used, and the unit records no exception. The rest
+  of the suite names it `t` 247 times in 16 files, but the file is new, and `temporaryDirectory` of unit 0046 names
+  it `testContext`. Added to `plan.md`, before doing it, a task, a commit point, and the verification to be run
+  again, on the human's word to apply C1. The other uses of `t` in the suite are outside this unit, and were
+  raised with the human
+- 2026-10-14T22:02:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1. Renamed the test
+  context of `allowModelServer` and of the five tests of `tests/entrypoint-model-server.test.mjs` from `t` to
+  `testContext`, and wrapped the call of the fourth test over lines, whose title no longer fit 120 characters with
+  the longer name. Nothing else in the file changed, and the five tests pass. C1 is resolved.
+  On that tree, `npm test` on the host reports 552 tests, 535 passing, 17 skipped and none failing.
+  `./sandbox-dev.sh --in-place npm test` reports 552 tests, 552 passing, none skipped and none failing. `npm pack
+  --dry-run` lists 33 files, the same as on `master` at `b6f80bf`. `npm run check-changes` is run on the commit of
+  this entry. Every task of the plan is ticked. The change for C1 has not been reviewed, so the status stays
+  `in-progress` for the human to decide whether it is reviewed again
 
 ## Amendments

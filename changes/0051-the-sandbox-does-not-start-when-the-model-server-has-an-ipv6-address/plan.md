@@ -99,8 +99,14 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
   lines, and `Ollama is running`, and both exit 0 (R1, R4)
 - [x] Log in `record.md` the Docker and Compose versions, the two commands, the entrypoint's lines and what `curl`
   printed (R7)
+- [x] For the review's C1: in `tests/entrypoint-model-server.test.mjs`, rename the test context `t` of
+  `allowModelServer` and of the five tests to `testContext`, as `temporaryDirectory` names it, since `process.md`
+  never uses a one-character name. Change nothing else. See the five tests pass, and log the outcome of C1 in
+  `record.md` (R6)
 
 ## Verification
+
+The boxes below were ticked on `ab5d8e3`, and are run again on the tree with the change for C1.
 
 - [x] `npm test` passes on the host, with no more tests skipped than on `master`
 - [x] `./sandbox-dev.sh --in-place npm test` passes, with no test skipped. `./sandbox.sh --in-place npm test`, the
@@ -116,3 +122,5 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
   alone`. The failure of the test before the fix is in the record, so the tree is never committed with a failing
   test
 - [x] The record of the runs, as `bugfix-0051 Record the runs on Docker Desktop 4.95.0`
+- [x] The change for C1, with the review's entry, its outcome and the verification run again, as
+  `bugfix-0051 Name the test context of the model server's tests in full`
