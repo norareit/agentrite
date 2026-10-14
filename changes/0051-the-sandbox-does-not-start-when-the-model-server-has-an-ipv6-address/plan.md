@@ -82,7 +82,7 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
 
 ## Tasks
 
-- [ ] In `container/entrypoint.sh`, move the block of the local model server into `allow_model_server HOST PORT`,
+- [x] In `container/entrypoint.sh`, move the block of the local model server into `allow_model_server HOST PORT`,
   defined just above its call, with its body as it is but for the two arguments in place of the two variables.
   Change nothing it does. Run `npm test` on the host and see no test fail (R5)
 - [ ] Write `tests/entrypoint-model-server.test.mjs` as the Approach describes. Run it with
@@ -109,7 +109,7 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
 
 ## Commit Points
 
-- [ ] The extraction, as `bugfix-0051 Move the rule of the local model server into a function`. It changes no
+- [x] The extraction, as `bugfix-0051 Move the rule of the local model server into a function`. It changes no
   behavior, and the suite passes on it
 - [ ] The regression test and the fix, in one commit, as `bugfix-0051 Admit the model server at its IPv4 address
   alone`. The failure of the test before the fix is in the record, so the tree is never committed with a failing

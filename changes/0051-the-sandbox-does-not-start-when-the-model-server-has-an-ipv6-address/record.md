@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: planned
+status: in-progress
 timestamp: 2026-10-14T21:29:22Z
 ---
 
@@ -42,5 +42,14 @@ timestamp: 2026-10-14T21:29:22Z
   ahosts` gives the IPv4 address first. Found Ollama listening on `127.0.0.1:11434` on the host, and a container on
   this Docker reaching it at `192.168.65.254:11434`.
   Wrote `plan.md`. The status is `planned`
+- 2026-10-14T21:37:36Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the macOS host,
+  on the host rather than in the sandbox, on
+  `bugfix-0051-the-sandbox-does-not-start-when-the-model-server-has-an-ipv6-address` at `452ee13`. Read the role
+  file as installed, release 6.0.0. The status is `in-progress`
+- 2026-10-14T21:39:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved the rule of the local
+  model server into `allow_model_server HOST PORT`, defined just above its call, with its body as it was but for
+  the two arguments in place of `MODEL_SERVER_HOST` and `MODEL_SERVER_PORT`, and the lookup still `getent hosts`.
+  `bash -n` passes on the entrypoint. `npm test` on the host reports 547 tests, 530 passing, 17 skipped and none
+  failing
 
 ## Amendments

@@ -213,13 +213,17 @@ iptables -A OUTPUT -p tcp -d 127.0.0.1 --dport "$PROXY_PORT" -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 443 -m owner --uid-owner "$proxy_uid" -j ACCEPT
 
 # The host gateway address, on the local model server's port only.
-gw_ip="$(getent hosts "$MODEL_SERVER_HOST" | awk '{print $1; exit}' || true)"
-if [ -n "$gw_ip" ]; then
-  iptables -A OUTPUT -p tcp -d "$gw_ip" --dport "$MODEL_SERVER_PORT" -j ACCEPT
-  log "allowed local model server at $gw_ip:$MODEL_SERVER_PORT"
-else
-  log "WARNING: $MODEL_SERVER_HOST did not resolve; the local model server will be unreachable"
-fi
+allow_model_server() {
+  local host="$1" port="$2" gw_ip
+  gw_ip="$(getent hosts "$host" | awk '{print $1; exit}' || true)"
+  if [ -n "$gw_ip" ]; then
+    iptables -A OUTPUT -p tcp -d "$gw_ip" --dport "$port" -j ACCEPT
+    log "allowed local model server at $gw_ip:$port"
+  else
+    log "WARNING: $host did not resolve; the local model server will be unreachable"
+  fi
+}
+allow_model_server "$MODEL_SERVER_HOST" "$MODEL_SERVER_PORT"
 
 # Start the proxy as its own account, with no capabilities, in a session of its own so
 # that a signal sent to the agent's terminal does not reach it. It outlives this script:
