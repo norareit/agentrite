@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-14T21:29:22Z
 ---
 
@@ -29,5 +29,6 @@ timestamp: 2026-10-14T21:29:22Z
   this host. Left out, under "Beyond the request": a message of the kit's own when a rule of the firewall fails.
   Not checked: a Linux host, which Docker Desktop version first gave the name an IPv6 address, and the fix through
   the wrapper, which is the implementer's. The status is `draft`
+- 2026-10-14T21:34:43Z [human] approved the spec. The status is `approved`
 
 ## Amendments
