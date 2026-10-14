@@ -13,17 +13,19 @@ lines of the sandbox service's `volumes:` list that mount at `/work`:
 * The list is the lines after the first line that is exactly `    volumes:`, the service's, up to the first line
   that is not blank, not a comment and not indented by more than four spaces. The top-level `volumes:` is not
   indented and is not it
-* A short-form entry is a line that opens with `      - ` and holds no `: ` after it, as `- .:/work`. Its text,
-  with surrounding quotes taken off, is split on `:`, and it mounts at `/work` when a field after the first is
-  exactly `/work`. Any field after the first, and not only the second, so that a source with a colon in it, as
-  `${SOURCE:-.}:/work`, is still caught
-* A long-form entry mounts at `/work` when one of its lines is `target: /work`, with or without quotes, and whether
-  the line opens the entry, as `      - target: /work`, or follows it, as `        target: /work`
+* A short-form entry is a line that opens with `      - `. It mounts at `/work` when it holds `:/work` followed by
+  the end of the line, a `:`, a quote or whitespace. So `- .:/work`, `- ./source:/work:ro`,
+  `- "${SOURCE:-.}:/work"` and `- .:/work # the checkout` mount at `/work`, whatever the source holds
+* A long-form entry mounts at `/work` when one of its lines is `target:` and then `/work`, with or without quotes,
+  followed by the end of the line or whitespace, and whether the line opens the entry, as
+  `      - target: /work`, or follows it, as `        target: /work`
 * A target under `/work`, such as `/work/.reviews`, and a source of `/work`, are not `/work`
-* A line is read without its trailing comment, as YAML has one: from a `#` that follows whitespace and is outside
-  quotes, to the end of the line. So `- .:/work # the checkout` and `target: /work # the checkout` mount at
-  `/work`, and a `#` inside a quoted source, or with no whitespace before it, is part of the entry. Added after the
-  review's S1, which found both forms missed when they carry a comment
+* Nothing is read as a quote or a comment. So a reading can only take too much for a volume at `/work`: a comment
+  that holds `:/work`, after a volume elsewhere, makes test 1 fail with that line named, which is seen and is
+  mended by rewording the comment, where a volume taken for none passes unseen. After the review's S1, which found
+  both forms missed when they carry a trailing comment, a rule took the comment off each line, tracking quotes.
+  The review's S2 found that it missed a quote escaped in a quoted value, `''` and `\"`, and it was replaced by
+  this one, which needs neither
 
 The tests of the file:
 
@@ -38,9 +40,9 @@ The tests of the file:
    `- ${HOME}/.gitconfig:/etc/gitconfig:ro`, `- /work:/elsewhere` and a long-form entry with `target: /work/.reviews`,
    and whose top-level `volumes:` names a volume `work`
 5. `workVolumes` finds `- .:/work # the checkout`, a long-form entry with `target: /work # the checkout`,
-   `- "./a #b:/work"`, `- ./a#b:/work` and `- ./it's:/work # the checkout`, and not `- "./a #b:/elsewhere"`, in a
-   text whose list holds them all. A quote counts only where it opens a value, after whitespace, so the
-   apostrophe of `./it's` opens no quoted value that would hide the comment
+   `- "./a #b:/work"`, `- ./a#b:/work`, `- ./it's:/work # the checkout`, `- .:/work # project: checkout` and the
+   two of S2, `- './it''s #b:/work'` and `- "./a\" #b:/work"`, and not `- "./a #b:/elsewhere"` or
+   `- './it''s #b:/elsewhere'`, in a text whose list holds them all
 
 Tests 2 to 5 hold the function to both forms, which test 1 cannot do, since the kit's file holds the short form
 only.
@@ -136,10 +138,16 @@ wrapper, `container/unit-clone.sh` and the wrapper's tests.
   describes, and see all five tests pass. Run the reviewer's reproduction of S1, which injects
   `- .:/work # project checkout` into the compose text the test reads, and its long form, and see test 1 fail
   for each. Log the failure and the outcome of S1 in `record.md` (R7)
+- [x] For the review's S2: add to test 5 the cases of the Approach that it does not hold yet, and see it fail on
+  the two of S2. Then have `workVolumes` read the two forms as the Approach
+  now describes, with nothing read as a quote or a comment, and see all five tests pass. Run the reviewer's
+  reproductions of S1 and of S2 and see test 1 fail for each. Log the failure and the outcome of S2 in
+  `record.md` (R7)
 
 ## Verification
 
-The boxes below were ticked on `dbf901f`, and are run again on the tree with the change for S1.
+The boxes below were ticked on `dbf901f` and again on `9bdfcf9`, and are run again on the tree with the change
+for S2.
 
 - [x] `npm test` passes on the host, with no more tests skipped than on `master`
 - [x] `./sandbox.sh --in-place npm test` passes, with no test skipped
@@ -154,3 +162,5 @@ The boxes below were ticked on `dbf901f`, and are run again on the tree with the
 - [x] The record of the runs, as `bugfix-0050 Record the runs on Compose 2.23.3 and 2.39.2`
 - [x] The change for S1, with the review's entry, its outcome and the verification run again, as
   `bugfix-0050 Read a volume at /work that carries a trailing comment`
+- [x] The change for S2, with the review's entry, its outcome and the verification run again, as
+  `bugfix-0050 Find a volume at /work without reading quotes or comments`

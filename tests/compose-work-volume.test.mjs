@@ -20,38 +20,19 @@ function serviceVolumeLines(text) {
   return list;
 }
 
-const unquoted = (value) => value.replace(/^(["'])(.*)\1$/, '$2');
+// A long-form line whose target is /work, quoted or not, followed by the end of the line or whitespace.
+const longFormAtWork = /^(?:- )?target:\s*(["']?)\/work\1(?:\s|$)/;
+// A short-form entry, `- source:target[:mode]`, whose target is /work: `:/work` followed by the end of the line, a
+// colon, a quote or whitespace, whatever the source before it holds.
+const shortFormAtWork = /:\/work(?=$|[:\s"'])/;
 
-// The line without its trailing comment, as YAML has one: from a # that follows whitespace and is outside quotes, to
-// the end. A quote counts only where it opens a value, after whitespace, so that one inside a plain value, as in
-// `./it's`, opens nothing.
-function withoutComment(line) {
-  let quote = '';
-  for (let index = 0; index < line.length; index += 1) {
-    const character = line[index];
-    const afterWhitespace = index === 0 || /\s/.test(line[index - 1]);
-    if (quote) {
-      if (character === quote) quote = '';
-    } else if ((character === '"' || character === "'") && afterWhitespace) {
-      quote = character;
-    } else if (character === '#' && afterWhitespace) {
-      return line.slice(0, index).trimEnd();
-    }
-  }
-  return line;
-}
-
-// Whether a line of the list mounts at /work. A long-form entry does when one of its lines is `target: /work`. A
-// short-form entry, `- source:target[:mode]`, does when a field after the first is `/work`: any field and not only
-// the second, so that a source with a colon in it, as `${SOURCE:-.}`, is still caught. A trailing comment is no
-// part of either.
-function mountsAtWork(volumeLine) {
-  const line = withoutComment(volumeLine);
+// Whether a line of the list mounts at /work. Nothing is read as a quote or a comment, which YAML allows in more
+// ways than a test should parse. So a reading can only take too much: a comment that holds `:/work` fails the test
+// with its line named, where a volume taken for none would pass unseen.
+function mountsAtWork(line) {
   const trimmed = line.trim();
-  const target = /^(?:- )?target:(.*)$/.exec(trimmed);
-  if (target) return unquoted(target[1].trim()) === '/work';
-  if (!line.startsWith('      - ') || trimmed.includes(': ')) return false;
-  return unquoted(trimmed.slice('- '.length).trim()).split(':').slice(1).includes('/work');
+  if (longFormAtWork.test(trimmed)) return true;
+  return line.startsWith('      - ') && shortFormAtWork.test(trimmed);
 }
 
 // The lines of the sandbox service's volumes that mount at /work, trimmed.
@@ -118,9 +99,8 @@ test('a volume under /work, from /work or elsewhere is not one at /work', () => 
   assert.deepEqual(workVolumes(text), []);
 });
 
-// A comment at the end of the line does not hide the volume. A # is a comment only after whitespace and outside
-// quotes, as YAML has it, so one inside a quoted source or with no whitespace before it is part of the entry.
-test('a volume at /work is found with a trailing comment, and a # that is no comment is part of the entry', () => {
+// Neither a trailing comment, a # in the source nor a quote escaped in a quoted source hides the volume.
+test('a volume at /work is found whatever comment, # or quotes its line holds', () => {
   const text = composeWith([
     '      - .:/work # the checkout',
     '      - type: bind',
@@ -129,7 +109,11 @@ test('a volume at /work is found with a trailing comment, and a # that is no com
     '      - "./a #b:/work"',
     '      - ./a#b:/work',
     "      - ./it's:/work # the checkout",
+    '      - .:/work # project: checkout',
+    "      - './it''s #b:/work'",
+    '      - "./a\\" #b:/work"',
     '      - "./a #b:/elsewhere"',
+    "      - './it''s #b:/elsewhere'",
   ]);
   assert.deepEqual(workVolumes(text), [
     '- .:/work # the checkout',
@@ -137,5 +121,8 @@ test('a volume at /work is found with a trailing comment, and a # that is no com
     '- "./a #b:/work"',
     '- ./a#b:/work',
     "- ./it's:/work # the checkout",
+    '- .:/work # project: checkout',
+    "- './it''s #b:/work'",
+    '- "./a\\" #b:/work"',
   ]);
 });

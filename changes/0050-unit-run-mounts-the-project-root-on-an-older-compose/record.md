@@ -137,5 +137,40 @@ timestamp: 2026-10-14T12:21:25Z
   --dry-run` lists 33 files, the same as on `master` at `193e7e7`. `npm run check-changes` is run on the commit
   of this entry. Every task of the plan is ticked. The change for S1 has not been reviewed, so the status stays
   `in-progress` for the human to decide whether it is reviewed again
+- 2026-10-14T20:15:26Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0050 at
+  `9bdfcf9838d7f3503fadf80f43729a3836395e04`, a delta review from
+  `dbf901ffdd39b585a745046764d1c3ef6c9f5684`. Verified that the two original S1 reproductions now fail the
+  regression assertion, and returned S2 from the new diff. The complete findings are in
+  `.reviews/0050-unit-run-mounts-the-project-root-on-an-older-compose/20261014T201356Z-delta-review.md`.
+  Independently ran `npm test`: 547 tests, 530 passing, 17 skipped and none failing; and
+  `./sandbox.sh --in-place npm test` through a terminal: 547 passing, none skipped or failing. The change check,
+  package dry run and whitespace check passed. Compared the new and prior regression tests with in-memory
+  injections and checked their volume declarations with Compose 2.23.3-desktop.2. Not independently verified:
+  the historical test-first ordering of the S1 correction. The wrapper mount observations outside this delta
+  were not repeated, and the first review's limits for the recorded Compose 2.39.2 runs and Linux hosts remain
+- 2026-10-14T20:18:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted S2, which blocks: the
+  rule added for S1 ends a quoted value at a quote escaped in it, `''` or `\"`, reads what follows as a comment,
+  and so misses `- './it''s #b:/work'` and `- "./a\" #b:/work"`, which the test found on `dbf901f`. Reproduced on
+  `9bdfcf9` with each injected into the compose text the test reads: 5 tests passing and none failing. Proposed to
+  the human not to mend the scanner but to replace it, since a reading of quotes and comments by hand misses the
+  next case YAML allows: the test reads neither, and finds a short-form entry by `:/work` followed by the end of
+  the line, a `:`, a quote or whitespace, and a long-form one by its `target:`. Such a reading can only take too
+  much, which fails test 1 visibly. Told the human it would also find `- .:/work # project: checkout`, which
+  the rule of S1 missed: that was wrong, as the run below shows, since the rule of S1 takes the comment off before
+  it looks for `: `. The test of `dbf901f` missed it. Added to `plan.md`, before doing it, the rules, the cases of
+  test 5, a task, a commit point, and the verification to be run again, on the human's word to apply S2 that way
+- 2026-10-14T20:22:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S2. Added to test 5
+  `- .:/work # project: checkout`, the two entries of S2, and `- './it''s #b:/elsewhere'` as one more that is not
+  at `/work`, and saw it fail on the two of S2 alone. Then replaced the reading of quotes and comments in
+  `workVolumes` with the two patterns of the plan, one for a long-form `target:` and one for `:/work` in a
+  short-form entry, and took out the helpers that only it used. The five tests pass. The reviewer's reproductions,
+  each injected into the compose text the test reads, give 4 tests passing and 1 failing, test 1, for each:
+  `- .:/work # project checkout`, its long form with `target: /work # project checkout`, `- './it''s #b:/work'`
+  and `- "./a\" #b:/work"`. S2 is resolved.
+  On that tree, `npm test` on the host reports 547 tests, 530 passing, 17 skipped and none failing.
+  `./sandbox.sh --in-place npm test` reports 547 tests, 547 passing, none skipped and none failing. `npm pack
+  --dry-run` lists 33 files, the same as on `master` at `193e7e7`. `npm run check-changes` is run on the commit
+  of this entry. Every task of the plan is ticked. The change for S2 has not been reviewed, so the status stays
+  `in-progress` for the human to decide whether it is reviewed again
 
 ## Amendments
