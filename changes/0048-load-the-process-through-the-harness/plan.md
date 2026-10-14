@@ -197,7 +197,7 @@ The `CLAUDE.md` that `init` writes:
 
 `init`:
 
-- [ ] 5. Write the tests of `init`, failing, in `tests/agentrite-init.test.mjs` (R2, R3, R4, R5, R6, R7):
+- [x] 5. Write the tests of `init`, failing, in `tests/agentrite-init.test.mjs` (R2, R3, R4, R5, R6, R7):
     * `init opencode` in a fresh project: `opencode.json` byte for byte the file of R3, and the line
       `wrote opencode.json` after the line of `package.json`. The same for `init claude opencode`, also with
       `--no-sandbox`. "a fresh project gets every file" gains it
@@ -219,7 +219,7 @@ The `CLAUDE.md` that `init` writes:
     * `CLAUDE.md` that exists and lacks both lines, for `init opencode`: the skipped line and no notice of it
     * the tests that use `CLAUDE_NOTICE` use the notice function with both lines, and "init with no argument takes
       the harnesses and the sandbox from the file" passes with the line of `opencode.json` in both runs
-- [ ] 6. In `scripts/agentrite.mjs`, make `init` pass task 5 (R2, R3, R4, R5, R6, R7):
+- [x] 6. In `scripts/agentrite.mjs`, make `init` pass task 5 (R2, R3, R4, R5, R6, R7):
     * the notice of a `CLAUDE.md` that exists is pushed only with `claude` among the harnesses, and only when
       `claudeLacks(readProjectFile(root, 'CLAUDE.md'))` lacks a line. `CLAUDE_NOTICE` is removed
     * with `opencode` among the harnesses, after `package.json`: `readProjectFile` and `opencodeVerdict`. Loads:
@@ -320,7 +320,7 @@ In real sessions:
 - [x] `feature-0048 Lay out an amended JSON file in one place`: task 1
 - [x] `feature-0048 Judge whether CLAUDE.md and opencode.json load the process, in one module`: tasks 2 and 3
 - [x] `feature-0048 Import process.md in the CLAUDE.md that init writes`: task 4
-- [ ] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5
+- [x] `feature-0048 Have init write or amend opencode.json, and notice only a CLAUDE.md that lacks a line`: tasks 5
   and 6
 - [ ] `feature-0048 Have refresh notice a CLAUDE.md or opencode.json that does not load the process`: tasks 7 and 8
 - [ ] `feature-0048 Hold that the role files still say to read process.md first`: task 9

@@ -3,6 +3,15 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { basename, dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import {
+  claudeInitNotice,
+  claudeLacks,
+  OPENCODE_FILE,
+  opencodeInitNotice,
+  opencodeVerdict,
+  PROCESS_PATH,
+  readProjectFile,
+} from './agentrite-instructions.mjs';
 import { formattedLike } from './agentrite-json.mjs';
 import { HARNESS_NAMES, plannedFiles, ROLES } from './agentrite-roles.mjs';
 import {
@@ -31,10 +40,6 @@ const DOCKERIGNORE =
 
 /** The headings of the sections of `AGENTS.md` that make the kit's instructions reach an agent. */
 export const AGENTS_SECTIONS = ['# Development Guidelines', '## Roles', '## Changes in this project'];
-
-export const CLAUDE_NOTICE =
-  'CLAUDE.md exists and was left as it is. For Claude Code to read the instructions in AGENTS.md, it must import\n' +
-  'that file with a line holding `@AGENTS.md`.\n';
 
 export const CONFIG_NOTICE =
   "These are the kit's defaults, and nothing of the project was looked at to find them. Check each against the\n" +
@@ -637,6 +642,29 @@ function writeDockerignore({ path, isNew, content }) {
 }
 
 /**
+ * Writes the project's `opencode.json`, amends it, or leaves it, prints what it did, and returns the notice to print
+ * for one it cannot amend.
+ *
+ * @param {string} root
+ * @returns {string | undefined}
+ */
+function writeOpencodeJson(root) {
+  const read = readProjectFile(root, OPENCODE_FILE);
+  const verdict = opencodeVerdict(read);
+  if (verdict.loads) {
+    console.log(`skipped ${OPENCODE_FILE}, which loads ${PROCESS_PATH}`);
+    return undefined;
+  }
+  if (verdict.content === undefined) {
+    console.log(`skipped ${OPENCODE_FILE}, which cannot be amended`);
+    return opencodeInitNotice(verdict.problem);
+  }
+  writeFileSync(resolve(root, OPENCODE_FILE), verdict.content, read.found ? {} : { flag: 'wx' });
+  console.log(`${read.found ? 'changed' : 'wrote'} ${OPENCODE_FILE}`);
+  return undefined;
+}
+
+/**
  * Prints the content of an `agentrite.json` that was just written, after an empty line.
  *
  * @param {string} content
@@ -701,7 +729,10 @@ function init(root, given) {
     if (exists(absolute)) {
       console.log(`skipped ${file.path}, which exists`);
       if (file.path === 'AGENTS.md') notices.push(agentsNotice(file.content));
-      if (file.path === 'CLAUDE.md') notices.push(CLAUDE_NOTICE);
+      if (file.path === 'CLAUDE.md' && harnesses.includes('claude')) {
+        const lacks = claudeLacks(readProjectFile(root, file.path));
+        if (lacks.length > 0) notices.push(claudeInitNotice(lacks));
+      }
       continue;
     }
     mkdirSync(dirname(absolute), { recursive: true });
@@ -716,6 +747,11 @@ function init(root, given) {
   } else {
     writeFileSync(manifest.path, amendedManifest);
     console.log('changed package.json');
+  }
+
+  if (harnesses.includes('opencode')) {
+    const notice = writeOpencodeJson(root);
+    if (notice !== undefined) notices.push(notice);
   }
 
   if (ignore !== undefined) writeDockerignore(ignore);

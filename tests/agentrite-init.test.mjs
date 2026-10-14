@@ -14,14 +14,18 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { claudeLacks } from '../scripts/agentrite-instructions.mjs';
+import {
+  claudeInitNotice,
+  claudeLacks,
+  opencodeInitNotice,
+  opencodeVerdict,
+} from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { settingsText } from '../scripts/agentrite-settings.mjs';
 import {
   AGENTS_SECTIONS,
   sandboxName,
   agentsNotice,
-  CLAUDE_NOTICE,
   defaultBranchNotice,
   dockerignore,
   fillTemplate,
@@ -45,6 +49,11 @@ const ignore = (existing) => dockerignore(existing, CONTAINER_FILES);
 const HARNESS_LISTS = [['claude'], ['opencode'], ['claude', 'opencode']];
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 const KIT_CONTAINER = 'node_modules/agentrite/container';
+const PROCESS = 'node_modules/agentrite/process.md';
+// The notice of init for a CLAUDE.md that holds neither line.
+const CLAUDE_NOTICE = claudeInitNotice([`@${PROCESS}`, '@AGENTS.md']);
+// The opencode.json of R3, byte for byte.
+const OPENCODE = `{\n  "instructions": [\n    "${PROCESS}"\n  ]\n}\n`;
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
@@ -267,11 +276,6 @@ test('the notice for an existing AGENTS.md names the three sections and holds th
     assert.ok(notice.includes(heading.replace(/^#+ /, '')), `the notice does not name ${heading}`);
   }
   assert.doesNotMatch(notice, /Specific to this project/);
-});
-
-test('the notice for an existing CLAUDE.md names the @AGENTS.md import', () => {
-  assert.match(CLAUDE_NOTICE, /CLAUDE\.md exists and was left as it is/);
-  assert.match(CLAUDE_NOTICE, /`@AGENTS\.md`/);
 });
 
 // R6
@@ -533,6 +537,8 @@ test('a fresh project gets every file, listed as written, and exits 0', (t) => {
   assert.match(result.stdout, /^changed package\.json$/m);
   assert.equal(read('.dockerignore'), ignore(undefined));
   assert.match(result.stdout, /^wrote \.dockerignore$/m);
+  assert.equal(read('opencode.json'), OPENCODE);
+  assert.match(result.stdout, /^changed package\.json\nwrote opencode\.json\n/m);
   assert.doesNotMatch(result.stdout, /skipped/);
   assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o111, 0);
 });
@@ -1106,4 +1112,168 @@ test('init with no argument in a project whose agentrite.json is not valid refus
     assert.match(result.stderr, /^agentrite: agentrite\.json/);
     assert.deepEqual(snapshot(base), before);
   }
+});
+
+// opencode.json and CLAUDE.md, which load process.md
+
+const OPENCODE_WITH_COMMENT = `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`;
+// What can be at the path of opencode.json and cannot be amended, each with what makes it so.
+const UNAMENDABLE = {
+  'not JSON': 'not json\n',
+  'a JSON list': '[]\n',
+  null: 'null\n',
+  'a string of instructions': '{ "instructions": "x" }\n',
+};
+
+// R3
+test('init opencode writes opencode.json as R3 gives it, after the line of package.json', (t) => {
+  for (const args of [['opencode'], ['claude', 'opencode'], ['opencode', OPTION], ['claude', 'opencode', OPTION]]) {
+    const { run, read } = project(t);
+
+    const result = run('init', ...args);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read('opencode.json'), OPENCODE, args.join(' '));
+    const lines = linesOf(result);
+    assert.equal(lines[lines.indexOf('changed package.json') + 1], 'wrote opencode.json', args.join(' '));
+    assert.doesNotMatch(noticesOf(result), /opencode\.json/);
+  }
+});
+
+// R4
+test('init amends an opencode.json that is an object without the path, and prints no notice of it', (t) => {
+  for (const text of ['{\n  "model": "x"\n}\n', '{\n\t"instructions": ["a.md"]\n}']) {
+    const { base, run, read } = project(t);
+    writeFileSync(join(base, 'opencode.json'), text);
+
+    const result = run('init', 'opencode');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read('opencode.json'), opencodeVerdict({ found: true, text }).content);
+    assert.ok(JSON.parse(read('opencode.json')).instructions.includes(PROCESS));
+    assert.ok(linesOf(result).includes('changed opencode.json'), result.stdout);
+    assert.doesNotMatch(noticesOf(result), /opencode\.json/);
+  }
+});
+
+// R4, R5
+test('init leaves an opencode.json that loads the path, also one with a comment, and says so', (t) => {
+  for (const text of [`{ "instructions": ["a.md", "${PROCESS}"] }`, OPENCODE_WITH_COMMENT]) {
+    const { base, run, read } = project(t);
+    writeFileSync(join(base, 'opencode.json'), text);
+
+    const result = run('init', 'opencode');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read('opencode.json'), text);
+    assert.ok(linesOf(result).includes(`skipped opencode.json, which loads ${PROCESS}`), result.stdout);
+    assert.doesNotMatch(noticesOf(result), /opencode\.json/);
+  }
+});
+
+// R5
+test('init leaves an opencode.json it cannot amend, with a notice of why, writes the rest and exits 0', (t) => {
+  const plain = project(t);
+  const expected = plain.run('init', 'opencode');
+  const cases = { ...UNAMENDABLE, 'a directory': null };
+
+  for (const [name, text] of Object.entries(cases)) {
+    const { base, run, read } = project(t);
+    if (text === null) mkdirSync(join(base, 'opencode.json'));
+    else writeFileSync(join(base, 'opencode.json'), text);
+
+    const result = run('init', 'opencode');
+
+    assert.equal(result.status, 0, `${name}: ${result.stderr}`);
+    assert.equal(result.stderr, '', name);
+    if (text === null) assert.ok(statSync(join(base, 'opencode.json')).isDirectory(), name);
+    else assert.equal(read('opencode.json'), text, name);
+    const swapped = linesOf(expected).map((line) =>
+      line === 'wrote opencode.json' ? 'skipped opencode.json, which cannot be amended' : line,
+    );
+    assert.deepEqual(linesOf(result), swapped, name);
+    const { problem } = opencodeVerdict(
+      text === null ? { found: true, error: 'x' } : { found: true, text },
+    );
+    if (text !== null) assert.ok(noticesOf(result).includes(opencodeInitNotice(problem)), name);
+    assert.match(noticesOf(result), /^opencode\.json was left as it is, because /m, name);
+    assert.ok(noticesOf(result).indexOf('opencode.json was left') < noticesOf(result).indexOf('"harnesses"'), name);
+    for (const [path, content] of snapshot(plain.base)) {
+      if (path === 'opencode.json' || content === null) continue;
+      assert.equal(read(path), content, `${name}: ${path}`);
+    }
+  }
+});
+
+// R6
+test('an opencode.json that is not JSON neither stops init nor is written before a refusal', (t) => {
+  const refused = project(t);
+  writeFileSync(join(refused.base, 'package.json'), '{\n  "dependencies": {}\n}\n');
+  writeFileSync(join(refused.base, 'opencode.json'), 'not json\n');
+  const before = snapshot(refused.base);
+  const refusal = refused.run('init', 'opencode');
+  assert.equal(refusal.status, 1);
+  assert.match(refusal.stderr, /has no name/);
+  assert.deepEqual(snapshot(refused.base), before);
+
+  const { base, run, read } = project(t);
+  writeFileSync(join(base, 'opencode.json'), 'not json\n');
+  const result = run('init', 'opencode');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('opencode.json'), 'not json\n');
+  for (const path of ['agentrite.json', 'AGENTS.md', 'CLAUDE.md', '.opencode', 'sandbox.sh']) {
+    assert.ok(exists(join(base, path)), path);
+  }
+});
+
+// R7
+test('init claude neither reads, writes nor names opencode.json, whatever is at its path', (t) => {
+  const cases = { none: undefined, ...UNAMENDABLE, 'an object': '{ "model": "x" }\n', 'a directory': null };
+  for (const [name, text] of Object.entries(cases)) {
+    const { base, run, read } = project(t);
+    if (text === null) mkdirSync(join(base, 'opencode.json'));
+    else if (text !== undefined) writeFileSync(join(base, 'opencode.json'), text);
+
+    const result = run('init', 'claude');
+
+    assert.equal(result.status, 0, `${name}: ${result.stderr}`);
+    assert.doesNotMatch(result.stdout, /opencode\.json/, name);
+    if (text === undefined) assert.equal(exists(join(base, 'opencode.json')), false, name);
+    else if (text === null) assert.ok(statSync(join(base, 'opencode.json')).isDirectory(), name);
+    else assert.equal(read('opencode.json'), text, name);
+  }
+});
+
+// R2
+test('init claude notices an existing CLAUDE.md only for the lines it lacks', (t) => {
+  const cases = [
+    ['our own\n', CLAUDE_NOTICE],
+    ['# Ours\n\n@AGENTS.md\n', claudeInitNotice([`@${PROCESS}`])],
+    [`# Ours\n\n@${PROCESS}\n@AGENTS.md\n`, undefined],
+    [`# Ours\r\n\r\n@${PROCESS}\r\n@AGENTS.md\r\n`, undefined],
+  ];
+  for (const [text, notice] of cases) {
+    const { base, run, read } = project(t);
+    writeFileSync(join(base, 'CLAUDE.md'), text);
+
+    const result = run('init', 'claude');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read('CLAUDE.md'), text);
+    assert.ok(linesOf(result).includes('skipped CLAUDE.md, which exists'), result.stdout);
+    if (notice === undefined) assert.doesNotMatch(noticesOf(result), /CLAUDE\.md/, JSON.stringify(text));
+    else assert.ok(noticesOf(result).includes(notice), JSON.stringify(text));
+  }
+});
+
+// R2
+test('init opencode does not notice an existing CLAUDE.md that lacks both lines', (t) => {
+  const { base, run } = project(t);
+  writeFileSync(join(base, 'CLAUDE.md'), 'our own\n');
+
+  const result = run('init', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(linesOf(result).includes('skipped CLAUDE.md, which exists'), result.stdout);
+  assert.doesNotMatch(noticesOf(result), /CLAUDE\.md/);
 });
