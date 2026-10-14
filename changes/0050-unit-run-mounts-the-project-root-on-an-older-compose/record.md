@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: planned
 timestamp: 2026-10-14T12:21:25Z
 ---
 
@@ -37,5 +37,18 @@ timestamp: 2026-10-14T12:21:25Z
   request": the wrapper refusing a project's Compose file that declares a volume at `/work`.
   Not checked: the fix through the wrapper, which is the implementer's, and a Linux host. The status is `draft`
 - 2026-10-14T12:27:53Z [human] approved the spec. The status is `approved`
+- 2026-10-14T12:33:24Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the macOS host, on
+  the host rather than in the sandbox, whose unit run on this host's Compose is the bug. Cut
+  `bugfix-0050-unit-run-mounts-the-project-root-on-an-older-compose` from `master` at `193e7e7`. Read the role file
+  and `process.md` as installed, release 6.0.0. Judged that the fix needs a plan: a regression test, the fix and
+  runs through the wrapper on two Compose versions. Read besides: `container/compose.yml`, the comments of the
+  wrapper and of `container/unit-clone.sh` on landing a clone in a checked-out branch, `sandbox-dev.sh`,
+  `sandbox/compose.project.yml` for the container's name, and `tests/compose-tmpfs.test.mjs` for how the suite reads
+  the compose file. Only the comment above the volume says the file mounts the project root.
+  Tried on this host, for the newer Compose of requirement 4: the standalone Compose 2.39.2 as the CLI plugin of a
+  scratch Docker configuration directory gives `docker compose version` 2.39.2 against Docker Desktop 4.26.0, builds
+  with Desktop's buildx 0.12.0, and mounts a `run --volume` at `/work` over a file's `.:/work`. The host's own
+  `docker compose` stays 2.23.3-desktop.2.
+  Wrote `plan.md`. The status is `planned`
 
 ## Amendments
