@@ -66,3 +66,23 @@ timestamp: 2026-10-14T12:22:07Z
   Not checked: a run or a `--connect` through the wrapper end to end, OpenCode in the Terminal app (R7), and tmux on
   Linux (R8), which the human has said cannot be checked in the coming days for want of a Linux machine. The tasks
   of the last group stay open, and the status stays `in-progress`
+- 2026-10-14T22:20:38Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, rebased the branch onto
+  `master` at `51f8877`, which holds unit 0051 and with it a sandbox that starts on Docker 29, on the human's
+  request. No conflict. The six commits of the unit are now `233a53b` to `534d0cc`; the entries above name the
+  commits they were written on, `e739b04` and `917f3fe` among them, which the branch no longer holds. On
+  `534d0cc`: `npm test` on the macOS host reports 568 tests, 551 passing, 17 skipped, the same seventeen, and none
+  failing, and `npm run check-changes` exits 0.
+  The checks that were blocked, run on `534d0cc` with the working copy's sandbox, each on a pseudo-terminal from
+  `script -q /dev/null`, with a command that prints `[${TERM-unset}] [${COLORTERM-none}]`:
+  `./sandbox-dev.sh --in-place` from a shell with `TERM=xterm-256color` and no `COLORTERM` printed
+  `[xterm-256color] [none]`; with `TERM=xterm-256color COLORTERM=truecolor`, `[xterm-256color] [truecolor]`; with
+  `TERM=xterm-ghostty COLORTERM=truecolor`, `[xterm-256color] [truecolor]`; with neither, `[xterm] [none]`, as
+  before the unit. With `./sandbox-dev.sh 0049 sleep 150` under way, `./sandbox-dev.sh --connect 0049` from a
+  shell with `TERM=xterm-ghostty` and no `COLORTERM` printed `[xterm-256color] [none]` as `agent`, and from one
+  with `TERM=tmux-256color COLORTERM=truecolor`, `[tmux-256color] [truecolor]` as `agent`.
+  `./sandbox-dev.sh --in-place npm test` reports 568 tests, 568 passing, none skipped or failing, on Linux. It
+  stands in the plan in place of `./sandbox.sh --in-place npm test`: the installed release does not start on
+  Docker 29 until a release holds unit 0051.
+  R7: the human ran `./sandbox-dev.sh --in-place opencode` in the Terminal app of macOS 15, beside `opencode` on the
+  host, and saw OpenCode in the sandbox as on the host: the near black background of its theme, and the dark tints
+  of a diff where the olive and the green were. Written as the human reported it

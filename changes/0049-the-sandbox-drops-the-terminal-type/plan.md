@@ -143,7 +143,7 @@ being in it whole, so neither table of "What is here" changes.
 
 ### Shown in the sandbox and in the human's terminals
 
-- [ ] On the host, with Docker, run the working copy's sandbox on a terminal and print what a command is given, with
+- [x] On the host, with Docker, run the working copy's sandbox on a terminal and print what a command is given, with
   `script -q /dev/null` on macOS or `script -qec` of util-linux to give it one. Each case written in `record.md` with
   what was run and what it printed (R1, R2, R3, R4, R5):
     - `TERM=xterm-256color`, no `COLORTERM`: `./sandbox-dev.sh --in-place sh -c 'echo "[$TERM] [${COLORTERM-none}]"'`
@@ -153,7 +153,7 @@ being in it whole, so neither table of "What is here" changes.
     - `TERM` removed with `env -u TERM`: prints `[xterm] [none]`, as before the unit
     - With a unit run of the working copy's sandbox under way, `./sandbox-dev.sh --connect <unit> sh -c ...` from a
       shell with `TERM=xterm-ghostty` and no `COLORTERM` prints `[xterm-256color] [none]`
-- [ ] Ask the human to run OpenCode with `./sandbox-dev.sh --in-place opencode` in the Terminal app of macOS 15, beside
+- [x] Ask the human to run OpenCode with `./sandbox-dev.sh --in-place opencode` in the Terminal app of macOS 15, beside
   `opencode` on the host, and to compare the background and the tints of a diff. Write what they ran and saw in
   `record.md` (R7)
 - [x] Ask the human to do the same in a tmux pane on Linux. Write what they ran and saw in `record.md`, or that it was
@@ -162,7 +162,9 @@ being in it whole, so neither table of "What is here" changes.
 ## Verification
 
 - [x] `npm test` passes on the macOS host, with no test skipped that was not skipped before
-- [ ] `./sandbox.sh --in-place npm test` passes, which runs the suite on Linux
+- [x] `./sandbox-dev.sh --in-place npm test` passes, which runs the suite on Linux. In place of
+  `./sandbox.sh --in-place npm test`, whose installed release does not start on Docker 29 until a release holds
+  unit 0051
 - [x] `npm run check-changes` passes
 - [x] No line of a changed file is longer than 120 characters, and no changed text holds an em dash
 - [x] `git diff master --stat` names no file outside those of "Files"
