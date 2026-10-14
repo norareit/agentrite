@@ -212,10 +212,15 @@ iptables -t nat -A OUTPUT -p tcp --dport 443 -j REDIRECT --to-ports "$PROXY_PORT
 iptables -A OUTPUT -p tcp -d 127.0.0.1 --dport "$PROXY_PORT" -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 443 -m owner --uid-owner "$proxy_uid" -j ACCEPT
 
-# The host gateway address, on the local model server's port only.
+# The host gateway address, on the local model server's port only. Its IPv4 address
+# alone: iptables takes no IPv6 address, and the firewall denies every IPv6 address but
+# loopback's, so the model server is reached at nothing else. A host may have both, as
+# host.docker.internal has on Docker Desktop, whose IPv6 one `getent hosts` gives first.
+# getent reads /etc/hosts, where the host-gateway mapping puts the name, which dig would
+# not; the grep is resolve_one's, and keeps the address an IPv4 one.
 allow_model_server() {
   local host="$1" port="$2" gw_ip
-  gw_ip="$(getent hosts "$host" | awk '{print $1; exit}' || true)"
+  gw_ip="$(getent ahostsv4 "$host" | awk '{print $1}' | grep -E '^[0-9]+(\.[0-9]+){3}$' | head -1 || true)"
   if [ -n "$gw_ip" ]; then
     iptables -A OUTPUT -p tcp -d "$gw_ip" --dport "$port" -j ACCEPT
     log "allowed local model server at $gw_ip:$port"

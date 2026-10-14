@@ -51,5 +51,18 @@ timestamp: 2026-10-14T21:29:22Z
   the two arguments in place of `MODEL_SERVER_HOST` and `MODEL_SERVER_PORT`, and the lookup still `getent hosts`.
   `bash -n` passes on the entrypoint. `npm test` on the host reports 547 tests, 530 passing, 17 skipped and none
   failing
+- 2026-10-14T21:40:45Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote
+  `tests/entrypoint-model-server.test.mjs` as the plan describes. On the tree of `adc8d14` with the test added,
+  `node --test tests/entrypoint-model-server.test.mjs` on the host reports 5 tests, 2 passing and 3 failing. Tests
+  1 and 2, an IPv6 address before the IPv4 one and after it, record the `iptables` call for `fdc4:f303:9324::254`
+  where the one for `192.168.65.254` is expected. Test 4, an IPv6 address alone, records the same call where none
+  is expected. Tests 3 and 5 pass. The plan had test 4 passing on the old lookup: it admits the IPv6 address alone,
+  which the stand-in `iptables` takes and a real one refuses, so the failure is the bug's. Corrected the plan's
+  Approach and its task to say so
+- 2026-10-14T21:41:09Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, had `allow_model_server` look the
+  host up with `getent ahostsv4`, keep the addresses that `resolve_one`'s `grep` keeps and take the first, and
+  wrote the comment above it that says why IPv4 alone. `bash -n` passes on the entrypoint, and the five tests of
+  `tests/entrypoint-model-server.test.mjs` pass. `git diff master -- container/entrypoint.sh` changes the block of
+  the local model server alone, into the function and its call, and no `ip6tables` line
 
 ## Amendments

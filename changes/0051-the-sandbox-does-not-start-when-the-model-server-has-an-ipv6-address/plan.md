@@ -53,8 +53,9 @@ the `iptables` calls and standard error:
    `[entrypoint] WARNING: host.docker.internal did not resolve; the local model server will be unreachable`
 5. With no address: the same as 4
 
-On the extraction, which still asks `getent hosts`, tests 1 and 2 fail and 3 to 5 pass. After the fix all five
-pass.
+On the extraction, which still asks `getent hosts`, tests 1, 2 and 4 fail and 3 and 5 pass. After the fix all five
+pass. The plan first had test 4 passing there; the implementer found that the old lookup admits the IPv6 address
+alone, which a real `iptables` refuses, so it fails as it should.
 
 **The run on the host.** This repository's `./sandbox.sh` runs the installed release 6.0.0, which does not start on
 this host's Docker, so the runs use `./sandbox-dev.sh`, which runs the working copy's `container/`. The model server
@@ -85,13 +86,13 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
 - [x] In `container/entrypoint.sh`, move the block of the local model server into `allow_model_server HOST PORT`,
   defined just above its call, with its body as it is but for the two arguments in place of the two variables.
   Change nothing it does. Run `npm test` on the host and see no test fail (R5)
-- [ ] Write `tests/entrypoint-model-server.test.mjs` as the Approach describes. Run it with
-  `node --test tests/entrypoint-model-server.test.mjs` on the host and see tests 1 and 2 fail, each with the
-  `iptables` call for `fdc4:f303:9324::254` where the one for `192.168.65.254` is expected, and tests 3 to 5 pass.
-  Log the failure in `record.md` (R6)
-- [ ] In `allow_model_server`, look the host up as the Approach gives, and write the comment above the function
+- [x] Write `tests/entrypoint-model-server.test.mjs` as the Approach describes. Run it with
+  `node --test tests/entrypoint-model-server.test.mjs` on the host and see tests 1, 2 and 4 fail, each with the
+  `iptables` call for `fdc4:f303:9324::254`, where 1 and 2 expect the one for `192.168.65.254` and 4 expects none,
+  and tests 3 and 5 pass. Log the failure in `record.md` (R6)
+- [x] In `allow_model_server`, look the host up as the Approach gives, and write the comment above the function
   that says why IPv4 alone. See the five tests pass (R1, R2, R3, R4, R6)
-- [ ] See that `git diff master -- container/entrypoint.sh` changes nothing outside the block of the local model
+- [x] See that `git diff master -- container/entrypoint.sh` changes nothing outside the block of the local model
   server and the new function, and that every `ip6tables` line is as it was (R5)
 - [ ] On the macOS host with Docker Desktop 4.95.0, with Ollama listening on port 11434, run the two commands of
   the Approach. See the first print `allowed local model server at 192.168.65.254:11434` among the entrypoint's
@@ -111,7 +112,7 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
 
 - [x] The extraction, as `bugfix-0051 Move the rule of the local model server into a function`. It changes no
   behavior, and the suite passes on it
-- [ ] The regression test and the fix, in one commit, as `bugfix-0051 Admit the model server at its IPv4 address
+- [x] The regression test and the fix, in one commit, as `bugfix-0051 Admit the model server at its IPv4 address
   alone`. The failure of the test before the fix is in the record, so the tree is never committed with a failing
   test
 - [ ] The record of the runs, as `bugfix-0051 Record the runs on Docker Desktop 4.95.0`
