@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: planned
 timestamp: 2026-10-14T21:29:22Z
 ---
 
@@ -30,5 +30,17 @@ timestamp: 2026-10-14T21:29:22Z
   Not checked: a Linux host, which Docker Desktop version first gave the name an IPv6 address, and the fix through
   the wrapper, which is the implementer's. The status is `draft`
 - 2026-10-14T21:34:43Z [human] approved the spec. The status is `approved`
+- 2026-10-14T21:36:19Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the macOS host, on
+  the host rather than in the sandbox, which does not start on this host's Docker. Cut
+  `bugfix-0051-the-sandbox-does-not-start-when-the-model-server-has-an-ipv6-address` from `master` at `b6f80bf`. Read
+  the role file and `process.md` as installed, release 6.0.0. Judged that the fix needs a plan: the rule moves into a
+  function first, since the suite tests the entrypoint by its functions, then a regression test, the fix and a run
+  through the wrapper. Read besides: the entrypoint around the rule, `resolve_one`, `tests/entrypoint-function.mjs`
+  and `tests/entrypoint-home-owner.test.mjs` for how a test runs the entrypoint's functions with stand-ins.
+  Ran in the sandbox's image on Docker Desktop 4.95.0, for the stand-in of `getent`: `getent hosts` gives
+  `fdc4:f303:9324::254`, `getent ahostsv4` gives `192.168.65.254` with `STREAM`, `DGRAM` and `RAW`, and `getent
+  ahosts` gives the IPv4 address first. Found Ollama listening on `127.0.0.1:11434` on the host, and a container on
+  this Docker reaching it at `192.168.65.254:11434`.
+  Wrote `plan.md`. The status is `planned`
 
 ## Amendments
