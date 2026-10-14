@@ -205,7 +205,7 @@ test('no notice holds an em dash', () => {
     claudeRefreshNotice(true, [IMPORT, '@AGENTS.md']),
     opencodeRefreshNotice('it is missing'),
   ];
-  for (const notice of notices) assert.ok(!notice.includes('—'), notice);
+  for (const notice of notices) assert.ok(!notice.includes('\u2014'), notice);
 });
 
 // R5, R9
