@@ -85,11 +85,11 @@ function setUp(t, { imageExists = true } = {}) {
   // The project's log directory, which is named after the root and lies in the home's data directory unless a run
   // sets XDG_DATA_HOME.
   const logs = logDirectory(join(home, '.local', 'share'), root);
-  // The calls of a unit run that mounts `mounted` at /work, with `mounts` after the two of the unit run and the two
-  // directories of `logDirectory` last.
-  const unitRun = (mounted, mounts = '', logDirectory = logs) => [
+  // The calls of a unit run that mounts `mounted` at /work, with the flags of the host's terminal in `terminal`
+  // before the mounts, `mounts` after the two of the unit run and the two directories of `logDirectory` last.
+  const unitRun = (mounted, mounts = '', logDirectory = logs, terminal = '') => [
     `AGENTRITE_CONTAINER=${kitPath} docker rm ${containerName}`,
-    `${compose} run --rm --name ${containerName} --volume ${mounted}:/work ` +
+    `${compose} run --rm --name ${containerName} ${terminal}--volume ${mounted}:/work ` +
       `--volume ${root}/.reviews:/work/.reviews ${mounts}${logMounts(logDirectory)}sandbox echo hi`,
   ];
   // The script the stand-in `docker` runs as the agent, in the directory mounted at /work.
@@ -940,11 +940,11 @@ function firstCommandGets() {
 }
 
 // The one call of Docker a connect makes, as the stand-in records it: `command` in the unit run's container, with
-// a terminal when `tty` says so.
-const connectCall = (command, { tty = false } = {}) =>
+// a terminal when `tty` says so, and the flags of the host's terminal in `terminal`.
+const connectCall = (command, { tty = false, terminal = '' } = {}) =>
   `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive ${tty ? '--tty ' : ''}--user agent --workdir /work ` +
   '--env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
-  '--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ' +
+  `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${terminal}` +
   `${containerName} ${command}`;
 
 // What the stand-in's `ps` prints for a container that is running.
@@ -977,6 +977,35 @@ test('--connect exits with the status the connected command exited with', (t) =>
   assert.equal(result.status, 7, result.stderr);
   assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
 });
+
+// The host's terminal: a unit run and a connected command are each given the TERM and the COLORTERM of the shell
+// the wrapper was started from, each when it is set and not empty.
+test("a unit run passes the host's TERM and COLORTERM to the command", (t) => {
+  const { clone, run, dockerCalls, unitRun, logs } = setUp(t);
+  const result = run([branch, 'echo', 'hi'], { TERM: 'xterm-256color', COLORTERM: 'truecolor' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(
+    dockerCalls(),
+    unitRun(clone, '', logs, '--env TERM=xterm-256color --env COLORTERM=truecolor '),
+  );
+});
+
+for (const [shell, env, terminal] of [
+  [
+    'with TERM and COLORTERM',
+    { TERM: 'xterm-256color', COLORTERM: 'truecolor' },
+    '--env TERM=xterm-256color --env COLORTERM=truecolor ',
+  ],
+  ['with a TERM of tmux and no COLORTERM', { TERM: 'tmux-256color' }, '--env TERM=tmux-256color '],
+]) {
+  test(`--connect passes what its own shell has of the two to the command, from a shell ${shell}`, (t) => {
+    const host = setUp(t);
+    markRunning(host);
+    const result = host.run(['--connect', branch, 'echo', 'hi'], env);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', { terminal })]);
+  });
+}
 
 // `script` of util-linux runs a command on a terminal of its own. It is the suite's, not the wrapper's, so it is
 // taken from the suite's PATH and is not in the stand-in's `bin`. A host without it skips the test, and the reason

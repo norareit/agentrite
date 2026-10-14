@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: planned
+status: in-progress
 timestamp: 2026-10-14T12:22:07Z
 ---
 
@@ -27,3 +27,14 @@ timestamp: 2026-10-14T12:22:07Z
   `TERM` and `COLORTERM`, and a script in the image replaces a `TERM` it holds no description of, which the
   entrypoint and `--connect` both run the command through. Every requirement has a task and every task traces to
   one. The status is `planned`
+- 2026-10-14T20:57:49Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the macOS host,
+  began on `e739b04`. The status is `in-progress`
+- 2026-10-14T21:06:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, extended the plan's
+  approach: the wrapper first passed `TERM` whenever its value was not empty, and 78 tests failed, each with a
+  `--env TERM=dumb` that no test had asked for. Bash gives a shell started without `TERM` an unexported
+  `TERM=dumb` of its own, shown with `env -i bash -c 'declare -p TERM'`, which printed `declare -- TERM="dumb"`
+  with bash 3.2.57 on the macOS host and with bash 5.2.15 in the image. So the wrapper asks `declare -p` whether
+  each variable is exported, and passes it only then. Written into the plan's approach
+- 2026-10-14T21:09:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved the sentences of
+  `README.md` and `SANDBOX.md` on a `TERM` the image does not describe from the first group of tasks to a new
+  task of the second, which makes them true, so that no commit describes what it does not do. Written into the plan

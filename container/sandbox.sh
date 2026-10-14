@@ -4,9 +4,10 @@
 # invocation: the wrapper translates the working directory and any --mount flags into
 # `docker compose run --volume` options, adds the developer's Claude Code status line
 # when the host has one and the two directories of the host that hold the harnesses'
-# logs, and passes the rest through. It sets nothing that confines the container; every
-# such setting is in container/compose.yml and the project's sandbox/compose.project.yml,
-# and the firewall is in container/entrypoint.sh.
+# logs, gives the command the host's TERM and COLORTERM, and passes the rest through.
+# It sets nothing that confines the container; every such setting is in
+# container/compose.yml and the project's sandbox/compose.project.yml, and the firewall
+# is in container/entrypoint.sh.
 #
 # The logs are Claude Code's sessions and OpenCode's data directory. In every run they
 # are in the project's log directory on the host, <data>/agentrite/<name>, where <data>
@@ -35,7 +36,7 @@
 # a connected process is the wrapper's to name, though: Docker runs it as root, with the
 # capabilities the entrypoint keeps for the firewall, unless it is told the user, so the
 # wrapper names the agent, and gives the command the environment and the working
-# directory that the first command has.
+# directory that the first command has, with the TERM and COLORTERM of its own shell.
 #
 # It also decides which versions of Claude Code and OpenCode the image holds. Each is
 # the first of: the version the project's compose file gives, and the version the host's
@@ -424,6 +425,22 @@ unit_container_name() {
   echo "${name//[^A-Za-z0-9_.-]/-}"
 }
 
+# The terminal the wrapper was started from, for the command: its TERM, which names the
+# terminal, and its COLORTERM, which a terminal that shows 24-bit colour may set to say
+# so. Programs that draw in a terminal read the two to learn what it shows, and Docker
+# gives a container with a terminal TERM=xterm and no COLORTERM, which tells OpenCode to
+# send 24-bit colour to a terminal that may show only 256. A variable that is not in the
+# wrapper's environment, or is empty there, is not passed, and the command keeps what
+# Docker gives it. Whether it is in the environment is asked of declare, and not read
+# from its value: bash gives a shell started without TERM a TERM=dumb of its own, which
+# it does not export and which is not the host's.
+from_environment() {
+  [[ "$(declare -p "$1" 2>/dev/null)" == "declare -x $1="* ]] && [ -n "${!1}" ]
+}
+terminal_environment=()
+! from_environment TERM || terminal_environment+=(--env "TERM=$TERM")
+! from_environment COLORTERM || terminal_environment+=(--env "COLORTERM=$COLORTERM")
+
 # --connect ends here, before the host's harnesses are asked for a version, a build is
 # weighed or a directory is made: it runs the command in the container of the unit's
 # run, beside what runs there, and the wrapper becomes that call, so its status is the
@@ -437,7 +454,8 @@ unit_container_name() {
 # working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. A
 # test in tests/sandbox-unit-run.test.mjs reads the three files and holds this call
 # against them. Without --user the command would be root, with the capabilities the
-# entrypoint keeps for the firewall.
+# entrypoint keeps for the firewall. TERM and COLORTERM are not the first command's but
+# those of this wrapper's shell, since --connect may be run from another terminal.
 #
 # Standard input is always passed on, so that a command a script runs can be given
 # input. A terminal only when the wrapper has one on both its input and its output:
@@ -465,6 +483,7 @@ if [ "$connect" -eq 1 ]; then
   exec docker exec --interactive ${terminal[@]+"${terminal[@]}"} --user agent --workdir /work \
     --env HOME=/home/agent --env USER=agent --env LOGNAME=agent \
     --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
+    ${terminal_environment[@]+"${terminal_environment[@]}"} \
     "$container_name" "$@"
 fi
 
@@ -594,6 +613,7 @@ mounts+=(
 
 if [ -z "$branch" ]; then
   exec "${compose[@]}" run --rm \
+    ${terminal_environment[@]+"${terminal_environment[@]}"} \
     --volume "$workdir:/work" \
     ${mounts[@]+"${mounts[@]}"} \
     sandbox "$@"
@@ -614,6 +634,7 @@ docker rm "$container_name" >/dev/null 2>&1 || true
 trap : INT TERM HUP
 status=0
 "${compose[@]}" run --rm --name "$container_name" \
+  ${terminal_environment[@]+"${terminal_environment[@]}"} \
   --volume "$clone:/work" \
   --volume "$root/.reviews:/work/.reviews" \
   ${mounts[@]+"${mounts[@]}"} \

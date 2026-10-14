@@ -73,6 +73,10 @@ Several runs:
   agents on one unit"
 * Two checkouts of one project on one host share a branch's clone
 
+Every command in the sandbox, of a unit run, of `--in-place`, of `--workdir` and of `--connect`, has the `TERM` and
+the `COLORTERM` of the terminal the wrapper was run from, so a harness draws in the colours it draws in there on the
+host. Run from a shell without a `TERM`, as a script may be, the command keeps the `TERM` Docker gives it, `xterm`.
+
 For a unit run that starts nothing, see "When something goes wrong".
 
 ## Getting the work back
@@ -118,7 +122,8 @@ And in another, while that runs:
   same processes, and the firewall and the egress proxy stand between it and the network as they do for the first
   command
 * It runs as the agent, as the first command does: the same user and groups, no capability and no way to gain one,
-  `HOME`, `USER`, `LOGNAME` and `PATH` as the first command has them, and `/work` as its working directory
+  `HOME`, `USER`, `LOGNAME` and `PATH` as the first command has them, and `/work` as its working directory. Its
+  `TERM` and `COLORTERM` are those of the terminal `--connect` was run from, and not the first command's
 * It is given a terminal when `--connect` is run from one, and none when it is not, so a script can connect a
   command and give it its input. The wrapper exits with the status the command exited with
 * Any number of commands may be connected to one run at a time. Two harnesses in one clone write the same files and

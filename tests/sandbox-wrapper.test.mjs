@@ -45,10 +45,10 @@ function composeCalls(root, container, versions, ...commands) {
 // that lies beside the project.
 const homeLogs = (root) => logDirectory(join(dirname(root), 'home', '.local', 'share'), root);
 
-// The `run` of a wrapper given `echo hi` for the project at `root`: `mounted` at /work, then `mounts`, and last the
-// two directories of `logs`.
-const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root)) =>
-  `run --rm --volume ${mounted}:/work ${mounts}${logMounts(logs)}sandbox echo hi`;
+// The `run` of a wrapper given `echo hi` for the project at `root`: the flags of the host's terminal in `terminal`,
+// then `mounted` at /work, then `mounts`, and last the two directories of `logs`.
+const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root), terminal = '') =>
+  `run --rm ${terminal}--volume ${mounted}:/work ${mounts}${logMounts(logs)}sandbox echo hi`;
 
 // A project with the kit's wrapper installed at `kitPath` under `root`, and nothing else of the kit beside it,
 // and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER and the two version
@@ -744,3 +744,43 @@ test('the wrapper mounts a relative XDG_DATA_HOME as the absolute path it names 
   assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, root, '', logs)));
   assert.deepEqual(everythingIn(logs), logDirectoryHolds);
 });
+
+// The host's terminal. The wrapper passes its TERM and its COLORTERM to the command, each when it is set and not
+// empty, so that a program in the sandbox is told what the developer's terminal can show. Without them the command
+// keeps what Docker gives it, which every test above shows.
+for (const [form, formArgs] of [
+  ['--in-place', () => ['--in-place']],
+  ['--workdir', (workdir) => ['--workdir', workdir]],
+]) {
+  test(`the wrapper passes the host's TERM and COLORTERM to the command with ${form}`, (t) => {
+    const { base, root, container, runWith, dockerCalls } = setUp(t, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    const env = { TERM: 'xterm-256color', COLORTERM: 'truecolor' };
+    const result = runWith({ env }, root, ...formArgs(workdir), 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const mounted = form === '--workdir' ? workdir : root;
+    const terminal = '--env TERM=xterm-256color --env COLORTERM=truecolor ';
+    assert.deepEqual(
+      dockerCalls(),
+      composeCalls(root, container, hostVersions, runCommand(root, mounted, '', homeLogs(root), terminal)),
+    );
+  });
+}
+
+for (const [host, env, terminal] of [
+  ['with no COLORTERM', { TERM: 'xterm-256color' }, '--env TERM=xterm-256color '],
+  ['with an empty COLORTERM', { TERM: 'xterm-256color', COLORTERM: '' }, '--env TERM=xterm-256color '],
+  ['with no TERM', { COLORTERM: 'truecolor' }, '--env COLORTERM=truecolor '],
+  ['with an empty TERM', { TERM: '', COLORTERM: 'truecolor' }, '--env COLORTERM=truecolor '],
+]) {
+  test(`the wrapper passes only what the host has of the two, on a host ${host}`, (t) => {
+    const { root, container, runWith, dockerCalls } = setUp(t, kitPath);
+    const result = runWith({ env }, root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(
+      dockerCalls(),
+      composeCalls(root, container, hostVersions, runCommand(root, root, '', homeLogs(root), terminal)),
+    );
+  });
+}

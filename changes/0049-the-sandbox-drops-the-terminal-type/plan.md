@@ -5,10 +5,13 @@
 Two pieces, one on each side of Docker.
 
 **The wrapper passes the two variables.** `container/sandbox.sh` builds one array of flags from its own environment,
-before the block of `--connect`: `--env TERM=<value>` when `TERM` is set and not empty, and `--env COLORTERM=<value>`
-when `COLORTERM` is set and not empty. With neither, the array is empty and every call is the one it is today, which
-is what keeps requirement 5 and every existing test as they are. The array goes into the three calls that start a
-command:
+before the block of `--connect`: `--env TERM=<value>` when `TERM` is in the wrapper's environment and not empty,
+and `--env COLORTERM=<value>` when `COLORTERM` is. With neither, the array is empty and every call is the one it is
+today, which is what keeps requirement 5 and every existing test as they are. Whether a variable is in the
+environment is asked of `declare -p`, which marks an exported one with `-x`: bash gives a shell started without
+`TERM` an unexported `TERM=dumb` of its own, so a value alone does not say that the host has one.
+
+The array goes into the three calls that start a command:
 
 * The `docker exec` of `--connect`, after its `--env PATH=...`
 * The `compose run` of `--in-place` and `--workdir`, after `--rm`
@@ -73,34 +76,35 @@ being in it whole, so neither table of "What is here" changes.
 
 ### The wrapper passes `TERM` and `COLORTERM`
 
-- [ ] In `tests/sandbox-wrapper.test.mjs`, give `runCommand` a way to put the terminal flags after `--rm`, as a
+- [x] In `tests/sandbox-wrapper.test.mjs`, give `runCommand` a way to put the terminal flags after `--rm`, as a
   string that defaults to empty, so that every existing caller is unchanged. Add tests, each run with `runWith` and
   the variables in `env`: `--in-place` with `TERM=xterm-256color` and `COLORTERM=truecolor` records `run --rm --env
   TERM=xterm-256color --env COLORTERM=truecolor --volume ...`; `--workdir` with the same records the same flags; a
   host with `TERM=xterm-256color` and no `COLORTERM` records only the `TERM` flag; a host with an empty `COLORTERM`
   records no `COLORTERM` flag; a host with `COLORTERM=truecolor` and no `TERM` records only the `COLORTERM` flag.
   Run them and see them fail (R1, R3, R5, R6)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, give `unitRun` and `connectCall` the same way to take the terminal flags:
+- [x] In `tests/sandbox-unit-run.test.mjs`, give `unitRun` and `connectCall` the same way to take the terminal flags:
   after `--name <container>` in the unit run's `run`, and after `--env PATH=...` in the `exec`. `run` there already
   takes `env`. Add tests: a unit run with `TERM=xterm-256color` and `COLORTERM=truecolor` records both flags; a
   `--connect` with the same records both; a `--connect` with `TERM=tmux-256color` and no `COLORTERM` records only the
   `TERM` flag. Run them and see them fail (R1, R2, R3, R6)
-- [ ] In `container/sandbox.sh`, build the array of flags before the block of `--connect`, with a comment that says
+- [x] In `container/sandbox.sh`, build the array of flags before the block of `--connect`, with a comment that says
   what it is for and that a variable that is not set, or is empty, is not passed, so the command keeps what Docker
   gives it. Put the array in the three calls where the tests above expect it, with `${array[@]+"${array[@]}"}` as the
   file does for its other arrays, since bash 3.2 on macOS fails on an empty array under `set -u`. Update the header
   comment, which says what the wrapper adds to a run and gives a command of `--connect`, and the comment of
   `--connect`, which lists `HOME`, `USER`, `LOGNAME` and `PATH`. Run `npm test`: the new tests pass, and every
   existing test passes unchanged (R1, R2, R3, R5)
-- [ ] In `README.md`, add `TERM` and `COLORTERM` to the table of the environment variables of `sandbox.sh`, after
-  `SANDBOX_CPUS`. `TERM` says that it is the terminal type the command is told, and that one the image holds no
-  description of is told as `xterm-256color`; `COLORTERM` says that it is passed to the command as it is. Each row
-  fits the table's widths and the 120-character line, which leaves 90 characters for the text (R9)
-- [ ] In `SANDBOX.md`, in "Running a unit" before its last line, which points to "When something goes wrong", add a
+- [x] In `README.md`, add `TERM` and `COLORTERM` to the table of the environment variables of `sandbox.sh`, after
+  `SANDBOX_CPUS`. `TERM` says that it is the terminal type the command is told; `COLORTERM` says that it is passed
+  to the command as it is. Each row fits the table's widths and the 120-character line, which leaves 90 characters
+  for the text. What the image does with a `TERM` it does not describe is added with the second group of tasks,
+  which makes it true (R9)
+- [x] In `SANDBOX.md`, in "Running a unit" before its last line, which points to "When something goes wrong", add a
   paragraph: every command in the sandbox, of a unit run, of `--in-place`, of `--workdir` and of `--connect`, has
   the `TERM` and the `COLORTERM` of the terminal the wrapper was run from, so a harness draws in the colours it
-  draws in on the host; a `TERM` the image holds no description of is `xterm-256color` there, with the host's
-  `COLORTERM` beside it. In "Two agents on one unit", the bullet that lists `HOME`, `USER`, `LOGNAME` and `PATH`
+  draws in on the host. The `TERM` the image holds no description of is added with the second group of tasks. In
+  "Two agents on one unit", the bullet that lists `HOME`, `USER`, `LOGNAME` and `PATH`
   adds that `TERM` and `COLORTERM` are those of the terminal `--connect` was run from, and not the first command's
   (R10)
 
@@ -125,6 +129,10 @@ being in it whole, so neither table of "What is here" changes.
   above it why: the image knows which terminal descriptions it holds, and the wrapper does not (R4)
 - [ ] In `container/Dockerfile`, copy the script to `/usr/local/bin/known-terminal.sh` and make it executable,
   beside the entrypoint's `COPY` and `chmod` (R4)
+- [ ] In `README.md`, add to the row of `TERM` that one the image holds no description of is told as
+  `xterm-256color`. In `SANDBOX.md`, add to the paragraph of "Running a unit" that such a `TERM` is
+  `xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. Moved here from the first group, so that
+  no commit describes what it does not do (R9, R10)
 - [ ] In `container/sandbox.sh`, put `/usr/local/bin/known-terminal.sh` before the command of `--connect`, and say in
   the comment of `--connect` that it is what the entrypoint runs the first command through. Run `npm test`: all pass
   (R2, R4)
@@ -157,7 +165,7 @@ being in it whole, so neither table of "What is here" changes.
 
 ## Commit Points
 
-- [ ] `bugfix-0049 Plan the passing of the host's terminal type`: `plan.md` and `record.md`
-- [ ] `bugfix-0049 Pass the host's TERM and COLORTERM to the sandbox's commands`: the first group of tasks
+- [x] `bugfix-0049 Plan the passing of the host's terminal type`: `plan.md` and `record.md`
+- [x] `bugfix-0049 Pass the host's TERM and COLORTERM to the sandbox's commands`: the first group of tasks
 - [ ] `bugfix-0049 Tell a command xterm-256color for a TERM the image does not describe`: the second group
 - [ ] `bugfix-0049 Record the checks in the sandbox and in the human's terminals`: `record.md`
