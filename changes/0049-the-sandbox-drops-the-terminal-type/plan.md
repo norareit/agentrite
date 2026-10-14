@@ -161,11 +161,11 @@ being in it whole, so neither table of "What is here" changes.
 
 ## Verification
 
-- [ ] `npm test` passes on the macOS host, with no test skipped that was not skipped before
+- [x] `npm test` passes on the macOS host, with no test skipped that was not skipped before
 - [ ] `./sandbox.sh --in-place npm test` passes, which runs the suite on Linux
-- [ ] `npm run check-changes` passes
-- [ ] No line of a changed file is longer than 120 characters, and no changed text holds an em dash
-- [ ] `git diff master --stat` names no file outside those of "Files"
+- [x] `npm run check-changes` passes
+- [x] No line of a changed file is longer than 120 characters, and no changed text holds an em dash
+- [x] `git diff master --stat` names no file outside those of "Files"
 
 ## Commit Points
 
