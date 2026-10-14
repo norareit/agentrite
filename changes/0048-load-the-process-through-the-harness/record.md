@@ -31,5 +31,14 @@ timestamp: 2026-10-14T08:12:35Z
   one fails without a word, and is pointed to from "agentrite init", the text on existing files and "Updating a
   project to a newer kit". What requirement 11 asked before is requirement 13. Added the decision with its
   rationale. The status is `draft`
+- 2026-10-14T09:02:47Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision that
+  `refresh` detects a `CLAUDE.md` or `opencode.json` that does not load the kit's instructions and prints a notice,
+  and does not amend either file, so that the responsibility stays with the project and one that leaves the lines
+  out on purpose is not overruled. The human weighed `refresh` amending both and turned it down. Changed `spec.md`:
+  requirements 9 and 10 are new, on what `refresh` reads and notices and on the one rule both commands judge a file
+  by. Requirement 2 now notices an existing `CLAUDE.md` only with `claude` among the harnesses and only when it
+  lacks a line, and requirement 5 counts an `opencode.json` that is not JSON as loading the path when its text holds
+  it in quotes. The requirements after 9 are renumbered. Rewrote the decision on `refresh`, added one on the rule,
+  and added two entries to "Beyond the request". The status is `draft`
 
 ## Amendments

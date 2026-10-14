@@ -45,8 +45,10 @@ child session in OpenCode's export. The OpenCode sessions ran a local Gemma 4 31
    line `@AGENTS.md`, and neither line is in a code span or a fenced block. A Claude Code session started in a
    project that `init` set up, after `npm ci`, has `process.md` in its context without reading it, and so has a
    subagent of one of the project's role wrappers that it dispatches
-2. When `CLAUDE.md` exists, `init` leaves it as it is, as it does today, and its notice says that for Claude Code to
-   read the instructions the file must hold both lines, `@node_modules/agentrite/process.md` and `@AGENTS.md`
+2. When `CLAUDE.md` exists, `init` leaves it as it is, as it does today. With `claude` among the harnesses, and only
+   when the file lacks one of the two lines, it prints a notice that names the lines it lacks, says that Claude Code
+   does not read the kit's instructions without them, and points to the section of requirement 12. A line counts
+   when it is exactly the text above, whether it ends in LF or CRLF
 
 `opencode.json`, at the project root, and only when `opencode` is among the harnesses that `init` works with:
 
@@ -69,10 +71,13 @@ child session in OpenCode's export. The OpenCode sessions ran a local Gemma 4 31
     * With `instructions` a list that holds the path, it leaves the file as it is and prints
       `skipped opencode.json, which loads node_modules/agentrite/process.md`
 5. When `opencode.json` is there and cannot be amended, because it cannot be read, is not JSON, is not a JSON object,
-   or holds an `instructions` that is not a list, `init` leaves it as it is and prints
-   `skipped opencode.json, which cannot be amended`. It writes and amends everything else as it would have, exits 0,
-   and prints a notice among its other notices that says why the file was left, and that for OpenCode to read the
-   kit's instructions its `instructions` list must hold `node_modules/agentrite/process.md`
+   or holds an `instructions` that is not a list, `init` leaves it as it is. When it is not JSON and its text holds
+   `"node_modules/agentrite/process.md"`, with the quotes, it counts as loading the path, as a file with a comment
+   in it can, and `init` prints the `skipped` line of requirement 4 and no notice. Otherwise it prints
+   `skipped opencode.json, which cannot be amended`, and a notice among its other notices that says why the file
+   was left, that for OpenCode to read the kit's instructions its `instructions` list must hold
+   `node_modules/agentrite/process.md`, and points to the section of requirement 12. Either way it writes and
+   amends everything else as it would have, and exits 0
 6. What `init` refuses on, it refuses on before it writes anything, as today. Reading `opencode.json` is not among
    it: no state of that file makes `init` refuse
 7. Without `opencode` among the harnesses, `init` does not read, write or amend `opencode.json`, and prints nothing
@@ -80,15 +85,29 @@ child session in OpenCode's export. The OpenCode sessions ran a local Gemma 4 31
 8. An OpenCode session started in a project that `init` set up with `opencode`, after `npm ci`, has `process.md` in
    its context without reading it, and so has a subagent of one of the project's role wrappers that it dispatches
 
+`refresh`:
+
+9. `refresh` never writes, amends or creates `CLAUDE.md` or `opencode.json`. It reads them, and with what it finds
+   prints a notice after the lines of the files it refreshed:
+    * With `claude` among the harnesses, for a `CLAUDE.md` that is missing, or that lacks one of the two lines of
+      requirement 1, counted as requirement 2 counts them. The notice names what is missing
+    * With `opencode` among the harnesses, for an `opencode.json` that is missing, or that does not load the path
+      by the rule of requirements 4 and 5. The notice names what is missing, or why the file could not be read
+
+   Each notice says that the harness does not read the kit's instructions without it, that `refresh` does not add
+   it, and points to the section of requirement 12. A file that loads the instructions gets no notice and no line.
+   No state of either file changes what `refresh` writes or the status it exits with
+10. Whether a `CLAUDE.md` and an `opencode.json` load the kit's instructions is decided in one place of the kit's
+    code, which `init` and `refresh` both use
+
 What does not change:
 
-9. `refresh` neither reads, writes nor creates `CLAUDE.md` or `opencode.json`
-10. The project's `AGENTS.md` as `init` writes it still calls `process.md` required reading in a link, and each of
+11. The project's `AGENTS.md` as `init` writes it still calls `process.md` required reading in a link, and each of
     the kit's role files still opens with the instruction to read `process.md` first
 
 The documents:
 
-11. `README.md` has a section of its own on how the kit's instructions reach an agent, under a heading that says so,
+12. `README.md` has a section of its own on how the kit's instructions reach an agent, under a heading that says so,
     in "Installing it into a project". A reader finds it from the README's headings, without having seen a notice
     of `init`. It holds, for each file, what that file must hold and which harness reads it:
     * `AGENTS.md`: the sections Development Guidelines, Roles and Changes in this project, read by both harnesses
@@ -99,18 +118,20 @@ The documents:
 
     And it says:
     * That `init` puts these in a file it writes, and in an `opencode.json` it can amend, and that for an
-      `AGENTS.md` or a `CLAUDE.md` that exists, and an `opencode.json` it cannot amend, it only prints a notice,
-      once, which is kept nowhere. The project then adds what is missing by hand
-    * That nothing reports a file that lacks them: neither harness gives an error, and a session starts without the
+      `AGENTS.md` or a `CLAUDE.md` that exists, and an `opencode.json` it cannot amend, it only prints a notice.
+      The project then adds what is missing by hand
+    * That neither harness reports a file that lacks them: there is no error, and a session starts without the
       kit's instructions in its context, which it then reads only if the model follows the link in `AGENTS.md`
-    * That `refresh` never adds them, and a project checks the three files against this section after an `init`
-      that printed a notice
-12. "agentrite init", the text of `README.md` on a file that exists, and "Updating a project to a newer kit" each
-    point to that section
-13. `README.md` says, in "agentrite init" and in "Installing it into a project", that `init` writes or amends
+    * That `refresh` never adds them to `CLAUDE.md` or `opencode.json`, and prints a notice on each run for as long
+      as one of them lacks them. A project that leaves them out on purpose gets that notice on every `refresh`
+13. "agentrite init", "agentrite refresh", the text of `README.md` on a file that exists, and "Updating a project to
+    a newer kit" each point to that section
+14. `README.md` says, in "agentrite init" and in "Installing it into a project", that `init` writes or amends
     `opencode.json` with `opencode`, and what it does with one that exists. Its table of the files `init` writes has
     a row for `opencode.json` and says in the row of `CLAUDE.md` that it imports `process.md` as well as
-    `AGENTS.md`. "Updating a project to a newer kit" names `opencode.json` among the files `refresh` never touches
+    `AGENTS.md`. "agentrite refresh" and "Updating a project to a newer kit" name `opencode.json` among the files
+    `refresh` never writes, and say that it reads `CLAUDE.md` and `opencode.json` and prints the notices of
+    requirement 9
 
 ## Decisions
 
@@ -147,22 +168,33 @@ The documents:
   wired there
 * **The written `opencode.json` holds `instructions` and nothing else.** That is the one key the kit needs. A
   `$schema` key would help an editor and is the project's to add
-* **`refresh` does not take the two files over, and existing projects run `init`.** `refresh` rewrites whole the
-  files that hold nothing but what the kit put there, and `CLAUDE.md` and `opencode.json` are the project's. `init`
-  with no argument writes what is missing, which now includes the `opencode.json` entry, and prints the notice of
-  `CLAUDE.md` that names the one line to add by hand. The release notes say so, when the release is made. Rejected:
-  `refresh` amending both, which makes it touch the project's own files for a step each project takes once. The
-  third action, in which a project names its own style file, may need the loading kept in step with a setting, and
-  decides then how
+* **`refresh` detects and notices, and does not amend.** The human decided this while the spec was a draft.
+  `refresh` rewrites whole the files that hold nothing but what the kit put there, and `CLAUDE.md` and
+  `opencode.json` are the project's, so it leaves them as they are and the responsibility with the project. It
+  still reads them, because `refresh` is what every update of the kit runs, and so the one place where a project
+  that set up before this unit, or that missed the notice of `init`, is told. A project that leaves the lines out on
+  purpose is not overruled on every run, as it would be by a `refresh` that adds them: it gets a notice, which
+  changes no file. That notice comes back on every `refresh`, which is the cost, and is accepted. Rejected:
+  `refresh` amending both, which the human weighed and turned down; and `refresh` not reading them, as in the first
+  draft, which left the wiring to a notice of `init` printed once. An existing project runs `init` with no argument
+  to get the `opencode.json` entry written, or adds what the notices name by hand. The release notes say so, when
+  the release is made. The third action, in which a project names its own style file, may need the loading kept in
+  step with a setting, and decides then how
+* **Both commands judge a file by one rule, and notice only for the harness that reads it.** `init` noticed every
+  `CLAUDE.md` that exists before this unit, also one that held what it needs, and also in a project without
+  `claude`. A notice that comes on every `refresh` must come only when something is missing, or a project learns to
+  skip it, and the same rule in `init` keeps the two from telling a project different things. A file that is not
+  JSON counts as loading the path when its text holds it in quotes, so that a project whose `opencode.json` has a
+  comment, which OpenCode reads, is not noticed on every run over a file that works. That textual test can be
+  fooled, for example by the path in a comment, and is accepted: a JSONC parser is a dependency for an edge case
 * **What a project must hold is documented in one section, and not only in the notices.** The human asked for
-  this while the spec was a draft. A notice is printed once, among the other lines of `init`, and is kept nowhere,
-  so a reader who did not see it, or who set the project up before this unit, has nothing to go by. And a file
-  that lacks a line fails without a word, as the table above shows for a missing target, so the reader cannot
-  learn it from an error either. One section that lists every file and line is what a reader checks a project
-  against. It holds `AGENTS.md` too, whose sections the notice of `init` already lists, so that the section is the
-  whole of the wiring and not two thirds of it. Rejected: the facts spread over "agentrite init" and the text on
-  existing files, which is where they were in the first draft, and which a reader looking for the wiring has to
-  assemble
+  this while the spec was a draft. A notice is printed among the other lines of a command, and is kept nowhere,
+  so a reader who did not see it has nothing to go by. And a file that lacks a line fails without a word, as the
+  table above shows for a missing target, so the reader cannot learn it from an error either. One section that
+  lists every file and line is what a reader checks a project against, and what every notice points to. It holds
+  `AGENTS.md` too, whose sections the notice of `init` already lists, so that the section is the whole of the
+  wiring and not two thirds of it. Rejected: the facts spread over "agentrite init" and the text on existing files,
+  which is where they were in the first draft, and which a reader looking for the wiring has to assemble
 * **The line goes before `@AGENTS.md`.** The kit's instructions first and the project's after them, the order in
   which `AGENTS.md` describes the two
 
@@ -183,6 +215,15 @@ The documents:
 * **An `opencode.jsonc`, or an `opencode.json` under `.opencode/`, that a project already has.** `init` could look
   for them and amend the one it finds. Cost: deciding which wins when there are two, and amending a file with
   comments in it, which `JSON.parse` cannot read. Without it, `init` writes `opencode.json` at the root beside it, a
-  new tracked file that shows in the project's diff and that the project can fold into its own in a minute
+  new tracked file that shows in the project's diff and that the project can fold into its own in a minute. A
+  project that keeps its own file there instead gets the notice of `refresh` on every run
+* **`refresh` noticing an `AGENTS.md` that lacks its three sections.** The same detection for the third file. Cost:
+  deciding when a section a project has reworded still counts, since the sections are prose and not one line.
+  Without it, `AGENTS.md` is covered by the notice of `init` and the README section, as it is today, and the
+  role files and the loaded `process.md` reach an agent without it
+* **A line in a fenced block or a code span of `CLAUDE.md`.** Claude Code does not expand it, and the rule of
+  requirement 2 counts it as there. Cost: reading Markdown structure to find the blocks. Without it, a project that
+  quoted the line in a block, which nobody does by accident, gets no notice, and the README section says where the
+  line must be
 * **A check that the imported file is there.** Covered under "Decisions": it would guard one way a session starts
   and say nothing in the others
