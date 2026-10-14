@@ -94,19 +94,19 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
   that says why IPv4 alone. See the five tests pass (R1, R2, R3, R4, R6)
 - [x] See that `git diff master -- container/entrypoint.sh` changes nothing outside the block of the local model
   server and the new function, and that every `ip6tables` line is as it was (R5)
-- [ ] On the macOS host with Docker Desktop 4.95.0, with Ollama listening on port 11434, run the two commands of
+- [x] On the macOS host with Docker Desktop 4.95.0, with Ollama listening on port 11434, run the two commands of
   the Approach. See the first print `allowed local model server at 192.168.65.254:11434` among the entrypoint's
   lines, and `Ollama is running`, and both exit 0 (R1, R4)
-- [ ] Log in `record.md` the Docker and Compose versions, the two commands, the entrypoint's lines and what `curl`
+- [x] Log in `record.md` the Docker and Compose versions, the two commands, the entrypoint's lines and what `curl`
   printed (R7)
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with no more tests skipped than on `master`
-- [ ] `./sandbox-dev.sh --in-place npm test` passes, with no test skipped. `./sandbox.sh --in-place npm test`, the
+- [x] `npm test` passes on the host, with no more tests skipped than on `master`
+- [x] `./sandbox-dev.sh --in-place npm test` passes, with no test skipped. `./sandbox.sh --in-place npm test`, the
   installed release, does not start on this host's Docker, which is the bug
-- [ ] `npm pack --dry-run` lists the same files as on `master`
-- [ ] `npm run check-changes` passes
+- [x] `npm pack --dry-run` lists the same files as on `master`
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
@@ -115,4 +115,4 @@ No other file changes. `README.md` and `SANDBOX.md` stay as they are, as the spe
 - [x] The regression test and the fix, in one commit, as `bugfix-0051 Admit the model server at its IPv4 address
   alone`. The failure of the test before the fix is in the record, so the tree is never committed with a failing
   test
-- [ ] The record of the runs, as `bugfix-0051 Record the runs on Docker Desktop 4.95.0`
+- [x] The record of the runs, as `bugfix-0051 Record the runs on Docker Desktop 4.95.0`

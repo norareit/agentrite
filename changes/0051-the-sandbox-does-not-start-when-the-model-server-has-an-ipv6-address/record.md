@@ -64,5 +64,25 @@ timestamp: 2026-10-14T21:29:22Z
   wrote the comment above it that says why IPv4 alone. `bash -n` passes on the entrypoint, and the five tests of
   `tests/entrypoint-model-server.test.mjs` pass. `git diff master -- container/entrypoint.sh` changes the block of
   the local model server alone, into the function and its call, and no `ip6tables` line
+- 2026-10-14T21:44:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the working copy's
+  sandbox through the wrapper on `f322a7e`, with `./sandbox-dev.sh`, on the macOS host with Docker Desktop 4.95.0,
+  Engine 29.8.2 and Compose 5.6.0, with Ollama listening on `127.0.0.1:11434`. Each run rebuilt the image.
+  * `./sandbox-dev.sh --in-place curl -4 -s --max-time 5 http://host.docker.internal:11434/` exited 0. The
+    entrypoint logged `installing default-deny egress firewall`, `IPv6 egress denied`,
+    `allowed local model server at 192.168.65.254:11434`, the proxy listening, the canary blocked, every
+    allowlisted host and the probe reachable, `example.com` refused at the probe's address, and
+    `firewall verified; dropping to the agent user`. `curl` printed `Ollama is running`
+  * `./sandbox-dev.sh 0051 true` exited 0, in the container
+    `ritenoar-agentrite-sandbox-dev-bugfix-0051-the-sandbox-does-not-start-when-the-model-server-has-an-ipv6-address`,
+    with the same lines of the entrypoint. After it the checkout was on the unit's branch at `f322a7e` with nothing
+    in `git status`, and the clone's directory was gone
+  On that tree, with this record and the ticks of `plan.md` added, which change no code: `npm test` on the host
+  reports 552 tests, 535 passing, 17 skipped and none failing, the seventeen that skipped before this unit, since
+  the new file skips none. `./sandbox-dev.sh --in-place npm test` reports 552 tests, 552 passing, none skipped and
+  none failing. `npm pack --dry-run` lists 33 files, the same as on `master` at `b6f80bf`. `npm run
+  check-changes` is run on the commit of this entry. Every task of the plan is ticked. The status stays
+  `in-progress` until the review.
+  Not checked: a Linux host, and a model server's host with an IPv6 address alone through the wrapper, which the
+  regression test holds
 
 ## Amendments
