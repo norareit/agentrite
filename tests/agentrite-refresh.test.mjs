@@ -714,12 +714,16 @@ test('refresh with sandbox false writes no sandbox.sh and says nothing of an age
   assert.throws(() => lstatSync(join(base, 'sandbox.sh')));
 });
 
-// R9, R10: refresh reads CLAUDE.md and opencode.json, notices one that does not load process.md, and writes neither.
+// R9, R10 of unit 0048, R18 of unit 0052: refresh reads CLAUDE.md and opencode.json, notices one that does not load
+// the kit's instructions, and writes neither.
 
 const PROCESS = 'node_modules/agentrite/process.md';
+const STANDARDS = 'node_modules/agentrite/standards.md';
 const IMPORT = `@${PROCESS}`;
-const CLAUDE_LOADS = `# Ours\n\n${IMPORT}\n@AGENTS.md\n`;
-const OPENCODE_LOADS = `{\n  "instructions": [\n    "${PROCESS}"\n  ]\n}\n`;
+const STANDARDS_IMPORT = `@${STANDARDS}`;
+const LINES = [IMPORT, STANDARDS_IMPORT, '@AGENTS.md'];
+const CLAUDE_LOADS = `# Ours\n\n${IMPORT}\n${STANDARDS_IMPORT}\n@AGENTS.md\n`;
+const OPENCODE_LOADS = `{\n  "instructions": [\n    "${PROCESS}",\n    "${STANDARDS}"\n  ]\n}\n`;
 
 // Puts `text` at `path` in the project: nothing for undefined, a directory for null, and a file otherwise.
 function place(made, path, text) {
@@ -735,7 +739,8 @@ function placed(made, path) {
 }
 
 // Runs refresh in a project whose files are up to date, with `claude` and `opencode` at the paths of the two files,
-// and checks that it wrote neither and printed for the files what a project whose two files load process.md gets.
+// and checks that it wrote neither and printed for the files what a project whose two files load the kit's
+// instructions gets.
 function refreshWith(t, harnesses, { claude, opencode }) {
   const loading = project(t);
   loading.write('CLAUDE.md', CLAUDE_LOADS);
@@ -757,9 +762,12 @@ function refreshWith(t, harnesses, { claude, opencode }) {
 
 test('refresh with claude notices a CLAUDE.md that is missing or lacks a line, after the lines of the files', (t) => {
   const cases = [
-    [undefined, claudeRefreshNotice(true, [IMPORT, '@AGENTS.md'])],
-    ['@AGENTS.md\n', claudeRefreshNotice(false, [IMPORT])],
-    ['our own\n', claudeRefreshNotice(false, [IMPORT, '@AGENTS.md'])],
+    [undefined, claudeRefreshNotice(true, LINES)],
+    [`${STANDARDS_IMPORT}\n@AGENTS.md\n`, claudeRefreshNotice(false, [IMPORT])],
+    ['@AGENTS.md\n', claudeRefreshNotice(false, [IMPORT, STANDARDS_IMPORT])],
+    // The CLAUDE.md of the last release, which loads process.md alone.
+    [`# Ours\n\n${IMPORT}\n@AGENTS.md\n`, claudeRefreshNotice(false, [STANDARDS_IMPORT])],
+    ['our own\n', claudeRefreshNotice(false, LINES)],
   ];
   for (const [claude, notice] of cases) {
     const result = refreshWith(t, ['claude'], { claude });
@@ -768,7 +776,7 @@ test('refresh with claude notices a CLAUDE.md that is missing or lacks a line, a
   }
 });
 
-test('refresh with claude prints nothing of a CLAUDE.md that holds both lines, in LF or in CRLF', (t) => {
+test('refresh with claude prints nothing of a CLAUDE.md that holds the three lines, in LF or in CRLF', (t) => {
   for (const claude of [CLAUDE_LOADS, CLAUDE_LOADS.replaceAll('\n', '\r\n')]) {
     const result = refreshWith(t, ['claude'], { claude });
     assert.equal(noticesOf(result), '');
@@ -776,25 +784,30 @@ test('refresh with claude prints nothing of a CLAUDE.md that holds both lines, i
   }
 });
 
-test('refresh with opencode notices an opencode.json that does not load process.md, with why', (t) => {
+test('refresh with opencode notices an opencode.json that does not load the kit\'s instructions, with why', (t) => {
+  const both = [PROCESS, STANDARDS];
   const cases = [
-    [undefined, 'it is missing'],
-    ['{\n  "model": "x"\n}\n', 'it has no instructions list'],
-    ['{ "instructions": ["a.md"] }\n', `its instructions list does not hold ${PROCESS}`],
-    ['not json\n', 'it is not JSON: '],
-    [null, 'it cannot be read: '],
+    [undefined, 'it is missing', both],
+    ['{\n  "model": "x"\n}\n', 'it has no instructions list', both],
+    ['{ "instructions": ["a.md"] }\n', `its instructions list does not hold ${PROCESS} or ${STANDARDS}`, both],
+    // The opencode.json of the last release, which loads process.md alone.
+    [`{ "instructions": ["${PROCESS}"] }\n`, `its instructions list does not hold ${STANDARDS}`, [STANDARDS]],
+    ['not json\n', 'it is not JSON: ', both],
+    [`{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`, 'it is not JSON: ', [STANDARDS]],
+    [null, 'it cannot be read: ', both],
   ];
-  for (const [opencode, problem] of cases) {
+  for (const [opencode, problem, lacks] of cases) {
     const result = refreshWith(t, ['opencode'], { opencode });
     const notices = noticesOf(result);
     assert.ok(notices.startsWith(`opencode.json does not load the kit's instructions,\nbecause ${problem}`), notices);
-    if (!problem.endsWith(': ')) assert.equal(notices, `${opencodeRefreshNotice(problem)}\n`);
-    assert.match(notices, /refresh\ndoes not add it/);
+    if (!problem.endsWith(': ')) assert.equal(notices, `${opencodeRefreshNotice(problem, lacks)}\n`);
+    assert.match(notices, /refresh\ndoes not add them/);
+    assert.ok(notices.includes(`does not add them:\n\n${lacks.join('\n')}\n\n`), notices);
   }
 });
 
-test('refresh with opencode prints nothing of an opencode.json that loads process.md, also one with a comment', (t) => {
-  for (const opencode of [OPENCODE_LOADS, `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`]) {
+test('refresh with opencode prints nothing of an opencode.json that loads both paths, also one with a comment', (t) => {
+  for (const opencode of [OPENCODE_LOADS, `{\n  // ours\n  "instructions": ["${PROCESS}", "${STANDARDS}"]\n}\n`]) {
     const result = refreshWith(t, ['opencode'], { opencode });
     assert.equal(noticesOf(result), '');
     assert.doesNotMatch(result.stdout, /opencode\.json/);
@@ -803,8 +816,8 @@ test('refresh with opencode prints nothing of an opencode.json that loads proces
 
 test('refresh with both harnesses prints the notice of CLAUDE.md and then that of opencode.json', (t) => {
   const result = refreshWith(t, ['claude', 'opencode'], { claude: undefined, opencode: undefined });
-  const claude = claudeRefreshNotice(true, [IMPORT, '@AGENTS.md']);
-  const opencode = opencodeRefreshNotice('it is missing');
+  const claude = claudeRefreshNotice(true, LINES);
+  const opencode = opencodeRefreshNotice('it is missing', [PROCESS, STANDARDS]);
   assert.equal(noticesOf(result), `${claude}\n\n${opencode}\n`);
 });
 

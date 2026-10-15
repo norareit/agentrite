@@ -64,5 +64,10 @@ timestamp: 2026-10-15T16:51:20Z
   wrappers, so the two implementer wrappers were written from `plannedFiles`, and no other file. They point at the
   installed release's `roles/implementer.md`, which still speaks of `planned` until this repository moves to the release
   that holds this unit. `npm test` on the tree of this step, uncommitted on `b2b30b8`, reported 577 tests, 577 passing
+- 2026-10-15T22:21:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did tasks 3.1 to 3.9. The tests of
+  3.1 failed on the missing exports before `scripts/agentrite-instructions.mjs` changed, and 7 of 3.4 and 18 of 3.5
+  failed before the templates and `scripts/agentrite.mjs` changed. One test of 3.4 then failed on itself: it looked for
+  "process.md and standards.md already." on one line, where the template wraps it, and now allows any whitespace there.
+  `npm test` on the tree of this step, uncommitted on `128f725`, reported 581 tests, 581 passing
 
 ## Amendments

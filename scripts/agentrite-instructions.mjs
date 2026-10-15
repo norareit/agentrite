@@ -5,10 +5,16 @@ import { formattedLike } from './agentrite-json.mjs';
 /** The kit's `process.md` as a project installs it, which the harness loads into every session. */
 export const PROCESS_PATH = 'node_modules/agentrite/process.md';
 
-/** The lines `CLAUDE.md` must hold for Claude Code to load the kit's instructions, in the order init writes them. */
-export const CLAUDE_LINES = [`@${PROCESS_PATH}`, '@AGENTS.md'];
+/** The kit's `standards.md` as a project installs it, which the harness loads into every session. */
+export const STANDARDS_PATH = 'node_modules/agentrite/standards.md';
 
-/** OpenCode's configuration file at the project root, whose `instructions` list loads `process.md`. */
+/** The kit's instruction files, in the order a harness is given them. */
+export const INSTRUCTION_PATHS = [PROCESS_PATH, STANDARDS_PATH];
+
+/** The lines `CLAUDE.md` must hold for Claude Code to load the kit's instructions, in the order init writes them. */
+export const CLAUDE_LINES = [...INSTRUCTION_PATHS.map((path) => `@${path}`), '@AGENTS.md'];
+
+/** OpenCode's configuration file at the project root, whose `instructions` list loads the kit's instructions. */
 export const OPENCODE_FILE = 'opencode.json';
 
 const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/README.md.';
@@ -50,7 +56,8 @@ export function readProjectFile(root, path) {
 
 /**
  * The lines of `CLAUDE_LINES` that a `CLAUDE.md` lacks, in their order. A line counts when it is exactly the text,
- * ending in LF or CRLF. A file that is missing or cannot be read lacks both, as Claude Code reads nothing from it.
+ * ending in LF or CRLF. A file that is missing or cannot be read lacks them all, as Claude Code reads nothing from
+ * it.
  *
  * @param {ProjectFile} read
  * @returns {string[]}
@@ -62,45 +69,59 @@ export function claudeLacks(read) {
 }
 
 /**
- * Whether an `opencode.json` loads `process.md`, and when it does not, why, and the text that would make it, which
- * is `undefined` for a file that cannot be amended.
+ * The verdict on an `opencode.json` that does not load the kit's instructions: why, the paths of
+ * `INSTRUCTION_PATHS` it lacks, in their order, and the text that would make it load them, which is `undefined` for
+ * a file that cannot be amended.
+ *
+ * @typedef {{ loads: false, problem: string, lacks: string[], content: string | undefined }} OpencodeFailure
+ */
+
+/**
+ * Whether an `opencode.json` loads the kit's instructions, every path of `INSTRUCTION_PATHS`, and when it does not,
+ * the verdict on it.
  *
  * @param {ProjectFile} read
- * @returns {{ loads: true } | { loads: false, problem: string, content: string | undefined }}
+ * @returns {{ loads: true } | OpencodeFailure}
  */
 export function opencodeVerdict(read) {
+  const all = [...INSTRUCTION_PATHS];
   if (!read.found) {
-    const content = formattedLike('{}\n', { instructions: [PROCESS_PATH] });
-    return { loads: false, problem: 'it is missing', content };
+    const content = formattedLike('{}\n', { instructions: all });
+    return { loads: false, problem: 'it is missing', lacks: all, content };
   }
-  if ('error' in read) return { loads: false, problem: `it cannot be read: ${read.error}`, content: undefined };
+  if ('error' in read) {
+    return { loads: false, problem: `it cannot be read: ${read.error}`, lacks: all, content: undefined };
+  }
 
   /** @type {unknown} */ let configuration;
   try {
     configuration = JSON.parse(read.text);
   } catch (error) {
     // OpenCode reads a file with comments in it, which JSON.parse does not, so the text is what is judged.
-    if (read.text.includes(`"${PROCESS_PATH}"`)) return { loads: true };
-    return { loads: false, problem: `it is not JSON: ${messageOf(error)}`, content: undefined };
+    const lacks = INSTRUCTION_PATHS.filter((path) => !read.text.includes(`"${path}"`));
+    if (lacks.length === 0) return { loads: true };
+    return { loads: false, problem: `it is not JSON: ${messageOf(error)}`, lacks, content: undefined };
   }
   if (typeof configuration !== 'object' || configuration === null || Array.isArray(configuration)) {
-    return { loads: false, problem: 'it is not a JSON object', content: undefined };
+    return { loads: false, problem: 'it is not a JSON object', lacks: all, content: undefined };
   }
 
-  const amend = (/** @type {unknown[]} */ instructions) =>
-    formattedLike(read.text, { ...configuration, instructions: [...instructions, PROCESS_PATH] });
+  const amend = (/** @type {unknown[]} */ instructions, /** @type {string[]} */ lacks) =>
+    formattedLike(read.text, { ...configuration, instructions: [...instructions, ...lacks] });
   if (!('instructions' in configuration)) {
-    return { loads: false, problem: 'it has no instructions list', content: amend([]) };
+    return { loads: false, problem: 'it has no instructions list', lacks: all, content: amend([], all) };
   }
   const { instructions } = configuration;
   if (!Array.isArray(instructions)) {
-    return { loads: false, problem: 'its instructions is not a list', content: undefined };
+    return { loads: false, problem: 'its instructions is not a list', lacks: all, content: undefined };
   }
-  if (instructions.includes(PROCESS_PATH)) return { loads: true };
+  const lacks = INSTRUCTION_PATHS.filter((path) => !instructions.includes(path));
+  if (lacks.length === 0) return { loads: true };
   return {
     loads: false,
-    problem: `its instructions list does not hold ${PROCESS_PATH}`,
-    content: amend(instructions),
+    problem: `its instructions list does not hold ${lacks.join(' or ')}`,
+    lacks,
+    content: amend(instructions, lacks),
   };
 }
 
@@ -119,16 +140,18 @@ export function claudeInitNotice(lines) {
 }
 
 /**
- * What `init` tells a project whose `opencode.json` it cannot amend, because of `problem`.
+ * What `init` tells a project whose `opencode.json` it cannot amend, because of `problem`, and which lacks the paths
+ * `lacks`.
  *
  * @param {string} problem
+ * @param {string[]} lacks
  * @returns {string}
  */
-export function opencodeInitNotice(problem) {
+export function opencodeInitNotice(problem, lacks) {
   return (
     `${OPENCODE_FILE} was left as it is, because ${problem}.\n` +
-    `For OpenCode to read the kit's instructions, its instructions list must hold ${PROCESS_PATH}.\n` +
-    `Add it by hand. ${SECTION}\n`
+    "For OpenCode to read the kit's instructions, its instructions list must hold the paths below.\n" +
+    `Add them by hand:\n\n${lacks.join('\n')}\n\n${SECTION}\n`
   );
 }
 
@@ -151,15 +174,17 @@ export function claudeRefreshNotice(missing, lines) {
 }
 
 /**
- * What `refresh` tells a project whose `opencode.json` does not load `process.md`, because of `problem`.
+ * What `refresh` tells a project whose `opencode.json` does not load the kit's instructions, because of `problem`,
+ * and lacks the paths `lacks`.
  *
  * @param {string} problem
+ * @param {string[]} lacks
  * @returns {string}
  */
-export function opencodeRefreshNotice(problem) {
+export function opencodeRefreshNotice(problem, lacks) {
   return (
     `${OPENCODE_FILE} does not load the kit's instructions,\nbecause ${problem}.\n` +
-    `OpenCode does not read them without ${PROCESS_PATH} in its instructions list, and refresh\n` +
-    `does not add it. ${SECTION}\n`
+    'OpenCode does not read them without the paths below in its instructions list, and refresh\n' +
+    `does not add them:\n\n${lacks.join('\n')}\n\n${SECTION}\n`
   );
 }

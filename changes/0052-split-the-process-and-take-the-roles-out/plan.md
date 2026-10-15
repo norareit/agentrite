@@ -176,7 +176,7 @@ the role and not the status, and every unit under `changes/` but this one.
 
 ### 3. `standards.md` loaded into every session
 
-- [ ] 3.1 In `tests/agentrite-instructions.test.mjs`: `STANDARDS_PATH` is `node_modules/agentrite/standards.md`,
+- [x] 3.1 In `tests/agentrite-instructions.test.mjs`: `STANDARDS_PATH` is `node_modules/agentrite/standards.md`,
   `INSTRUCTION_PATHS` is both in order, `CLAUDE_LINES` is the three lines in order; `claudeLacks` lacks each of the
   three it does not hold, in order, and all three for a missing or unreadable file; every row of the table under
   Approach, its `lacks` among it, with a list holding only `process.md` amended by `standards.md` at its end, one
@@ -184,11 +184,11 @@ the role and not the status, and every unit under `changes/` but this one.
   other, and the written file `{\n  "instructions": [\n    "node_modules/agentrite/process.md",\n
   "node_modules/agentrite/standards.md"\n  ]\n}\n`; and each notice of 3.3 listing the paths it is given and only
   those, with no line over 120 characters. See them fail (R18)
-- [ ] 3.2 In `scripts/agentrite-instructions.mjs`: add `STANDARDS_PATH` and `INSTRUCTION_PATHS`; `CLAUDE_LINES` is
+- [x] 3.2 In `scripts/agentrite-instructions.mjs`: add `STANDARDS_PATH` and `INSTRUCTION_PATHS`; `CLAUDE_LINES` is
   `[@process, @standards, @AGENTS.md]`; `opencodeVerdict` follows the table under Approach and returns `lacks` in
   every `loads: false` case; update the doc comments that say "process.md" or "both" for what is now the kit's two
   paths or three lines (R18)
-- [ ] 3.3 The notices for `opencode.json` take `lacks` and list it, one path to a line, as the `CLAUDE.md` notices
+- [x] 3.3 The notices for `opencode.json` take `lacks` and list it, one path to a line, as the `CLAUDE.md` notices
   list their lines (R18):
     * `opencodeInitNotice(problem, lacks)`: `opencode.json was left as it is, because <problem>.\nFor OpenCode to
       read the kit's instructions, its instructions list must hold the paths below.\nAdd them by hand:\n\n<lacks,
@@ -196,7 +196,7 @@ the role and not the status, and every unit under `changes/` but this one.
     * `opencodeRefreshNotice(problem, lacks)`: `opencode.json does not load the kit's instructions,\nbecause
       <problem>.\nOpenCode does not read them without the paths below in its instructions list, and refresh\ndoes
       not add them:\n\n<lacks, one to a line>\n\n<SECTION>\n`
-- [ ] 3.4 In `tests/agentrite-init.test.mjs`: `CLAUDE.md` imports process, standards and `AGENTS.md` in that order,
+- [x] 3.4 In `tests/agentrite-init.test.mjs`: `CLAUDE.md` imports process, standards and `AGENTS.md` in that order,
   outside a fenced block and a code span; `CLAUDE.md` names `standards.md` in its text; `AGENTS.md` calls both
   files required reading, each in a link, and its comment says what holds for every project is in `process.md` and
   `standards.md`; `OPENCODE` is the two-path file; an object without the paths and a list holding only `process.md`
@@ -204,25 +204,25 @@ the role and not the status, and every unit under `changes/` but this one.
   `skipped opencode.json, which loads node_modules/agentrite/process.md and node_modules/agentrite/standards.md`;
   a not-JSON file quoting only `process.md` is left with a notice naming `standards.md`; the `CLAUDE.md` notice
   cases use three lines. See them fail (R18, R19)
-- [ ] 3.5 In `tests/agentrite-refresh.test.mjs` and `tests/settings-update.test.mjs`: the loading `CLAUDE.md` holds
+- [x] 3.5 In `tests/agentrite-refresh.test.mjs` and `tests/settings-update.test.mjs`: the loading `CLAUDE.md` holds
   the three lines and the loading `opencode.json` both paths; a `CLAUDE.md` with only the two lines of the last
   release and an `opencode.json` with only `process.md` each get a notice naming `standards.md` alone; the expected
   notices pass `lacks`. See them fail (R18)
-- [ ] 3.6 `templates/project/CLAUDE.md`: the line `@node_modules/agentrite/standards.md` between the two imports; the
+- [x] 3.6 `templates/project/CLAUDE.md`: the line `@node_modules/agentrite/standards.md` between the two imports; the
   prose says the file imports the kit's `process.md` and `standards.md` and `AGENTS.md`, and its list names
   [`node_modules/agentrite/standards.md`](node_modules/agentrite/standards.md) beside `process.md` for what is the
   same in every project (R18, R19)
-- [ ] 3.7 `templates/project/AGENTS.md`: the first paragraph calls
+- [x] 3.7 `templates/project/AGENTS.md`: the first paragraph calls
   [`node_modules/agentrite/process.md`](node_modules/agentrite/process.md) and
   [`node_modules/agentrite/standards.md`](node_modules/agentrite/standards.md) **required reading** and says what
   each holds: `process.md` the changes process in `changes/`, the status progression and the freeze, and the commit
   prefixes; `standards.md` the rules on text, documentation, commits, code and tests. The comment under Specific to
   this project ends "Everything that holds for every project is in the kit's process.md and standards.md already."
   Keep the three section headings as they are, which `agentsNotice` prints (R19)
-- [ ] 3.8 In `scripts/agentrite.mjs`: `writeOpencodeJson` prints the line of 3.4 for a file that loads both, from
+- [x] 3.8 In `scripts/agentrite.mjs`: `writeOpencodeJson` prints the line of 3.4 for a file that loads both, from
   `INSTRUCTION_PATHS`, and passes `verdict.lacks` to `opencodeInitNotice`; `instructionNotices` passes it to
   `opencodeRefreshNotice` (R18)
-- [ ] 3.9 Run `npm test`, and see 3.1, 3.4 and 3.5 pass and nothing else fail (R18, R19)
+- [x] 3.9 Run `npm test`, and see 3.1, 3.4 and 3.5 pass and nothing else fail (R18, R19)
 
 ### 4. `README.md`
 

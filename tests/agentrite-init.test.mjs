@@ -50,10 +50,11 @@ const HARNESS_LISTS = [['claude'], ['opencode'], ['claude', 'opencode']];
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 const KIT_CONTAINER = 'node_modules/agentrite/container';
 const PROCESS = 'node_modules/agentrite/process.md';
-// The notice of init for a CLAUDE.md that holds neither line.
-const CLAUDE_NOTICE = claudeInitNotice([`@${PROCESS}`, '@AGENTS.md']);
-// The opencode.json of R3, byte for byte.
-const OPENCODE = `{\n  "instructions": [\n    "${PROCESS}"\n  ]\n}\n`;
+const STANDARDS = 'node_modules/agentrite/standards.md';
+// The notice of init for a CLAUDE.md that holds none of the lines.
+const CLAUDE_NOTICE = claudeInitNotice([`@${PROCESS}`, `@${STANDARDS}`, '@AGENTS.md']);
+// The opencode.json of R3 of unit 0048 and R18 of unit 0052, byte for byte.
+const OPENCODE = `{\n  "instructions": [\n    "${PROCESS}",\n    "${STANDARDS}"\n  ]\n}\n`;
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
@@ -205,12 +206,18 @@ test('the role wrappers are exactly those the kit renders', () => {
 
 // R3
 
-test('AGENTS.md holds the three sections, naming process.md, the role files and the change check', () => {
+test('AGENTS.md holds the three sections, naming process.md, standards.md, the role files and the change check', () => {
   const agents = fileAt(files(['claude']), 'AGENTS.md').content;
   const headings = agents.split('\n').filter((line) => /^#{1,2} /.test(line));
   assert.deepEqual(headings.slice(0, 3), AGENTS_SECTIONS);
   assert.equal(agents.split('\n')[0], '# Development Guidelines');
-  assert.match(agents, /node_modules\/agentrite\/process\.md.*\n?.*\*\*required reading\*\*/);
+  const opening = agents.split('\n\n')[1];
+  for (const file of ['process.md', 'standards.md']) {
+    const link = `[\`node_modules/agentrite/${file}\`](node_modules/agentrite/${file})`;
+    assert.ok(opening.includes(link), `the first paragraph does not link ${file}: ${opening}`);
+  }
+  assert.match(opening, /\*\*required reading\*\*/);
+  assert.match(agents, /is in the kit's process\.md and\s+standards\.md already\./);
   assert.match(agents, /\[README\.md\]\(README\.md\)/);
   assert.match(agents, /`npm ci` installs it/);
   assert.match(agents, /never under\n?\s*`node_modules\/`/);
@@ -247,19 +254,26 @@ test('CLAUDE.md is planned for every harness list and imports AGENTS.md', () => 
 
 // R1
 
-test('CLAUDE.md imports process.md before AGENTS.md, outside a fenced block and a code span', () => {
+test('CLAUDE.md imports process.md, standards.md and AGENTS.md in order, outside a fence and a code span', () => {
   for (const harnesses of HARNESS_LISTS) {
     const claude = fileAt(files(harnesses), 'CLAUDE.md').content;
     const lines = claude.split('\n');
-    const processLine = lines.indexOf('@node_modules/agentrite/process.md');
-    const agentsLine = lines.indexOf('@AGENTS.md');
-    assert.ok(processLine !== -1, 'CLAUDE.md has no line @node_modules/agentrite/process.md');
-    assert.ok(processLine < agentsLine, 'the import of process.md is not before the import of AGENTS.md');
+    const imports = [`@${PROCESS}`, `@${STANDARDS}`, '@AGENTS.md'].map((line) => lines.indexOf(line));
+    for (const index of imports) assert.ok(index !== -1, `CLAUDE.md lacks an import: ${imports}`);
+    assert.deepEqual([...imports].sort((first, second) => first - second), imports, 'the imports are out of order');
     const fence = lines.findIndex((line) => line.startsWith('```'));
-    assert.ok(fence === -1 || fence > agentsLine, 'a fenced block opens before the imports');
-    for (const line of [lines[processLine], lines[agentsLine]]) assert.ok(!line.includes('`'), line);
+    assert.ok(fence === -1 || fence > imports[2], 'a fenced block opens before the imports');
+    for (const index of imports) assert.ok(!lines[index].includes('`'), lines[index]);
     assert.deepEqual(claudeLacks({ found: true, text: claude }), []);
   }
+});
+
+// R19 of unit 0052
+test('CLAUDE.md names standards.md in its text as well as in its imports', () => {
+  const claude = fileAt(files(['claude']), 'CLAUDE.md').content;
+  const text = claude.split('\n').filter((line) => !line.startsWith('@')).join('\n');
+  assert.match(text, /imports the kit's `process\.md` and `standards\.md`/);
+  assert.ok(text.includes(`[\`${STANDARDS}\`](${STANDARDS})`), text);
 });
 
 // R5
@@ -1114,9 +1128,9 @@ test('init with no argument in a project whose agentrite.json is not valid refus
   }
 });
 
-// opencode.json and CLAUDE.md, which load process.md
+// opencode.json and CLAUDE.md, which load process.md and standards.md
 
-const OPENCODE_WITH_COMMENT = `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`;
+const OPENCODE_WITH_COMMENT = `{\n  // ours\n  "instructions": ["${PROCESS}", "${STANDARDS}"]\n}\n`;
 // What can be at the path of opencode.json and cannot be amended, each with what makes it so.
 const UNAMENDABLE = {
   'not JSON': 'not json\n',
@@ -1141,8 +1155,9 @@ test('init opencode writes opencode.json as R3 gives it, after the line of packa
 });
 
 // R4
-test('init amends an opencode.json that is an object without the path, and prints no notice of it', (t) => {
-  for (const text of ['{\n  "model": "x"\n}\n', '{\n\t"instructions": ["a.md"]\n}']) {
+test('init amends an opencode.json that is an object without the paths, and prints no notice of it', (t) => {
+  const onlyProcess = `{\n  "instructions": ["${PROCESS}"]\n}\n`;
+  for (const text of ['{\n  "model": "x"\n}\n', '{\n\t"instructions": ["a.md"]\n}', onlyProcess]) {
     const { base, run, read } = project(t);
     writeFileSync(join(base, 'opencode.json'), text);
 
@@ -1150,15 +1165,16 @@ test('init amends an opencode.json that is an object without the path, and print
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(read('opencode.json'), opencodeVerdict({ found: true, text }).content);
-    assert.ok(JSON.parse(read('opencode.json')).instructions.includes(PROCESS));
+    const { instructions } = JSON.parse(read('opencode.json'));
+    assert.deepEqual(instructions.slice(-2), [PROCESS, STANDARDS], text);
     assert.ok(linesOf(result).includes('changed opencode.json'), result.stdout);
     assert.doesNotMatch(noticesOf(result), /opencode\.json/);
   }
 });
 
 // R4, R5
-test('init leaves an opencode.json that loads the path, also one with a comment, and says so', (t) => {
-  for (const text of [`{ "instructions": ["a.md", "${PROCESS}"] }`, OPENCODE_WITH_COMMENT]) {
+test('init leaves an opencode.json that loads the paths, also one with a comment, and says so', (t) => {
+  for (const text of [`{ "instructions": ["a.md", "${PROCESS}", "${STANDARDS}"] }`, OPENCODE_WITH_COMMENT]) {
     const { base, run, read } = project(t);
     writeFileSync(join(base, 'opencode.json'), text);
 
@@ -1166,7 +1182,8 @@ test('init leaves an opencode.json that loads the path, also one with a comment,
 
     assert.equal(result.status, 0, result.stderr);
     assert.equal(read('opencode.json'), text);
-    assert.ok(linesOf(result).includes(`skipped opencode.json, which loads ${PROCESS}`), result.stdout);
+    const line = `skipped opencode.json, which loads ${PROCESS} and ${STANDARDS}`;
+    assert.ok(linesOf(result).includes(line), result.stdout);
     assert.doesNotMatch(noticesOf(result), /opencode\.json/);
   }
 });
@@ -1192,10 +1209,8 @@ test('init leaves an opencode.json it cannot amend, with a notice of why, writes
       line === 'wrote opencode.json' ? 'skipped opencode.json, which cannot be amended' : line,
     );
     assert.deepEqual(linesOf(result), swapped, name);
-    const { problem } = opencodeVerdict(
-      text === null ? { found: true, error: 'x' } : { found: true, text },
-    );
-    if (text !== null) assert.ok(noticesOf(result).includes(opencodeInitNotice(problem)), name);
+    const verdict = opencodeVerdict(text === null ? { found: true, error: 'x' } : { found: true, text });
+    if (text !== null) assert.ok(noticesOf(result).includes(opencodeInitNotice(verdict.problem, verdict.lacks)), name);
     assert.match(noticesOf(result), /^opencode\.json was left as it is, because /m, name);
     assert.ok(noticesOf(result).indexOf('opencode.json was left') < noticesOf(result).indexOf('"harnesses"'), name);
     for (const [path, content] of snapshot(plain.base)) {
@@ -1203,6 +1218,22 @@ test('init leaves an opencode.json it cannot amend, with a notice of why, writes
       assert.equal(read(path), content, `${name}: ${path}`);
     }
   }
+});
+
+// R18 of unit 0052
+test('init leaves a not-JSON opencode.json that quotes only process.md, with a notice naming standards.md', (t) => {
+  const { base, run, read } = project(t);
+  const text = `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`;
+  writeFileSync(join(base, 'opencode.json'), text);
+
+  const result = run('init', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('opencode.json'), text);
+  assert.ok(linesOf(result).includes('skipped opencode.json, which cannot be amended'), result.stdout);
+  const notice = noticesOf(result);
+  assert.ok(notice.includes(`Add them by hand:\n\n${STANDARDS}\n\n`), notice);
+  assert.ok(!notice.includes(`\n${PROCESS}\n`), notice);
 });
 
 // R6
@@ -1248,9 +1279,10 @@ test('init claude neither reads, writes nor names opencode.json, whatever is at 
 test('init claude notices an existing CLAUDE.md only for the lines it lacks', (t) => {
   const cases = [
     ['our own\n', CLAUDE_NOTICE],
-    ['# Ours\n\n@AGENTS.md\n', claudeInitNotice([`@${PROCESS}`])],
-    [`# Ours\n\n@${PROCESS}\n@AGENTS.md\n`, undefined],
-    [`# Ours\r\n\r\n@${PROCESS}\r\n@AGENTS.md\r\n`, undefined],
+    ['# Ours\n\n@AGENTS.md\n', claudeInitNotice([`@${PROCESS}`, `@${STANDARDS}`])],
+    [`# Ours\n\n@${PROCESS}\n@AGENTS.md\n`, claudeInitNotice([`@${STANDARDS}`])],
+    [`# Ours\n\n@${PROCESS}\n@${STANDARDS}\n@AGENTS.md\n`, undefined],
+    [`# Ours\r\n\r\n@${PROCESS}\r\n@${STANDARDS}\r\n@AGENTS.md\r\n`, undefined],
   ];
   for (const [text, notice] of cases) {
     const { base, run, read } = project(t);
@@ -1267,7 +1299,7 @@ test('init claude notices an existing CLAUDE.md only for the lines it lacks', (t
 });
 
 // R2
-test('init opencode does not notice an existing CLAUDE.md that lacks both lines', (t) => {
+test('init opencode does not notice an existing CLAUDE.md that lacks the lines', (t) => {
   const { base, run } = project(t);
   writeFileSync(join(base, 'CLAUDE.md'), 'our own\n');
 

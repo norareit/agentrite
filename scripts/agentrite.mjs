@@ -7,11 +7,11 @@ import {
   claudeInitNotice,
   claudeLacks,
   claudeRefreshNotice,
+  INSTRUCTION_PATHS,
   OPENCODE_FILE,
   opencodeInitNotice,
   opencodeRefreshNotice,
   opencodeVerdict,
-  PROCESS_PATH,
   readProjectFile,
 } from './agentrite-instructions.mjs';
 import { formattedLike } from './agentrite-json.mjs';
@@ -654,12 +654,12 @@ function writeOpencodeJson(root) {
   const read = readProjectFile(root, OPENCODE_FILE);
   const verdict = opencodeVerdict(read);
   if (verdict.loads) {
-    console.log(`skipped ${OPENCODE_FILE}, which loads ${PROCESS_PATH}`);
+    console.log(`skipped ${OPENCODE_FILE}, which loads ${INSTRUCTION_PATHS.join(' and ')}`);
     return undefined;
   }
   if (verdict.content === undefined) {
     console.log(`skipped ${OPENCODE_FILE}, which cannot be amended`);
-    return opencodeInitNotice(verdict.problem);
+    return opencodeInitNotice(verdict.problem, verdict.lacks);
   }
   writeFileSync(resolve(root, OPENCODE_FILE), verdict.content, read.found ? {} : { flag: 'wx' });
   console.log(`${read.found ? 'changed' : 'wrote'} ${OPENCODE_FILE}`);
@@ -818,7 +818,7 @@ function instructionNotices(root, harnesses) {
   }
   if (harnesses.includes('opencode')) {
     const verdict = opencodeVerdict(readProjectFile(root, OPENCODE_FILE));
-    if (!verdict.loads) notices.push(opencodeRefreshNotice(verdict.problem));
+    if (!verdict.loads) notices.push(opencodeRefreshNotice(verdict.problem, verdict.lacks));
   }
   return notices;
 }

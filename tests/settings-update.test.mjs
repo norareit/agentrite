@@ -109,9 +109,11 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   assert.equal(refreshed.status, 0, refreshed.stderr);
   const kitOwned = [...plannedFiles(['claude', 'opencode']).map((file) => file.path), 'sandbox.sh'];
   assert.deepEqual(linesOf(refreshed), kitOwned.map((path) => `up to date ${path}`));
-  // A project set up before the release that loads process.md has neither file that loads it, and is told so.
-  const claude = claudeRefreshNotice(true, ['@node_modules/agentrite/process.md', '@AGENTS.md']);
-  const opencode = opencodeRefreshNotice('it is missing');
+  // A project set up before the release that loads the kit's instructions has neither file that loads them, and is
+  // told so.
+  const paths = ['node_modules/agentrite/process.md', 'node_modules/agentrite/standards.md'];
+  const claude = claudeRefreshNotice(true, [...paths.map((path) => `@${path}`), '@AGENTS.md']);
+  const opencode = opencodeRefreshNotice('it is missing', paths);
   assert.ok(refreshed.stdout.endsWith(`\n\n${claude}\n\n${opencode}\n`), refreshed.stdout);
   assert.equal(tracked(), '?? agentrite.json');
 
