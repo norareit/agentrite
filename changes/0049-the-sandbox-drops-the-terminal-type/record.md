@@ -95,3 +95,15 @@ timestamp: 2026-10-14T12:22:07Z
   connection-environment and retained-image checks described in the findings. R7 was not independently observed;
   R8 remains unchecked as already recorded. Historical red-test ordering and a normal old-image run past its
   pre-existing IPv6 failure could not be verified
+- 2026-10-15T16:27:33Z [human] decided the two blocking findings of the review. S1 is accepted: a command of `--connect`
+  is to have no `TERM` or `COLORTERM` that its own shell lacks, and the `TERM` it had before the unit when its shell has
+  none. S2 is declined: an image built before this unit holds no `known-terminal.sh`, and the wrapper does not build it
+  again by itself, as it does not for any change to what goes into the image. The release that holds this unit needs a
+  rebuild of the image, `./sandbox.sh --in-place --rebuild true`, which its release notes name under "Worth knowing when
+  you update", as those of 0041 and 0042 did
+- 2026-10-15T16:27:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the tasks of S1 to the plan.
+  Docker keeps the `--env` of a `run` in the container's settings, and a `docker exec` that gives no value of its own
+  inherits it; it cannot remove one. Shown with containers of the image built from `f00e334`: one started with
+  `TERM=tmux-256color` and `COLORTERM=truecolor` gave `docker exec` with nothing passed `[tmux-256color] [truecolor]`,
+  with a terminal and without one, and with `--env TERM= --env COLORTERM=` gave `[] []`; one started as before the unit
+  gave `docker exec` `[xterm] [unset]` with a terminal and `[unset] [unset]` without one. The status stays `in-progress`

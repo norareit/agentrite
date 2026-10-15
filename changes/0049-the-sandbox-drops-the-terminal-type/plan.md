@@ -159,6 +159,38 @@ being in it whole, so neither table of "What is here" changes.
 - [x] Ask the human to do the same in a tmux pane on Linux. Write what they ran and saw in `record.md`, or that it was
   not checked and why (R8)
 
+### Review finding S1: a command of `--connect` inherits the run's terminal
+
+Added after the review. `--connect` gives the command both variables in every call, since a `docker exec` that
+gives none inherits the run's: the value of its own shell, or an empty one for a variable its shell lacks. The one
+exception is a `TERM` its shell lacks while it has a terminal, which is `xterm`, as Docker gives a command on a
+terminal that has no `TERM` from anywhere else, and as the command had before the unit. `known-terminal.sh` removes
+an empty `TERM` and an empty `COLORTERM` before it looks the `TERM` up. A run is unchanged: its container starts
+with nothing but what the wrapper gives it.
+
+- [ ] In `tests/known-terminal.test.mjs`, add tests: an empty `TERM` and an empty `COLORTERM` reach the command as
+  not set; an empty `COLORTERM` beside a `TERM` that is replaced reaches the command as not set. Run them and see
+  them fail (R3, R5, R6)
+- [ ] In `tests/sandbox-unit-run.test.mjs`, have `connectCall` always give `--env TERM=<value> --env
+  COLORTERM=<value>` after `--env PATH=...`, with `TERM` empty by default, or `xterm` with a terminal, and
+  `COLORTERM` empty by default. Add tests: a `--connect` from a shell with `TERM` and no `COLORTERM` gives
+  `COLORTERM` empty; one from a shell with an empty `COLORTERM` gives it empty; one from a shell with neither gives
+  both empty. In `tests/sandbox-dev.test.mjs`, expect the two empty values on the dev shim's `--connect`. Run them
+  and see them fail (R2, R3, R5, R6)
+- [ ] In `container/known-terminal.sh`, remove an empty `TERM` and an empty `COLORTERM`, and say why in its header
+  (R3, R5)
+- [ ] In `container/sandbox.sh`, give the `docker exec` of `--connect` the two values as above in place of the run's
+  flags, with a comment that says why, and keep the run's flags for the two `compose run` calls alone. Run
+  `npm test`: all pass (R2, R3, R5)
+- [ ] In `SANDBOX.md`, say in the paragraph of "Running a unit" that a command run from a shell without a `TERM` has
+  `xterm` on a terminal and none without one, and in the bullet of `--connect` that a variable its shell lacks, the
+  command lacks too, whatever the first command has (R10)
+- [ ] With the working copy's sandbox, start a unit run from a shell with `TERM=tmux-256color COLORTERM=truecolor`,
+  and connect to it from shells with: `TERM=xterm-256color` and no `COLORTERM`; neither; `TERM=xterm-ghostty` and no
+  `COLORTERM`; `TERM=xterm-256color` and an empty `COLORTERM`. Each connected command prints its `TERM` and
+  `COLORTERM` as its environment holds them, and none has a `COLORTERM`, and the second has `TERM=xterm`. Written in
+  `record.md` (R2, R3, R4, R5)
+
 ## Verification
 
 - [x] `npm test` passes on the macOS host, with no test skipped that was not skipped before
@@ -175,3 +207,4 @@ being in it whole, so neither table of "What is here" changes.
 - [x] `bugfix-0049 Pass the host's TERM and COLORTERM to the sandbox's commands`: the first group of tasks
 - [x] `bugfix-0049 Tell a command xterm-256color for a TERM the image does not describe`: the second group
 - [x] `bugfix-0049 Record the checks in the sandbox and in the human's terminals`: `record.md`
+- [ ] `bugfix-0049 Give a connected command no terminal variable its own shell lacks`: the tasks of S1
