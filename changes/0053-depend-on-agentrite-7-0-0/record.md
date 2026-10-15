@@ -103,3 +103,12 @@ not the one `init` writes, and moving any other project to 7.0.0.
 - 2026-10-15T21:49:54Z [human] on the concern of the entry before this one, asked that the prose of `CLAUDE.md` be
   brought up to date as part of this task, since it may not say something that no longer holds. Added to the
   description
+- 2026-10-15T21:52:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in the main session on the macOS
+  host, rewrote the prose of `CLAUDE.md` in `fbd3b86`: instructions are kept in the AGENTS.md files and, for one that
+  every project follows, in `process.md` at the root, and the file is a bridge that imports the kit's `process.md` and
+  `AGENTS.md` into Claude Code. The two import lines are unchanged. `templates/project/CLAUDE.md` needs no change: 0048
+  gave it that wording in 7.0.0. On the tree of `fbd3b86`: `npx agentrite refresh` exited 0, printed `up to date` for
+  the eight role wrappers and `sandbox.sh` and no notice, and changed no file; `npm run check-changes` exited 0; and
+  `npm test` exited 0 with 572 tests, 555 passing, 17 skipped and none failing. No line of `CLAUDE.md` or this record
+  passes 120 characters. Not run again: `./sandbox.sh --in-place --rebuild true`, since the change is to prose that
+  no image holds. The status stays `in-progress` until the review
