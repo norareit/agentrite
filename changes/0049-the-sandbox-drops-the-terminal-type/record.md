@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-14T12:22:07Z
 ---
 
@@ -124,3 +124,19 @@ timestamp: 2026-10-14T12:22:07Z
   `./sandbox-dev.sh --in-place npm test` reports 572 tests, 572 passing, none skipped or failing, on Linux, the test of
   `--connect` on a terminal among them; `npm run check-changes` exits 0. The status stays `in-progress` until S1 is
   reviewed
+- 2026-10-15T16:43:10Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0049 at
+  `6d5f7d7288076492b465b3bd9579f239c27295da` in a delta review from
+  `f00e3347ed1fa9a07d38a564d3897474722bdc05`. Returned no new findings. Saved the complete review in
+  `.reviews/0049-the-sandbox-drops-the-terminal-type/2026-10-15-164159-delta-6d5f7d7.md`.
+  Independently ran `npm test`: 572 tests, 555 passing, 17 expected skips; the Linux suite through
+  `./sandbox-dev.sh --in-place npm test`: all 572 passing; and `npm run check-changes`: exit 0. Checked ten live
+  connection-environment cases against a run holding both terminal variables, and an in-place run without either
+  variable or a terminal. All matched the expected environments. The unit run exited 0 and left no clone, sandbox
+  remote ref or running container. Historical red-test ordering could not be verified; the human's terminal
+  appearance and future release notes were not checked in this delta review
+- 2026-10-15T16:44:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the outcome of each finding
+  of the reviews: S1 is fixed in `18ff857`, and the review of `6d5f7d7` found it corrected; S2 is declined by the human,
+  and the release that holds this unit names a rebuild of the image in its release notes. The second review returned no
+  new findings
+- 2026-10-15T16:44:12Z [human] marked the unit implemented: every blocking finding is decided and every task of
+  `plan.md` is ticked. The status is `implemented`
