@@ -66,17 +66,17 @@ every unit under `changes/` but this one.
 
 ### 1. The split, as a move
 
-- [ ] 1.1 In `tests/package-documents.test.mjs`, expect `standards.md` in `files` right after `process.md`, and add a
+- [x] 1.1 In `tests/package-documents.test.mjs`, expect `standards.md` in `files` right after `process.md`, and add a
   test that `standards.md` is a file at the root and is in `files`. Run it and see it fail (R1)
-- [ ] 1.2 Create `standards.md` and move into it, word for word, from `process.md`: the sections Text and
+- [x] 1.2 Create `standards.md` and move into it, word for word, from `process.md`: the sections Text and
   Documentation changes, the two bullets of Commits on `Co-Authored-By` and on `Claude-Session` and other trailers,
   the section Code with How code is written, and the section Testing. Keep their heading levels: `## General
   guidelines` holding `### Text`, `### Documentation changes` and `### Commits`, then `## Code` and `## Testing` (R3,
   R4)
-- [ ] 1.3 What stays in `process.md`: `## General guidelines` holding Where instructions belong, Verifying reported
+- [x] 1.3 What stays in `process.md`: `## General guidelines` holding Where instructions belong, Verifying reported
   problems, and `### Commits` with the three prefix bullets alone; `## Changes` with Features, Bugs and Tasks; and
   `## Roles`, unchanged in this step (R2, R4)
-- [ ] 1.4 Write the opening of each file, under its title and the line "This document contains critical instructions
+- [x] 1.4 Write the opening of each file, under its title and the line "This document contains critical instructions
   for coding agents. Follow these guidelines precisely.", which both keep (R5):
     * `process.md`: what it holds (where instructions belong, how reported problems are verified, the commit prefixes,
       the changes process and the roles); that the rules on how text, documentation, commits, code and tests are
@@ -85,8 +85,8 @@ every unit under `changes/` but this one.
     * `standards.md`, titled `# Standards`: that it holds the rules on how text, documentation, commits, code and
       tests are written; that they hold for every role and for work in no role; that the process is in
       [`process.md`](process.md); and that what is specific to a project is in its own `AGENTS.md`
-- [ ] 1.5 Add `standards.md` to `files` in `package.json`, after `process.md`. Run 1.1's tests and see them pass (R1)
-- [ ] 1.6 Check the move: every non-empty line of `process.md` at `79ecca6` but its opening paragraph is a line of the
+- [x] 1.5 Add `standards.md` to `files` in `package.json`, after `process.md`. Run 1.1's tests and see them pass (R1)
+- [x] 1.6 Check the move: every non-empty line of `process.md` at `79ecca6` but its opening paragraph is a line of the
   new `process.md` or of `standards.md`, and no line was added to either but the openings of 1.4 and the duplicated
   heading `### Commits` and `## General guidelines`. A script in the scratchpad that compares the lines does it; log
   what it reported in `record.md` (R4)

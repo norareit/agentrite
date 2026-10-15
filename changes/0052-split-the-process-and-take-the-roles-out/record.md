@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-15T16:51:20Z
 ---
 
@@ -42,5 +42,16 @@ timestamp: 2026-10-15T16:51:20Z
   description reads "Builds an approved change unit [...] Use once the unit is approved, with its plan where its kind
   needs one". Set the status to `planned`, as the released role says; this unit is what takes that status out. The
   status is `planned`
+- 2026-10-15T22:14:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on
+  `feature-0052-split-the-process-and-take-the-roles-out` at `324eaba`. Took the role from `roles/implementer.md` and
+  `process.md` of the installed release 7.0.0. Read the spec, the plan and the record in full. Began the work. The
+  status is `in-progress`
+- 2026-10-15T22:15:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did tasks 1.1 to 1.6: `standards.md` holds
+  Text, Documentation changes, the two trailer bullets of Commits, Code and Testing, and `process.md` the rest, each
+  under a new opening; the package ships `standards.md`. 1.1's two tests failed before the move and passed after it.
+  The line comparison of task 1.6, a script in the scratchpad that counts the non-empty lines of `process.md` at
+  `79ecca6` without its opening paragraph against those of the new `process.md` and `standards.md`, reported 0 lines
+  missing and 11 added: the two openings (8 lines), the title `# Standards`, and the second `## General guidelines`
+  and `### Commits`
 
 ## Amendments

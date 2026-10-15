@@ -22,6 +22,7 @@
   "type": "module",
   "files": [
     "process.md",
+    "standards.md",
     "CHANGELOG.md",
     "SANDBOX.md",
     "roles",

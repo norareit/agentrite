@@ -12,6 +12,12 @@ test('the package ships the reference of the sandbox', () => {
   assert.ok(existsSync(new URL('../SANDBOX.md', import.meta.url)), 'SANDBOX.md is a file at the root');
 });
 
+// R1 of unit 0052: the rules on how things are written reach a project only while the package holds them.
+test('the package ships the standards, as a file at the root', () => {
+  assert.ok(packageJson.files.includes('standards.md'), `files holds ${packageJson.files.join(', ')}`);
+  assert.ok(existsSync(new URL('../standards.md', import.meta.url)), 'standards.md is a file at the root');
+});
+
 // Working on the kit is for whoever has the repository, and a project that installed the kit does not.
 test('the package does not ship CONTRIBUTING.md', () => {
   assert.ok(!packageJson.files.includes('CONTRIBUTING.md'), `files holds ${packageJson.files.join(', ')}`);
@@ -43,6 +49,7 @@ test('package.json keeps the one command and the files the package holds', () =>
   assert.deepEqual(packageJson.bin, { agentrite: 'scripts/agentrite.mjs' });
   assert.deepEqual(packageJson.files, [
     'process.md',
+    'standards.md',
     'CHANGELOG.md',
     'SANDBOX.md',
     'roles',
