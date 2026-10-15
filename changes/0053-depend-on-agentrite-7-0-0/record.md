@@ -1,7 +1,7 @@
 ---
 kind: task
-status: draft
-timestamp: 2026-10-15T21:36:44Z
+status: approved
+timestamp: 2026-10-15T21:39:07Z
 ---
 
 # 0053 Depend on AgentRite 7.0.0
@@ -45,3 +45,4 @@ not the one `init` writes, and moving any other project to 7.0.0.
   `npm ci`. `node scripts/agentrite.mjs init`, in a scratch copy of this tree outside the repository, wrote
   `opencode.json` as the description gives it, skipped every other file, and printed the notices of `AGENTS.md` and
   `CLAUDE.md`. The status is `draft`
+- 2026-10-15T21:39:07Z [human] asked for the task to be implemented, which is its approval. The status is `approved`
