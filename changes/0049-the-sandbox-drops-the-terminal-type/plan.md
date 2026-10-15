@@ -207,4 +207,4 @@ with nothing but what the wrapper gives it.
 - [x] `bugfix-0049 Pass the host's TERM and COLORTERM to the sandbox's commands`: the first group of tasks
 - [x] `bugfix-0049 Tell a command xterm-256color for a TERM the image does not describe`: the second group
 - [x] `bugfix-0049 Record the checks in the sandbox and in the human's terminals`: `record.md`
-- [ ] `bugfix-0049 Give a connected command no terminal variable its own shell lacks`: the tasks of S1
+- [x] `bugfix-0049 Give a connected command no terminal variable its own shell lacks`: the tasks of S1

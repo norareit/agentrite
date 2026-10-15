@@ -111,13 +111,13 @@ timestamp: 2026-10-14T12:22:07Z
   gives the command `--env TERM=<value> --env COLORTERM=<value>` in every call, the value of its own shell or empty for
   one it lacks, and `TERM=xterm` for a `TERM` it lacks on a terminal; `known-terminal.sh` removes an empty `TERM` and an
   empty `COLORTERM`; a run gives as before. Checked with the working copy's sandbox, on `18ff857`: `./sandbox-dev.sh
-  0049 sleep 180` started from a shell with `TERM=tmux-256color COLORTERM=truecolor`, whose container `docker inspect`
-  showed with `TERM=tmux-256color` and `COLORTERM=truecolor` in its settings, and `./sandbox-dev.sh --connect 0049` with
-  a command that prints its environment's `TERM` and `COLORTERM` as JSON, on a pseudo-terminal from `script -q
-  /dev/null` unless said: from `TERM=xterm-256color` and no `COLORTERM`, `{"TERM":"xterm-256color","COLORTERM":null}`;
-  from neither, `{"TERM":"xterm","COLORTERM":null}`; from `TERM=xterm-ghostty` and no `COLORTERM`,
-  `{"TERM":"xterm-256color","COLORTERM":null}`; from `TERM=xterm-256color` and an empty `COLORTERM`,
-  `{"TERM":"xterm-256color","COLORTERM":null}`; from `TERM=xterm-256color COLORTERM=24bit`,
+  0049 sleep 180` started from a shell with `TERM=tmux-256color COLORTERM=truecolor`, whose container held
+  `TERM=tmux-256color` and `COLORTERM=truecolor` in its settings, as `docker inspect` showed, and `./sandbox-dev.sh
+  --connect 0049` with a command that prints its environment's `TERM` and `COLORTERM` as JSON, on a pseudo-terminal from
+  `script -q /dev/null` unless said: from `TERM=xterm-256color` and no `COLORTERM`,
+  `{"TERM":"xterm-256color","COLORTERM":null}`; from neither, `{"TERM":"xterm","COLORTERM":null}`; from
+  `TERM=xterm-ghostty` and no `COLORTERM`, `{"TERM":"xterm-256color","COLORTERM":null}`; from `TERM=xterm-256color` and
+  an empty `COLORTERM`, `{"TERM":"xterm-256color","COLORTERM":null}`; from `TERM=xterm-256color COLORTERM=24bit`,
   `{"TERM":"xterm-256color","COLORTERM":"24bit"}`; and from neither without a terminal,
   `{"TERM":null,"COLORTERM":null}`. The run ended with exit 0 and left no clone and no `sandbox/` ref. On `18ff857`:
   `npm test` on the macOS host reports 572 tests, 555 passing, 17 skipped, the same seventeen, and none failing;
