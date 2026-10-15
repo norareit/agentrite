@@ -5,6 +5,107 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 7.0.0
+
+### What changed
+
+* A project keeps its settings in `agentrite.json` at its root: `defaultBranch`, the branch units are cut from and
+  compared with, `harnesses`, the harnesses it uses, and `sandbox`, `true` with the sandbox and `false` without it.
+  All three keys are required, and a command that reads a file that is missing or not valid refuses, says what is
+  wrong and changes nothing. "The project's settings" of the README describes the file (0045)
+* The new command `npx agentrite config` writes the default file, `master`, both harnesses and the sandbox, without
+  looking at the project, prints it and asks for it to be checked. It leaves a file that exists as it is (0045)
+* `init` writes `agentrite.json` from its arguments and prints it, and takes the new option
+  `--default-branch <name>`, `master` when it is not given. In a project that has the file, `init` takes no
+  argument: it reads the harnesses and the sandbox setting from the file and writes what is missing for them. Given
+  a harness, `--no-sandbox` or `--default-branch` there, it refuses and exits 1 (0045)
+* `refresh` takes no argument and reads the harnesses and the sandbox setting from `agentrite.json`. Given any, a
+  harness or `--no-sandbox` among them, it refuses and exits 2. It never writes `agentrite.json` (0045)
+* The change check compares with the branch `defaultBranch` names, and with `origin/<default branch>` when the local
+  one gives no common ancestor, where it compared with `master`. A unit run cuts a unit's branch from that branch,
+  reading `agentrite.json` from the checkout it is run from, and says so. `process.md` and the role files say "the
+  default branch" where they said `master` (0045)
+* The README installs the kit as a development dependency, `npm install --save-dev agentrite`, and updates it with
+  `npm install --save-dev agentrite@latest`. "On a fresh clone" says that an install without development
+  dependencies, as `npm ci --omit=dev`, installs no kit (0045)
+* Claude Code and OpenCode load `process.md` into every session themselves, where an agent read it only when it
+  followed the link in `AGENTS.md`, which stays. The `CLAUDE.md` that `init` writes imports
+  `@node_modules/agentrite/process.md` above `@AGENTS.md`. With `opencode`, `init` writes an `opencode.json` at the
+  project root whose `instructions` list holds that path, or adds the path to one that exists and that it can amend.
+  `init` and `refresh` print a notice for a `CLAUDE.md` or an `opencode.json` that does not load the file, and never
+  change either. The README's new section "How the kit's instructions reach an agent" says what each file must hold
+  (0048)
+* A command in the sandbox, of a run and of `--connect`, has the `TERM` and `COLORTERM` of the terminal the wrapper
+  was run from, where it had `TERM=xterm` and no `COLORTERM`, so a harness draws in the colours it draws in on the
+  host. A `TERM` the image holds no description of becomes `xterm-256color`. A command of `--connect` gets those of
+  its own shell, not the first command's (0049)
+* On a Docker Compose older than 2.35.0, a unit run mounts the clone of the unit's branch at `/work`, and a run with
+  `--workdir DIR` mounts `DIR`. Both mounted the project root there, so a unit's agent worked in the developer's own
+  checkout. The kit's base Compose file declares no volume at `/work` any more (0050)
+* The sandbox starts on a Docker that gives the local model server's host an IPv6 address besides an IPv4 one, as
+  Docker Desktop 4.95.0 does for `host.docker.internal`. The entrypoint stopped with iptables'
+  "host/network ... not found". The firewall admits the model server at its IPv4 address alone (0051)
+* Not in the package: this repository installs the kit from the npm registry (0044); the suite passes on a macOS
+  host, and a test skipped for what the host lacks names `./sandbox.sh --in-place npm test` (0046); this
+  repository's own `agentrite.json`, and the pointer package `agentrite-roles` at 2.0.2, which gives the commands as
+  this release takes them (0045)
+
+### Worth knowing when you update
+
+* **The update needs these steps. Until `agentrite.json` is there, `refresh`, the change check and a unit run that
+  cuts a branch refuse, each naming `npx agentrite config`.** From the project root:
+
+  ```sh
+  npm install --save-dev agentrite@latest
+  npx agentrite config
+  npx agentrite refresh
+  npx agentrite init
+  ./sandbox.sh --in-place --rebuild true
+  ```
+
+  After `config`, read what it printed and edit `agentrite.json` where the project differs: a default branch other
+  than `master`, a harness it does not use, no sandbox. `refresh` then writes and prints what `refresh` given those
+  harnesses, and `--no-sandbox` without the sandbox, did before. `init` with no argument writes or amends
+  `opencode.json` with `opencode`, and writes any other file of the kit's that is missing for the settings. Add the
+  line `@node_modules/agentrite/process.md` to `CLAUDE.md` by hand, on a line of its own above `@AGENTS.md`: no
+  command adds it, and `init` and `refresh` print a notice until it is there. A project without the sandbox has no
+  last command. Commit `agentrite.json` with `package.json`, `package-lock.json`, `CLAUDE.md`, `opencode.json` and
+  what `refresh` changed, in one commit on the default branch (0045, 0048)
+* A project whose CI runs the change check fails there from a commit that updates the kit until `agentrite.json` is
+  committed, which is why the steps commit them together. The check reads the file of the working tree, so one that
+  is not committed passes on the developer's machine and refuses in CI and in a unit run's clone (0045)
+* A project whose default branch is not `master` must change `defaultBranch`. Left at `master`, a unit run refuses
+  to cut a branch from a local branch that is not there, and the change check fails naming it, or, where a branch
+  `master` exists too, compares with that one (0045)
+* Whatever of the project's own runs `npx agentrite refresh` with harnesses or `--no-sandbox`, such as a script or
+  its documents, now fails with exit 2 and has to drop them. So does `npx agentrite init` with arguments in a project
+  that has `agentrite.json`, with exit 1 (0045)
+* The update command with `--save-dev` moves a kit that an earlier `npm install agentrite` put under `dependencies`
+  to `devDependencies`. A job that installs with `npm ci --omit=dev`, or with `NODE_ENV=production`, then has no kit,
+  and `npm run check-changes` does not run there. Such a job installs with a plain `npm ci` (0045)
+* **The image is to be rebuilt, with the last command above.** The wrapper does not rebuild it by itself for this
+  release. With an image built by an earlier one, `--connect` fails with Docker's
+  "known-terminal.sh: no such file or directory" and exit 127, a `TERM` the image does not describe reaches the
+  command as it is, and on a Docker that gives the model server's host an IPv6 address the sandbox still does not
+  start (0049, 0051)
+* `process.md` is in every session's context from its start, about 220 lines more for a session that did not read
+  it. A project that leaves the import or the `opencode.json` entry out on purpose gets the notice on every
+  `refresh`. A project that keeps OpenCode's configuration in an `opencode.jsonc` or under `.opencode/` gets a new
+  `opencode.json` at its root from `init`, beside its own, and folds the two together by hand (0048)
+* A harness in the sandbox may look different, which is the repair: it now draws for the developer's terminal. The
+  colours were checked in the Terminal app of macOS 15. tmux on Linux, where the bug was seen too, was not checked
+  (0049)
+* On a Compose older than 2.35.0, unit runs of earlier releases worked in the developer's checkout: the agent
+  switched its branch and committed on the unit's branch there. That work is on the unit's branch, and is the
+  project's to keep or undo. A project's own `sandbox/compose.project.yml` that declares a volume at `/work` brings
+  the bug back on such a Compose, and nothing checks for it. The repair was shown through the wrapper on macOS with
+  Compose 2.23.3-desktop.2 and 2.39.2, and not on a Linux host (0050)
+* A model server's host with only IPv6 addresses, or a `MODEL_SERVER_HOST` set to an IPv6 address, is not admitted:
+  the entrypoint warns that the host did not resolve, and the sandbox starts without the model server. Shown on
+  Docker Desktop 4.95.0 on macOS, not on a Linux host (0051)
+* The steps of the first item without `init` and the line of `CLAUDE.md` are tested by the suite, in a temporary
+  project. All of them together, the rebuild among them, were not tried in a project (0045, 0048)
+
 ## 6.0.0
 
 ### What changed
