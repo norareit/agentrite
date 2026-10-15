@@ -1,7 +1,7 @@
 ---
 kind: task
-status: approved
-timestamp: 2026-10-15T21:39:07Z
+status: in-progress
+timestamp: 2026-10-15T21:39:34Z
 ---
 
 # 0053 Depend on AgentRite 7.0.0
@@ -46,3 +46,7 @@ not the one `init` writes, and moving any other project to 7.0.0.
   `opencode.json` as the description gives it, skipped every other file, and printed the notices of `AGENTS.md` and
   `CLAUDE.md`. The status is `draft`
 - 2026-10-15T21:39:07Z [human] asked for the task to be implemented, which is its approval. The status is `approved`
+- 2026-10-15T21:39:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the macOS host,
+  with npm 11.19.1, node 26.9.0 and Docker 29.8.2. Cut `task-0053-depend-on-agentrite-7-0-0` from `master` at
+  `6b3949f`. Read `process.md` and `roles/implementer.md` of the installed release 6.0.0, and `record.md`, which is
+  the unit's one document. Set the status to `in-progress`
