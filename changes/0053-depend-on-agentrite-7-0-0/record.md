@@ -18,7 +18,9 @@ harnesses load `process.md` through `CLAUDE.md` and `opencode.json`. Move the de
   diff of `package.json` is the one version, and `refresh` changes no file
 * Run `npx agentrite init` with no argument. It writes `opencode.json` at the root, whose `instructions` list holds
   `node_modules/agentrite/process.md`, and skips every other file
-* Add the line `@node_modules/agentrite/process.md` to `CLAUDE.md`, on a line of its own above `@AGENTS.md`
+* Add the line `@node_modules/agentrite/process.md` to `CLAUDE.md`, on a line of its own above `@AGENTS.md`, and
+  make its prose say that it imports `process.md` as well as `AGENTS.md`, and where an instruction that every
+  project follows is kept
 * In "What the repository holds besides the package" of `CONTRIBUTING.md`, add a row for `opencode.json`, and say in
   the row of `CLAUDE.md` that it imports `process.md` as well as `AGENTS.md`
 
@@ -98,3 +100,6 @@ not the one `init` writes, and moving any other project to 7.0.0.
   description asks for the one line and not for the prose, so it is unchanged. Not checked: a session of OpenCode or
   of Claude Code that shows `process.md` loaded through the new wiring. The status stays `in-progress` until the
   review
+- 2026-10-15T21:49:54Z [human] on the concern of the entry before this one, asked that the prose of `CLAUDE.md` be
+  brought up to date as part of this task, since it may not say something that no longer holds. Added to the
+  description
