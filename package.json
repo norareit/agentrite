@@ -44,6 +44,6 @@
     "check-changes": "node node_modules/agentrite/scripts/check-changes.mjs"
   },
   "devDependencies": {
-    "agentrite": "6.0.0"
+    "agentrite": "7.0.0"
   }
 }

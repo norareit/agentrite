@@ -8,4 +8,5 @@ When updating or adding new instructions, always edit the appropriate AGENTS.md 
 
 ## Repository Instructions
 
+@node_modules/agentrite/process.md
 @AGENTS.md
