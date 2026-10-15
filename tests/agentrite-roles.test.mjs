@@ -106,8 +106,8 @@ test('no line of a planned wrapper is over 120 characters, and its text is what 
       "human has approved the unit's spec and the unit is next to be built, not before. Dispatch it with the " +
       'unit directory.',
     implementer:
-      'Builds a planned change unit and keeps its documents true. Use once the unit is planned, or approved ' +
-      'where it is a task, which has no plan. Dispatch it with the unit directory.',
+      'Builds an approved change unit and keeps its documents true. Use once the unit is approved, with its plan ' +
+      'where its kind needs one. Dispatch it with the unit directory.',
     reviewer:
       'Reviews a finished change unit for spec conformance, plan fidelity and code quality, and returns its ' +
       "findings in its response. It changes nothing under review, and appends one entry to the unit's record.md " +

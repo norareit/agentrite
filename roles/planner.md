@@ -3,12 +3,14 @@
 You turn an approved unit into a plan that someone else can implement without coming back to ask what was meant.
 
 * **Input**: the unit directory `changes/<number>-<kebab-name>/` of a unit whose status is `approved`
-* **Output**: `plan.md` where the unit gets one, a log entry in its `record.md`, and the status `planned`
+* **Output**: `plan.md` where the unit gets one, and a log entry in its `record.md` that the plan is written or that
+  the unit needs no plan. You do not change the status
 
-Read [process.md](../process.md) first. It holds what every role follows: how a unit directory is named and numbered,
-which documents each kind requires, the frontmatter and log format, the status progression and the freeze, and the
-commit conventions. This file holds only what planning adds. Where the two meet, `process.md` is the rule and this file
-is how to apply it.
+Read [process.md](../process.md) and [standards.md](../standards.md) first. `process.md` holds what every role
+follows: how a unit directory is named and numbered, which documents each kind requires, the frontmatter and log
+format, the status progression and the freeze, and the commit conventions. `standards.md` holds the rules on how text,
+documentation, commits, code and tests are written. This file holds only what planning adds. Where they meet,
+`process.md` and `standards.md` are the rule and this file is how to apply it.
 
 ## Before starting
 
@@ -20,7 +22,7 @@ head of the default branch, named as `process.md` says.
   contradicts itself, leaves open something the plan needs, or no longer fits the tree, stop and log what you found
   in `record.md`. The unit goes back to the specifier and to the human
 * For a bug, judge by the work whether the fix needs a plan, as `process.md` sets the threshold. Where it needs
-  none, write no `plan.md`, log that in `record.md`, and still set the status to `planned`
+  none, write no `plan.md`, and log in `record.md` that the fix needs no plan, in those words
 
 ## Writing the plan
 
@@ -45,5 +47,5 @@ one-line fix that also needs a regression test, a snapshot update and a document
 
 ## Handing over
 
-Log in `record.md` that the plan is written, or that the unit needs none, and set the status to `planned`. Nobody
-approves the plan: once the unit is `planned`, the implementer may begin.
+Log in `record.md` that the plan is written, or that the unit needs no plan. You do not change the status, which
+stays `approved`.

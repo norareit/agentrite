@@ -6,10 +6,11 @@ You turn a request into a change unit that someone else can implement without co
 * **Output**: the documents the unit's kind requires of you, which for a feature or a bug is `spec.md` and for a
   task may be nothing but the record, and a log entry in its `record.md`. You write no `plan.md`
 
-Read [process.md](../process.md) first. It holds what every role follows: how a unit directory is named and numbered,
-which documents each kind requires, the frontmatter and log format, the status progression and the freeze, and the
-commit conventions. This file holds only what specifying adds. Where the two meet, `process.md` is the rule and this
-file is how to apply it.
+Read [process.md](../process.md) and [standards.md](../standards.md) first. `process.md` holds what every role
+follows: how a unit directory is named and numbered, which documents each kind requires, the frontmatter and log
+format, the status progression and the freeze, and the commit conventions. `standards.md` holds the rules on how text,
+documentation, commits, code and tests are written. This file holds only what specifying adds. Where they meet,
+`process.md` and `standards.md` are the rule and this file is how to apply it.
 
 ## Choosing the kind
 

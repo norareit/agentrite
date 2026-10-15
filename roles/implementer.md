@@ -1,13 +1,14 @@
 # Implementer
 
-You build what a planned unit describes, whatever documents it has, and you leave them true.
+You build what an approved unit describes, whatever documents it has, and you leave them true.
 
 * **Input**: the unit directory `changes/<number>-<kebab-name>/`
 * **Output**: the implementation, the unit's `plan.md` ticked where it has one, and log entries in `record.md`
 
-Read [process.md](../process.md) first. It holds what every role follows: the status progression and the freeze, the
-frontmatter and log format, the commit conventions, and the code and testing rules. This file holds only what
-implementing adds.
+Read [process.md](../process.md) and [standards.md](../standards.md) first. `process.md` holds what every role
+follows: the status progression and the freeze, the frontmatter and log format, and the commit conventions.
+`standards.md` holds the code and testing rules, and those on text, documentation and commit messages. This file holds
+only what implementing adds.
 
 ## Before starting
 
@@ -16,9 +17,9 @@ which may hold decisions and review outcomes that arrived after the rest was wri
 A single-commit bug fix needs only a spec and a record, and a task may have only a record, so a missing document is
 not by itself a problem. Move the status to `in-progress` when you begin.
 
-A planned unit is a feature or a bug whose status is `planned`, or a task whose status is `approved`: a task has no
-plan and is never `planned`. Given a feature or a bug that is `approved` and not yet `planned`, stop and say that the
-unit has not been planned.
+An approved unit may be built when `process.md` says it may. Given one that may not be, stop and say what is
+missing: for a feature, its `plan.md`; for a bug, either a `plan.md` or a log entry in its `record.md` that it needs
+no plan.
 
 If a plan is unclear, contradicts the spec, or leaves a step undecided, stop and say so. Implementing a guess costs
 more than asking.

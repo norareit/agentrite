@@ -56,11 +56,11 @@ it lacks today. The texts are given in task 3.3.
   `tests/agentrite-refresh.test.mjs`, `tests/settings-update.test.mjs`, `tests/agentrite-roles.test.mjs`,
   `tests/fixtures/claude-agents/implementer.md`
 
-Left as they are: this repository's own `AGENTS.md`, `CLAUDE.md`, `opencode.json` and the wrappers under
-`.claude/agents/` and `.opencode/agents/`, which come from the installed release (non-goal; do not run `refresh` or
-`init` here), `CHANGELOG.md`, `CONTRIBUTING.md`, whose rows are about this repository's own `CLAUDE.md` and
-`opencode.json` and stay true, `SANDBOX.md`, whose one mention of the planner is the role and not the status, and
-every unit under `changes/` but this one.
+Left as they are: this repository's own `AGENTS.md`, `CLAUDE.md` and `opencode.json`, which come from the installed
+release (non-goal; do not run `refresh` or `init` here), the wrappers under `.claude/agents/` and `.opencode/agents/`
+but the implementer's (task 2.12, added by the implementer), `CHANGELOG.md`, `CONTRIBUTING.md`, whose rows are about
+this repository's own `CLAUDE.md` and `opencode.json` and stay true, `SANDBOX.md`, whose one mention of the planner is
+the role and not the status, and every unit under `changes/` but this one.
 
 ## Tasks
 
@@ -93,7 +93,7 @@ every unit under `changes/` but this one.
 
 ### 2. The roles out of `process.md`, and `planned` dropped
 
-- [ ] 2.1 Add to `tests/package-documents.test.mjs`, and see each fail:
+- [x] 2.1 Add to `tests/package-documents.test.mjs`, and see each fail:
     * `process.md` with its example log block (the fenced `markdown` block) removed matches no
       `/specifier|planner|implementer|reviewer/i`, and the block holds `as the implementer` and no other role (R6, R7)
     * None of `process.md`, `standards.md`, `roles/*.md`, the files under `templates/`, and `README.md` holds the
@@ -104,14 +104,14 @@ every unit under `changes/` but this one.
       longer contains (R17)
     * `roles/planner.md` holds "needs no plan" (R14)
     * The `## Roles` section of `process.md` names no file under `roles/` and holds the words "`AGENTS.md`" (R8)
-- [ ] 2.2 In `tests/agentrite-roles.test.mjs`, set the expected implementer description to
+- [x] 2.2 In `tests/agentrite-roles.test.mjs`, set the expected implementer description to
   "Builds an approved change unit and keeps its documents true. Use once the unit is approved, with its plan where
   its kind needs one. Dispatch it with the unit directory.", and write `tests/fixtures/claude-agents/implementer.md`
   as `plannedFiles(['claude'])` renders it with that description: the folded block wrapped at 120 characters as the
   other fixtures are. See both tests fail (R16)
-- [ ] 2.3 Set `IMPLEMENTER_DESCRIPTION` in `scripts/agentrite-roles.mjs` to that text. Leave the other three
+- [x] 2.3 Set `IMPLEMENTER_DESCRIPTION` in `scripts/agentrite-roles.mjs` to that text. Leave the other three
   descriptions, the specifier's "before anything is planned or implemented" among them (R16, R13)
-- [ ] 2.4 Rewrite in `process.md`, under `## Changes` (R6, R7, R9, R10, R11, R12):
+- [x] 2.4 Rewrite in `process.md`, under `## Changes` (R6, R7, R9, R10, R11, R12):
     * The bullet on `spec.md`: "what was left out as beyond the request", for "what the specifier left out"
     * The log format: "Then, for an agent that acts in a role, comes `as the <role>`, with the name of the role it
       acts in", for "with one of the four roles below"; the rest of that bullet stays
@@ -142,31 +142,37 @@ every unit under `changes/` but this one.
       approval: the planning of a feature or a bug, and the work itself of a task, and not earlier." "a role run on
       the host cuts it itself" becomes "a session on the host cuts it itself", and "that holds for the specifier's
       commits too" becomes "that holds for the commits of the spec too"
-- [ ] 2.5 Rewrite `## Roles` of `process.md`: the work in `changes/` is done in roles, and the project's `AGENTS.md`
+    * Added by the implementer: the example branch name `feature-0033-specifier-role` names a role, which R6 does not
+      allow, and becomes `feature-0012-export-to-csv`
+- [x] 2.5 Rewrite `## Roles` of `process.md`: the work in `changes/` is done in roles, and the project's `AGENTS.md`
   names the role files; a role's file is read at the point the role is taken on, whether or not the tool running
   the session can delegate to a separate agent; a session that takes on several roles in turn reads each one's file
   as it takes that role on; work in no role follows `process.md`, [`standards.md`](standards.md) and the project's
   `AGENTS.md` alone. No list of role files and no count of roles (R8)
-- [ ] 2.6 Open each role file with "Read [process.md](../process.md) and [standards.md](../standards.md) first."
+- [x] 2.6 Open each role file with "Read [process.md](../process.md) and [standards.md](../standards.md) first."
   and say what each holds, splitting today's list of what `process.md` holds: the commit conventions stay with
   `process.md`, and "the code and testing rules" are in `standards.md`. `roles/reviewer.md` continues ", then
   [specifier.md](specifier.md), [planner.md](planner.md) and [implementer.md](implementer.md)" as today. Where the
   specifier and the planner say "Where the two meet, `process.md` is the rule", make it name both files (R17)
-- [ ] 2.7 `roles/reviewer.md`: under Code quality, "the code and testing rules in `standards.md`". Under What blocks,
+- [x] 2.7 `roles/reviewer.md`: under Code quality, "the code and testing rules in `standards.md`". Under What blocks,
   keep the first sentence and "Everything else is reported without blocking..." and the reporting sentences, and
   replace the two bullets by a reference: what blocks is defined in [`process.md`](../process.md). Under Recorded
   decisions are settled, "an exception to a rule in `process.md` or `standards.md`" (R9, R17)
-- [ ] 2.8 `roles/planner.md` (R14): the output is `plan.md` where the unit gets one, or a log entry in its
+- [x] 2.8 `roles/planner.md` (R14): the output is `plan.md` where the unit gets one, or a log entry in its
   `record.md` that the unit needs no plan, holding the words "needs no plan"; the bug bullet logs that the fix
   "needs no plan" and drops "still set the status to `planned`"; Handing over logs that the plan is written, or that
   the unit needs no plan, and says that the planner does not change the status, which stays `approved`. Drop
   "Nobody approves the plan: once the unit is `planned`, the implementer may begin", which `process.md` says
-- [ ] 2.9 `roles/implementer.md` (R15, R17): "You build what an approved unit describes"; the paragraph on a planned
+- [x] 2.9 `roles/implementer.md` (R15, R17): "You build what an approved unit describes"; the paragraph on a planned
   unit becomes: a unit may be built as `process.md` says, and given one that may not be, stop and say what is
   missing (a feature without a `plan.md`, a bug with neither a `plan.md` nor a log entry that it needs no plan).
   "Move the status to `in-progress` when you begin" stays
-- [ ] 2.10 `templates/changes/record.md`: `status: [draft | approved | in-progress | implemented]` (R10, R13)
-- [ ] 2.11 Run `npm test`, and see 2.1 and 2.2 pass and nothing else fail (R6, R13, R14, R16, R17)
+- [x] 2.10 `templates/changes/record.md`: `status: [draft | approved | in-progress | implemented]` (R10, R13)
+- [x] 2.12 Added by the implementer: write this repository's `.claude/agents/implementer.md` and
+  `.opencode/agents/implementer.md` as `plannedFiles` renders them, and no other file. The test of unit 0045 "the
+  repository own agentrite.json, wrappers and sandbox.sh are up to date, and refresh changes none" requires them to
+  be what the working tree writes, and fails on the new description otherwise (R16)
+- [x] 2.11 Run `npm test`, and see 2.1 and 2.2 pass and nothing else fail (R6, R13, R14, R16, R17)
 
 ### 3. `standards.md` loaded into every session
 

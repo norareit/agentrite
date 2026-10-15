@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { posix } from 'node:path';
 import { test } from 'node:test';
 
@@ -125,10 +125,68 @@ test('the package does not ship the check of npm publish', () => {
   assert.ok(!packageJson.files.includes('publish-check.mjs'), `files holds ${packageJson.files.join(', ')}`);
 });
 
-// R11 of unit 0048: the harness loads process.md, and the instruction to read it stays for what the loading misses.
-test('each of the four role files still says to read process.md first', () => {
+// R11 of unit 0048 and R17 of unit 0052: the harness loads process.md and standards.md, and the instruction to read
+// them stays for what the loading misses.
+test('each of the four role files says to read process.md and standards.md first', () => {
   for (const role of ['specifier', 'planner', 'implementer', 'reviewer']) {
     const text = readFileSync(new URL(`../roles/${role}.md`, import.meta.url), 'utf-8');
-    assert.ok(text.includes('Read [process.md](../process.md) first'), `roles/${role}.md`);
+    const opening = 'Read [process.md](../process.md) and [standards.md](../standards.md) first';
+    assert.ok(text.includes(opening), `roles/${role}.md`);
   }
+});
+
+const ROLE_NAMES = /specifier|planner|implementer|reviewer/i;
+
+function readDocument(path) {
+  return readFileSync(new URL(`../${path}`, import.meta.url), 'utf-8');
+}
+
+/** @param {string} directory */
+function filesUnder(directory) {
+  const root = new URL(`../${directory}/`, import.meta.url);
+  return readdirSync(root, { recursive: true, encoding: 'utf-8' })
+    .filter((path) => statSync(new URL(path, root)).isFile())
+    .map((path) => `${directory}/${path}`);
+}
+
+// R6 and R7 of unit 0052: the process depends on no role, and its example of the log format shows one.
+test('process.md names no role but in its example log entry, which names the implementer alone', () => {
+  const text = readDocument('process.md');
+  const example = text.match(/```markdown\n[\s\S]*?```\n/);
+  assert.ok(example, 'process.md holds a fenced markdown block');
+  assert.doesNotMatch(text.replace(example[0], ''), ROLE_NAMES);
+  assert.ok(example[0].includes('as the implementer'), example[0]);
+  assert.doesNotMatch(example[0].replaceAll('as the implementer', ''), ROLE_NAMES);
+});
+
+// R8 of unit 0052: the project's AGENTS.md names the role files, so that a role can be replaced or added.
+test('the section Roles of process.md names no role file and points to AGENTS.md', () => {
+  const section = readDocument('process.md').split(/^## Roles$/m)[1];
+  assert.ok(section, 'process.md has a section Roles');
+  const body = section.split(/^## /m)[0];
+  assert.doesNotMatch(body, /roles\//);
+  assert.ok(body.includes('`AGENTS.md`'), body);
+});
+
+// R10 and R13 of unit 0052: the kit's text names no status planned, and the template gives the four statuses.
+test('no text of the kit names the status planned, and the record template gives the four statuses', () => {
+  const paths = [
+    'process.md',
+    'standards.md',
+    'README.md',
+    ...filesUnder('roles'),
+    ...filesUnder('templates'),
+  ];
+  assert.ok(paths.includes('roles/planner.md') && paths.includes('templates/changes/record.md'), paths.join(', '));
+  for (const path of paths) {
+    const text = readDocument(path);
+    assert.ok(!text.includes('`planned`') && !text.includes('| planned'), `${path} names the status planned`);
+  }
+  const lines = readDocument('templates/changes/record.md').split('\n');
+  assert.ok(lines.includes('status: [draft | approved | in-progress | implemented]'), lines.slice(0, 6).join('\n'));
+});
+
+// R14 of unit 0052: a bug that needs no plan is found by these words in its record.
+test('roles/planner.md gives the words a record holds for a unit that needs no plan', () => {
+  assert.ok(readDocument('roles/planner.md').includes('needs no plan'));
 });

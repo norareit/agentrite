@@ -1,7 +1,7 @@
 ---
 description: >-
-  Builds a planned change unit and keeps its documents true. Use once the unit is planned, or approved where it is a
-  task, which has no plan. Dispatch it with the unit directory.
+  Builds an approved change unit and keeps its documents true. Use once the unit is approved, with its plan where its
+  kind needs one. Dispatch it with the unit directory.
 mode: all
 ---
 

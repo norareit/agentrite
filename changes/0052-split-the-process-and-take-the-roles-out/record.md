@@ -46,12 +46,23 @@ timestamp: 2026-10-15T16:51:20Z
   `feature-0052-split-the-process-and-take-the-roles-out` at `324eaba`. Took the role from `roles/implementer.md` and
   `process.md` of the installed release 7.0.0. Read the spec, the plan and the record in full. Began the work. The
   status is `in-progress`
-- 2026-10-15T22:15:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did tasks 1.1 to 1.6: `standards.md` holds
-  Text, Documentation changes, the two trailer bullets of Commits, Code and Testing, and `process.md` the rest, each
-  under a new opening; the package ships `standards.md`. 1.1's two tests failed before the move and passed after it.
-  The line comparison of task 1.6, a script in the scratchpad that counts the non-empty lines of `process.md` at
+- 2026-10-15T22:15:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did tasks 1.1 to 1.6: `standards.md`
+  holds Text, Documentation changes, the two trailer bullets of Commits, Code and Testing, and `process.md` the rest,
+  each under a new opening; the package ships `standards.md`. 1.1's two tests failed before the move and passed after
+  it. The line comparison of task 1.6, a script in the scratchpad that counts the non-empty lines of `process.md` at
   `79ecca6` without its opening paragraph against those of the new `process.md` and `standards.md`, reported 0 lines
-  missing and 11 added: the two openings (8 lines), the title `# Standards`, and the second `## General guidelines`
-  and `### Commits`
+  missing and 11 added: the two openings (8 lines), the title `# Standards`, and the second `## General guidelines` and
+  `### Commits`
+- 2026-10-15T22:18:04Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did tasks 2.1 to 2.11. The tests of
+  2.1 failed, all five, before `process.md` and the role files were rewritten, and the three of 2.2 failed before the
+  description changed. Extended the plan twice, as it now says. Under 2.4: the example branch name
+  `feature-0033-specifier-role` in `process.md` names a role, which R6 does not allow and the test of 2.1 refused, so it
+  became `feature-0012-export-to-csv`. Task 2.12: the plan left this repository's wrappers as they are, as coming from
+  the installed release, but the test of unit 0045 "the repository own agentrite.json, wrappers and sandbox.sh are up to
+  date, and refresh changes none" requires them to be what the working tree writes, and it failed on the new
+  description. The spec's non-goal names this repository's `AGENTS.md`, `CLAUDE.md` and `opencode.json` and not the
+  wrappers, so the two implementer wrappers were written from `plannedFiles`, and no other file. They point at the
+  installed release's `roles/implementer.md`, which still speaks of `planned` until this repository moves to the release
+  that holds this unit. `npm test` on the tree of this step, uncommitted on `b2b30b8`, reported 577 tests, 577 passing
 
 ## Amendments
