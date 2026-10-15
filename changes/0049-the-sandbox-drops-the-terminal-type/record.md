@@ -107,3 +107,20 @@ timestamp: 2026-10-14T12:22:07Z
   `TERM=tmux-256color` and `COLORTERM=truecolor` gave `docker exec` with nothing passed `[tmux-256color] [truecolor]`,
   with a terminal and without one, and with `--env TERM= --env COLORTERM=` gave `[] []`; one started as before the unit
   gave `docker exec` `[xterm] [unset]` with a terminal and `[unset] [unset]` without one. The status stays `in-progress`
+- 2026-10-15T16:35:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S1 on `18ff857`: `--connect`
+  gives the command `--env TERM=<value> --env COLORTERM=<value>` in every call, the value of its own shell or empty for
+  one it lacks, and `TERM=xterm` for a `TERM` it lacks on a terminal; `known-terminal.sh` removes an empty `TERM` and an
+  empty `COLORTERM`; a run gives as before. Checked with the working copy's sandbox, on `18ff857`: `./sandbox-dev.sh
+  0049 sleep 180` started from a shell with `TERM=tmux-256color COLORTERM=truecolor`, whose container `docker inspect`
+  showed with `TERM=tmux-256color` and `COLORTERM=truecolor` in its settings, and `./sandbox-dev.sh --connect 0049` with
+  a command that prints its environment's `TERM` and `COLORTERM` as JSON, on a pseudo-terminal from `script -q
+  /dev/null` unless said: from `TERM=xterm-256color` and no `COLORTERM`, `{"TERM":"xterm-256color","COLORTERM":null}`;
+  from neither, `{"TERM":"xterm","COLORTERM":null}`; from `TERM=xterm-ghostty` and no `COLORTERM`,
+  `{"TERM":"xterm-256color","COLORTERM":null}`; from `TERM=xterm-256color` and an empty `COLORTERM`,
+  `{"TERM":"xterm-256color","COLORTERM":null}`; from `TERM=xterm-256color COLORTERM=24bit`,
+  `{"TERM":"xterm-256color","COLORTERM":"24bit"}`; and from neither without a terminal,
+  `{"TERM":null,"COLORTERM":null}`. The run ended with exit 0 and left no clone and no `sandbox/` ref. On `18ff857`:
+  `npm test` on the macOS host reports 572 tests, 555 passing, 17 skipped, the same seventeen, and none failing;
+  `./sandbox-dev.sh --in-place npm test` reports 572 tests, 572 passing, none skipped or failing, on Linux, the test of
+  `--connect` on a terminal among them; `npm run check-changes` exits 0. The status stays `in-progress` until S1 is
+  reviewed

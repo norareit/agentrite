@@ -185,7 +185,7 @@ with nothing but what the wrapper gives it.
 - [x] In `SANDBOX.md`, say in the paragraph of "Running a unit" that a command run from a shell without a `TERM` has
   `xterm` on a terminal and none without one, and in the bullet of `--connect` that a variable its shell lacks, the
   command lacks too, whatever the first command has (R10)
-- [ ] With the working copy's sandbox, start a unit run from a shell with `TERM=tmux-256color COLORTERM=truecolor`,
+- [x] With the working copy's sandbox, start a unit run from a shell with `TERM=tmux-256color COLORTERM=truecolor`,
   and connect to it from shells with: `TERM=xterm-256color` and no `COLORTERM`; neither; `TERM=xterm-ghostty` and no
   `COLORTERM`; `TERM=xterm-256color` and an empty `COLORTERM`. Each connected command prints its `TERM` and
   `COLORTERM` as its environment holds them, and none has a `COLORTERM`, and the second has `TERM=xterm`. Written in
