@@ -12,8 +12,14 @@
 # terminal that says it shows 24-bit colour keeps saying so beside the replacement. With
 # no TERM, nothing is changed.
 #
+# An empty TERM or COLORTERM is removed first. --connect gives one for a variable its
+# shell lacks: a command of docker exec that is given none inherits the run's, which
+# Docker keeps in the container's settings, and Docker cannot remove a variable.
+#
 # POSIX sh and not bash, so that its tests run on any host. infocmp is of ncurses-bin,
 # which every Debian image holds, and fails for a terminal it has no description of.
+[ -n "${TERM:-}" ] || unset TERM
+[ -n "${COLORTERM:-}" ] || unset COLORTERM
 if [ -n "${TERM:-}" ] && ! infocmp "$TERM" >/dev/null 2>&1; then
   TERM=xterm-256color
   export TERM

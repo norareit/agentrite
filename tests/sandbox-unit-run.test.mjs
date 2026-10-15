@@ -942,13 +942,14 @@ function firstCommandGets() {
 }
 
 // The one call of Docker a connect makes, as the stand-in records it: `command` in the unit run's container, run
-// through the script that makes the TERM one the image describes, with a terminal when `tty` says so, and the flags
-// of the host's terminal in `terminal`.
-const connectCall = (command, { tty = false, terminal = '' } = {}) =>
+// through the script that makes the TERM one the image describes, with a terminal when `tty` says so. It gives the
+// command `term` and `colorterm` in every call, empty where the shell of the connect lacks one, since a command
+// that is given none inherits the run's. A TERM the shell lacks is xterm on a terminal, as Docker gives it.
+const connectCall = (command, { tty = false, term = tty ? 'xterm' : '', colorterm = '' } = {}) =>
   `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive ${tty ? '--tty ' : ''}--user agent --workdir /work ` +
   '--env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
-  `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${terminal}` +
-  `${containerName} /usr/local/bin/known-terminal.sh ${command}`;
+  '--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ' +
+  `--env TERM=${term} --env COLORTERM=${colorterm} ${containerName} /usr/local/bin/known-terminal.sh ${command}`;
 
 // What the stand-in's `ps` prints for a container that is running.
 const markRunning = ({ runningContainer }) => writeFileSync(runningContainer, '0123456789ab\n');
@@ -982,7 +983,8 @@ test('--connect exits with the status the connected command exited with', (t) =>
 });
 
 // The host's terminal: a unit run and a connected command are each given the TERM and the COLORTERM of the shell
-// the wrapper was started from, each when it is set and not empty.
+// the wrapper was started from. A run is given each when it is set and not empty there. A connected command is
+// given both in every call, empty for one the shell lacks, which the image's script removes.
 test("a unit run passes the host's TERM and COLORTERM to the command", (t) => {
   const { clone, run, dockerCalls, unitRun, logs } = setUp(t);
   const result = run([branch, 'echo', 'hi'], { TERM: 'xterm-256color', COLORTERM: 'truecolor' });
@@ -993,20 +995,22 @@ test("a unit run passes the host's TERM and COLORTERM to the command", (t) => {
   );
 });
 
-for (const [shell, env, terminal] of [
+for (const [shell, env, given] of [
   [
     'with TERM and COLORTERM',
     { TERM: 'xterm-256color', COLORTERM: 'truecolor' },
-    '--env TERM=xterm-256color --env COLORTERM=truecolor ',
+    { term: 'xterm-256color', colorterm: 'truecolor' },
   ],
-  ['with a TERM of tmux and no COLORTERM', { TERM: 'tmux-256color' }, '--env TERM=tmux-256color '],
+  ['with a TERM of tmux and no COLORTERM', { TERM: 'tmux-256color' }, { term: 'tmux-256color' }],
+  ['with TERM and an empty COLORTERM', { TERM: 'xterm-256color', COLORTERM: '' }, { term: 'xterm-256color' }],
+  ['with neither', {}, {}],
 ]) {
-  test(`--connect passes what its own shell has of the two to the command, from a shell ${shell}`, (t) => {
+  test(`--connect gives the command what its own shell has of the two, the rest empty, from a shell ${shell}`, (t) => {
     const host = setUp(t);
     markRunning(host);
     const result = host.run(['--connect', branch, 'echo', 'hi'], env);
     assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', { terminal })]);
+    assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', given)]);
   });
 }
 
@@ -1051,8 +1055,8 @@ test('--connect gives the command what the entrypoint, the compose file and the 
   assert.deepEqual(host.dockerCalls(), [
     `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive --user ${gets.becomes} ` +
       `--workdir ${gets.workingDirectory} --env HOME=${gets.home} --env USER=${gets.user} ` +
-      `--env LOGNAME=${gets.logname} --env PATH=${gets.path} ${containerName} ${gets.through} ` +
-      gets.defaultCommand,
+      `--env LOGNAME=${gets.logname} --env PATH=${gets.path} --env TERM= --env COLORTERM= ${containerName} ` +
+      `${gets.through} ${gets.defaultCommand}`,
   ]);
 });
 

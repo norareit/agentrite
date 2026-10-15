@@ -168,21 +168,21 @@ terminal that has no `TERM` from anywhere else, and as the command had before th
 an empty `TERM` and an empty `COLORTERM` before it looks the `TERM` up. A run is unchanged: its container starts
 with nothing but what the wrapper gives it.
 
-- [ ] In `tests/known-terminal.test.mjs`, add tests: an empty `TERM` and an empty `COLORTERM` reach the command as
+- [x] In `tests/known-terminal.test.mjs`, add tests: an empty `TERM` and an empty `COLORTERM` reach the command as
   not set; an empty `COLORTERM` beside a `TERM` that is replaced reaches the command as not set. Run them and see
   them fail (R3, R5, R6)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, have `connectCall` always give `--env TERM=<value> --env
+- [x] In `tests/sandbox-unit-run.test.mjs`, have `connectCall` always give `--env TERM=<value> --env
   COLORTERM=<value>` after `--env PATH=...`, with `TERM` empty by default, or `xterm` with a terminal, and
   `COLORTERM` empty by default. Add tests: a `--connect` from a shell with `TERM` and no `COLORTERM` gives
   `COLORTERM` empty; one from a shell with an empty `COLORTERM` gives it empty; one from a shell with neither gives
   both empty. In `tests/sandbox-dev.test.mjs`, expect the two empty values on the dev shim's `--connect`. Run them
   and see them fail (R2, R3, R5, R6)
-- [ ] In `container/known-terminal.sh`, remove an empty `TERM` and an empty `COLORTERM`, and say why in its header
+- [x] In `container/known-terminal.sh`, remove an empty `TERM` and an empty `COLORTERM`, and say why in its header
   (R3, R5)
-- [ ] In `container/sandbox.sh`, give the `docker exec` of `--connect` the two values as above in place of the run's
+- [x] In `container/sandbox.sh`, give the `docker exec` of `--connect` the two values as above in place of the run's
   flags, with a comment that says why, and keep the run's flags for the two `compose run` calls alone. Run
   `npm test`: all pass (R2, R3, R5)
-- [ ] In `SANDBOX.md`, say in the paragraph of "Running a unit" that a command run from a shell without a `TERM` has
+- [x] In `SANDBOX.md`, say in the paragraph of "Running a unit" that a command run from a shell without a `TERM` has
   `xterm` on a terminal and none without one, and in the bullet of `--connect` that a variable its shell lacks, the
   command lacks too, whatever the first command has (R10)
 - [ ] With the working copy's sandbox, start a unit run from a shell with `TERM=tmux-256color COLORTERM=truecolor`,

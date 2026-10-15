@@ -73,12 +73,12 @@ Several runs:
   agents on one unit"
 * Two checkouts of one project on one host share a branch's clone
 
-Every command in the sandbox, of a unit run, of `--in-place`, of `--workdir` and of `--connect`, has the `TERM` and
-the `COLORTERM` of the terminal the wrapper was run from, so a harness draws in the colours it draws in there on the
-host. Run from a shell without a `TERM`, as a script may be, the command keeps the `TERM` Docker gives it, `xterm`.
-A `TERM` that the image holds no description of, as that of a terminal named after its own program may be, is
-`xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. `echo $TERM` in the sandbox shows which it
-is.
+Every command in the sandbox, of a unit run, of `--in-place`, of `--workdir` and of `--connect`, has the `TERM` and the
+`COLORTERM` of the terminal the wrapper was run from, so a harness draws in the colours it draws in there on the host.
+Run from a shell without a `TERM`, as a script may be, the command has the `TERM` Docker gives a command: `xterm` on a
+terminal, and none without one. A `TERM` that the image holds no description of, as that of a terminal named after its
+own program may be, is `xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. `echo $TERM` in the
+sandbox shows which it is.
 
 For a unit run that starts nothing, see "When something goes wrong".
 
@@ -126,7 +126,8 @@ And in another, while that runs:
   command
 * It runs as the agent, as the first command does: the same user and groups, no capability and no way to gain one,
   `HOME`, `USER`, `LOGNAME` and `PATH` as the first command has them, and `/work` as its working directory. Its
-  `TERM` and `COLORTERM` are those of the terminal `--connect` was run from, and not the first command's
+  `TERM` and `COLORTERM` are those of the terminal `--connect` was run from, and not the first command's: one that
+  its shell lacks is not taken from the first command
 * It is given a terminal when `--connect` is run from one, and none when it is not, so a script can connect a
   command and give it its input. The wrapper exits with the status the command exited with
 * Any number of commands may be connected to one run at a time. Two harnesses in one clone write the same files and

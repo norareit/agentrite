@@ -430,16 +430,13 @@ unit_container_name() {
 # so. Programs that draw in a terminal read the two to learn what it shows, and Docker
 # gives a container with a terminal TERM=xterm and no COLORTERM, which tells OpenCode to
 # send 24-bit colour to a terminal that may show only 256. A variable that is not in the
-# wrapper's environment, or is empty there, is not passed, and the command keeps what
-# Docker gives it. Whether it is in the environment is asked of declare, and not read
+# wrapper's environment, or is empty there, is the shell's to lack, and the command is
+# given none of it. Whether it is in the environment is asked of declare, and not read
 # from its value: bash gives a shell started without TERM a TERM=dumb of its own, which
 # it does not export and which is not the host's.
 from_environment() {
   [[ "$(declare -p "$1" 2>/dev/null)" == "declare -x $1="* ]] && [ -n "${!1}" ]
 }
-terminal_environment=()
-! from_environment TERM || terminal_environment+=(--env "TERM=$TERM")
-! from_environment COLORTERM || terminal_environment+=(--env "COLORTERM=$COLORTERM")
 
 # --connect ends here, before the host's harnesses are asked for a version, a build is
 # weighed or a directory is made: it runs the command in the container of the unit's
@@ -482,10 +479,23 @@ if [ "$connect" -eq 1 ]; then
   if [ -t 0 ] && [ -t 1 ]; then
     terminal=(--tty)
   fi
+  # A command of docker exec inherits the TERM and COLORTERM the run's container was
+  # started with, unless it is given its own, and Docker cannot remove a variable. So
+  # both are given in every call: this shell's, or empty for one it lacks, which
+  # known-terminal.sh removes. A TERM it lacks on a terminal is xterm, which is what
+  # Docker gives a command on a terminal when nothing else gives it one.
+  connected_term=""
+  if from_environment TERM; then
+    connected_term="$TERM"
+  elif [ "${#terminal[@]}" -gt 0 ]; then
+    connected_term=xterm
+  fi
+  connected_colorterm=""
+  ! from_environment COLORTERM || connected_colorterm="$COLORTERM"
   exec docker exec --interactive ${terminal[@]+"${terminal[@]}"} --user agent --workdir /work \
     --env HOME=/home/agent --env USER=agent --env LOGNAME=agent \
     --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
-    ${terminal_environment[@]+"${terminal_environment[@]}"} \
+    --env "TERM=$connected_term" --env "COLORTERM=$connected_colorterm" \
     "$container_name" /usr/local/bin/known-terminal.sh "$@"
 fi
 
@@ -612,6 +622,12 @@ mounts+=(
   --volume "$logs/.claude/projects:/home/agent/.claude/projects"
   --volume "$logs/.local/share/opencode:/home/agent/.local/share/opencode"
 )
+
+# The run's own terminal: each of the two that the wrapper's shell has, and nothing of
+# one it lacks, so that the command keeps what Docker gives it.
+terminal_environment=()
+! from_environment TERM || terminal_environment+=(--env "TERM=$TERM")
+! from_environment COLORTERM || terminal_environment+=(--env "COLORTERM=$COLORTERM")
 
 if [ -z "$branch" ]; then
   exec "${compose[@]}" run --rm \

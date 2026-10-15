@@ -62,6 +62,20 @@ test('with no COLORTERM, the command has none beside a TERM that is replaced', (
   assert.equal(result.stdout, 'TERM xterm-256color\nCOLORTERM is not set\n');
 });
 
+// A command of `--connect` is given an empty TERM or COLORTERM for one its shell lacks, since a `docker exec` that
+// gives none inherits the run's, and Docker cannot remove a variable. The script removes them.
+test('an empty TERM and an empty COLORTERM reach the command as not set', (t) => {
+  const result = runKnownTerminal(t, { env: { TERM: '', COLORTERM: '' } });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, 'TERM is not set\nCOLORTERM is not set\n');
+});
+
+test('an empty COLORTERM beside a TERM that is replaced reaches the command as not set', (t) => {
+  const result = runKnownTerminal(t, { env: { TERM: 'xterm-ghostty', COLORTERM: '' } });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, 'TERM xterm-256color\nCOLORTERM is not set\n');
+});
+
 test('the arguments reach the command as they were given', (t) => {
   const result = runKnownTerminal(t, { command: [...printer, 'one two', '', 'three'] });
   assert.equal(result.status, 0, result.stderr);
