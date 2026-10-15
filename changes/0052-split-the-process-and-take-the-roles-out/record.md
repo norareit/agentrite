@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-15T16:51:20Z
 ---
 
@@ -27,5 +27,6 @@ timestamp: 2026-10-15T16:51:20Z
   about none of them, and approving the unit approves them.
   The human means to make a release before this unit is built, so that this repository's sandbox runs with the
   fixes of units 0049 to 0051. The status is `draft`
+- 2026-10-15T22:04:49Z [human] approved the spec. The status is `approved`
 
 ## Amendments
