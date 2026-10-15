@@ -86,3 +86,12 @@ timestamp: 2026-10-14T12:22:07Z
   R7: the human ran `./sandbox-dev.sh --in-place opencode` in the Terminal app of macOS 15, beside `opencode` on the
   host, and saw OpenCode in the sandbox as on the host: the near black background of its theme, and the dark tints
   of a diff where the olive and the green were. Written as the human reported it
+- 2026-10-14T22:35:57Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0049 at
+  `f00e3347ed1fa9a07d38a564d3897474722bdc05` in a full review against merge base
+  `51f8877c12a00a21cc5c53b00f4d4b32301a168b`. Returned `S1` and `S2`. Saved the complete findings in
+  `.reviews/0049-the-sandbox-drops-the-terminal-type/2026-10-14-223432-full-f00e334.md`.
+  Independently ran `npm test`: 568 tests, 551 passing, 17 expected skips; the Linux suite through
+  `./sandbox-dev.sh --in-place npm test`: all 568 passing; and `npm run check-changes`: exit 0. Ran the live
+  connection-environment and retained-image checks described in the findings. R7 was not independently observed;
+  R8 remains unchecked as already recorded. Historical red-test ordering and a normal old-image run past its
+  pre-existing IPv6 failure could not be verified
