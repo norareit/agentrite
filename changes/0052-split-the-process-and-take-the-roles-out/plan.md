@@ -226,7 +226,7 @@ the role and not the status, and every unit under `changes/` but this one.
 
 ### 4. `README.md`
 
-- [ ] 4.1 Make `README.md` true of the kit (R20), with every line within 120 characters:
+- [x] 4.1 Make `README.md` true of the kit (R20), with every line within 120 characters:
     * "What is here": a row for `standards.md`, "The rules on how text, documentation, commits, code and tests are
       written", after `process.md`, whose row becomes "How work is done: the changes process, the roles, the commit
       prefixes"; widen the table if a cell needs it
@@ -244,24 +244,24 @@ the role and not the status, and every unit under `changes/` but this one.
     * "How the kit's instructions reach an agent": the harness loads `process.md` and `standards.md`, and an agent
       finds the role files from `AGENTS.md`; the three lines in the block, the two-path `opencode.json`, and the
       model following the links to `process.md` and `standards.md` in `AGENTS.md`
-- [ ] 4.2 `grep -n "process\.md\|planned" README.md` and read each hit, so that none says `process.md` alone where
+- [x] 4.2 `grep -n "process\.md\|planned" README.md` and read each hit, so that none says `process.md` alone where
   both are now meant, and none names the status `planned` (R13, R20)
 
 ## Verification
 
-- [ ] `npm test` on the final tree, every test passing; log the count and the commit in `record.md`
-- [ ] `npm run check-changes` on the final committed tree, passing
-- [ ] The line comparison of task 1.6, logged in `record.md`
-- [ ] `grep -rn "planned" process.md standards.md roles templates README.md scripts/agentrite-roles.mjs`: each hit
+- [x] `npm test` on the final tree, every test passing; log the count and the commit in `record.md`
+- [x] `npm run check-changes` on the final committed tree, passing
+- [x] The line comparison of task 1.6, logged in `record.md`
+- [x] `grep -rn "planned" process.md standards.md roles templates README.md scripts/agentrite-roles.mjs`: each hit
   read, and none names the status (`plannedFiles` and the specifier's "before anything is planned or implemented"
   are expected) (R13)
-- [ ] `grep -n -i "specifier\|planner\|implementer\|reviewer" process.md`: the one hit is the example entry (R6)
-- [ ] No line over 120 characters in any file the unit changes: `awk 'length > 120'` over them
+- [x] `grep -n -i "specifier\|planner\|implementer\|reviewer" process.md`: the one hit is the example entry (R6)
+- [x] No line over 120 characters in any file the unit changes: `awk 'length > 120'` over them
 
 ## Commit Points
 
-- [ ] `feature-0052 Move the standards out of process.md`: tasks 1.1 to 1.6
-- [ ] `feature-0052 Take the roles and the status planned out of process.md`: tasks 2.1 to 2.11
-- [ ] `feature-0052 Load standards.md beside process.md`: tasks 3.1 to 3.9
-- [ ] `feature-0052 Make README.md true of the split`: tasks 4.1 and 4.2, and the record's entries of the
+- [x] `feature-0052 Move the standards out of process.md`: tasks 1.1 to 1.6
+- [x] `feature-0052 Take the roles and the status planned out of process.md`: tasks 2.1 to 2.11
+- [x] `feature-0052 Load standards.md beside process.md`: tasks 3.1 to 3.9
+- [x] `feature-0052 Make README.md true of the split`: tasks 4.1 and 4.2, and the record's entries of the
   verification

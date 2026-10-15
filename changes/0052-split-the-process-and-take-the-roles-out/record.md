@@ -69,5 +69,18 @@ timestamp: 2026-10-15T16:51:20Z
   failed before the templates and `scripts/agentrite.mjs` changed. One test of 3.4 then failed on itself: it looked for
   "process.md and standards.md already." on one line, where the template wraps it, and now allows any whitespace there.
   `npm test` on the tree of this step, uncommitted on `128f725`, reported 581 tests, 581 passing
+- 2026-10-15T22:23:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did tasks 4.1 and 4.2 and the
+  verification. The implementer's cell of the table in "How it works" reads "An approved unit and its plan", and not the
+  plan's "An approved unit, with its plan where its kind needs one", because a row holding that is 145 characters wide
+  whatever the other cells are; the sentence under the table says that a task has no plan and a bug may have none, which
+  its record then says. Of the hits of 4.2, "specified, planned, recorded and frozen" in "The name" is English for a
+  change being planned and names no status, and every other hit names both files where both are meant. Verification, on
+  `5074069`, whose tree differs from that of the commit holding this entry only in this unit's `plan.md` and
+  `record.md`: `npm test` reported 581 tests, 581 passing; `npm run check-changes` exited 0; `grep -rn "planned"` over
+  `process.md`, `standards.md`, `roles`, `templates`, `README.md` and `scripts/agentrite-roles.mjs` found that line of
+  `README.md`, the specifier's description and `plannedFiles`, and nothing that names the status; `grep -n -i` for the
+  four roles in `process.md` found the example entry alone; `awk 'length > 120'` over every file changed since `79ecca6`
+  printed nothing. The line comparison of task 1.6 is logged above. Every task is ticked. The status stays `in-progress`
+  until the review's blocking findings are decided
 
 ## Amendments
