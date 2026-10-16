@@ -51,7 +51,10 @@ The settings:
    A file that lacks either key, or a `roles` that lacks one of the four roles, is not valid. A project uses the
    kit's own files by naming their paths, and another file by naming its path instead
 2. A path in either key is a string that is not empty, relative to the project root, that does not lead outside the
-   project, and that names a regular file in the project's working tree. `roles` is an object that holds exactly the
+   project, and that names a regular file in the project's working tree. Whether it leads outside the project is
+   judged on the path as it is written, and no symbolic link is followed for it. Whether it names a regular file is
+   judged with symbolic links followed, so that a kit linked into `node_modules`, as `npm link` does, is taken.
+   `roles` is an object that holds exactly the
    four names `specifier`, `planner`, `implementer` and `reviewer`. Two or more roles may name the same file, and
    each then gets its wrappers, with that file's description, and its line in the list of requirement 13
 3. A key the kit does not know is still ignored, as requirement 3 of unit 0045 has it
@@ -169,6 +172,15 @@ The documents:
     file of its own, named in `agentrite.json`, with a link to the section of requirement 20. The list of sections
     holds that section
 
+This repository:
+
+24. This repository's root `agentrite.json` is, byte for byte, the default file of the release this repository
+    installs, as that release has it under `node_modules/agentrite/templates/project/`. This takes the place of
+    requirement 41 of unit 0045, which compares it with the default file of the working tree
+25. With it, the `refresh` of the release this repository installs, run at this repository's root with no argument,
+    prints `up to date` for each file it writes and changes no file. This takes the place of requirement 42 of unit
+    0045, which runs the working tree's `refresh` there
+
 ## Decisions
 
 * **The keys are required, and the files `config` and `init` write name the kit's files.** The human decided this
@@ -242,6 +254,24 @@ The documents:
   settings". The human asked for it while the spec was a draft. A wider review of the README, which the notes of
   the conversation foresee since it describes the kit's engine and its default rules as one thing, is a unit after
   this one: it reorders and rewrites sections this unit does not otherwise touch
+* **This repository's own files are judged against the release it installs, and not against the working tree.**
+  The planner found, after the approval, that requirements 41 and 42 of unit 0045 tie the root's `agentrite.json`
+  and the working copy's `refresh` to the working tree, while the root is a project of the installed release, which
+  catches up only in the task after a release. Every unit that changes what a project holds breaks the two until
+  then; this unit is the first, as its default file has two more keys. The two were meant to catch this repository
+  not holding what `refresh` writes after it moves to a release, and against the installed release they still do,
+  without breaking for a unit that is being built. The working tree's kit is judged by the suite on projects it
+  makes for the purpose, as it is today. The human decided this while the spec was being corrected, with it in
+  this unit rather than in one of its own, since this unit cannot be built without it. Rejected, as the planner
+  set them out: giving the root the new default file within this unit, which needs a release that holds
+  `standards.md` first, and a copy of the root whose `node_modules/agentrite` is the working tree for the second
+  requirement; suspending the two until the move, which leaves the repository for a while not doing what its own
+  requirements say; and moving the repository to the release that holds this unit within this unit, which cannot
+  be, since that release is made after it
+* **Whether a path leads outside the project is judged as written.** The check is there so that a committed path
+  works in a clone and on another machine, and the path as written is what decides that. Following symbolic links
+  for it would refuse a kit installed by `npm link`, and a test project whose `node_modules/agentrite` links to the
+  kit. The planner raised the question, and read it the same way
 * **The kit's wrappers do not change.** The descriptions move into the role files word for word, so a project that
   replaces nothing gets no diff from `refresh`. That is what makes the move checkable
 
@@ -255,7 +285,8 @@ The documents:
 * Software in the sandbox, which belongs in a project's Dockerfile or Compose layer
 * Presets, `extends`, or settings merged from several files
 * This repository's own `agentrite.json`, `AGENTS.md`, `CLAUDE.md`, `opencode.json` and `.agentrite/`, which follow
-  when it moves to the release that holds this unit
+  when it moves to the release that holds this unit. Requirements 24 and 25 hold of them before that move and after
+  it, each time against the release installed
 * `CHANGELOG.md`, which is written when the release is made
 * A review or restructuring of `README.md` beyond what requirements 19 to 23 change
 

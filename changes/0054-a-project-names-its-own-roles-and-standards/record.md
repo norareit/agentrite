@@ -86,5 +86,15 @@ timestamp: 2026-10-16T11:14:23Z
   links are followed. Read the second way, a kit installed by `npm link`, or a test project with
   `node_modules/agentrite` linked to the kit, is refused. The plan would read it the first way, and check the
   regular file with links followed. The status stays `approved`
+- 2026-10-16T12:13:40Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the unit's branch at `adcfbaf`, on
+  what the planner logged above. Checked it: requirements 41 and 42 of unit 0045 and their two tests are as the planner
+  says, and the spec missed them. The human decided, after the specifier set out the planner's three ways and a
+  fourth, that this repository's own files are judged against the release it installs and not against the working
+  tree, and that this belongs in this unit. Corrected `spec.md`: requirements 24 and 25 take the place of
+  requirements 41 and 42 of unit 0045; requirement 2 says that whether a path leads outside the project is judged
+  as written, and whether it names a regular file with symbolic links followed, as the planner proposed; the
+  non-goal on this repository's files says that the two new requirements hold of them before and after its move;
+  and two decisions give the reasons and what was rejected. The correction waits for the human's approval before
+  the planner starts again. The status stays `approved`
 
 ## Amendments
