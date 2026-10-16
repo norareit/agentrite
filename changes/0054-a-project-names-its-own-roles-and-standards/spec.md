@@ -32,33 +32,52 @@ a plan written under the project's own planner against the wrong instructions.
 The settings are in `agentrite.json`, as unit 0045 made them: three keys, all required, and a key the kit does not
 know is ignored.
 
-The conversation settled that the keys are optional, that an unknown key is refused from now on, that a role's
-description travels with its file, and that `refresh` and the loading follow the settings. The decisions it left
-open are the specifier's, and approving the unit approves them.
+The conversation settled that a role's description travels with its file, and that `refresh` and the loading
+follow the settings. It also proposed that the new keys be optional and that an unknown key be refused from then on;
+the human decided otherwise while the spec was a draft, as "Decisions" records. The decisions that neither settled
+are the specifier's, and approving the unit approves them.
 
 ## Requirements
 
 The settings:
 
-1. `agentrite.json` may hold two more keys, each optional:
+1. `agentrite.json` holds two more keys, both required, as the three of unit 0045 are:
 
-   | Key         | What it holds                                                           |
-   |-------------|-------------------------------------------------------------------------|
-   | `standards` | The path of the project's own file in the place of the kit's standards  |
-   | `roles`     | An object from a role's name to the path of the project's own role file |
+   | Key         | What it holds                                                        |
+   |-------------|----------------------------------------------------------------------|
+   | `standards` | The path of the standards file the project uses                      |
+   | `roles`     | An object from the name of each role to the path of its file in use  |
 
-   A file without either key is valid, as every file is today, and means the kit's files. A role that `roles` does
-   not name is the kit's
+   A file that lacks either key, or a `roles` that lacks one of the four roles, is not valid. A project uses the
+   kit's own files by naming their paths, and another file by naming its path instead
 2. A path in either key is a string that is not empty, relative to the project root, that does not lead outside the
-   project, and that names a regular file in the project's working tree. A name in `roles` is one of `specifier`,
-   `planner`, `implementer` and `reviewer`. `roles` is an object, and may be empty
-3. A key the kit does not know makes the file not valid. This changes requirement 3 of unit 0045, which ignores one
+   project, and that names a regular file in the project's working tree. `roles` is an object that holds exactly the
+   four names `specifier`, `planner`, `implementer` and `reviewer`
+3. A key the kit does not know is still ignored, as requirement 3 of unit 0045 has it
 4. What a valid file is, is still decided in one place of the kit's code. A command that reads the file and finds it
    not valid refuses as unit 0045 says: it writes and changes nothing, exits with a status other than 0, and its
    message names the file, the key and what is wrong. For a path that names no regular file, the message names the
-   key, the path, and that there is no file at it. For an unknown key, it names the key and the keys the file may
-   hold
-5. `agentrite config` and `init` write the file with the three keys of unit 0045 alone, as today
+   key, the path, and that there is no file at it. For a `roles` that lacks a role, or holds a name that is none of
+   the four, it names the role and the four names `roles` must hold
+5. `agentrite config` and `init` write the file with all five keys, `standards` and `roles` naming the kit's own
+   files. The default file in `templates/project/`, which `config` writes, is this, ending in one line break:
+
+   ```json
+   {
+     "defaultBranch": "master",
+     "harnesses": ["claude", "opencode"],
+     "sandbox": true,
+     "standards": "node_modules/agentrite/standards.md",
+     "roles": {
+       "specifier": "node_modules/agentrite/roles/specifier.md",
+       "planner": "node_modules/agentrite/roles/planner.md",
+       "implementer": "node_modules/agentrite/roles/implementer.md",
+       "reviewer": "node_modules/agentrite/roles/reviewer.md"
+     }
+   }
+   ```
+
+   `init` writes the same two keys into the file it writes from its arguments
 
 The role files and their descriptions:
 
@@ -84,10 +103,11 @@ What follows the settings:
     writes it imports that file, between the import of `process.md` and that of `AGENTS.md`, and the `opencode.json`
     that `init` writes or amends lists it after `process.md`. The rule by which `init` and `refresh` judge whether a
     file loads the kit's instructions, from unit 0048 and unit 0052, expects that file
-12. With `standards` set, that rule also reports a `CLAUDE.md` that still imports `node_modules/agentrite/standards.md`
-    and an `opencode.json` that still lists it, since the harness then loads both sets of rules. `init` and `refresh`
-    print a notice that names the line or the entry to remove, as they print one for what is missing, and remove
-    nothing themselves
+12. With `standards` naming another file than `node_modules/agentrite/standards.md`, that rule also reports a
+    `CLAUDE.md` that still imports the kit's `standards.md` and an `opencode.json` that still lists it, since the
+    harness then loads both sets of rules. `init` and `refresh` print a notice that names the line or the entry to
+    remove, as they print one for what is missing, and remove nothing themselves
+
 The list of the files in use:
 
 13. The kit writes a file `.agentrite/instructions.md` in the project root, which lists the instruction files the
@@ -122,10 +142,12 @@ What a kit file says of the others:
 
 The documents:
 
-19. `README.md` says, in "The project's settings", what the two keys hold, that they are optional and what a
-    missing one means, what a valid value is, that an unknown key is refused, and that after changing one
+19. `README.md` says, in "The project's settings", what the two keys hold, that they are required and name the
+    kit's files in the file `config` and `init` write, what a valid value is, and that after changing one
     `npx agentrite refresh` rewrites the wrappers and the list, and prints the notices on `CLAUDE.md` and
-    `opencode.json`. Its table of the keys has a row for each, with what reads it
+    `opencode.json`. Its table of the keys has a row for each, with what reads it, and its default file is the one
+    of requirement 5. "Updating a project to a newer kit" says that a project whose `agentrite.json` lacks the two
+    keys adds them, as requirement 5 gives them, before any command that reads the file runs again
 20. `README.md` has a section on bringing a project's own role or standards file, which says what such a file must
     hold: for a role file, the front matter of requirement 6, a first instruction to read `process.md` and the
     project's standards with a link that works from where the file is, and its input, its output and the status it
@@ -143,15 +165,24 @@ The documents:
 
 ## Decisions
 
-* **The keys are optional, and a missing one means the kit's file.** Settled in the conversation. The keys of unit
-  0045 are facts the kit cannot know, so a default for them would be a guess. "Not replaced" is no guess. Existing
-  projects need no change, and the kit's internal paths are not written into every project's file
-* **An unknown key is refused.** Settled in the conversation. Unit 0045 ignored one because a misspelled key shows
-  as a missing required key. With optional keys, a misspelled `standard` would be ignored, and the kit's rules would
-  keep applying without a word. This changes a decision of unit 0045, recorded here as such
+* **The keys are required, and the files `config` and `init` write name the kit's files.** The human decided this
+  while the spec was a draft, in the place of the optional keys the conversation proposed: a project can point a
+  key at another file, and cannot leave it out. That is unit 0045's "Nothing is implicit", which made the three keys
+  before these required: every file the project's agents work by is named in its settings, and nothing is used
+  because a key is absent. The costs, accepted: an existing project's `agentrite.json` is refused by every command
+  that reads it until the two keys are added, which the release notes say, with the lines to add; and the kit's
+  paths are written into every project, so a release that moved or renamed one of the files would leave every
+  project's file naming a path that is not there, which is refused with a message that names the key and the path.
+  Rejected: optional keys that mean the kit's files when they are missing, which needs no change of an existing
+  project and is the implicit default unit 0045 removed
+* **An unknown key is still ignored.** The conversation proposed refusing one, because a misspelled optional key
+  would be ignored and its override would never apply. With both keys required, a misspelled key shows as a
+  missing required one and is refused, which is unit 0045's reason to ignore unknown keys, and it holds again.
+  Rejected: refusing them, which changes a decision of unit 0045 for a mistake that is already caught
 * **A path that names no file is refused by every command that reads the settings.** A wrapper that points at a
   missing file, or a standards import of a missing file, fails without a word in both harnesses, as unit 0048
-  found. The check is one place that refuses loudly. Every command refuses, and not only those that use the path,
+  found. The check is one place that refuses loudly, and with the kit's own paths in the file it also catches a
+  kit file that a release moved. Every command refuses, and not only those that use the path,
   because unit 0045 decided that a file is valid whole or not at all. Rejected: checking in `refresh` alone, which
   leaves `run` and the sandbox on a project that `refresh` has not seen since the file moved
 * **Replace only, and no addition per role.** What a project adds to a role, as "our reviewer also checks X", it can

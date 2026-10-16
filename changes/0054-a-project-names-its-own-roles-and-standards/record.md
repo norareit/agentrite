@@ -40,5 +40,12 @@ timestamp: 2026-10-16T11:14:23Z
   `AGENTS.md`, and the requirements on `README.md` are renumbered 19 to 22 and follow the list. Replaced the two
   decisions on `AGENTS.md` with four on the list, and dropped the entry of "Beyond the request" that the list
   answers. The status is `draft`
+- 2026-10-16T11:27:01Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision while the spec
+  was a draft that the two new keys are required, written with the kit's own paths by `config` and `init`, so that
+  a project can point one at another file and cannot leave it out. Changed `spec.md`: requirements 1, 2, 3, 4 and 5
+  now make `standards` and all four entries of `roles` required, give the default file, and keep unit 0045's rule
+  that an unknown key is ignored, since a misspelled key now shows as a missing one. Requirement 12 compares with
+  the kit's path, and requirement 19 tells an existing project to add the keys. Replaced the decisions on optional
+  keys and on refusing unknown ones, with the costs of the human's choice. The status is `draft`
 
 ## Amendments
