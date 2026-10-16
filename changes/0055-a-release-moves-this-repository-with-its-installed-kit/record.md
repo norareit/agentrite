@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-16T12:51:32Z
 ---
 
@@ -58,5 +58,14 @@ timestamp: 2026-10-16T12:51:32Z
   those that do not hold. The requirements after 6 are renumbered. "Context" gives all of what 7.1.0 asks, and
   three decisions give the reasons. The correction waits for the human's approval before the planner starts again.
   The status stays `approved`
+- 2026-10-16T13:04:40Z [human] approved the corrected spec. The status is `approved`
+- 2026-10-16T13:05:29Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the unit's branch at `1645b49`,
+  with 7.0.0 installed. Read the corrected `spec.md`, 7.1.0's `templates/project/AGENTS.md` at the tag `v7.1.0`,
+  this repository's `AGENTS.md`, and `tests/package-documents.test.mjs`, which pins the scripts of `package.json`.
+  Wrote `plan.md`: the script `kit` with a test of its text first, then step 6 of `RELEASING.md`, then the text of
+  `CLAUDE.md`, `CONTRIBUTING.md` and `AGENTS.md`, in three commits. Every task names its requirements, and every
+  requirement from 1 to 13 has a task. The plan has step 6 also remove the files an instruction's command printed
+  as written when it puts the repository back, since `git restore .` leaves an untracked file, and checks the
+  widened step against the 7.1.0 section as a dry run. The status is `planned`
 
 ## Amendments
