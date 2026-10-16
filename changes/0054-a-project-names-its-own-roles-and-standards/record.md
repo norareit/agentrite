@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-16T11:14:23Z
 ---
 
@@ -58,5 +58,6 @@ timestamp: 2026-10-16T11:14:23Z
   Asked whether that belongs in this unit, the specifier proposed the opening here and a wider review of the README
   as a unit after this one, and the human agreed. Changed `spec.md`: added requirement 23 on the opening of
   `README.md`, a decision on the split, and a non-goal for the wider review. The status is `draft`
+- 2026-10-16T11:47:58Z [human] approved the spec. The status is `approved`
 
 ## Amendments
