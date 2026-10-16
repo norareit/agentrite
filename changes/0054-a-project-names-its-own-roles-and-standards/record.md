@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: planned
 timestamp: 2026-10-16T11:14:23Z
 ---
 
@@ -97,5 +97,16 @@ timestamp: 2026-10-16T11:14:23Z
   and two decisions give the reasons and what was rejected. The correction waits for the human's approval before
   the planner starts again. The status stays `approved`
 - 2026-10-16T12:15:21Z [human] approved the correction of the spec. The status is `approved`
+- 2026-10-16T12:24:41Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0054-a-project-names-its-own-roles-and-standards` at `6019dd3`, from `roles/planner.md` and `process.md`
+  of release 7.0.0 as installed with `npm ci`. Wrote `plan.md` against the corrected spec. `npm test` reported 581
+  tests, 581 passing, at `6019dd3`. Found, and planned for, that the root's `.claude/agents/implementer.md` and
+  `.opencode/agents/implementer.md` hold the description of unit 0052, which is on `master` and in no release, so
+  that the installed release's `refresh` rewrites them today: requirement 25 needs them as 7.0.0 writes them, which
+  task 4.2 does. The wrappers are not among the files the non-goal on this repository leaves. Two choices the plan
+  makes to keep documents true that the spec does not name: the section Roles of `process.md` says that
+  `.agentrite/instructions.md` names the role files and that `AGENTS.md` points to it, since requirement 15 leaves
+  `AGENTS.md` naming none, which changes the wording of requirement 8 of unit 0052; and `init` from its arguments
+  checks the paths it writes before writing anything. The status is `planned`
 
 ## Amendments
