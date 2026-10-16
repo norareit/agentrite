@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-16T11:14:23Z
 ---
 
@@ -118,5 +118,10 @@ timestamp: 2026-10-16T11:14:23Z
   runs the working tree's command, as unit 0055 found; the installed release's is `npm run kit --`, or its script
   under `node_modules/agentrite/scripts/`, which task 4.2 and the test of requirement 25 use. The status is
   `approved`
+
+- 2026-10-16T18:32:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on
+  `feature-0054-a-project-names-its-own-roles-and-standards` at `6974c5e`, from `roles/implementer.md`,
+  `process.md` and `standards.md` of release 7.1.0, installed with `npm ci` because `node_modules` was missing.
+  `npm test` reported 582 tests, 582 passing, at `6974c5e`. Began the work. The status is `in-progress`
 
 ## Amendments
