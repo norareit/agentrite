@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-16T11:14:23Z
 ---
 
@@ -214,5 +214,23 @@ timestamp: 2026-10-16T11:14:23Z
   than these and a space, and how a harness or an editor follows such a link. `npm test` reported 653 tests, 653
   passing, none skipped, on Linux, on the tree committed next. The outcome of S1 waits on the human's decision. The
   status is `in-progress`
+
+- 2026-10-16T20:56:20Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
+  `0054-a-project-names-its-own-roles-and-standards` at `c5030065ce19aa87b5ff056379c69a90b5923fe3`, as a delta
+  from `864121c8884a583091f1c0eecdff0241b5694e11`. Verified the correction of S1 and returned no new findings
+  on any of the three axes. Saved the complete review in
+  `.reviews/0054-a-project-names-its-own-roles-and-standards/2026-10-16T205620Z-delta.md`.
+  `npm test` reported 653 passing, none failed or skipped; `npm run check-changes` and the diff whitespace check
+  exited 0. Independently resolved the generated links for names with `#`, `?` and parentheses. Did not reproduce
+  historical test-first ordering or verify link-following by a real harness or editor, real Docker, real harness
+  execution or a consuming project installed from the registry. This was not a fresh full-unit review.
+
+- 2026-10-16T21:10:51Z [human] accepted the correction of finding S1 of the review, as the delta review of
+  20:56:20 verified it. The status is `in-progress`
+- 2026-10-16T21:10:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit `implemented`: the
+  human has decided S1, the one blocking finding of the review, the delta review returned no new findings, and every
+  task in `plan.md` is ticked. `npm test` reported 653 tests, 653 passing, none skipped, on Linux, at `c503006`,
+  whose tree differs from the one committed next only in `record.md`. Not checked: the sandbox with a real Docker,
+  the harnesses themselves, and a project with a kit installed from the registry. The status is `implemented`
 
 ## Amendments
