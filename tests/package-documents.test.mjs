@@ -121,6 +121,12 @@ test('package.json checks a release in prepublishOnly, and holds no script that 
   }
 });
 
+// R1 of unit 0055: the package is named agentrite, so in this repository `npx agentrite` runs the working tree's
+// command. The script runs the installed release's.
+test('package.json runs the installed release of the kit as the script kit', () => {
+  assert.equal(packageJson.scripts.kit, 'node node_modules/agentrite/scripts/agentrite.mjs');
+});
+
 test('the package does not ship the check of npm publish', () => {
   assert.ok(!packageJson.files.includes('publish-check.mjs'), `files holds ${packageJson.files.join(', ')}`);
 });

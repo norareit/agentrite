@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: in-progress
 timestamp: 2026-10-16T12:51:32Z
 ---
 
@@ -67,5 +67,8 @@ timestamp: 2026-10-16T12:51:32Z
   requirement from 1 to 13 has a task. The plan has step 6 also remove the files an instruction's command printed
   as written when it puts the repository back, since `git restore .` leaves an untracked file, and checks the
   widened step against the 7.1.0 section as a dry run. The status is `planned`
+- 2026-10-16T13:07:48Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the macOS host,
+  on the unit's branch at `aed05a1`, with 7.0.0 installed. Took the role from the role file and `process.md` of
+  7.0.0. Read `spec.md`, `plan.md` and this record. The status is `in-progress`
 
 ## Amendments

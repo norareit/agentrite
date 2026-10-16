@@ -48,6 +48,12 @@ characters.
 * `SANDBOX.md` holds no HTML. A table in it is a Markdown table whose lines fit the line limit, and what does not
   fit one is written as text
 
+## The kit's command
+
+In this repository `npx agentrite` runs the working tree's `agentrite`, not the installed release's. Run the
+installed release's command as `npm run kit -- <command>`, with the arguments `npx agentrite <command>` takes. The
+rest is in "Commands" of [CONTRIBUTING.md](CONTRIBUTING.md#commands).
+
 ## Releasing
 
 `CHANGELOG.md` holds one section per release and ships in the package. A section is written when a release is made,

@@ -51,24 +51,24 @@ passing.
 
 The script and where `npx agentrite` leads:
 
-- [ ] In `tests/package-documents.test.mjs`, after the test of `prepublishOnly`, add a test that
+- [x] In `tests/package-documents.test.mjs`, after the test of `prepublishOnly`, add a test that
   `packageJson.scripts.kit` is `node node_modules/agentrite/scripts/agentrite.mjs`, with a comment that says why:
   in this repository `npx agentrite` runs the working tree's command, and the script runs the installed release's.
   Run `npm test` and see that test fail (R1)
-- [ ] In `package.json`, add `"kit": "node node_modules/agentrite/scripts/agentrite.mjs"` to `scripts`, after
+- [x] In `package.json`, add `"kit": "node node_modules/agentrite/scripts/agentrite.mjs"` to `scripts`, after
   `check-changes`. Run `npm test` and see it pass (R1)
-- [ ] In "Commands" of `CONTRIBUTING.md`, after the section `npm test`, add a section `### npm run kit` in the form
+- [x] In "Commands" of `CONTRIBUTING.md`, after the section `npm test`, add a section `### npm run kit` in the form
   of the others: the synopsis `npm run kit -- COMMAND [ARGUMENT...]`; that it runs the `agentrite` command of the
   installed release, `node_modules/agentrite/scripts/agentrite.mjs`, with what follows `--`, which are the commands
   and arguments "Commands" of `README.md` gives for `npx agentrite`; that in this repository `npx agentrite` runs
   the working tree's command, because the package is named `agentrite`, and `npm run kit --` the installed
   release's; that the installed copy is there after `npm ci`, as for `npm run check-changes`; and a "See" line to
   "The kit's own copy of the kit". The script adds no environment variable (R2)
-- [ ] In `AGENTS.md`, add a section `## The kit's command` before `## Releasing`: in this repository
+- [x] In `AGENTS.md`, add a section `## The kit's command` before `## Releasing`: in this repository
   `npx agentrite` runs the working tree's `agentrite`, not the installed release's, and the installed release's
   command is run as `npm run kit -- <command>`, with a link to "Commands" of `CONTRIBUTING.md` for the rest. Say it
   there and nowhere else in `AGENTS.md` (R3)
-- [ ] Commit as `feature-0055 Run the installed kit's command with npm run kit`
+- [x] Commit as `feature-0055 Run the installed kit's command with npm run kit`
 
 Step 6:
 
@@ -85,6 +85,8 @@ Step 6:
   text of `AGENTS.md` (R8); and that each instruction carried out is checked against what the instruction says it
   does, by what its command printed and by reading the file it named (R9). Keep the list of what was carried out,
   taken as done and found not to hold, with why, for the commit (R11) (R6, R7, R8, R9)
+- [ ] In the sentence that introduces the five commands, "Run these five, in this order, and nothing else that
+  changes a file", except the instructions carried out after them, which would otherwise be forbidden by it (R6)
 - [ ] Move "Then read `git status --short` and `git diff package.json`" after the instructions, and widen what it
   expects: beside `package.json`, `package-lock.json` and the files `refresh` printed as written or refreshed, the
   files an instruction named and those a command it ran printed as written or changed. A change to any other file
@@ -145,8 +147,8 @@ Closing:
 
 ## Commit Points
 
-- [ ] `feature-0055 Plan the unit`: `plan.md` and `record.md`
-- [ ] `feature-0055 Run the installed kit's command with npm run kit`
+- [x] `feature-0055 Plan the unit`: `plan.md` and `record.md`
+- [x] `feature-0055 Run the installed kit's command with npm run kit`
 - [ ] `feature-0055 Have step 6 carry out what a release asks when it is exact`
 - [ ] `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
 - [ ] The record's closing entries, with the verification

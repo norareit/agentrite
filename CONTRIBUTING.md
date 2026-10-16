@@ -50,6 +50,24 @@ Runs node's built-in test runner over `tests/`. It takes no argument.
 
 See "The kit's own tests".
 
+### npm run kit
+
+```sh
+npm run kit -- COMMAND [ARGUMENT...]
+```
+
+Runs the `agentrite` command of the installed release, `node_modules/agentrite/scripts/agentrite.mjs`, with what
+follows `--`. That is a command and its arguments as "Commands" of `README.md` gives them for `npx agentrite`, for
+example `npm run kit -- refresh` or `npm run kit -- roles --json`. The script adds no argument, option or environment
+variable of its own.
+
+In this repository `npx agentrite` runs the working tree's command, `scripts/agentrite.mjs`, and not the installed
+release's: the package is itself named `agentrite`, and npm runs the root package's own command for that name. A
+project that installs the kit is not affected. `npm run kit --` runs the installed release's command, which is there
+after `npm ci`, as for `npm run check-changes`.
+
+See "The kit's own copy of the kit".
+
 ### sandbox-dev.sh
 
 ```sh
