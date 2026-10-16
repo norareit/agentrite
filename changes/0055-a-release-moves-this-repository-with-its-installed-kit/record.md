@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-16T12:51:32Z
 ---
 
@@ -24,5 +24,6 @@ timestamp: 2026-10-16T12:51:32Z
   Wrote `spec.md`. It decides, without asking the human: the script's name `kit`, the closed list of what is an
   exact instruction, that this repository's prose stops listing the kit's instruction files, and that the move to
   7.1.0 is step 6 run alone after this unit. Approving the unit approves them. The status is `draft`
+- 2026-10-16T12:56:11Z [human] approved the spec. The status is `approved`
 
 ## Amendments
