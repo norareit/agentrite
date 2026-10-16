@@ -124,7 +124,7 @@ timestamp: 2026-10-16T11:14:23Z
   `process.md` and `standards.md` of release 7.1.0, installed with `npm ci` because `node_modules` was missing.
   `npm test` reported 582 tests, 582 passing, at `6974c5e`. Began the work. The status is `in-progress`
 
-- 2026-10-16T18:58:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved task 4.1 into step 1,
+- 2026-10-16T18:41:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved task 4.1 into step 1,
   before task 1.8, and changed `plan.md` to say so. The plan keeps the tests of requirements 41 and 42 of unit 0045
   until step 4, and has every step leave the suite green, but step 1 breaks both: with the default file of task 1.4,
   the root's `agentrite.json` is no longer the working tree's default file (R41), and with the checks of task 1.3
@@ -132,7 +132,7 @@ timestamp: 2026-10-16T11:14:23Z
   of requirements 24 and 25 of this unit, hold already, since they judge the root against release 7.1.0. Task 2.9's
   note that the test of R42 stays until task 4.1 changes with it. The status is `in-progress`
 
-- 2026-10-16T19:12:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, replaced the plan's test helper
+- 2026-10-16T18:41:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, replaced the plan's test helper
   `linkKit`, which made `node_modules/agentrite` of a test project a symbolic link to this repository's root, by
   `installKit`, which copies `process.md`, `standards.md` and `roles/` there, and changed `plan.md` to say so. With
   the link, the test of `init` "the written sandbox.sh execs the kit wrapper with the project root and every other
@@ -144,7 +144,7 @@ timestamp: 2026-10-16T11:14:23Z
   none skipped, on the tree committed next, and `git status` showed no file of the kit changed by the run. The
   status is `in-progress`
 
-- 2026-10-16T20:07:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 2. Two changes to
+- 2026-10-16T18:54:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 2. Two changes to
   the plan, written into `plan.md`: the notice of requirement 16 has its words wrapped at 120 characters, since the
   plan's text with `does not name .agentrite/instructions.md` in the place of `is missing` gives a first line of 133
   characters, and the commands keep their output to 120; and `tests/installed-kit.mjs` holds `KIT_ROLES`, the
@@ -154,17 +154,44 @@ timestamp: 2026-10-16T11:14:23Z
   files, with the four Claude Code fixtures of before and the four OpenCode fixtures written by task 2.1 from the
   code as it was at `1501453`. The status is `in-progress`
 
-- 2026-10-16T20:31:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 3. `process.md` keeps
+- 2026-10-16T18:56:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 3. `process.md` keeps
   the name `standards.md` once, in backticks and not linked, as the file the project's standards are unless it
   replaced them, as task 3.2 has it; the test of task 3.1 refuses a link to `standards.md` in `process.md` and the
   role files, and the words "in", "and" or "or" before it. `npm test` reported 652 tests, 652 passing, none
   skipped, on the tree committed next. The status is `in-progress`
 
-- 2026-10-16T20:35:02Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 4 at `35fe22d`.
+- 2026-10-16T18:56:49Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 4 at `35fe22d`.
   `node node_modules/agentrite/scripts/agentrite.mjs refresh` at the root, of release 7.1.0, printed `up to date` for
   the eight wrappers and `sandbox.sh`, exited 0 and changed no file, as `git status` showed; task 4.2 changes
   nothing, as the entry of 14:01:08 foresaw. Task 4.1 was done in step 1, so step 4 has no commit of code of its
   own: the commit point after task 4.3 is the commit of this entry. `npm test` at `35fe22d` is the run logged for
   step 3. The status is `in-progress`
+
+- 2026-10-16T19:02:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 5 and the
+  verification of `plan.md`, on `8c2c7c7`:
+  * `npm test` reported 652 tests, 652 passing, none skipped, on Linux, and `npm run check-changes` exited 0
+  * In a scratch project with `node_modules/agentrite` a link to the working tree: `init claude opencode` wrote the
+    default file of requirement 5 byte for byte, the list, and the eight wrappers, each the same as its fixture
+    under `tests/fixtures/`. With `standards` set to `rules/house.md` and `roles.reviewer` to `rules/reviewer.md`,
+    `run reviewer claude 0007` refused the wrapper and named `refresh`; `refresh` refreshed the two reviewer
+    wrappers and the list, found the rest up to date, and printed the notices on `CLAUDE.md` and `opencode.json`,
+    both for the project's standards they lack and for the kit's they still load; `roles` listed the project's
+    reviewer; and `run reviewer claude 0007` then started the fake harness with the reviewer as its agent
+  * `git diff 6019dd3 -- .claude .opencode` shows no change at all, and not the two implementer wrappers the plan
+    expected: with 7.1.0 installed they are already what it writes, as the entry of 14:01:08 says. The installed
+    release's `refresh` at the root printed `up to date` for its nine files
+  * Every requirement 1 to 25 is named by a task. The verification item said as well that every task names one,
+    which the plan as written does not hold, so I changed the item in `plan.md` to name the seven tasks that name
+    none
+  * The suite was also run in a worktree at `1501453`, the commit of step 1, where it reported 599 tests, 599
+    passing, none skipped, as the entry of step 1 says
+- 2026-10-16T19:02:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, corrected the timestamps of my
+  five entries from moving task 4.1 to step 4. I had written times that were not read from the clock, and that lay
+  after the time of this correction. Each is now the time of the commit that holds the entry, from `git log`:
+  `1501453` for the two of step 1, `8271068` for step 2, `35fe22d` for step 3 and `72755aa` for step 4. Nothing
+  else in them changed.
+  The unit is not `implemented`: the review has not run, and `implemented` waits on the human deciding its blocking
+  findings. Not checked: the sandbox with a real Docker, the harnesses themselves, and a project with a kit
+  installed from the registry rather than linked. The status is `in-progress`
 
 ## Amendments

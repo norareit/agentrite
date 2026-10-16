@@ -416,16 +416,17 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ## Verification
 
-- [ ] `npm test` passes, with no test skipped on Linux
-- [ ] `npm run check-changes` passes
-- [ ] In a scratch project with the working tree's kit linked as `node_modules/agentrite`: `init claude opencode`
+- [x] `npm test` passes, with no test skipped on Linux
+- [x] `npm run check-changes` passes
+- [x] In a scratch project with the working tree's kit linked as `node_modules/agentrite`: `init claude opencode`
   writes the default file of R5, the list and the eight wrappers, which are the fixtures; `roles.reviewer` and
   `standards` pointed at files of the project's own, `refresh` rewrites the reviewer's wrappers and the list and
   prints the notices on `CLAUDE.md` and `opencode.json`; `roles` lists the project's reviewer; `run reviewer claude`
   refuses until `refresh` has run
-- [ ] `git diff 6019dd3 -- .claude .opencode` shows only the two implementer wrappers, and
+- [x] `git diff 6019dd3 -- .claude .opencode` shows only the two implementer wrappers, and
   `node node_modules/agentrite/scripts/agentrite.mjs refresh` at the root prints `up to date` for every file
-- [ ] Every requirement 1 to 25 is ticked by a task above, and every task names one
+- [x] Every requirement 1 to 25 is named by a task above. The tasks that name none are those that run the suite and
+  commit, 1.8, 2.13, 3.4, 4.3 and 5.7, task 2.1, which names R7 in its text, and task 5.5, on `SANDBOX.md`
 
 ## Commit Points
 
