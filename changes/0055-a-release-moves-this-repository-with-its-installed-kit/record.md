@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-16T12:51:32Z
 ---
 
@@ -92,5 +92,17 @@ timestamp: 2026-10-16T12:51:32Z
   is implemented; the instruction on `AGENTS.md` does not hold, as `AGENTS.md` names `standards.md`; the last two
   bullets ask nothing. That `init` here writes only what `opencode.json` is said to gain was not checked, as the
   dry run ran nothing. Every task of `plan.md` is ticked. The status stays `in-progress` until the review
+- 2026-10-16T13:29:41Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0055 at
+  `3c0a3fe399f1b5d96240ec5f88a2d9bd176d166a`, against merge base `70831ec7fe5d3bf6a7f56019f538769af9fa6c99`.
+  Returned no findings on spec conformance, plan fidelity or code quality. `npm test` passed: 565 passed, 17
+  skipped on macOS, none failed; the complete run followed an initial tool timeout. `npm run check-changes` exited
+  0. Verified the installed command's output and argument forwarding, the document line limits, and the 7.1.0 dry
+  run. The installed `standards.md` could not be read because 7.0.0 lacks it, as the spec's decision records;
+  read the rules in the installed `process.md`. The platform-specific tests and the actual move to 7.1.0,
+  including `init` in this repository and the Docker rebuild/start, were not verified. Complete findings are in
+  `.reviews/0055-a-release-moves-this-repository-with-its-installed-kit/20261016T132834Z-opencode.md`
+- 2026-10-16T13:32:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the
+  review returned no findings. No finding is left to decide, and every task of `plan.md` is ticked. The status is
+  `implemented`
 
 ## Amendments
