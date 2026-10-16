@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: planned
+status: approved
 timestamp: 2026-10-16T11:14:23Z
 ---
 
@@ -108,5 +108,15 @@ timestamp: 2026-10-16T11:14:23Z
   `.agentrite/instructions.md` names the role files and that `AGENTS.md` points to it, since requirement 15 leaves
   `AGENTS.md` naming none, which changes the wording of requirement 8 of unit 0052; and `init` from its arguments
   checks the paths it writes before writing anything. The status is `planned`
+- 2026-10-16T14:01:08Z [Claude Code, anthropic/claude-opus-5-5] on the human's request, merged `master` at `f120864`
+  into this branch as `9866cf1`, with no conflict: it brings release 7.1.0, which this repository now installs, unit
+  0055 and its script `kit`. Release 7.1.0 has no status `planned`, and its notes have a unit that is `planned` at
+  the update set to `approved`, since it has been planned. Set the status from `planned` to `approved`; the
+  planner's entry above that says `planned` is history and stays. For the implementer: the plan was written with
+  7.0.0 installed. With 7.1.0, the root's implementer wrappers are already what the installed release writes, as
+  step 6 of `RELEASING.md` found on `master`, so task 4.2 now changes nothing. In this repository `npx agentrite`
+  runs the working tree's command, as unit 0055 found; the installed release's is `npm run kit --`, or its script
+  under `node_modules/agentrite/scripts/`, which task 4.2 and the test of requirement 25 use. The status is
+  `approved`
 
 ## Amendments
