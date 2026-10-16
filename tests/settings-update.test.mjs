@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { copyKitInstructions, installKit } from './installed-kit.mjs';
 import { fakeHost } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -64,6 +65,7 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   }
   chmodSync(join(installed, 'container', 'sandbox.sh'), 0o755);
   cpSync(join(kit, 'scripts'), join(installed, 'scripts'), { recursive: true });
+  copyKitInstructions(installed);
   const home = join(base, 'home');
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
@@ -136,6 +138,7 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
 
 test('a project without the sandbox and with one harness edits both keys, and refresh has its four wrappers', (t) => {
   const { root, command, edit } = project(t, ['opencode']);
+  installKit(root);
   assert.equal(command('refresh').status, 1);
 
   assert.equal(command('config').status, 0);

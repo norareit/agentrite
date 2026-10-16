@@ -22,6 +22,9 @@ const REVIEWER_DESCRIPTION =
   'saying that it reviewed. Use once the implementation is committed. Dispatch it with the unit directory; ' +
   'it produces its own diff and runs the suites itself.';
 
+/** The names of the roles, in the order every listing of them follows. */
+export const ROLE_NAMES = ['specifier', 'planner', 'implementer', 'reviewer'];
+
 /** The roles the kit has, in the order every listing of them follows. */
 export const ROLES = [
   { name: 'specifier', description: SPECIFIER_DESCRIPTION },

@@ -4,6 +4,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { findFrozenViolations, findIncompletePlans } from '../scripts/check-changes.mjs';
+import { kitSettingsText, installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 test('findFrozenViolations reports a changed frozen spec', () => {
@@ -126,7 +127,7 @@ function specPath(repository) {
 }
 
 function settingsFor(defaultBranch) {
-  return `{\n  "defaultBranch": ${JSON.stringify(defaultBranch)},\n  "harnesses": ["claude"],\n  "sandbox": true\n}\n`;
+  return kitSettingsText({ defaultBranch, harnesses: ['claude'], sandbox: true });
 }
 
 /**
@@ -143,6 +144,8 @@ function repositoryWithFrozenUnit(t, defaultBranch = 'main') {
   writeFileSync(join(repository, 'changes', '0001-example', 'record.md'), '---\nstatus: implemented\n---\n');
   writeFileSync(specPath(repository), 'original spec\n');
   writeFileSync(join(repository, 'agentrite.json'), settingsFor(defaultBranch));
+  writeFileSync(join(repository, '.gitignore'), 'node_modules\n');
+  installKit(repository);
   git(repository, 'add', '.');
   git(repository, 'commit', '-m', 'base');
 
@@ -225,6 +228,7 @@ test('check-changes falls back to origin/<default branch> when no local default 
   const origin = repositoryWithFrozenUnit(t);
   const clone = temporaryDirectory(t, 'check-changes-clone-');
   execFileSync('git', ['clone', origin, clone], { stdio: 'ignore' });
+  installKit(clone);
   git(clone, 'config', 'user.email', 'test@example.com');
   git(clone, 'config', 'user.name', 'Test User');
   git(clone, 'checkout', '-b', 'change');
@@ -262,6 +266,22 @@ test('check-changes refuses an agentrite.json that is not valid, also in a key i
     assert.equal(result.status, 1);
     assert.match(result.stderr, message);
   }
+});
+
+// Unit 0054, R4: the change check reads the file as every command does, and refuses a path that names no file.
+test('check-changes refuses an agentrite.json whose standards names no file, with the message of the reader', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  changeFrozenSpec(repository);
+  rmSync(join(repository, 'node_modules'), { recursive: true });
+
+  const result = runChecker(repository);
+
+  assert.equal(result.status, 1);
+  assert.equal(
+    result.stderr,
+    'agentrite.json: standards is "node_modules/agentrite/standards.md", and there is no file at it. ' +
+      "It must name a file in the project's working tree\n",
+  );
 });
 
 // R26

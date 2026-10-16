@@ -25,7 +25,13 @@ import {
   RUN_FORM,
   unitPrompt,
 } from './agentrite-run.mjs';
-import { parseSettings, readSettings, SETTINGS_FILE, settingsText } from './agentrite-settings.mjs';
+import {
+  checkSettingsFiles,
+  parseSettings,
+  readSettings,
+  SETTINGS_FILE,
+  settingsText,
+} from './agentrite-settings.mjs';
 
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -681,18 +687,38 @@ const INIT_WITH_SETTINGS =
 
 /**
  * The settings `init` writes into a project that has none: the harnesses in the kit's order, so that one set of
- * harnesses gives one file however it was typed, and the template's own branch when none was named.
+ * harnesses gives one file however it was typed, the template's own branch when none was named, and the template's
+ * standards and roles, which name the kit's own files.
  *
  * @param {{ harnesses: string[], sandbox: boolean, defaultBranch: string | undefined }} given
- * @param {string} templateBranch
+ * @param {import('./agentrite-settings.mjs').Settings} template
  * @returns {import('./agentrite-settings.mjs').Settings}
  */
-function settingsToWrite({ harnesses, sandbox, defaultBranch }, templateBranch) {
+function settingsToWrite({ harnesses, sandbox, defaultBranch }, template) {
   return {
-    defaultBranch: defaultBranch ?? templateBranch,
+    defaultBranch: defaultBranch ?? template.defaultBranch,
     harnesses: HARNESS_NAMES.filter((name) => harnesses.includes(name)),
     sandbox,
+    standards: template.standards,
+    roles: template.roles,
   };
+}
+
+/**
+ * The settings `init` works by: those of the project's file, or those it is about to write, whose paths it checks
+ * before anything is written, as reading the file would.
+ *
+ * @param {string} root
+ * @param {boolean} hasSettings
+ * @param {ReturnType<typeof parseInit>} given
+ * @param {import('./agentrite-settings.mjs').Settings} template
+ * @returns {import('./agentrite-settings.mjs').Settings}
+ */
+function initSettings(root, hasSettings, given, template) {
+  if (hasSettings) return readSettings(root);
+  const settings = settingsToWrite(given, template);
+  checkSettingsFiles(root, settings);
+  return settings;
 }
 
 /**
@@ -713,8 +739,8 @@ function init(root, given) {
     return 2;
   }
 
-  const templateBranch = parseSettings(readSettingsTemplate()).defaultBranch;
-  const settings = hasSettings ? readSettings(root) : settingsToWrite(given, templateBranch);
+  const template = parseSettings(readSettingsTemplate());
+  const settings = initSettings(root, hasSettings, given, template);
   // Every file but agentrite.json follows the order the harnesses were given in.
   const harnesses = hasSettings ? settings.harnesses : given.harnesses;
   const manifest = readPackageJson(root);
@@ -762,7 +788,7 @@ function init(root, given) {
 
   if (!hasSettings) {
     printSettings(files[0].content);
-    if (given.defaultBranch === undefined) process.stdout.write(`\n${defaultBranchNotice(templateBranch)}`);
+    if (given.defaultBranch === undefined) process.stdout.write(`\n${defaultBranchNotice(template.defaultBranch)}`);
   }
 
   return 0;

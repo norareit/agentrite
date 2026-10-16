@@ -13,6 +13,7 @@ import {
   runUsage,
   unitPrompt,
 } from '../scripts/agentrite-run.mjs';
+import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
@@ -553,6 +554,7 @@ const REMEDY = 'Run: npx agentrite refresh, which writes the wrappers of the har
 
 function project(t, harnesses = ['claude', 'opencode']) {
   const base = emptyDirectory(t);
+  installKit(base);
   const write = (path, content) => {
     mkdirSync(dirname(join(base, path)), { recursive: true });
     writeFileSync(join(base, path), content);

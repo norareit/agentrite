@@ -14,6 +14,7 @@ import {
 } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
+import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { skipReason } from './skip-reason.mjs';
 import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -24,7 +25,7 @@ const kitPath = 'node_modules/agentrite/container';
 
 // An agentrite.json that names `defaultBranch`.
 function settingsFor(defaultBranch) {
-  return `{\n  "defaultBranch": "${defaultBranch}",\n  "harnesses": ["claude"],\n  "sandbox": true\n}\n`;
+  return kitSettingsText({ defaultBranch, harnesses: ['claude'], sandbox: true });
 }
 
 const branch = 'task-0026-doc';
@@ -47,6 +48,8 @@ function setUp(t, { imageExists = true } = {}) {
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   // The wrapper runs the reader of agentrite.json from the kit's scripts/, beside its container/.
   cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
+  // The files agentrite.json names, which the reader checks.
+  copyKitInstructions(join(container, '..'));
   writeFileSync(join(root, 'agentrite.json'), settingsFor('master'));
   mkdirSync(join(root, 'sandbox'));
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
@@ -372,6 +375,23 @@ const noCut = [
       /^sandbox\.sh: so no branch is cut for '0031'\.$/m,
     ],
   },
+  // Unit 0054, R4
+  {
+    name: 'an agentrite.json whose standards names no file',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      rmSync(join(host.root, 'node_modules', 'agentrite', 'standards.md'));
+    },
+    says: [
+      new RegExp(
+        '^agentrite: agentrite\\.json: standards is "node_modules/agentrite/standards\\.md", and there is no file ' +
+          "at it\\. It must name a file in the project's working tree$",
+        'm',
+      ),
+      /^sandbox\.sh: so no branch is cut for '0031'\.$/m,
+    ],
+  },
 ];
 
 for (const { name, unit, arrange, says } of noCut) {
@@ -532,6 +552,9 @@ test('the change check inside the clone of a unit run compares with origin/<defa
       `cat agentrite.json >> "${report}"`,
       'echo changed > changes/0001-frozen/spec.md',
       'git commit --quiet --all --message "change a frozen spec"',
+      // What npm ci gives the clone: the files agentrite.json names, under node_modules.
+      `node -e 'require("fs").mkdirSync("node_modules"); require("fs").symlinkSync(process.argv[1], ` +
+        `"node_modules/agentrite")' "${join(kitScripts, '..')}"`,
       'status=0',
       `node "${kitScripts}check-changes.mjs" . >> "${report}" 2>&1 || status=$?`,
       `echo "status $status" >> "${report}"`,

@@ -175,12 +175,15 @@ an installed kit:
 
 * `KIT_SETTINGS`, the `standards` and `roles` of the template, read with `parseSettings`
 * `kitSettingsText({ defaultBranch, harnesses, sandbox })`, the `settingsText` of those with them
-* `linkKit(root)`, which makes `node_modules/agentrite` in the project a symbolic link to this repository's root, so
-  that the kit's paths name the working tree's `standards.md` and role files
+* `installKit(root)`, which copies the working tree's `process.md`, `standards.md` and `roles/` into
+  `node_modules/agentrite` of the project, so that the kit's paths name files with the working tree's content. It
+  stands in the place of a `linkKit(root)` that made `node_modules/agentrite` a symbolic link to this repository's
+  root: with the link, a test of `init` that writes a fake `node_modules/agentrite/container/sandbox.sh` wrote it
+  over the kit's own wrapper, as `record.md` says
 * `copyKitInstructions(installed)`, which copies `process.md`, `standards.md` and `roles/` into a directory that
   stands for an installed kit, for the tests that copy the kit's `scripts/` and `container/` into one today
 
-A test project that is a git repository ignores `node_modules` before its first `git add`, so that the link is not
+A test project that is a git repository ignores `node_modules` before its first `git add`, so that the copies are not
 committed.
 
 **This repository (R24, R25).** The root's `agentrite.json` is the installed 7.0.0's default file already. The
@@ -221,9 +224,9 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ### 1. The settings
 
-- [ ] 1.1 Add `tests/installed-kit.mjs` as "What the test projects stand on" says. It makes no temporary directory
+- [x] 1.1 Add `tests/installed-kit.mjs` as "What the test projects stand on" says. It makes no temporary directory
   itself (R1, R5)
-- [ ] 1.2 In `tests/agentrite-settings.test.mjs`, cover before the code: the five keys read back, `roles` in
+- [x] 1.2 In `tests/agentrite-settings.test.mjs`, cover before the code: the five keys read back, `roles` in
   `ROLE_NAMES` order whatever order the text has; each refusal of "The settings, judged in this order" with its
   message, a missing `standards`, a `roles` that lacks each role, holds `tester`, is an array, and a path that is
   empty, absolute, `..`, `../x.md`, `a/../../x.md`, and one that is `a/../x.md`, which holds; an unknown key beside
@@ -231,13 +234,13 @@ holds whatever a later release writes, and runs the installed release's own `scr
   `standards` and a `roles.reviewer` that name no file, a directory, and a dangling link, with the message naming
   the key, the path and that there is no file at it; taking a path whose `node_modules/agentrite` is a link to a
   directory outside the project; and two roles naming one file (R1, R2, R3, R4, R5)
-- [ ] 1.3 Change `scripts/agentrite-settings.mjs` as decided, with `ROLE_NAMES` exported from
+- [x] 1.3 Change `scripts/agentrite-settings.mjs` as decided, with `ROLE_NAMES` exported from
   `scripts/agentrite-roles.mjs` beside `ROLES`, which stays until task 2.4 (R1, R2, R3, R4)
-- [ ] 1.4 Change `templates/project/agentrite.json` to the default file of R5. `init` from its arguments writes
+- [x] 1.4 Change `templates/project/agentrite.json` to the default file of R5. `init` from its arguments writes
   `standards` and `roles` from the template and calls `checkSettingsFiles` before writing anything, as decided (R5)
-- [ ] 1.5 Give every test project of the suite the two keys and a kit to name: `kitSettingsText` in the place of a
+- [x] 1.5 Give every test project of the suite the two keys and a kit to name: `kitSettingsText` in the place of a
   three-key text in `tests/check-changes.test.mjs`, `tests/sandbox-unit-run.test.mjs`, `tests/sandbox-update.test.mjs`,
-  `tests/agentrite-refresh.test.mjs` and `tests/agentrite-init.test.mjs`; `linkKit` in each project of
+  `tests/agentrite-refresh.test.mjs` and `tests/agentrite-init.test.mjs`; `installKit` in each project of
   `tests/agentrite-init.test.mjs`, `tests/agentrite-refresh.test.mjs`, `tests/agentrite-run.test.mjs` and
   `tests/check-changes.test.mjs`, with `node_modules` ignored in the last before its first commit; and
   `copyKitInstructions` where `tests/sandbox-unit-run.test.mjs` and `tests/settings-update.test.mjs` copy the kit's
@@ -245,13 +248,16 @@ holds whatever a later release writes, and runs the installed release's own `scr
   that hold the three-key default file, in `tests/agentrite-config.test.mjs`, `tests/agentrite-init.test.mjs` and
   `tests/settings-update.test.mjs`, read the template as they do today, and the `edit` steps of the last still find
   `"master"` (R5)
-- [ ] 1.6 In `tests/agentrite-init.test.mjs`, cover: `init claude opencode` writes the default file of R5 byte for byte;
+- [x] 1.6 In `tests/agentrite-init.test.mjs`, cover: `init claude opencode` writes the default file of R5 byte for byte;
   `init --default-branch main opencode` writes it with `main` and only `opencode`; `init` from arguments in a project
   with no `node_modules/agentrite` refuses with the message of `standards`, writes nothing and exits 1; `init` with no
   argument in a project whose file lacks `roles` refuses and writes nothing (R1, R4, R5)
-- [ ] 1.7 In `tests/check-changes.test.mjs` and `tests/sandbox-unit-run.test.mjs`, cover that the change check and a
+- [x] 1.7 In `tests/check-changes.test.mjs` and `tests/sandbox-unit-run.test.mjs`, cover that the change check and a
   unit run that cuts a branch refuse a file whose `standards` names no file, with the reader's message (R4)
-- [ ] 1.8 Run `npm test`; all pass. Commit: `feature-0054 Require the standards and the roles in agentrite.json`
+- [x] 1.8 Do task 4.1 here, before running the suite: the default file of task 1.4 breaks the test of R41 of unit
+  0045, and `readSettings` of task 1.3 refuses the root's three-key file in the test of R42, so step 1 cannot leave
+  the suite green with them. Then run `npm test`; all pass. Commit: `feature-0054 Require the standards and the
+  roles in agentrite.json`
 
 ### 2. The roles from their files, and everything after them from the settings
 
@@ -307,7 +313,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
   the path, whatever the harnesses, and none for one with it; the notices in the order decided; a role file without
   front matter refused with the R8 message and nothing written. Bring the existing expectations of the files
   printed and of `CLAUDE_LINES` and the paths up to date with the list and the standards argument. The test of R41
-  and R42 of unit 0045 stays until task 4.1 (R9, R11, R12, R13, R14, R16)
+  and R42 of unit 0045 is gone by then, since task 4.1 is done in step 1 (R9, R11, R12, R13, R14, R16)
 - [ ] 2.10 In `tests/agentrite-run.test.mjs`, cover before the code: `roles` and `roles --json` list the
   descriptions of the files the settings give, a replaced role's included; `roles` and `run` refuse with no
   `agentrite.json`, with one that is not valid, with a path that names no file and with a role file without front
@@ -348,7 +354,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ### 4. This repository's own files
 
-- [ ] 4.1 Add `tests/repository-own-files.test.mjs` with the two tests as decided: the root `agentrite.json` is
+- [x] 4.1 Done in step 1, as task 1.8 says. Add `tests/repository-own-files.test.mjs` with the two tests as decided: the root `agentrite.json` is
   `node_modules/agentrite/templates/project/agentrite.json` byte for byte, and is not in `files` of `package.json`;
   the installed release's `refresh`, in a copy of the tracked files with `node_modules/agentrite` a link to the
   installed one and every copy dated long ago, exits 0, prints `up to date` on every line before the notices, and
@@ -418,7 +424,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ## Commit Points
 
-- [ ] After task 1.8: the settings
+- [x] After task 1.8: the settings
 - [ ] After task 2.13: the roles and the standards from the settings
 - [ ] After task 3.4: the kit's files
 - [ ] After task 4.3: this repository's own files

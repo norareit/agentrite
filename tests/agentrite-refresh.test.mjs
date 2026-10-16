@@ -15,8 +15,8 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
-import { settingsText } from '../scripts/agentrite-settings.mjs';
 import { refreshedWrapper } from '../scripts/agentrite.mjs';
+import { kitSettingsText, installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
@@ -174,6 +174,7 @@ const PROJECT_OWNED = {
 
 function project(t) {
   const base = temporaryDirectory(t, 'agentrite-refresh-');
+  installKit(base);
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
   const read = (path) => readFileSync(join(base, path), 'utf-8');
   const write = (path, content) => {
@@ -182,7 +183,7 @@ function project(t) {
   };
   // Runs refresh, with no argument, on an agentrite.json that names the harnesses and the sandbox setting.
   const refresh = (harnesses, sandbox = true) => {
-    write('agentrite.json', settingsText({ defaultBranch: 'master', harnesses, sandbox }));
+    write('agentrite.json', kitSettingsText({ defaultBranch: 'master', harnesses, sandbox }));
     return run('refresh');
   };
   return { base, run, read, write, refresh };
@@ -556,7 +557,7 @@ test('refresh does for each value of the two settings what it did for the argume
   for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode'], ['opencode', 'claude']]) {
     for (const sandbox of [true, false]) {
       const { base, refresh, read } = project(t);
-      const text = settingsText({ defaultBranch: 'master', harnesses, sandbox });
+      const text = kitSettingsText({ defaultBranch: 'master', harnesses, sandbox });
 
       const result = refresh(harnesses, sandbox);
 
@@ -573,33 +574,13 @@ test('refresh does for each value of the two settings what it did for the argume
   }
 });
 
-// R41, R42: this repository's own file and its own nine files.
-test('the repository own agentrite.json, wrappers and sandbox.sh are up to date, and refresh changes none', (t) => {
-  const { base, run, read, write } = project(t);
-  const root = join(import.meta.dirname, '..');
-  const copied = [...KIT_OWNED, 'agentrite.json'];
-  for (const path of copied) write(path, readFileSync(join(root, path), 'utf-8'));
-  chmodSync(join(base, 'sandbox.sh'), statSync(join(root, 'sandbox.sh')).mode & 0o777);
-  const longAgo = new Date('2020-01-01T00:00:00Z');
-  for (const path of copied) utimesSync(join(base, path), longAgo, longAgo);
-
-  const result = run('refresh');
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(linesOf(result), KIT_OWNED.map((path) => `up to date ${path}`));
-  for (const path of copied) {
-    assert.equal(read(path), readFileSync(join(root, path), 'utf-8'), path);
-    assert.equal(statSync(join(base, path)).mtimeMs, longAgo.getTime(), path);
-  }
-});
-
 test('refresh runs through a node_modules bin symlink the way npx does', (t) => {
   const { base, read, write } = staleProject(t);
   mkdirSync(join(base, 'node_modules', '.bin'), { recursive: true });
   const bin = join(base, 'node_modules', '.bin', 'agentrite');
   symlinkSync(script, bin);
 
-  write('agentrite.json', settingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }));
+  write('agentrite.json', kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }));
 
   const result = spawnSync(process.execPath, [bin, 'refresh'], { cwd: base, encoding: 'utf-8' });
 

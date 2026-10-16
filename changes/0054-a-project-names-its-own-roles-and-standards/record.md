@@ -124,4 +124,24 @@ timestamp: 2026-10-16T11:14:23Z
   `process.md` and `standards.md` of release 7.1.0, installed with `npm ci` because `node_modules` was missing.
   `npm test` reported 582 tests, 582 passing, at `6974c5e`. Began the work. The status is `in-progress`
 
+- 2026-10-16T18:58:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved task 4.1 into step 1,
+  before task 1.8, and changed `plan.md` to say so. The plan keeps the tests of requirements 41 and 42 of unit 0045
+  until step 4, and has every step leave the suite green, but step 1 breaks both: with the default file of task 1.4,
+  the root's `agentrite.json` is no longer the working tree's default file (R41), and with the checks of task 1.3
+  the working tree's `refresh` refuses the root's file for lacking `standards` (R42). Their replacements, the tests
+  of requirements 24 and 25 of this unit, hold already, since they judge the root against release 7.1.0. Task 2.9's
+  note that the test of R42 stays until task 4.1 changes with it. The status is `in-progress`
+
+- 2026-10-16T19:12:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, replaced the plan's test helper
+  `linkKit`, which made `node_modules/agentrite` of a test project a symbolic link to this repository's root, by
+  `installKit`, which copies `process.md`, `standards.md` and `roles/` there, and changed `plan.md` to say so. With
+  the link, the test of `init` "the written sandbox.sh execs the kit wrapper with the project root and every other
+  argument", which writes a fake `node_modules/agentrite/container/sandbox.sh`, wrote it over this repository's
+  `container/sandbox.sh`, and the next tests of the sandbox ran the fake; the file was restored with
+  `git checkout`. A symbolic link under `node_modules`, as `npm link` makes, is still tested: in
+  `tests/agentrite-settings.test.mjs` for a link to a directory outside the project, and in the test of requirement
+  25, whose copy links the installed release. Steps 1 and 4.1 are done: `npm test` reported 599 tests, 599 passing,
+  none skipped, on the tree committed next, and `git status` showed no file of the kit changed by the run. The
+  status is `in-progress`
+
 ## Amendments

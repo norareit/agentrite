@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { CONFIG_NOTICE } from '../scripts/agentrite.mjs';
+import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
@@ -81,6 +82,7 @@ test('config leaves what is at the path of agentrite.json, whatever it is, and p
 // R46
 test('refresh runs on the file config wrote, and writes the eight wrappers and sandbox.sh', (t) => {
   const { base, run } = directory(t);
+  installKit(base);
   assert.equal(run('config').status, 0);
 
   const result = run('refresh');

@@ -12,6 +12,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { fakeHost } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -80,9 +81,10 @@ function setUp(t) {
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   mkdirSync(join(root, 'agent'));
   writeFileSync(join(root, 'package.json'), '{\n  "name": "my-app"\n}\n');
+  copyKitInstructions(join(root, 'node_modules', 'agentrite'));
   writeFileSync(
     join(root, 'agentrite.json'),
-    '{\n  "defaultBranch": "master",\n  "harnesses": ["claude"],\n  "sandbox": true\n}\n',
+    kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }),
   );
   writeFileSync(join(root, 'agent.sh'), OLD_SHIM, { mode: 0o755 });
   writeFileSync(join(root, 'agent', 'compose.project.yml'), OLD_COMPOSE);

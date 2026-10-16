@@ -1,14 +1,34 @@
-import { lstatSync, readFileSync, realpathSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
+import { isAbsolute, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { HARNESS_NAMES } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, ROLE_NAMES } from './agentrite-roles.mjs';
 
 /** The file at a project's root that holds its settings. */
 export const SETTINGS_FILE = 'agentrite.json';
 
 /**
- * @typedef {{ defaultBranch: string, harnesses: string[], sandbox: boolean }} Settings
+ * @typedef {{ specifier: string, planner: string, implementer: string, reviewer: string }} RoleFiles
+ * @typedef {{
+ *   defaultBranch: string, harnesses: string[], sandbox: boolean, standards: string, roles: RoleFiles
+ * }} Settings
  */
+
+/**
+ * True for a path that a committed file can name in a clone: a string that is not empty, relative to the project
+ * root, and that does not lead outside the project. It is judged on the path as written, and touches no file.
+ *
+ * @param {unknown} value
+ * @returns {value is string}
+ */
+function isProjectPath(value) {
+  if (typeof value !== 'string' || value === '' || isAbsolute(value)) return false;
+  const normalized = posix.normalize(value);
+  return normalized !== '..' && !normalized.startsWith('../');
+}
+
+const PATH_MUST = 'the path of a file, relative to the project root, that does not lead outside the project';
+
+const ROLE_LIST = `${ROLE_NAMES.slice(0, -1).join(', ')} and ${ROLE_NAMES.at(-1)}`;
 
 /**
  * The keys of the file, in the order they are written and judged in, each with whether a value is one it may hold
@@ -29,7 +49,15 @@ const KEYS = [
     must: `a list of one or more of ${HARNESS_NAMES.map((name) => JSON.stringify(name)).join(' and ')}`,
   },
   { name: 'sandbox', holds: (value) => typeof value === 'boolean', must: 'true or false' },
+  { name: 'standards', holds: isProjectPath, must: PATH_MUST },
+  {
+    name: 'roles',
+    holds: (value) => typeof value === 'object' && value !== null && !Array.isArray(value),
+    must: `an object from each of the roles ${ROLE_LIST} to the path of its file`,
+  },
 ];
+
+const ROLES_EXACTLY = `It must hold exactly the roles ${ROLE_LIST}, each with the path of its file`;
 
 const MUST_HOLD_OBJECT = `The file must hold a JSON object with the keys ${KEYS.slice(0, -1)
   .map((key) => key.name)
@@ -70,8 +98,64 @@ export function parseSettings(text) {
     throw new Error(`${SETTINGS_FILE}: ${key.name} is ${found}. It must hold ${key.must}`);
   }
 
-  const { defaultBranch, harnesses, sandbox } = /** @type {Settings} */ (parsed);
-  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox };
+  const { defaultBranch, harnesses, sandbox, standards } = /** @type {Settings} */ (parsed);
+  const roles = parseRoles(/** @type {Record<string, unknown>} */ (values.roles));
+  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox, standards, roles };
+}
+
+/**
+ * The role files that the object `roles` of the file holds, in the order of `ROLE_NAMES`. Throws, as
+ * `parseSettings` does, for one that lacks a role, holds a name that is none, or holds a path that does not hold.
+ *
+ * @param {Record<string, unknown>} roles
+ * @returns {RoleFiles}
+ */
+function parseRoles(roles) {
+  const lacking = ROLE_NAMES.find((name) => !Object.hasOwn(roles, name));
+  if (lacking !== undefined) throw new Error(`${SETTINGS_FILE}: roles lacks ${lacking}. ${ROLES_EXACTLY}`);
+  const stranger = Object.keys(roles).find((name) => !ROLE_NAMES.includes(name));
+  if (stranger !== undefined) {
+    throw new Error(`${SETTINGS_FILE}: roles holds ${JSON.stringify(stranger)}, which is no role. ${ROLES_EXACTLY}`);
+  }
+  for (const name of ROLE_NAMES) {
+    if (isProjectPath(roles[name])) continue;
+    throw new Error(`${SETTINGS_FILE}: roles.${name} is ${JSON.stringify(roles[name])}. It must hold ${PATH_MUST}`);
+  }
+  return /** @type {RoleFiles} */ (Object.fromEntries(ROLE_NAMES.map((name) => [name, roles[name]])));
+}
+
+/**
+ * Throws, naming the key and the path, for the first path of `settings` that names no regular file under `root`,
+ * `standards` first and then each role in its order. Symbolic links are followed, so that a kit linked into
+ * `node_modules` is taken.
+ *
+ * @param {string} root
+ * @param {Settings} settings
+ */
+export function checkSettingsFiles(root, settings) {
+  const paths = [
+    ['standards', settings.standards],
+    ...ROLE_NAMES.map((name) => [`roles.${name}`, settings.roles[/** @type {keyof RoleFiles} */ (name)]]),
+  ];
+  for (const [key, path] of paths) {
+    if (isRegularFile(resolve(root, path))) continue;
+    throw new Error(
+      `${SETTINGS_FILE}: ${key} is ${JSON.stringify(path)}, and there is no file at it. ` +
+        "It must name a file in the project's working tree",
+    );
+  }
+}
+
+/**
+ * @param {string} path
+ * @returns {boolean}
+ */
+function isRegularFile(path) {
+  try {
+    return statSync(path).isFile();
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -81,13 +165,20 @@ export function parseSettings(text) {
  * @param {Settings} settings
  * @returns {string}
  */
-export function settingsText({ defaultBranch, harnesses, sandbox }) {
+export function settingsText({ defaultBranch, harnesses, sandbox, standards, roles }) {
   const list = harnesses.map((harness) => JSON.stringify(harness)).join(', ');
+  const roleLines = ROLE_NAMES.map(
+    (name) => `    ${JSON.stringify(name)}: ${JSON.stringify(roles[/** @type {keyof RoleFiles} */ (name)])}`,
+  );
   return [
     '{',
     `  "defaultBranch": ${JSON.stringify(defaultBranch)},`,
     `  "harnesses": [${list}],`,
-    `  "sandbox": ${JSON.stringify(sandbox)}`,
+    `  "sandbox": ${JSON.stringify(sandbox)},`,
+    `  "standards": ${JSON.stringify(standards)},`,
+    '  "roles": {',
+    roleLines.join(',\n'),
+    '  }',
     '}',
     '',
   ].join('\n');
@@ -108,7 +199,8 @@ function isMissing(path) {
 
 /**
  * The settings of the project at `root`, from the `agentrite.json` in its working tree. Throws what to print for a
- * project that has none, for a file that cannot be read and for one that is not valid. No default stands in for a
+ * project that has none, for a file that cannot be read and for one that is not valid, a path that names no file
+ * included. No default stands in for a
  * missing file or a missing key.
  *
  * @param {string} root
@@ -125,7 +217,9 @@ export function readSettings(root) {
     }
     throw new Error(`cannot read ${SETTINGS_FILE}: ${messageOf(error)}. ${MUST_HOLD_OBJECT}`);
   }
-  return parseSettings(text);
+  const settings = parseSettings(text);
+  checkSettingsFiles(root, settings);
+  return settings;
 }
 
 /**

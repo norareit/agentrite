@@ -21,7 +21,6 @@ import {
   opencodeVerdict,
 } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
-import { settingsText } from '../scripts/agentrite-settings.mjs';
 import {
   AGENTS_SECTIONS,
   sandboxName,
@@ -34,6 +33,7 @@ import {
   projectFiles,
   withCheckChangesScript,
 } from '../scripts/agentrite.mjs';
+import { kitSettingsText, installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE_PATHS = ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', 'sandbox/compose.project.yml'];
@@ -523,6 +523,7 @@ function project(t, { lockfile = LOCKFILE } = {}) {
     '{\n  "name": "my-app",\n  "scripts": {\n    "test": "node --test"\n  }\n}\n',
   );
   if (lockfile !== null) writeFileSync(join(base, 'package-lock.json'), lockfile);
+  installKit(base);
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
   const read = (path) => readFileSync(join(base, path), 'utf-8');
   return { base, run, read };
@@ -871,8 +872,10 @@ const WITH_FILE_REFUSAL =
 
 // Every path under `base`, node_modules apart, with what a file holds.
 function snapshot(base, directory = '') {
-  return readdirSync(join(base, directory), { withFileTypes: true }).flatMap((entry) => {
+  const entries = readdirSync(join(base, directory), { withFileTypes: true });
+  return entries.flatMap((entry) => {
     const path = join(directory, entry.name);
+    if (path === 'node_modules') return [];
     if (entry.isDirectory()) return [[path, null], ...snapshot(base, path)];
     return [[path, entry.isFile() ? readFileSync(join(base, path), 'utf-8') : null]];
   });
@@ -893,7 +896,7 @@ test('init writes the file for every combination of harnesses, --no-sandbox and 
         const result = run('init', ...args);
 
         assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
-        const expected = settingsText({
+        const expected = kitSettingsText({
           defaultBranch: defaultBranch ?? 'master',
           harnesses: KIT_ORDER.filter((harness) => harnesses.includes(harness)),
           sandbox,
@@ -1046,7 +1049,7 @@ test('an init that refuses for a .dockerignore it cannot read has written no age
 // R11
 test('init with no argument takes the harnesses and the sandbox from the file, and leaves the file', (t) => {
   const { base, run, read } = project(t);
-  const settings = settingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: true });
+  const settings = kitSettingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: true });
   writeFileSync(join(base, 'agentrite.json'), settings);
   const given = project(t);
   const expected = given.run('init', 'opencode');
@@ -1072,7 +1075,7 @@ test('init with no argument takes the harnesses and the sandbox from the file, a
 test('init with no argument and sandbox false asks for no name and reads no lockfile', (t) => {
   const { base, run, read } = project(t, { lockfile: 'not json' });
   writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n');
-  const settings = settingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: false });
+  const settings = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: false });
   writeFileSync(join(base, 'agentrite.json'), settings);
 
   const result = run('init');
@@ -1095,7 +1098,7 @@ test('init with no argument and sandbox false asks for no name and reads no lock
 
 // R12
 test('init given an argument in a project with an agentrite.json refuses, and writes nothing', (t) => {
-  const valid = settingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
+  const valid = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
   for (const settings of [valid, 'not json']) {
     for (const args of [['claude'], [OPTION], [BRANCH, 'main'], ['claude', OPTION, BRANCH, 'main'], ['opencode']]) {
       const { base, run } = project(t);
@@ -1126,6 +1129,58 @@ test('init with no argument in a project whose agentrite.json is not valid refus
     assert.match(result.stderr, /^agentrite: agentrite\.json/);
     assert.deepEqual(snapshot(base), before);
   }
+});
+
+// Unit 0054, R1, R5
+test('init --default-branch main opencode writes the default file with main and opencode alone', (t) => {
+  const { run, read } = project(t);
+
+  const result = run('init', BRANCH, 'main', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    read('agentrite.json'),
+    SETTINGS_TEMPLATE.replace('"master"', '"main"').replace('["claude", "opencode"]', '["opencode"]'),
+  );
+});
+
+// Unit 0054, R4
+test('init given harnesses in a project without the kit installed refuses for standards, and writes nothing', (t) => {
+  const { base, run } = project(t);
+  rmSync(join(base, 'node_modules'), { recursive: true });
+  const before = snapshot(base);
+
+  const result = run('init', 'claude', 'opencode');
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(
+    result.stderr,
+    'agentrite: agentrite.json: standards is "node_modules/agentrite/standards.md", and there is no file at it. ' +
+      "It must name a file in the project's working tree\n",
+  );
+  assert.deepEqual(snapshot(base), before);
+  assert.equal(exists(join(base, 'agentrite.json')), false);
+});
+
+// Unit 0054, R1, R4
+test('init with no argument in a project whose agentrite.json lacks roles refuses, and writes nothing', (t) => {
+  const { base, run } = project(t);
+  const settings = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
+  const withoutRoles = JSON.stringify({ ...JSON.parse(settings), roles: undefined });
+  writeFileSync(join(base, 'agentrite.json'), withoutRoles);
+  const before = snapshot(base);
+
+  const result = run('init');
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(
+    result.stderr,
+    'agentrite: agentrite.json: roles is missing. It must hold an object from each of the roles specifier, ' +
+      'planner, implementer and reviewer to the path of its file\n',
+  );
+  assert.deepEqual(snapshot(base), before);
 });
 
 // opencode.json and CLAUDE.md, which load process.md and standards.md
