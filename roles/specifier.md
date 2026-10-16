@@ -1,3 +1,10 @@
+---
+description: >-
+  Writes what a change unit must make true: the spec of a feature or a bug, or the record of a task, in changes/. Use
+  before anything is planned or implemented. Dispatch it with the request, and with the unit directory when the unit
+  exists already.
+---
+
 # Specifier
 
 You turn a request into a change unit that someone else can implement without coming back to ask what was meant.

@@ -154,7 +154,9 @@ which .agentrite/instructions.md names. refresh does not change AGENTS.md. See "
 an agent" in node_modules/agentrite/README.md.
 ```
 
-with `does not name .agentrite/instructions.md` in the place of `is missing` for a file that is there. `refresh`
+with `does not name .agentrite/instructions.md` in the place of `is missing` for a file that is there. Its words are
+wrapped at 120 characters by `wrapWords`, and not broken where the text above breaks them, since with the longer
+problem the first line would be over 120 characters, as `record.md` says. `refresh`
 judges it whatever the harnesses. `init` judges it only for an `AGENTS.md` that exists, since it writes a missing one,
 and prints it after the notice of the sections, which it prints as today.
 
@@ -180,6 +182,8 @@ an installed kit:
   stands in the place of a `linkKit(root)` that made `node_modules/agentrite` a symbolic link to this repository's
   root: with the link, a test of `init` that writes a fake `node_modules/agentrite/container/sandbox.sh` wrote it
   over the kit's own wrapper, as `record.md` says
+* `KIT_ROLES`, the kit's roles as `readRoles` gives them in a project with the kit installed, which the tests give
+  `plannedFiles` in the place of the kit's own wrappers
 * `copyKitInstructions(installed)`, which copies `process.md`, `standards.md` and `roles/` into a directory that
   stands for an installed kit, for the tests that copy the kit's `scripts/` and `container/` into one today
 
@@ -261,26 +265,26 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ### 2. The roles from their files, and everything after them from the settings
 
-- [ ] 2.1 Before any code changes, write `tests/fixtures/opencode-agents/<role>.md` from what
+- [x] 2.1 Before any code changes, write `tests/fixtures/opencode-agents/<role>.md` from what
   `plannedFiles(['opencode'])` returns at that point, one file per role, and check that
   `tests/fixtures/claude-agents/` is what
   `plannedFiles(['claude'])` returns, which its existing test does. These are the wrappers of R7's comparison
-- [ ] 2.2 In `tests/agentrite-roles.test.mjs`, cover `parseRoleDescription`: both forms, CRLF, the folded form of each
+- [x] 2.2 In `tests/agentrite-roles.test.mjs`, cover `parseRoleDescription`: both forms, CRLF, the folded form of each
   kit role file giving its description; and `undefined` for no front matter, no closing `---`, another key, an empty
   description, `description: >-` with no line under it, a line indented by one or by four spaces, a blank line inside.
   Cover `readRoles`: the four kit files read from a linked project in `ROLE_NAMES` order; two roles that share a file
   each get its description; the R8 message, naming the path, for a file without front matter (R6, R8)
-- [ ] 2.3 In `tests/agentrite-roles.test.mjs`, replace the tests that use the constants: `plannedFiles` of both
+- [x] 2.3 In `tests/agentrite-roles.test.mjs`, replace the tests that use the constants: `plannedFiles` of both
   harnesses, given `readRoles` of the kit's files, is the eight fixtures byte for byte; with a role's path and file
   replaced, the wrapper carries that file's description and a body that names that path; two roles sharing a file
   both get wrappers with its description. The test that holds the four descriptions as strings goes, since the role
   files are now where they are kept (R7, R9, R2)
-- [ ] 2.4 Add the front matter to `roles/specifier.md`, `roles/planner.md`, `roles/implementer.md` and
+- [x] 2.4 Add the front matter to `roles/specifier.md`, `roles/planner.md`, `roles/implementer.md` and
   `roles/reviewer.md`, each in the folded form, its lines the `description: >-` block of today's wrapper for the role,
   copied from `tests/fixtures/claude-agents/<role>.md`. Add `parseRoleDescription`, `readRoles`,
   `wrapperDirectories` and `plannedFiles(harnesses, roles)` to `scripts/agentrite-roles.mjs`, and remove `ROLES` and
   the description constants. `scripts/agentrite-run.mjs` takes `ROLE_NAMES` (R6, R7, R8, R9)
-- [ ] 2.5 In `tests/agentrite-instructions.test.mjs`, cover before the code: `instructionPaths` and `claudeLines` of
+- [x] 2.5 In `tests/agentrite-instructions.test.mjs`, cover before the code: `instructionPaths` and `claudeLines` of
   the kit's standards and of `rules/house.md`; `claudeLacks` and `opencodeVerdict` judged against `rules/house.md`,
   `opencodeVerdict` writing a new file and amending one with that path after `process.md`; the two kit's-standards
   checks, true only for another standards file and a file that holds the kit's line or entry, a non-JSON
@@ -288,8 +292,8 @@ holds whatever a later release writes, and runs the installed release's own `scr
   `agentsNamesList` and its two notices; `instructionsList` of the default file as given, of a project's own
   standards and roles with links that work from `.agentrite/`, of two roles sharing one file, and of a path with a
   space, linked with `%20`; no line of the default list over 120 characters (R11, R12, R13, R16)
-- [ ] 2.6 Change `scripts/agentrite-instructions.mjs` as decided (R11, R12, R13, R16)
-- [ ] 2.7 Rewrite `templates/project/AGENTS.md`: Development Guidelines says that the files
+- [x] 2.6 Change `scripts/agentrite-instructions.mjs` as decided (R11, R12, R13, R16)
+- [x] 2.7 Rewrite `templates/project/AGENTS.md`: Development Guidelines says that the files
   [`.agentrite/instructions.md`](.agentrite/instructions.md) names are required reading before any change, that they
   are the kit's `process.md`, the project's standards and the file of each role, with what `process.md` and the
   standards hold as it says today, and that the kit writes the list from `agentrite.json`; Roles says that the list
@@ -298,7 +302,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
   Neither section names `standards.md` or a role file. Rewrite `templates/project/CLAUDE.md`: it bridges the kit's
   `process.md`, the project's standards and `AGENTS.md`, names the list in its text where it names the kit's files
   today, and imports `@node_modules/agentrite/process.md`, `@{{standards}}` and `@AGENTS.md` (R11, R15)
-- [ ] 2.8 In `tests/agentrite-init.test.mjs`, cover before the code: the files and their order with the list after
+- [x] 2.8 In `tests/agentrite-init.test.mjs`, cover before the code: the files and their order with the list after
   the wrappers; the list's content; `CLAUDE.md` importing the settings' standards between the other two, and the kit's
   in a project that names them; `AGENTS.md` holding `.agentrite/instructions.md` and no `roles/` and no `standards.md`;
   `opencode.json` written with the settings' standards and amended with it; with a project's own standards, a
@@ -306,7 +310,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
   kit's they do not; an existing `AGENTS.md` without the list's path gets the sections notice and then the list
   notice, and one with it only the sections notice; a project whose `roles.planner` names a file of its own gets
   wrappers with that file's description and path; a list path that exists is skipped (R9, R11, R12, R13, R14, R15, R16)
-- [ ] 2.9 In `tests/agentrite-refresh.test.mjs`, cover before the code: the list written, refreshed and up to date,
+- [x] 2.9 In `tests/agentrite-refresh.test.mjs`, cover before the code: the list written, refreshed and up to date,
   and left with a message and exit 1 for a directory or a link at its path, the other files still written; the list
   and the wrappers following a changed `roles.reviewer` and a changed `standards`; the R12 notices for `CLAUDE.md`
   and `opencode.json`, and none with the kit's standards; the R16 notice for a missing `AGENTS.md`, for one without
@@ -314,19 +318,19 @@ holds whatever a later release writes, and runs the installed release's own `scr
   front matter refused with the R8 message and nothing written. Bring the existing expectations of the files
   printed and of `CLAUDE_LINES` and the paths up to date with the list and the standards argument. The test of R41
   and R42 of unit 0045 is gone by then, since task 4.1 is done in step 1 (R9, R11, R12, R13, R14, R16)
-- [ ] 2.10 In `tests/agentrite-run.test.mjs`, cover before the code: `roles` and `roles --json` list the
+- [x] 2.10 In `tests/agentrite-run.test.mjs`, cover before the code: `roles` and `roles --json` list the
   descriptions of the files the settings give, a replaced role's included; `roles` and `run` refuse with no
   `agentrite.json`, with one that is not valid, with a path that names no file and with a role file without front
   matter, each with exit 1, the message of the refusal, nothing on standard output and no harness started; `run`
   refuses a wrapper that points at the kit's file when `roles` names another, and starts with the one `refresh`
   writes then. The test of R7 of unit 0045, that the two read no `agentrite.json`, is replaced by these. The tests
   of the listing that take `ROLES` take `readRoles` of the kit's files (R10)
-- [ ] 2.11 Change `scripts/agentrite.mjs`: `init`, `refresh`, `roles` and `run` as decided, the list among the
+- [x] 2.11 Change `scripts/agentrite.mjs`: `init`, `refresh`, `roles` and `run` as decided, the list among the
   kit-owned files and among those `init` writes, the `CLAUDE.md` template filled with `standards`, and the notices in
   their order (R9, R10, R11, R12, R13, R14, R15, R16)
-- [ ] 2.12 In `tests/settings-update.test.mjs` and `tests/sandbox-update.test.mjs`, bring the expectations up to
+- [x] 2.12 In `tests/settings-update.test.mjs` and `tests/sandbox-update.test.mjs`, bring the expectations up to
   date: `refresh` writes the list, and prints the `AGENTS.md` notice for a project without it (R14, R16)
-- [ ] 2.13 Run `npm test`; all pass. Commit: `feature-0054 Take the roles and the standards from the files the
+- [x] 2.13 Run `npm test`; all pass. Commit: `feature-0054 Take the roles and the standards from the files the
   settings name`
 
 ### 3. What the kit's files say of each other
@@ -425,7 +429,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
 ## Commit Points
 
 - [x] After task 1.8: the settings
-- [ ] After task 2.13: the roles and the standards from the settings
+- [x] After task 2.13: the roles and the standards from the settings
 - [ ] After task 3.4: the kit's files
 - [ ] After task 4.3: this repository's own files
 - [ ] After task 5.7: the documents

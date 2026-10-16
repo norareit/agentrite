@@ -4,7 +4,7 @@ import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { findFrozenViolations, findIncompletePlans } from '../scripts/check-changes.mjs';
-import { kitSettingsText, installKit } from './installed-kit.mjs';
+import { installKit, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 test('findFrozenViolations reports a changed frozen spec', () => {

@@ -4,18 +4,26 @@ import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSyn
 import { basename, dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
+  agentsListNotice,
+  agentsNamesList,
   claudeInitNotice,
+  claudeKitStandardsNotice,
   claudeLacks,
+  claudeLoadsKitStandards,
   claudeRefreshNotice,
-  INSTRUCTION_PATHS,
+  INSTRUCTIONS_LIST,
+  instructionPaths,
+  instructionsList,
   OPENCODE_FILE,
   opencodeInitNotice,
+  opencodeKitStandardsNotice,
+  opencodeLoadsKitStandards,
   opencodeRefreshNotice,
   opencodeVerdict,
   readProjectFile,
 } from './agentrite-instructions.mjs';
 import { formattedLike } from './agentrite-json.mjs';
-import { HARNESS_NAMES, plannedFiles, ROLES } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -237,8 +245,21 @@ export function playwrightVersion(lockfile) {
  * @returns {string}
  */
 function roleWrapperDirectories(harnesses) {
-  const directories = new Set(plannedFiles(harnesses).map((file) => dirname(file.path)));
-  return [...directories].map((directory) => `* \`${directory}/\``).join('\n');
+  return wrapperDirectories(harnesses)
+    .map((directory) => `* \`${directory}/\``)
+    .join('\n');
+}
+
+/**
+ * The list of the instruction files in use, written from the standards and the role files the settings give.
+ *
+ * @param {string} standards
+ * @param {import('./agentrite-roles.mjs').Role[]} roles
+ * @returns {{ path: string, content: string }}
+ */
+function listFile(standards, roles) {
+  const files = Object.fromEntries(roles.map((role) => [role.name, role.path]));
+  return { path: INSTRUCTIONS_LIST, content: instructionsList({ standards, roles: files }) };
 }
 
 /**
@@ -253,14 +274,22 @@ function shimFile(templates) {
 
 /**
  * The generated files that hold nothing but what the kit put there, which refresh keeps as the release writes
- * them: the role wrappers, in which a project may have pinned a model, and the shim when the project has the sandbox.
+ * them: the role wrappers, in which a project may have pinned a model, the list of the instruction files in use,
+ * and the shim when the project has the sandbox.
  *
- * @param {{ templates: Record<string, string>, harnesses: string[], sandbox: boolean }} project
+ * @param {{
+ *   templates: Record<string, string>,
+ *   harnesses: string[],
+ *   sandbox: boolean,
+ *   standards: string,
+ *   roles: import('./agentrite-roles.mjs').Role[],
+ * }} project
  * @returns {{ path: string, content: string, executable?: boolean, keepsModel?: boolean }[]}
  */
-function kitOwnedFiles({ templates, harnesses, sandbox }) {
-  const wrappers = plannedFiles(harnesses).map((file) => ({ ...file, keepsModel: true }));
-  return sandbox ? [...wrappers, shimFile(templates)] : wrappers;
+function kitOwnedFiles({ templates, harnesses, sandbox, standards, roles }) {
+  const wrappers = plannedFiles(harnesses, roles).map((file) => ({ ...file, keepsModel: true }));
+  const files = [...wrappers, listFile(standards, roles)];
+  return sandbox ? [...files, shimFile(templates)] : files;
 }
 
 /**
@@ -280,19 +309,33 @@ function playwrightBuildBlock(version) {
 }
 
 /**
- * The files init creates that carry the process: the role wrappers, `AGENTS.md` and `CLAUDE.md`.
+ * The process of a project as the settings give it: its harnesses, its standards and its roles, as `readRoles`
+ * gives them.
  *
- * @param {{ templates: Record<string, string>, harnesses: string[] }} project
+ * @typedef {{
+ *   templates: Record<string, string>,
+ *   harnesses: string[],
+ *   standards: string,
+ *   roles: import('./agentrite-roles.mjs').Role[],
+ * }} ProcessProject
+ */
+
+/**
+ * The files init creates that carry the process: the role wrappers, the list of the instruction files in use,
+ * `AGENTS.md` and `CLAUDE.md`.
+ *
+ * @param {ProcessProject} project
  * @returns {{ path: string, content: string }[]}
  */
-export function processFiles({ templates, harnesses }) {
+export function processFiles({ templates, harnesses, standards, roles }) {
   return [
-    ...plannedFiles(harnesses),
+    ...plannedFiles(harnesses, roles),
+    listFile(standards, roles),
     {
       path: 'AGENTS.md',
       content: fillTemplate(templates['AGENTS.md'], { role_wrapper_directories: roleWrapperDirectories(harnesses) }),
     },
-    { path: 'CLAUDE.md', content: fillTemplate(templates['CLAUDE.md'], {}) },
+    { path: 'CLAUDE.md', content: fillTemplate(templates['CLAUDE.md'], { standards }) },
   ];
 }
 
@@ -318,19 +361,11 @@ function sandboxFiles({ templates, packageName, playwrightVersion }) {
 /**
  * The files init creates, filled from the templates.
  *
- * @param {{
- *   templates: Record<string, string>,
- *   harnesses: string[],
- *   packageName: string,
- *   playwrightVersion: string | undefined,
- * }} project
+ * @param {ProcessProject & { packageName: string, playwrightVersion: string | undefined }} project
  * @returns {{ path: string, content: string, executable?: boolean }[]}
  */
-export function projectFiles({ templates, harnesses, packageName, playwrightVersion }) {
-  return [
-    ...processFiles({ templates, harnesses }),
-    ...sandboxFiles({ templates, packageName, playwrightVersion }),
-  ];
+export function projectFiles({ packageName, playwrightVersion, ...process }) {
+  return [...processFiles(process), ...sandboxFiles({ templates: process.templates, packageName, playwrightVersion })];
 }
 
 /**
@@ -606,16 +641,16 @@ function readTemplates() {
  *
  * @param {string} root
  * @param {{ path: string, text: string, name: unknown }} manifest
- * @param {string[]} harnesses
+ * @param {Omit<ProcessProject, 'templates'>} process
  * @param {boolean} sandbox
  * @returns {{ path: string, content: string, executable?: boolean }[]}
  */
-function plannedProjectFiles(root, manifest, harnesses, sandbox) {
+function plannedProjectFiles(root, manifest, process, sandbox) {
   const templates = readTemplates();
-  if (!sandbox) return processFiles({ templates, harnesses });
+  if (!sandbox) return processFiles({ templates, ...process });
   return projectFiles({
     templates,
-    harnesses,
+    ...process,
     packageName: packageNameOf(manifest),
     playwrightVersion: playwrightVersion(readLockfile(root)),
   });
@@ -650,26 +685,45 @@ function writeDockerignore({ path, isNew, content }) {
 }
 
 /**
- * Writes the project's `opencode.json`, amends it, or leaves it, prints what it did, and returns the notice to print
- * for one it cannot amend.
+ * Writes the project's `opencode.json`, amends it, or leaves it, prints what it did, and returns the notices to
+ * print: for one it cannot amend, and for one that lists the kit's standards beside the project's own, judged on
+ * the file as it was read, since amending only adds.
  *
  * @param {string} root
- * @returns {string | undefined}
+ * @param {string} standards
+ * @returns {string[]}
  */
-function writeOpencodeJson(root) {
+function writeOpencodeJson(root, standards) {
   const read = readProjectFile(root, OPENCODE_FILE);
-  const verdict = opencodeVerdict(read);
+  const kitStandards = opencodeLoadsKitStandards(read, standards) ? [opencodeKitStandardsNotice(standards)] : [];
+  const verdict = opencodeVerdict(read, standards);
   if (verdict.loads) {
-    console.log(`skipped ${OPENCODE_FILE}, which loads ${INSTRUCTION_PATHS.join(' and ')}`);
-    return undefined;
+    console.log(`skipped ${OPENCODE_FILE}, which loads ${instructionPaths(standards).join(' and ')}`);
+    return kitStandards;
   }
   if (verdict.content === undefined) {
     console.log(`skipped ${OPENCODE_FILE}, which cannot be amended`);
-    return opencodeInitNotice(verdict.problem, verdict.lacks);
+    return [opencodeInitNotice(verdict.problem, verdict.lacks), ...kitStandards];
   }
   writeFileSync(resolve(root, OPENCODE_FILE), verdict.content, read.found ? {} : { flag: 'wx' });
   console.log(`${read.found ? 'changed' : 'wrote'} ${OPENCODE_FILE}`);
-  return undefined;
+  return kitStandards;
+}
+
+/**
+ * The notices `init` prints for a `CLAUDE.md` that exists: the lines it lacks, and the kit's standards beside the
+ * project's own.
+ *
+ * @param {import('./agentrite-instructions.mjs').ProjectFile} read
+ * @param {string} standards
+ * @returns {string[]}
+ */
+function claudeInitNotices(read, standards) {
+  const lacks = claudeLacks(read, standards);
+  return [
+    ...(lacks.length > 0 ? [claudeInitNotice(lacks)] : []),
+    ...(claudeLoadsKitStandards(read, standards) ? [claudeKitStandardsNotice(standards)] : []),
+  ];
 }
 
 /**
@@ -743,11 +797,13 @@ function init(root, given) {
   const settings = initSettings(root, hasSettings, given, template);
   // Every file but agentrite.json follows the order the harnesses were given in.
   const harnesses = hasSettings ? settings.harnesses : given.harnesses;
+  const roles = readRoles(root, settings.roles);
+  const { standards } = settings;
   const manifest = readPackageJson(root);
   // Planned before anything is written, the settings file among it: what init refuses on is read here.
   const files = [
     { path: SETTINGS_FILE, content: settingsText(settings) },
-    ...plannedProjectFiles(root, manifest, harnesses, settings.sandbox),
+    ...plannedProjectFiles(root, manifest, { harnesses, standards, roles }, settings.sandbox),
   ];
   const ignore = settings.sandbox ? plannedDockerignore(root) : undefined;
   /** @type {string[]} */ const notices = [];
@@ -756,10 +812,12 @@ function init(root, given) {
     const absolute = resolve(root, file.path);
     if (exists(absolute)) {
       console.log(`skipped ${file.path}, which exists`);
-      if (file.path === 'AGENTS.md') notices.push(agentsNotice(file.content));
+      if (file.path === 'AGENTS.md') {
+        notices.push(agentsNotice(file.content));
+        if (!agentsNamesList(readProjectFile(root, file.path))) notices.push(agentsListNotice(false));
+      }
       if (file.path === 'CLAUDE.md' && harnesses.includes('claude')) {
-        const lacks = claudeLacks(readProjectFile(root, file.path));
-        if (lacks.length > 0) notices.push(claudeInitNotice(lacks));
+        notices.push(...claudeInitNotices(readProjectFile(root, file.path), standards));
       }
       continue;
     }
@@ -777,10 +835,7 @@ function init(root, given) {
     console.log('changed package.json');
   }
 
-  if (harnesses.includes('opencode')) {
-    const notice = writeOpencodeJson(root);
-    if (notice !== undefined) notices.push(notice);
-  }
+  if (harnesses.includes('opencode')) notices.push(...writeOpencodeJson(root, standards));
 
   if (ignore !== undefined) writeDockerignore(ignore);
 
@@ -828,24 +883,31 @@ function kindOf(path) {
 }
 
 /**
- * What to tell a project, with `harnesses`, whose `CLAUDE.md` or `opencode.json` does not load the kit's
- * instructions, which `refresh` reads and never writes: the notice of each such file of a harness given.
+ * What to tell a project, with `harnesses` and `standards`, about the files `refresh` reads and never writes: a
+ * `CLAUDE.md` or an `opencode.json` of a harness given that does not load the kit's instructions, or that loads the
+ * kit's standards beside the project's own, and, whatever the harnesses, an `AGENTS.md` that does not name the list.
  *
  * @param {string} root
  * @param {string[]} harnesses
+ * @param {string} standards
  * @returns {string[]}
  */
-function instructionNotices(root, harnesses) {
+function instructionNotices(root, harnesses, standards) {
   /** @type {string[]} */ const notices = [];
   if (harnesses.includes('claude')) {
     const read = readProjectFile(root, 'CLAUDE.md');
-    const lacks = claudeLacks(read);
+    const lacks = claudeLacks(read, standards);
     if (lacks.length > 0) notices.push(claudeRefreshNotice(!read.found, lacks));
+    if (claudeLoadsKitStandards(read, standards)) notices.push(claudeKitStandardsNotice(standards));
   }
   if (harnesses.includes('opencode')) {
-    const verdict = opencodeVerdict(readProjectFile(root, OPENCODE_FILE));
+    const read = readProjectFile(root, OPENCODE_FILE);
+    const verdict = opencodeVerdict(read, standards);
     if (!verdict.loads) notices.push(opencodeRefreshNotice(verdict.problem, verdict.lacks));
+    if (opencodeLoadsKitStandards(read, standards)) notices.push(opencodeKitStandardsNotice(standards));
   }
+  const agents = readProjectFile(root, 'AGENTS.md');
+  if (!agentsNamesList(agents)) notices.push(agentsListNotice(!agents.found));
   return notices;
 }
 
@@ -853,16 +915,17 @@ function instructionNotices(root, harnesses) {
  * Makes the kit's own files in the project at `root` what this release writes, prints what it did to each, and
  * returns the exit status. The harnesses and the sandbox setting are those of the project's `agentrite.json`, which
  * is read and never written. With the sandbox setting false the shim is left out, so that nothing is read or
- * printed of it. After the files come the notices of a `CLAUDE.md` or an `opencode.json` that does not load the
- * kit's instructions, which change neither what is written nor the status.
+ * printed of it. After the files come the notices of `instructionNotices`, which change neither what is written
+ * nor the status.
  *
  * @param {string} root
  * @returns {number}
  */
 function refresh(root) {
-  const { harnesses, sandbox } = readSettings(root);
+  const { harnesses, sandbox, standards, roles: roleFiles } = readSettings(root);
+  const roles = readRoles(root, roleFiles);
   let status = 0;
-  for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses, sandbox })) {
+  for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses, sandbox, standards, roles })) {
     const absolute = resolve(root, file.path);
     const kind = kindOf(absolute);
     if (kind === 'other') {
@@ -886,20 +949,31 @@ function refresh(root) {
     if (file.executable) chmodSync(absolute, 0o755);
     console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${file.path}`);
   }
-  for (const notice of instructionNotices(root, harnesses)) console.log(`\n${notice}`);
+  for (const notice of instructionNotices(root, harnesses, standards)) console.log(`\n${notice}`);
   return status;
 }
 
 /**
- * Prints the roles the kit has, for a reader or as JSON, and returns the exit status. It reads nothing of the
- * project.
+ * The roles of the project at `root`: each with the file the settings give and the description that file holds.
+ * Throws what to print for settings that are not valid and for a role file that cannot be read.
  *
- * @param {string} _root
+ * @param {string} root
+ * @returns {import('./agentrite-roles.mjs').Role[]}
+ */
+function projectRoles(root) {
+  return readRoles(root, readSettings(root).roles);
+}
+
+/**
+ * Prints the roles of the project, for a reader or as JSON, and returns the exit status.
+ *
+ * @param {string} root
  * @param {{ json: boolean }} parsed
  * @returns {number}
  */
-function roles(_root, { json }) {
-  process.stdout.write(json ? rolesJson(ROLES) : rolesListing(ROLES));
+function roles(root, { json }) {
+  const listed = projectRoles(root);
+  process.stdout.write(json ? rolesJson(listed) : rolesListing(listed));
   return 0;
 }
 
@@ -918,16 +992,17 @@ function changeDirectories(root) {
 }
 
 /**
- * Throws unless the wrapper of `role` for `harness` is in the project at `root` as refresh would leave it. A
- * harness that is given another wrapper may go on as its default agent, which never reads the role's file, and
- * say so in one line that is easy to miss.
+ * Throws unless the wrapper of `role` for `harness` is in the project at `root` as refresh would leave it, given
+ * the project's `roles`. A harness that is given another wrapper may go on as its default agent, which never reads
+ * the role's file, and say so in one line that is easy to miss.
  *
  * @param {string} root
+ * @param {import('./agentrite-roles.mjs').Role[]} roles
  * @param {string} harness
  * @param {string} role
  */
-function checkWrapper(root, harness, role) {
-  const wrapper = plannedFiles([harness]).find((file) => basename(file.path) === `${role}.md`);
+function checkWrapper(root, roles, harness, role) {
+  const wrapper = plannedFiles([harness], roles).find((file) => basename(file.path) === `${role}.md`);
   if (wrapper === undefined) throw new Error(`the kit writes no wrapper of ${role} for ${harness}`);
   const absolute = resolve(root, wrapper.path);
   const remedy =
@@ -948,8 +1023,9 @@ function checkWrapper(root, harness, role) {
  * @returns {number}
  */
 function run(root, { role, harness, unit, text, ...start }) {
+  const roles = projectRoles(root);
   const directory = resolveUnit(unit, changeDirectories(root));
-  checkWrapper(root, harness, role);
+  checkWrapper(root, roles, harness, role);
   const { command, args } = harnessCommand({ ...start, harness, role, prompt: unitPrompt(directory, text) });
 
   // The arguments go to the harness as they are, with no shell in between to read the prompt.

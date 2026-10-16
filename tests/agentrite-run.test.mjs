@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { HARNESS_NAMES, plannedFiles, ROLES } from '../scripts/agentrite-roles.mjs';
+import { HARNESS_NAMES, plannedFiles, ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -13,7 +13,7 @@ import {
   runUsage,
   unitPrompt,
 } from '../scripts/agentrite-run.mjs';
-import { installKit } from './installed-kit.mjs';
+import { installKit, KIT_ROLES } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
@@ -37,18 +37,18 @@ function emptyDirectory(t) {
 // R1: the roles.
 
 test('the listing holds every role the kit has, in the order the kit holds them', () => {
-  const blocks = rolesListing(ROLES).trimEnd().split('\n\n');
+  const blocks = rolesListing(KIT_ROLES).trimEnd().split('\n\n');
 
-  assert.ok(ROLES.length > 0);
+  assert.ok(KIT_ROLES.length > 0);
   assert.deepEqual(
     blocks.map((block) => block.split('\n')[0]),
-    ROLES.map((role) => role.name),
+    KIT_ROLES.map((role) => role.name),
   );
 });
 
 test('each role is listed with its description as the wrappers hold it, indented by two spaces', () => {
-  const wrappers = plannedFiles(['claude']);
-  const blocks = rolesListing(ROLES).trimEnd().split('\n\n');
+  const wrappers = plannedFiles(['claude'], KIT_ROLES);
+  const blocks = rolesListing(KIT_ROLES).trimEnd().split('\n\n');
 
   blocks.forEach((block, index) => {
     const [name, ...lines] = block.split('\n');
@@ -56,23 +56,25 @@ test('each role is listed with its description as the wrappers hold it, indented
     assert.ok(wrapper, `no wrapper for ${name}`);
     for (const line of lines) assert.match(line, /^ {2}\S/);
     assert.equal(lines.map((line) => line.slice(2)).join(' '), wrapperDescription(wrapper.content));
-    assert.equal(lines.map((line) => line.slice(2)).join(' '), ROLES[index].description);
+    assert.equal(lines.map((line) => line.slice(2)).join(' '), KIT_ROLES[index].description);
   });
 });
 
 test('no line of the listing is over 120 characters, and it ends with one line break', () => {
-  const listing = rolesListing(ROLES);
+  const listing = rolesListing(KIT_ROLES);
 
   for (const line of listing.split('\n')) assert.ok(line.length <= 120, `a line of ${line.length} characters`);
   assert.equal(listing, `${listing.trimEnd()}\n`);
 });
 
-test('agentrite roles prints the listing and exits 0 in a directory that is no project', (t) => {
-  const result = spawnSync(process.execPath, [script, 'roles'], { cwd: emptyDirectory(t), encoding: 'utf-8' });
+test('agentrite roles prints the listing of the kit roles and exits 0 in a project that names them', (t) => {
+  const { agentrite } = project(t);
+
+  const result = agentrite(['roles']);
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
-  assert.equal(result.stdout, rolesListing(ROLES));
+  assert.equal(result.stdout, rolesListing(KIT_ROLES));
 });
 
 test('agentrite roles with an argument that is not --json prints its usage on standard error and exits 2', (t) => {
@@ -89,12 +91,12 @@ test('agentrite roles with an argument that is not --json prints its usage on st
 // R20: the roles as JSON.
 
 test('the JSON of the roles reads back as the roles the kit has, in order, by name and description', () => {
-  const document = JSON.parse(rolesJson(ROLES));
+  const document = JSON.parse(rolesJson(KIT_ROLES));
 
   assert.deepEqual(Object.keys(document), ['roles']);
   assert.deepEqual(
     document.roles,
-    ROLES.map((role) => ({ name: role.name, description: role.description })),
+    KIT_ROLES.map((role) => ({ name: role.name, description: role.description })),
   );
   for (const role of document.roles) {
     assert.deepEqual(Object.keys(role), ['name', 'description']);
@@ -103,9 +105,9 @@ test('the JSON of the roles reads back as the roles the kit has, in order, by na
 });
 
 test('each description in the JSON is the one the wrappers hold, as one line', () => {
-  const wrappers = plannedFiles(['claude']);
+  const wrappers = plannedFiles(['claude'], KIT_ROLES);
 
-  for (const role of JSON.parse(rolesJson(ROLES)).roles) {
+  for (const role of JSON.parse(rolesJson(KIT_ROLES)).roles) {
     const wrapper = wrappers.find((file) => file.path === `.claude/agents/${role.name}.md`);
     assert.ok(wrapper, `no wrapper for ${role.name}`);
     assert.equal(role.description, wrapperDescription(wrapper.content));
@@ -119,21 +121,20 @@ test('the JSON is indented by two, each key of a role on a line of its own, and 
     json,
     '{\n  "roles": [\n    {\n      "name": "a",\n      "description": "One \\"quoted\\" line."\n    }\n  ]\n}\n',
   );
-  assert.equal(rolesJson(ROLES), `${JSON.stringify(JSON.parse(rolesJson(ROLES)), null, 2)}\n`);
+  assert.equal(rolesJson(KIT_ROLES), `${JSON.stringify(JSON.parse(rolesJson(KIT_ROLES)), null, 2)}\n`);
 });
 
-test('agentrite roles --json prints the JSON and exits 0 in a directory that is no project', (t) => {
-  const result = spawnSync(process.execPath, [script, 'roles', '--json'], {
-    cwd: emptyDirectory(t),
-    encoding: 'utf-8',
-  });
+test('agentrite roles --json prints the JSON of the kit roles and exits 0 in a project that names them', (t) => {
+  const { agentrite } = project(t);
+
+  const result = agentrite(['roles', '--json']);
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
-  assert.equal(result.stdout, rolesJson(ROLES));
+  assert.equal(result.stdout, rolesJson(KIT_ROLES));
   assert.deepEqual(
     JSON.parse(result.stdout).roles.map((role) => role.name),
-    ROLES.map((role) => role.name),
+    ROLE_NAMES,
   );
 });
 
@@ -159,7 +160,7 @@ usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [-
 
 test('the usage of run is the text of the plan, with the roles and the harnesses the kit has', () => {
   assert.equal(runUsage(), RUN_USAGE);
-  assert.match(runUsage(), new RegExp(`^  <role> +${ROLES.map((role) => role.name).join(' \\| ')}$`, 'm'));
+  assert.match(runUsage(), new RegExp(`^  <role> +${ROLE_NAMES.join(' \\| ')}$`, 'm'));
   assert.match(runUsage(), new RegExp(`^  <harness> +${HARNESS_NAMES.join(' \\| ')}$`, 'm'));
   for (const line of runUsage().split('\n')) assert.ok(line.length <= 120, line);
 });
@@ -171,10 +172,10 @@ const REVIEW = { role: 'reviewer', harness: 'opencode', unit: '0007' };
 
 test('run takes the role, the harness and the unit, in that order', () => {
   assert.deepEqual(parseRunArgs(['reviewer', 'opencode', '0007']), { ...REVIEW, ...PLAIN });
-  for (const role of ROLES) {
+  for (const role of ROLE_NAMES) {
     for (const harness of HARNESS_NAMES) {
-      const parsed = parseRunArgs([role.name, harness, '0007-a-unit']);
-      assert.deepEqual([parsed.role, parsed.harness, parsed.unit], [role.name, harness, '0007-a-unit']);
+      const parsed = parseRunArgs([role, harness, '0007-a-unit']);
+      assert.deepEqual([parsed.role, parsed.harness, parsed.unit], [role, harness, '0007-a-unit']);
     }
   }
 });
@@ -897,26 +898,105 @@ test('agentrite alone and with a command it does not know print the usage of eve
   assert.equal(unknown.stderr, `unknown command: list-roles\n${usage}`);
 });
 
-// R7: run and roles do not read agentrite.json.
+// Unit 0054, R10: run and roles read agentrite.json and the role files it names.
 
-test('run and roles do what they do with no agentrite.json and with one that is not valid', (t) => {
-  const { base, agentrite, write } = project(t);
-  const expected = started('claude', STARTED.claude([], UNIT_PROMPT));
-  const withFile = agentrite(['run', 'reviewer', 'claude', '0007']);
-  assert.equal(withFile.stdout, expected);
+const OWN_REVIEWER = '---\ndescription: Reviews as this project does.\n---\n\n# Our reviewer\n';
 
-  for (const settings of [undefined, 'not json', '{ "defaultBranch": "", "harnesses": [], "sandbox": "no" }']) {
-    if (settings === undefined) rmSync(join(base, 'agentrite.json'));
-    else write('agentrite.json', settings);
+// `project` with its reviewer's file replaced by one of its own, as agentrite.json names it.
+function withOwnReviewer(made) {
+  made.write('rules/reviewer.md', OWN_REVIEWER);
+  const settings = JSON.parse(made.read('agentrite.json'));
+  const roles = { ...settings.roles, reviewer: 'rules/reviewer.md' };
+  made.write('agentrite.json', JSON.stringify({ ...settings, roles }));
+}
 
-    const result = agentrite(['run', 'reviewer', 'claude', '0007']);
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, expected);
-    assert.equal(result.stderr, withFile.stderr);
+test('roles and roles --json list the descriptions of the files the settings give, a replaced role included', (t) => {
+  const made = project(t);
+  withOwnReviewer(made);
+  const own = { name: 'reviewer', path: 'rules/reviewer.md', description: 'Reviews as this project does.' };
+  const roles = KIT_ROLES.map((role) => (role.name === 'reviewer' ? own : role));
 
-    const roles = agentrite(['roles']);
-    assert.equal(roles.status, 0, roles.stderr);
-    assert.equal(roles.stdout, rolesListing(ROLES));
-    assert.equal(roles.stderr, '');
-  }
+  const listing = made.agentrite(['roles']);
+  const json = made.agentrite(['roles', '--json']);
+
+  assert.equal(listing.status, 0, listing.stderr);
+  assert.equal(listing.stdout, rolesListing(roles));
+  assert.equal(json.status, 0, json.stderr);
+  assert.equal(json.stdout, rolesJson(roles));
+  assert.ok(listing.stdout.endsWith('reviewer\n  Reviews as this project does.\n'), listing.stdout);
+});
+
+const FRONT_MATTER_REFUSAL =
+  'agentrite: rules/reviewer.md has no front matter that a role file must open with. It must be a line ---, then ' +
+  'either the line description: <text>, or the line description: >- followed by the text on lines indented by two ' +
+  'spaces, then a line ---\n';
+
+// Each project a command that reads the settings refuses, with what it says on standard error.
+const REFUSED = [
+  {
+    what: 'no agentrite.json',
+    arrange: (made) => rmSync(join(made.base, 'agentrite.json')),
+    says: (stderr) =>
+      assert.equal(
+        stderr,
+        'agentrite: the project has no agentrite.json. Run: npx agentrite config, which writes one\n',
+      ),
+  },
+  {
+    what: 'an agentrite.json that is not valid',
+    arrange: (made) => made.write('agentrite.json', 'not json'),
+    says: (stderr) => assert.match(stderr, /^agentrite: agentrite\.json is not JSON: /),
+  },
+  {
+    what: 'a path that names no file',
+    arrange: (made) => rmSync(join(made.base, 'node_modules'), { recursive: true }),
+    says: (stderr) =>
+      assert.equal(
+        stderr,
+        'agentrite: agentrite.json: standards is "node_modules/agentrite/standards.md", and there is no file at it. ' +
+          "It must name a file in the project's working tree\n",
+      ),
+  },
+  {
+    what: 'a role file without front matter',
+    arrange: (made) => {
+      withOwnReviewer(made);
+      made.write('rules/reviewer.md', '# Our reviewer\n');
+    },
+    says: (stderr) => assert.equal(stderr, FRONT_MATTER_REFUSAL),
+  },
+];
+
+for (const { what, arrange, says } of REFUSED) {
+  test(`roles and run refuse a project with ${what}, print nothing on standard output and start nothing`, (t) => {
+    const made = project(t);
+    arrange(made);
+
+    for (const args of [['roles'], ['roles', '--json'], ['run', 'reviewer', 'claude', '0007']]) {
+      const result = made.agentrite(args);
+
+      assert.equal(result.status, 1, args.join(' '));
+      assert.equal(result.stdout, '', args.join(' '));
+      says(result.stderr);
+    }
+  });
+}
+
+test('run refuses the kit reviewer wrapper when roles names another file, and starts with the refreshed one', (t) => {
+  const made = project(t);
+  withOwnReviewer(made);
+
+  const refused = made.agentrite(['run', 'reviewer', 'claude', '0007']);
+
+  assert.equal(refused.status, 1);
+  assert.equal(refused.stdout, '');
+  assert.equal(
+    refused.stderr,
+    `agentrite: .claude/agents/reviewer.md is not the file refresh would leave there. ${REMEDY}\n`,
+  );
+
+  assert.equal(made.agentrite(['refresh']).status, 0);
+  const result = made.agentrite(['run', 'reviewer', 'claude', '0007']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
 });

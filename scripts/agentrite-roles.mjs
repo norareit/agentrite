@@ -1,37 +1,87 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 const BODY_LINE =
-  'Read `node_modules/agentrite/roles/{name}.md` in the project root and follow it. ' +
-  'It is your instruction; this file holds none of its own.';
-
-const SPECIFIER_DESCRIPTION =
-  'Writes what a change unit must make true: the spec of a feature or a bug, or the record of a task, in ' +
-  'changes/. Use before anything is planned or implemented. Dispatch it with the request, and with the ' +
-  'unit directory when the unit exists already.';
-
-const PLANNER_DESCRIPTION =
-  'Writes the plan of an approved change unit, against the tree the unit will be built on. Use once the ' +
-  "human has approved the unit's spec and the unit is next to be built, not before. Dispatch it with the " +
-  'unit directory.';
-
-const IMPLEMENTER_DESCRIPTION =
-  'Builds an approved change unit and keeps its documents true. Use once the unit is approved, with its plan ' +
-  'where its kind needs one. Dispatch it with the unit directory.';
-
-const REVIEWER_DESCRIPTION =
-  'Reviews a finished change unit for spec conformance, plan fidelity and code quality, and returns its ' +
-  "findings in its response. It changes nothing under review, and appends one entry to the unit's record.md " +
-  'saying that it reviewed. Use once the implementation is committed. Dispatch it with the unit directory; ' +
-  'it produces its own diff and runs the suites itself.';
+  'Read `{path}` in the project root and follow it. It is your instruction; this file holds none of its own.';
 
 /** The names of the roles, in the order every listing of them follows. */
 export const ROLE_NAMES = ['specifier', 'planner', 'implementer', 'reviewer'];
 
-/** The roles the kit has, in the order every listing of them follows. */
-export const ROLES = [
-  { name: 'specifier', description: SPECIFIER_DESCRIPTION },
-  { name: 'planner', description: PLANNER_DESCRIPTION },
-  { name: 'implementer', description: IMPLEMENTER_DESCRIPTION },
-  { name: 'reviewer', description: REVIEWER_DESCRIPTION },
-];
+/**
+ * @typedef {{ name: string, path: string, description: string }} Role
+ */
+
+/**
+ * The description that the front matter of a role file holds, or `undefined` for a text whose front matter is not
+ * in one of its two forms: a line `---`, then either the line `description: <text>` or the line `description: >-`
+ * followed by the text on lines indented by two spaces, then a line `---`. The folded form is read as YAML reads it,
+ * as one line whose lines are joined by spaces. No YAML parser is used, and nothing else may stand in the front
+ * matter.
+ *
+ * @param {string} text
+ * @returns {string | undefined}
+ */
+export function parseRoleDescription(text) {
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== '---') return undefined;
+  const end = lines.indexOf('---', 1);
+  if (end === -1) return undefined;
+  const [first, ...rest] = lines.slice(1, end);
+  if (first === undefined || !first.startsWith('description:')) return undefined;
+  const value = first.slice('description:'.length).trim();
+  if (value === '>-') return foldedDescription(rest);
+  return value === '' || rest.length > 0 ? undefined : value;
+}
+
+/**
+ * The text of the lines of a folded description, each indented by two spaces and then a character that is not a
+ * space, joined by single spaces, or `undefined` when there are none or one is indented otherwise.
+ *
+ * @param {string[]} lines
+ * @returns {string | undefined}
+ */
+function foldedDescription(lines) {
+  if (lines.length === 0 || !lines.every((line) => /^ {2}\S/.test(line))) return undefined;
+  return lines.map((line) => line.slice(2).trimEnd()).join(' ');
+}
+
+const FRONT_MATTER_FORM =
+  'It must be a line ---, then either the line description: <text>, or the line description: >- followed by the ' +
+  'text on lines indented by two spaces, then a line ---';
+
+/**
+ * @param {unknown} error
+ * @returns {string}
+ */
+function messageOf(error) {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * Each role with the path of its file, as `roles` gives it, and the description that file holds, in the order of
+ * `ROLE_NAMES`. A file two roles share is read for each. Throws, naming the file, for one that cannot be read and
+ * for one without the front matter of `parseRoleDescription`.
+ *
+ * @param {string} root
+ * @param {Record<string, string>} roles
+ * @returns {Role[]}
+ */
+export function readRoles(root, roles) {
+  return ROLE_NAMES.map((name) => {
+    const path = roles[name];
+    let text;
+    try {
+      text = readFileSync(resolve(root, path), 'utf-8');
+    } catch (error) {
+      throw new Error(`cannot read ${path}: ${messageOf(error)}`);
+    }
+    const description = parseRoleDescription(text);
+    if (description === undefined) {
+      throw new Error(`${path} has no front matter that a role file must open with. ${FRONT_MATTER_FORM}`);
+    }
+    return { name, path, description };
+  });
+}
 
 // The longest line a wrapper holds, so that a project wrapping its text at 120 characters can commit the wrappers
 // as they are written.
@@ -72,27 +122,27 @@ function descriptionBlock(description) {
 }
 
 /**
- * @param {string} name
+ * @param {string} path
  * @returns {string}
  */
-function body(name) {
-  return `${wrapWords(BODY_LINE.replaceAll('{name}', name), LINE_WIDTH, '').join('\n')}\n`;
+function body(path) {
+  return `${wrapWords(BODY_LINE.replace('{path}', path), LINE_WIDTH, '').join('\n')}\n`;
 }
 
 /**
- * @param {{ name: string, description: string }} role
+ * @param {Role} role
  * @returns {string}
  */
 function claudeFile(role) {
-  return `---\nname: ${role.name}\n${descriptionBlock(role.description)}---\n\n${body(role.name)}`;
+  return `---\nname: ${role.name}\n${descriptionBlock(role.description)}---\n\n${body(role.path)}`;
 }
 
 /**
- * @param {{ name: string, description: string }} role
+ * @param {Role} role
  * @returns {string}
  */
 function opencodeFile(role) {
-  return `---\n${descriptionBlock(role.description)}mode: all\n---\n\n${body(role.name)}`;
+  return `---\n${descriptionBlock(role.description)}mode: all\n---\n\n${body(role.path)}`;
 }
 
 const HARNESSES = {
@@ -104,13 +154,27 @@ const HARNESSES = {
 export const HARNESS_NAMES = Object.keys(HARNESSES);
 
 /**
+ * The directory of each harness's wrappers, in the order the harnesses are given.
+ *
  * @param {string[]} harnesses
+ * @returns {string[]}
+ */
+export function wrapperDirectories(harnesses) {
+  return harnesses.map((harness) => HARNESSES[harness].directory);
+}
+
+/**
+ * The wrappers of each role for each harness, written from `roles`, as `readRoles` gives them: each with its role's
+ * description, and a body that says to read its role's file.
+ *
+ * @param {string[]} harnesses
+ * @param {Role[]} roles
  * @returns {{ path: string, content: string }[]}
  */
-export function plannedFiles(harnesses) {
+export function plannedFiles(harnesses, roles) {
   /** @type {{ path: string, content: string }[]} */ const files = [];
   for (const harness of harnesses) {
-    for (const role of ROLES) {
+    for (const role of roles) {
       files.push({
         path: `${HARNESSES[harness].directory}/${role.name}.md`,
         content: HARNESSES[harness].render(role),

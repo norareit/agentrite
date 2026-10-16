@@ -13,10 +13,17 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
+import {
+  agentsListNotice,
+  claudeKitStandardsNotice,
+  claudeRefreshNotice,
+  instructionsList,
+  opencodeKitStandardsNotice,
+  opencodeRefreshNotice,
+} from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { refreshedWrapper } from '../scripts/agentrite.mjs';
-import { kitSettingsText, installKit } from './installed-kit.mjs';
+import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
@@ -24,7 +31,7 @@ const SHIM = readFileSync(new URL('../templates/project/sandbox.sh', import.meta
 
 function rendered(harness, role) {
   const directory = harness === 'claude' ? '.claude/agents' : '.opencode/agents';
-  return plannedFiles([harness]).find((file) => file.path === `${directory}/${role}.md`).content;
+  return plannedFiles([harness], KIT_ROLES).find((file) => file.path === `${directory}/${role}.md`).content;
 }
 
 // `wrapper` with `lines` added to its frontmatter, straight after the line that starts with `after`.
@@ -160,11 +167,14 @@ test('refreshing what a refresh returned changes nothing', () => {
 // End to end: the executable in a temporary project.
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
-const WRAPPERS = plannedFiles(['claude', 'opencode']);
-const KIT_OWNED = [...WRAPPERS.map((file) => file.path), 'sandbox.sh'];
+const WRAPPERS = plannedFiles(['claude', 'opencode'], KIT_ROLES);
+const LIST = '.agentrite/instructions.md';
+const KIT_OWNED = [...WRAPPERS.map((file) => file.path), LIST, 'sandbox.sh'];
+// An AGENTS.md that names the list, of which refresh says nothing.
+const AGENTS_NAMING_LIST = `# Development Guidelines\n\nRead the files ${LIST} names.\n`;
 // The files init writes or amends that refresh must never touch.
 const PROJECT_OWNED = {
-  'AGENTS.md': '# Development Guidelines\n\nOurs.\n',
+  'AGENTS.md': AGENTS_NAMING_LIST,
   'CLAUDE.md': '@AGENTS.md\n',
   'sandbox/compose.project.yml': 'name: my-app-sandbox\n',
   'package.json': '{\n  "name": "my-app"\n}\n',
@@ -175,6 +185,7 @@ const PROJECT_OWNED = {
 function project(t) {
   const base = temporaryDirectory(t, 'agentrite-refresh-');
   installKit(base);
+  writeFileSync(join(base, 'AGENTS.md'), AGENTS_NAMING_LIST);
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
   const read = (path) => readFileSync(join(base, path), 'utf-8');
   const write = (path, content) => {
@@ -212,8 +223,8 @@ function noticesOf(result) {
   return result.stdout.split('\n\n').slice(1).join('\n\n');
 }
 
-// A project whose nine files are all out of date: the wrappers name the old package, one pins a model, and the
-// shim is another script that is not executable.
+// A project whose ten files are all out of date: the wrappers name the old package, one pins a model, the shim is
+// another script that is not executable, and the list is another text.
 function staleProject(t) {
   const made = project(t);
   for (const file of WRAPPERS) {
@@ -223,6 +234,7 @@ function staleProject(t) {
   made.write(pinnedPath, withFrontmatter(made.read(pinnedPath), 'mode:', ['model: some/model']));
   made.write('sandbox.sh', '#!/usr/bin/env bash\nexec something-else "$@"\n');
   chmodSync(join(made.base, 'sandbox.sh'), 0o644);
+  made.write(LIST, '# An old list\n');
   return { ...made, pinnedPath };
 }
 
@@ -246,7 +258,7 @@ test('stale wrappers and a stale shim are refreshed, a pinned model is kept, and
 
 test('a wrapper that holds mode: subagent is refreshed to mode: all, and keeps its pinned model', (t) => {
   const { refresh, read, write } = project(t);
-  const wrappers = plannedFiles(['opencode']);
+  const wrappers = plannedFiles(['opencode'], KIT_ROLES);
   const pinnedPath = '.opencode/agents/reviewer.md';
   for (const file of wrappers) {
     const earlier = file.content.replace('mode: all\n', 'mode: subagent\n');
@@ -282,7 +294,7 @@ test('a second run reports every file as up to date and writes none', (t) => {
   assert.doesNotMatch(result.stdout, /^(wrote|refreshed) /m);
 });
 
-test('a project with none of the files gets all nine, listed as written', (t) => {
+test('a project with none of the files gets all ten, listed as written', (t) => {
   const { base, refresh, read } = project(t);
 
   const result = refresh(['claude', 'opencode']);
@@ -295,7 +307,8 @@ test('a project with none of the files gets all nine, listed as written', (t) =>
   assert.equal(read('sandbox.sh'), SHIM);
   assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o111, 0);
   assert.match(result.stdout, line('wrote', 'sandbox.sh'));
-  assert.equal(linesOf(result).length, 9);
+  assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
+  assert.deepEqual(linesOf(result), KIT_OWNED.map((path) => `wrote ${path}`));
 });
 
 // The descriptions the planner's and the implementer's wrappers held in the release before the specifier, as that
@@ -351,6 +364,7 @@ test('a project with the three wrappers of the release before gets the fourth, a
     'refreshed .opencode/agents/planner.md',
     'refreshed .opencode/agents/implementer.md',
     'up to date .opencode/agents/reviewer.md',
+    `wrote ${LIST}`,
     'up to date sandbox.sh',
   ]);
   for (const file of WRAPPERS) {
@@ -429,6 +443,7 @@ test('the files that are the project own are byte for byte unchanged, and a miss
   for (const [path, content] of Object.entries(PROJECT_OWNED)) assert.equal(present.read(path), content, path);
 
   const absent = staleProject(t);
+  rmSync(join(absent.base, 'AGENTS.md'));
   assert.equal(absent.refresh(['claude', 'opencode']).status, 0);
   for (const path of [...Object.keys(PROJECT_OWNED), 'sandbox', 'package-lock.json']) {
     assert.equal(exists(join(absent.base, path)), false, path);
@@ -562,7 +577,8 @@ test('refresh does for each value of the two settings what it did for the argume
       const result = refresh(harnesses, sandbox);
 
       assert.equal(result.status, 0, result.stderr);
-      const expected = plannedFiles(harnesses).map((file) => `wrote ${file.path}`);
+      const expected = plannedFiles(harnesses, KIT_ROLES).map((file) => `wrote ${file.path}`);
+      expected.push(`wrote ${LIST}`);
       if (sandbox) expected.push('wrote sandbox.sh');
       assert.deepEqual(linesOf(result), expected);
       assert.equal(exists(join(base, 'sandbox.sh')), sandbox);
@@ -606,7 +622,7 @@ test('refresh with sandbox false refreshes the wrappers, keeps a pinned model an
     assert.equal(read(file.path), expected, file.path);
     assert.match(result.stdout, line('refreshed', file.path));
   }
-  assert.equal(linesOf(result).length, WRAPPER_PATHS.length);
+  assert.deepEqual(linesOf(result), [...WRAPPER_PATHS, LIST].map((path) => `refreshed ${path}`));
   assert.doesNotMatch(result.stdout, /sandbox\.sh/);
   assert.equal(read('sandbox.sh'), shimBefore);
 });
@@ -834,4 +850,176 @@ test('the notices change neither what refresh writes nor its status, also when a
   assert.match(noticesOf(result), /^CLAUDE\.md does not load/m);
   assert.match(noticesOf(result), /^opencode\.json does not load/m);
   for (const path of ['CLAUDE.md', 'opencode.json']) assert.equal(exists(join(made.base, path)), false, path);
+});
+
+// Unit 0054: the list, and what follows the settings.
+
+const OWN_REVIEWER = '---\ndescription: Reviews as this project does.\n---\n\n# Our reviewer\n';
+const HOUSE = 'rules/house.md';
+
+// Runs refresh on an agentrite.json with both harnesses and the sandbox whose standards and roles are `own`, after
+// writing a file at each path of `own` that is not the kit's.
+function refreshOwn(made, own) {
+  const settings = { ...KIT_SETTINGS, ...own, roles: { ...KIT_SETTINGS.roles, ...own.roles } };
+  if (settings.standards === HOUSE) made.write(HOUSE, '# Our standards\n');
+  if (settings.roles.reviewer !== KIT_SETTINGS.roles.reviewer) made.write(settings.roles.reviewer, OWN_REVIEWER);
+  const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: true });
+  made.write('agentrite.json', JSON.stringify({ ...JSON.parse(text), ...settings }));
+  return made.run('refresh');
+}
+
+// R13, R14
+test('refresh writes the list, refreshes one that differs, and finds one that is up to date', (t) => {
+  const { refresh, read, write } = project(t);
+
+  assert.match(refresh(['claude']).stdout, line('wrote', LIST));
+  assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
+  assert.match(refresh(['claude']).stdout, line('up to date', LIST));
+  write(LIST, `${read(LIST)}Our line.\n`);
+  assert.match(refresh(['claude']).stdout, line('refreshed', LIST));
+  assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
+});
+
+test('a directory or a link at the path of the list is left, named, and the other files are written', (t) => {
+  for (const make of [
+    (base) => mkdirSync(join(base, LIST), { recursive: true }),
+    (base) => {
+      mkdirSync(join(base, '.agentrite'));
+      symlinkSync('/no/such/target', join(base, LIST));
+    },
+  ]) {
+    const { base, refresh } = project(t);
+    make(base);
+
+    const result = refresh(['claude', 'opencode']);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stderr, `agentrite: left ${LIST}, which is not a regular file\n`);
+    assert.deepEqual(
+      linesOf(result),
+      KIT_OWNED.filter((path) => path !== LIST).map((path) => `wrote ${path}`),
+    );
+  }
+});
+
+// R9, R13
+test('the list and the wrappers follow a changed roles.reviewer and a changed standards', (t) => {
+  const made = project(t);
+  assert.equal(made.refresh(['claude', 'opencode']).status, 0);
+
+  const result = refreshOwn(made, { standards: HOUSE, roles: { reviewer: 'rules/reviewer.md' } });
+
+  assert.equal(result.status, 0, result.stderr);
+  const changed = ['.claude/agents/reviewer.md', '.opencode/agents/reviewer.md', LIST];
+  for (const path of KIT_OWNED) {
+    assert.match(result.stdout, line(changed.includes(path) ? 'refreshed' : 'up to date', path), path);
+  }
+  const roles = { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' };
+  assert.equal(made.read(LIST), instructionsList({ standards: HOUSE, roles }));
+  for (const path of changed.slice(0, 2)) {
+    assert.match(made.read(path), /^ {2}Reviews as this project does\.$/m, path);
+    assert.match(made.read(path), /^Read `rules\/reviewer\.md` in the project root and follow it\./m, path);
+  }
+});
+
+// R11, R12
+test('refresh judges CLAUDE.md and opencode.json against the standards the settings give', (t) => {
+  const made = project(t);
+  made.write('CLAUDE.md', `@${PROCESS}\n@${HOUSE}\n@AGENTS.md\n`);
+  made.write('opencode.json', `{ "instructions": ["${PROCESS}", "${HOUSE}"] }\n`);
+
+  const result = refreshOwn(made, { standards: HOUSE });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(noticesOf(result), '');
+});
+
+test('refresh notices the kit standards in CLAUDE.md and opencode.json beside the project own, removing none', (t) => {
+  const claude = `@${PROCESS}\n@${HOUSE}\n${STANDARDS_IMPORT}\n@AGENTS.md\n`;
+  const opencode = `{ "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"] }\n`;
+  const made = project(t);
+  made.write('CLAUDE.md', claude);
+  made.write('opencode.json', opencode);
+
+  const result = refreshOwn(made, { standards: HOUSE });
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(noticesOf(result), `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`);
+  assert.equal(made.read('CLAUDE.md'), claude);
+  assert.equal(made.read('opencode.json'), opencode);
+});
+
+test('refresh gives no notice of the kit standards in a project that uses them', (t) => {
+  const made = project(t);
+  made.write('CLAUDE.md', CLAUDE_LOADS);
+  made.write('opencode.json', OPENCODE_LOADS);
+
+  const result = made.refresh(['claude', 'opencode']);
+
+  assert.equal(noticesOf(result), '');
+});
+
+// R16
+test('refresh notices an AGENTS.md that is missing or does not name the list, whatever the harnesses', (t) => {
+  for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode']]) {
+    for (const [agents, notice] of [
+      [undefined, agentsListNotice(true)],
+      ['# Ours\n\nRead node_modules/agentrite/standards.md.\n', agentsListNotice(false)],
+    ]) {
+      const made = project(t);
+      made.write('CLAUDE.md', CLAUDE_LOADS);
+      made.write('opencode.json', OPENCODE_LOADS);
+      rmSync(join(made.base, 'AGENTS.md'));
+      if (agents !== undefined) made.write('AGENTS.md', agents);
+
+      const result = made.refresh(harnesses);
+
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(noticesOf(result), `${notice}\n`, `${harnesses} ${JSON.stringify(agents)}`);
+      assert.equal(placed(made, 'AGENTS.md'), agents);
+    }
+  }
+});
+
+test('refresh prints the notices: CLAUDE.md, the kit standards in it, opencode.json, in it, then AGENTS.md', (t) => {
+  const made = project(t);
+  made.write('CLAUDE.md', `${STANDARDS_IMPORT}\n`);
+  made.write('opencode.json', `{ "instructions": ["${STANDARDS}"] }\n`);
+  rmSync(join(made.base, 'AGENTS.md'));
+
+  const result = refreshOwn(made, { standards: HOUSE });
+
+  assert.equal(result.status, 0, result.stderr);
+  const notices = noticesOf(result);
+  const order = [
+    /^CLAUDE\.md does not load/m,
+    /^CLAUDE\.md imports the kit's standards\.md/m,
+    /^opencode\.json does not load/m,
+    /^opencode\.json lists the kit's standards\.md/m,
+    /^AGENTS\.md is missing/m,
+  ].map((pattern) => notices.search(pattern));
+  assert.ok(order.every((at) => at !== -1), notices);
+  assert.deepEqual([...order].sort((first, second) => first - second), order, notices);
+});
+
+// R8
+test('refresh refuses a role file without front matter, and writes nothing', (t) => {
+  const { run, read, write } = staleProject(t);
+  write('rules/reviewer.md', '# Our reviewer\n');
+  const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: true });
+  const settings = { ...JSON.parse(text), roles: { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' } };
+  write('agentrite.json', JSON.stringify(settings));
+  const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
+
+  const result = run('refresh');
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.equal(
+    result.stderr,
+    'agentrite: rules/reviewer.md has no front matter that a role file must open with. It must be a line ---, ' +
+      'then either the line description: <text>, or the line description: >- followed by the text on lines ' +
+      'indented by two spaces, then a line ---\n',
+  );
+  for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
 });

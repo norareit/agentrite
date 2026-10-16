@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { CONFIG_NOTICE } from '../scripts/agentrite.mjs';
-import { installKit } from './installed-kit.mjs';
+import { installKit, KIT_ROLES } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
@@ -79,8 +79,8 @@ test('config leaves what is at the path of agentrite.json, whatever it is, and p
   }
 });
 
-// R46
-test('refresh runs on the file config wrote, and writes the eight wrappers and sandbox.sh', (t) => {
+// R46, and the list of unit 0054
+test('refresh runs on the file config wrote, and writes the eight wrappers, the list and sandbox.sh', (t) => {
   const { base, run } = directory(t);
   installKit(base);
   assert.equal(run('config').status, 0);
@@ -88,10 +88,11 @@ test('refresh runs on the file config wrote, and writes the eight wrappers and s
   const result = run('refresh');
 
   assert.equal(result.status, 0, result.stderr);
-  const paths = [...plannedFiles(['claude', 'opencode']).map((file) => file.path), 'sandbox.sh'];
-  assert.equal(paths.length, 9);
-  // The lines before the first empty line: the notices of CLAUDE.md and opencode.json, which the directory lacks,
-  // follow it.
+  const wrappers = plannedFiles(['claude', 'opencode'], KIT_ROLES).map((file) => file.path);
+  const paths = [...wrappers, '.agentrite/instructions.md', 'sandbox.sh'];
+  assert.equal(paths.length, 10);
+  // The lines before the first empty line: the notices of CLAUDE.md, opencode.json and AGENTS.md, which the
+  // directory lacks, follow it.
   assert.deepEqual(result.stdout.split('\n\n')[0].split('\n'), paths.map((path) => `wrote ${path}`));
   assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), TEMPLATE);
 });

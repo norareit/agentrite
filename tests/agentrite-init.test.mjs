@@ -15,9 +15,13 @@ import {
 import { join } from 'node:path';
 import { test } from 'node:test';
 import {
+  agentsListNotice,
   claudeInitNotice,
+  claudeKitStandardsNotice,
   claudeLacks,
+  instructionsList,
   opencodeInitNotice,
+  opencodeKitStandardsNotice,
   opencodeVerdict,
 } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
@@ -33,7 +37,7 @@ import {
   projectFiles,
   withCheckChangesScript,
 } from '../scripts/agentrite.mjs';
-import { kitSettingsText, installKit } from './installed-kit.mjs';
+import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE_PATHS = ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', 'sandbox/compose.project.yml'];
@@ -51,6 +55,7 @@ const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 const KIT_CONTAINER = 'node_modules/agentrite/container';
 const PROCESS = 'node_modules/agentrite/process.md';
 const STANDARDS = 'node_modules/agentrite/standards.md';
+const LIST = '.agentrite/instructions.md';
 // The notice of init for a CLAUDE.md that holds none of the lines.
 const CLAUDE_NOTICE = claudeInitNotice([`@${PROCESS}`, `@${STANDARDS}`, '@AGENTS.md']);
 // The opencode.json of R3 of unit 0048 and R18 of unit 0052, byte for byte.
@@ -58,7 +63,15 @@ const OPENCODE = `{\n  "instructions": [\n    "${PROCESS}",\n    "${STANDARDS}"\
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
-  return projectFiles({ templates, harnesses, packageName: 'my-app', playwrightVersion: '1.59.1', ...overrides });
+  return projectFiles({
+    templates,
+    harnesses,
+    roles: KIT_ROLES,
+    standards: STANDARDS,
+    packageName: 'my-app',
+    playwrightVersion: '1.59.1',
+    ...overrides,
+  });
 }
 function fileAt(list, path) {
   const file = list.find((candidate) => candidate.path === path);
@@ -199,39 +212,43 @@ test('parseArgs gives the usage of every command for no command and for one that
 test('the role wrappers are exactly those the kit renders', () => {
   for (const harnesses of HARNESS_LISTS) {
     const planned = files(harnesses);
-    for (const wrapper of plannedFiles(harnesses)) assert.deepEqual(fileAt(planned, wrapper.path), wrapper);
-    assert.equal(planned.filter((file) => file.path.includes('/agents/')).length, plannedFiles(harnesses).length);
+    for (const wrapper of plannedFiles(harnesses, KIT_ROLES)) assert.deepEqual(fileAt(planned, wrapper.path), wrapper);
+    const wrappers = plannedFiles(harnesses, KIT_ROLES);
+    assert.equal(planned.filter((file) => file.path.includes('/agents/')).length, wrappers.length);
   }
 });
 
 // R3
 
-test('AGENTS.md holds the three sections, naming process.md, standards.md, the role files and the change check', () => {
+test('AGENTS.md holds the three sections, naming the list of the files in use and the change check', () => {
   const agents = fileAt(files(['claude']), 'AGENTS.md').content;
   const headings = agents.split('\n').filter((line) => /^#{1,2} /.test(line));
   assert.deepEqual(headings.slice(0, 3), AGENTS_SECTIONS);
   assert.equal(agents.split('\n')[0], '# Development Guidelines');
   const opening = agents.split('\n\n')[1];
-  for (const file of ['process.md', 'standards.md']) {
-    const link = `[\`node_modules/agentrite/${file}\`](node_modules/agentrite/${file})`;
-    assert.ok(opening.includes(link), `the first paragraph does not link ${file}: ${opening}`);
-  }
+  assert.ok(opening.includes(`[\`${LIST}\`](${LIST})`), `the first paragraph does not link the list: ${opening}`);
   assert.match(opening, /\*\*required reading\*\*/);
-  assert.match(agents, /is in the kit's process\.md and\s+standards\.md already\./);
+  assert.match(opening, /the kit's `process\.md`, the project's standards, and the file of each role/);
+  assert.match(opening, /The kit writes the list from `agentrite\.json`/);
+  assert.match(agents, /is in the files\s+\.agentrite\/instructions\.md names already\./);
   assert.match(agents, /\[README\.md\]\(README\.md\)/);
   assert.match(agents, /`npm ci` installs it/);
   assert.match(agents, /never under\n?\s*`node_modules\/`/);
-  const roles = ['specifier', 'planner', 'implementer', 'reviewer'];
-  assert.deepEqual(
-    [...agents.matchAll(/^\* \[`node_modules\/agentrite\/roles\/(\w+)\.md`\]\((.*)\)$/gm)].map((link) => [
-      link[1],
-      link[2],
-    ]),
-    roles.map((role) => [role, `node_modules/agentrite/roles/${role}.md`]),
-  );
-  assert.match(agents, /^The four roles that do the work in `changes\/` are the kit's:$/m);
+  const roles = agents.slice(agents.indexOf('## Roles'), agents.indexOf('## Changes in this project'));
+  assert.ok(roles.includes(`[\`${LIST}\`](${LIST}) names the file of each of the four roles`), roles);
+  assert.match(roles, /Each wrapper is a pointer to\s+one role file/);
   assert.match(agents, /`npm run check-changes`, which runs the kit's script/);
   assert.match(agents, /## Specific to this project/);
+});
+
+// Unit 0054, R15
+test('AGENTS.md names no role file and no standards file itself', () => {
+  for (const harnesses of HARNESS_LISTS) {
+    const agents = fileAt(files(harnesses), 'AGENTS.md').content;
+    assert.doesNotMatch(agents, /roles\//);
+    assert.doesNotMatch(agents, /standards\.md/);
+    assert.ok(agents.includes(LIST));
+  }
 });
 
 test('AGENTS.md names the wrapper directories of the harnesses given, and only those', () => {
@@ -264,16 +281,43 @@ test('CLAUDE.md imports process.md, standards.md and AGENTS.md in order, outside
     const fence = lines.findIndex((line) => line.startsWith('```'));
     assert.ok(fence === -1 || fence > imports[2], 'a fenced block opens before the imports');
     for (const index of imports) assert.ok(!lines[index].includes('`'), lines[index]);
-    assert.deepEqual(claudeLacks({ found: true, text: claude }), []);
+    assert.deepEqual(claudeLacks({ found: true, text: claude }, STANDARDS), []);
   }
 });
 
-// R19 of unit 0052
-test('CLAUDE.md names standards.md in its text as well as in its imports', () => {
+// Unit 0054, R11, R15
+test('CLAUDE.md names the list in its text, and imports the standards the settings give between the other two', () => {
   const claude = fileAt(files(['claude']), 'CLAUDE.md').content;
   const text = claude.split('\n').filter((line) => !line.startsWith('@')).join('\n');
-  assert.match(text, /imports the kit's `process\.md` and `standards\.md`/);
-  assert.ok(text.includes(`[\`${STANDARDS}\`](${STANDARDS})`), text);
+  assert.match(text, /imports the kit's `process\.md`, the project's standards and\n`AGENTS\.md`/);
+  assert.ok(text.includes(`[\`${LIST}\`](${LIST})`), text);
+  assert.doesNotMatch(text, /standards\.md/);
+
+  const house = fileAt(files(['claude'], { standards: 'rules/house.md' }), 'CLAUDE.md').content;
+  const lines = house.split('\n');
+  assert.deepEqual(lines.slice(lines.indexOf(`@${PROCESS}`), lines.indexOf('@AGENTS.md') + 1), [
+    `@${PROCESS}`,
+    '@rules/house.md',
+    '@AGENTS.md',
+  ]);
+  assert.doesNotMatch(house, /standards\.md/);
+  assert.deepEqual(claudeLacks({ found: true, text: house }, 'rules/house.md'), []);
+});
+
+// Unit 0054, R13
+test('the list is planned after the wrappers and before AGENTS.md, with what the settings give', () => {
+  for (const harnesses of HARNESS_LISTS) {
+    const planned = files(harnesses);
+    const paths = planned.map((file) => file.path);
+    const wrappers = plannedFiles(harnesses, KIT_ROLES).map((file) => file.path);
+    assert.deepEqual(paths.slice(0, wrappers.length + 3), [...wrappers, LIST, 'AGENTS.md', 'CLAUDE.md']);
+    assert.equal(fileAt(planned, LIST).content, instructionsList({ standards: STANDARDS, roles: KIT_SETTINGS.roles }));
+  }
+  const own = files(['claude'], { standards: 'rules/house.md' });
+  assert.equal(
+    fileAt(own, LIST).content,
+    instructionsList({ standards: 'rules/house.md', roles: KIT_SETTINGS.roles }),
+  );
 });
 
 // R5
@@ -674,13 +718,13 @@ test('the command runs through a node_modules bin symlink the way npx does', (t)
   symlinkSync(script, bin);
   const result = spawnSync(process.execPath, [bin, 'init', 'claude'], { cwd: base, encoding: 'utf-8' });
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(read('CLAUDE.md'), templates['CLAUDE.md']);
+  assert.equal(read('CLAUDE.md'), fillTemplate(templates['CLAUDE.md'], { standards: STANDARDS }));
 });
 
 // --no-sandbox
 
 const SANDBOX_FILES = ['sandbox.sh', 'sandbox/compose.project.yml', '.dockerignore'];
-const PROCESS_PATHS = [...plannedFiles(['claude']).map((file) => file.path), 'AGENTS.md', 'CLAUDE.md'];
+const PROCESS_PATHS = [...plannedFiles(['claude'], KIT_ROLES).map((file) => file.path), 'AGENTS.md', 'CLAUDE.md'];
 
 function line(word, path, end) {
   return new RegExp(`^${word} ${path.replaceAll('.', '\\.')}${end}`, 'm');
@@ -936,7 +980,7 @@ test('init claude opencode and init opencode claude both write the default file,
   const wrappers = linesOf(result).filter((line) => line.includes('/agents/'));
   assert.deepEqual(
     wrappers,
-    plannedFiles(['opencode', 'claude']).map((file) => `wrote ${file.path}`),
+    plannedFiles(['opencode', 'claude'], KIT_ROLES).map((file) => `wrote ${file.path}`),
   );
   assert.match(second.read('AGENTS.md'), /^\* `\.opencode\/agents\/`\n\* `\.claude\/agents\/`$/m);
 });
@@ -1219,7 +1263,7 @@ test('init amends an opencode.json that is an object without the paths, and prin
     const result = run('init', 'opencode');
 
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(read('opencode.json'), opencodeVerdict({ found: true, text }).content);
+    assert.equal(read('opencode.json'), opencodeVerdict({ found: true, text }, STANDARDS).content);
     const { instructions } = JSON.parse(read('opencode.json'));
     assert.deepEqual(instructions.slice(-2), [PROCESS, STANDARDS], text);
     assert.ok(linesOf(result).includes('changed opencode.json'), result.stdout);
@@ -1264,7 +1308,7 @@ test('init leaves an opencode.json it cannot amend, with a notice of why, writes
       line === 'wrote opencode.json' ? 'skipped opencode.json, which cannot be amended' : line,
     );
     assert.deepEqual(linesOf(result), swapped, name);
-    const verdict = opencodeVerdict(text === null ? { found: true, error: 'x' } : { found: true, text });
+    const verdict = opencodeVerdict(text === null ? { found: true, error: 'x' } : { found: true, text }, STANDARDS);
     if (text !== null) assert.ok(noticesOf(result).includes(opencodeInitNotice(verdict.problem, verdict.lacks)), name);
     assert.match(noticesOf(result), /^opencode\.json was left as it is, because /m, name);
     assert.ok(noticesOf(result).indexOf('opencode.json was left') < noticesOf(result).indexOf('"harnesses"'), name);
@@ -1363,4 +1407,181 @@ test('init opencode does not notice an existing CLAUDE.md that lacks the lines',
   assert.equal(result.status, 0, result.stderr);
   assert.ok(linesOf(result).includes('skipped CLAUDE.md, which exists'), result.stdout);
   assert.doesNotMatch(noticesOf(result), /CLAUDE\.md/);
+});
+
+// Unit 0054: what follows the settings.
+
+const HOUSE = 'rules/house.md';
+const OWN_PLANNER = '---\ndescription: Plans as this project does.\n---\n\n# Our planner\n';
+
+// A project with both harnesses and no sandbox, whose agentrite.json names `standards` and the planner's file
+// `planner`, with a file at each.
+function ownProject(t, { standards = HOUSE, planner = KIT_SETTINGS.roles.planner }) {
+  const made = project(t);
+  const settings = { ...KIT_SETTINGS, roles: { ...KIT_SETTINGS.roles, planner } };
+  const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude', 'opencode'], sandbox: false });
+  writeFileSync(join(made.base, 'agentrite.json'), JSON.stringify({ ...JSON.parse(text), ...settings, standards }));
+  mkdirSync(join(made.base, 'rules'), { recursive: true });
+  if (standards === HOUSE) writeFileSync(join(made.base, HOUSE), '# Our standards\n');
+  if (planner !== KIT_SETTINGS.roles.planner) writeFileSync(join(made.base, planner), OWN_PLANNER);
+  return made;
+}
+
+// R13, R14
+test('init writes the list after the wrappers and before AGENTS.md, with the files the settings give', (t) => {
+  const { run, read } = project(t);
+
+  const result = run('init', 'claude', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  const wrappers = plannedFiles(['claude', 'opencode'], KIT_ROLES).map((file) => `wrote ${file.path}`);
+  assert.deepEqual(linesOf(result).slice(0, wrappers.length + 4), [
+    'wrote agentrite.json',
+    ...wrappers,
+    `wrote ${LIST}`,
+    'wrote AGENTS.md',
+    'wrote CLAUDE.md',
+  ]);
+  assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
+});
+
+test('init skips a list that exists, and leaves it as it is', (t) => {
+  const { base, run, read } = project(t);
+  mkdirSync(join(base, '.agentrite'));
+  writeFileSync(join(base, LIST), 'ours\n');
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(LIST), 'ours\n');
+  assert.ok(linesOf(result).includes(`skipped ${LIST}, which exists`), result.stdout);
+});
+
+// R9, R11, R13
+test('init in a project with its own standards and planner writes everything from them', (t) => {
+  const { run, read } = ownProject(t, { planner: 'rules/planner.md' });
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  const lines = read('CLAUDE.md').split('\n');
+  assert.deepEqual(lines.slice(lines.indexOf(`@${PROCESS}`), lines.indexOf('@AGENTS.md') + 1), [
+    `@${PROCESS}`,
+    `@${HOUSE}`,
+    '@AGENTS.md',
+  ]);
+  assert.doesNotMatch(read('CLAUDE.md'), /standards\.md/);
+  assert.equal(read('opencode.json'), `{\n  "instructions": [\n    "${PROCESS}",\n    "${HOUSE}"\n  ]\n}\n`);
+  assert.ok(read(LIST).includes(`* Standards: [\`${HOUSE}\`](../${HOUSE})\n`));
+  assert.ok(read(LIST).includes('* planner: [`rules/planner.md`](../rules/planner.md)\n'));
+  for (const directory of ['.claude/agents', '.opencode/agents']) {
+    const planner = read(`${directory}/planner.md`);
+    assert.match(planner, /^description: >-\n {2}Plans as this project does\.\n/m);
+    assert.match(planner, /^Read `rules\/planner\.md` in the project root and follow it\./m);
+    assert.equal(read(`${directory}/reviewer.md`), fixtureOf(directory, 'reviewer'));
+  }
+});
+
+// The wrapper of `role` the kit writes into `directory` for its own role file.
+function fixtureOf(directory, role) {
+  return plannedFiles([directory.startsWith('.claude') ? 'claude' : 'opencode'], KIT_ROLES).find((file) =>
+    file.path.endsWith(`/${role}.md`),
+  ).content;
+}
+
+test('init in a project that names the kit standards writes CLAUDE.md importing them', (t) => {
+  const { run, read } = ownProject(t, { standards: STANDARDS });
+
+  assert.equal(run('init').status, 0);
+
+  assert.match(read('CLAUDE.md'), new RegExp(`^@${PROCESS}\n@${STANDARDS}\n@AGENTS\\.md$`, 'm'));
+});
+
+test('init amends an opencode.json with the standards the settings give, after process.md', (t) => {
+  const { base, run, read } = ownProject(t, {});
+  writeFileSync(join(base, 'opencode.json'), `{\n  "instructions": ["${PROCESS}"]\n}\n`);
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('opencode.json'), `{\n  "instructions": [\n    "${PROCESS}",\n    "${HOUSE}"\n  ]\n}\n`);
+  assert.match(result.stdout, /^changed opencode\.json$/m);
+});
+
+// R12
+test('init notices a CLAUDE.md and an opencode.json that load the kit standards beside the project own', (t) => {
+  const claude = `@${PROCESS}\n@${HOUSE}\n@${STANDARDS}\n@AGENTS.md\n`;
+  const opencode = `{\n  "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"]\n}\n`;
+  const { base, run, read } = ownProject(t, {});
+  writeFileSync(join(base, 'CLAUDE.md'), claude);
+  writeFileSync(join(base, 'opencode.json'), opencode);
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('CLAUDE.md'), claude);
+  assert.equal(read('opencode.json'), opencode);
+  assert.equal(
+    noticesOf(result),
+    `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`,
+  );
+});
+
+test('init notices the kit standards only when the project has other standards', (t) => {
+  const { base, run } = ownProject(t, { standards: STANDARDS });
+  writeFileSync(join(base, 'CLAUDE.md'), `@${PROCESS}\n@${STANDARDS}\n@AGENTS.md\n`);
+  writeFileSync(join(base, 'opencode.json'), `{ "instructions": ["${PROCESS}", "${STANDARDS}"] }\n`);
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(noticesOf(result), '');
+});
+
+// R15, R16
+test('init notices an existing AGENTS.md with the sections, and then that it does not name the list', (t) => {
+  const { base, run } = project(t);
+  writeFileSync(join(base, 'AGENTS.md'), '# Our own instructions\n');
+
+  const result = run('init', OPTION, 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  const agents = fileAt(files(['claude']), 'AGENTS.md').content;
+  const notices = noticesOf(result);
+  const sections = notices.indexOf(agentsNotice(agents));
+  const list = notices.indexOf(agentsListNotice(false));
+  assert.ok(sections !== -1 && list > sections, notices);
+  assert.ok(notices.indexOf(CLAUDE_NOTICE) === -1 || notices.indexOf(CLAUDE_NOTICE) > list, notices);
+});
+
+test('init gives an existing AGENTS.md that names the list the notice of the sections alone', (t) => {
+  const { base, run } = project(t);
+  writeFileSync(join(base, 'AGENTS.md'), `# Ours\n\nRead the files [${LIST}](${LIST}) names.\n`);
+
+  const result = run('init', OPTION, 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(noticesOf(result).includes('AGENTS.md exists and was left as it is'));
+  assert.doesNotMatch(noticesOf(result), /does not name \.agentrite/);
+});
+
+test('init gives no notice of AGENTS.md when it writes AGENTS.md', (t) => {
+  const { run } = project(t);
+  const result = run('init', OPTION, 'claude');
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /AGENTS\.md (?:is missing|does not name|exists)/);
+});
+
+// R8
+test('init refuses a project whose role file has no front matter, and writes nothing', (t) => {
+  const { base, run } = ownProject(t, { planner: 'rules/planner.md' });
+  writeFileSync(join(base, 'rules', 'planner.md'), '# Our planner\n');
+  const before = snapshot(base);
+
+  const result = run('init');
+
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /^agentrite: rules\/planner\.md has no front matter that a role file must open with\. /);
+  assert.deepEqual(snapshot(base), before);
 });

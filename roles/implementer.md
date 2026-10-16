@@ -1,3 +1,9 @@
+---
+description: >-
+  Builds an approved change unit and keeps its documents true. Use once the unit is approved, with its plan where its
+  kind needs one. Dispatch it with the unit directory.
+---
+
 # Implementer
 
 You build what an approved unit describes, whatever documents it has, and you leave them true.

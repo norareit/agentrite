@@ -144,4 +144,14 @@ timestamp: 2026-10-16T11:14:23Z
   none skipped, on the tree committed next, and `git status` showed no file of the kit changed by the run. The
   status is `in-progress`
 
+- 2026-10-16T20:07:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 2. Two changes to
+  the plan, written into `plan.md`: the notice of requirement 16 has its words wrapped at 120 characters, since the
+  plan's text with `does not name .agentrite/instructions.md` in the place of `is missing` gives a first line of 133
+  characters, and the commands keep their output to 120; and `tests/installed-kit.mjs` holds `KIT_ROLES`, the
+  kit's roles as `readRoles` gives them, which the suite's calls of `plannedFiles` take. `npm test` reported 650
+  tests, 650 passing, none skipped, on the tree committed next. The kit's wrappers are the same byte for byte as
+  before the unit: `tests/agentrite-roles.test.mjs` compares `plannedFiles` of both harnesses, from the kit's role
+  files, with the four Claude Code fixtures of before and the four OpenCode fixtures written by task 2.1 from the
+  code as it was at `1501453`. The status is `in-progress`
+
 ## Amendments

@@ -14,9 +14,9 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
+import { agentsListNotice, claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
-import { copyKitInstructions, installKit } from './installed-kit.mjs';
+import { copyKitInstructions, installKit, KIT_ROLES } from './installed-kit.mjs';
 import { fakeHost } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -25,6 +25,7 @@ const agentrite = join(kit, 'scripts', 'agentrite.mjs');
 const checker = join(kit, 'scripts', 'check-changes.mjs');
 const TEMPLATE = readFileSync(join(kit, 'templates', 'project', 'agentrite.json'), 'utf-8');
 const SHIM = readFileSync(join(kit, 'templates', 'project', 'sandbox.sh'), 'utf-8');
+const LIST = '.agentrite/instructions.md';
 const NAMES_CONFIG = /the project has no agentrite\.json\. Run: npx agentrite config, which writes one/;
 
 // The lines refresh prints for the files, without the notices, which follow an empty line.
@@ -40,7 +41,7 @@ function project(t, harnesses) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), content);
   };
-  for (const file of plannedFiles(harnesses)) write(file.path, file.content);
+  for (const file of plannedFiles(harnesses, KIT_ROLES)) write(file.path, file.content);
   const command = (...args) => spawnSync(process.execPath, [agentrite, ...args], { cwd: root, encoding: 'utf-8' });
   const edit = (from, to) => {
     const settings = readFileSync(join(root, 'agentrite.json'), 'utf-8');
@@ -106,21 +107,23 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   assert.ok(configured.stdout.includes(TEMPLATE), configured.stdout);
   edit('"master"', '"main"');
 
-  // 3. refresh, which has nothing to change in a project whose files are the release's.
+  // 3. refresh, which has nothing to change in a project whose files are the release's but writes the list of the
+  // files in use, which a project set up before the list lacks.
   const refreshed = command('refresh');
   assert.equal(refreshed.status, 0, refreshed.stderr);
-  const kitOwned = [...plannedFiles(['claude', 'opencode']).map((file) => file.path), 'sandbox.sh'];
-  assert.deepEqual(linesOf(refreshed), kitOwned.map((path) => `up to date ${path}`));
-  // A project set up before the release that loads the kit's instructions has neither file that loads them, and is
-  // told so.
+  const wrappers = plannedFiles(['claude', 'opencode'], KIT_ROLES).map((file) => `up to date ${file.path}`);
+  assert.deepEqual(linesOf(refreshed), [...wrappers, `wrote ${LIST}`, 'up to date sandbox.sh']);
+  // A project set up before the release that loads the kit's instructions has neither file that loads them, nor an
+  // AGENTS.md that names the list, and is told so.
   const paths = ['node_modules/agentrite/process.md', 'node_modules/agentrite/standards.md'];
   const claude = claudeRefreshNotice(true, [...paths.map((path) => `@${path}`), '@AGENTS.md']);
   const opencode = opencodeRefreshNotice('it is missing', paths);
-  assert.ok(refreshed.stdout.endsWith(`\n\n${claude}\n\n${opencode}\n`), refreshed.stdout);
-  assert.equal(tracked(), '?? agentrite.json');
+  const agents = agentsListNotice(true);
+  assert.ok(refreshed.stdout.endsWith(`\n\n${claude}\n\n${opencode}\n\n${agents}\n`), refreshed.stdout);
+  assert.equal(tracked(), '?? .agentrite/\n?? agentrite.json');
 
-  // 4. the file committed on the default branch.
-  git('add', 'agentrite.json');
+  // 4. the file and the list committed on the default branch.
+  git('add', 'agentrite.json', LIST);
   git('commit', '--quiet', '--message', 'the settings');
   const commit = git('rev-parse', '--short', 'main');
 
@@ -147,9 +150,9 @@ test('a project without the sandbox and with one harness edits both keys, and re
   const refreshed = command('refresh');
 
   assert.equal(refreshed.status, 0, refreshed.stderr);
-  const wrappers = plannedFiles(['opencode']).map((file) => file.path);
+  const wrappers = plannedFiles(['opencode'], KIT_ROLES).map((file) => file.path);
   assert.equal(wrappers.length, 4);
-  assert.deepEqual(linesOf(refreshed), wrappers.map((path) => `up to date ${path}`));
+  assert.deepEqual(linesOf(refreshed), [...wrappers.map((path) => `up to date ${path}`), `wrote ${LIST}`]);
   assert.equal(existsSync(join(root, 'sandbox.sh')), false);
   assert.equal(existsSync(join(root, '.claude')), false);
 });

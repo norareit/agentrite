@@ -12,6 +12,7 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { agentsListNotice } from '../scripts/agentrite-instructions.mjs';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { fakeHost } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -111,6 +112,9 @@ test('a project of the release before starts its sandbox after the four steps, a
   const refreshed = refresh();
   assert.equal(refreshed.status, 0, refreshed.stderr);
   assert.match(refreshed.stdout, /^wrote sandbox\.sh$/m);
+  // It writes the list of the files in use too, and says that the project has no AGENTS.md to name it.
+  assert.match(refreshed.stdout, /^wrote \.agentrite\/instructions\.md$/m);
+  assert.ok(refreshed.stdout.endsWith(`\n\n${agentsListNotice(true)}\n`), refreshed.stdout);
   assert.equal(lstatSync(join(root, 'sandbox.sh')).mode & 0o111, 0o111);
   assert.equal(readFileSync(join(root, 'agent.sh'), 'utf-8'), OLD_SHIM);
   assert.equal(readFileSync(join(root, 'agent', 'compose.project.yml'), 'utf-8'), OLD_COMPOSE);

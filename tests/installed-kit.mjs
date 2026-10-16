@@ -1,5 +1,6 @@
 import { cpSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readRoles, ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
 import { parseSettings, settingsText } from '../scripts/agentrite-settings.mjs';
 
 // What the suite's projects need of an installed kit: the kit's paths in `agentrite.json`, and files at those paths.
@@ -12,6 +13,11 @@ const { standards, roles } = parseSettings(TEMPLATE);
 
 // The `standards` and `roles` of the default file, which name the kit's own files.
 export const KIT_SETTINGS = { standards, roles };
+
+// The kit's roles as `readRoles` gives them in a project with the kit installed: the working tree's role files, by
+// the paths the default file names.
+const ownRoleFiles = Object.fromEntries(ROLE_NAMES.map((name) => [name, `roles/${name}.md`]));
+export const KIT_ROLES = readRoles(KIT_ROOT, ownRoleFiles).map((role) => ({ ...role, path: roles[role.name] }));
 
 // The text of an `agentrite.json` with the three settings given and the kit's own files.
 export function kitSettingsText({ defaultBranch, harnesses, sandbox }) {
