@@ -47,5 +47,16 @@ timestamp: 2026-10-16T12:51:32Z
   step 6 for 7.1.0 stops on both, so the run the decisions name as the first use of the widened step does not
   carry 7.1.0 through. The spec does not say whether that is intended, or whether an instruction whose condition
   does not hold here, as no unit is `planned` at the time, is one that "asks a project to do something"
+- 2026-10-16T13:02:18Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the unit's branch at `2c4c777`, on
+  what the planner logged above. Checked it against "Worth knowing when you update" of 7.0.0 and 7.1.0: both
+  questions are as the planner says, and the spec's "Context" had left out two of 7.1.0's instructions. The human
+  chose to fold the edit of this repository's `AGENTS.md` into this unit. Corrected `spec.md`: requirement 7 takes
+  an instruction that installs the kit, runs `refresh`, starts the sandbox or asks for the commit as done by step 6;
+  requirement 8 has an instruction whose condition does not hold here ask nothing, settled by `agentrite.json` or by
+  the tracked files on `master`; requirement 13 brings this repository's `AGENTS.md` to 7.1.0's wording, so that
+  7.1.0's instruction on `AGENTS.md` does not hold here; requirement 11 records the instructions taken as done and
+  those that do not hold. The requirements after 6 are renumbered. "Context" gives all of what 7.1.0 asks, and
+  three decisions give the reasons. The correction waits for the human's approval before the planner starts again.
+  The status stays `approved`
 
 ## Amendments
