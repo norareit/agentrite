@@ -96,5 +96,6 @@ timestamp: 2026-10-16T11:14:23Z
   non-goal on this repository's files says that the two new requirements hold of them before and after its move;
   and two decisions give the reasons and what was rejected. The correction waits for the human's approval before
   the planner starts again. The status stays `approved`
+- 2026-10-16T12:15:21Z [human] approved the correction of the spec. The status is `approved`
 
 ## Amendments
