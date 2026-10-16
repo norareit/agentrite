@@ -120,7 +120,9 @@ npm test
 ```
 
 * It runs node's built-in test runner over `tests/`
-* The tests need no install
+* It needs `npm ci` first: two tests judge this repository's own files against the installed release, as "The
+  kit's own copy of the kit" says, and fail, naming `npm ci`, when `node_modules/agentrite` is missing. The other
+  tests need no install
 
 A host other than Linux skips some of the tests. Each is skipped for what it needs and the host lacks:
 
@@ -160,6 +162,12 @@ The kit is also a devDependency of itself, installed from the npm registry at on
   the host. See "Trying the working copy's sandbox"
 * `npm publish` stays on the host: releasing needs the npm login that owns the package, which never enters the
   sandbox
+* The root is a project of the installed release, and its own files are judged against that release, not against
+  the working tree: the root's `agentrite.json` is the installed release's default file,
+  `node_modules/agentrite/templates/project/agentrite.json`, byte for byte, and the installed release's `refresh`,
+  run at the root with no argument as `npm run kit -- refresh`, prints `up to date` for every file it writes and
+  changes none. The suite checks both. A unit that changes what a project holds changes the root's files only when
+  the repository moves to the release that holds it
 
 ## Trying the working copy's sandbox
 

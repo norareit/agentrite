@@ -358,8 +358,9 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ### 4. This repository's own files
 
-- [x] 4.1 Done in step 1, as task 1.8 says. Add `tests/repository-own-files.test.mjs` with the two tests as decided: the root `agentrite.json` is
-  `node_modules/agentrite/templates/project/agentrite.json` byte for byte, and is not in `files` of `package.json`;
+- [x] 4.1 Done in step 1, as task 1.8 says. Add `tests/repository-own-files.test.mjs` with the two tests as decided:
+  the root `agentrite.json` is `node_modules/agentrite/templates/project/agentrite.json` byte for byte, and is not in
+  `files` of `package.json`;
   the installed release's `refresh`, in a copy of the tracked files with `node_modules/agentrite` a link to the
   installed one and every copy dated long ago, exits 0, prints `up to date` on every line before the notices, and
   leaves every copy's content and time as they were and no file that was not there. Each fails naming `npm ci` when
@@ -372,12 +373,12 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ### 5. The documents
 
-- [ ] 5.1 `README.md`, its opening before the list of sections: what the kit holds by default, the process in
+- [x] 5.1 `README.md`, its opening before the list of sections: what the kit holds by default, the process in
   `process.md`, the standards in `standards.md`, the four roles, specifier, planner, implementer and reviewer, as
   opinionated, and the sandbox; that the process is the same in every project; that a project can replace the
   standards and each role with a file of its own, named in `agentrite.json`, with a link to the section of task 5.3.
   The list of sections holds that section (R23)
-- [ ] 5.2 "The project's settings": five keys, the table with a row for `standards`, read by `init` and `refresh`,
+- [x] 5.2 "The project's settings": five keys, the table with a row for `standards`, read by `init` and `refresh`,
   and for `roles`, read by `init`, `refresh`, `agentrite roles` and `agentrite run`; the default file of R5; both
   required, naming the kit's files in what `config` and `init` write; a valid path as R2 has it, links followed for
   the file and not for leading outside; two roles may share a file; every command that reads the file refuses a path
@@ -387,7 +388,7 @@ holds whatever a later release writes, and runs the installed release's own `scr
   as the default file gives them, before any command that reads the file runs again; `refresh` writes the list; an
   `AGENTS.md` that `init` wrote before has its Development Guidelines and Roles sections replaced by those that
   `npx agentrite init` with no argument prints (R19, R21)
-- [ ] 5.3 A new section after "The project's settings", "Replacing a role or the standards", which says what such a
+- [x] 5.3 A new section after "The project's settings", "Replacing a role or the standards", which says what such a
   file must hold: a role file, the front matter of R6 in both forms, an opening instruction to read `process.md` and
   the project's standards with a link that works from where the file is, and its input, its output and the status it
   sets in the documents and statuses of `process.md`; a standards file, that it is the project's whole set of rules
@@ -395,22 +396,22 @@ holds whatever a later release writes, and runs the installed release's own `scr
   of the kit's later improvements to it, that the file is committed, since a unit run's clone holds only what is
   committed and a path that names no file is refused, and that what a project adds to a role without replacing it
   belongs in its `AGENTS.md` (R20)
-- [ ] 5.4 "agentrite init", "Installing it into a project", "agentrite refresh", "agentrite roles", "agentrite run"
+- [x] 5.4 "agentrite init", "Installing it into a project", "agentrite refresh", "agentrite roles", "agentrite run"
   and "How the kit's instructions reach an agent": the list among the files `init` writes and `refresh` rewrites,
   with what it holds; the wrappers pointing at the role files the settings give, with their descriptions; the
   `CLAUDE.md` lines and the `opencode.json` paths with the settings' standards; the notices of R12 and R16;
   `AGENTS.md` holding a link to the list and naming no role or standards file; `roles` and `run` reading the settings
   and the role files, and their refusals, R8's among them (R21, R22)
-- [ ] 5.5 `SANDBOX.md`: the bullet on `npm ci` in a new clone says that without it the change check in the clone
+- [x] 5.5 `SANDBOX.md`: the bullet on `npm ci` in a new clone says that without it the change check in the clone
   refuses too, since the files `agentrite.json` names under `node_modules` are not there, and that a project's own
   role or standards file is in the clone only when it is committed. The refusal names the key and the path but not
   what to do, so it is an entry of "When something goes wrong": what is seen, that the file is not in the clone or
   the checkout, and to run `npm ci` or commit the file
-- [ ] 5.6 `CONTRIBUTING.md`: "The kit's own tests" says that the suite needs `npm ci` first, for the two tests of
+- [x] 5.6 `CONTRIBUTING.md`: "The kit's own tests" says that the suite needs `npm ci` first, for the two tests of
   this repository's own files, in the place of "The tests need no install"; "The kit's own copy of the kit" says that
   the root's `agentrite.json` is the installed release's default file and its `refresh` finds every file it writes up
   to date, and that the suite checks both (R24, R25)
-- [ ] 5.7 Check that no line of a changed document is over 120 characters. Commit: `feature-0054 Describe the
+- [x] 5.7 Check that no line of a changed document is over 120 characters. Commit: `feature-0054 Describe the
   settings that name the standards and the roles`
 
 ## Verification
@@ -432,4 +433,4 @@ holds whatever a later release writes, and runs the installed release's own `scr
 - [x] After task 2.13: the roles and the standards from the settings
 - [x] After task 3.4: the kit's files
 - [x] After task 4.3: this repository's own files
-- [ ] After task 5.7: the documents
+- [x] After task 5.7: the documents

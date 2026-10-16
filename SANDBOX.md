@@ -53,7 +53,9 @@ host's branch is at:
 
 * The clone holds what is committed and nothing else. Uncommitted work, ignored files such as a `.env`, and
   `node_modules` stay on the host. So the first command in a new clone is `npm ci`, without which the role files
-  under `node_modules` are not found and the suite does not run
+  under `node_modules` are not found, the suite does not run, and the change check refuses too, since the files that
+  `agentrite.json` names under `node_modules` are not there
+* A project's own role or standards file, named in `agentrite.json`, is in the clone only when it is committed
 * The host's other branches are in the clone as `origin/*`. The default branch is among them, as
   `origin/<default branch>`, which is the base the change check compares with
 * The change check inside the clone reads the clone's own `agentrite.json`, which is the one committed on the unit's
@@ -432,6 +434,17 @@ Why, and what to do for each:
 * The unit is given by such a number, and the default branch that `agentrite.json` names is no local branch. Make
   the local branch, for example with `git branch main origin/main` for a default branch `main`. Or, when the name
   is not the project's default branch, correct `defaultBranch` in `agentrite.json`
+
+**In a unit run's clone, or in a new checkout, the change check, `npx agentrite` and `./sandbox.sh` refuse
+`agentrite.json`, saying that `standards` or a role of `roles` is a path and there is no file at it.**
+
+Why: every command that reads `agentrite.json` checks that each file it names is in the working tree. The kit's own
+files are under `node_modules`, which a clone and a new checkout do not have until `npm ci` has run. A project's own
+role or standards file is in a clone only when it is committed.
+
+What to do: run `npm ci` in the clone or the checkout, for a path under `node_modules`. For a file of the project's
+own, commit it on the branch the clone is of. For a path that names no file anywhere, as after a release that moved
+one of the kit's files, correct the path in `agentrite.json`.
 
 **The container, the wrapper or the host crashed during a unit run.**
 
