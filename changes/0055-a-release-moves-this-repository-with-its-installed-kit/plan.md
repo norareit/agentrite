@@ -126,20 +126,20 @@ This repository's text:
 
 Closing:
 
-- [ ] Run everything under "Verification", and log in `record.md` what it showed
+- [x] Run everything under "Verification", and log in `record.md` what it showed
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` exits 0, after the last commit
-- [ ] `npm run --silent kit -- roles` prints what `node node_modules/agentrite/scripts/agentrite.mjs roles` prints,
+- [x] `npm test` passes
+- [x] `npm run check-changes` exits 0, after the last commit
+- [x] `npm run --silent kit -- roles` prints what `node node_modules/agentrite/scripts/agentrite.mjs roles` prints,
   the implementer as "Builds a planned change unit", and `npx agentrite roles` prints the working tree's,
   "Builds an approved change unit" (R1)
-- [ ] `awk 'length > 120' RELEASING.md CONTRIBUTING.md AGENTS.md CLAUDE.md` prints nothing
-- [ ] `grep -n 'npx agentrite' RELEASING.md CONTRIBUTING.md AGENTS.md` shows only `npx agentrite-roles` and the
+- [x] `awk 'length > 120' RELEASING.md CONTRIBUTING.md AGENTS.md CLAUDE.md` prints nothing
+- [x] `grep -n 'npx agentrite' RELEASING.md CONTRIBUTING.md AGENTS.md` shows only `npx agentrite-roles` and the
   sentences that say what `npx agentrite` runs here, none that tells a reader to run it (R4)
-- [ ] `git diff master --stat` names no path in `files` of `package.json`, and not `README.md`
-- [ ] Step 6, read against the 7.1.0 section of `CHANGELOG.md` as a dry run without running it: the install and
+- [x] `git diff master --stat` names no path in `files` of `package.json`, and not `README.md`
+- [x] Step 6, read against the 7.1.0 section of `CHANGELOG.md` as a dry run without running it: the install and
   `refresh` are taken as done; `npx agentrite init` runs as `npm run kit -- init`; the line of `CLAUDE.md` is
   exact and carried out; the instruction on `planned` units does not hold, as no `record.md` says
   `status: planned` once this unit is implemented; the instruction on `AGENTS.md` does not hold, as `AGENTS.md`
@@ -151,4 +151,4 @@ Closing:
 - [x] `feature-0055 Run the installed kit's command with npm run kit`
 - [x] `feature-0055 Have step 6 carry out what a release asks when it is exact`
 - [x] `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
-- [ ] The record's closing entries, with the verification
+- [x] The record's closing entries, with the verification

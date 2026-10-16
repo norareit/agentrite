@@ -77,5 +77,20 @@ timestamp: 2026-10-16T12:51:32Z
   so that sentence makes room for them. Reading step 6 against the 7.1.0 section of `CHANGELOG.md` showed that the
   section gives the install, `refresh` and `init` in one block of commands, and that the plan's dry run settles them
   one at a time; step 6 says that a block of several commands is taken one command at a time
+- 2026-10-16T13:20:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran "Verification" of
+  `plan.md` on `07625c4`, the last implementation commit, with 7.0.0 installed. `npm test` passed: 565 tests pass,
+  17 are skipped on macOS, none fail. `npm run check-changes` exited 0. `npm run --silent kit -- roles` printed
+  what `node node_modules/agentrite/scripts/agentrite.mjs roles` printed, the implementer as "Builds a planned
+  change unit", and `npx agentrite roles` printed the working tree's, "Builds an approved change unit".
+  `awk 'length > 120'` over `RELEASING.md`, `CONTRIBUTING.md`, `AGENTS.md` and `CLAUDE.md` printed nothing. `grep
+  -n 'npx agentrite'` over the first three shows `npx agentrite-roles` in step 5 and sentences that say what
+  `npx agentrite` runs here, none that tells a reader to run it. `git diff master --stat` names no path in `files`
+  of `package.json`, and not `README.md`. Read step 6 against the 7.1.0 section of `CHANGELOG.md` without running
+  it: the install, `refresh` and the commit are taken as done by the step; `npx agentrite init` is exact and runs
+  as `npm run kit -- init`; the line `@node_modules/agentrite/standards.md` is exact, between two lines `CLAUDE.md`
+  holds; the instruction on `planned` units does not hold, as no `record.md` says `status: planned` once this unit
+  is implemented; the instruction on `AGENTS.md` does not hold, as `AGENTS.md` names `standards.md`; the last two
+  bullets ask nothing. That `init` here writes only what `opencode.json` is said to gain was not checked, as the
+  dry run ran nothing. Every task of `plan.md` is ticked. The status stays `in-progress` until the review
 
 ## Amendments
