@@ -72,11 +72,11 @@ The script and where `npx agentrite` leads:
 
 Step 6:
 
-- [ ] In the command block of step 6 of `RELEASING.md`, replace `npx agentrite refresh` with
+- [x] In the command block of step 6 of `RELEASING.md`, replace `npx agentrite refresh` with
   `npm run kit -- refresh`, leaving the other four lines as they are. Change the bullet on `refresh` under the block
   to say that it runs the `refresh` of the release just installed, and that `npx agentrite refresh` would run the
   working tree's, which "Commands" of `CONTRIBUTING.md` explains (R4, R5)
-- [ ] Replace the paragraph that opens "Then read "Worth knowing when you update"" and the sentence "The step is
+- [x] Replace the paragraph that opens "Then read "Worth knowing when you update"" and the sentence "The step is
   those five commands." with the update's instructions, placed after the bullets of the five commands and before
   the reading of the tree. Read the section of `<version>` in `CHANGELOG.md`, and take each instruction in it that
   asks a project to do something through the four outcomes of "Approach", in that order, with these words of the
@@ -85,24 +85,24 @@ Step 6:
   text of `AGENTS.md` (R8); and that each instruction carried out is checked against what the instruction says it
   does, by what its command printed and by reading the file it named (R9). Keep the list of what was carried out,
   taken as done and found not to hold, with why, for the commit (R11) (R6, R7, R8, R9)
-- [ ] In the sentence that introduces the five commands, "Run these five, in this order, and nothing else that
+- [x] In the sentence that introduces the five commands, "Run these five, in this order, and nothing else that
   changes a file", except the instructions carried out after them, which would otherwise be forbidden by it (R6)
-- [ ] Move "Then read `git status --short` and `git diff package.json`" after the instructions, and widen what it
+- [x] Move "Then read `git status --short` and `git diff package.json`" after the instructions, and widen what it
   expects: beside `package.json`, `package-lock.json` and the files `refresh` printed as written or refreshed, the
   files an instruction named and those a command it ran printed as written or changed. A change to any other file
   still stops the step, and `package.json` still differs by the one version (R10)
-- [ ] In the list of what stops the step, replace "The release asks this repository for more than the five
+- [x] In the list of what stops the step, replace "The release asks this repository for more than the five
   commands. Name the file and the line" with: an instruction is not exact; its condition is settled by neither
   `agentrite.json` nor the tracked files; or one carried out fails or does not do what it says. Each names the
   instruction and why the step stopped (R9)
-- [ ] In putting the repository back, remove each file a command an instruction ran printed as written, beside
+- [x] In putting the repository back, remove each file a command an instruction ran printed as written, beside
   those `refresh` printed as written. Keep `git restore .` and `npm ci` as they are (R9)
-- [ ] In the commit, add the files the instructions changed to what is committed. Add to the body's list: each
+- [x] In the commit, add the files the instructions changed to what is committed. Add to the body's list: each
   instruction carried out and what came of it; each taken as done by the five commands; each whose condition does
   not hold here, with why (R10, R11)
-- [ ] Read step 6 through and see that no text of `RELEASING.md` tells a reader to run the installed release's
+- [x] Read step 6 through and see that no text of `RELEASING.md` tells a reader to run the installed release's
   command with `npx agentrite`, and that `npx agentrite-roles` in step 5 is unchanged (R4)
-- [ ] Commit as `feature-0055 Have step 6 carry out what a release asks when it is exact`
+- [x] Commit as `feature-0055 Have step 6 carry out what a release asks when it is exact`
 
 This repository's text:
 
@@ -149,6 +149,6 @@ Closing:
 
 - [x] `feature-0055 Plan the unit`: `plan.md` and `record.md`
 - [x] `feature-0055 Run the installed kit's command with npm run kit`
-- [ ] `feature-0055 Have step 6 carry out what a release asks when it is exact`
+- [x] `feature-0055 Have step 6 carry out what a release asks when it is exact`
 - [ ] `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
 - [ ] The record's closing entries, with the verification

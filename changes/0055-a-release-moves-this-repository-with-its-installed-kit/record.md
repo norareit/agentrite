@@ -70,5 +70,12 @@ timestamp: 2026-10-16T12:51:32Z
 - 2026-10-16T13:07:48Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the macOS host,
   on the unit's branch at `aed05a1`, with 7.0.0 installed. Took the role from the role file and `process.md` of
   7.0.0. Read `spec.md`, `plan.md` and this record. The status is `in-progress`
+- 2026-10-16T13:12:45Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, committed `npm run kit` at
+  `edcad3b`: the test of the script failed before the script was added, and `npm test` passed after it, 565 tests
+  passing and 17 skipped on macOS. Added a task to `plan.md` before step 6's text was written: step 6 says to run
+  the five commands "and nothing else that changes a file", which forbids the instructions the step now carries out,
+  so that sentence makes room for them. Reading step 6 against the 7.1.0 section of `CHANGELOG.md` showed that the
+  section gives the install, `refresh` and `init` in one block of commands, and that the plan's dry run settles them
+  one at a time; step 6 says that a block of several commands is taken one command at a time
 
 ## Amendments

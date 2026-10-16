@@ -166,11 +166,12 @@ one of these does not hold:
 When the devDependency `agentrite` in `package.json` already names `<version>`, there is nothing to move. Say so,
 change nothing, and go on to the end of this step.
 
-Run these five, in this order, and nothing else that changes a file:
+Run these five, in this order, and nothing else that changes a file, but for the release's own instructions
+that come after them:
 
 ```sh
 npm install --save-dev --save-exact agentrite@<version>
-npx agentrite refresh
+npm run kit -- refresh
 npm test
 npm run check-changes
 ./sandbox.sh --in-place --rebuild true
@@ -178,8 +179,10 @@ npm run check-changes
 
 * `npm install` fetches the version `npm publish` published and fails when the registry does not have it. When the
   session may not run it, ask the human to, and go on from its result
-* `refresh` brings the role wrappers and `sandbox.sh` to what the release writes, and prints each file as written,
-  refreshed or up to date
+* `npm run kit -- refresh` runs the `refresh` of the release just installed. It brings the role wrappers and
+  `sandbox.sh` to what the release writes, and prints each file as written, refreshed or up to date. In this
+  repository `npx agentrite refresh` would run the working tree's `refresh`, as "Commands" of `CONTRIBUTING.md`
+  explains
 * `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
   it shows that the installed check starts, and no more
 * `./sandbox.sh --in-place --rebuild true` starts the sandbox of the release just installed, through this
@@ -189,32 +192,60 @@ npm run check-changes
   the firewall's among them. It shows nothing of a harness, a login, a prompt or a unit run. When the session may
   not run it, ask the human to, and go on from its result
 
-Then read `git status --short` and `git diff package.json`. The tree holds changes to `package.json`,
-`package-lock.json` and the files `refresh` printed as written or refreshed, and to nothing else, and
-`package.json` differs by the one version.
-
 Then read "Worth knowing when you update" in the section of `<version>` in `CHANGELOG.md`, as a project that
-updates does, and look in this repository's own files for what it asks of a project beyond the install and the
-`refresh`: a line that runs something the release changed, a file of the project's own that needs an edit.
+updates does. Take each instruction in it that asks a project to do something, in the order the section gives
+them, and settle it by the first of these four that applies. A block of several commands is taken one command at a
+time:
 
-The step is those five commands. Stop, commit nothing and repair nothing when:
+1. **Done by this step.** It installs the kit, runs `refresh`, starts the sandbox, or asks for the update to be
+   committed. The five commands and the commit below do that, and it is not carried out again. Run again as
+   written, the install would move the devDependency from the exact version to a range
+2. **Asks nothing here.** It holds only for some projects, as one that opens with "a unit that", "an `AGENTS.md`
+   that" or "with `opencode`" does, and its condition does not hold in this repository. The condition is settled by
+   `agentrite.json`, or by what the tracked files on `master` hold, such as the status in each `record.md` under
+   `changes/` or the text of `AGENTS.md`. When neither settles it, it stops the step
+3. **Carried out.** It is exact, which is one of these two and nothing else:
+    * A command to run, given word for word. Run it as given. A command that is the kit's own, `npx agentrite`
+      with its arguments, is run as `npm run kit --` with the same arguments
+    * A line to add to a named file of the project, given word for word, together with where it goes: before or
+      after a line it quotes, or at the end of a list or section it names. Add it there
+
+   Then check that it did what the instruction says it does, by what its command printed or by reading the file
+   it named
+4. **Stops the step.** Anything else: an instruction that is not exact, one whose condition neither
+   `agentrite.json` nor the tracked files settle, and one carried out that fails or does not do what it says
+
+Keep, for the commit, each instruction carried out and what came of it, each taken as done by this step, and each
+whose condition does not hold here, with why.
+
+Then read `git status --short` and `git diff package.json`. The tree holds changes to `package.json`,
+`package-lock.json`, the files `refresh` printed as written or refreshed, the files an instruction carried out
+named, and the files a command it ran printed as written or changed, and to nothing else, and `package.json`
+differs by the one version.
+
+Stop, commit nothing and repair nothing when:
 
 * One of the five fails. Say which and what it printed
+* An instruction is not exact, its condition is settled by neither `agentrite.json` nor the tracked files on
+  `master`, or one carried out fails or does not do what it says. Name the instruction and why the step stopped
 * The tree holds another change, or `package.json` differs by more than the version. Say what
-* The release asks this repository for more than the five commands. Name the file and the line
 
-Then put the repository back: `git restore .`, remove each file `refresh` printed as written, and run `npm ci`,
-which installs the release `package-lock.json` names again. Tell the human that the move is now a unit in
-`changes/`, on a branch, and what that unit has to do. The release itself is made, and step 7 does not wait.
+Then put the repository back: `git restore .`, remove each file `refresh` printed as written and each file a
+command an instruction ran printed as written, and run `npm ci`, which installs the release `package-lock.json`
+names again. Tell the human that the move is now a unit in `changes/`, on a branch, and what that unit has to do.
+The release itself is made, and step 7 does not wait.
 
-Otherwise commit `package.json`, `package-lock.json` and the files `refresh` wrote or refreshed, on `master`, with
-no unit prefix, as `Depend on AgentRite <version>`. The commit's body is the only record of this step, so write in
-it what was seen:
+Otherwise commit `package.json`, `package-lock.json`, the files `refresh` wrote or refreshed and the files the
+instructions changed, on `master`, with no unit prefix, as `Depend on AgentRite <version>`. The commit's body is the
+only record of this step, so write in it what was seen:
 
 * How many tests passed
 * That the change check exited 0
 * What `refresh` reported: the files written and refreshed, or that every file was up to date
 * That `./sandbox.sh --in-place --rebuild true` exited 0
+* Each instruction of "Worth knowing when you update" carried out, and what came of it
+* Each taken as done by this step
+* Each whose condition does not hold here, and why
 
 Commit nothing else, and push nothing.
 
