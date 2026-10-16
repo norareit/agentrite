@@ -11,4 +11,5 @@ as a bridge that imports the kit's instruction files and `AGENTS.md` into Claude
 ## Repository Instructions
 
 @node_modules/agentrite/process.md
+@node_modules/agentrite/standards.md
 @AGENTS.md
