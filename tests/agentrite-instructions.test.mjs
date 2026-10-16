@@ -484,6 +484,23 @@ test('the list links a path with a space with %20', () => {
   assert.ok(list.includes('* Standards: [`our rules/house rules.md`](../our%20rules/house%20rules.md)\n'), list);
 });
 
+test('the list links a path with a URL delimiter or a parenthesis in a name to the file itself', () => {
+  const roles = { ...KIT_SETTINGS.roles, reviewer: 'rules/what?.md', planner: 'rules/a (b).md' };
+  const list = instructionsList({ ...KIT_SETTINGS, standards: 'rules/house#team.md', roles });
+  const links = [
+    ['* Standards: [`rules/house#team.md`]', 'rules/house%23team.md'],
+    ['* reviewer: [`rules/what?.md`]', 'rules/what%3F.md'],
+    ['* planner: [`rules/a (b).md`]', 'rules/a%20%28b%29.md'],
+  ];
+  for (const [item, encoded] of links) {
+    assert.ok(list.includes(`${item}(../${encoded})\n`), list);
+    const resolved = new URL(`../${encoded}`, `file:///project/${INSTRUCTIONS_LIST}`);
+    assert.equal(resolved.pathname, `/project/${encoded}`);
+    assert.equal(resolved.search, '');
+    assert.equal(resolved.hash, '');
+  }
+});
+
 test('the list follows from the settings alone', () => {
   assert.equal(instructionsList({ ...KIT_SETTINGS, defaultBranch: 'main', harnesses: ['opencode'] }), DEFAULT_LIST);
 });

@@ -333,8 +333,19 @@ export function agentsListNotice(missing) {
  * @returns {string}
  */
 function listItem(label, path) {
-  const link = encodeURI(posix.relative(posix.dirname(INSTRUCTIONS_LIST), posix.normalize(path)));
-  return `* ${label}: [\`${path}\`](${link})`;
+  const relative = posix.relative(posix.dirname(INSTRUCTIONS_LIST), posix.normalize(path));
+  return `* ${label}: [\`${path}\`](${relative.split('/').map(linkSegment).join('/')})`;
+}
+
+/**
+ * A segment of a link's path, encoded so that a `#` or a `?` in a file's name is not read as the start of a fragment
+ * or a query, and a parenthesis does not close the Markdown link.
+ *
+ * @param {string} segment
+ * @returns {string}
+ */
+function linkSegment(segment) {
+  return encodeURIComponent(segment).replaceAll('(', '%28').replaceAll(')', '%29');
 }
 
 /**
