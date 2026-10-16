@@ -365,9 +365,9 @@ holds whatever a later release writes, and runs the installed release's own `scr
   leaves every copy's content and time as they were and no file that was not there. Each fails naming `npm ci` when
   `node_modules/agentrite` is missing. Remove the test of R41 from `tests/package-documents.test.mjs` and that of R42
   from `tests/agentrite-refresh.test.mjs` (R24, R25)
-- [ ] 4.2 Run `node node_modules/agentrite/scripts/agentrite.mjs refresh` at the root, which rewrites the two
+- [x] 4.2 Run `node node_modules/agentrite/scripts/agentrite.mjs refresh` at the root, which rewrites the two
   implementer wrappers, and check that it changes nothing else (R25)
-- [ ] 4.3 Run `npm test`; all pass. Commit: `feature-0054 Judge this repository's own files against the installed
+- [x] 4.3 Run `npm test`; all pass. Commit: `feature-0054 Judge this repository's own files against the installed
   release`
 
 ### 5. The documents
@@ -431,5 +431,5 @@ holds whatever a later release writes, and runs the installed release's own `scr
 - [x] After task 1.8: the settings
 - [x] After task 2.13: the roles and the standards from the settings
 - [x] After task 3.4: the kit's files
-- [ ] After task 4.3: this repository's own files
+- [x] After task 4.3: this repository's own files
 - [ ] After task 5.7: the documents
