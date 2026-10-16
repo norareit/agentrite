@@ -25,5 +25,27 @@ timestamp: 2026-10-16T12:51:32Z
   exact instruction, that this repository's prose stops listing the kit's instruction files, and that the move to
   7.1.0 is step 6 run alone after this unit. Approving the unit approves them. The status is `draft`
 - 2026-10-16T12:56:11Z [human] approved the spec. The status is `approved`
+- 2026-10-16T12:57:29Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the macOS host, cut
+  `feature-0055-a-release-moves-this-repository-with-its-installed-kit` from `master` at `70831ec`, with 7.0.0
+  installed. Took the role from the role file and `process.md` of 7.0.0. Read `spec.md`, `RELEASING.md`,
+  `CONTRIBUTING.md`, `CLAUDE.md`, `opencode.json`, `package.json`, `tests/release.test.mjs`, the release skill, and
+  "Worth knowing when you update" of 7.0.0 and 7.1.0 in `CHANGELOG.md`. Wrote no plan: the spec leaves open what
+  the text of step 6 has to say, in two places, and the unit goes back to the specifier and the human. The status
+  stays `approved`.
+  First, an instruction that repeats one of the five commands. Both sections that asked for more open with a block
+  that holds `npm install --save-dev agentrite@latest` and `npx agentrite refresh`, and 7.0.0's holds
+  `./sandbox.sh --in-place --rebuild true` too. Each is a command word for word, so requirement 6 has step 6 carry
+  it out after the five. Carried out as written, the install moves the devDependency from `7.1.0` to `^7.1.0`, and
+  the reading of the tree then stops the step, since `package.json` differs by more than the version. The spec
+  does not say whether such an instruction is carried out, counts as done by the five, or stops the step.
+  Second, the context says that what 7.1.0 asks besides the five commands is exact: `init` and the line of
+  `CLAUDE.md`. Its section asks two more things of a project. A unit whose status is `planned` at the update is to
+  have `status: planned` changed to `status: approved`: that is a change to a line, which is not on the closed list
+  of requirement 6, and whether it holds here is settled by the units in `changes/`, not by `agentrite.json`. And an
+  `AGENTS.md` that names no `standards.md` is to take what the project wants of the sections `init` prints, which
+  leaves a choice; this repository's `AGENTS.md` names no `standards.md`. Under requirements 6 and 7 as written,
+  step 6 for 7.1.0 stops on both, so the run the decisions name as the first use of the widened step does not
+  carry 7.1.0 through. The spec does not say whether that is intended, or whether an instruction whose condition
+  does not hold here, as no unit is `planned` at the time, is one that "asks a project to do something"
 
 ## Amendments
