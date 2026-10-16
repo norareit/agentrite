@@ -203,4 +203,16 @@ timestamp: 2026-10-16T11:14:23Z
   exited 0. Did not independently reproduce the historical scratch run or test-first ordering, or verify real
   Docker, real harnesses or a consuming project installed from the registry.
 
+- 2026-10-16T20:29:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on finding S1 of the review, at
+  `04427d9`, which blocks. Checked it: `listItem` linked with `encodeURI`, which leaves `#` and `?` as they are, so the link of
+  a standards path `rules/house#team.md` named `rules/house` with the fragment `team.md`, and requirement 13 was false
+  for it. Applied it, since I agree with it: added step 6 to `plan.md`, as work the plan did not have, and changed
+  its decision on the list's links to say that each segment of the path is encoded with `encodeURIComponent`, with
+  `(` and `)` as `%28` and `%29` besides, as a parenthesis in a name would close the Markdown link. The test of task
+  6.1 failed before the change and passes after it; it covers `#`, `?` and `(b)` in a file's name, and checks that
+  each link, resolved against the list's place, names the file with no query and no fragment. Not checked: other
+  characters than these and a space, and how a harness or an editor follows such a link. `npm test` reported 653
+  tests, 653 passing, none skipped, on Linux, on the tree committed next. The outcome of S1 waits on the human's
+  decision. The status is `in-progress`
+
 ## Amendments

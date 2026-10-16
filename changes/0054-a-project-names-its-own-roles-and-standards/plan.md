@@ -86,7 +86,9 @@ descriptions move word for word. `roleWrapperDirectories` in `scripts/agentrite.
 given.
 
 **The list (R13).** `.agentrite/instructions.md`, exported as `INSTRUCTIONS_LIST`. Each path is shown as the
-settings write it, in a code span, and linked by `encodeURI(posix.relative('.agentrite', posix.normalize(path)))`.
+settings write it, in a code span, and linked by `posix.relative('.agentrite', posix.normalize(path))` with each
+segment between its `/` encoded by `encodeURIComponent`, and `(` and `)` as `%28` and `%29`, so that a `#`, a `?` or
+a parenthesis in a file's name is part of the path the link names.
 For the default file, the text is exactly this, ending in one line break:
 
 ```markdown
@@ -413,6 +415,15 @@ holds whatever a later release writes, and runs the installed release's own `scr
   to date, and that the suite checks both (R24, R25)
 - [x] 5.7 Check that no line of a changed document is over 120 characters. Commit: `feature-0054 Describe the
   settings that name the standards and the roles`
+
+### 6. The review
+
+- [x] 6.1 In `tests/agentrite-instructions.test.mjs`, cover before the code, and see it fail: the list links a
+  standards path `rules/house#team.md` as `../rules/house%23team.md`, a role path `rules/what?.md` as
+  `../rules/what%3F.md`, and `rules/a (b).md` as `../rules/a%20%28b%29.md`; each resolved against the list's place
+  names the file, with no query and no fragment (R13, finding S1 of the review)
+- [x] 6.2 Change `listItem` in `scripts/agentrite-instructions.mjs` to encode each segment as decided (R13)
+- [x] 6.3 Run `npm test`; all pass. Commit: `feature-0054 Encode the characters of a file's name in the list's links`
 
 ## Verification
 
