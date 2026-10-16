@@ -335,25 +335,25 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 ### 3. What the kit's files say of each other
 
-- [ ] 3.1 In `tests/package-documents.test.mjs`, replace the test that each role file says to read `process.md` and
+- [x] 3.1 In `tests/package-documents.test.mjs`, replace the test that each role file says to read `process.md` and
   `standards.md` first: each opens, after its front matter and heading, with the instruction to read
   `[process.md](../process.md)` and the project's standards first, names `.agentrite/instructions.md`, and links no
   `../standards.md`; no text of `process.md` or a role file links `standards.md`; `roles/reviewer.md` links none of
   `specifier.md`, `planner.md` and `implementer.md` and names `.agentrite/instructions.md` for them (R17, R18)
-- [ ] 3.2 Change `process.md`: its opening says that the rules on how text, documentation, commits, code and tests are
+- [x] 3.2 Change `process.md`: its opening says that the rules on how text, documentation, commits, code and tests are
   written are in the project's standards, the file `.agentrite/instructions.md` in the project root names, which is
   the kit's `standards.md` unless the project replaced it; the second case of what blocks says "a rule in
   `process.md` or in the project's standards"; the section Roles says that `.agentrite/instructions.md` names the
   file of each role and that the project's `AGENTS.md` points to it, and that work in no role follows this document,
   the project's standards and the project's `AGENTS.md` alone. The test of R8 of unit 0052, that the section names
   no role file and names `AGENTS.md`, still holds (R17, R15)
-- [ ] 3.3 Change the four role files: each opens with "Read [process.md](../process.md) and the project's standards
+- [x] 3.3 Change the four role files: each opens with "Read [process.md](../process.md) and the project's standards
   first", says that the standards are the file `.agentrite/instructions.md` in the project root names and hold the
   rules on how text, documentation, commits, code and tests are written, and says "`process.md` and the standards"
   where it says "`process.md` and `standards.md`". `roles/reviewer.md` then says to read the files of the specifier,
   the planner and the implementer that the list names, as the instructions the work was produced under, and names
   "the project's standards" where it names `standards.md` in what is judged and in what blocks (R17, R18)
-- [ ] 3.4 Run `npm test`; all pass. Commit: `feature-0054 Send the kit's files to the standards and roles the
+- [x] 3.4 Run `npm test`; all pass. Commit: `feature-0054 Send the kit's files to the standards and roles the
   project uses`
 
 ### 4. This repository's own files
@@ -430,6 +430,6 @@ holds whatever a later release writes, and runs the installed release's own `scr
 
 - [x] After task 1.8: the settings
 - [x] After task 2.13: the roles and the standards from the settings
-- [ ] After task 3.4: the kit's files
+- [x] After task 3.4: the kit's files
 - [ ] After task 4.3: this repository's own files
 - [ ] After task 5.7: the documents

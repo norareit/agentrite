@@ -154,4 +154,10 @@ timestamp: 2026-10-16T11:14:23Z
   files, with the four Claude Code fixtures of before and the four OpenCode fixtures written by task 2.1 from the
   code as it was at `1501453`. The status is `in-progress`
 
+- 2026-10-16T20:31:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 3. `process.md` keeps
+  the name `standards.md` once, in backticks and not linked, as the file the project's standards are unless it
+  replaced them, as task 3.2 has it; the test of task 3.1 refuses a link to `standards.md` in `process.md` and the
+  role files, and the words "in", "and" or "or" before it. `npm test` reported 652 tests, 652 passing, none
+  skipped, on the tree committed next. The status is `in-progress`
+
 ## Amendments

@@ -124,14 +124,44 @@ test('the package does not ship the check of npm publish', () => {
   assert.ok(!packageJson.files.includes('publish-check.mjs'), `files holds ${packageJson.files.join(', ')}`);
 });
 
-// R11 of unit 0048 and R17 of unit 0052: the harness loads process.md and standards.md, and the instruction to read
-// them stays for what the loading misses.
-test('each of the four role files says to read process.md and standards.md first', () => {
+// R11 of unit 0048, R17 of unit 0052 and R17 of unit 0054: the harness loads process.md and the project's
+// standards, and the instruction to read them stays for what the loading misses. The standards are the file the
+// list names, which may be the project's own.
+test('each of the four role files says first to read process.md and the standards the list names', () => {
   for (const role of ['specifier', 'planner', 'implementer', 'reviewer']) {
-    const text = readFileSync(new URL(`../roles/${role}.md`, import.meta.url), 'utf-8');
-    const opening = 'Read [process.md](../process.md) and [standards.md](../standards.md) first';
-    assert.ok(text.includes(opening), `roles/${role}.md`);
+    const text = readDocument(`roles/${role}.md`);
+    const firstRead = text.split('\n\n').find((paragraph) => paragraph.startsWith('Read '));
+    assert.ok(firstRead.startsWith("Read [process.md](../process.md) and the project's standards first"), role);
+    assert.ok(firstRead.includes('`.agentrite/instructions.md`'), `roles/${role}.md: ${firstRead}`);
+    const rules = /rules on how text,\s+documentation,\s+commits,\s+code\s+and\s+tests\s+are\s+written/;
+    assert.match(firstRead, rules, role);
+    assert.ok(!text.includes('../standards.md'), `roles/${role}.md links ../standards.md`);
   }
+});
+
+// R17 of unit 0054
+test('no text of process.md or of a role file links standards.md or names it as the rules that hold', () => {
+  const roleFiles = ['specifier', 'planner', 'implementer', 'reviewer'].map((role) => `roles/${role}.md`);
+  for (const path of ['process.md', ...roleFiles]) {
+    const text = readDocument(path);
+    assert.doesNotMatch(text, /\]\((?:\.\.\/)?standards\.md\)/, path);
+    assert.doesNotMatch(text, /(?:in|and|or) `standards\.md`/, path);
+  }
+  const process = readDocument('process.md');
+  assert.match(process, /\* A rule in `process\.md` or in the project's standards is broken/);
+  assert.ok(process.split('\n\n').slice(0, 3).join('\n\n').includes('`.agentrite/instructions.md`'));
+});
+
+// R18 of unit 0054
+test('roles/reviewer.md sends to the role files the list names, and links none of the kit three', () => {
+  const text = readDocument('roles/reviewer.md');
+  for (const role of ['specifier', 'planner', 'implementer']) {
+    assert.doesNotMatch(text, new RegExp(`\\]\\(${role}\\.md\\)`), role);
+  }
+  const firstRead = text.split('\n\n').find((paragraph) => paragraph.startsWith('Read '));
+  const list = /the specifier, the planner and the implementer that\s+`\.agentrite\/instructions\.md`\s+names/;
+  assert.match(firstRead, list);
+  assert.match(firstRead, /instructions the work was produced\s+under/);
 });
 
 const ROLE_NAMES = /specifier|planner|implementer|reviewer/i;
@@ -158,13 +188,16 @@ test('process.md names no role but in its example log entry, which names the imp
   assert.doesNotMatch(example[0].replaceAll('as the implementer', ''), ROLE_NAMES);
 });
 
-// R8 of unit 0052: the project's AGENTS.md names the role files, so that a role can be replaced or added.
-test('the section Roles of process.md names no role file and points to AGENTS.md', () => {
+// R8 of unit 0052: the project's AGENTS.md names the role files, so that a role can be replaced or added. Since unit
+// 0054 it does so by pointing to the list, which names them.
+test('the section Roles of process.md names no role file and points to AGENTS.md and the list', () => {
   const section = readDocument('process.md').split(/^## Roles$/m)[1];
   assert.ok(section, 'process.md has a section Roles');
   const body = section.split(/^## /m)[0];
   assert.doesNotMatch(body, /roles\//);
   assert.ok(body.includes('`AGENTS.md`'), body);
+  assert.ok(body.includes('`.agentrite/instructions.md`'), body);
+  assert.match(body, /this document, the project's standards and the\s+project's `AGENTS\.md` alone/);
 });
 
 // R10 and R13 of unit 0052: the kit's text names no status planned, and the template gives the four statuses.

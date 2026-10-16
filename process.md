@@ -3,9 +3,10 @@
 This document contains critical instructions for coding agents. Follow these guidelines precisely.
 
 It holds how work is done: where instructions belong, how reported problems are verified, the commit prefixes, the
-changes process and the roles. The rules on how text, documentation, commits, code and tests are written are in
-[`standards.md`](standards.md). What a project is, what it is built with and how its commands are run belong to that
-project's own `AGENTS.md`, which links here for the rest.
+changes process and the roles. The rules on how text, documentation, commits, code and tests are written are in the
+project's standards, the file that `.agentrite/instructions.md` in the project root names, which is the kit's
+`standards.md` unless the project replaced it. What a project is, what it is built with and how its commands are run
+belong to that project's own `AGENTS.md`, which links here for the rest.
 
 ## General guidelines
 
@@ -91,8 +92,8 @@ Set `implemented` only after the human has decided every blocking finding the re
 
 * A requirement in `spec.md` is false, under the usage the spec says the unit supports and the threat model it
   states. A requirement that holds for supported usage and fails only outside it is not false
-* A rule in `process.md` or in `standards.md` is broken, and no decision in `spec.md` or `record.md` records an
-  exception to it
+* A rule in `process.md` or in the project's standards is broken, and no decision in `spec.md` or `record.md`
+  records an exception to it
 
 Every other finding does not block, and neither does a limitation recorded as a decision. Remove a task that will
 not be done, recording the reason in `record.md`, rather than leaving its box open. Once implemented, `spec.md` and
@@ -139,7 +140,8 @@ Tasks are small changes and may need only a record.
 
 ## Roles
 
-The work in `changes/` is done in roles, and the project's `AGENTS.md` names the file of each. A role's file is read
-at the point the role is taken on, whether or not the tool running the session can delegate to a separate agent. A
-session that takes on several roles in turn reads each one's file as it takes that role on. Work in no role follows
-this document, [`standards.md`](standards.md) and the project's `AGENTS.md` alone.
+The work in `changes/` is done in roles. `.agentrite/instructions.md` in the project root names the file of each, and
+the project's `AGENTS.md` points to it. A role's file is read at the point the role is taken on, whether or not the
+tool running the session can delegate to a separate agent. A session that takes on several roles in turn reads each
+one's file as it takes that role on. Work in no role follows this document, the project's standards and the
+project's `AGENTS.md` alone.

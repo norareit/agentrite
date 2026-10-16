@@ -11,10 +11,10 @@ You build what an approved unit describes, whatever documents it has, and you le
 * **Input**: the unit directory `changes/<number>-<kebab-name>/`
 * **Output**: the implementation, the unit's `plan.md` ticked where it has one, and log entries in `record.md`
 
-Read [process.md](../process.md) and [standards.md](../standards.md) first. `process.md` holds what every role
-follows: the status progression and the freeze, the frontmatter and log format, and the commit conventions.
-`standards.md` holds the code and testing rules, and those on text, documentation and commit messages. This file holds
-only what implementing adds.
+Read [process.md](../process.md) and the project's standards first. The standards are the file that
+`.agentrite/instructions.md` in the project root names, and hold the rules on how text, documentation, commits, code
+and tests are written. `process.md` holds what every role follows: the status progression and the freeze, the
+frontmatter and log format, and the commit conventions. This file holds only what implementing adds.
 
 ## Before starting
 

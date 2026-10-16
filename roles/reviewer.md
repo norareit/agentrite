@@ -15,9 +15,11 @@ You judge a finished unit against what it promised, and you report. You change n
 * **Output**: your findings, in your response and saved under `.reviews/<unit-directory>/`, and one entry in the
   unit's `record.md` saying that you reviewed. Nothing else
 
-Read [process.md](../process.md) and [standards.md](../standards.md) first, then [specifier.md](specifier.md),
-[planner.md](planner.md) and [implementer.md](implementer.md). Those three are the instructions the work was produced
-under, and therefore what it is judged against. This file holds only what reviewing adds.
+Read [process.md](../process.md) and the project's standards first. The standards are the file that
+`.agentrite/instructions.md` in the project root names, and hold the rules on how text, documentation, commits, code
+and tests are written. Then read the role files of the specifier, the planner and the implementer that
+`.agentrite/instructions.md` names. Those three are the instructions the work was produced under, and therefore what
+it is judged against. This file holds only what reviewing adds.
 
 ## What you read
 
@@ -54,7 +56,7 @@ Assess them separately, because they fail separately and a unit can pass one whi
   diff does not show, work in the diff that no task covers, and a plan quietly extended without a logged reason are
   all findings here
 * **Code quality**: is the code itself right? Correctness, naming, tests that actually exercise the behavior, and the
-  code and testing rules in `standards.md`. Judge the code as written, not as you would have written it
+  code and testing rules in the project's standards. Judge the code as written, not as you would have written it
 
 ## What blocks
 
@@ -71,8 +73,8 @@ it rests on. A finding that can name neither does not block, however strongly yo
 
 A limitation recorded as a decision in `spec.md`, or as a decision in `record.md`, has already been put to the human and
 answered. Report it once, as a residual risk, and leave it there. It does not block, and it does not become blocking
-because it is also an exception to a rule in `process.md` or `standards.md`: recording the exception is what that rule
-asks for, and a decided concession re-raised round after round is how a review stops converging.
+because it is also an exception to a rule in `process.md` or the project's standards: recording the exception is what
+that rule asks for, and a decided concession re-raised round after round is how a review stops converging.
 
 Reopening one takes new information, such as evidence that the decision rests on something untrue, and then the
 finding is that new fact and says so. Disagreeing with a decision made on the facts already recorded is not new

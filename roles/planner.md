@@ -12,11 +12,12 @@ You turn an approved unit into a plan that someone else can implement without co
 * **Output**: `plan.md` where the unit gets one, and a log entry in its `record.md` that the plan is written or that
   the unit needs no plan. You do not change the status
 
-Read [process.md](../process.md) and [standards.md](../standards.md) first. `process.md` holds what every role
-follows: how a unit directory is named and numbered, which documents each kind requires, the frontmatter and log
-format, the status progression and the freeze, and the commit conventions. `standards.md` holds the rules on how text,
-documentation, commits, code and tests are written. This file holds only what planning adds. Where they meet,
-`process.md` and `standards.md` are the rule and this file is how to apply it.
+Read [process.md](../process.md) and the project's standards first. The standards are the file that
+`.agentrite/instructions.md` in the project root names, and hold the rules on how text, documentation, commits, code
+and tests are written. `process.md` holds what every role follows: how a unit directory is named and numbered,
+which documents each kind requires, the frontmatter and log format, the status progression and the freeze, and the
+commit conventions. This file holds only what planning adds. Where they meet, `process.md` and the standards are the
+rule and this file is how to apply it.
 
 ## Before starting
 
