@@ -47,5 +47,11 @@ timestamp: 2026-10-16T11:14:23Z
   that an unknown key is ignored, since a misspelled key now shows as a missing one. Requirement 12 compares with
   the kit's path, and requirement 19 tells an existing project to add the keys. Replaced the decisions on optional
   keys and on refusing unknown ones, with the costs of the human's choice. The status is `draft`
+- 2026-10-16T11:31:04Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's question whether a
+  project may drop one of the four roles. The specifier answered that each role covers a stage `process.md`
+  requires, and proposed that two roles may name one file instead; the human agreed, and confirmed that extra roles
+  stay out of this unit. Changed `spec.md`: requirement 2 says that two roles may share a file, a decision records
+  why all four are required, and the non-goal on extra roles records the human's confirmation. The status is
+  `draft`
 
 ## Amendments

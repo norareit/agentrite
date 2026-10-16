@@ -52,7 +52,8 @@ The settings:
    kit's own files by naming their paths, and another file by naming its path instead
 2. A path in either key is a string that is not empty, relative to the project root, that does not lead outside the
    project, and that names a regular file in the project's working tree. `roles` is an object that holds exactly the
-   four names `specifier`, `planner`, `implementer` and `reviewer`
+   four names `specifier`, `planner`, `implementer` and `reviewer`. Two or more roles may name the same file, and
+   each then gets its wrappers, with that file's description, and its line in the list of requirement 13
 3. A key the kit does not know is still ignored, as requirement 3 of unit 0045 has it
 4. What a valid file is, is still decided in one place of the kit's code. A command that reads the file and finds it
    not valid refuses as unit 0045 says: it writes and changes nothing, exits with a status other than 0, and its
@@ -175,6 +176,13 @@ The documents:
   project's file naming a path that is not there, which is refused with a message that names the key and the path.
   Rejected: optional keys that mean the kit's files when they are missing, which needs no change of an existing
   project and is the implicit default unit 0045 removed
+* **All four roles are required, and two may share a file.** The roles answer to what `process.md` requires of every
+  unit: a spec the human approves, a plan where the kind needs one, the work, and a review whose blocking findings
+  `implemented` waits on. A project without one of them has a stage that nobody covers, so dropping a role is a
+  change to the process, which this round keeps fixed. A project that wants fewer roles in practice, as the
+  specifier and the planner in one, names one file for both: the process still has the two done at their own
+  moments, and the file says how to do both. The human agreed while the spec was a draft. Rejected: letting a role
+  be left out of `roles`
 * **An unknown key is still ignored.** The conversation proposed refusing one, because a misspelled optional key
   would be ignored and its override would never apply. With both keys required, a misspelled key shows as a
   missing required one and is refused, which is unit 0045's reason to ignore unknown keys, and it holds again.
@@ -229,7 +237,9 @@ The documents:
 
 ## Non-goals
 
-* A role the kit does not have. `roles` names only the four, and an extra role is later, on purpose, in the notes
+* A role the kit does not have. `roles` names only the four, and an extra role is later, on purpose, in the notes.
+  The human confirmed this while the spec was a draft. Since `roles` maps a name to a file, a later unit that
+  allows more names leaves every file valid that this unit makes valid
 * Replacing `process.md`, or any part of it
 * An orchestrator, or settings for one
 * Software in the sandbox, which belongs in a project's Dockerfile or Compose layer
