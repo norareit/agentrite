@@ -106,15 +106,15 @@ Step 6:
 
 This repository's text:
 
-- [ ] In `CLAUDE.md`, in the paragraphs above `## Repository Instructions`, replace each mention of the kit's
+- [x] In `CLAUDE.md`, in the paragraphs above `## Repository Instructions`, replace each mention of the kit's
   `process.md` with the kit's instruction files: those every project follows "are in the kit's instruction files";
   one that every project follows is edited in "the kit's instruction files at the root"; the file "imports the
   kit's instruction files and `AGENTS.md` into Claude Code". Leave the import lines as they are (R12)
-- [ ] In "What the repository holds besides the package" of `CONTRIBUTING.md`, write the row of `CLAUDE.md` as "The
+- [x] In "What the repository holds besides the package" of `CONTRIBUTING.md`, write the row of `CLAUDE.md` as "The
   bridge that imports the kit's instruction files and `AGENTS.md` into Claude Code" and the row of `opencode.json`
   as "The configuration that loads the kit's instruction files into OpenCode". Re-pad the table so that its columns
   line up and no line passes 120 characters (R12)
-- [ ] Rewrite the opening paragraph of `AGENTS.md`, from "We eat our own dog food" to "nothing is stated in both
+- [x] Rewrite the opening paragraph of `AGENTS.md`, from "We eat our own dog food" to "nothing is stated in both
   places.", keeping "We eat our own dog food: this project uses AgentRite" and its last sentence.
   [`node_modules/agentrite/process.md`](node_modules/agentrite/process.md) and
   [`node_modules/agentrite/standards.md`](node_modules/agentrite/standards.md) are **required reading** before any
@@ -122,7 +122,7 @@ This repository's text:
   commit prefixes; `standards.md` holds the rules on text, documentation, commits, code and tests, as 7.1.0's
   template words them. It no longer says that `process.md` holds the documentation rules or the code and testing
   standards (R13)
-- [ ] Commit as `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
+- [x] Commit as `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
 
 Closing:
 
@@ -150,5 +150,5 @@ Closing:
 - [x] `feature-0055 Plan the unit`: `plan.md` and `record.md`
 - [x] `feature-0055 Run the installed kit's command with npm run kit`
 - [x] `feature-0055 Have step 6 carry out what a release asks when it is exact`
-- [ ] `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
+- [x] `feature-0055 Stop listing the kit's instruction files, and name standards.md in AGENTS.md`
 - [ ] The record's closing entries, with the verification

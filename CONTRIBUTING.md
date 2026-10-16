@@ -14,26 +14,26 @@ sandbox does is in [`SANDBOX.md`](SANDBOX.md). This document is not in the packa
 
 What the package holds is in "What is here" of `README.md`. The repository holds besides:
 
-| Path                          | What it holds                                                         |
-|-------------------------------|-----------------------------------------------------------------------|
-| `tests/`                      | The kit's own unit tests, run by node's built-in test runner          |
-| `RELEASING.md`                | How a release of the kit is made, which the `/release` skill follows  |
-| `publish-check.mjs`           | What `npm publish` checks before it publishes                         |
-| `CONTRIBUTING.md`             | This document                                                         |
-| `changes/`                    | The kit's own change units                                            |
-| `pointers/`                   | The package that holds the name `agentrite-roles`                     |
-| `AGENTS.md`                   | This repository's own instructions for agents                         |
-| `CLAUDE.md`                   | The bridge that imports `process.md` and `AGENTS.md` into Claude Code |
-| `opencode.json`               | The configuration that loads `process.md` into OpenCode               |
-| `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill           |
-| `.opencode/`                  | The role wrappers for OpenCode                                        |
-| `agentrite.json`              | This repository's own settings, which the kit's commands read         |
-| `sandbox.sh`                  | The shim that runs the sandbox of the installed release               |
-| `sandbox/`                    | This repository's `compose.project.yml`                               |
-| `sandbox-dev.sh`              | Runs the sandbox of the working copy                                  |
-| `package-lock.json`           | The lockfile, which pins the installed release of the kit             |
-| `.dockerignore`, `.gitignore` | What the image build and git leave out                                |
-| `.editorconfig`               | The formatting that editors apply                                     |
+| Path                          | What it holds                                                                        |
+|-------------------------------|--------------------------------------------------------------------------------------|
+| `tests/`                      | The kit's own unit tests, run by node's built-in test runner                         |
+| `RELEASING.md`                | How a release of the kit is made, which the `/release` skill follows                 |
+| `publish-check.mjs`           | What `npm publish` checks before it publishes                                        |
+| `CONTRIBUTING.md`             | This document                                                                        |
+| `changes/`                    | The kit's own change units                                                           |
+| `pointers/`                   | The package that holds the name `agentrite-roles`                                    |
+| `AGENTS.md`                   | This repository's own instructions for agents                                        |
+| `CLAUDE.md`                   | The bridge that imports the kit's instruction files and `AGENTS.md` into Claude Code |
+| `opencode.json`               | The configuration that loads the kit's instruction files into OpenCode               |
+| `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill                          |
+| `.opencode/`                  | The role wrappers for OpenCode                                                       |
+| `agentrite.json`              | This repository's own settings, which the kit's commands read                        |
+| `sandbox.sh`                  | The shim that runs the sandbox of the installed release                              |
+| `sandbox/`                    | This repository's `compose.project.yml`                                              |
+| `sandbox-dev.sh`              | Runs the sandbox of the working copy                                                 |
+| `package-lock.json`           | The lockfile, which pins the installed release of the kit                            |
+| `.dockerignore`, `.gitignore` | What the image build and git leave out                                               |
+| `.editorconfig`               | The formatting that editors apply                                                    |
 
 ## Commands
 
