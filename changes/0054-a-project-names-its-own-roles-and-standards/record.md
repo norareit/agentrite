@@ -194,4 +194,13 @@ timestamp: 2026-10-16T11:14:23Z
   findings. Not checked: the sandbox with a real Docker, the harnesses themselves, and a project with a kit
   installed from the registry rather than linked. The status is `in-progress`
 
+- 2026-10-16T20:22:07Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
+  `0054-a-project-names-its-own-roles-and-standards` at `864121c8884a583091f1c0eecdff0241b5694e11` in full,
+  against merge base `f12086463b99cec805005e5cb7154323c86a5bbb` with `origin/master`. Returned S1; no separate
+  plan-fidelity or code-quality findings. Saved the complete review in
+  `.reviews/0054-a-project-names-its-own-roles-and-standards/2026-10-16T202207Z-full.md`.
+  `npm test` reported 652 passing, none failed or skipped; `npm run check-changes` and the diff whitespace check
+  exited 0. Did not independently reproduce the historical scratch run or test-first ordering, or verify real
+  Docker, real harnesses or a consuming project installed from the registry.
+
 ## Amendments
