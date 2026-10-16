@@ -59,5 +59,32 @@ timestamp: 2026-10-16T11:14:23Z
   as a unit after this one, and the human agreed. Changed `spec.md`: added requirement 23 on the opening of
   `README.md`, a decision on the split, and a non-goal for the wider review. The status is `draft`
 - 2026-10-16T11:47:58Z [human] approved the spec. The status is `approved`
+- 2026-10-16T11:52:30Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0054-a-project-names-its-own-roles-and-standards` at `56a7502`, which is the head of `origin/master`.
+  Took the role from `roles/planner.md` and `process.md` of release 7.0.0, installed with `npm ci` because
+  `node_modules` was missing. Wrote no `plan.md`: the spec does not fit the tree in one place, which the plan
+  cannot settle without deciding what should be true. The unit goes back to the specifier and to the human.
+  Requirements 41 and 42 of unit 0045 hold for this repository today, and their tests are
+  `tests/package-documents.test.mjs` ("the root has an agentrite.json that is the default file byte for byte") and
+  `tests/agentrite-refresh.test.mjs` ("the repository own agentrite.json, wrappers and sandbox.sh are up to date,
+  and refresh changes none"). R41 has the root `agentrite.json` be the default file byte for byte, and R42 has the
+  working copy's `refresh` at the root print `up to date` for the wrappers and `sandbox.sh` and change no file.
+  This unit breaks both, and its non-goal leaves this repository's `agentrite.json` and `.agentrite/` as they are:
+  * Requirement 5 changes the default file, so a root file left with three keys is no longer the default file
+    (R41), and the working copy's `refresh` refuses it for lacking `standards` and `roles` (R42)
+  * Giving the root the new default file does not help while the repository runs on 7.0.0: the installed release
+    has no `standards.md`, so requirement 2 refuses `node_modules/agentrite/standards.md` as a path that names no
+    file
+  * Requirement 14 has `refresh` write `.agentrite/instructions.md`, which the root does not have, so even with a
+    valid file `refresh` writes a file there (R42)
+  The spec has to say what becomes of unit 0045's R41 and R42 until this repository moves to the release that
+  holds this unit. Three ways the planner sees: the unit gives the root the new default file and its list, and R42
+  is judged in a copy of the root with the working tree's kit files under `node_modules/agentrite`, as the test of
+  R42 already copies the root; or R41 and R42 are suspended until that move, and their two tests are changed to say
+  so; or the non-goal is dropped and the repository moves within this unit. Smaller, for the same pass: requirement
+  2's "does not lead outside the project" can be read of the path as written, or of where it leads once symbolic
+  links are followed. Read the second way, a kit installed by `npm link`, or a test project with
+  `node_modules/agentrite` linked to the kit, is refused. The plan would read it the first way, and check the
+  regular file with links followed. The status stays `approved`
 
 ## Amendments
