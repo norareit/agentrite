@@ -5,6 +5,59 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 7.1.0
+
+### What changed
+
+* The rules on how text, documentation, commit messages, code and tests are written moved out of `process.md` into a
+  new file, `standards.md`, which is in the package. `process.md` keeps where instructions belong, how reported
+  problems are verified, the commit prefixes, the changes process and the roles. The rules moved word for word, and
+  a broken rule of `standards.md` blocks `implemented` as one of `process.md` does (0052)
+* `process.md` names no role. It says who does what by the document, the status or the human, its section Roles no
+  longer lists the role files, which the project's `AGENTS.md` does, and what blocks `implemented` is defined in
+  `process.md` and no longer in `roles/reviewer.md` (0052)
+* The status `planned` is gone. Every kind of unit goes from `draft` to `approved` to `in-progress` to
+  `implemented`. An approved unit may be built when it is a task, a bug with a `plan.md` or a log entry that it
+  "needs no plan", or a feature with a `plan.md`. The planner no longer changes the status, and the implementer
+  stops at a unit that may not be built yet. `templates/changes/record.md` lists the four statuses (0052)
+* Claude Code and OpenCode load `standards.md` into every session beside `process.md`. The `CLAUDE.md` that `init`
+  writes imports `@node_modules/agentrite/standards.md` between `@node_modules/agentrite/process.md` and
+  `@AGENTS.md`, and the `opencode.json` it writes lists both paths. `init` adds the path that an `opencode.json` it
+  can amend lacks, and the notices of `init` and `refresh` name what a `CLAUDE.md` or an `opencode.json` lacks of
+  the two (0052)
+* Each role file says to read `process.md` and `standards.md` first, and the `AGENTS.md` that `init` writes calls
+  both required reading. The implementer's description, which its wrappers carry, no longer names `planned`, so
+  `refresh` rewrites the implementer's wrappers (0052)
+* Not in the package: this repository installs release 7.0.0 (0053)
+
+### Worth knowing when you update
+
+* **The update needs these steps for the harnesses to load `standards.md`.** From the project root:
+
+  ```sh
+  npm install --save-dev agentrite@latest
+  npx agentrite refresh
+  npx agentrite init
+  ```
+
+  `refresh` rewrites the implementer's wrappers, and prints a notice for a `CLAUDE.md` or an `opencode.json` that
+  does not load `standards.md`. Add the line `@node_modules/agentrite/standards.md` to `CLAUDE.md` by hand, on a
+  line of its own between `@node_modules/agentrite/process.md` and `@AGENTS.md`: no command adds it, and the notice
+  comes on every `refresh` until it is there. With `opencode`, `init` with no argument adds the path to
+  `opencode.json`. Commit `package.json`, `package-lock.json`, `CLAUDE.md`, `opencode.json` and the wrappers in one
+  commit (0052)
+* A unit whose status is `planned` when the project updates is set to `approved`: change `status: planned` to
+  `status: approved` in its `record.md`. It has been planned, so it may be built. Its log entries that say
+  `planned` are history and stay. Whatever of the project's own reads a unit's status, such as a script, no longer
+  sees `planned` (0052)
+* An `AGENTS.md` that an earlier `init` wrote says that `process.md` holds the code and testing standards, and names
+  no `standards.md`. No command changes it. `init` prints its sections as they are now written, and the project
+  pastes in what it wants of them. The harnesses load `standards.md` whatever it says, once `CLAUDE.md` and
+  `opencode.json` are as above (0052)
+* That Claude Code and OpenCode load `standards.md` in a live session was not tested for this release. It is loaded
+  the way `process.md` is, which was tested in both harnesses when unit 0048 was specified (0052)
+* Nothing of the sandbox changed, and its image needs no rebuild
+
 ## 7.0.0
 
 ### What changed
