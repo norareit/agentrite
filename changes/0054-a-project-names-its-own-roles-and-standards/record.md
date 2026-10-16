@@ -53,5 +53,10 @@ timestamp: 2026-10-16T11:14:23Z
   stay out of this unit. Changed `spec.md`: requirement 2 says that two roles may share a file, a decision records
   why all four are required, and the non-goal on extra roles records the human's confirmation. The status is
   `draft`
+- 2026-10-16T11:43:47Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's request that the README
+  say clearly at its beginning what the kit holds by default and that the standards and the roles can be replaced.
+  Asked whether that belongs in this unit, the specifier proposed the opening here and a wider review of the README
+  as a unit after this one, and the human agreed. Changed `spec.md`: added requirement 23 on the opening of
+  `README.md`, a decision on the split, and a non-goal for the wider review. The status is `draft`
 
 ## Amendments

@@ -163,6 +163,11 @@ The documents:
 22. "How the kit's instructions reach an agent" of `README.md` says what `AGENTS.md` must hold of the list, and
     what the list holds. "agentrite roles", "agentrite run", "agentrite init" and "agentrite refresh" are true of the
     commands and files after the unit
+23. The opening of `README.md`, before its list of sections, says what the kit holds by default: the process in
+    `process.md`, the standards in `standards.md`, four opinionated roles, which it names, and the sandbox. It says
+    that the process is the same in every project, and that a project can replace the standards and each role with a
+    file of its own, named in `agentrite.json`, with a link to the section of requirement 20. The list of sections
+    holds that section
 
 ## Decisions
 
@@ -232,6 +237,11 @@ The documents:
 * **A project's role file refers to the process by a link of its own.** The kit's files use `../process.md` from
   `node_modules/agentrite/roles/`. A project's file is wherever the project puts it, so the README says what it must
   say, not where it must be. Rejected: a fixed directory for a project's role files, which is the kit's guess
+* **The opening of the README says what can be replaced, and the rest of the README is left to a unit of its own.**
+  Without it, a reader learns that the roles and the standards can be replaced only by reaching "The project's
+  settings". The human asked for it while the spec was a draft. A wider review of the README, which the notes of
+  the conversation foresee since it describes the kit's engine and its default rules as one thing, is a unit after
+  this one: it reorders and rewrites sections this unit does not otherwise touch
 * **The kit's wrappers do not change.** The descriptions move into the role files word for word, so a project that
   replaces nothing gets no diff from `refresh`. That is what makes the move checkable
 
@@ -247,6 +257,7 @@ The documents:
 * This repository's own `agentrite.json`, `AGENTS.md`, `CLAUDE.md`, `opencode.json` and `.agentrite/`, which follow
   when it moves to the release that holds this unit
 * `CHANGELOG.md`, which is written when the release is made
+* A review or restructuring of `README.md` beyond what requirements 19 to 23 change
 
 ## Beyond the request
 
