@@ -29,5 +29,16 @@ timestamp: 2026-10-16T11:14:23Z
   still loads the kit's `standards.md` beside the project's own is reported. The human was asked about none of
   them, and approving the unit approves them.
   Unit 0052, which this unit builds on, is on `master` and in no release yet. The status is `draft`
+- 2026-10-16T11:23:11Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on two decisions of the human while
+  the spec was a draft. First, that in a project with its own standards file the roles follow that file alone, as
+  the spec had it: the human had asked that the role files keep linking `../standards.md`, and chose replacement when
+  asked whether the kit's standards should then still hold beside the project's. Second, that the files a project
+  uses are listed in a file the kit writes, and not in `AGENTS.md` kept by hand, after the specifier set out where a
+  list kept by hand goes out of date. Changed `spec.md`: requirements 13 to 16 are new and give the list,
+  `.agentrite/instructions.md`, which `init` and `refresh` write from the settings, the `AGENTS.md` that links it,
+  and the notice for one that does not. Requirements 17 and 18 point the kit's files to the list in the place of
+  `AGENTS.md`, and the requirements on `README.md` are renumbered 19 to 22 and follow the list. Replaced the two
+  decisions on `AGENTS.md` with four on the list, and dropped the entry of "Beyond the request" that the list
+  answers. The status is `draft`
 
 ## Amendments

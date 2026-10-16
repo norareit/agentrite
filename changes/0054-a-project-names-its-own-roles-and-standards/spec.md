@@ -88,27 +88,45 @@ What follows the settings:
     and an `opencode.json` that still lists it, since the harness then loads both sets of rules. `init` and `refresh`
     print a notice that names the line or the entry to remove, as they print one for what is missing, and remove
     nothing themselves
-13. The project's `AGENTS.md` as `init` writes it names, as required reading, `process.md` and the standards the
-    settings give, and lists the role files the settings give. A role file of the project is listed by its path from
-    the project root. `CLAUDE.md` as `init` writes it names the standards the settings give in its text. When
-    `AGENTS.md` exists, `init`'s notice prints the sections as they would be written from the settings
+The list of the files in use:
+
+13. The kit writes a file `.agentrite/instructions.md` in the project root, which lists the instruction files the
+    project uses: the kit's `process.md`, the standards the settings give, and for each of the four roles, its name
+    and the role file the settings give. Each is named by its path from the project root, in a link that works from
+    the list's own place. The list says that these are the files whose instructions hold in the project, that the
+    standards are the project's whole set of rules on how text, documentation, commits, code and tests are written,
+    and that the kit writes the list from `agentrite.json` and it is not edited by hand. What it holds follows from
+    the settings alone
+14. `init` writes the list when it is missing, and `refresh` writes it as the settings give it, whatever is there,
+    as it writes the role wrappers: it prints `wrote`, `refreshed` or `up to date` for it, and leaves a path that holds
+    something other than a regular file, names it on standard error and exits with a status other than 0 after
+    writing the rest. The list is committed with the project, as the wrappers are
+15. The project's `AGENTS.md` as `init` writes it says that the files `.agentrite/instructions.md` names are required
+    reading, with a link to the list, and lists no role file and no standards file itself. `CLAUDE.md` as `init`
+    writes it names the list in its text, where it names the kit's files today. When `AGENTS.md` exists, `init`'s
+    notice prints the sections as they are now written
+16. `init` and `refresh` print a notice for an `AGENTS.md` that is missing or does not hold the text
+    `.agentrite/instructions.md`. It says that agents then do not learn from `AGENTS.md` which role and standards
+    files are in use, that `refresh` does not change `AGENTS.md`, and points to the README section of requirement
+    22. Whether `AGENTS.md` holds the text is judged in the place where the kit judges `CLAUDE.md` and
+    `opencode.json`
 
 What a kit file says of the others:
 
-14. No kit file names `standards.md` as the one file whose rules hold. `process.md` and each kit role file say that
-    the rules on how text, documentation, commits, code and tests are written are in the project's standards: the
-    kit's `standards.md`, or the file the project uses in its place, which the project's `AGENTS.md` names. Where
-    `process.md` says that a broken rule of `standards.md` blocks, it says the same of the project's standards
-15. `roles/reviewer.md` says to read the role files of the specifier, the planner and the implementer that the
-    project uses, as its `AGENTS.md` names them, and no longer links the kit's three
+17. No kit file names `standards.md` as the one file whose rules hold. `process.md` and each kit role file say that
+    the rules on how text, documentation, commits, code and tests are written are in the project's standards, which
+    `.agentrite/instructions.md` in the project root names. Where `process.md` says that a broken rule of
+    `standards.md` blocks, it says the same of the project's standards
+18. `roles/reviewer.md` says to read the role files of the specifier, the planner and the implementer that
+    `.agentrite/instructions.md` names, and no longer links the kit's three
 
 The documents:
 
-16. `README.md` says, in "The project's settings", what the two keys hold, that they are optional and what a
-    missing one means, what a valid value is, that an unknown key is refused, and what to run after changing one:
-    `npx agentrite refresh` for the wrappers and the notices on `CLAUDE.md` and `opencode.json`, and an edit by hand
-    of the sections of `AGENTS.md`. Its table of the keys has a row for each, with what reads it
-17. `README.md` has a section on bringing a project's own role or standards file, which says what such a file must
+19. `README.md` says, in "The project's settings", what the two keys hold, that they are optional and what a
+    missing one means, what a valid value is, that an unknown key is refused, and that after changing one
+    `npx agentrite refresh` rewrites the wrappers and the list, and prints the notices on `CLAUDE.md` and
+    `opencode.json`. Its table of the keys has a row for each, with what reads it
+20. `README.md` has a section on bringing a project's own role or standards file, which says what such a file must
     hold: for a role file, the front matter of requirement 6, a first instruction to read `process.md` and the
     project's standards with a link that works from where the file is, and its input, its output and the status it
     sets in terms of the documents and statuses of `process.md`; for a standards file, that it is the project's
@@ -116,8 +134,12 @@ The documents:
     replaced file no longer gets the kit's improvements to it, that the file is committed, since a unit run's clone
     holds only what is committed and refuses a path that names no file, and that what a project adds to a role
     without replacing it belongs in the project's `AGENTS.md`
-18. "agentrite roles", "agentrite run", "agentrite init", "agentrite refresh" and "How the kit's instructions reach an
-    agent" are true of the commands and files after the unit
+21. `README.md` names `.agentrite/instructions.md` among the files `init` writes and those `refresh` rewrites, and
+    says in "Updating a project to a newer kit" that `refresh` writes it, and what to change in an `AGENTS.md` that
+    `init` wrote before
+22. "How the kit's instructions reach an agent" of `README.md` says what `AGENTS.md` must hold of the list, and
+    what the list holds. "agentrite roles", "agentrite run", "agentrite init" and "agentrite refresh" are true of the
+    commands and files after the unit
 
 ## Decisions
 
@@ -149,14 +171,25 @@ The documents:
 * **The kit's standards line is reported, not removed, when the project has its own.** A harness that loads both
   sets of rules gives an agent two that may contradict each other, and nothing says so. The files are the project's,
   and unit 0048 decided that `refresh` notices and does not amend them. The same holds here
-* **`AGENTS.md` is where a project's choice is written in text.** A kit file cannot know which standards or role
-  files a project uses, and `AGENTS.md` is the project's own and is read in every session. So the kit's files point
-  to it, and `init` writes it from the settings. Rejected: the kit's role files naming a fixed `../standards.md`,
-  which is the second-rule-set problem of "Context"
-* **`AGENTS.md` is brought up to date by hand after a change of the settings.** It is the project's own text, and
-  unit 0045 already leaves the wrapper directories it lists to the project. `init` prints the sections as the
-  settings give them when the file exists, and the README says to edit them. Noticing an `AGENTS.md` that names
-  other files is under "Beyond the request"
+* **The files in use are listed in a file the kit writes and keeps.** The human decided this while the spec was a
+  draft, after weighing it against `AGENTS.md` listing them, kept up to date by hand. A kit file cannot know which
+  standards or role files a project uses, so it has to point somewhere that does. `AGENTS.md` is read in every
+  session and calls what it names required reading, so a list in it that is out of date sends agents to a second
+  set of rules, or the reviewer and a session without a wrapper to the wrong role file. And it is out of date by
+  default: `init` takes no override as an argument, so the usual order, `init`, then a key added by hand, then
+  `refresh`, leaves an `AGENTS.md` that names the kit's files. A list that `refresh` writes from the settings is
+  right after every `refresh`. Rejected: `AGENTS.md` kept by hand, with the README saying to edit it; and `refresh`
+  noticing an `AGENTS.md` that names other files, which would have to read prose
+* **The list is `.agentrite/instructions.md`.** The kit's other generated files that hold nothing of the project's,
+  the wrappers, are under the harnesses' dot directories, out of the way of the project's own files. A dot directory
+  of the kit's keeps the list there as well. Rejected: a file at the project root, which is the project's
+* **The harness does not load the list.** The harness loads `process.md` and the standards already, and the list
+  adds paths, not rules. It is for an agent that reads files itself: from `AGENTS.md`, or from a kit role file.
+  Rejected: importing it into `CLAUDE.md`, which adds a file to every session for that fallback
+* **`refresh` notices an `AGENTS.md` without the link, and does not add it.** `AGENTS.md` is the project's, as
+  unit 0048 decided of `CLAUDE.md`. A project that set up before this unit has an `AGENTS.md` that lists the kit's
+  files, which is right only while it replaces nothing, so it is told on every `refresh` until it links the list.
+  Whether it holds the text is a test of one string, unlike whether prose names the right files
 * **A project's role file refers to the process by a link of its own.** The kit's files use `../process.md` from
   `node_modules/agentrite/roles/`. A project's file is wherever the project puts it, so the README says what it must
   say, not where it must be. Rejected: a fixed directory for a project's role files, which is the kit's guess
@@ -170,16 +203,12 @@ The documents:
 * An orchestrator, or settings for one
 * Software in the sandbox, which belongs in a project's Dockerfile or Compose layer
 * Presets, `extends`, or settings merged from several files
-* This repository's own `agentrite.json`, `AGENTS.md`, `CLAUDE.md` and `opencode.json`, which follow when it moves to
-  the release that holds this unit
+* This repository's own `agentrite.json`, `AGENTS.md`, `CLAUDE.md`, `opencode.json` and `.agentrite/`, which follow
+  when it moves to the release that holds this unit
 * `CHANGELOG.md`, which is written when the release is made
 
 ## Beyond the request
 
-* **`refresh` noticing an `AGENTS.md` that does not name the files the settings give.** Cost: deciding when a section
-  a project has reworded still names the right files, since it is prose. Without it, a project that changed a key
-  and forgot `AGENTS.md` has agents that follow the link there to the old file, while the harness loads and the
-  wrappers point at the new one. It shows the first time someone reads `AGENTS.md` or an agent quotes it
 * **`agentrite roles --json` giving each role's file.** The coming orchestrator may want it. Cost: a key in a listing
   that scripts read, which is then a promise. Without it, a script reads the paths from `agentrite.json`
 * **An addition file per role beside the kit's.** Covered under "Decisions"
