@@ -10,7 +10,9 @@ project is in its own `AGENTS.md`.
 
 ### Text
 
-When generating text such as documentation or commit messages, do not use em dashes.
+* When generating text such as documentation or commit messages, do not use em dashes
+* Do not quote the human's messages in anything committed to the project. They are written for the agent, not for
+  the project's readers. Write what was asked or decided in your own words, as correct prose
 
 ### Documentation changes
 
