@@ -18,5 +18,5 @@
 
 ## Beyond the request
 
-- [What the specifier would add that the request does not need, with its cost and what happens without it. Left
-  out unless the human takes it. Write "None" when there is nothing]
+1. [What the specifier would add that the request does not need, with its cost and what happens without it. Left
+   out unless the human takes it. Write "None" when there is nothing]
