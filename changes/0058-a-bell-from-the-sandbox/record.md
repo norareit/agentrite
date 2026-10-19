@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-19T15:47:39Z
 ---
 
@@ -34,5 +34,6 @@ timestamp: 2026-10-19T15:47:39Z
   that `bell` is required. Changed `spec.md`: requirements 6 to 8 make `bell` required, and a start refuses a file
   that lacks it; requirements 1, 11, 13 and 14 follow; the decision on the first optional key is replaced by one on
   a required key, and one on the default the written file gives. The status is `draft`
+- 2026-10-19T18:54:53Z [human] approved the spec. The status is `approved`
 
 ## Amendments
