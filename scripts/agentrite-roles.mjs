@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 const BODY_LINE =
   'Read `{path}` in the project root and follow it. It is your instruction; this file holds none of its own.';
 
-/** The names of the roles, in the order every listing of them follows. */
+/** The four roles every project has, in the order of their stages, which every listing gives first. */
 export const ROLE_NAMES = ['specifier', 'planner', 'implementer', 'reviewer'];
 
 /**
@@ -145,13 +145,39 @@ function opencodeFile(role) {
   return `---\n${descriptionBlock(role.description)}mode: all\n---\n\n${body(role.path)}`;
 }
 
+// `ownAgents` are the names of the agents the harness has of its own, as its documentation writes them on
+// 2026-10-19: https://code.claude.com/docs/en/sub-agents and https://opencode.ai/docs/agents/
 const HARNESSES = {
-  claude: { directory: '.claude/agents', render: claudeFile },
-  opencode: { directory: '.opencode/agents', render: opencodeFile },
+  claude: {
+    title: 'Claude Code',
+    directory: '.claude/agents',
+    render: claudeFile,
+    ownAgents: ['Explore', 'Plan', 'general-purpose', 'claude', 'statusline-setup', 'claude-code-guide', 'fork'],
+  },
+  opencode: {
+    title: 'OpenCode',
+    directory: '.opencode/agents',
+    render: opencodeFile,
+    ownAgents: ['build', 'plan', 'general', 'explore', 'scout', 'compaction', 'title', 'summary'],
+  },
 };
 
 /** The names of the harnesses the kit writes wrappers for, as the commands take them. */
 export const HARNESS_NAMES = Object.keys(HARNESSES);
+
+/**
+ * The titles of the harnesses, in the order of `HARNESS_NAMES`, that have an agent of their own named `name`,
+ * without regard to case, and an empty list when none does.
+ *
+ * @param {string} name
+ * @returns {string[]}
+ */
+export function harnessesWithAgent(name) {
+  const lowered = name.toLowerCase();
+  return Object.values(HARNESSES)
+    .filter((entry) => entry.ownAgents.some((agent) => agent.toLowerCase() === lowered))
+    .map((entry) => entry.title);
+}
 
 /**
  * The directory of each harness's wrappers, in the order the harnesses are given.

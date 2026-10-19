@@ -4,6 +4,7 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import {
+  harnessesWithAgent,
   parseRoleDescription,
   plannedFiles,
   readRoles,
@@ -166,11 +167,14 @@ test('readRoles refuses a role file without front matter, naming the file and th
 test('readRoles refuses a role file it cannot read, naming it and the error', (t) => {
   const base = projectWith(t);
   mkdirSync(join(base, 'rules', 'reviewer.md'), { recursive: true });
-  assert.throws(() => readRoles(base, { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' }), (error) => {
-    assert.ok(error.message.startsWith('cannot read rules/reviewer.md: '), error.message);
-    assert.match(error.message, /EISDIR/);
-    return true;
-  });
+  assert.throws(
+    () => readRoles(base, { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' }),
+    (error) => {
+      assert.ok(error.message.startsWith('cannot read rules/reviewer.md: '), error.message);
+      assert.match(error.message, /EISDIR/);
+      return true;
+    },
+  );
 });
 
 // Unit 0054, R7, R9: the wrappers from the role files the settings give.
@@ -279,4 +283,27 @@ test('no file under scripts/ has a shebang but the commands the package has', ()
     .sort();
 
   assert.deepEqual(withShebang, commands.sort());
+});
+
+// Unit 0056, R3: the names of the agents that the harnesses have of their own, written as their documentation does.
+
+test('harnessesWithAgent names the harness of each of its own agents, without regard to case', () => {
+  const table = {
+    'Claude Code': ['Explore', 'Plan', 'general-purpose', 'claude', 'statusline-setup', 'claude-code-guide', 'fork'],
+    OpenCode: ['build', 'plan', 'general', 'explore', 'scout', 'compaction', 'title', 'summary'],
+  };
+  for (const [title, names] of Object.entries(table)) {
+    for (const name of names) {
+      for (const form of [name, name.toLowerCase(), name.toUpperCase()]) {
+        assert.ok(harnessesWithAgent(form).includes(title), `${form} is an agent of ${title}`);
+      }
+    }
+  }
+});
+
+test('harnessesWithAgent gives both titles in order for plan and explore, and none for any other name', () => {
+  assert.deepEqual(harnessesWithAgent('plan'), ['Claude Code', 'OpenCode']);
+  assert.deepEqual(harnessesWithAgent('explore'), ['Claude Code', 'OpenCode']);
+  assert.deepEqual(harnessesWithAgent('security-reviewer'), []);
+  for (const name of ROLE_NAMES) assert.deepEqual(harnessesWithAgent(name), []);
 });

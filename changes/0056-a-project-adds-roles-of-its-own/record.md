@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: approved
-timestamp: 2026-10-18T17:01:25Z
+status: in-progress
+timestamp: 2026-10-19T16:00:00Z
 ---
 
 # 0056 A project adds roles of its own
@@ -45,3 +45,6 @@ timestamp: 2026-10-18T17:01:25Z
   the files the plan names. The plan is in five steps and five commits: the settings, everything that follows them,
   the removal of a stale wrapper by `refresh`, the kit's reviewer, and the README. Each requirement has a task,
   R11 a check that `process.md` is unchanged. The status is `approved`
+- 2026-10-19T16:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
+  branch at `4e1cc24`, from `roles/implementer.md` of the installed release. Read `spec.md`, `plan.md` and this
+  record in full. The status is `in-progress`

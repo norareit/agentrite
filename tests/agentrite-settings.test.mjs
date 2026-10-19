@@ -70,7 +70,10 @@ test('roles are given in the order specifier, planner, implementer, reviewer, wh
 });
 
 test('two or more roles may name the same file', () => {
-  const shared = { ...VALID, roles: { ...VALID.roles, planner: 'rules/specifier.md', reviewer: 'rules/specifier.md' } };
+  const shared = {
+    ...VALID,
+    roles: { ...VALID.roles, planner: 'rules/specifier.md', reviewer: 'rules/specifier.md' },
+  };
   assert.deepEqual(parseSettings(textOf(shared)), shared);
 });
 
@@ -93,22 +96,28 @@ test('text that is not JSON is refused with the file, the parser own error and w
     } catch (error) {
       parserMessage = error.message;
     }
-    assert.throws(() => parseSettings(text), (error) => {
-      assert.ok(error.message.startsWith('agentrite.json is not JSON: '), error.message);
-      assert.ok(error.message.includes(parserMessage), error.message);
-      assert.ok(error.message.endsWith(OBJECT_SENTENCE), error.message);
-      return true;
-    });
+    assert.throws(
+      () => parseSettings(text),
+      (error) => {
+        assert.ok(error.message.startsWith('agentrite.json is not JSON: '), error.message);
+        assert.ok(error.message.includes(parserMessage), error.message);
+        assert.ok(error.message.endsWith(OBJECT_SENTENCE), error.message);
+        return true;
+      },
+    );
   }
 });
 
 test('JSON that is no object is refused with the file and what the file must hold', () => {
   for (const text of ['[]', 'null', '"main"', '5', 'true']) {
-    assert.throws(() => parseSettings(text), (error) => {
-      assert.ok(error.message.startsWith('agentrite.json '), `${text}: ${error.message}`);
-      assert.ok(error.message.endsWith(OBJECT_SENTENCE), `${text}: ${error.message}`);
-      return true;
-    });
+    assert.throws(
+      () => parseSettings(text),
+      (error) => {
+        assert.ok(error.message.startsWith('agentrite.json '), `${text}: ${error.message}`);
+        assert.ok(error.message.endsWith(OBJECT_SENTENCE), `${text}: ${error.message}`);
+        return true;
+      },
+    );
   }
 });
 
@@ -119,9 +128,14 @@ const SANDBOX_MUST = 'It must hold true or false';
 const PATH_MUST =
   'It must hold the path of a file, relative to the project root, that does not lead outside the project';
 const ROLES_OBJECT_MUST =
-  'It must hold an object from each of the roles specifier, planner, implementer and reviewer to the path of its file';
-const ROLES_EXACTLY_MUST =
-  'It must hold exactly the roles specifier, planner, implementer and reviewer, each with the path of its file';
+  'It must hold an object from each of the roles specifier, planner, implementer and reviewer, ' +
+  "and from any role of the project's own, to the path of its file";
+const ROLES_MUST_HOLD =
+  'It must hold the roles specifier, planner, implementer and reviewer, each with the path of its file, ' +
+  "and may hold roles of the project's own besides";
+const NAME_FORM =
+  "A role's name is one or more words of the lowercase letters a to z, joined by single hyphens, as security-reviewer";
+const OWN_AGENT_REFUSAL = 'A role cannot have the name of an agent of a harness the kit writes wrappers for';
 
 test('each of the five keys, when missing, is named as missing, with what it must hold', () => {
   for (const [key, must] of [
@@ -182,20 +196,110 @@ test('a roles that is no JSON object is named with what it holds', () => {
 test('a roles that lacks a role names the first one it lacks, with the four it must hold', () => {
   for (const role of ROLE_NAMES) {
     assert.throws(() => parseSettings(textOf(withRole(role, undefined))), {
-      message: `agentrite.json: roles lacks ${role}. ${ROLES_EXACTLY_MUST}`,
+      message: `agentrite.json: roles lacks ${role}. ${ROLES_MUST_HOLD}`,
     });
   }
   assert.throws(() => parseSettings(textOf({ ...VALID, roles: { reviewer: 'rules/reviewer.md' } })), {
-    message: `agentrite.json: roles lacks specifier. ${ROLES_EXACTLY_MUST}`,
+    message: `agentrite.json: roles lacks specifier. ${ROLES_MUST_HOLD}`,
   });
 });
 
-test('a roles that holds a name that is no role names it, with the four it must hold', () => {
-  assert.throws(() => parseSettings(textOf(withRole('tester', 'rules/tester.md'))), {
-    message: `agentrite.json: roles holds "tester", which is no role. ${ROLES_EXACTLY_MUST}`,
+const EXTRA = { 'security-reviewer': 'rules/security.md', 'test-writer': 'rules/tests.md' };
+
+test('a roles that holds roles of the projects own gives the four and then those, in the order of the text', () => {
+  const settings = parseSettings(textOf({ ...VALID, roles: { ...VALID.roles, ...EXTRA } }));
+  assert.deepEqual(Object.keys(settings.roles), [...ROLE_NAMES, 'security-reviewer', 'test-writer']);
+  assert.deepEqual(settings.roles, { ...VALID.roles, ...EXTRA });
+  const before = parseSettings(textOf({ ...VALID, roles: { ...EXTRA, ...VALID.roles } }));
+  assert.deepEqual(Object.keys(before.roles), [...ROLE_NAMES, 'security-reviewer', 'test-writer']);
+  const reversed = parseSettings(
+    textOf({ ...VALID, roles: { 'test-writer': 'a.md', 'security-reviewer': 'b.md', ...VALID.roles } }),
+  );
+  assert.deepEqual(Object.keys(reversed.roles).slice(4), ['test-writer', 'security-reviewer']);
+});
+
+test('an extra role may name the file of another role, one of the four or an extra one', () => {
+  const roles = {
+    ...VALID.roles,
+    'security-reviewer': VALID.roles.reviewer,
+    'test-writer': 'rules/shared.md',
+    other: 'rules/shared.md',
+  };
+  assert.deepEqual(parseSettings(textOf({ ...VALID, roles })).roles, roles);
+});
+
+test('a roles of the four alone gives the four', () => {
+  assert.deepEqual(Object.keys(parseSettings(textOf(VALID)).roles), ROLE_NAMES);
+});
+
+test('a name of the wrong form is refused with the form, the name written as JSON', () => {
+  for (const name of [
+    'Security-Reviewer',
+    'security_reviewer',
+    'reviewer2',
+    '-reviewer',
+    'reviewer-',
+    'security--reviewer',
+    'security reviewer',
+    'a/b',
+    'toString',
+    '__proto__',
+    '',
+  ]) {
+    const roles = JSON.parse(JSON.stringify(VALID.roles));
+    const text = textOf({ ...VALID, roles: 0 }).replace(
+      '"roles":0',
+      `"roles":${JSON.stringify(roles).slice(0, -1)},${JSON.stringify(name)}:"x.md"}`,
+    );
+    assert.throws(() => parseSettings(text), {
+      message: `agentrite.json: roles holds ${JSON.stringify(name)}, which is not the name of a role. ${NAME_FORM}`,
+    });
+  }
+});
+
+test('the name of an agent that a harness has of its own is refused with the harnesses that have it', () => {
+  for (const [name, who, verb] of [
+    ['general-purpose', 'Claude Code', 'has'],
+    ['claude', 'Claude Code', 'has'],
+    ['fork', 'Claude Code', 'has'],
+    ['build', 'OpenCode', 'has'],
+    ['compaction', 'OpenCode', 'has'],
+    ['plan', 'Claude Code and OpenCode', 'have'],
+    ['explore', 'Claude Code and OpenCode', 'have'],
+  ]) {
+    for (const harnesses of [['claude'], ['opencode']]) {
+      assert.throws(() => parseSettings(textOf({ ...VALID, harnesses, roles: { ...VALID.roles, [name]: 'x.md' } })), {
+        message:
+          `agentrite.json: roles holds "${name}", which is the name of an agent that ${who} ${verb} of its own. ` +
+          OWN_AGENT_REFUSAL,
+      });
+    }
+  }
+});
+
+test('a lack is named before a bad name, an earlier bad name before a later one, and a name before a path', () => {
+  const lacking = { ...VALID.roles, Bad: 'x.md' };
+  delete lacking.planner;
+  assert.throws(() => parseSettings(textOf({ ...VALID, roles: lacking })), {
+    message: `agentrite.json: roles lacks planner. ${ROLES_MUST_HOLD}`,
   });
-  assert.throws(() => parseSettings(textOf({ ...withRole('reviewer', undefined), roles: { tester: 'x.md' } })), {
-    message: `agentrite.json: roles lacks specifier. ${ROLES_EXACTLY_MUST}`,
+  assert.throws(() => parseSettings(textOf({ ...VALID, roles: { ...VALID.roles, Second: 'x.md', build: 'x.md' } })), {
+    message: `agentrite.json: roles holds "Second", which is not the name of a role. ${NAME_FORM}`,
+  });
+  assert.throws(() => parseSettings(textOf({ ...VALID, roles: { ...VALID.roles, planner: '', Bad: 'x.md' } })), {
+    message: `agentrite.json: roles holds "Bad", which is not the name of a role. ${NAME_FORM}`,
+  });
+});
+
+test('the path of an extra role is judged as that of the four, after them, with roles.<name> as the key', () => {
+  for (const value of [5, '', '/etc/x.md', '../x.md']) {
+    assert.throws(() => parseSettings(textOf({ ...VALID, roles: { ...VALID.roles, 'test-writer': value } })), {
+      message: `agentrite.json: roles.test-writer is ${JSON.stringify(value)}. ${PATH_MUST}`,
+    });
+  }
+  const both = { ...VALID.roles, 'test-writer': '', reviewer: '/x.md' };
+  assert.throws(() => parseSettings(textOf({ ...VALID, roles: both })), {
+    message: `agentrite.json: roles.reviewer is "/x.md". ${PATH_MUST}`,
   });
 });
 
@@ -265,6 +369,13 @@ test('settingsText writes the five keys in order, indented by two spaces, the li
       '',
     ].join('\n'),
   );
+});
+
+test('what settingsText writes is read back, with roles of the projects own after the four', () => {
+  const settings = { ...VALID, roles: { ...VALID.roles, ...EXTRA } };
+  const text = settingsText(settings);
+  assert.ok(text.includes('    "reviewer": "rules/reviewer.md",\n    "security-reviewer": "rules/security.md",\n'));
+  assert.deepEqual(parseSettings(text), settings);
 });
 
 test('what settingsText writes is read back as the settings it was given', () => {
@@ -360,6 +471,16 @@ test('readSettings takes a path through a node_modules/agentrite that links outs
   assert.deepEqual(readSettings(base), linked);
 });
 
+test('readSettings refuses an extra role that names no file, with roles.<name> as the key, after the four', (t) => {
+  const base = directory(t);
+  const settings = { ...VALID, roles: { ...VALID.roles, 'test-writer': 'rules/tests.md' } };
+  writePathsOf(base, VALID);
+  writeFileSync(join(base, 'agentrite.json'), textOf(settings));
+  assert.throws(() => readSettings(base), {
+    message: `agentrite.json: roles.test-writer is "rules/tests.md", and there is no file at it. ${NO_FILE_MUST}`,
+  });
+});
+
 test('readSettings takes two roles that name one file', (t) => {
   const base = directory(t);
   writePathsOf(base, VALID);
@@ -375,12 +496,15 @@ test('readSettings in a directory with no file names the command that writes one
 test('readSettings of a file that cannot be read names the file, the error and what the file must hold', (t) => {
   const base = directory(t);
   mkdirSync(join(base, 'agentrite.json'));
-  assert.throws(() => readSettings(base), (error) => {
-    assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
-    assert.match(error.message, /EISDIR/);
-    assert.ok(error.message.endsWith(OBJECT_SENTENCE), error.message);
-    return true;
-  });
+  assert.throws(
+    () => readSettings(base),
+    (error) => {
+      assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
+      assert.match(error.message, /EISDIR/);
+      assert.ok(error.message.endsWith(OBJECT_SENTENCE), error.message);
+      return true;
+    },
+  );
 });
 
 test('readSettings refuses a file that is not valid as parseSettings does', (t) => {

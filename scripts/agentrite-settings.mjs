@@ -1,13 +1,14 @@
 import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { HARNESS_NAMES, ROLE_NAMES } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, harnessesWithAgent, ROLE_NAMES } from './agentrite-roles.mjs';
 
 /** The file at a project's root that holds its settings. */
 export const SETTINGS_FILE = 'agentrite.json';
 
 /**
- * @typedef {{ specifier: string, planner: string, implementer: string, reviewer: string }} RoleFiles
+ * @typedef {Record<string, string>} RoleFiles The path of each role's file: the four roles in the order of
+ *   `ROLE_NAMES` and then any roles of the project's own, in the order of the file.
  * @typedef {{
  *   defaultBranch: string, harnesses: string[], sandbox: boolean, standards: string, roles: RoleFiles
  * }} Settings
@@ -53,11 +54,17 @@ const KEYS = [
   {
     name: 'roles',
     holds: (value) => typeof value === 'object' && value !== null && !Array.isArray(value),
-    must: `an object from each of the roles ${ROLE_LIST} to the path of its file`,
+    must:
+      `an object from each of the roles ${ROLE_LIST}, and from any role of the project's own, ` +
+      'to the path of its file',
   },
 ];
 
-const ROLES_EXACTLY = `It must hold exactly the roles ${ROLE_LIST}, each with the path of its file`;
+const ROLES_MUST_HOLD =
+  `It must hold the roles ${ROLE_LIST}, each with the path of its file, ` +
+  "and may hold roles of the project's own besides";
+
+const ROLE_NAME_FORM = /^[a-z]+(-[a-z]+)*$/;
 
 const MUST_HOLD_OBJECT = `The file must hold a JSON object with the keys ${KEYS.slice(0, -1)
   .map((key) => key.name)
@@ -104,24 +111,47 @@ export function parseSettings(text) {
 }
 
 /**
- * The role files that the object `roles` of the file holds, in the order of `ROLE_NAMES`. Throws, as
- * `parseSettings` does, for one that lacks a role, holds a name that is none, or holds a path that does not hold.
+ * The role files that the object `roles` of the file holds: the four of `ROLE_NAMES` in their order and then the
+ * roles of the project's own in the order of the text. Throws, as `parseSettings` does, for one that lacks one of
+ * the four, holds a name that is not a role's name, or holds a path that does not hold.
  *
  * @param {Record<string, unknown>} roles
  * @returns {RoleFiles}
  */
 function parseRoles(roles) {
   const lacking = ROLE_NAMES.find((name) => !Object.hasOwn(roles, name));
-  if (lacking !== undefined) throw new Error(`${SETTINGS_FILE}: roles lacks ${lacking}. ${ROLES_EXACTLY}`);
-  const stranger = Object.keys(roles).find((name) => !ROLE_NAMES.includes(name));
-  if (stranger !== undefined) {
-    throw new Error(`${SETTINGS_FILE}: roles holds ${JSON.stringify(stranger)}, which is no role. ${ROLES_EXACTLY}`);
-  }
-  for (const name of ROLE_NAMES) {
+  if (lacking !== undefined) throw new Error(`${SETTINGS_FILE}: roles lacks ${lacking}. ${ROLES_MUST_HOLD}`);
+  const extraNames = Object.keys(roles).filter((name) => !ROLE_NAMES.includes(name));
+  for (const name of extraNames) checkRoleName(name);
+  const names = [...ROLE_NAMES, ...extraNames];
+  for (const name of names) {
     if (isProjectPath(roles[name])) continue;
     throw new Error(`${SETTINGS_FILE}: roles.${name} is ${JSON.stringify(roles[name])}. It must hold ${PATH_MUST}`);
   }
-  return /** @type {RoleFiles} */ (Object.fromEntries(ROLE_NAMES.map((name) => [name, roles[name]])));
+  return /** @type {RoleFiles} */ (Object.fromEntries(names.map((name) => [name, roles[name]])));
+}
+
+/**
+ * Throws for a name that is not the name of an extra role: one of the wrong form, or one that a harness has for an
+ * agent of its own.
+ *
+ * @param {string} name
+ */
+function checkRoleName(name) {
+  if (!ROLE_NAME_FORM.test(name)) {
+    throw new Error(
+      `${SETTINGS_FILE}: roles holds ${JSON.stringify(name)}, which is not the name of a role. A role's name is one ` +
+        'or more words of the lowercase letters a to z, joined by single hyphens, as security-reviewer',
+    );
+  }
+  const titles = harnessesWithAgent(name);
+  if (titles.length === 0) return;
+  const verb = titles.length === 1 ? 'has' : 'have';
+  throw new Error(
+    `${SETTINGS_FILE}: roles holds ${JSON.stringify(name)}, which is the name of an agent that ` +
+      `${titles.join(' and ')} ${verb} of its own. ` +
+      'A role cannot have the name of an agent of a harness the kit writes wrappers for',
+  );
 }
 
 /**
@@ -135,7 +165,7 @@ function parseRoles(roles) {
 export function checkSettingsFiles(root, settings) {
   const paths = [
     ['standards', settings.standards],
-    ...ROLE_NAMES.map((name) => [`roles.${name}`, settings.roles[/** @type {keyof RoleFiles} */ (name)]]),
+    ...Object.entries(settings.roles).map(([name, path]) => [`roles.${name}`, path]),
   ];
   for (const [key, path] of paths) {
     if (isRegularFile(resolve(root, path))) continue;
@@ -167,9 +197,7 @@ function isRegularFile(path) {
  */
 export function settingsText({ defaultBranch, harnesses, sandbox, standards, roles }) {
   const list = harnesses.map((harness) => JSON.stringify(harness)).join(', ');
-  const roleLines = ROLE_NAMES.map(
-    (name) => `    ${JSON.stringify(name)}: ${JSON.stringify(roles[/** @type {keyof RoleFiles} */ (name)])}`,
-  );
+  const roleLines = Object.entries(roles).map(([name, path]) => `    ${JSON.stringify(name)}: ${JSON.stringify(path)}`);
   return [
     '{',
     `  "defaultBranch": ${JSON.stringify(defaultBranch)},`,

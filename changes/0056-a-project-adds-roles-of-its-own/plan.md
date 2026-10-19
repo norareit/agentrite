@@ -131,28 +131,28 @@ change.
 
 ### 1. The settings take extra roles
 
-- [ ] In `tests/agentrite-roles.test.mjs`, test `harnessesWithAgent`: for each name of R3's table, written in the
+- [x] In `tests/agentrite-roles.test.mjs`, test `harnessesWithAgent`: for each name of R3's table, written in the
   test as the table writes it and not imported, the harness of its row is among the titles given, for the name as
   written, lowercased and uppercased; `plan` and `explore` give `['Claude Code', 'OpenCode']`; a name of no agent,
   as `security-reviewer`, and each of the four roles give `[]` (R3)
-- [ ] In `tests/agentrite-settings.test.mjs`, test that a `roles` with the four and `security-reviewer` and
+- [x] In `tests/agentrite-settings.test.mjs`, test that a `roles` with the four and `security-reviewer` and
   `test-writer` is valid and gives the six, the four in their order and then the two in the order of the text, also
   when the two stand before the four in the text; that an extra role may name the file of another role, one of the
   four or an extra one; and that a file with the four alone still gives the four (R1, R2, R4)
-- [ ] Replace the test that refuses a name that is no role with one that refuses each of `Security-Reviewer`,
+- [x] Replace the test that refuses a name that is no role with one that refuses each of `Security-Reviewer`,
   `security_reviewer`, `reviewer2`, `-reviewer`, `reviewer-`, `security--reviewer`, `security reviewer`, `a/b`,
   `toString`, `__proto__` and the empty name with the message of the form, the name in it as JSON (R2, R3)
-- [ ] Test that each lowercase name of R3's table that has the form of a name, as `general-purpose`, `claude`,
+- [x] Test that each lowercase name of R3's table that has the form of a name, as `general-purpose`, `claude`,
   `fork`, `build` and `compaction`, is refused with the message that names it and its harness, with `has` for one
   harness; that `plan` and `explore` name both, with `have`; and that the refusal does not depend on `harnesses`,
   with `["claude"]` and with `["opencode"]` (R3)
-- [ ] Test the order of judging: a file that lacks `planner` and holds a bad name is refused for the lack; of two
+- [x] Test the order of judging: a file that lacks `planner` and holds a bad name is refused for the lack; of two
   bad names the first in the text is named; a bad name is named before a path of the four that does not hold; and
   an extra role whose path is absolute, or names no file for `readSettings`, is refused with `roles.<name>` as the
   key, after the four (R2, R3)
-- [ ] Update the expected messages of the lack and of a `roles` that is no object to the texts above, and extend
+- [x] Update the expected messages of the lack and of a `roles` that is no object to the texts above, and extend
   the test that `settingsText` reads back as the settings it was given to settings with two extra roles
-- [ ] Make the tests pass in `scripts/agentrite-roles.mjs` and `scripts/agentrite-settings.mjs` as "Approach" says
+- [x] Make the tests pass in `scripts/agentrite-roles.mjs` and `scripts/agentrite-settings.mjs` as "Approach" says
   (R1 to R4)
 
 ### 2. Everything after the settings follows every role they name

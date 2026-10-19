@@ -1222,7 +1222,7 @@ test('init with no argument in a project whose agentrite.json lacks roles refuse
   assert.equal(
     result.stderr,
     'agentrite: agentrite.json: roles is missing. It must hold an object from each of the roles specifier, ' +
-      'planner, implementer and reviewer to the path of its file\n',
+      "planner, implementer and reviewer, and from any role of the project's own, to the path of its file\n",
   );
   assert.deepEqual(snapshot(base), before);
 });
