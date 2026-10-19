@@ -1,0 +1,116 @@
+# 0059 A project adds software to the sandbox
+
+## Context
+
+The project AloudRite-IntelliJ is built with a JDK, and the sandbox's image has none, so an agent in its sandbox
+cannot build or test it. The human asked for a way for a project that uses the kit to add a JDK, or whatever else
+it needs, to the sandbox's image.
+
+The kit builds the image from its own `container/Dockerfile`, with the project root as the context. What a project
+can change of it today:
+
+* the harness versions and the agent's user, through the build arguments of its `sandbox/compose.project.yml`
+* Playwright's browser, which the kit adds when the project's `package-lock.json` resolves Playwright
+
+Nothing else. AloudRite-IntelliJ's `sandbox/compose.project.yml` holds its name, its limits and its allowlist, and
+nothing that builds. Unit 0054 named "software in the sandbox" as a non-goal, as something that "belongs in a
+project's Dockerfile or Compose layer", and no unit has made such a layer.
+
+`container/sandbox.sh` builds the image on `--rebuild`, when there is none, and when the version of a harness it
+holds, which two labels of the image record, is not the version wanted. Otherwise a start builds nothing and needs
+no network.
+
+## Requirements
+
+The project's file:
+
+1. A project may hold a file `sandbox/Dockerfile`. When it does, the image the sandbox runs is the kit's image with
+   that file built on top of it. When it does not, the image is the kit's, as today
+2. The file builds on the kit's image by opening with these two lines, which `SANDBOX.md` gives:
+
+   ```dockerfile
+   ARG AGENTRITE_IMAGE
+   FROM ${AGENTRITE_IMAGE}
+   ```
+
+   The kit gives `AGENTRITE_IMAGE` the name of its own image when it builds the file. The file is built with the
+   project root as its context, as the kit's own file is
+3. The image the sandbox runs keeps its name, the `image:` of the project's `sandbox/compose.project.yml`. With a
+   `sandbox/Dockerfile`, the kit's own image is kept beside it under that name followed by `-base`
+4. With the JDK of the example of requirement 9 in the file, `java -version` and `javac -version` succeed for the
+   agent in the sandbox, and the firewall, the proxy and the drop to the agent are as they are without the file:
+   the entrypoint's checks pass at start-up, and the agent holds no capability
+
+When the image is built:
+
+5. A start builds the image anew when the content of `sandbox/Dockerfile` is not the content the image was built
+   from, when the file was added or removed since, and in every case where it builds today. A start where none of
+   these holds builds nothing. Which content the image was built from is recorded on the image, as the harness
+   versions are
+6. When the kit's image is built anew, the project's file is built on it anew in the same start
+7. A build of the project's file that fails ends the start with the build's own output and a status other than 0,
+   and runs nothing, as a failing build of the kit's file does today
+8. Requirements 1 to 7 hold for `./sandbox.sh` in each form that starts a container, and for `./sandbox-dev.sh`
+
+The documents:
+
+9. `SANDBOX.md` has a section on adding software to the sandbox, which says:
+    * where the file is, the two lines it opens with, and that it is built on the kit's image, as root, with the
+      project root as the context
+    * an example that installs a JDK from the image's Debian packages, and sets `JAVA_HOME`
+    * that the file must not change the entrypoint, the command, the user or the working directory the kit's image
+      sets, since the entrypoint is what installs the firewall and drops to the agent
+    * that the build runs on the host, with the host's network, outside the sandbox's firewall, as the kit's build
+      does
+    * that the file is committed, and that the image is built from the file of the checkout the command is run from,
+      so a change to it that an agent made in a unit run's clone reaches the image only once the developer has it in
+      that checkout
+    * when the image is built anew, by requirements 5 and 6, and that `--rebuild` builds both
+    * that a tool the project adds that downloads at run time needs its hosts in the project's `ALLOWLIST`, with a
+      link to "Reaching more hosts"
+10. "Where things are kept on the host" of `SANDBOX.md` names the `-base` image of requirement 3, and how to remove
+    it
+11. `README.md` names `sandbox/Dockerfile` where it says what of the sandbox a project holds and may change, as
+    a file the project may add, and that `init` and `refresh` do not write it
+
+## Decisions
+
+* **A Dockerfile of the project's, built on the kit's image.** It takes whatever a project needs: a package, a
+  download, a toolchain at a version of its own, an environment variable. Rejected: a list of Debian packages in
+  `sandbox/compose.project.yml`, which is enough for a JDK from Debian and for nothing that Debian does not carry
+  at the version wanted, so the next need would bring the Dockerfile anyway
+* **The file names the kit's image through an argument.** The kit's image is built as part of the same start, and
+  its name follows the project's `image:`. An argument keeps the file the same in every project and on every
+  builder. Rejected: a fixed image name in `FROM`, which would tie every project's file to one name; and a named
+  build context of Compose, which depends on a version of Compose and of the builder that the kit does not require
+  today
+* **The project's file is trusted as `sandbox/compose.project.yml` is.** Both are the developer's files, built and
+  read from the checkout the command is run from, and the compose file can already change any setting of the
+  container. The sandbox defends against the agent, which reaches either file only through what the developer takes
+  into that checkout. So the kit does not check what the file does. It says, in `SANDBOX.md`, what it must not
+  change
+* **A change of the file builds the image, and an unchanged file does not.** The image is built only when a start
+  needs it, so that a start needs no network otherwise. Recording the file's content on the image is how the kit
+  already knows the harness versions it holds, and it catches every change, the adding and the removing of the file
+  included. Rejected: building on every start, which needs the network on every start; and only on `--rebuild`,
+  which leaves an image without what the file now says, with nothing to say so
+* **The kit's own image is kept under a name of its own.** The project's file needs it as a base, and a start that
+  rebuilds only the project's layer then builds it from that base without building the kit's again
+* **`init` writes no `sandbox/Dockerfile`.** Most projects need none, and a file that adds nothing would be built on
+  every project's image
+
+## Non-goals
+
+* Checking that a project's file keeps the kit's entrypoint, command and user. See "Beyond the request"
+* Software that the kit itself adds for every project, such as a JDK in the kit's image
+* OpenCode or Claude Code at versions of the project's own, which "Holding a harness version" covers
+* AloudRite-IntelliJ's own `sandbox/Dockerfile` and allowlist, which are that project's, made when it moves to the
+  release that holds this unit
+* `CHANGELOG.md`, which is written when the release is made
+
+## Beyond the request
+
+* **Refusing an image whose entrypoint, command or user is not the kit's.** A project's file that sets its own
+  `ENTRYPOINT` by mistake starts a sandbox without the firewall, and nothing says so. Cost: a check of the built
+  image at every start that builds, and its message. Without it, the mistake is one nobody has made, and the
+  developer's compose file can make the same one today without a check
