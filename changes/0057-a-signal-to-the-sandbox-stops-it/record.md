@@ -57,3 +57,17 @@ timestamp: 2026-10-19T14:45:48Z
   changed, no check was run. P2: ticked the host `npm test` and `npm run check-changes` checks, which passed on
   `ee005a6`, and the two commit points that exist, `1f2c071` and `ee005a6`. The checks that start a sandbox, and the
   commit point `Record the checks on the host`, stay open
+- 2026-10-19T15:21:07Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, logged the checks the human ran
+  on the host with `./sandbox-dev.sh`, which runs the working copy's `compose.yml`, as the human reported them.
+  R3: in `./sandbox-dev.sh 0057 bash` the shell showed `CapPrm`, `CapEff` and `CapAmb` all
+  0000000000000000 and `NoNewPrivs: 1`, and `./sandbox-dev.sh --connect 0057 grep ...` showed the same. R1: in that
+  run `kill -WINCH` to the `docker compose run` process and a resize of the window printed nothing in the terminal,
+  and `tput cols` went from 191 to 223. In `--in-place` and in `--workdir` the human reported that the same
+  `kill -WINCH` and resize printed nothing; the widths of `tput cols` were not reported for these two. R2:
+  `docker kill -s WINCH` left the container listed by `docker ps` and printed nothing in the terminal. A
+  `docker kill -s TERM` of the `bash` run printed nothing and left the shell running, since an interactive bash
+  ignores SIGTERM, so it did not show the end of a command; with `./sandbox-dev.sh --in-place sleep 300`,
+  `docker kill -s TERM` ended the run at once, with nothing printed. `./sandbox-dev.sh --in-place npm test`
+  reported 654 tests, 653 passed, 0 failed, 1 skipped; the pasted tail does not name the skipped test, so that it is
+  `tests/sandbox-signal.test.mjs` is not checked. The box for that run in `plan.md` stays open, and so does the commit
+  point of the checks

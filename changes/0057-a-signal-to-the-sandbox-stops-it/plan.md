@@ -88,14 +88,14 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
   skipped
 - [ ] `./sandbox-dev.sh --in-place npm test`: every test passes, and `tests/sandbox-signal.test.mjs` is skipped with the
   reason above
-- [ ] For each of `./sandbox-dev.sh 0057 bash`, `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a
+- [x] For each of `./sandbox-dev.sh 0057 bash`, `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a
   scratch directory> bash`, run in a terminal on the host: once the shell's prompt is
   up, send `kill -WINCH` to the `docker compose run` process from another shell of the host, and resize the terminal
   window. The shell goes on running and the terminal shows no message of tini. Then, in that shell, `tput cols`
   gives the new width. Log each outcome in `record.md`. (R1)
-- [ ] In one sandbox started as above, `docker kill -s WINCH` the container from the host, and it goes on running;
+- [x] In one sandbox started as above, `docker kill -s WINCH` the container from the host, and it goes on running;
   then `docker kill -s TERM` it, and the run ends without the message of tini. Log the outcome. (R2)
-- [ ] In a sandbox of `./sandbox-dev.sh 0057 bash`, `grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status`
+- [x] In a sandbox of `./sandbox-dev.sh 0057 bash`, `grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status`
   shows the three sets all zero and `NoNewPrivs` `1`; and from another shell of the host, `./sandbox-dev.sh
   --connect 0057 grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status` shows the same. Log both outputs. (R3)
 - [x] `npm run check-changes` passes on the committed branch
