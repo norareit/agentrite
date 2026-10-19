@@ -19,7 +19,10 @@ Read [process.md](../process.md) and the project's standards first. The standard
 `.agentrite/instructions.md` in the project root names, and hold the rules on how text, documentation, commits, code
 and tests are written. Then read the role files of the specifier, the planner and the implementer that
 `.agentrite/instructions.md` names. Those three are the instructions the work was produced under, and therefore what
-it is judged against. This file holds only what reviewing adds.
+it is judged against. Read also the file of each role besides the four that has an entry in the unit's `record.md`,
+written as `as the <name>`, by the path `.agentrite/instructions.md` names for it, and judge the work against it as
+against the three. A role besides the four with no entry in `record.md` did not work on the unit, and its file is not
+read. This file holds only what reviewing adds.
 
 ## What you read
 

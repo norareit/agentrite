@@ -164,6 +164,22 @@ test('roles/reviewer.md sends to the role files the list names, and links none o
   assert.match(firstRead, /instructions the work was produced\s+under/);
 });
 
+// R10 of unit 0056
+test('roles/reviewer.md reads the file of each other role with an entry in the record, and of none without', () => {
+  const firstRead = readDocument('roles/reviewer.md')
+    .split('\n\n')
+    .find((paragraph) => paragraph.startsWith('Read '));
+  const flat = firstRead.replace(/\s+/g, ' ');
+  for (const sentence of [
+    "Read also the file of each role besides the four that has an entry in the unit's `record.md`, written as " +
+      '`as the <name>`, by the path `.agentrite/instructions.md` names for it',
+    'judge the work against it as against the three',
+    'A role besides the four with no entry in `record.md` did not work on the unit, and its file is not read',
+  ]) {
+    assert.ok(flat.includes(sentence), sentence);
+  }
+});
+
 const ROLE_NAMES = /specifier|planner|implementer|reviewer/i;
 
 function readDocument(path) {
