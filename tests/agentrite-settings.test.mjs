@@ -4,18 +4,26 @@ import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
-import { parseSettings, readSettings, SETTINGS_FILE, settingsText } from '../scripts/agentrite-settings.mjs';
+import {
+  parseBell,
+  parseSettings,
+  readBell,
+  readSettings,
+  SETTINGS_FILE,
+  settingsText,
+} from '../scripts/agentrite-settings.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const OBJECT_SENTENCE =
-  'The file must hold a JSON object with the keys defaultBranch, harnesses, sandbox, standards and roles';
+  'The file must hold a JSON object with the keys defaultBranch, harnesses, sandbox, bell, standards and roles';
 const NO_FILE = 'the project has no agentrite.json. Run: npx agentrite config, which writes one';
 
 const VALID = {
   defaultBranch: 'main',
   harnesses: ['opencode'],
   sandbox: false,
+  bell: true,
   standards: 'rules/house.md',
   roles: {
     specifier: 'rules/specifier.md',
@@ -55,7 +63,7 @@ test('the file is named agentrite.json', () => {
 
 // R1, R3
 
-test('a valid file gives the five settings', () => {
+test('a valid file gives the six settings', () => {
   assert.deepEqual(parseSettings(textOf(VALID)), VALID);
   const both = { ...VALID, defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: true };
   assert.deepEqual(parseSettings(textOf(both)), both);
@@ -82,7 +90,7 @@ test('a harness named more than once is there once, and the list keeps the order
   assert.deepEqual(settings.harnesses, ['opencode', 'claude']);
 });
 
-test('a key the kit does not know is ignored, beside the five', () => {
+test('a key the kit does not know is ignored, beside the six', () => {
   assert.deepEqual(parseSettings(textOf({ ...VALID, baseBranch: 'develop', $schema: 5 })), VALID);
 });
 
@@ -137,11 +145,12 @@ const NAME_FORM =
   "A role's name is one or more words of the lowercase letters a to z, joined by single hyphens, as security-reviewer";
 const OWN_AGENT_REFUSAL = 'A role cannot have the name of an agent of a harness the kit writes wrappers for';
 
-test('each of the five keys, when missing, is named as missing, with what it must hold', () => {
+test('each of the six keys, when missing, is named as missing, with what it must hold', () => {
   for (const [key, must] of [
     ['defaultBranch', BRANCH_MUST],
     ['harnesses', HARNESSES_MUST],
     ['sandbox', SANDBOX_MUST],
+    ['bell', SANDBOX_MUST],
     ['standards', PATH_MUST],
     ['roles', ROLES_OBJECT_MUST],
   ]) {
@@ -163,6 +172,11 @@ test('a key that holds anything else is named with what it holds and what it mus
     ['harnesses', ['claude', 'toString'], HARNESSES_MUST],
     ['sandbox', 'false', SANDBOX_MUST],
     ['sandbox', 0, SANDBOX_MUST],
+    ['bell', null, SANDBOX_MUST],
+    ['bell', 0, SANDBOX_MUST],
+    ['bell', 'true', SANDBOX_MUST],
+    ['bell', [], SANDBOX_MUST],
+    ['bell', {}, SANDBOX_MUST],
   ]) {
     assert.throws(
       () => parseSettings(textOf(withKey(key, value))),
@@ -172,15 +186,26 @@ test('a key that holds anything else is named with what it holds and what it mus
   }
 });
 
-test('the first key at fault, in the order defaultBranch, harnesses, sandbox, standards, roles, is named', () => {
+test('the first key at fault, in the order defaultBranch, harnesses, sandbox, bell, standards, roles, is named', () => {
   assert.throws(() => parseSettings('{}'), { message: `agentrite.json: defaultBranch is missing. ${BRANCH_MUST}` });
   assert.throws(() => parseSettings('{"sandbox": 1, "harnesses": [], "defaultBranch": "main"}'), {
     message: `agentrite.json: harnesses is []. ${HARNESSES_MUST}`,
   });
-  const { standards: _standards, roles: _roles, ...three } = VALID;
-  assert.throws(() => parseSettings(textOf({ ...three, roles: 5 })), {
+  const { standards: _standards, roles: _roles, ...four } = VALID;
+  assert.throws(() => parseSettings(textOf({ ...four, roles: 5 })), {
     message: `agentrite.json: standards is missing. ${PATH_MUST}`,
   });
+  const { bell: _bell, ...noBell } = VALID;
+  assert.throws(() => parseSettings(textOf({ ...noBell, standards: 5 })), {
+    message: `agentrite.json: bell is missing. ${SANDBOX_MUST}`,
+  });
+});
+
+// R6, R8, R11: bell, for each JSON type.
+
+test('bell gives true and false as they are written', () => {
+  assert.equal(parseSettings(textOf(withKey('bell', true))).bell, true);
+  assert.equal(parseSettings(textOf(withKey('bell', false))).bell, false);
 });
 
 test('a roles that is no JSON object is named with what it holds', () => {
@@ -341,15 +366,23 @@ const ROLES_TEXT = [
   '  }',
 ];
 
-test('settingsText writes the five keys in order, indented by two spaces, the list on one line', () => {
+test('settingsText writes the six keys in order, indented by two spaces, the list on one line', () => {
   const { roles, standards } = VALID;
   assert.equal(
-    settingsText({ roles, standards, sandbox: false, harnesses: ['claude', 'opencode'], defaultBranch: 'main' }),
+    settingsText({
+      roles,
+      standards,
+      bell: false,
+      sandbox: false,
+      harnesses: ['claude', 'opencode'],
+      defaultBranch: 'main',
+    }),
     [
       '{',
       '  "defaultBranch": "main",',
       '  "harnesses": ["claude", "opencode"],',
       '  "sandbox": false,',
+      '  "bell": false,',
       '  "standards": "rules/house.md",',
       ...ROLES_TEXT,
       '}',
@@ -363,6 +396,7 @@ test('settingsText writes the five keys in order, indented by two spaces, the li
       '  "defaultBranch": "release/\\"1\\"",',
       '  "harnesses": ["opencode"],',
       '  "sandbox": true,',
+      '  "bell": true,',
       '  "standards": "rules/house.md",',
       ...ROLES_TEXT,
       '}',
@@ -381,6 +415,7 @@ test('what settingsText writes is read back, with roles of the projects own afte
 test('what settingsText writes is read back as the settings it was given', () => {
   const settings = { ...VALID, defaultBranch: 'release/"1"', harnesses: ['opencode', 'claude'], sandbox: false };
   assert.deepEqual(parseSettings(settingsText(settings)), settings);
+  assert.deepEqual(parseSettings(settingsText({ ...settings, bell: false })), { ...settings, bell: false });
 });
 
 test('the template is the default file, and settingsText of its own values is the template byte for byte', () => {
@@ -391,6 +426,7 @@ test('the template is the default file, and settingsText of its own values is th
       '  "defaultBranch": "master",',
       '  "harnesses": ["claude", "opencode"],',
       '  "sandbox": true,',
+      '  "bell": true,',
       '  "standards": "node_modules/agentrite/standards.md",',
       '  "roles": {',
       '    "specifier": "node_modules/agentrite/roles/specifier.md",',
@@ -548,11 +584,11 @@ test('run on a project with no file, or with one that is not valid, it prints wh
 });
 
 test('run with no project root, or with more than one argument, it prints its usage and exits 2', (t) => {
-  for (const args of [[], [directory(t), 'more']]) {
+  for (const args of [[], [directory(t), 'more'], [directory(t), 'bell', 'more'], [directory(t), 'Bell']]) {
     const result = entryPoint(...args);
     assert.equal(result.status, 2);
     assert.equal(result.stdout, '');
-    assert.equal(result.stderr, 'usage: node agentrite-settings.mjs <project root>\n');
+    assert.equal(result.stderr, 'usage: node agentrite-settings.mjs <project root> [bell]\n');
   }
 });
 
@@ -561,4 +597,118 @@ test('imported, the module prints nothing', () => {
   const result = spawnSync(process.execPath, ['--input-type=module', '--eval', importing], { encoding: 'utf-8' });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout + result.stderr, '');
+});
+
+// R6, R7, R11: bell alone, as a start of the sandbox reads it.
+
+const BELL_MUST = 'It must hold true or false';
+
+test('parseBell gives true and false, from a file of bell alone and from a whole file', () => {
+  assert.equal(parseBell('{"bell": true}'), true);
+  assert.equal(parseBell('{"bell": false}'), false);
+  assert.equal(parseBell(settingsText(VALID)), true);
+  assert.equal(parseBell(settingsText({ ...VALID, bell: false })), false);
+});
+
+test('parseBell judges no other key: a file whose other keys are all wrong gives its bell', () => {
+  const wrong = { defaultBranch: 5, harnesses: [], sandbox: 'yes', standards: '/x', roles: [], bell: false };
+  assert.equal(parseBell(textOf(wrong)), false);
+  assert.equal(parseBell(textOf({ ...wrong, bell: true })), true);
+});
+
+test('parseBell refuses a bell that is missing or holds anything but true or false, naming what it holds', () => {
+  assert.throws(() => parseBell('{}'), { message: `agentrite.json: bell is missing. ${BELL_MUST}` });
+  assert.throws(() => parseBell(textOf(withKey('bell', undefined))), {
+    message: `agentrite.json: bell is missing. ${BELL_MUST}`,
+  });
+  for (const value of [null, 0, 1, 'true', 'false', [], [true], {}, { on: true }]) {
+    assert.throws(
+      () => parseBell(textOf({ bell: value })),
+      { message: `agentrite.json: bell is ${JSON.stringify(value)}. ${BELL_MUST}` },
+      JSON.stringify(value),
+    );
+  }
+});
+
+test('parseBell refuses a text that is not JSON with the parser own error, and that bell cannot be read', () => {
+  for (const text of ['', 'not json', '{ "bell": true, }']) {
+    let parserMessage;
+    try {
+      JSON.parse(text);
+    } catch (error) {
+      parserMessage = error.message;
+    }
+    assert.throws(() => parseBell(text), {
+      message: `agentrite.json is not JSON: ${parserMessage}, so bell cannot be read. ${BELL_MUST}`,
+    });
+  }
+});
+
+test('parseBell refuses JSON that is no object, naming what it holds and that bell is missing', () => {
+  for (const text of ['[]', 'null', 'true', '5', '"bell"']) {
+    assert.throws(() => parseBell(text), {
+      message:
+        `agentrite.json holds ${JSON.stringify(JSON.parse(text))}, which is no JSON object, so bell is missing. ` +
+        BELL_MUST,
+    });
+  }
+});
+
+test('readBell reads the bell of the agentrite.json at the root, with no file the paths name', (t) => {
+  const base = directory(t);
+  writeFileSync(join(base, 'agentrite.json'), settingsText({ ...VALID, bell: false }));
+  assert.equal(readBell(base), false);
+});
+
+const NO_FILE_BELL =
+  'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
+  'Run: npx agentrite config, which writes one';
+
+test('readBell in a directory with no file says that bell is missing and names the command that writes one', (t) => {
+  assert.throws(() => readBell(directory(t)), { message: NO_FILE_BELL });
+});
+
+test('readBell of a file that cannot be read names the file, the error and that bell cannot be read', (t) => {
+  const base = directory(t);
+  mkdirSync(join(base, 'agentrite.json'));
+  assert.throws(
+    () => readBell(base),
+    (error) => {
+      assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
+      assert.match(error.message, /EISDIR/);
+      assert.ok(error.message.endsWith(`, so bell cannot be read. ${BELL_MUST}`), error.message);
+      return true;
+    },
+  );
+});
+
+test('run with a project root and bell, the module prints true or false and a line break, and exits 0', (t) => {
+  for (const bell of [true, false]) {
+    const base = directory(t);
+    writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
+    const result = entryPoint(base, 'bell');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, `${bell}\n`);
+    assert.equal(result.stderr, '');
+  }
+});
+
+test('run with bell on a file at fault, or on no file, it prints why on standard error alone and exits 1', (t) => {
+  const missing = entryPoint(directory(t), 'bell');
+  assert.equal(missing.status, 1);
+  assert.equal(missing.stdout, '');
+  assert.equal(missing.stderr, `agentrite: ${NO_FILE_BELL}\n`);
+
+  for (const [text, message] of [
+    ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
+    ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
+    ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
+  ]) {
+    const base = directory(t);
+    writeFileSync(join(base, 'agentrite.json'), text);
+    const result = entryPoint(base, 'bell');
+    assert.equal(result.status, 1, text);
+    assert.equal(result.stdout, '', text);
+    assert.equal(result.stderr, `agentrite: ${message}\n`, text);
+  }
 });

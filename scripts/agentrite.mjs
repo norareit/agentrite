@@ -751,7 +751,7 @@ const INIT_WITH_SETTINGS =
 /**
  * The settings `init` writes into a project that has none: the harnesses in the kit's order, so that one set of
  * harnesses gives one file however it was typed, the template's own branch when none was named, and the template's
- * standards and roles, which name the kit's own files.
+ * bell, standards and roles, which name the kit's own files and ring in the sandbox.
  *
  * @param {{ harnesses: string[], sandbox: boolean, defaultBranch: string | undefined }} given
  * @param {import('./agentrite-settings.mjs').Settings} template
@@ -762,6 +762,7 @@ function settingsToWrite({ harnesses, sandbox, defaultBranch }, template) {
     defaultBranch: defaultBranch ?? template.defaultBranch,
     harnesses: HARNESS_NAMES.filter((name) => harnesses.includes(name)),
     sandbox,
+    bell: template.bell,
     standards: template.standards,
     roles: template.roles,
   };

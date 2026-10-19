@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-19T15:47:39Z
 ---
 
@@ -47,5 +47,14 @@ timestamp: 2026-10-19T15:47:39Z
   at its end. The status is `approved`
 - 2026-10-19T19:24:57Z [human] decided that unit 0054's R24 test, failing before the work, is ignored for now. The
   status is `approved`
+- 2026-10-19T19:28:41Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on
+  `feature-0058-a-bell-from-the-sandbox` at `aafad5f`, began the work. The status is `in-progress`
+- 2026-10-19T19:31:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added two test files to the
+  "Files" of `plan.md` that task group 1 needed and the plan did not name: `tests/agentrite-run.test.mjs`, where
+  `agentrite roles` is run, for its test of a file that lacks `bell`, and `tests/installed-kit.mjs`, whose
+  `kitSettingsText` writes most of the suite's files and now writes `bell`, `true` unless it is given. Task group 1
+  is done: `npm test` reports 699 tests, 697 passing, 1 skipped (the Docker test of
+  `tests/sandbox-signal.test.mjs`) and 1 failing, unit 0054's R24 test, which failed before the work. The status is
+  `in-progress`
 
 ## Amendments

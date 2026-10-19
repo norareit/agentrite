@@ -167,6 +167,8 @@ both tests import, since this is its second use.
   command's second form
 - `tests/agentrite-init.test.mjs`, `tests/agentrite-config.test.mjs`, `tests/agentrite-refresh.test.mjs`: the
   written file, a file that lacks `bell`, and the fixtures
+- `tests/agentrite-run.test.mjs`: `agentrite roles` with a file that lacks `bell`
+- `tests/installed-kit.mjs`: `kitSettingsText` writes `bell`, `true` unless it is given
 - `tests/check-changes.test.mjs`, `tests/sandbox-update.test.mjs`, `tests/settings-update.test.mjs`,
   `tests/sandbox-unit-run.test.mjs`, `tests/sandbox-dev.test.mjs`: the fixtures, and the calls that change with them
 - `tests/sandbox-wrapper.test.mjs`: the fixture, and the start for each value of `bell`
@@ -181,27 +183,27 @@ both tests import, since this is its second use.
 
 ### 1. The key
 
-- [ ] In `tests/agentrite-settings.test.mjs`, test `parseSettings` with the default file and each value of `bell`:
+- [x] In `tests/agentrite-settings.test.mjs`, test `parseSettings` with the default file and each value of `bell`:
   `true` and `false` are returned, and absent, `null`, `0`, `"true"`, `[]` and `{}` are each refused with
   `agentrite.json: bell is <missing|JSON>. It must hold true or false`. Test that `settingsText` writes `bell` after
   `sandbox`, and that the template is `settingsText` of its own settings byte for byte. See them fail (R6, R8, R9,
   R11)
-- [ ] In the same file, test `parseBell` for the same values, and for a text that is not JSON and JSON that is no
+- [x] In the same file, test `parseBell` for the same values, and for a text that is not JSON and JSON that is no
   object, with the messages of the approach. Test that it takes a file of `bell` alone, and one whose other keys are
   all wrong. Test `readBell` for a project with no file. Test the command's second form: it prints `true` or `false`
   and exits 0, prints `agentrite: <message>` and exits 1 for a file at fault, and prints the usage and exits 2 for
   another argument. See them fail (R6, R7, R11)
-- [ ] Add `bell` to `KEYS`, the type, `parseSettings`, `settingsText`, extract the message of a key at fault, add
+- [x] Add `bell` to `KEYS`, the type, `parseSettings`, `settingsText`, extract the message of a key at fault, add
   `parseBell`, `readBell` and the second form, in `scripts/agentrite-settings.mjs` (R6, R7, R8)
-- [ ] Add `"bell": true` after `"sandbox"` to `templates/project/agentrite.json` and to the root `agentrite.json`,
+- [x] Add `"bell": true` after `"sandbox"` to `templates/project/agentrite.json` and to the root `agentrite.json`,
   and take `bell` from the template in `settingsToWrite` (R9)
-- [ ] In `tests/agentrite-init.test.mjs` and `tests/agentrite-config.test.mjs`, test that the file `init` writes
+- [x] In `tests/agentrite-init.test.mjs` and `tests/agentrite-config.test.mjs`, test that the file `init` writes
   from its arguments holds `"bell": true` after `"sandbox"`, with and without `--no-sandbox`, and that `config`
   writes it. Test that `init`, `config` and `refresh` in a project whose `agentrite.json` lacks `bell` leave the file
   byte for byte as it was: `init` and `refresh` refuse it naming `bell`, and `config` skips it (R8, R9, R11)
-- [ ] Test that one more command that judges the whole file, `agentrite roles`, refuses a file that lacks `bell` and
+- [x] Test that one more command that judges the whole file, `agentrite roles`, refuses a file that lacks `bell` and
   one whose `bell` is `"true"`, naming the key, and exits other than 0 (R8, R11)
-- [ ] Add `"bell"` to every `agentrite.json` the suite writes for a command that judges the whole file, in the
+- [x] Add `"bell"` to every `agentrite.json` the suite writes for a command that judges the whole file, in the
   files the "Files" section names. Give `settingsFor` of `tests/sandbox-unit-run.test.mjs` `"bell": false` (R6, R8)
 
 ### 2. What rings
@@ -304,7 +306,7 @@ both tests import, since this is its second use.
 
 Each commit is made once `npm test` is green but for the test that failed before the work.
 
-- [ ] After task group 1: `feature-0058 Make bell a required key of agentrite.json`
+- [x] After task group 1: `feature-0058 Make bell a required key of agentrite.json`
 - [ ] After task group 2: `feature-0058 Ring the bell from a script, from Claude Code's hooks and from OpenCode's
   plugin`
 - [ ] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`

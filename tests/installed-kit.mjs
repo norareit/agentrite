@@ -19,9 +19,10 @@ export const KIT_SETTINGS = { standards, roles };
 const ownRoleFiles = Object.fromEntries(ROLE_NAMES.map((name) => [name, `roles/${name}.md`]));
 export const KIT_ROLES = readRoles(KIT_ROOT, ownRoleFiles).map((role) => ({ ...role, path: roles[role.name] }));
 
-// The text of an `agentrite.json` with the three settings given and the kit's own files.
-export function kitSettingsText({ defaultBranch, harnesses, sandbox }) {
-  return settingsText({ defaultBranch, harnesses, sandbox, ...KIT_SETTINGS });
+// The text of an `agentrite.json` with the settings given and the kit's own files. The bell rings unless `bell` is
+// given as false, as in the default file.
+export function kitSettingsText({ defaultBranch, harnesses, sandbox, bell = true }) {
+  return settingsText({ defaultBranch, harnesses, sandbox, bell, ...KIT_SETTINGS });
 }
 
 // Installs the kit's instruction files into `node_modules/agentrite` of the project at `root`, so that the kit's paths

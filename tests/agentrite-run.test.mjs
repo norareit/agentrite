@@ -1069,3 +1069,22 @@ test('run refuses a role the settings do not name, naming the roles they do, and
     );
   }
 });
+
+// Unit 0058, R8, R11
+test('agentrite roles refuses a file that lacks bell, or whose bell is a string, naming the key', (t) => {
+  for (const [replacement, found] of [
+    ['', 'missing'],
+    ['  "bell": "true",\n', '"true"'],
+  ]) {
+    const { agentrite, write } = project(t);
+    const text = SETTINGS.replace('  "bell": true,\n', replacement);
+    assert.notEqual(text, SETTINGS);
+    write('agentrite.json', text);
+
+    const result = agentrite(['roles']);
+
+    assert.notEqual(result.status, 0);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, new RegExp(`agentrite\\.json: bell is ${found}\\. It must hold true or false`));
+  }
+});

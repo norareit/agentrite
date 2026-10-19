@@ -1128,3 +1128,26 @@ test('refresh refuses a role file without front matter, and writes nothing', (t)
   );
   for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
 });
+
+// Unit 0058, R8, R11
+test('refresh refuses a file that lacks bell, or whose bell is a string, and writes nothing', (t) => {
+  for (const [replacement, found] of [
+    ['', 'missing'],
+    ['  "bell": "true",\n', '"true"'],
+  ]) {
+    const { run, read, write } = staleProject(t);
+    const valid = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true });
+    const text = valid.replace('  "bell": true,\n', replacement);
+    assert.notEqual(text, valid);
+    write('agentrite.json', text);
+    const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
+
+    const result = run('refresh');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `agentrite: agentrite.json: bell is ${found}. It must hold true or false\n`);
+    for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
+    assert.equal(read('agentrite.json'), text);
+  }
+});

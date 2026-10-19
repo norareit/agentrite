@@ -1625,3 +1625,37 @@ test('init refuses a project whose role file has no front matter, and writes not
   assert.match(result.stderr, /^agentrite: rules\/planner\.md has no front matter that a role file must open with\. /);
   assert.deepEqual(snapshot(base), before);
 });
+
+// Unit 0058, R9, R11
+test('init given harnesses writes "bell": true after "sandbox", with and without --no-sandbox', (t) => {
+  for (const args of [['claude'], ['opencode', OPTION], [OPTION, 'claude', 'opencode']]) {
+    const { run, read } = project(t);
+
+    const result = run('init', ...args);
+
+    assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+    assert.match(read('agentrite.json'), /^ {2}"sandbox": (true|false),\n {2}"bell": true,\n/m, args.join(' '));
+  }
+});
+
+// Unit 0058, R8, R9, R11
+test('init with no argument in a project whose agentrite.json lacks bell, or holds a string, refuses it', (t) => {
+  const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
+  for (const [bell, found] of [
+    [undefined, 'missing'],
+    ['true', '"true"'],
+  ]) {
+    const { base, run } = project(t);
+    const text = `${JSON.stringify({ ...settings, bell }, null, 2)}\n`;
+    writeFileSync(join(base, 'agentrite.json'), text);
+    const before = snapshot(base);
+
+    const result = run('init');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `agentrite: agentrite.json: bell is ${found}. It must hold true or false\n`);
+    assert.deepEqual(snapshot(base), before);
+    assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), text);
+  }
+});

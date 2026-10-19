@@ -2,6 +2,7 @@
   "defaultBranch": "master",
   "harnesses": ["claude", "opencode"],
   "sandbox": true,
+  "bell": true,
   "standards": "node_modules/agentrite/standards.md",
   "roles": {
     "specifier": "node_modules/agentrite/roles/specifier.md",

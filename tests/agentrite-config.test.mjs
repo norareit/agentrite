@@ -96,3 +96,27 @@ test('refresh runs on the file config wrote, and writes the eight wrappers, the 
   assert.deepEqual(result.stdout.split('\n\n')[0].split('\n'), paths.map((path) => `wrote ${path}`));
   assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), TEMPLATE);
 });
+
+// Unit 0058, R9
+test('config writes "bell": true after "sandbox"', (t) => {
+  const { base, run } = directory(t);
+
+  assert.equal(run('config').status, 0);
+
+  assert.match(readFileSync(join(base, 'agentrite.json'), 'utf-8'), /^ {2}"sandbox": true,\n {2}"bell": true,\n/m);
+});
+
+// Unit 0058, R9, R11
+test('config skips an agentrite.json that lacks bell, and leaves it byte for byte', (t) => {
+  const { base, run } = directory(t);
+  const path = join(base, 'agentrite.json');
+  const text = TEMPLATE.replace('  "bell": true,\n', '');
+  assert.notEqual(text, TEMPLATE);
+  writeFileSync(path, text);
+
+  const result = run('config');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, 'skipped agentrite.json, which exists\n');
+  assert.equal(readFileSync(path, 'utf-8'), text);
+});

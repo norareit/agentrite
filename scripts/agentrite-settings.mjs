@@ -10,7 +10,7 @@ export const SETTINGS_FILE = 'agentrite.json';
  * @typedef {Record<string, string>} RoleFiles The path of each role's file: the four roles in the order of
  *   `ROLE_NAMES` and then any roles of the project's own, in the order of the file.
  * @typedef {{
- *   defaultBranch: string, harnesses: string[], sandbox: boolean, standards: string, roles: RoleFiles
+ *   defaultBranch: string, harnesses: string[], sandbox: boolean, bell: boolean, standards: string, roles: RoleFiles
  * }} Settings
  */
 
@@ -50,6 +50,7 @@ const KEYS = [
     must: `a list of one or more of ${HARNESS_NAMES.map((name) => JSON.stringify(name)).join(' and ')}`,
   },
   { name: 'sandbox', holds: (value) => typeof value === 'boolean', must: 'true or false' },
+  { name: 'bell', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'standards', holds: isProjectPath, must: PATH_MUST },
   {
     name: 'roles',
@@ -98,16 +99,53 @@ export function parseSettings(text) {
   }
 
   const values = /** @type {Record<string, unknown>} */ (parsed);
-  for (const key of KEYS) {
-    const value = Object.hasOwn(values, key.name) ? values[key.name] : undefined;
-    if (key.holds(value)) continue;
-    const found = value === undefined ? 'missing' : JSON.stringify(value);
-    throw new Error(`${SETTINGS_FILE}: ${key.name} is ${found}. It must hold ${key.must}`);
-  }
+  for (const key of KEYS) checkKey(values, key);
 
-  const { defaultBranch, harnesses, sandbox, standards } = /** @type {Settings} */ (parsed);
+  const { defaultBranch, harnesses, sandbox, bell, standards } = /** @type {Settings} */ (parsed);
   const roles = parseRoles(/** @type {Record<string, unknown>} */ (values.roles));
-  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox, standards, roles };
+  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox, bell, standards, roles };
+}
+
+/**
+ * Throws, naming the key, what it holds or that it is missing, and what it must hold, for a key of `values` that
+ * holds no value it may hold. It is the one wording of a key at fault, for the whole file and for `bell` alone.
+ *
+ * @param {Record<string, unknown>} values
+ * @param {(typeof KEYS)[number]} key
+ */
+function checkKey(values, key) {
+  const value = Object.hasOwn(values, key.name) ? values[key.name] : undefined;
+  if (key.holds(value)) return;
+  const found = value === undefined ? 'missing' : JSON.stringify(value);
+  throw new Error(`${SETTINGS_FILE}: ${key.name} is ${found}. It must hold ${key.must}`);
+}
+
+const BELL_KEY = /** @type {(typeof KEYS)[number]} */ (KEYS.find((key) => key.name === 'bell'));
+
+const BELL_MUST_HOLD = `It must hold ${BELL_KEY.must}`;
+
+/**
+ * The value of `bell` that the text of an `agentrite.json` holds, as a start of the sandbox reads it. No other key is
+ * judged, so a start is refused for `bell` alone. Throws, naming the file, the key, what it holds or that it is
+ * missing, and what it must hold.
+ *
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function parseBell(text) {
+  /** @type {unknown} */ let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${SETTINGS_FILE} is not JSON: ${messageOf(error)}, so bell cannot be read. ${BELL_MUST_HOLD}`);
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    const found = JSON.stringify(parsed);
+    throw new Error(`${SETTINGS_FILE} holds ${found}, which is no JSON object, so bell is missing. ${BELL_MUST_HOLD}`);
+  }
+  const values = /** @type {Record<string, unknown>} */ (parsed);
+  checkKey(values, BELL_KEY);
+  return /** @type {boolean} */ (values.bell);
 }
 
 /**
@@ -195,7 +233,7 @@ function isRegularFile(path) {
  * @param {Settings} settings
  * @returns {string}
  */
-export function settingsText({ defaultBranch, harnesses, sandbox, standards, roles }) {
+export function settingsText({ defaultBranch, harnesses, sandbox, bell, standards, roles }) {
   const list = harnesses.map((harness) => JSON.stringify(harness)).join(', ');
   const roleLines = Object.entries(roles).map(([name, path]) => `    ${JSON.stringify(name)}: ${JSON.stringify(path)}`);
   return [
@@ -203,6 +241,7 @@ export function settingsText({ defaultBranch, harnesses, sandbox, standards, rol
     `  "defaultBranch": ${JSON.stringify(defaultBranch)},`,
     `  "harnesses": [${list}],`,
     `  "sandbox": ${JSON.stringify(sandbox)},`,
+    `  "bell": ${JSON.stringify(bell)},`,
     `  "standards": ${JSON.stringify(standards)},`,
     '  "roles": {',
     roleLines.join(',\n'),
@@ -251,8 +290,33 @@ export function readSettings(root) {
 }
 
 /**
+ * The value of `bell` in the `agentrite.json` in the working tree of the project at `root`, read as `parseBell`
+ * reads it. Throws what to print for a project that has none and for a file that cannot be read.
+ *
+ * @param {string} root
+ * @returns {boolean}
+ */
+export function readBell(root) {
+  const path = resolve(root, SETTINGS_FILE);
+  let text;
+  try {
+    text = readFileSync(path, 'utf-8');
+  } catch (error) {
+    if (isMissing(path)) {
+      throw new Error(
+        `the project has no ${SETTINGS_FILE}, so bell is missing. ${BELL_MUST_HOLD}. ` +
+          'Run: npx agentrite config, which writes one',
+      );
+    }
+    throw new Error(`cannot read ${SETTINGS_FILE}: ${messageOf(error)}, so bell cannot be read. ${BELL_MUST_HOLD}`);
+  }
+  return parseBell(text);
+}
+
+/**
  * True when this file is the entry point, which it is for the sandbox's wrapper: a shell script cannot import, so
- * it runs this file with `node` and reads the default branch from what is printed.
+ * it runs this file with `node` and reads the default branch, or with `bell` the value of `bell`, from what is
+ * printed.
  *
  * @returns {boolean}
  */
@@ -265,12 +329,13 @@ function isMain() {
 
 if (isMain()) {
   const [root, ...rest] = process.argv.slice(2);
-  if (root === undefined || rest.length > 0) {
-    console.error('usage: node agentrite-settings.mjs <project root>');
+  const wantsBell = rest.length === 1 && rest[0] === 'bell';
+  if (root === undefined || (rest.length > 0 && !wantsBell)) {
+    console.error('usage: node agentrite-settings.mjs <project root> [bell]');
     process.exit(2);
   }
   try {
-    console.log(readSettings(root).defaultBranch);
+    console.log(wantsBell ? readBell(root) : readSettings(root).defaultBranch);
   } catch (error) {
     console.error(`agentrite: ${messageOf(error)}`);
     process.exit(1);

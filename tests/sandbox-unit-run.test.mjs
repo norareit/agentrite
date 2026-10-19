@@ -23,9 +23,9 @@ const kitContainer = new URL('../container/', import.meta.url).pathname;
 const kitScripts = new URL('../scripts/', import.meta.url).pathname;
 const kitPath = 'node_modules/agentrite/container';
 
-// An agentrite.json that names `defaultBranch`.
+// An agentrite.json that names `defaultBranch`, and in which the bell does not ring.
 function settingsFor(defaultBranch) {
-  return kitSettingsText({ defaultBranch, harnesses: ['claude'], sandbox: true });
+  return kitSettingsText({ defaultBranch, harnesses: ['claude'], sandbox: true, bell: false });
 }
 
 const branch = 'task-0026-doc';
