@@ -92,8 +92,6 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
   to the `docker compose run` process from another shell of the host, and resize the terminal window. The shell goes
   on running and the terminal shows no message of tini. Then, in that shell, `tput cols` gives the new width. Log
   the outcome in `record.md`. (R1)
-- [ ] For each of `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a scratch directory> bash`, do
-  the same, and log the width that `tput cols` gives before and after the resize. (R1)
 - [x] In a sandbox of `./sandbox-dev.sh 0057 bash`, `docker kill -s WINCH` the container from the host, and it goes on
   running. Then, in `./sandbox-dev.sh --in-place sleep 300`, `docker kill -s TERM` the container, and the run ends
   without the message of tini. An interactive bash ignores SIGTERM, so the `TERM` check needs a command that ends on

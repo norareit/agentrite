@@ -90,3 +90,9 @@ timestamp: 2026-10-19T14:45:48Z
   to 223 and stays ticked, and the `--in-place` and `--workdir` runs, whose widths were not reported and whose box is
   open again; and the box of the `docker kill` checks now names the `sleep 300` run that showed the `TERM`, since an
   interactive bash ignores it. The open box waits for the human's widths
+- 2026-10-19T15:33:08Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on the human's decision, removed
+  from `plan.md` the task of logging the widths of `tput cols` in `./sandbox-dev.sh --in-place bash` and
+  `--workdir`. Reason: the resize reaching the shell is shown in the unit run, where the width went from 191 to 223,
+  and the three modes run over the same `container/compose.yml`. What was reported for the other two stands as logged:
+  `kill -WINCH` to the compose process and a resize printed nothing in the terminal. Every box of `plan.md` is
+  ticked
