@@ -100,3 +100,5 @@ timestamp: 2026-10-19T14:45:48Z
   the human's instruction. The reviews returned no blocking finding, P1, P2 and P3 were accepted and applied, every
   box of `plan.md` is ticked, and `npm test` and `npm run check-changes` passed on `e93819a`, with only the
   unit's `plan.md` and `record.md` changed since. The status is `implemented`
+
+## Amendments
