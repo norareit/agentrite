@@ -71,15 +71,22 @@ What follows the settings:
 9. `.agentrite/instructions.md` names the file of each extra role with those of the four, by name and by path as it
    names theirs
 
+The kit's reviewer:
+
+10. `roles/reviewer.md` says to read, besides the role files of the specifier, the planner and the implementer, the
+    file of each extra role that has an entry in the unit's `record.md`, as `.agentrite/instructions.md` names it,
+    and to judge the work against those files as it judges it against the three. It says that an extra role that has
+    no entry in `record.md` did not work on the unit, and that its file is not read
+
 The process:
 
-10. `process.md` does not change. An extra role writes its entries in `record.md` as `as the <name>`, with its name
+11. `process.md` does not change. An extra role writes its entries in `record.md` as `as the <name>`, with its name
     as `roles` gives it, which the log format allows already
 
 The documents:
 
-11. `README.md` is true of the kit after the unit:
-    * Its opening says that a project can add roles of its own as well, with a link to the section of requirement 12
+12. `README.md` is true of the kit after the unit:
+    * Its opening says that a project can add roles of its own as well, with a link to the section of requirement 13
       in the place where it links "Replacing a role or the standards", and its list of sections holds that section
     * "How it works" says that each of the four roles covers one stage of the process and moves the unit through
       the statuses, and that a project can add roles that run just before or just after one of the four, within
@@ -87,7 +94,7 @@ The documents:
     * "The project's settings" says that `roles` may hold extra roles besides the four, and what a name must be
     * "agentrite roles", "agentrite run", "agentrite init" and "agentrite refresh" are true of the extra roles, of
       the refusal of requirement 8 and of the removal of requirement 6
-12. `README.md` has a section on adding a role, after "Replacing a role or the standards", which says:
+13. `README.md` has a section on adding a role, after "Replacing a role or the standards", which says:
     * that an extra role adds no stage and no status: it runs just before or just after one of the four roles,
       within that role's stage, as the table of the examples in "Context" shows
     * how it is added: its name and the path of its file in `roles`, the file committed, and `npx agentrite
@@ -98,7 +105,9 @@ The documents:
       and that it sets no status
     * that its findings do not block `implemented`. They go where its file says, such as to the human, to the role
       whose work it judged, or to the implementer
-    * that its log entries name it, as `as the <name>`
+    * that it writes at least one entry in the unit's `record.md`, as `as the <name>`, each time it works on the
+      unit, and that the kit's reviewer reads the file of each extra role that has such an entry and judges the work
+      against it, as requirement 10 has it
     * that the kit does not yet run it at its moment: the human dispatches it, in a session or with `agentrite run`
 
 ## Decisions
@@ -121,6 +130,15 @@ The documents:
   blocks, as "the review", and changing that changes the process. A project that wants a check to block makes it
   part of its reviewer, by replacing the reviewer's file. Rejected: every review of a unit blocks, whichever role
   made it, which changes `process.md` and has the reviewer find out which other roles reviewed
+* **The kit's reviewer reads the file of each extra role that worked on the unit.** The human asked for it, and
+  agreed to the form. The reviewer reads the other roles' files because they are the instructions the work was
+  produced under, and an extra role's file is one of them: a test writer's tests are in the diff, and a spec
+  reviewer's or a security reviewer's file says what was checked and what may have changed because of it. Which
+  extra roles worked on a unit is in its `record.md`, since every role writes its entries there as `as the <name>`,
+  so the kit needs no record of its own for it. That is also why an extra role writes at least one entry each time
+  it works on the unit: without one it does not show. Rejected: reading the file of every role `roles` names, which
+  judges a unit against the instructions of a role that did not work on it, such as a test writer left out for a
+  change to the documentation alone
 * **`process.md` does not change.** It names no role since unit 0052, and its log format already takes any name.
   What an extra role must say of itself is the README's, as unit 0054 put what a replacing role file must hold
 * **A role's name is lowercase words joined by hyphens.** It becomes the name of a wrapper's file in each harness's
@@ -149,8 +167,6 @@ The documents:
 * Findings of an extra role that block `implemented`
 * A stage or a status of a project's own, and any change to `process.md`
 * Leaving out one of the four roles, which unit 0054 decided against
-* The kit's `roles/reviewer.md` reading the files of extra roles. It reads those of the specifier, the planner and
-  the implementer, as unit 0054 left it
 * Removing the wrappers in the directory of a harness that `agentrite.json` no longer names, which `refresh` does not
   do for the four either
 * This repository's own `agentrite.json`, which names no extra role. Requirements 24 and 25 of unit 0054 still hold
@@ -163,10 +179,5 @@ The documents:
   a list of each harness's names in the kit, kept up to date as the harnesses change. Without it, a project that
   names a role `plan` or `build` gets a wrapper that the harness may take in the place of its own agent, or the
   other way round, which it sees when it dispatches the role and fixes by renaming it in `roles`
-* **The kit's reviewer reading the files of the extra roles that ran before it.** A test writer's tests are in the
-  diff the reviewer judges, and the test writer's file is what they were written under. Cost: the reviewer reads
-  every extra role's file to find out which ran before it, while the kit records nowhere which did. Without it, the
-  reviewer judges the tests against the spec and the standards, as it judges the implementer's, and a project that
-  wants more says so in its `AGENTS.md` or its own reviewer
 * **The path of each role's file in `agentrite roles --json`.** The orchestrator may want it, as unit 0054 already
   noted. Without it, a script reads the paths from `agentrite.json`

@@ -22,3 +22,11 @@ timestamp: 2026-10-18T17:01:25Z
   running just before or after one of the four roles. Wrote `spec.md`. Of what the conversation left to decide, the
   spec decides: an extra role sets no status, the form of a role's name, the order of the listings, that `refresh`
   removes the kit's wrappers of a role that is gone, and that `process.md` does not change. The status is `draft`
+- 2026-10-19T14:31:02Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's question whether
+  the reviewer should not take every role into account. The specifier agreed that its reason to leave it out did
+  not hold, since every role writes its entries in `record.md` and the reviewer can see there which extra roles
+  worked on the unit, and proposed reading only those; the human agreed. Changed `spec.md`: added requirement 10, by
+  which `roles/reviewer.md` reads the file of each extra role that has an entry in the unit's `record.md`, and
+  renumbered the requirements after it. Requirement 13 says that an extra role writes at least one entry each time
+  it works on the unit. Added a decision with the reasoning, and removed the non-goal on the reviewer and its entry
+  under "Beyond the request". The status is `draft`
