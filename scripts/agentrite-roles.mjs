@@ -59,16 +59,16 @@ function messageOf(error) {
 
 /**
  * Each role with the path of its file, as `roles` gives it, and the description that file holds, in the order of
- * `ROLE_NAMES`. A file two roles share is read for each. Throws, naming the file, for one that cannot be read and
- * for one without the front matter of `parseRoleDescription`.
+ * `roles`, which holds the four of `ROLE_NAMES` and then any roles of the project's own. A file two roles share is
+ * read for each. Throws, naming the file, for one that cannot be read and for one without the front matter of
+ * `parseRoleDescription`.
  *
  * @param {string} root
  * @param {Record<string, string>} roles
  * @returns {Role[]}
  */
 export function readRoles(root, roles) {
-  return ROLE_NAMES.map((name) => {
-    const path = roles[name];
+  return Object.entries(roles).map(([name, path]) => {
     let text;
     try {
       text = readFileSync(resolve(root, path), 'utf-8');

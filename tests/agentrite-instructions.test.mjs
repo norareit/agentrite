@@ -472,6 +472,17 @@ test('the list names a project own standards and roles, with links that work fro
   assert.ok(list.includes('* Process: [`node_modules/agentrite/process.md`]'), list);
 });
 
+test('the list names the roles of the projects own after the four, in the order of the settings', () => {
+  const roles = { ...KIT_SETTINGS.roles, 'test-writer': 'rules/tests (new).md', 'security-reviewer': 'rules/s.md' };
+  const list = instructionsList({ ...KIT_SETTINGS, roles });
+  const tail =
+    '* test-writer: [`rules/tests (new).md`](../rules/tests%20%28new%29.md)\n' +
+    '* security-reviewer: [`rules/s.md`](../rules/s.md)\n';
+  assert.ok(list.endsWith(tail), list);
+  assert.ok(list.indexOf('* reviewer: ') < list.indexOf('* test-writer: '), list);
+  assertLinesFit(list);
+});
+
 test('the list names a file two roles share for each of them', () => {
   const roles = { ...KIT_SETTINGS.roles, planner: 'rules/both.md', specifier: 'rules/both.md' };
   const list = instructionsList({ ...KIT_SETTINGS, roles });

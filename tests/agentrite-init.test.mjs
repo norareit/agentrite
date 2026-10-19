@@ -1459,6 +1459,28 @@ test('init skips a list that exists, and leaves it as it is', (t) => {
 
 // R9, R11, R13
 test('init in a project with its own standards and planner writes everything from them', (t) => {
+// Unit 0056, R5, R9
+test('init in a project that names a role of its own writes its wrappers for the harnesses and lists it', (t) => {
+  const { base, run, read } = project(t);
+  const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: false });
+  const roles = { ...KIT_SETTINGS.roles, 'security-reviewer': 'rules/security-reviewer.md' };
+  writeFileSync(join(base, 'agentrite.json'), JSON.stringify({ ...JSON.parse(text), roles }));
+  mkdirSync(join(base, 'rules'));
+  writeFileSync(join(base, 'rules/security-reviewer.md'), '---\ndescription: Reviews security.\n---\n\n# S\n');
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(linesOf(result).includes('wrote .opencode/agents/security-reviewer.md'), result.stdout);
+  assert.ok(!exists(join(base, '.claude/agents/security-reviewer.md')));
+  assert.match(read('.opencode/agents/security-reviewer.md'), /^Read `rules\/security-reviewer\.md` in the project/m);
+  assert.equal(read(LIST), instructionsList({ standards: KIT_SETTINGS.standards, roles }));
+  assert.match(
+    read(LIST),
+    /\* security-reviewer: \[`rules\/security-reviewer\.md`\]\(\.\.\/rules\/security-reviewer\.md\)\n/,
+  );
+});
+
   const { run, read } = ownProject(t, { planner: 'rules/planner.md' });
 
   const result = run('init');

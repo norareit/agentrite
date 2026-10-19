@@ -1015,6 +1015,20 @@ function checkWrapper(root, roles, harness, role) {
 }
 
 /**
+ * Throws unless `role` is the name of one of `roles`. The comparison is with the names of the list, so that a word
+ * such as `toString` is refused.
+ *
+ * @param {import('./agentrite-roles.mjs').Role[]} roles
+ * @param {string} role
+ */
+function checkRoleNamed(roles, role) {
+  const names = roles.map((listed) => listed.name);
+  if (names.includes(role)) return;
+  const list = `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+  throw new Error(`the project has no role ${role}. The roles ${SETTINGS_FILE} names are ${list}`);
+}
+
+/**
  * Starts the harness as the role, on the unit, in the project at `root`, waits for it, and returns the exit
  * status, which is the harness's own.
  *
@@ -1024,6 +1038,7 @@ function checkWrapper(root, roles, harness, role) {
  */
 function run(root, { role, harness, unit, text, ...start }) {
   const roles = projectRoles(root);
+  checkRoleNamed(roles, role);
   const directory = resolveUnit(unit, changeDirectories(root));
   checkWrapper(root, roles, harness, role);
   const { command, args } = harnessCommand({ ...start, harness, role, prompt: unitPrompt(directory, text) });

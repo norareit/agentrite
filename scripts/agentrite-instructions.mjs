@@ -1,7 +1,7 @@
 import { lstatSync, readFileSync } from 'node:fs';
 import { posix, resolve } from 'node:path';
 import { formattedLike } from './agentrite-json.mjs';
-import { ROLE_NAMES, wrapWords } from './agentrite-roles.mjs';
+import { wrapWords } from './agentrite-roles.mjs';
 
 /** The kit's `process.md` as a project installs it, which the harness loads into every session. */
 export const PROCESS_PATH = 'node_modules/agentrite/process.md';
@@ -350,7 +350,7 @@ function linkSegment(segment) {
 
 /**
  * The text of the list of the instruction files in use, which follows from the settings alone: the kit's
- * `process.md`, the standards, and the file of each role, in the order of `ROLE_NAMES`.
+ * `process.md`, the standards, and the file of each role, in the order of `roles`.
  *
  * @param {{ standards: string, roles: Record<string, string> }} settings
  * @returns {string}
@@ -372,7 +372,7 @@ export function instructionsList({ standards, roles }) {
     '',
     '## Roles',
     '',
-    ...ROLE_NAMES.map((name) => listItem(name, roles[name])),
+    ...Object.entries(roles).map(([name, path]) => listItem(name, path)),
     '',
   ].join('\n');
 }

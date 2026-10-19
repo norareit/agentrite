@@ -927,6 +927,25 @@ test('refresh judges CLAUDE.md and opencode.json against the standards the setti
   const made = project(t);
   made.write('CLAUDE.md', `@${PROCESS}\n@${HOUSE}\n@AGENTS.md\n`);
   made.write('opencode.json', `{ "instructions": ["${PROCESS}", "${HOUSE}"] }\n`);
+// Unit 0056, R5, R9
+test('refresh writes the wrappers of a role of the projects own for the harnesses named, and lists it', (t) => {
+  const made = project(t);
+  made.write('rules/test-writer.md', '---\ndescription: Writes the tests first.\n---\n\n# T\n');
+  const roles = { ...KIT_SETTINGS.roles, 'test-writer': 'rules/test-writer.md' };
+  const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['opencode'], sandbox: false });
+  made.write('agentrite.json', JSON.stringify({ ...JSON.parse(text), roles }));
+
+  const result = made.run('refresh');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, line('wrote', '.opencode/agents/test-writer.md'));
+  assert.doesNotMatch(result.stdout, /\.claude\/agents\/test-writer/);
+  assert.match(made.read('.opencode/agents/test-writer.md'), /^Read `rules\/test-writer\.md` in the project root/m);
+  assert.match(made.read('.opencode/agents/test-writer.md'), /^ {2}Writes the tests first\.$/m);
+  assert.equal(made.read(LIST), instructionsList({ standards: KIT_SETTINGS.standards, roles }));
+  assert.ok(made.read(LIST).indexOf('* reviewer: ') < made.read(LIST).indexOf('* test-writer: '));
+});
+
 
   const result = refreshOwn(made, { standards: HOUSE });
 

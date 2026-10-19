@@ -1,5 +1,5 @@
 import { parseArgs } from 'node:util';
-import { HARNESS_NAMES, ROLE_NAMES, wrapWords } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, wrapWords } from './agentrite-roles.mjs';
 
 // The longest line the commands print, which is the width the kit wraps its own text at.
 const LINE_WIDTH = 120;
@@ -18,13 +18,13 @@ export function rolesListing(roles) {
 
 /**
  * What `agentrite roles --json` prints, for a script: an object, so that it can get a key beside `roles` later,
- * with each description on one line.
+ * with each description on one line and the path of each role's file as the project gives it.
  *
- * @param {{ name: string, description: string }[]} roles
+ * @param {{ name: string, description: string, path: string }[]} roles
  * @returns {string}
  */
 export function rolesJson(roles) {
-  const document = { roles: roles.map(({ name, description }) => ({ name, description })) };
+  const document = { roles: roles.map(({ name, description, path }) => ({ name, description, path })) };
   return `${JSON.stringify(document, null, 2)}\n`;
 }
 
@@ -41,7 +41,7 @@ export function runUsage() {
   return [
     RUN_FORM,
     '',
-    `  <role>              ${ROLE_NAMES.join(' | ')}`,
+    '  <role>              a role that agentrite.json names, as agentrite roles lists them',
     `  <harness>           ${HARNESS_NAMES.join(' | ')}`,
     '  <unit>              a directory of changes/, by its name or by the four digits its name opens with',
     '  --prompt <text>     added to the prompt, after the unit, as it is written',
@@ -91,7 +91,6 @@ function optionError({ name, rawName, value, inlineValue }) {
  */
 function positionError([role, harness, unit, beyond]) {
   if (role === undefined) return 'no role given';
-  if (!ROLE_NAMES.includes(role)) return `unknown role: ${role}`;
   if (harness === undefined) return 'no harness given';
   if (!HARNESS_NAMES.includes(harness)) return `unknown harness: ${harness}`;
   if (unit === undefined) return 'no unit given';

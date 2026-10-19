@@ -157,18 +157,18 @@ change.
 
 ### 2. Everything after the settings follows every role they name
 
-- [ ] In `tests/agentrite-roles.test.mjs`, test that `readRoles` of the four and an extra role whose file has front
+- [x] In `tests/agentrite-roles.test.mjs`, test that `readRoles` of the four and an extra role whose file has front
   matter gives five roles in that order, the extra one with its path and description, and that an extra role whose
   file has no front matter is refused, naming its file, as one of the four is (R4, R5, R7)
-- [ ] In `tests/agentrite-instructions.test.mjs`, test that the list names the four and then the extra roles, in the
+- [x] In `tests/agentrite-instructions.test.mjs`, test that the list names the four and then the extra roles, in the
   order of the settings, each by its name and with a link that works from `.agentrite/`, as the four are named (R9)
-- [ ] In `tests/agentrite-run.test.mjs`, change the tests of the JSON to expect `name`, `description` and `path` for
+- [x] In `tests/agentrite-run.test.mjs`, change the tests of the JSON to expect `name`, `description` and `path` for
   each role, in that key order, the path as `roles` gives it, and keep the tests of the text listing as they are
   (R7)
-- [ ] Change the expected usage of `run` to the role's line above, and assert that it names none of the four. Move
+- [x] Change the expected usage of `run` to the role's line above, and assert that it names none of the four. Move
   `auditor` and `toString` out of the cases `parseRunArgs` refuses: test that it takes any word as the role, and
   that `['claude', 'reviewer', '0007']` is refused as `unknown harness: reviewer` (R8)
-- [ ] Add a helper beside `withOwnReviewer` that writes a role file of a project's own, with front matter, and
+- [x] Add a helper beside `withOwnReviewer` that writes a role file of a project's own, with front matter, and
   names it as `security-reviewer` in the project's `roles` after the four. With it, test end to end that
   `agentrite roles` and `agentrite roles --json` list the five, the extra role last, with its description and, in
   the JSON, its path; that `run security-reviewer claude 0007` after `refresh` starts the harness with
@@ -176,12 +176,12 @@ change.
   starts nothing, and prints `agentrite: the project has no role auditor. The roles agentrite.json names are
   specifier, planner, implementer, reviewer and security-reviewer` on standard error. Take `auditor` out of the
   test of what run does not take with exit 2 (R7, R8)
-- [ ] In `tests/agentrite-refresh.test.mjs`, test end to end that `refresh` with an extra role in `roles` writes its
+- [x] In `tests/agentrite-refresh.test.mjs`, test end to end that `refresh` with an extra role in `roles` writes its
   wrapper for each harness `harnesses` names, as `plannedFiles` gives it, and none for a harness it does not name,
   and that `.agentrite/instructions.md` names it after the four (R5, R9)
-- [ ] In `tests/agentrite-init.test.mjs`, test end to end that `init` in a project whose `agentrite.json` names an
+- [x] In `tests/agentrite-init.test.mjs`, test end to end that `init` in a project whose `agentrite.json` names an
   extra role writes that role's wrappers for each harness it names, and the list naming it (R5, R9)
-- [ ] Make the tests pass in `scripts/agentrite-roles.mjs`, `scripts/agentrite-instructions.mjs`,
+- [x] Make the tests pass in `scripts/agentrite-roles.mjs`, `scripts/agentrite-instructions.mjs`,
   `scripts/agentrite-run.mjs` and `scripts/agentrite.mjs` as "Approach" says (R4, R5, R7, R8, R9)
 
 ### 3. `refresh` removes the kit's wrapper of a role that is gone

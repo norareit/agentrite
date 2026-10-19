@@ -96,10 +96,10 @@ test('the JSON of the roles reads back as the roles the kit has, in order, by na
   assert.deepEqual(Object.keys(document), ['roles']);
   assert.deepEqual(
     document.roles,
-    KIT_ROLES.map((role) => ({ name: role.name, description: role.description })),
+    KIT_ROLES.map((role) => ({ name: role.name, description: role.description, path: role.path })),
   );
   for (const role of document.roles) {
-    assert.deepEqual(Object.keys(role), ['name', 'description']);
+    assert.deepEqual(Object.keys(role), ['name', 'description', 'path']);
     assert.doesNotMatch(role.description, /\n/);
   }
 });
@@ -115,11 +115,12 @@ test('each description in the JSON is the one the wrappers hold, as one line', (
 });
 
 test('the JSON is indented by two, each key of a role on a line of its own, and ends with one line break', () => {
-  const json = rolesJson([{ name: 'a', description: 'One "quoted" line.' }]);
+  const json = rolesJson([{ name: 'a', description: 'One "quoted" line.', path: 'rules/a.md' }]);
 
   assert.equal(
     json,
-    '{\n  "roles": [\n    {\n      "name": "a",\n      "description": "One \\"quoted\\" line."\n    }\n  ]\n}\n',
+    '{\n  "roles": [\n    {\n      "name": "a",\n      "description": "One \\"quoted\\" line.",\n' +
+      '      "path": "rules/a.md"\n    }\n  ]\n}\n',
   );
   assert.equal(rolesJson(KIT_ROLES), `${JSON.stringify(JSON.parse(rolesJson(KIT_ROLES)), null, 2)}\n`);
 });
@@ -144,7 +145,7 @@ const RUN_USAGE = `
 usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
                      [-- <harness arguments...>]
 
-  <role>              specifier | planner | implementer | reviewer
+  <role>              a role that agentrite.json names, as agentrite roles lists them
   <harness>           claude | opencode
   <unit>              a directory of changes/, by its name or by the four digits its name opens with
   --prompt <text>     added to the prompt, after the unit, as it is written
@@ -160,7 +161,7 @@ usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [-
 
 test('the usage of run is the text of the plan, with the roles and the harnesses the kit has', () => {
   assert.equal(runUsage(), RUN_USAGE);
-  assert.match(runUsage(), new RegExp(`^  <role> +${ROLE_NAMES.join(' \\| ')}$`, 'm'));
+  for (const role of ROLE_NAMES) assert.doesNotMatch(runUsage().split('\n')[2], new RegExp(role));
   assert.match(runUsage(), new RegExp(`^  <harness> +${HARNESS_NAMES.join(' \\| ')}$`, 'm'));
   for (const line of runUsage().split('\n')) assert.ok(line.length <= 120, line);
 });
@@ -298,9 +299,15 @@ test('a role, a harness or a unit missing before the -- is named, whatever follo
     [['reviewer', '--', 'claude', '0007'], 'no harness given'],
     [['reviewer', 'claude', '--', '0007'], 'no unit given'],
     [['reviewer', 'claude', '--headless', '--', '0007', '--resume', 'x'], 'no unit given'],
-    [['auditor', '--', 'claude', '0007'], 'unknown role: auditor'],
   ]) {
     assert.throws(() => parseRunArgs(args), { message: `${named}\n${RUN_USAGE}` }, args.join(' '));
+  }
+});
+
+test('run takes any word as the role, whatever it is', () => {
+  for (const role of ['auditor', 'toString', 'security-reviewer']) {
+    const parsed = parseRunArgs([role, 'claude', '0007']);
+    assert.deepEqual([parsed.role, parsed.harness, parsed.unit], [role, 'claude', '0007']);
   }
 });
 
@@ -312,11 +319,9 @@ test('each argument run does not take is named, followed by the usage of run', (
   const noText = '--prompt takes a text, and none was given';
   const noId = '--model takes an id, and none was given';
   for (const [args, named] of [
-    [['auditor', 'claude', '0007'], 'unknown role: auditor'],
-    [['toString', 'claude', '0007'], 'unknown role: toString'],
     [['reviewer', 'codex', '0007'], 'unknown harness: codex'],
     [['reviewer', 'constructor', '0007'], 'unknown harness: constructor'],
-    [['claude', 'reviewer', '0007'], 'unknown role: claude'],
+    [['claude', 'reviewer', '0007'], 'unknown harness: reviewer'],
     [['reviewer', 'claude'], 'no unit given'],
     [['reviewer', 'claude', '--headless'], 'no unit given'],
     [['reviewer'], 'no harness given'],
@@ -820,7 +825,6 @@ test('run with no argument prints its usage on standard error, exits 2 and start
 test('what run does not take is named before its usage, with exit 2 and nothing started', (t) => {
   const { agentrite } = project(t);
   for (const [args, named] of [
-    [['auditor', 'claude', '0007'], 'unknown role: auditor'],
     [['reviewer', 'codex', '0007'], 'unknown harness: codex'],
     [['reviewer', 'claude'], 'no unit given'],
     [['reviewer', 'claude', '0007', '--verbose'], 'unknown option: --verbose'],
@@ -999,4 +1003,69 @@ test('run refuses the kit reviewer wrapper when roles names another file, and st
   const result = made.agentrite(['run', 'reviewer', 'claude', '0007']);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
+});
+
+// Unit 0056, R5, R7, R8: a role of the project's own.
+
+const SECURITY_REVIEWER = '---\ndescription: Reviews the security of a unit.\n---\n\n# Security reviewer\n';
+
+// `project` with a role of its own, `security-reviewer`, after the four; its wrappers are written by `refresh`.
+function withSecurityReviewer(made) {
+  made.write('rules/security-reviewer.md', SECURITY_REVIEWER);
+  const settings = JSON.parse(made.read('agentrite.json'));
+  const roles = { ...settings.roles, 'security-reviewer': 'rules/security-reviewer.md' };
+  made.write('agentrite.json', JSON.stringify({ ...settings, roles }));
+  assert.equal(made.agentrite(['refresh']).status, 0);
+}
+
+test('roles and roles --json list a role of the projects own after the four, with its path in the JSON', (t) => {
+  const made = project(t);
+  withSecurityReviewer(made);
+  const own = {
+    name: 'security-reviewer',
+    path: 'rules/security-reviewer.md',
+    description: 'Reviews the security of a unit.',
+  };
+
+  const listing = made.agentrite(['roles']);
+  const json = made.agentrite(['roles', '--json']);
+
+  assert.equal(listing.status, 0, listing.stderr);
+  assert.equal(listing.stdout, rolesListing([...KIT_ROLES, own]));
+  assert.ok(listing.stdout.endsWith('security-reviewer\n  Reviews the security of a unit.\n'), listing.stdout);
+  assert.equal(json.status, 0, json.stderr);
+  assert.equal(json.stdout, rolesJson([...KIT_ROLES, own]));
+  const roles = JSON.parse(json.stdout).roles;
+  assert.deepEqual(
+    roles.map((role) => role.name),
+    [...ROLE_NAMES, 'security-reviewer'],
+  );
+  assert.deepEqual(roles.at(-1), own);
+});
+
+test('run starts the harness as a role of the projects own', (t) => {
+  const made = project(t);
+  withSecurityReviewer(made);
+
+  const result = made.agentrite(['run', 'security-reviewer', 'claude', '0007']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, started('claude', ['--agent', 'security-reviewer', '--', UNIT_PROMPT]));
+});
+
+test('run refuses a role the settings do not name, naming the roles they do, and starts nothing', (t) => {
+  const made = project(t);
+  withSecurityReviewer(made);
+  const roles = 'specifier, planner, implementer, reviewer and security-reviewer';
+
+  for (const role of ['auditor', 'toString', 'Security-Reviewer']) {
+    const result = made.agentrite(['run', role, 'claude', '0007']);
+
+    assert.equal(result.status, 1, role);
+    assert.equal(result.stdout, '', role);
+    assert.equal(
+      result.stderr,
+      `agentrite: the project has no role ${role}. The roles agentrite.json names are ${roles}\n`,
+    );
+  }
 });
