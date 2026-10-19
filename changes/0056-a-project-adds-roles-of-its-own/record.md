@@ -39,3 +39,9 @@ timestamp: 2026-10-18T17:01:25Z
   for each, corrected the reason of the decision on the form of a name, and left "Beyond the request" with none.
   The status is `draft`
 - 2026-10-19T14:34:29Z [human] approved the spec. The status is `approved`
+- 2026-10-19T15:41:05Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the unit's branch at `170527e`, from
+  `roles/planner.md` of the installed release. Wrote `plan.md` against the tree of the branch, on which
+  `npm test` reported 653 tests, 653 passing. The default branch has moved on with unit 0057, which touches none of
+  the files the plan names. The plan is in five steps and five commits: the settings, everything that follows them,
+  the removal of a stale wrapper by `refresh`, the kit's reviewer, and the README. Each requirement has a task,
+  R11 a check that `process.md` is unchanged. The status is `approved`
