@@ -193,5 +193,11 @@ timestamp: 2026-10-19T15:47:39Z
   `String`, after which it passes. On the host with Docker, `npm test` reports 725 tests, 724 passing, none skipped
   and 1 failing, unit 0054's R24 test, both with and without `FORCE_COLOR=1`. The run in the sandbox after the last
   change is still to be done, so the item of "Verification" after group 5 stays open. The status is `in-progress`
+- 2026-10-19T23:09:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's run of `npm test`
+  in the sandbox on `614890d`: 725 tests, 721 passing, 3 skipped (the three Docker tests of
+  `tests/sandbox-signal.test.mjs` and `tests/bell.test.mjs`, for want of Docker) and 1 failing, unit 0054's R24 test,
+  which the human decided to ignore. With the run on the host logged before, the item of "Verification" after task
+  group 5 is ticked, and every task of `plan.md` is ticked. The unit goes to the reviewer. The status is
+  `in-progress`
 
 ## Amendments

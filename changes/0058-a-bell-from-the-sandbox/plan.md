@@ -350,7 +350,7 @@ both tests import, since this is its second use.
 - [x] `npm test` on the host with Docker: the Docker test passes (R5, R10)
 - [x] `npm run check-changes` passes, on the committed work, and `spec.md` is unchanged
 - [x] `npm pack --dry-run` lists the three files of `container/bell/` (R2)
-- [ ] After task group 5, `npm test` in the sandbox, and on the host with Docker, where both Docker tests of the
+- [x] After task group 5, `npm test` in the sandbox, and on the host with Docker, where both Docker tests of the
   bell pass: all green but unit 0054's R24 test (R5, R10)
 - [x] The check by hand of R12, on the host in a tmux pane, with `./sandbox-dev.sh --in-place`, whose
   `agentrite.json` holds `"bell": true`, the image built again first with `./sandbox-dev.sh --in-place --rebuild`
