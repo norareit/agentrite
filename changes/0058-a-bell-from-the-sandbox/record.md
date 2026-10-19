@@ -87,5 +87,17 @@ timestamp: 2026-10-19T15:47:39Z
   over 120 characters and none holds an em dash, checked with `awk` and `grep`. "Where things are kept on the host"
   is unchanged, since the bell keeps nothing on the host. `npm test` reports 722 tests, 719 passing, 2 skipped and 1
   failing, unit 0054's R24 test. The status is `in-progress`
+- 2026-10-19T19:41:42Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification that the sandbox can run,
+  on `34c3b40`: `npm test` reports 722 tests, 719 passing, 2 skipped (the Docker tests of
+  `tests/sandbox-signal.test.mjs` and `tests/bell.test.mjs`, for want of Docker) and 1 failing, unit 0054's R24 test,
+  which the human decided to ignore; `npm run check-changes` exits 0 with no output, comparing with `origin/master`
+  since there is no local `master`, and `spec.md` is unchanged since `4abced8`; `npm pack --dry-run` lists the three
+  files of `container/bell/`. Not done, since they need the host: the Docker test of the bell on a host with Docker,
+  whose task in group 2 stays open, and the check by hand of R12 in tmux with each harness. A concern: the test of
+  the script with no terminal of its own walks up past the test's processes to the parents of whoever runs the
+  suite, and where one of those has a terminal, as `npm test` run from a shell does, the script writes a bell to it,
+  so the suite may ring that terminal once. The test still holds what it is for, that the script exits 0 and prints
+  nothing; the walk stops at pid 1 and at a process it cannot read, which in the sandbox is every process of root,
+  and was not bounded further, since the plan gives it so. The status is `in-progress`
 
 ## Amendments

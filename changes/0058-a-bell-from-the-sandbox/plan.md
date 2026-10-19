@@ -287,11 +287,11 @@ both tests import, since this is its second use.
 
 ## Verification
 
-- [ ] `npm test` in the sandbox: all green but unit 0054's R24 test, which failed before the work, and the skips the
+- [x] `npm test` in the sandbox: all green but unit 0054's R24 test, which failed before the work, and the skips the
   approach names (R10, R11)
 - [ ] `npm test` on the host with Docker: the Docker test passes (R5, R10)
-- [ ] `npm run check-changes` passes, on the committed work, and `spec.md` is unchanged
-- [ ] `npm pack --dry-run` lists the three files of `container/bell/` (R2)
+- [x] `npm run check-changes` passes, on the committed work, and `spec.md` is unchanged
+- [x] `npm pack --dry-run` lists the three files of `container/bell/` (R2)
 - [ ] The check by hand of R12, on the host in a tmux pane, with `./sandbox-dev.sh --in-place`, whose
   `agentrite.json` holds `"bell": true`. First confirm that the home volume holds no bell: no `hooks` in
   `~/.claude/settings.json` and nothing in `~/.config/opencode/plugins/`. Then, from another tmux window each time:
