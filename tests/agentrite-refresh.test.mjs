@@ -1008,11 +1008,6 @@ test('refresh leaves the wrappers of a harness that harnesses no longer names', 
   assert.ok(exists(join(made.base, '.opencode/agents/security-reviewer.md')));
 });
 
-// R11, R12
-test('refresh judges CLAUDE.md and opencode.json against the standards the settings give', (t) => {
-  const made = project(t);
-  made.write('CLAUDE.md', `@${PROCESS}\n@${HOUSE}\n@AGENTS.md\n`);
-  made.write('opencode.json', `{ "instructions": ["${PROCESS}", "${HOUSE}"] }\n`);
 // Unit 0056, R5, R9
 test('refresh writes the wrappers of a role of the projects own for the harnesses named, and lists it', (t) => {
   const made = project(t);
@@ -1032,6 +1027,11 @@ test('refresh writes the wrappers of a role of the projects own for the harnesse
   assert.ok(made.read(LIST).indexOf('* reviewer: ') < made.read(LIST).indexOf('* test-writer: '));
 });
 
+// R11, R12
+test('refresh judges CLAUDE.md and opencode.json against the standards the settings give', (t) => {
+  const made = project(t);
+  made.write('CLAUDE.md', `@${PROCESS}\n@${HOUSE}\n@AGENTS.md\n`);
+  made.write('opencode.json', `{ "instructions": ["${PROCESS}", "${HOUSE}"] }\n`);
 
   const result = refreshOwn(made, { standards: HOUSE });
 

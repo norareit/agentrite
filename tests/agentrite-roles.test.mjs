@@ -165,6 +165,28 @@ test('readRoles refuses a role file without front matter, naming the file and th
   });
 });
 
+// Unit 0056, R4, R5, R7
+test('readRoles gives the four roles and then an extra role with its path and description', (t) => {
+  const base = projectWith(t, { 'rules/auditor.md': '---\ndescription: Audits a unit.\n---\n\n# Auditor\n' });
+  const roles = readRoles(base, { ...KIT_SETTINGS.roles, auditor: 'rules/auditor.md' });
+  assert.deepEqual(
+    roles.map((role) => role.name),
+    [...ROLE_NAMES, 'auditor'],
+  );
+  assert.deepEqual(roles[ROLE_NAMES.length], {
+    name: 'auditor',
+    path: 'rules/auditor.md',
+    description: 'Audits a unit.',
+  });
+});
+
+test('readRoles refuses an extra role file without front matter, naming the file', (t) => {
+  const base = projectWith(t, { 'rules/auditor.md': '# Auditor\n' });
+  assert.throws(() => readRoles(base, { ...KIT_SETTINGS.roles, auditor: 'rules/auditor.md' }), {
+    message: /^rules\/auditor\.md has no front matter that a role file must open with\./,
+  });
+});
+
 test('readRoles refuses a role file it cannot read, naming it and the error', (t) => {
   const base = projectWith(t);
   mkdirSync(join(base, 'rules', 'reviewer.md'), { recursive: true });
@@ -321,6 +343,8 @@ test('isKitWrapper is true for the wrapper of each harness, whatever path it nam
     `node_modules/${'a'.repeat(100)}/roles/planner.md`,
     `rules/${'long '.repeat(24)}planner.md`,
     'rules/our planner.md',
+    'rules/a`b.md',
+    'rules/`planner`.md',
   ];
   for (const path of paths) {
     for (const wrapper of wrappersOf({ ...ROLE, path })) assert.ok(isKitWrapper(wrapper), wrapper);

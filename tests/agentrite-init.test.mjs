@@ -1475,8 +1475,6 @@ test('init in a project whose wrappers of a role that is gone are there removes 
   assert.equal(readFileSync(join(base, '.claude/agents/gone.md'), 'utf-8'), stale);
 });
 
-// R9, R11, R13
-test('init in a project with its own standards and planner writes everything from them', (t) => {
 // Unit 0056, R5, R9
 test('init in a project that names a role of its own writes its wrappers for the harnesses and lists it', (t) => {
   const { base, run, read } = project(t);
@@ -1499,6 +1497,8 @@ test('init in a project that names a role of its own writes its wrappers for the
   );
 });
 
+// R9, R11, R13
+test('init in a project with its own standards and planner writes everything from them', (t) => {
   const { run, read } = ownProject(t, { planner: 'rules/planner.md' });
 
   const result = run('init');

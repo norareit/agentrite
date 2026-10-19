@@ -144,10 +144,14 @@ export function isKitWrapper(text) {
   if (end === -1) return false;
   const afterFrontMatter = lines.slice(end + 1).join('\n');
   const opening = afterFrontMatter.indexOf('`');
-  const closing = afterFrontMatter.indexOf('`', opening + 1);
-  if (opening === -1 || closing === -1) return false;
-  const path = afterFrontMatter.slice(opening + 1, closing).replaceAll('\n', ' ');
-  return afterFrontMatter === `\n${body(path)}`;
+  if (opening === -1) return false;
+  // A path may hold a backtick, so each backtick after the opening one is tried as the end of the path
+  for (let closing = afterFrontMatter.indexOf('`', opening + 1); closing !== -1; ) {
+    const path = afterFrontMatter.slice(opening + 1, closing).replaceAll('\n', ' ');
+    if (afterFrontMatter === `\n${body(path)}`) return true;
+    closing = afterFrontMatter.indexOf('`', closing + 1);
+  }
+  return false;
 }
 
 /**
