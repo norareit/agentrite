@@ -693,6 +693,21 @@ test('run with a project root and bell, the module prints true or false and a li
   }
 });
 
+// A shell that sets FORCE_COLOR would give a value printed in colour to container/sandbox.sh, which takes nothing but
+// the bare word for true.
+test('run with bell, the module prints the bare word also where the environment asks for colour', (t) => {
+  for (const bell of [true, false]) {
+    const base = directory(t);
+    writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
+    const result = spawnSync(process.execPath, [script, base, 'bell'], {
+      encoding: 'utf-8',
+      env: { ...process.env, FORCE_COLOR: '1' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, `${bell}\n`);
+  }
+});
+
 test('run with bell on a file at fault, or on no file, it prints why on standard error alone and exits 1', (t) => {
   const missing = entryPoint(directory(t), 'bell');
   assert.equal(missing.status, 1);

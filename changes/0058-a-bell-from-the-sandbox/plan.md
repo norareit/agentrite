@@ -336,6 +336,13 @@ both tests import, since this is its second use.
   Claude Code in the sandbox to ring, naming the entry of `SANDBOX.md` (R14)
 - [x] Check every line changed against the limit of 120 characters, and that no em dash was written
 
+### 6. The reader's output
+
+- [x] In `tests/agentrite-settings.test.mjs`, test that the command's second form prints `true` or `false` and a
+  line break, with nothing else, also with `FORCE_COLOR=1` in its environment. See it fail (R1, R6)
+- [x] In `scripts/agentrite-settings.mjs`, print the value of `bell` as text, so that `console.log` gives it no
+  colour, which `container/sandbox.sh` would not take for `true` (R1, R6)
+
 ## Verification
 
 - [x] `npm test` in the sandbox: all green but unit 0054's R24 test, which failed before the work, and the skips the
@@ -373,3 +380,4 @@ Each commit is made once `npm test` is green but for the test that failed before
 - [x] After task group 5: `feature-0058 Make the agent a member of tty, so that Claude Code's hooks reach the
   terminal`
 - [x] After the check by hand: `feature-0058 Log the check by hand of the bell`
+- [x] After task group 6: `feature-0058 Print bell without colour, whatever the environment asks`

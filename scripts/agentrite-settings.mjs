@@ -335,7 +335,9 @@ if (isMain()) {
     process.exit(2);
   }
   try {
-    console.log(wantsBell ? readBell(root) : readSettings(root).defaultBranch);
+    // As text, since console.log gives a boolean colour where the environment asks for it, and container/sandbox.sh
+    // takes nothing but the bare word for true.
+    console.log(wantsBell ? String(readBell(root)) : readSettings(root).defaultBranch);
   } catch (error) {
     console.error(`agentrite: ${messageOf(error)}`);
     process.exit(1);
