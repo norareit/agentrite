@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-19T14:45:48Z
 ---
 
@@ -20,3 +20,4 @@ timestamp: 2026-10-19T14:45:48Z
   against" of `SANDBOX.md`, and looked into the home volume of the running sandbox, which holds no saved login.
   Left the human's running sandbox as it was. Wrote `spec.md`. What sent the signal during the login is not
   established, and the spec says so. The status is `draft`
+- 2026-10-19T14:48:46Z [human] approved the spec. The status is `approved`
