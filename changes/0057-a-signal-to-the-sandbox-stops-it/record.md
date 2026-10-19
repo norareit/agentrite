@@ -76,3 +76,17 @@ timestamp: 2026-10-19T14:45:48Z
   the host lacks. The sandbox holds no Docker, so run npm test on a host that has it", so the one skipped test of the
   run of `npm test` above is this one, as the plan expects. Every box of `plan.md` is ticked. The status stays
   `in-progress`: the process sets `implemented` after the human has decided the review's findings
+- 2026-10-19T15:24:58Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, performed a delta review of unit 0057 at
+  `e93819a3d5f111a68d88058949faab07eeb07702`, from previously reviewed commit
+  `ee005a661c33c1c7c7ee3d697e9d918623389669`. Returned P3. Saved the complete findings in
+  `.reviews/0057-a-signal-to-the-sandbox-stops-it/review-20261019T152408Z-e93819a.md`. Reran `npm test`: 654 passed,
+  0 failed, 0 skipped. Reran `./sandbox-dev.sh --in-place npm test`: 653 passed, 0 failed, 1 skipped, with the
+  Docker-unavailable reason printed for the signal regression. `npm run check-changes` and
+  `git diff --check ee005a6..HEAD` passed. Could not independently verify the human's historical terminal resizes,
+  Compose-process signals, full-sandbox PID 1 signals, or actual unit-run and --connect capability observations;
+  the recorded resized widths for --in-place and --workdir remain unavailable
+- 2026-10-19T15:27:18Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, accepted P3 of the delta review of
+  `e93819a` and applied it to `plan.md`: the terminal-check box is split into the unit run, whose width went from 191
+  to 223 and stays ticked, and the `--in-place` and `--workdir` runs, whose widths were not reported and whose box is
+  open again; and the box of the `docker kill` checks now names the `sleep 300` run that showed the `TERM`, since an
+  interactive bash ignores it. The open box waits for the human's widths

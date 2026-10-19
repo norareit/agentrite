@@ -88,13 +88,16 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
   skipped
 - [x] `./sandbox-dev.sh --in-place npm test`: every test passes, and `tests/sandbox-signal.test.mjs` is skipped with the
   reason above
-- [x] For each of `./sandbox-dev.sh 0057 bash`, `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a
-  scratch directory> bash`, run in a terminal on the host: once the shell's prompt is
-  up, send `kill -WINCH` to the `docker compose run` process from another shell of the host, and resize the terminal
-  window. The shell goes on running and the terminal shows no message of tini. Then, in that shell, `tput cols`
-  gives the new width. Log each outcome in `record.md`. (R1)
-- [x] In one sandbox started as above, `docker kill -s WINCH` the container from the host, and it goes on running;
-  then `docker kill -s TERM` it, and the run ends without the message of tini. Log the outcome. (R2)
+- [x] In `./sandbox-dev.sh 0057 bash`, run in a terminal on the host: once the shell's prompt is up, send `kill -WINCH`
+  to the `docker compose run` process from another shell of the host, and resize the terminal window. The shell goes
+  on running and the terminal shows no message of tini. Then, in that shell, `tput cols` gives the new width. Log
+  the outcome in `record.md`. (R1)
+- [ ] For each of `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a scratch directory> bash`, do
+  the same, and log the width that `tput cols` gives before and after the resize. (R1)
+- [x] In a sandbox of `./sandbox-dev.sh 0057 bash`, `docker kill -s WINCH` the container from the host, and it goes on
+  running. Then, in `./sandbox-dev.sh --in-place sleep 300`, `docker kill -s TERM` the container, and the run ends
+  without the message of tini. An interactive bash ignores SIGTERM, so the `TERM` check needs a command that ends on
+  it. Log the outcome. (R2)
 - [x] In a sandbox of `./sandbox-dev.sh 0057 bash`, `grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status`
   shows the three sets all zero and `NoNewPrivs` `1`; and from another shell of the host, `./sandbox-dev.sh
   --connect 0057 grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status` shows the same. Log both outputs. (R3)
