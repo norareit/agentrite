@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-10-19T14:45:48Z
 ---
 
@@ -29,3 +29,15 @@ timestamp: 2026-10-19T14:45:48Z
   where `docker info` fails, with a reason of its own, since the reason of `tests/skip-reason.mjs` sends the reader
   to the sandbox, whose image holds no Docker. It adds the skip to the list in "The kit's own tests" of
   `CONTRIBUTING.md`, which says what each skipped test needs. The status stays `approved`
+- 2026-10-19T14:52:29Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a session on the Linux host,
+  on `bugfix-0057-a-signal-to-the-sandbox-stops-it`. Read `roles/implementer.md`, `spec.md`, `plan.md` and this
+  record. The unit has a plan, so it may be built. The status is `in-progress`
+- 2026-10-19T14:52:45Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, wrote
+  `tests/sandbox-signal.test.mjs` and ran `node --test tests/sandbox-signal.test.mjs` on the host on the tree before
+  the fix. It failed at the assertion "SIGWINCH leaves the container running", with the container stopped
+- 2026-10-19T14:56:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, added `KILL` to `cap_add` in
+  `container/compose.yml`, made true the four comments the plan names, and changed `SANDBOX.md` and `CONTRIBUTING.md`
+  as the plan says. Nothing in the rest of "What the sandbox defends against" names the capabilities. On the host,
+  `node --test tests/sandbox-signal.test.mjs` passed after the fix, and `npm test` reported 654 tests, 654 passed, 0
+  failed, 0 skipped. Not yet run: the sandbox run of `./sandbox.sh --in-place npm test`, and the checks under
+  "Verification" that start the sandbox in a terminal, which need the human's terminal

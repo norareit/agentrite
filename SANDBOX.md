@@ -403,8 +403,8 @@ container reaches its own project's log directory and no other project's, no dir
 host's own `~/.claude` or OpenCode directories.
 
 Docker's own command starts a process in a running container too, and that process is not what `--connect` gives.
-`docker exec <container> bash`, with no user named, is root and holds `NET_ADMIN`, `SETUID` and `SETGID`, and
-`NET_ADMIN` is what changing the firewall takes. `--connect` is the way to a second shell. See "Two agents on one
+`docker exec <container> bash`, with no user named, is root and holds `NET_ADMIN`, `SETUID`, `SETGID` and `KILL`,
+and `NET_ADMIN` is what changing the firewall takes. `--connect` is the way to a second shell. See "Two agents on one
 unit".
 
 Egress is bounded by hostname, as "Reaching more hosts" says. It does not stop data leaving through a host that is

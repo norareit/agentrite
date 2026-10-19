@@ -34,7 +34,7 @@
 # changes nothing on the host, and the wrapper ends in `docker exec`. The container is
 # confined as the unit run started it, and the wrapper sets nothing of that. The user of
 # a connected process is the wrapper's to name, though: Docker runs it as root, with the
-# capabilities the entrypoint keeps for the firewall, unless it is told the user, so the
+# capabilities the container is given, unless it is told the user, so the
 # wrapper names the agent, and gives the command the environment and the working
 # directory that the first command has, with the TERM and COLORTERM of its own shell.
 #
@@ -451,7 +451,7 @@ from_environment() {
 # working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. A
 # test in tests/sandbox-unit-run.test.mjs reads the three files and holds this call
 # against them. Without --user the command would be root, with the capabilities the
-# entrypoint keeps for the firewall. The command runs through known-terminal.sh, as the
+# container is given. The command runs through known-terminal.sh, as the
 # entrypoint runs the first, so that a TERM the image does not describe is replaced.
 # TERM and COLORTERM are not the first command's but those of this wrapper's shell,
 # since --connect may be run from another terminal.

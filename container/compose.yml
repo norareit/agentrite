@@ -59,8 +59,11 @@ services:
       - /run
 
     # Every capability dropped except NET_ADMIN, which the entrypoint needs to install
-    # the firewall, and SETUID/SETGID, which it needs to drop from root to the agent
-    # user afterwards. The agent process ends up with an empty capability set, and
+    # the firewall, SETUID/SETGID, which it needs to drop from root to the agent user
+    # afterwards, and KILL. Docker's init runs as root and forwards a signal the
+    # container receives, a resize of the terminal among them, to the command, which
+    # runs as the agent. Without KILL the kernel refuses that and the init exits, which
+    # stops the container. The agent process ends up with an empty capability set, and
     # no-new-privileges leaves it no way to regain one.
     cap_drop:
       - ALL
@@ -68,6 +71,7 @@ services:
       - NET_ADMIN
       - SETUID
       - SETGID
+      - KILL
     security_opt:
       - no-new-privileges:true
 

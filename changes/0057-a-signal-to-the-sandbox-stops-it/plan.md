@@ -44,7 +44,7 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
 
 ## Tasks
 
-- [ ] Write `tests/sandbox-signal.test.mjs`, matching the idiom of `tests/compose-tmpfs.test.mjs`. (R4, R1, R2)
+- [x] Write `tests/sandbox-signal.test.mjs`, matching the idiom of `tests/compose-tmpfs.test.mjs`. (R4, R1, R2)
     - Read `container/compose.yml` and take, by indentation as `compose-tmpfs.test.mjs` does, the value of
       `    init:` and the entries of the service's `    cap_drop:`, `    cap_add:` and `    security_opt:` lists.
       Assert that `init` is `true`, so that a change to it fails here rather than leaving the test meaningless
@@ -60,24 +60,24 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
       wait one second, and assert that it is still running and that `docker logs` holds no line with `tini`
     - `docker kill -s TERM` the container, `docker wait` it, and assert that it stopped and that `docker logs` holds
       no line with `tini`
-- [ ] Run `node --test tests/sandbox-signal.test.mjs` on the host, on the tree before the fix, and see the `SIGWINCH`
+- [x] Run `node --test tests/sandbox-signal.test.mjs` on the host, on the tree before the fix, and see the `SIGWINCH`
   assertion fail with the container stopped. Log the outcome in `record.md`. (R4)
-- [ ] Add `- KILL` to `cap_add` in `container/compose.yml`, after `SETGID`. Rewrite the comment above `cap_drop` so
+- [x] Add `- KILL` to `cap_add` in `container/compose.yml`, after `SETGID`. Rewrite the comment above `cap_drop` so
   that it names `KILL` and why: Docker's init runs as root and forwards a signal the container receives, a resize of
   the terminal among them, to the command, which runs as the agent, and without `KILL` the kernel refuses it and the
   init exits, stopping the container. Keep the comment's last sentence, that the agent ends up with an empty set and
   `no-new-privileges` leaves it no way to regain one. (R1, R2, R3)
-- [ ] Run `node --test tests/sandbox-signal.test.mjs` on the host and see it pass. (R1, R2, R4)
-- [ ] In `container/entrypoint.sh`, rewrite the comment above the proxy's start-up loop, which says root holds no
+- [x] Run `node --test tests/sandbox-signal.test.mjs` on the host and see it pass. (R1, R2, R4)
+- [x] In `container/entrypoint.sh`, rewrite the comment above the proxy's start-up loop, which says root holds no
   `CAP_KILL` and so cannot signal the proxy, to say that the check reads `/proc` because the existence of the
   process is what is asked, and that it does not depend on which capabilities root holds. Change no code. (R3)
-- [ ] In `container/sandbox.sh`, change "with the capabilities the entrypoint keeps for the firewall" in both comments,
+- [x] In `container/sandbox.sh`, change "with the capabilities the entrypoint keeps for the firewall" in both comments,
   at lines 36 to 37 and 453 to 454, to "with the capabilities the container is given". Change no code. (R3)
-- [ ] In `SANDBOX.md`, "What the sandbox defends against", change "is root and holds `NET_ADMIN`, `SETUID` and
+- [x] In `SANDBOX.md`, "What the sandbox defends against", change "is root and holds `NET_ADMIN`, `SETUID` and
   `SETGID`" to "is root and holds `NET_ADMIN`, `SETUID`, `SETGID` and `KILL`", keeping the rest of the paragraph and
   the 120-character wrap. Read the rest of the section and confirm that nothing else in it names the capabilities or
   becomes false; the agent's processes still hold none. (R5)
-- [ ] In `CONTRIBUTING.md`, "The kit's own tests", say after the list of what a host other than Linux skips that a
+- [x] In `CONTRIBUTING.md`, "The kit's own tests", say after the list of what a host other than Linux skips that a
   host without Docker skips the test that a signal to the sandbox leaves it running, and that the sandbox is such a
   host, so that test runs with `npm test` on a host that has Docker, and the paragraph that sends the reader to
   `./sandbox.sh --in-place npm test` does not hold for it. (R4)
