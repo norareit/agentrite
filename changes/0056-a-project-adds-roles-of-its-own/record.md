@@ -92,3 +92,5 @@ timestamp: 2026-10-19T18:10:00Z
   `implemented`: every box of `plan.md` is ticked, the human has decided every blocking finding, and the suites
   were last run on the unchanged tree (`npm test` 681 of 681 passing, `npm run check-changes` passed). The status is
   `implemented`
+
+## Amendments
