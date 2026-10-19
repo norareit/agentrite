@@ -84,26 +84,26 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
 
 ## Verification
 
-- [ ] `npm test` on the host, with Docker: every test passes, `tests/sandbox-signal.test.mjs` among them and not
+- [x] `npm test` on the host, with Docker: every test passes, `tests/sandbox-signal.test.mjs` among them and not
   skipped
-- [ ] `./sandbox.sh --in-place npm test`: every test passes, and `tests/sandbox-signal.test.mjs` is skipped with the
+- [ ] `./sandbox-dev.sh --in-place npm test`: every test passes, and `tests/sandbox-signal.test.mjs` is skipped with the
   reason above
-- [ ] For each of `./sandbox.sh 0057 bash`, `./sandbox.sh --in-place bash`, `./sandbox.sh --workdir <a scratch
-  directory> bash` and `./sandbox-dev.sh --in-place bash`, run in a terminal on the host: once the shell's prompt is
+- [ ] For each of `./sandbox-dev.sh 0057 bash`, `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a
+  scratch directory> bash`, run in a terminal on the host: once the shell's prompt is
   up, send `kill -WINCH` to the `docker compose run` process from another shell of the host, and resize the terminal
   window. The shell goes on running and the terminal shows no message of tini. Then, in that shell, `tput cols`
   gives the new width. Log each outcome in `record.md`. (R1)
 - [ ] In one sandbox started as above, `docker kill -s WINCH` the container from the host, and it goes on running;
   then `docker kill -s TERM` it, and the run ends without the message of tini. Log the outcome. (R2)
-- [ ] In a sandbox of `./sandbox.sh 0057 bash`, `grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status`
-  shows the three sets all zero and `NoNewPrivs` `1`; and from another shell of the host, `./sandbox.sh --connect
-  0057 grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status` shows the same. Log both outputs. (R3)
-- [ ] `npm run check-changes` passes on the committed branch
+- [ ] In a sandbox of `./sandbox-dev.sh 0057 bash`, `grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status`
+  shows the three sets all zero and `NoNewPrivs` `1`; and from another shell of the host, `./sandbox-dev.sh
+  --connect 0057 grep -E '^(CapEff|CapPrm|CapAmb|NoNewPrivs)' /proc/self/status` shows the same. Log both outputs. (R3)
+- [x] `npm run check-changes` passes on the committed branch
 
 ## Commit Points
 
-- [ ] `bugfix-0057 Plan the fix`: `plan.md` and the planner's entry in `record.md`
-- [ ] `bugfix-0057 Give the sandbox's init the capability to forward a signal to the agent`: the regression test,
+- [x] `bugfix-0057 Plan the fix`: `plan.md` and the planner's entry in `record.md`
+- [x] `bugfix-0057 Give the sandbox's init the capability to forward a signal to the agent`: the regression test,
   `container/compose.yml`, the comments of `container/entrypoint.sh` and `container/sandbox.sh`,
   `SANDBOX.md` and `CONTRIBUTING.md`, with the record's entries of the failing and the passing run
 - [ ] `bugfix-0057 Record the checks on the host`: the record's entries of the checks under "Verification"

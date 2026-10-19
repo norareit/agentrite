@@ -41,3 +41,19 @@ timestamp: 2026-10-19T14:45:48Z
   `node --test tests/sandbox-signal.test.mjs` passed after the fix, and `npm test` reported 654 tests, 654 passed, 0
   failed, 0 skipped. Not yet run: the sandbox run of `./sandbox.sh --in-place npm test`, and the checks under
   "Verification" that start the sandbox in a terminal, which need the human's terminal
+- 2026-10-19T14:57:37Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, performed a full review of unit 0057 at
+  `ee005a661c33c1c7c7ee3d697e9d918623389669`, against merge base `6d8f3fdd046744a41379dfc0a73f87d557ed378a`.
+  Returned P1 and P2. Saved the complete findings in
+  `.reviews/0057-a-signal-to-the-sandbox-stops-it/review-20261019T145641Z-ee005a6.md`. Reran `npm test`: 654 passed,
+  0 failed, 0 skipped; `npm run check-changes` and `git diff --check master...HEAD` passed. Verified the regression's
+  Docker-unavailable skip and independently reproduced the fatal forwarding error without KILL, survival of
+  SIGWINCH and exit 143 after SIGTERM with KILL, and zero capability sets with NoNewPrivs 1 in a non-root exec.
+  Could not verify the full sandbox-suite run, terminal resizing and Compose-process signals in each wrapper mode,
+  signals through the complete sandbox entrypoint, or capabilities through an actual sandbox run and its --connect
+- 2026-10-19T15:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, accepted both findings of the
+  review of `ee005a6` and applied them. P1: `./sandbox.sh` runs the installed release's `compose.yml`, which has no
+  `KILL` (checked: `grep KILL node_modules/agentrite/container/compose.yml` finds nothing), so the checks of
+  "Verification" that start a sandbox now use `./sandbox-dev.sh`, which runs the working copy's; the plan's text
+  changed, no check was run. P2: ticked the host `npm test` and `npm run check-changes` checks, which passed on
+  `ee005a6`, and the two commit points that exist, `1f2c071` and `ee005a6`. The checks that start a sandbox, and the
+  commit point `Record the checks on the host`, stay open
