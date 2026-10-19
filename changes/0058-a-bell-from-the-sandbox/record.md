@@ -35,5 +35,15 @@ timestamp: 2026-10-19T15:47:39Z
   that lacks it; requirements 1, 11, 13 and 14 follow; the decision on the first optional key is replaced by one on
   a required key, and one on the default the written file gives. The status is `draft`
 - 2026-10-19T18:54:53Z [human] approved the spec. The status is `approved`
+- 2026-10-19T19:21:56Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0058-a-bell-from-the-sandbox` at `8cc88d6`, wrote `plan.md`. Found in the image's Claude Code 2.1.303 the
+  drop-in directory `managed-settings.d/` of managed settings, and in its OpenCode 1.19.3 the variable
+  `OPENCODE_CONFIG_CONTENT`, a plugin named by a `file://` URL, the events `session.idle` and `permission.asked`, and no
+  `permission.updated`; the plan gives the bell through these. Before the work `npm test` reports 682 tests, 680
+  passing, 1 skipped, and 1 failing: unit 0054's R24 test in `tests/repository-own-files.test.mjs`, since `8cc88d6` gave
+  the root `agentrite.json` keys that the installed release's template lacks. The plan leaves it failing, as no part of
+  this spec, and adds `bell` to that file, which `./sandbox-dev.sh` now reads; the human decides it. The plan reads R3
+  as saying what a run with no terminal does: a headless run started from a terminal has that terminal, and rings once
+  at its end. The status is `approved`
 
 ## Amendments
