@@ -227,7 +227,7 @@ both tests import, since this is its second use.
   the plugin (R1, R3)
 - [x] Move `listEntries` to `tests/compose-entries.mjs`, taking the text of `container/compose.yml` as it reads it
   today, and import it in `tests/sandbox-signal.test.mjs`. The test there passes or skips as before (R10)
-- [ ] In `tests/bell.test.mjs`, add the Docker test of the approach. On a host with Docker and `script`, run it and
+- [x] In `tests/bell.test.mjs`, add the Docker test of the approach. On a host with Docker and `script`, run it and
   see it pass; in the sandbox it is skipped with the reason of `tests/sandbox-signal.test.mjs` (R5, R10)
 
 ### 3. The start
@@ -289,7 +289,7 @@ both tests import, since this is its second use.
 
 - [x] `npm test` in the sandbox: all green but unit 0054's R24 test, which failed before the work, and the skips the
   approach names (R10, R11)
-- [ ] `npm test` on the host with Docker: the Docker test passes (R5, R10)
+- [x] `npm test` on the host with Docker: the Docker test passes (R5, R10)
 - [x] `npm run check-changes` passes, on the committed work, and `spec.md` is unchanged
 - [x] `npm pack --dry-run` lists the three files of `container/bell/` (R2)
 - [ ] The check by hand of R12, on the host in a tmux pane, with `./sandbox-dev.sh --in-place`, whose

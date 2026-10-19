@@ -99,5 +99,34 @@ timestamp: 2026-10-19T15:47:39Z
   so the suite may ring that terminal once. The test still holds what it is for, that the script exits 0 and prints
   nothing; the walk stops at pid 1 and at a process it cannot read, which in the sandbox is every process of root,
   and was not bounded further, since the plan gives it so. The status is `in-progress`
+- 2026-10-19T20:06:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0058-a-bell-from-the-sandbox` at `b8e627f`, which holds the commits made in the sandbox, ran the checks
+  that need the host. `npm test` reports 722 tests, 721 passing, none skipped and 1 failing, unit 0054's R24 test,
+  which the human decided to ignore. The Docker tests ran and passed: "a bell the agent writes to the sandbox's
+  terminal comes out on the host's side unchanged" of `tests/bell.test.mjs`, and the signal test of
+  `tests/sandbox-signal.test.mjs`. Ticked the last task of group 2 and "npm test on the host with Docker". Then the
+  check by hand of R12, which the human did in a tmux pane with `./sandbox-dev.sh --in-place`, with `"bell": true` in
+  the root `agentrite.json` and the host's `~/.claude/statusline-command.sh` in place. In the sandbox,
+  `~/.claude/settings.json` held `{"theme": "dark"}` and no `hooks`, and `~/.config/opencode/plugins/` did not exist.
+  `claude --version` gave `2.1.303 (Claude Code)` and `opencode --version` gave `1.19.3`. What was seen:
+    * Claude Code in auto mode, asked to run `touch /tmp/bell-check`, with the human switched to another window: the
+      sandbox's window was marked. Which of Claude Code's moments, or what else, rang it was not established
+    * Claude Code in its default mode, asked for `touch /tmp/bell-check` and again for
+      `sleep 15 && touch /tmp/bell-check`, the human switched away while it asked for the permission and again after
+      approving it: the window was not marked at either moment
+    * In the sandbox's shell, `sleep 3; sh /etc/agentrite/bell/ring-bell.sh`, the human switched away: the window was
+      marked
+    * `/etc/claude-code/managed-settings.d/agentrite-bell.json` is mounted, beside `managed-settings.json`, and holds
+      exactly the hooks of the plan
+    * `/hooks` in Claude Code says of both `Stop` and `Notification`: "No hooks configured for this event"
+    * In a run of `claude --debug`, the lines of `~/.claude/debug/` that name `managed-settings`, `agentrite-bell` or
+      `not applied` are only that it watches `/etc/claude-code/managed-settings.json` and the drop-in directory
+      `/etc/claude-code/managed-settings.d`. None says that a file of the directory was read, refused or held back
+
+  So the bell passes out of the sandbox, and Claude Code 2.1.303 does not load the hooks of the drop-in directory
+  `managed-settings.d/`, at least beside a `managed-settings.json`. The plan's mechanism for Claude Code does not hold
+  for that version, and the plan goes back to the planner. Stopped there, as the plan says, and worked nothing around.
+  Not done: Claude Code with the status line moved away, OpenCode, and the starts with `"bell": false`. The check by
+  hand and its commit point stay open. The status is `in-progress`
 
 ## Amendments
