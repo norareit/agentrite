@@ -260,7 +260,7 @@ both tests import, since this is its second use.
 
 ### 4. The documents
 
-- [ ] `SANDBOX.md`: a section "The bell" right after "The status line", with each point of R13: when each harness
+- [x] `SANDBOX.md`: a section "The bell" right after "The status line", with each point of R13: when each harness
   rings; that it rings in every project whose `agentrite.json` holds `"bell": true`, which `init` and `config`
   write, with nothing to set in the home volume or on the host; that the bell reaches the host's terminal and through
   it tmux, which marks the window; that the host's own hooks, plugins and settings of a bell do not hold in the
@@ -269,21 +269,21 @@ both tests import, since this is its second use.
   the claude.ai console may make Claude Code ignore the kit's, as "The status line" says, and it then rings as that
   policy says. A run with no terminal rings nothing. No HTML, and the refusal of a `bell` at fault is not described
   in it, since its message says why and what to do (R13)
-- [ ] `README.md`, "The project's settings": `bell` in the table, after `sandbox`, read by `./sandbox.sh` at each
+- [x] `README.md`, "The project's settings": `bell` in the table, after `sandbox`, read by `./sandbox.sh` at each
   start; six keys where it says five; the default file with `"bell": true`; that `bell` is required and is `true` or
   `false`, not a string; that it is read at each start of the sandbox, by every form but `--connect`, which judges it
   alone, and that it has no effect outside the sandbox; and in "What to run afterwards", that a change of `bell`
   needs nothing and holds from the next start. Change the bullet that says which forms of `./sandbox.sh` do not read
   the file (R14)
-- [ ] `README.md`, "sandbox.sh" in "Commands": that a start but `--connect` reads `bell` and refuses, starting
+- [x] `README.md`, "sandbox.sh" in "Commands": that a start but `--connect` reads `bell` and refuses, starting
   nothing, a file that lacks it or whose `bell` is neither `true` nor `false`, and "The bell" among the sections of
   `SANDBOX.md` it names. "The sandbox": a bullet of "What a run does" that the sandbox rings, naming "The bell" (R14)
-- [ ] `README.md`, "Updating a project to a newer kit": a project whose `agentrite.json` lacks `bell` adds
+- [x] `README.md`, "Updating a project to a newer kit": a project whose `agentrite.json` lacks `bell` adds
   `"bell": true,` after `sandbox` before any command that reads the file runs again, as it says of `standards` and
   `roles` (R8)
-- [ ] `CONTRIBUTING.md`: the host without Docker skips the two tests that need it, the signal and the bell, and a
+- [x] `CONTRIBUTING.md`: the host without Docker skips the two tests that need it, the signal and the bell, and a
   host without `script` of util-linux skips the tests of the script that need a terminal (R10)
-- [ ] Check every line changed against the limit of 120 characters, and that no em dash was written (R13, R14)
+- [x] Check every line changed against the limit of 120 characters, and that no em dash was written (R13, R14)
 
 ## Verification
 
@@ -312,5 +312,5 @@ Each commit is made once `npm test` is green but for the test that failed before
 - [x] After task group 2: `feature-0058 Ring the bell from a script, from Claude Code's hooks and from OpenCode's
   plugin`
 - [x] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`
-- [ ] After task group 4: `feature-0058 Describe the bell and the key bell`
+- [x] After task group 4: `feature-0058 Describe the bell and the key bell`
 - [ ] After the check by hand: `feature-0058 Log the check by hand of the bell`

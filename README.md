@@ -341,6 +341,11 @@ Starts the sandbox, from the project root, with what the form names mounted at `
 With `--connect` it starts nothing, and runs beside a unit run that is under way. A unit given by a number that no
 branch holds gets its branch first, cut from the default branch that `agentrite.json` names.
 
+Every form but `--connect` reads `bell` from the project's `agentrite.json` at each start, and with `true` has the
+harnesses ring the terminal's bell. It refuses a project with no `agentrite.json`, and a file that lacks `bell` or
+whose `bell` is neither `true` nor `false`, with a message that names the file, the key and what it must hold, and
+starts nothing. See "The project's settings".
+
 | Argument or option | What it is                                                                                   |
 |--------------------|----------------------------------------------------------------------------------------------|
 | `UNIT`             | Mounts a clone of the unit's branch, given by its name or by the unit's number in its name   |
@@ -363,7 +368,7 @@ branch holds gets its branch first, cut from the default branch that `agentrite.
 | `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                         |
 
 See "The sandbox", and in `SANDBOX.md` "Running a unit", "Getting the work back", "Two agents on one unit",
-"Running on the tree as it is" and "Where things are kept on the host".
+"Running on the tree as it is", "The bell" and "Where things are kept on the host".
 
 ## Running a role
 
@@ -667,13 +672,14 @@ that runs the change check therefore installs with a plain `npm ci`.
 
 ## The project's settings
 
-A project's settings are in `agentrite.json` at the project root, a JSON object with five keys:
+A project's settings are in `agentrite.json` at the project root, a JSON object with six keys:
 
 | Key             | What it holds                                        | What reads it                        |
 |-----------------|------------------------------------------------------|--------------------------------------|
 | `defaultBranch` | The branch that units are cut from and compared with | The change check and a unit run      |
 | `harnesses`     | The harnesses the project uses, as a list            | `init` and `refresh`                 |
 | `sandbox`       | `true` with the sandbox, `false` without it          | `init` and `refresh`                 |
+| `bell`          | `true` for a sandbox that rings, `false` for none    | `./sandbox.sh`, at each start        |
 | `standards`     | The path of the standards file the project uses      | `init` and `refresh`                 |
 | `roles`         | Each role's name, with the path of its file in use   | `init`, `refresh`, `roles` and `run` |
 
@@ -684,6 +690,7 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   "defaultBranch": "master",
   "harnesses": ["claude", "opencode"],
   "sandbox": true,
+  "bell": true,
   "standards": "node_modules/agentrite/standards.md",
   "roles": {
     "specifier": "node_modules/agentrite/roles/specifier.md",
@@ -697,9 +704,13 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
 * `init` writes the file from its arguments in a project that has none, and `config` writes the default file. The
   default branch is `master` unless `--default-branch` or an edit says otherwise
 * The file is committed
-* All five keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
-  `claude` and `opencode`, in which a name given more than once counts once, and `sandbox` is `true` or `false`, not
-  a string. A key the kit does not know is ignored
+* All six keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
+  `claude` and `opencode`, in which a name given more than once counts once, and `sandbox` and `bell` are each `true`
+  or `false`, not a string. A key the kit does not know is ignored
+* `bell` says whether the harnesses in the sandbox ring the terminal's bell when they need the developer or stop, as
+  "The bell" in `SANDBOX.md` says. It is read at each start of the sandbox, so a change holds from the next start. It
+  has no effect outside the sandbox: the harnesses on the host are the developer's, and the kit changes nothing of
+  their configuration
 * `standards` and `roles` name the kit's own files in the file `config` and `init` write. A project uses another file
   by naming its path instead, as "Replacing a role or the standards" says. `roles` holds the four names
   `specifier`, `planner`, `implementer` and `reviewer`, each with the path of its file, and may hold roles of the
@@ -722,18 +733,24 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   on the path as it is written, with no symbolic link followed. Whether it names a file is judged with symbolic links
   followed, so a kit linked into `node_modules`, as `npm link` does, is taken
 * The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by the
-  change check, and by `./sandbox.sh` when a unit run cuts a branch. `./sandbox.sh` with `--in-place`, with
-  `--workdir`, with `--connect` or with a unit whose branch exists does not read it
+  change check, and by `./sandbox.sh`. Every form of `./sandbox.sh` but `--connect` reads `bell` at each start, and
+  judges no other key of the file, unless a unit run cuts a branch, which reads the whole file. `--connect` does not
+  read it
 * A command that reads the file refuses in a project that has none, and names `npx agentrite config` as the command
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused
   so by every command that reads the file, also one that does not use it: the message names the key, the path and
   that there is no file at it. Either way it writes and changes nothing and exits with a status other than 0. No
   command takes a missing file for the default file, or a missing key for its default value
+* A start of `./sandbox.sh` that cuts no branch judges `bell` alone. It refuses a project with no file, a file that
+  is not a JSON object, one that lacks `bell` and one whose `bell` is neither `true` nor `false`, names the file, the
+  key, what it holds or that it is missing, and what it must hold, starts nothing and exits 2. Another key at fault
+  does not stop it
 
 A setting is changed by editing the file by hand. What to run afterwards:
 
 * `defaultBranch`: nothing
+* `bell`: nothing. It holds from the next start of the sandbox
 * A harness added to `harnesses`: `npx agentrite refresh` writes its wrappers. The wrapper directories that the
   project's `AGENTS.md` lists are the project's to bring up to date
 * `sandbox` set to `true`: `npx agentrite init` writes the files of the sandbox that are missing
@@ -872,6 +889,14 @@ command that reads the file runs again: until then every such command refuses th
   }
 ```
 
+A project whose `agentrite.json` lacks `bell` adds it before any command that reads the file runs again, and before
+the sandbox starts again: until then every such command refuses the file, and every start but `--connect` is
+refused. The line, after `sandbox`, with `false` for a project that wants no bell:
+
+```json
+  "bell": true,
+```
+
 Then bring the kit's own files in the project up to date, from the project root:
 
 ```sh
@@ -934,6 +959,9 @@ What a run does:
 * `./sandbox.sh --in-place --rebuild` builds the image again before running
 * `./sandbox.sh --connect 0029` mounts and starts nothing: it runs a command in the container of the unit run that is
   under way for the unit, beside what runs there. See "Two agents on one unit" of `SANDBOX.md`
+* In a project whose `agentrite.json` holds `"bell": true`, Claude Code and OpenCode in the sandbox ring the
+  terminal's bell when they need the developer or stop, with nothing to set in the home volume or on the host. See
+  "The bell" of `SANDBOX.md`
 
 What it confines:
 

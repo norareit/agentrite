@@ -129,10 +129,13 @@ A host other than Linux skips some of the tests. Each is skipped for what it nee
 * The reading of the allowlists by the entrypoint needs bash 4 or newer, and macOS has bash 3.2
 * The check of who owns the agent's home needs GNU `stat`, and macOS has BSD's
 * The terminal that `--connect` gives the command needs `script` of util-linux, and macOS has BSD's
+* The tests of the script that rings the bell need `setsid`, and those of them that give it a terminal need `script`
+  of util-linux besides. macOS has neither
 
-A host without Docker skips the test that a signal to the sandbox leaves it running. The sandbox is such a host: its
-image holds no Docker, so that test runs with `npm test` on a host that has Docker, and the command below does not
-run it.
+A host without Docker skips the two tests that need it: that a signal to the sandbox leaves it running, and that a
+bell the agent writes to the sandbox's terminal comes out on the host's side. The sandbox is such a host: its image
+holds no Docker, so those tests run with `npm test` on a host that has Docker, and the command below does not run
+them.
 
 The reason that each other skipped test prints names the command that runs the whole suite in the sandbox, which is
 Linux:

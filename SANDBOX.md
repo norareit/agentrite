@@ -285,6 +285,31 @@ one setting runs the script with `bash`. With no such file on the host, neither 
 * When the developer's organization delivers managed settings from the claude.ai console, Claude Code by default
   uses those and ignores the file, so the status line is then whatever that policy gives
 
+## The bell
+
+The harnesses in the sandbox ring the terminal's bell when they need the developer or stop:
+
+* Claude Code at each `Notification`, when it asks for a permission or waits for input, and at each `Stop`, when it
+  ends a turn
+* OpenCode each time a session goes idle and each time it asks for a permission
+
+It rings in every project whose `agentrite.json` holds `"bell": true`, which the file `init` and `config` write
+holds. Nothing is set in the home volume or on the host: the wrapper mounts the kit's `container/bell/` read-only at
+each start, with Claude Code's hooks as managed settings and OpenCode's plugin named in its configuration.
+
+* The bell is the one byte BEL, written to the session's terminal. It comes out on the terminal the sandbox was
+  started from, and through it tmux, which marks the window whose pane rang
+* The host's own hooks, plugins and settings of a bell do not hold in the sandbox, which reads none of the host's
+  settings. A hook that calls `tmux` cannot work there either, since tmux runs on the host
+* A bell the developer sets in the home volume rings besides, and is not removed
+* A run with no terminal, such as `agentrite run --headless` started by a script, rings nothing
+* When the developer's organization delivers managed settings from the claude.ai console, Claude Code may ignore
+  the kit's, as it does for the status line, and then rings as that policy says
+
+To turn it off, a project sets `"bell": false` in its `agentrite.json`. The file is read at each start, so the
+change holds from the next start, with no rebuild. A developer who wants no bell in a project that rings mutes it in
+their terminal or in tmux.
+
 ## The local model server
 
 The sandbox reaches one host and port outside the allowlist: `MODEL_SERVER_HOST` on `MODEL_SERVER_PORT`, which

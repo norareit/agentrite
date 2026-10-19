@@ -79,5 +79,13 @@ timestamp: 2026-10-19T15:47:39Z
   hooks name the path at which the wrapper mounts `container/bell/` failed against the wrapper of `e4eee8d` and
   passes now. `npm test` reports 722 tests, 719 passing, 2 skipped (the two Docker tests) and 1 failing, unit 0054's
   R24 test. The status is `in-progress`
+- 2026-10-19T19:41:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 4: the section "The bell" of
+  `SANDBOX.md`, after "The status line"; in `README.md` the key `bell` in "The project's settings", with a bullet
+  that a start that cuts no branch judges `bell` alone, which the bullet on refusals did not say, the start that reads
+  it in "sandbox.sh", a bullet of "What a run does", and the line to add in "Updating a project to a newer kit"; and
+  in `CONTRIBUTING.md` the tests a host without Docker, `setsid` or `script` of util-linux skips. No line changed is
+  over 120 characters and none holds an em dash, checked with `awk` and `grep`. "Where things are kept on the host"
+  is unchanged, since the bell keeps nothing on the host. `npm test` reports 722 tests, 719 passing, 2 skipped and 1
+  failing, unit 0054's R24 test. The status is `in-progress`
 
 ## Amendments
