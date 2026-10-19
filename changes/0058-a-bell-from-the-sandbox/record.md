@@ -158,5 +158,28 @@ timestamp: 2026-10-19T15:47:39Z
   made the agent a member of the group `tty`". No line changed is over 120 characters and none holds an em dash. On
   the host with Docker, `npm test` reports 724 tests, 723 passing, none skipped and 1 failing, unit 0054's R24 test.
   The status is `in-progress`
+- 2026-10-19T23:03:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `d1492be`, did the check by hand of R12 with the human, who ran the sandbox in a tmux pane and switched to another
+  tmux window at each moment; "rang" is that the sandbox's window was marked with the bell flag. The image was built
+  again with `./sandbox-dev.sh --in-place --rebuild`, with `"bell": true` in the root `agentrite.json`. In the
+  sandbox, `id` named `5(tty)` among the agent's groups, `~/.claude/settings.json` held `{"theme": "dark"}` and no
+  `hooks`, and `~/.config/opencode/plugins/` did not exist. `claude --version` gave `2.1.304 (Claude Code)`, which the
+  rebuild brought in where the plan was written against 2.1.303, and `opencode --version` gave `1.19.3`. What was
+  seen:
+    * Claude Code, started with `--permission-mode default` and the host's `~/.claude/statusline-command.sh` in
+      place, asked to run `sleep 15 && touch /tmp/bell-check`: it rang while it asked for the permission, and again
+      when the turn ended after the human approved it. `/status` did not name
+      `Enterprise managed settings (file + drop-ins)`, which the plan names, on the human's Pro account; the bell rang
+      regardless
+    * The same with `~/.claude/statusline-command.sh` moved away on the host and the sandbox started again: it rang at
+      both moments
+    * OpenCode, given a prompt: it rang when the session went idle, and when it asked for a permission, which it
+      did with its defaults: nothing was set in `~/.config/opencode/opencode.json` for the check
+    * With `"bell": false` in the root `agentrite.json`, not committed, and the sandbox started again: Claude Code
+      asked for the permission of the same command, and OpenCode's session went idle, and neither rang. The file was
+      set back to `"bell": true`
+
+  Ticked the check by hand and its commit point. Not run: `npm test` in the sandbox after task group 5, which the
+  item of "Verification" after group 5 also names, so that item stays open. The status is `in-progress`
 
 ## Amendments

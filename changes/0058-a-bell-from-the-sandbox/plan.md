@@ -345,7 +345,7 @@ both tests import, since this is its second use.
 - [x] `npm pack --dry-run` lists the three files of `container/bell/` (R2)
 - [ ] After task group 5, `npm test` in the sandbox, and on the host with Docker, where both Docker tests of the
   bell pass: all green but unit 0054's R24 test (R5, R10)
-- [ ] The check by hand of R12, on the host in a tmux pane, with `./sandbox-dev.sh --in-place`, whose
+- [x] The check by hand of R12, on the host in a tmux pane, with `./sandbox-dev.sh --in-place`, whose
   `agentrite.json` holds `"bell": true`, the image built again first with `./sandbox-dev.sh --in-place --rebuild`
   after task group 5, and `id` in the sandbox naming the group `tty`. In Claude Code, `/status` names
   `Enterprise managed settings (file + drop-ins)`; `/hooks` in 2.1.303 listed none of the managed hooks while they
@@ -372,4 +372,4 @@ Each commit is made once `npm test` is green but for the test that failed before
 - [x] After task group 4: `feature-0058 Describe the bell and the key bell`
 - [x] After task group 5: `feature-0058 Make the agent a member of tty, so that Claude Code's hooks reach the
   terminal`
-- [ ] After the check by hand: `feature-0058 Log the check by hand of the bell`
+- [x] After the check by hand: `feature-0058 Log the check by hand of the bell`
