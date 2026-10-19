@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-19T15:47:39Z
 ---
 
@@ -221,5 +221,14 @@ timestamp: 2026-10-19T15:47:39Z
 
   `npm test` on the host with Docker reports 725 tests, 724 passing, none skipped and 1 failing, unit 0054's R24
   test. The status is `in-progress`
+- 2026-10-19T23:23:26Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0058 at
+  `1b17132f56933502001ef513704709718dbf1e6b`, in a delta review from
+  `10f5bacb9af9cfd2b76b3a085eb3fbdc468dfc3f`. Returned no new findings. The complete review is in
+  `.reviews/0058-a-bell-from-the-sandbox/20261019T232249Z-opencode-delta.md`. Ran `npm test`: 725 tests, 724 passing,
+  1 failing (the previously accepted 0054 check), none skipped; all three Docker tests passed. The change check and
+  delta whitespace check passed. Did not repeat the authenticated tmux checks. The status is `in-progress`
+- 2026-10-19T23:24:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the unit is
+  implemented: the delta review of `1b17132` returned no new findings, the human decided every finding of the review
+  of `10f5bac`, and every task of `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
