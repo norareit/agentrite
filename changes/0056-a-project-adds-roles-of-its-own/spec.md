@@ -47,8 +47,17 @@ The settings:
    `security-reviewer`. The path of an extra role is judged as the path of one of the four is, by requirement 2 of
    unit 0054, and an extra role may name the same file as another role
 3. A file whose `roles` holds a name that is not of that form is not valid. The command refuses as unit 0045 says,
-   and its message names the name and the form a role's name must have. A file that unit 0054 makes valid is still
-   valid
+   and its message names the name and the form a role's name must have. A file whose `roles` holds the name of an
+   agent that a harness the kit writes wrappers for has of its own is not valid either, whichever harnesses
+   `agentrite.json` names. The names are judged without regard to case, and are:
+
+   | Harness     | Its own agents                                                                     |
+   |-------------|------------------------------------------------------------------------------------|
+   | Claude Code | `Explore`, `Plan`, `general-purpose`, `claude`, `statusline-setup`, `claude-code-guide`, `fork` |
+   | OpenCode    | `build`, `plan`, `general`, `explore`, `scout`, `compaction`, `title`, `summary`   |
+
+   The message of that refusal names the name and the harness that has an agent of that name. The names are held in
+   one place of the kit's code. A file that unit 0054 makes valid is still valid
 4. Where the kit lists the roles, it lists the four in their order, `specifier`, `planner`, `implementer` and
    `reviewer`, and then the extra roles in the order `roles` in `agentrite.json` holds them
 
@@ -63,8 +72,9 @@ What follows the settings:
    removes. A file of another body, such as an agent of the project's own, is left as it is, and `refresh` says
    nothing of it
 7. `agentrite roles` lists the extra roles with the four, as text and with `--json`, each with the description that
-   its file's front matter holds. The JSON document keeps its form: each role is an object with its `name` and its
-   `description`
+   its file's front matter holds. With `--json`, each role is an object with its `name`, its `description`, and its
+   `path`: the path of its file as `roles` in `agentrite.json` gives it. The four roles get the key as well. The text
+   listing does not change
 8. `agentrite run` takes as its role any role `roles` names. Given a role that `roles` does not name, it starts
    nothing, exits with a status other than 0, and its message names the role and the roles `roles` names. Its usage
    text says that the role is one that `agentrite.json` names, and names no fixed list of roles
@@ -91,9 +101,11 @@ The documents:
     * "How it works" says that each of the four roles covers one stage of the process and moves the unit through
       the statuses, and that a project can add roles that run just before or just after one of the four, within
       its stage
-    * "The project's settings" says that `roles` may hold extra roles besides the four, and what a name must be
+    * "The project's settings" says that `roles` may hold extra roles besides the four, what a name must be, and
+      that a name of an agent of a harness's own is refused, with the names of requirement 3
     * "agentrite roles", "agentrite run", "agentrite init" and "agentrite refresh" are true of the extra roles, of
-      the refusal of requirement 8 and of the removal of requirement 6
+      the refusal of requirement 8 and of the removal of requirement 6. "agentrite roles" gives the key `path` of
+      requirement 7
 13. `README.md` has a section on adding a role, after "Replacing a role or the standards", which says:
     * that an extra role adds no stage and no status: it runs just before or just after one of the four roles,
       within that role's stage, as the table of the examples in "Context" shows
@@ -143,8 +155,25 @@ The documents:
   What an extra role must say of itself is the README's, as unit 0054 put what a replacing role file must hold
 * **A role's name is lowercase words joined by hyphens.** It becomes the name of a wrapper's file in each harness's
   directory, the `name` of a Claude Code subagent, and the first argument of `agentrite run`, and the form is one
-  that every file system and both harnesses take. Claude Code gives the name of a subagent as lowercase letters and
-  hyphens. Rejected: any string, which would let a name hold a slash or a space and lead a wrapper's path elsewhere
+  that every file system and both harnesses take. Claude Code takes more, as digits, and the form can be widened
+  later without making a valid file invalid, while it cannot be narrowed so. Rejected: any string, which would let a
+  name hold a slash or a space and lead a wrapper's path elsewhere
+* **A name a harness has for an agent of its own is refused.** The human took this into the unit. A wrapper of that
+  name takes the place of the harness's own agent, as Claude Code's documentation says a project's subagent named
+  `Explore` does, or the harness's agent takes the place of the role, and neither shows until the role is dispatched.
+  The names are those the documentation of each harness gave on 2026-10-19, at
+  `https://code.claude.com/docs/en/sub-agents` and `https://opencode.ai/docs/agents/`. They are judged without
+  regard to case, since Claude Code writes some with a capital and whether it tells `plan` from `Plan` is not
+  documented. They are refused for every harness the kit writes wrappers for, and not only those `agentrite.json`
+  names, so that a project that adds a harness to its settings does not find its roles refused then. The cost,
+  accepted: the names are kept up to date by hand, in a unit, as the harnesses add agents, and a name a harness adds
+  before then shows as it does without the check, when the role is dispatched, and is fixed by renaming the role.
+  Rejected: refusing only the names of the harnesses `agentrite.json` names
+* **`agentrite roles --json` gives the path of each role's file.** The human took this into the unit, for the
+  orchestrator, which dispatches on the listing and reads the files. The path is the one `roles` gives, from the
+  project root, so that it is the same in every clone. The key is a promise to every script that reads the listing,
+  which the object form of unit 0054 made room for without changing the keys there are. The text listing stays as
+  it is: it is for a reader, who has the paths in `agentrite.json` and `.agentrite/instructions.md`
 * **The four come first, and the extra roles follow in the order of the file.** The order of the four is the order
   of the stages, and stays the same in every project. An object's keys keep their order when the file is read, so
   the project decides the order of its own roles where it writes them. Rejected: the extra roles in alphabetical
@@ -174,10 +203,4 @@ The documents:
 
 ## Beyond the request
 
-* **Refusing a name that a harness has for an agent of its own.** OpenCode has the agents `build` and `plan`, and
-  Claude Code has `Explore`, `Plan` and `general-purpose`, of which only the lowercase ones fit requirement 2. Cost:
-  a list of each harness's names in the kit, kept up to date as the harnesses change. Without it, a project that
-  names a role `plan` or `build` gets a wrapper that the harness may take in the place of its own agent, or the
-  other way round, which it sees when it dispatches the role and fixes by renaming it in `roles`
-* **The path of each role's file in `agentrite roles --json`.** The orchestrator may want it, as unit 0054 already
-  noted. Without it, a script reads the paths from `agentrite.json`
+None

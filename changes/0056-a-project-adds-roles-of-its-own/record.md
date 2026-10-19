@@ -30,3 +30,11 @@ timestamp: 2026-10-18T17:01:25Z
   renumbered the requirements after it. Requirement 13 says that an extra role writes at least one entry each time
   it works on the unit. Added a decision with the reasoning, and removed the non-goal on the reviewer and its entry
   under "Beyond the request". The status is `draft`
+- 2026-10-19T14:32:27Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision to take
+  both entries of "Beyond the request" into the unit. Read the agents of each harness from its documentation, at
+  `https://code.claude.com/docs/en/sub-agents` and `https://opencode.ai/docs/agents/`, which give more than the
+  spec named before, and found that Claude Code takes digits in a name as well. Changed `spec.md`: requirement 3
+  refuses a role named as an agent of either harness, without regard to case, and gives the names; requirement 7
+  gives each role's `path` in `agentrite roles --json`; requirement 12 has the README say both. Added a decision
+  for each, corrected the reason of the decision on the form of a name, and left "Beyond the request" with none.
+  The status is `draft`
