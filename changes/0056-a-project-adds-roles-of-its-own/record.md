@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-18T17:01:25Z
 ---
 
@@ -38,3 +38,4 @@ timestamp: 2026-10-18T17:01:25Z
   gives each role's `path` in `agentrite roles --json`; requirement 12 has the README say both. Added a decision
   for each, corrected the reason of the decision on the form of a name, and left "Beyond the request" with none.
   The status is `draft`
+- 2026-10-19T14:34:29Z [human] approved the spec. The status is `approved`
