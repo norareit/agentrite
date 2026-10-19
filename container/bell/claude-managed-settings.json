@@ -1,0 +1,6 @@
+{
+  "hooks": {
+    "Notification": [{ "hooks": [{ "type": "command", "command": "sh /etc/agentrite/bell/ring-bell.sh" }] }],
+    "Stop": [{ "hooks": [{ "type": "command", "command": "sh /etc/agentrite/bell/ring-bell.sh" }] }]
+  }
+}

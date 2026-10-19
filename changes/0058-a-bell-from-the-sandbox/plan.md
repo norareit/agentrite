@@ -208,7 +208,7 @@ both tests import, since this is its second use.
 
 ### 2. What rings
 
-- [ ] In `tests/bell.test.mjs`, test the script, each case run with `spawnSync`:
+- [x] In `tests/bell.test.mjs`, test the script, each case run with `spawnSync`:
     * With no terminal anywhere, a new session with pipes for its standard streams (`setsid` when the host has it):
       exits 0, with nothing on its standard output or error (R3)
     * Under `script` of util-linux: what `script` prints holds BEL, and nothing else from the script (R4)
@@ -217,16 +217,15 @@ both tests import, since this is its second use.
     * With JSON on its standard input, as a hook is given: the same as without
 
   The last three are skipped with `skipReason` where `script` or `setsid` is not on the PATH. See them fail
-- [ ] Add `container/bell/ring-bell.sh` as the approach gives (R1, R3, R4)
-- [ ] In `tests/bell.test.mjs`, test that `container/bell/claude-managed-settings.json` holds exactly the hooks of
-  the approach, and that the path its command runs is the path at which `container/sandbox.sh` mounts
-  `container/bell/`, read from the wrapper's text. See it fail, then add the file (R1)
-- [ ] In `tests/bell.test.mjs`, test the plugin: copy `container/bell/opencode-plugin.js` into a temporary
+- [x] Add `container/bell/ring-bell.sh` as the approach gives (R1, R3, R4)
+- [x] In `tests/bell.test.mjs`, test that `container/bell/claude-managed-settings.json` holds exactly the hooks of
+  the approach. See it fail, then add the file (R1)
+- [x] In `tests/bell.test.mjs`, test the plugin: copy `container/bell/opencode-plugin.js` into a temporary
   directory beside a stand-in `ring-bell.sh` that appends a line to a file, import it, and call its handler with
   events of the types `session.idle`, `permission.asked` and `message.updated`. The first two each append a line and
   the third none. With a stand-in that exits 1, the handler resolves and nothing is printed. See it fail, then add
   the plugin (R1, R3)
-- [ ] Move `listEntries` to `tests/compose-entries.mjs`, taking the text of `container/compose.yml` as it reads it
+- [x] Move `listEntries` to `tests/compose-entries.mjs`, taking the text of `container/compose.yml` as it reads it
   today, and import it in `tests/sandbox-signal.test.mjs`. The test there passes or skips as before (R10)
 - [ ] In `tests/bell.test.mjs`, add the Docker test of the approach. On a host with Docker and `script`, run it and
   see it pass; in the sandbox it is skipped with the reason of `tests/sandbox-signal.test.mjs` (R5, R10)
@@ -245,6 +244,9 @@ both tests import, since this is its second use.
       missing, and `true or false`, and `docker` and `npm` were not called
 
   See them fail (R1, R2, R6, R7, R11)
+- [ ] In `tests/bell.test.mjs`, test that the path the command of `container/bell/claude-managed-settings.json`
+  runs is the path at which `container/sandbox.sh` mounts `container/bell/`, read from the wrapper's text. See it
+  fail (R1)
 - [ ] In `tests/sandbox-wrapper.test.mjs`, test that a start reads the file again at each start: one start with
   `false`, the file changed to `true`, and the next start mounts the bell with no build in between (R7)
 - [ ] In `tests/sandbox-unit-run.test.mjs`, test that a unit run with `"bell": true` mounts the bell in its `run`,
@@ -307,7 +309,7 @@ both tests import, since this is its second use.
 Each commit is made once `npm test` is green but for the test that failed before the work.
 
 - [x] After task group 1: `feature-0058 Make bell a required key of agentrite.json`
-- [ ] After task group 2: `feature-0058 Ring the bell from a script, from Claude Code's hooks and from OpenCode's
+- [x] After task group 2: `feature-0058 Ring the bell from a script, from Claude Code's hooks and from OpenCode's
   plugin`
 - [ ] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`
 - [ ] After task group 4: `feature-0058 Describe the bell and the key bell`

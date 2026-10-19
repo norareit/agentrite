@@ -56,5 +56,15 @@ timestamp: 2026-10-19T15:47:39Z
   is done: `npm test` reports 699 tests, 697 passing, 1 skipped (the Docker test of
   `tests/sandbox-signal.test.mjs`) and 1 failing, unit 0054's R24 test, which failed before the work. The status is
   `in-progress`
+- 2026-10-19T19:35:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 2 but its last
+  task. Moved the part of the third task that reads the mount path of `container/bell/` from `container/sandbox.sh`
+  to task group 3, as a task of its own: the wrapper mounts nothing of the bell before group 3, so the test could
+  not pass at the commit point of group 2. The test of the script with no controlling terminal gives the script's
+  streams in a child shell that replaces itself with it, since a shell that redirects for a command it forks applies
+  the redirections to its own streams first, which hid the terminal from the walk; with the walk taken out of the
+  script, that test fails, and with it, it passes. The Docker test is added and is skipped in the sandbox, which has
+  no Docker; its quoting was checked with `script` and a stand-in for `docker run`, not with Docker. Its task stays
+  open until it has passed on a host with Docker. `npm test` reports 707 tests, 704 passing, 2 skipped (the two
+  Docker tests) and 1 failing, unit 0054's R24 test. The status is `in-progress`
 
 ## Amendments
