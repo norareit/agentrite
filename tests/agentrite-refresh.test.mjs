@@ -922,6 +922,92 @@ test('the list and the wrappers follow a changed roles.reviewer and a changed st
   }
 });
 
+// Unit 0056, R6: a wrapper of a role that is gone
+const EXTRA_ROLE_FILE = '---\ndescription: Reviews security.\n---\n\n# S\n';
+const WRAPPER_DIRS = ['.claude/agents', '.opencode/agents'];
+
+// Runs refresh on both harnesses and no sandbox, with the four roles and `extra`, a list of the names of roles of the
+// project's own, each with a file at `rules/<name>.md`.
+function refreshWithRoles(made, extra) {
+  const roles = { ...KIT_SETTINGS.roles };
+  for (const name of extra) {
+    made.write(`rules/${name}.md`, EXTRA_ROLE_FILE);
+    roles[name] = `rules/${name}.md`;
+  }
+  const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: false });
+  made.write('agentrite.json', JSON.stringify({ ...JSON.parse(text), roles }));
+  return made.run('refresh');
+}
+
+test('refresh removes the wrappers of a role taken out of roles, after the files and before the notices', (t) => {
+  const made = project(t);
+  assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
+  const pinned = made.read('.opencode/agents/security-reviewer.md').replace('\n---\n\n', '\nmodel: x/y\n---\n\n');
+  made.write('.opencode/agents/security-reviewer.md', pinned);
+
+  const result = refreshWithRoles(made, []);
+
+  assert.equal(result.status, 0, result.stderr);
+  for (const directory of WRAPPER_DIRS) {
+    assert.match(result.stdout, line('removed', `${directory}/security-reviewer.md`));
+    assert.ok(!exists(join(made.base, directory, 'security-reviewer.md')), directory);
+  }
+  const lines = result.stdout.split('\n');
+  const first = lines.findIndex((entry) => entry.startsWith('removed '));
+  assert.deepEqual(
+    lines.slice(first, first + 2),
+    WRAPPER_DIRS.map((directory) => `removed ${directory}/security-reviewer.md`),
+  );
+  assert.ok(lines.slice(0, first).every((entry) => /^(wrote|refreshed|up to date) /.test(entry)), result.stdout);
+  assert.equal(lines[first + 2], '', result.stdout);
+  const second = refreshWithRoles(made, []);
+  assert.doesNotMatch(second.stdout, /^removed /m);
+});
+
+test('a renamed role loses the wrappers of its old name and gets those of its new one', (t) => {
+  const made = project(t);
+  assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
+
+  const result = refreshWithRoles(made, ['security-checker']);
+
+  assert.match(result.stdout, line('removed', '.claude/agents/security-reviewer.md'));
+  assert.match(result.stdout, line('wrote', '.claude/agents/security-checker.md'));
+  assert.ok(!exists(join(made.base, '.claude/agents/security-reviewer.md')));
+  assert.ok(exists(join(made.base, '.opencode/agents/security-checker.md')));
+});
+
+test('refresh leaves an agent of the projects own, a link and a directory, and says nothing of them', (t) => {
+  const made = project(t);
+  for (const directory of WRAPPER_DIRS) {
+    made.write(`${directory}/ours.md`, '---\nname: ours\ndescription: Ours.\n---\n\n# Ours\n');
+    mkdirSync(join(made.base, directory, 'folder.md'));
+    symlinkSync('ours.md', join(made.base, directory, 'linked.md'));
+  }
+
+  const result = refreshWithRoles(made, []);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /removed|ours|folder|linked/);
+  for (const directory of WRAPPER_DIRS) {
+    assert.ok(exists(join(made.base, directory, 'ours.md')));
+    assert.ok(exists(join(made.base, directory, 'folder.md')));
+    assert.ok(exists(join(made.base, directory, 'linked.md')));
+  }
+});
+
+test('refresh leaves the wrappers of a harness that harnesses no longer names', (t) => {
+  const made = project(t);
+  assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
+  const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: false });
+  made.write('agentrite.json', text);
+
+  const result = made.run('refresh');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, line('removed', '.claude/agents/security-reviewer.md'));
+  assert.ok(exists(join(made.base, '.opencode/agents/security-reviewer.md')));
+});
+
 // R11, R12
 test('refresh judges CLAUDE.md and opencode.json against the standards the settings give', (t) => {
   const made = project(t);

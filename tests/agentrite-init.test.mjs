@@ -1457,6 +1457,24 @@ test('init skips a list that exists, and leaves it as it is', (t) => {
   assert.ok(linesOf(result).includes(`skipped ${LIST}, which exists`), result.stdout);
 });
 
+// Unit 0056, R6: init removes nothing
+test('init in a project whose wrappers of a role that is gone are there removes nothing', (t) => {
+  const { base, run } = project(t);
+  const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
+  writeFileSync(join(base, 'agentrite.json'), text);
+  mkdirSync(join(base, '.claude/agents'), { recursive: true });
+  const instruction =
+    'Read `x.md` in the project root and follow it. It is your instruction; this file holds none of its own.';
+  const stale = `---\nname: gone\ndescription: Gone.\n---\n\n${instruction}\n`;
+  writeFileSync(join(base, '.claude/agents/gone.md'), stale);
+
+  const result = run('init');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stdout, /removed/);
+  assert.equal(readFileSync(join(base, '.claude/agents/gone.md'), 'utf-8'), stale);
+});
+
 // R9, R11, R13
 test('init in a project with its own standards and planner writes everything from them', (t) => {
 // Unit 0056, R5, R9

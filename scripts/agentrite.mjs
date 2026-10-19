@@ -1,6 +1,15 @@
 #!/usr/bin/env node
 import { spawnSync } from 'node:child_process';
-import { chmodSync, lstatSync, mkdirSync, readdirSync, readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import {
+  chmodSync,
+  lstatSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { basename, dirname, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
@@ -23,7 +32,7 @@ import {
   readProjectFile,
 } from './agentrite-instructions.mjs';
 import { formattedLike } from './agentrite-json.mjs';
-import { HARNESS_NAMES, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, isKitWrapper, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -949,8 +958,32 @@ function refresh(root) {
     if (file.executable) chmodSync(absolute, 0o755);
     console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${file.path}`);
   }
+  removeStaleWrappers(root, harnesses, roles.map((role) => role.name));
   for (const notice of instructionNotices(root, harnesses, standards)) console.log(`\n${notice}`);
   return status;
+}
+
+/**
+ * Removes, from the wrapper directory of each of `harnesses`, the regular file `<name>.md` that holds the kit's
+ * wrapper body for a `<name>` that is not in `roleNames`, and prints `removed <path>` for each. A symbolic link, a
+ * directory and a file with another body, such as an agent of the project's own, are left and not mentioned.
+ *
+ * @param {string} root
+ * @param {string[]} harnesses
+ * @param {string[]} roleNames
+ */
+function removeStaleWrappers(root, harnesses, roleNames) {
+  for (const directory of wrapperDirectories(harnesses)) {
+    const absoluteDirectory = resolve(root, directory);
+    if (!exists(absoluteDirectory)) continue;
+    for (const entry of readdirSync(absoluteDirectory).sort()) {
+      if (!entry.endsWith('.md') || roleNames.includes(entry.slice(0, -'.md'.length))) continue;
+      const absolute = resolve(absoluteDirectory, entry);
+      if (kindOf(absolute) !== 'file' || !isKitWrapper(readFileSync(absolute, 'utf-8'))) continue;
+      rmSync(absolute);
+      console.log(`removed ${directory}/${entry}`);
+    }
+  }
 }
 
 /**

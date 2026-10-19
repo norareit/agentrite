@@ -130,6 +130,27 @@ function body(path) {
 }
 
 /**
+ * True when `text` is a wrapper as the kit writes it, whatever role, harness or path it names: front matter that is
+ * not looked into, so that a pinned model does not matter, then the body the kit writes for the path its first line
+ * names. A path that holds a space may be wrapped at it, so a line break in the path is read as a space.
+ *
+ * @param {string} text
+ * @returns {boolean}
+ */
+export function isKitWrapper(text) {
+  const lines = text.split(/\r?\n/);
+  if (lines[0] !== '---') return false;
+  const end = lines.indexOf('---', 1);
+  if (end === -1) return false;
+  const afterFrontMatter = lines.slice(end + 1).join('\n');
+  const opening = afterFrontMatter.indexOf('`');
+  const closing = afterFrontMatter.indexOf('`', opening + 1);
+  if (opening === -1 || closing === -1) return false;
+  const path = afterFrontMatter.slice(opening + 1, closing).replaceAll('\n', ' ');
+  return afterFrontMatter === `\n${body(path)}`;
+}
+
+/**
  * @param {Role} role
  * @returns {string}
  */

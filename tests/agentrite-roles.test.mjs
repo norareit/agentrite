@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import {
   harnessesWithAgent,
+  isKitWrapper,
   parseRoleDescription,
   plannedFiles,
   readRoles,
@@ -306,4 +307,48 @@ test('harnessesWithAgent gives both titles in order for plan and explore, and no
   assert.deepEqual(harnessesWithAgent('explore'), ['Claude Code', 'OpenCode']);
   assert.deepEqual(harnessesWithAgent('security-reviewer'), []);
   for (const name of ROLE_NAMES) assert.deepEqual(harnessesWithAgent(name), []);
+});
+
+// Unit 0056, R6: what a wrapper of the kit's is.
+
+const ROLE = { name: 'planner', path: 'roles/planner.md', description: 'Plans a unit.' };
+const wrappersOf = (role) => ['claude', 'opencode'].map((harness) => plannedFiles([harness], [role])[0].content);
+
+test('isKitWrapper is true for the wrapper of each harness, whatever path it names', () => {
+  const paths = [
+    'roles/planner.md',
+    'node_modules/@ritenoar/agent-kit/roles/planner.md',
+    `node_modules/${'a'.repeat(100)}/roles/planner.md`,
+    `rules/${'long '.repeat(24)}planner.md`,
+    'rules/our planner.md',
+  ];
+  for (const path of paths) {
+    for (const wrapper of wrappersOf({ ...ROLE, path })) assert.ok(isKitWrapper(wrapper), wrapper);
+  }
+});
+
+test('isKitWrapper is true with a pinned model in the front matter and with CRLF line ends', () => {
+  const [claude, opencode] = wrappersOf(ROLE);
+  assert.ok(isKitWrapper(claude.replace('\n---\n\n', '\nmodel: opus\n---\n\n')));
+  assert.ok(isKitWrapper(opencode.replace('\n---\n\n', '\nmodel: x/y\n---\n\n')));
+  assert.ok(isKitWrapper(claude.replaceAll('\n', '\r\n')));
+});
+
+test('isKitWrapper is false for a text that is not a wrapper of the kit', () => {
+  const [claude] = wrappersOf(ROLE);
+  const body = claude.slice(claude.lastIndexOf('---\n') + 4);
+  for (const text of [
+    body,
+    claude.replace('---\n\n', ''),
+    claude.replace('\n---\n\n', '\n\n'),
+    claude.replace('and follow it', 'and follow it now'),
+    claude.replace('Read `', 'Read the `'),
+    claude.replace('`roles/planner.md` in', '`roles/planner.md`\nin'),
+    claude.replace(' in the project root', ''),
+    `${claude}Our own line.\n`,
+    '---\nname: ours\ndescription: Our agent.\n---\n\n# Our agent\n',
+    '',
+  ]) {
+    assert.ok(!isKitWrapper(text), text);
+  }
 });

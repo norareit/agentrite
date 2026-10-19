@@ -186,13 +186,13 @@ change.
 
 ### 3. `refresh` removes the kit's wrapper of a role that is gone
 
-- [ ] In `tests/agentrite-roles.test.mjs`, test `isKitWrapper`: true for each wrapper `plannedFiles` gives, for
+- [x] In `tests/agentrite-roles.test.mjs`, test `isKitWrapper`: true for each wrapper `plannedFiles` gives, for
   either harness; for one with a pinned model in its front matter; for one with CRLF line ends; and for one whose
   body names another path, as `node_modules/@ritenoar/agent-kit/roles/planner.md`, a path long enough that the
   body wraps, or a path that holds a space where the body wraps. False for a text with no front matter, for one
   whose front matter is never closed, for a body with a word added, changed or wrapped otherwise, and for an agent
   of the project's own (R6)
-- [ ] In `tests/agentrite-refresh.test.mjs`, test end to end, with both harnesses: a project that ran `refresh`
+- [x] In `tests/agentrite-refresh.test.mjs`, test end to end, with both harnesses: a project that ran `refresh`
   with `security-reviewer` in `roles`, then took it out, runs `refresh` again, and its two wrappers are gone, with
   `removed .claude/agents/security-reviewer.md` and `removed .opencode/agents/security-reviewer.md` printed after
   the lines of the files and before the notices, also when one of them pins a model. A renamed role loses the
@@ -200,17 +200,17 @@ change.
   symbolic link and a directory named `<name>.md` there are left as they are and no line names them. A second
   `refresh` removes nothing and prints no `removed` line. The wrappers of a harness that `harnesses` no longer
   names are left (R6)
-- [ ] Test that `init` in the project of the last task removes nothing (R6, and the decision that `init` removes
+- [x] Test that `init` in the project of the last task removes nothing (R6, and the decision that `init` removes
   nothing)
-- [ ] Make the tests pass with `isKitWrapper` in `scripts/agentrite-roles.mjs` and `removeStaleWrappers` in
+- [x] Make the tests pass with `isKitWrapper` in `scripts/agentrite-roles.mjs` and `removeStaleWrappers` in
   `scripts/agentrite.mjs`, as "Approach" says (R6)
 
 ### 4. The kit's reviewer reads the files of the extra roles that worked on the unit
 
-- [ ] In `tests/package-documents.test.mjs`, beside the test of the reviewer's first paragraph, test that it says to
+- [x] In `tests/package-documents.test.mjs`, beside the test of the reviewer's first paragraph, test that it says to
   read the file of each other role that has an entry in the unit's `record.md`, by the path
   `.agentrite/instructions.md` names, and that the file of a role with no entry is not read (R10)
-- [ ] Change `roles/reviewer.md` as "Approach" says, wrapped at 120 characters (R10)
+- [x] Change `roles/reviewer.md` as "Approach" says, wrapped at 120 characters (R10)
 
 ### 5. The README
 
