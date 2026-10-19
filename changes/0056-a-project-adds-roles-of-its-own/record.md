@@ -57,3 +57,20 @@ timestamp: 2026-10-19T16:00:00Z
   `npm test` reported 679 tests, 679 passing, and `npm run check-changes` passed, both on the final tree. No line of a
   file the unit changes is over 120 characters, and none holds an em dash. The status stays `in-progress`, for the
   review
+- 2026-10-19T16:24:07Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0056 at
+  `1761dd03bc907a3b13d4bca78469d0d35d55611e`, a full review against merge base
+  `170527eed8203fbe5520d12da97e5d09e5e5ef66`. Returned S1, P1 and C1, saved in
+  `.reviews/0056-a-project-adds-roles-of-its-own/2026-10-19-full-1761dd0.md`. Independently ran `npm test`
+  (679 passed, none failed or skipped), `npm run check-changes` and the diff whitespace check, which passed;
+  confirmed `process.md` is unchanged. Could not verify pre-implementation test execution; did not run a link
+  checker or dispatch an actual harness. The status stays `in-progress`
+- 2026-10-19T17:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, applied the three findings of
+  `.reviews/0056-a-project-adds-roles-of-its-own/2026-10-19-full-1761dd0.md` in one commit. S1: `isKitWrapper` now
+  tries each backtick after the opening one as the end of the path, and its tests gained the paths `rules/a`b.md`
+  and `rules/`planner`.md`; with the old code that test fails (28 passed, 1 failed in
+  `tests/agentrite-roles.test.mjs`), with the new it passes. C1: the extra-role tests of `init` and `refresh` are
+  top-level siblings again and the original tests are whole; the `refresh` one runs alone by its exact name. P1:
+  added the two direct `readRoles` tests the plan names. Proposed for the human to decide: S1 and C1 are blocking
+  and are fixed as above, P1 does not block. `npm test` reported 681 tests, 681 passing, and
+  `npm run check-changes` passed, both after the last edit and before the commit of the fixes. Not checked: the
+  `init` extra-role test alone by name. The status stays `in-progress` until the human has decided the findings
