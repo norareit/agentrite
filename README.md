@@ -897,6 +897,14 @@ refused. The line, after `sandbox`, with `false` for a project that wants no bel
   "bell": true,
 ```
 
+A project whose sandbox image was built before the kit made the agent a member of the group `tty` builds it again
+once, for Claude Code in the sandbox to ring, since the wrapper does not build it again for a new kit. See "Claude
+Code in the sandbox does not ring the bell, while OpenCode does" in "When something goes wrong" of `SANDBOX.md`:
+
+```sh
+./sandbox.sh --in-place --rebuild
+```
+
 Then bring the kit's own files in the project up to date, from the project root:
 
 ```sh

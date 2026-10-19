@@ -613,6 +613,18 @@ Why: the kit checks no version of either harness. What it promises for no versio
 What to do, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that
 works in the project's `sandbox/compose.project.yml`.
 
+**Claude Code in the sandbox does not ring the bell, while OpenCode does.**
+
+Why: the image was built before the kit made the agent a member of the group `tty`, which Claude Code's hooks need
+to reach the session's terminal. The wrapper builds the image again when a harness version changes, and not for a
+new kit.
+
+What to do: build the image again, once:
+
+```sh
+./sandbox.sh --in-place --rebuild
+```
+
 **The container cannot reach the model of the local model server.**
 
 Why: the host is a Linux host whose firewall denies incoming traffic by default, `ufw` for example.

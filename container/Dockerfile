@@ -112,6 +112,11 @@ RUN mkdir -p /etc/opencode \
 # root, and the entrypoint's later drop from root to root is a no-op that leaves the
 # firewall capabilities in place. The sandbox needs an account that is actually
 # unprivileged, not one merely named "agent".
+#
+# The agent is a member of tty so that container/bell/ring-bell.sh can ring the bell
+# from a hook of Claude Code, which runs in a session of its own and reaches the
+# session's terminal only by its path. The terminal is root's, of the group tty with
+# mode 0620, so the group gives the agent the write to it and no read.
 RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
       echo "AGENT_UID/AGENT_GID must not be 0: the agent account would be root." >&2; \
       echo "Do not run sandbox.sh with sudo; add your user to the docker group instead." >&2; \
@@ -119,7 +124,7 @@ RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
     fi \
     && userdel -r node 2>/dev/null || true \
     && groupadd -o -g "${AGENT_GID}" agent \
-    && useradd -o -m -u "${AGENT_UID}" -g agent -s /bin/bash agent \
+    && useradd -o -m -u "${AGENT_UID}" -g agent -G tty -s /bin/bash agent \
     && mkdir -p /work \
     && chown "${AGENT_UID}:${AGENT_GID}" /work /home/agent
 

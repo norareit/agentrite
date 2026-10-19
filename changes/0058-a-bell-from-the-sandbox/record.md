@@ -143,5 +143,20 @@ timestamp: 2026-10-19T15:47:39Z
   image, so an image built before it rings nothing from Claude Code until `--rebuild`, which the plan has
   `SANDBOX.md` and `README.md` say. `spec.md` is unchanged, since every requirement still holds as written. The
   status is `in-progress`
+- 2026-10-19T20:26:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0058-a-bell-from-the-sandbox` at `9edbc57`, which commits the planner's change of `plan.md`, began task
+  group 5. The status is `in-progress`
+- 2026-10-19T20:29:01Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 5. The test that the
+  `useradd` of the agent gives it `-G tty` failed before the change of `container/Dockerfile` and passes now. The
+  Docker test of a process with no controlling terminal does not run the command the plan gives, `sh -c 'setsid sh
+  ring-bell.sh </dev/null >/dev/null 2>&1'`: traced in `node:26-bookworm`, the shell applies the redirections to its
+  own streams before it starts the script, so the walk finds `/dev/null` in its parent and no BEL comes out with the
+  group or without it, which the record logged at 19:35:28Z of the test of the script on the host. It runs the shape
+  of that test, `sh -c 'sh -c "exec setsid sh ring-bell.sh </dev/null >/dev/null 2>&1"; true'`, which gives BEL with
+  `--groups tty` and none with `--clear-groups`, the two cases the plan asks for. The entry of `SANDBOX.md` is after
+  "A version of a harness breaks something". `README.md` names no release in its paragraph, and says "before the kit
+  made the agent a member of the group `tty`". No line changed is over 120 characters and none holds an em dash. On
+  the host with Docker, `npm test` reports 724 tests, 723 passing, none skipped and 1 failing, unit 0054's R24 test.
+  The status is `in-progress`
 
 ## Amendments

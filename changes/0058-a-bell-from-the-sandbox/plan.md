@@ -315,26 +315,26 @@ both tests import, since this is its second use.
 
 ### 5. The terminal's group
 
-- [ ] In `tests/bell.test.mjs`, test that the `useradd` of the agent in `container/Dockerfile` gives it the
+- [x] In `tests/bell.test.mjs`, test that the `useradd` of the agent in `container/Dockerfile` gives it the
   supplementary group `tty`, read from the Dockerfile's text as the test of the hooks' path reads the wrapper's. See
   it fail (R1)
-- [ ] In `tests/bell.test.mjs`, beside the Docker test of R10 and skipped as it is, a Docker test of a process of the
+- [x] In `tests/bell.test.mjs`, beside the Docker test of R10 and skipped as it is, a Docker test of a process of the
   agent with no controlling terminal: under `script`, `docker run --rm -t --init` with the settings of that test and
   `container/bell/` mounted read-only at `/etc/agentrite/bell`, the command
   `setpriv --reuid=1000 --regid=1000 --groups tty -- sh -c 'setsid sh /etc/agentrite/bell/ring-bell.sh </dev/null
   >/dev/null 2>&1'` gives BEL in what `script` printed, and the same with `--clear-groups` in the place of
   `--groups tty` gives none. The second case holds that the group is what carries the bell, so that the test notices
   when a base image gives the terminal another owner or mode (R1, R5, R10)
-- [ ] Add `-G tty` to the `useradd` of the agent in `container/Dockerfile`, with a comment of why, and the sentence
+- [x] Add `-G tty` to the `useradd` of the agent in `container/Dockerfile`, with a comment of why, and the sentence
   of the approach to the head comment of `container/bell/ring-bell.sh` (R1, R5)
-- [ ] `SANDBOX.md`, "When something goes wrong": an entry, in bold what is seen, that Claude Code in the sandbox
+- [x] `SANDBOX.md`, "When something goes wrong": an entry, in bold what is seen, that Claude Code in the sandbox
   does not ring while OpenCode does; why, that the image was built before the kit made the agent a member of `tty`,
   which the hooks of Claude Code need to reach the terminal, and that the wrapper does not rebuild for a new kit;
   and what to do, `./sandbox.sh --in-place --rebuild` once. In "The bell", nothing else changes (R13)
-- [ ] `README.md`, "Updating a project to a newer kit": after the paragraph on `bell`, that the image of a project
+- [x] `README.md`, "Updating a project to a newer kit": after the paragraph on `bell`, that the image of a project
   whose sandbox was built before this release is built again once, with `./sandbox.sh --in-place --rebuild`, for
   Claude Code in the sandbox to ring, naming the entry of `SANDBOX.md` (R14)
-- [ ] Check every line changed against the limit of 120 characters, and that no em dash was written
+- [x] Check every line changed against the limit of 120 characters, and that no em dash was written
 
 ## Verification
 
@@ -370,6 +370,6 @@ Each commit is made once `npm test` is green but for the test that failed before
   plugin`
 - [x] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`
 - [x] After task group 4: `feature-0058 Describe the bell and the key bell`
-- [ ] After task group 5: `feature-0058 Make the agent a member of tty, so that Claude Code's hooks reach the
+- [x] After task group 5: `feature-0058 Make the agent a member of tty, so that Claude Code's hooks reach the
   terminal`
 - [ ] After the check by hand: `feature-0058 Log the check by hand of the bell`

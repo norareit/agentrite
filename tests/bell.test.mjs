@@ -164,6 +164,49 @@ test(
 );
 
 // R1
+test('the Dockerfile makes the agent a member of the group tty', () => {
+  const useradd = dockerfile.split('\n').find((line) => /\buseradd\b.* agent \\$/.test(line.trim()));
+  assert.ok(useradd, 'the Dockerfile adds the agent with useradd');
+  assert.match(useradd, / -G tty /);
+});
+
+// A hook of Claude Code runs in a session of its own, with no controlling terminal, and the script then writes to
+// the terminal by its path. The terminal is root's, and of the group tty with mode 0620, so the agent reaches it
+// only as a member of that group. The case without the group holds that the group is what carries the bell, so that
+// the test notices when a base image gives the terminal another owner or mode. The command is shaped as in the test
+// of the script with no controlling terminal above, so that the outer shell, whose streams are the terminal, is the
+// script's parent.
+test(
+  'with no controlling terminal, the agent rings the sandbox\'s terminal as a member of tty, and not without it',
+  {
+    skip: dockerLacking
+      ? 'needs Docker, which the host lacks. The sandbox holds no Docker, so run npm test on a host that has it'
+      : terminalSkip,
+  },
+  () => {
+    const image = /^FROM (\S+) AS base$/m.exec(dockerfile)?.[1];
+    assert.ok(image, 'the Dockerfile has a base stage');
+    const bell = new URL('../container/bell', import.meta.url).pathname;
+    const rings = (groups) => {
+      const run = [
+        'docker', 'run', '--rm', '--tty', '--init', '--read-only',
+        ...listEntries('cap_drop').flatMap((capability) => ['--cap-drop', capability]),
+        ...listEntries('cap_add').flatMap((capability) => ['--cap-add', capability]),
+        ...listEntries('security_opt').flatMap((option) => ['--security-opt', option]),
+        '--volume', `${bell}:/etc/agentrite/bell:ro`,
+        image,
+        'setpriv', '--reuid=1000', '--regid=1000', ...groups, '--',
+        'sh', '-c', 'sh -c "exec setsid sh /etc/agentrite/bell/ring-bell.sh </dev/null >/dev/null 2>&1"; true',
+      ];
+      return inTerminal(run.map(quoted).join(' ')).includes(BEL);
+    };
+
+    assert.equal(rings(['--groups', 'tty']), true);
+    assert.equal(rings(['--clear-groups']), false);
+  },
+);
+
+// R1
 test('the hooks and the plugin name the files where container/sandbox.sh mounts container/bell/', () => {
   const wrapper = readFileSync(new URL('../container/sandbox.sh', import.meta.url), 'utf-8');
   const mountPoint = /--volume "\$here\/bell:([^"]+):ro"/.exec(wrapper)?.[1];

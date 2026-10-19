@@ -10,6 +10,8 @@
 # still the terminal, so otherwise the script walks up its parents and writes to the
 # first terminal one of their standard streams is. The walk stops at pid 1 and at a
 # process whose streams it cannot read, which in the sandbox is every process of root.
+# It writes to that terminal by its path, which the agent may since the image makes it
+# a member of the group tty.
 #
 # It reads nothing of its standard input, which a hook of Claude Code fills with JSON,
 # prints nothing and always exits 0, so that no harness shows an error or output for it,
