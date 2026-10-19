@@ -86,7 +86,7 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
 
 - [x] `npm test` on the host, with Docker: every test passes, `tests/sandbox-signal.test.mjs` among them and not
   skipped
-- [ ] `./sandbox-dev.sh --in-place npm test`: every test passes, and `tests/sandbox-signal.test.mjs` is skipped with the
+- [x] `./sandbox-dev.sh --in-place npm test`: every test passes, and `tests/sandbox-signal.test.mjs` is skipped with the
   reason above
 - [x] For each of `./sandbox-dev.sh 0057 bash`, `./sandbox-dev.sh --in-place bash` and `./sandbox-dev.sh --workdir <a
   scratch directory> bash`, run in a terminal on the host: once the shell's prompt is
@@ -106,4 +106,4 @@ start-up check in `container/entrypoint.sh`, whose `/proc` check stays as it is,
 - [x] `bugfix-0057 Give the sandbox's init the capability to forward a signal to the agent`: the regression test,
   `container/compose.yml`, the comments of `container/entrypoint.sh` and `container/sandbox.sh`,
   `SANDBOX.md` and `CONTRIBUTING.md`, with the record's entries of the failing and the passing run
-- [ ] `bugfix-0057 Record the checks on the host`: the record's entries of the checks under "Verification"
+- [x] `bugfix-0057 Record the checks on the host`: the record's entries of the checks under "Verification"

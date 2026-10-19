@@ -71,3 +71,8 @@ timestamp: 2026-10-19T14:45:48Z
   reported 654 tests, 653 passed, 0 failed, 1 skipped; the pasted tail does not name the skipped test, so that it is
   `tests/sandbox-signal.test.mjs` is not checked. The box for that run in `plan.md` stays open, and so does the commit
   point of the checks
+- 2026-10-19T15:22:05Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, logged the human's run of
+  `./sandbox-dev.sh --in-place node --test tests/sandbox-signal.test.mjs`: one test, skipped with "needs Docker, which
+  the host lacks. The sandbox holds no Docker, so run npm test on a host that has it", so the one skipped test of the
+  run of `npm test` above is this one, as the plan expects. Every box of `plan.md` is ticked. The status stays
+  `in-progress`: the process sets `implemented` after the human has decided the review's findings
