@@ -48,3 +48,12 @@ timestamp: 2026-10-19T16:00:00Z
 - 2026-10-19T16:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
   branch at `4e1cc24`, from `roles/implementer.md` of the installed release. Read `spec.md`, `plan.md` and this
   record in full. The status is `in-progress`
+- 2026-10-19T17:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the five steps of the plan
+  in five commits, `047b877` to the README commit that follows `d4f88a2`, and ticked every box of `plan.md`. Changed
+  `spec.md` and `process.md` in none (`git diff 170527e -- process.md` is empty). Tests of step 3 and step 4 were
+  written before their code, but the shell was unavailable for a stretch and the red run of those new tests was not
+  observed, so that they failed before the code is not verified. Not checked: `README.md` links were not run through
+  a link checker. Where a Prettier run reformatted code the unit does not touch, those hunks were taken out again.
+  `npm test` reported 679 tests, 679 passing, and `npm run check-changes` passed, both on the final tree. No line of a
+  file the unit changes is over 120 characters, and none holds an em dash. The status stays `in-progress`, for the
+  review
