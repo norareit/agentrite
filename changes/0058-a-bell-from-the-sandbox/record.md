@@ -28,5 +28,11 @@ timestamp: 2026-10-19T15:47:39Z
   `spec.md`: the kit rings in the sandbox for both harnesses at the moments of the human's own hooks and plugin, a
   project turns it off with the optional key `bell`, which a start reads alone, and `init` and `config` write it.
   Removed the decision that the kit sets no bell, and the non-goal of OpenCode. The status is `draft`
+- 2026-10-19T18:53:01Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's question whether
+  every other key of `agentrite.json` is not required. The specifier agreed that the optional key went against the
+  decision of unit 0054 to keep every key required, and that a misspelled key would go unnoticed; the human decided
+  that `bell` is required. Changed `spec.md`: requirements 6 to 8 make `bell` required, and a start refuses a file
+  that lacks it; requirements 1, 11, 13 and 14 follow; the decision on the first optional key is replaced by one on
+  a required key, and one on the default the written file gives. The status is `draft`
 
 ## Amendments

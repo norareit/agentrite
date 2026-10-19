@@ -41,7 +41,8 @@ it does not know is ignored.
 
 When the sandbox rings:
 
-1. In the sandbox, with nothing set, the harness rings the bell of the terminal the sandbox was started from:
+1. In the sandbox, with `"bell": true` in `agentrite.json`, the harness rings the bell of the terminal the sandbox
+   was started from:
     * Claude Code, at each `Notification` and at each `Stop`, the moments of its hooks of those names
     * OpenCode, each time a session goes idle and each time it asks for a permission
 2. That holds in every project, for every home volume, a new one included, and needs nothing in the home volume or
@@ -56,16 +57,16 @@ When the sandbox rings:
 
 Turning it off:
 
-6. `agentrite.json` takes a key `bell`, which holds `true` or `false`. With `false`, nothing of requirement 1 is set
-   in the sandbox, and the harnesses ring only as they would with no kit. With `true`, or with no key `bell`, the
-   sandbox rings as requirement 1 says
+6. `agentrite.json` holds a key `bell`, which is required, as every other key of the file is, and holds `true` or
+   `false`. With `true`, the sandbox rings as requirement 1 says. With `false`, nothing of requirement 1 is set in the
+   sandbox, and the harnesses ring only as they would with no kit
 7. A start reads the key from the `agentrite.json` of the checkout the command is run from, at each start, so that a
-   change to it holds at the next start with no rebuild. A start with no `agentrite.json`, or with one that is not a
-   JSON object, rings, as it starts today whatever the file holds. A start whose file holds a `bell` that is neither
-   `true` nor `false` is refused, with a message that names the file, the key, what it holds and what it must hold,
-   and starts nothing
-8. Every command of the kit that judges `agentrite.json` judges `bell` as requirement 6 says, refuses a file whose
-   `bell` holds anything else as it refuses any key at fault, and takes a file with no `bell` as it takes one today
+   change to it holds at the next start with no rebuild. A start whose file is missing, is not a JSON object, lacks
+   `bell`, or holds a `bell` that is neither `true` nor `false`, is refused, with a message that names the file, the
+   key, what it holds or that it is missing, and what it must hold, and starts nothing. A start judges no other key
+   of the file
+8. Every command of the kit that judges `agentrite.json` judges `bell` as requirement 6 says, and refuses a file that
+   lacks it, or whose `bell` holds anything else, as it refuses any key at fault
 9. The default `agentrite.json` that `init` and `config` write holds `"bell": true`, after `sandbox`. `init` with
    arguments writes it too. No command adds the key to a file that exists
 
@@ -74,8 +75,8 @@ Tests:
 10. The suite holds a test that starts a container with the kit's settings, in a pseudo-terminal, has a process of
     the agent's user write a bell to `/dev/tty`, and finds the bell in what comes out on the host's side. Where Docker
     is not available, it is skipped as the suite's other tests that need Docker are
-11. The suite tests requirements 6 to 9 for each value of `bell`: present and `true`, present and `false`, absent, and
-    one of each other JSON type
+11. The suite tests requirements 6 to 9 for each value of `bell`: `true`, `false`, absent, and one of each other JSON
+    type
 12. The implementer checks by hand, in a sandbox started in a tmux pane on the host, that each harness rings at the
     moments of requirement 1, with nothing in the home volume, and that with `"bell": false` neither rings. The
     check is logged in `record.md`, with the version of each harness
@@ -83,7 +84,8 @@ Tests:
 The documents:
 
 13. `SANDBOX.md` has a section on the bell, beside "The status line", which says:
-    * when each harness rings, and that it rings with nothing to set
+    * when each harness rings, and that it rings in every project whose `agentrite.json` holds `"bell": true`,
+      which `init` and `config` write, with nothing to set in the home volume or on the host
     * that the bell reaches the host's terminal, and through it tmux, which marks the window
     * that the host's own hooks, plugins and settings of a bell do not hold in the sandbox, and that a hook that calls
       `tmux` cannot work there, since tmux runs on the host
@@ -93,7 +95,7 @@ The documents:
       Claude Code may ignore the kit's, as "The status line" says of the status line, and then rings as that policy
       says
 14. `README.md` describes the key `bell` where it describes the keys of `agentrite.json`: what it holds, that it is
-    optional and `true` when absent, that it is read at each start of the sandbox, and that it has no effect outside
+    required, that it is read at each start of the sandbox, and that it has no effect outside
     the sandbox
 
 ## Decisions
@@ -105,13 +107,19 @@ The documents:
 * **A project turns it off in `agentrite.json`.** The human chose a setting of the project over a variable of the
   developer's environment. It is committed, so it holds for every developer of the project and in every checkout, and
   it is where a project's other settings for the kit already are
-* **`bell` is the first optional key.** Every other key is required, and a project that upgrades would otherwise be
-  refused until it adds a key whose value is the default. With no key, the sandbox rings, which is the default. `init`
-  and `config` write it all the same, so that a new project sees that the bell can be turned off and how
+* **`bell` is required.** The human decided this while the spec was a draft, in the place of an optional key that
+  meant `true` when absent. It is unit 0045's "Nothing is implicit", which unit 0054 kept: every setting a project
+  works by is in its `agentrite.json`, and nothing holds because a key is absent. It also keeps a misspelled key
+  from going unnoticed: the kit ignores a key it does not know, and a `bel` would be ignored while the bell rang,
+  where now the missing `bell` is refused. The cost, accepted: an existing project's `agentrite.json` is refused by
+  every command that reads it, and every start of its sandbox, until the key is added, which the release notes say,
+  with the line to add. Rejected: an optional key, which needs no change of an existing project
+* **The default is on, through the file that `init` and `config` write.** `"bell": true` in the default file is how
+  a new project rings with no setting up, and shows where the bell is turned off
 * **A start reads only `bell`.** The sandbox starts today whatever `agentrite.json` holds, and reads the file only to
   cut a unit's branch. A start is not refused for another key at fault because of this unit. A `bell` it cannot read
   is refused rather than taken as either value, since either guess would ring or be silent against what the file
-  says
+  says, or against what it would say once the key is added
 * **The kit rings at the moments of the human's own hooks and plugin.** For Claude Code, `Notification` is when it
   needs the developer and `Stop` is when it has finished; for OpenCode, an idle session and a permission asked are
   the same two. Rejected: Claude Code's own setting `preferredNotifChannel` with the value `"terminal_bell"`, which
