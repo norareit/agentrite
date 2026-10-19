@@ -21,6 +21,9 @@ The work is in four steps, each a commit of its own:
    or done, and with `true` mounts the files of step 2 and gives OpenCode the plugin (R1 to R3, R6, R7, R11)
 4. **The documents** (R13, R14, and `CONTRIBUTING.md` and the comments that the unit makes untrue)
 
+5. **The terminal's group.** The image makes the agent a member of the group `tty`, so that the script can write to
+   the session's terminal from a hook of Claude Code, which has no controlling terminal (R1, R5)
+
 Last comes the check by hand (R12), which the implementer does on the host with the human, in tmux.
 
 ### Decided here, so that the implementer does not re-derive it
@@ -64,6 +67,29 @@ its tests run on any host. It writes the one byte BEL, `printf '\a'`, and nothin
 Every error of a write, a `readlink` and a read of `/proc` goes to `/dev/null`. It reads nothing from its standard
 input, which a hook of Claude Code fills with JSON, prints nothing and always exits 0, so that no harness shows an
 error or output for it (R3). A comment says why the walk is there.
+
+**The terminal's group, `container/Dockerfile` (R1, R5).** Found on `f1c7a18`, after the check by hand: Claude Code
+2.1.303 runs a hook in a session of its own, with sockets and files for its standard streams, so `/dev/tty` does not
+open and the walk of step 2 finds the terminal in Claude Code's standard input, `/dev/pts/0`. In the container that
+terminal is `root:tty` with mode `0620`, so the agent, which is in no group but `agent`, is refused the write, and
+the script stays silent as it is meant to. The agent writes to `/dev/tty` itself, which is how the Docker test of R10
+and the check in the sandbox's shell passed. Shown on the host, in the image `ritenoar-agentrite-sandbox-dev` of
+that commit with `claude -p` under `script` and a `SessionStart` hook in a drop-in that runs the script: no BEL
+comes out with the agent as it is, and one does once the agent is in `tty`. OpenCode's plugin spawns the script
+with OpenCode's controlling terminal, so OpenCode does not need it.
+
+* The `useradd` of the agent gets `-G tty`. The entrypoint drops to the agent with `setpriv --init-groups`, and
+  `--connect` with `docker exec --user agent`, and both take the agent's groups from `/etc/group`, so the session's
+  terminal and the one `--connect` opens are both writable by the agent. A comment beside it says why
+* The group gives the write that `0620` gives a group, not a read, and only on the terminals of the container's own
+  `devpts`, which are the sandbox's sessions, all of them the agent's already
+* The membership is in the image, as the entrypoint is, so an image built before this unit rings nothing from Claude
+  Code until it is built again with `--rebuild`. The wrapper rebuilds only when a harness version changes, and does
+  not see a change of the kit. `README.md` says so in "Updating a project to a newer kit", and `SANDBOX.md` has the
+  failure in "When something goes wrong", since the developer recovers from it by doing something
+* The script itself does not change, apart from its head comment, which says that the walk writes to the terminal
+  by its path, which the agent may since it is in `tty`
+* With `"bell": false` the membership stays. It sets nothing of R1: no hook and no plugin is given, so nothing rings
 
 **The hooks, `container/bell/claude-managed-settings.json` (R1).** Exactly:
 
@@ -158,7 +184,8 @@ both tests import, since this is its second use.
 - `scripts/agentrite.mjs`: `settingsToWrite` writes `bell` from the template
 - `templates/project/agentrite.json`: `"bell": true`
 - `agentrite.json`: `"bell": true`
-- `container/bell/ring-bell.sh`: new, the script
+- `container/bell/ring-bell.sh`: new, the script; later its head comment on the group `tty`
+- `container/Dockerfile`: the agent in the group `tty`, with its comment
 - `container/bell/claude-managed-settings.json`: new, Claude Code's hooks
 - `container/bell/opencode-plugin.js`: new, OpenCode's plugin
 - `container/sandbox.sh`: reads `bell` at a start, mounts and gives the bell, the header comment
@@ -172,7 +199,8 @@ both tests import, since this is its second use.
 - `tests/check-changes.test.mjs`, `tests/sandbox-update.test.mjs`, `tests/settings-update.test.mjs`,
   `tests/sandbox-unit-run.test.mjs`, `tests/sandbox-dev.test.mjs`: the fixtures, and the calls that change with them
 - `tests/sandbox-wrapper.test.mjs`: the fixture, and the start for each value of `bell`
-- `tests/bell.test.mjs`: new, the script, the plugin, the hooks file, and the Docker test
+- `tests/bell.test.mjs`: new, the script, the plugin, the hooks file, and the Docker test; later the agent's group
+  `tty` in the Dockerfile, and the Docker test of a process with no controlling terminal
 - `tests/compose-entries.mjs`: new, `listEntries` moved out of `tests/sandbox-signal.test.mjs`
 - `tests/sandbox-signal.test.mjs`: imports `listEntries`
 - `SANDBOX.md`: the section "The bell"
@@ -285,6 +313,29 @@ both tests import, since this is its second use.
   host without `script` of util-linux skips the tests of the script that need a terminal (R10)
 - [x] Check every line changed against the limit of 120 characters, and that no em dash was written (R13, R14)
 
+### 5. The terminal's group
+
+- [ ] In `tests/bell.test.mjs`, test that the `useradd` of the agent in `container/Dockerfile` gives it the
+  supplementary group `tty`, read from the Dockerfile's text as the test of the hooks' path reads the wrapper's. See
+  it fail (R1)
+- [ ] In `tests/bell.test.mjs`, beside the Docker test of R10 and skipped as it is, a Docker test of a process of the
+  agent with no controlling terminal: under `script`, `docker run --rm -t --init` with the settings of that test and
+  `container/bell/` mounted read-only at `/etc/agentrite/bell`, the command
+  `setpriv --reuid=1000 --regid=1000 --groups tty -- sh -c 'setsid sh /etc/agentrite/bell/ring-bell.sh </dev/null
+  >/dev/null 2>&1'` gives BEL in what `script` printed, and the same with `--clear-groups` in the place of
+  `--groups tty` gives none. The second case holds that the group is what carries the bell, so that the test notices
+  when a base image gives the terminal another owner or mode (R1, R5, R10)
+- [ ] Add `-G tty` to the `useradd` of the agent in `container/Dockerfile`, with a comment of why, and the sentence
+  of the approach to the head comment of `container/bell/ring-bell.sh` (R1, R5)
+- [ ] `SANDBOX.md`, "When something goes wrong": an entry, in bold what is seen, that Claude Code in the sandbox
+  does not ring while OpenCode does; why, that the image was built before the kit made the agent a member of `tty`,
+  which the hooks of Claude Code need to reach the terminal, and that the wrapper does not rebuild for a new kit;
+  and what to do, `./sandbox.sh --in-place --rebuild` once. In "The bell", nothing else changes (R13)
+- [ ] `README.md`, "Updating a project to a newer kit": after the paragraph on `bell`, that the image of a project
+  whose sandbox was built before this release is built again once, with `./sandbox.sh --in-place --rebuild`, for
+  Claude Code in the sandbox to ring, naming the entry of `SANDBOX.md` (R14)
+- [ ] Check every line changed against the limit of 120 characters, and that no em dash was written
+
 ## Verification
 
 - [x] `npm test` in the sandbox: all green but unit 0054's R24 test, which failed before the work, and the skips the
@@ -292,8 +343,14 @@ both tests import, since this is its second use.
 - [x] `npm test` on the host with Docker: the Docker test passes (R5, R10)
 - [x] `npm run check-changes` passes, on the committed work, and `spec.md` is unchanged
 - [x] `npm pack --dry-run` lists the three files of `container/bell/` (R2)
+- [ ] After task group 5, `npm test` in the sandbox, and on the host with Docker, where both Docker tests of the
+  bell pass: all green but unit 0054's R24 test (R5, R10)
 - [ ] The check by hand of R12, on the host in a tmux pane, with `./sandbox-dev.sh --in-place`, whose
-  `agentrite.json` holds `"bell": true`. First confirm that the home volume holds no bell: no `hooks` in
+  `agentrite.json` holds `"bell": true`, the image built again first with `./sandbox-dev.sh --in-place --rebuild`
+  after task group 5, and `id` in the sandbox naming the group `tty`. In Claude Code, `/status` names
+  `Enterprise managed settings (file + drop-ins)`; `/hooks` in 2.1.303 listed none of the managed hooks while they
+  ran in the image, so it is not taken as evidence either way. First confirm that the home volume holds no bell: no
+  `hooks` in
   `~/.claude/settings.json` and nothing in `~/.config/opencode/plugins/`. Then, from another tmux window each time:
     * Claude Code rings when it asks for a permission and when it ends a turn, with the host's
       `~/.claude/statusline-command.sh` there and again with it moved away, which holds the drop-in without
@@ -313,4 +370,6 @@ Each commit is made once `npm test` is green but for the test that failed before
   plugin`
 - [x] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`
 - [x] After task group 4: `feature-0058 Describe the bell and the key bell`
+- [ ] After task group 5: `feature-0058 Make the agent a member of tty, so that Claude Code's hooks reach the
+  terminal`
 - [ ] After the check by hand: `feature-0058 Log the check by hand of the bell`

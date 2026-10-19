@@ -128,5 +128,20 @@ timestamp: 2026-10-19T15:47:39Z
   for that version, and the plan goes back to the planner. Stopped there, as the plan says, and worked nothing around.
   Not done: Claude Code with the status line moved away, OpenCode, and the starts with `"bell": false`. The check by
   hand and its commit point stay open. The status is `in-progress`
+- 2026-10-19T20:20:22Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  `feature-0058-a-bell-from-the-sandbox` at `f1c7a18`, on the human's request to find a way for the hooks to ring in
+  Claude Code in the sandbox. The drop-in loads: the human's `/status` in the sandbox names
+  `Enterprise managed settings (file + drop-ins)` and no skipped source. In the image `ritenoar-agentrite-sandbox-dev`,
+  as the agent and not logged in, a `SessionStart` hook of a drop-in ran with the drop-in mounted beside the status
+  line's `managed-settings.json`, mounted alone, owned by root, and as hooks in `managed-settings.json` itself. What
+  fails is the write: Claude Code runs a hook in a session of its own, with no controlling terminal, so `/dev/tty`
+  does not open, and the walk of the script finds Claude Code's terminal `/dev/pts/0`, which is `root:tty` with mode
+  `0620`, and the agent may not write to it. Under `script`, with a hook that runs `container/bell/ring-bell.sh`, no
+  BEL came out, and one did with the agent added to the group `tty`. Why `/hooks` listed no hook was not
+  established; it is not the cause. Changed `plan.md`: the approach on the terminal's group, the files, task group
+  5 with its commit point, `npm test` after it, and the check by hand after a rebuild. The membership is in the
+  image, so an image built before it rings nothing from Claude Code until `--rebuild`, which the plan has
+  `SANDBOX.md` and `README.md` say. `spec.md` is unchanged, since every requirement still holds as written. The
+  status is `in-progress`
 
 ## Amendments
