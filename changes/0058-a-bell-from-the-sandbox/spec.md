@@ -2,19 +2,27 @@
 
 ## Context
 
-The human has Claude Code ring the terminal's bell when it needs them or stops, and uses it in tmux, which marks the
-window whose pane rang. On the host it is two hooks in `~/.claude/settings.json`, on `Notification` and on `Stop`,
-that run a script `~/.local/bin/ring-bell`. The script exits unless `TMUX_PANE` is set, and writes the bell to the
-pane's terminal, which it asks `tmux display` for. The human asked whether it works inside the sandbox, and how it
-can be made to.
+The human has Claude Code and OpenCode ring the terminal's bell when they need them or stop, and uses it in tmux,
+which marks the window whose pane rang. On the host it is done by files of their own:
 
-It does not work today, and nothing of it is the kit's doing:
+* Claude Code: two hooks in `~/.claude/settings.json`, on `Notification` and on `Stop`, that run a script
+  `~/.local/bin/ring-bell`
+* OpenCode: a plugin `~/.config/opencode/plugins/ring-bell.js`, which runs the same script at the events
+  `session.idle` and `permission.asked`, and at `permission.updated`, the older name of the latter
+* The script exits unless `TMUX_PANE` is set, and writes the bell to the pane's terminal, which it asks
+  `tmux display` for
 
-* Claude Code in the sandbox reads its user settings from `~/.claude/settings.json` of the home volume, and not the
-  host's. The hooks are not there. That is on purpose: "The status line" of `SANDBOX.md` says that the host's
-  credentials, settings and history stay on the host
+The human asked that the bell work inside the sandbox, for both harnesses, with nothing to set up per project.
+
+It does not work today:
+
+* Claude Code and OpenCode in the sandbox read their user settings and plugins from the home volume, and not the
+  host's. The hooks and the plugin are not there. That is on purpose: "The status line" of `SANDBOX.md` says that the
+  host's credentials, settings and history stay on the host
 * The script needs tmux and `TMUX_PANE`, and the sandbox has neither. tmux runs on the host, around the terminal
   that `docker compose run` is attached to
+* A developer could set a bell in the home volume, but each project has a volume of its own, so it would be set
+  once per project, and again for each new volume
 
 What does reach the host is a bell written to the sandbox's terminal. The specifier showed it on the human's host
 on 2026-10-19: a process of another user than root, in a container of the sandbox's image and of the sandbox's
@@ -22,59 +30,107 @@ settings, started with `docker compose run` in a pseudo-terminal, wrote `x`, a b
 three bytes came out on the host's side unchanged. tmux marks a window on a bell that reaches its pane, whatever
 wrote it.
 
-Claude Code can ring the bell itself. Its documentation of 2026-10-19, "Get a terminal bell or notification" at
-`https://code.claude.com/docs/en/terminal-config`, says that it fires a notification when it finishes a task or
-pauses for a permission prompt and the developer appears to be away, and that the setting `preferredNotifChannel`
-with the value `"terminal_bell"` in `~/.claude/settings.json` makes it ring the bell. A hook on `Notification` or on
-`Stop` that writes a bell to the terminal does the same at the moments the hook fires.
+The kit already gives the sandbox a developer's setting of Claude Code at each start, without the home volume: the
+status line, through managed settings that the wrapper mounts read-only. OpenCode reads a configuration of the kit's
+from the image, whose path `OPENCODE_CONFIG` names, and loads plugins.
 
-So a developer gets the bell in the sandbox by setting it in the sandbox, once per home volume, as the login is. What
-is missing is that `SANDBOX.md` says so.
+A project's settings for the kit are in its `agentrite.json`. Today every key the kit knows is required, and a key
+it does not know is ignored.
 
 ## Requirements
 
-1. A bell that a process of the agent writes to its terminal in the sandbox reaches the terminal the sandbox was
-   started from, unchanged, in every form of `./sandbox.sh` that starts a container, and in `./sandbox-dev.sh`
-2. The suite holds a test that starts a container with the kit's settings, in a pseudo-terminal, has a process of
-   the agent's user write a bell to `/dev/tty`, and finds the bell in what comes out on the host's side. Where Docker
-   is not available, it is skipped as the suite's other tests that need Docker are
-3. `SANDBOX.md` has a section on getting a bell from Claude Code in the sandbox, beside "The status line", which
-   says:
-    * that Claude Code in the sandbox does not read the host's `~/.claude/settings.json`, so a host's hooks and
-      notification setting do not hold there, and a hook that calls `tmux` cannot work there, since tmux runs on
-      the host
-    * that a bell written in the sandbox reaches the host's terminal, and through it tmux, which marks the window
-    * the two ways to have one, each as the text to put in the home volume's `~/.claude/settings.json`: the setting
-      `"preferredNotifChannel": "terminal_bell"`, with when Claude Code rings by it; and hooks on `Notification` and
-      on `Stop` whose command writes a bell to `/dev/tty`, which ring each time the hook fires
-    * that the setting is kept in the home volume, as the login is, so it is made once per home volume and is gone
-      when the volume is removed
-4. The hooks that section gives ring the host's terminal from a session of Claude Code in the sandbox, at a
-   `Notification` and at a `Stop`. The implementer checks it by hand in a sandbox, in a tmux pane on the host, and
-   logs it in `record.md`, with the version of Claude Code
+When the sandbox rings:
+
+1. In the sandbox, with nothing set, the harness rings the bell of the terminal the sandbox was started from:
+    * Claude Code, at each `Notification` and at each `Stop`, the moments of its hooks of those names
+    * OpenCode, each time a session goes idle and each time it asks for a permission
+2. That holds in every project, for every home volume, a new one included, and needs nothing in the home volume or
+   on the host besides the kit and the project's files
+3. It holds in every form of `./sandbox.sh` that starts a session with a terminal, and in `./sandbox-dev.sh`. A run
+   with no terminal, as `agentrite run --headless`, rings nothing, and the harness shows no error and no output for
+   it
+4. The bell is the one byte BEL, written to the session's terminal, and nothing else: no text, no other escape
+   sequence. A bell that the developer sets themselves in the home volume rings besides, and is not removed
+5. A bell that a process of the agent writes to its terminal in the sandbox reaches the terminal the sandbox was
+   started from, unchanged
+
+Turning it off:
+
+6. `agentrite.json` takes a key `bell`, which holds `true` or `false`. With `false`, nothing of requirement 1 is set
+   in the sandbox, and the harnesses ring only as they would with no kit. With `true`, or with no key `bell`, the
+   sandbox rings as requirement 1 says
+7. A start reads the key from the `agentrite.json` of the checkout the command is run from, at each start, so that a
+   change to it holds at the next start with no rebuild. A start with no `agentrite.json`, or with one that is not a
+   JSON object, rings, as it starts today whatever the file holds. A start whose file holds a `bell` that is neither
+   `true` nor `false` is refused, with a message that names the file, the key, what it holds and what it must hold,
+   and starts nothing
+8. Every command of the kit that judges `agentrite.json` judges `bell` as requirement 6 says, refuses a file whose
+   `bell` holds anything else as it refuses any key at fault, and takes a file with no `bell` as it takes one today
+9. The default `agentrite.json` that `init` and `config` write holds `"bell": true`, after `sandbox`. `init` with
+   arguments writes it too. No command adds the key to a file that exists
+
+Tests:
+
+10. The suite holds a test that starts a container with the kit's settings, in a pseudo-terminal, has a process of
+    the agent's user write a bell to `/dev/tty`, and finds the bell in what comes out on the host's side. Where Docker
+    is not available, it is skipped as the suite's other tests that need Docker are
+11. The suite tests requirements 6 to 9 for each value of `bell`: present and `true`, present and `false`, absent, and
+    one of each other JSON type
+12. The implementer checks by hand, in a sandbox started in a tmux pane on the host, that each harness rings at the
+    moments of requirement 1, with nothing in the home volume, and that with `"bell": false` neither rings. The
+    check is logged in `record.md`, with the version of each harness
+
+The documents:
+
+13. `SANDBOX.md` has a section on the bell, beside "The status line", which says:
+    * when each harness rings, and that it rings with nothing to set
+    * that the bell reaches the host's terminal, and through it tmux, which marks the window
+    * that the host's own hooks, plugins and settings of a bell do not hold in the sandbox, and that a hook that calls
+      `tmux` cannot work there, since tmux runs on the host
+    * how a project turns it off, with `"bell": false` in `agentrite.json`, and that it holds from the next start
+    * that a bell the developer sets in the home volume rings besides
+    * that when the developer's organization delivers managed settings of Claude Code from the claude.ai console,
+      Claude Code may ignore the kit's, as "The status line" says of the status line, and then rings as that policy
+      says
+14. `README.md` describes the key `bell` where it describes the keys of `agentrite.json`: what it holds, that it is
+    optional and `true` when absent, that it is read at each start of the sandbox, and that it has no effect outside
+    the sandbox
 
 ## Decisions
 
-* **The kit sets no bell, and documents how a developer sets one.** A bell is a developer's taste, as the status line
-  is, and the sandbox already keeps a developer's settings of Claude Code in its home volume, where the theme is.
-  Rejected: the bell in the kit's managed settings, which stand above every other setting, so that every developer
-  of every project gets it and cannot turn it off. Rejected as well: carrying the host's hooks into the sandbox,
-  which reads the host's settings that the sandbox keeps out on purpose, and whose commands, as the human's, may
-  call what is only on the host
-* **Both ways are given.** The setting rings when Claude Code judges the developer away, and the hooks ring at
-  every `Notification` and `Stop`, which is what the human has on the host. Which a developer wants differs
-* **A test keeps the bell passing through.** `SANDBOX.md` promises it, and it rests on how the sandbox attaches its
-  terminal, which a later unit may change. The test is the one place that would notice
-* **The check that Claude Code rings by the hooks is by hand.** It needs a logged-in Claude Code in a session, which
-  the suite has not. The passing of the bell that the check rests on is tested by requirement 2
+* **The bell is on by default.** The human wants it to need no setting up. A bell when the harness waits for the
+  developer is what a developer at a terminal wants of a session they are not watching, and a terminal that does not
+  want bells mutes them for every program at once. Rejected: an opt-in, which leaves every developer to find the
+  setting first; and a bell set once per home volume, which is once per project and again for each new volume
+* **A project turns it off in `agentrite.json`.** The human chose a setting of the project over a variable of the
+  developer's environment. It is committed, so it holds for every developer of the project and in every checkout, and
+  it is where a project's other settings for the kit already are
+* **`bell` is the first optional key.** Every other key is required, and a project that upgrades would otherwise be
+  refused until it adds a key whose value is the default. With no key, the sandbox rings, which is the default. `init`
+  and `config` write it all the same, so that a new project sees that the bell can be turned off and how
+* **A start reads only `bell`.** The sandbox starts today whatever `agentrite.json` holds, and reads the file only to
+  cut a unit's branch. A start is not refused for another key at fault because of this unit. A `bell` it cannot read
+  is refused rather than taken as either value, since either guess would ring or be silent against what the file
+  says
+* **The kit rings at the moments of the human's own hooks and plugin.** For Claude Code, `Notification` is when it
+  needs the developer and `Stop` is when it has finished; for OpenCode, an idle session and a permission asked are
+  the same two. Rejected: Claude Code's own setting `preferredNotifChannel` with the value `"terminal_bell"`, which
+  its documentation says rings only when Claude Code judges the developer away, and which OpenCode has nothing like
+* **The kit rings in the sandbox, and not on the host.** The host's harnesses are the developer's, and the kit
+  changes nothing of their configuration. `bell` has no effect outside the sandbox
+* **A test keeps the bell passing through.** The bell rests on how the sandbox attaches its terminal, which a later
+  unit may change. The test is the one place that would notice
+* **The check that the harnesses ring is by hand.** It needs a logged-in session of each harness, which the suite has
+  not. The passing of the bell that the check rests on is tested by requirement 10
 
 ## Non-goals
 
-* OpenCode's notifications. The human asked for Claude Code
-* A bell from `agentrite run --headless`, which has no terminal of a session
-* Changing the host's hooks or the `ring-bell` script, which are the human's and not the kit's
-* A desktop notification through an escape sequence of the terminal, which Claude Code sends by itself in some
-  terminals and which passes through as the bell does
+* A desktop notification, or any signal other than the bell
+* A setting of the bell per developer, apart from the one of the project. A developer who wants no bell in a project
+  that rings mutes it in their terminal or in tmux
+* A setting of when the harnesses ring, other than on or off
+* Changing the host's hooks, plugin or the `ring-bell` script, which are the human's and not the kit's
+* `CHANGELOG.md`, which is written when the release is made
 
 ## Beyond the request
 

@@ -18,5 +18,15 @@ timestamp: 2026-10-19T15:47:39Z
   started with `docker compose run`, comes out on the host's side unchanged. Did not check Claude Code's own bell
   or a hook inside a sandbox, which needs a logged-in session; requirement 4 has the implementer check it. Wrote
   `spec.md`. The status is `draft`
+- 2026-10-19T18:44:10Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's answer that a bell
+  set once per home volume, and so once per project, is not easy enough, and that OpenCode is to ring as well. Read
+  the human's OpenCode plugin `~/.config/opencode/plugins/ring-bell.js` and OpenCode's documentation of plugins of
+  2026-10-19, which names the events `session.idle` and `permission.asked` and no bell of OpenCode's own, how
+  `container/sandbox.sh` mounts the status line and reads `agentrite.json`, and how
+  `scripts/agentrite-settings.mjs` judges that file. Offered three ways; the human chose a bell that is on by
+  default, and a setting in `agentrite.json` rather than a variable of the environment to turn it off. Rewrote
+  `spec.md`: the kit rings in the sandbox for both harnesses at the moments of the human's own hooks and plugin, a
+  project turns it off with the optional key `bell`, which a start reads alone, and `init` and `config` write it.
+  Removed the decision that the kit sets no bell, and the non-goal of OpenCode. The status is `draft`
 
 ## Amendments
