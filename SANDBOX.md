@@ -45,8 +45,8 @@ does. The default branch is the local branch that `defaultBranch` names in `agen
 4. The wrapper says what it cut, from which branch and commit and for which unit, before it builds an image or
    starts a container
 
-A run that cuts no branch does not read `agentrite.json`: a unit whose branch exists, `--in-place`, `--workdir` and
-`--connect`.
+A run that cuts no branch, a unit whose branch exists, `--in-place` or `--workdir`, reads only `bell` of
+`agentrite.json`, as "The bell" says, and judges no other key. `--connect` reads none of it.
 
 Before the container starts, the wrapper clones the repository, with that branch checked out at the commit the
 host's branch is at:

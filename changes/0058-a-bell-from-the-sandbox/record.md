@@ -199,5 +199,27 @@ timestamp: 2026-10-19T15:47:39Z
   which the human decided to ignore. With the run on the host logged before, the item of "Verification" after task
   group 5 is ticked, and every task of `plan.md` is ticked. The unit goes to the reviewer. The status is
   `in-progress`
+- 2026-10-19T23:14:08Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0058 at
+  `10f5bacb9af9cfd2b76b3a085eb3fbdc468dfc3f`, in a full review against merge base
+  `8cc88d6c3d684454a0f30a027d929c955f8ea06b`. Returned C1, C2 and C3, all non-blocking. The complete findings are in
+  `.reviews/0058-a-bell-from-the-sandbox/20261019T231306Z-opencode-full.md`. Ran `npm test`: 725 tests, 724 passing,
+  1 failing (the previously accepted 0054 check), none skipped; all three Docker tests passed. The change check and
+  package dry run passed. Reproduced four bell-test failures with the checkout mounted read-only at `/review tree`.
+  Did not independently repeat or observe the authenticated tmux checks of R12. The status is `in-progress`
+- 2026-10-19T23:19:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the outcomes of the review
+  of `10f5bac`, as the human decided them:
+    * C1, the tests of `tests/bell.test.mjs` fail in a checkout whose path holds a space: not fixed in this unit. The
+      paths from `.pathname` of a file URL are the convention of the whole suite, so the human decided that a unit
+      of its own fixes it for the suite, which is bug 0061 on `master`
+    * C2, `SANDBOX.md` said that a run that cuts no branch does not read `agentrite.json`: accepted and applied. The
+      paragraph now says that such a run, a unit whose branch exists, `--in-place` or `--workdir`, reads only `bell`,
+      and that `--connect` reads none of the file
+    * C3, `CONTRIBUTING.md` said a host without Docker skips two tests, where there are three: accepted, and applied
+      as the human asked, with no count, so that a new test that needs Docker does not make it untrue. It names the
+      signal and the bell as examples, and says that each such test says so in the reason it prints, which the three
+      do
+
+  `npm test` on the host with Docker reports 725 tests, 724 passing, none skipped and 1 failing, unit 0054's R24
+  test. The status is `in-progress`
 
 ## Amendments

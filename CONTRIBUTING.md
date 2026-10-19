@@ -132,10 +132,10 @@ A host other than Linux skips some of the tests. Each is skipped for what it nee
 * The tests of the script that rings the bell need `setsid`, and those of them that give it a terminal need `script`
   of util-linux besides. macOS has neither
 
-A host without Docker skips the two tests that need it: that a signal to the sandbox leaves it running, and that a
-bell the agent writes to the sandbox's terminal comes out on the host's side. The sandbox is such a host: its image
-holds no Docker, so those tests run with `npm test` on a host that has Docker, and the command below does not run
-them.
+A host without Docker skips the tests that need it, such as that a signal to the sandbox leaves it running, and that
+a bell the agent writes to the sandbox's terminal comes out on the host's side. Each says so in the reason it prints.
+The sandbox is such a host: its image holds no Docker, so those tests run with `npm test` on a host that has Docker,
+and the command below does not run them.
 
 The reason that each other skipped test prints names the command that runs the whole suite in the sandbox, which is
 Linux:
