@@ -96,7 +96,11 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   assert.match(checkBefore.stderr, NAMES_CONFIG);
   const runBefore = unitRun();
   assert.equal(runBefore.status, 2);
-  assert.match(runBefore.stderr, NAMES_CONFIG);
+  // Unit 0058: a start reads bell first, and says so.
+  assert.match(
+    runBefore.stderr,
+    /the project has no agentrite\.json, so bell is missing\. .*Run: npx agentrite config, which writes one/,
+  );
   assert.deepEqual(host.dockerCalls(), []);
   assert.equal(git('for-each-ref', '--format=%(refname:short)', 'refs/heads'), 'main\nmaster');
   assert.equal(tracked(), '');

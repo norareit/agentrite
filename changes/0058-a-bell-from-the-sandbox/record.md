@@ -66,5 +66,18 @@ timestamp: 2026-10-19T15:47:39Z
   no Docker; its quoting was checked with `script` and a stand-in for `docker run`, not with Docker. Its task stays
   open until it has passed on a host with Docker. `npm test` reports 707 tests, 704 passing, 2 skipped (the two
   Docker tests) and 1 failing, unit 0054's R24 test. The status is `in-progress`
+- 2026-10-19T19:39:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 3. A start now
+  reads `bell` before anything else, so four tests of earlier units that held a start to run with no
+  `agentrite.json`, or with one that is not JSON, were changed with it: the test of `tests/sandbox-unit-run.test.mjs`
+  that a run that cuts no branch makes the calls it makes with a valid file now holds that for a file of `bell` alone
+  in every form, and for no file and a file that is not JSON only for `--connect`; two cases of the runs that cut no
+  branch now expect the reader's message of `bell`, with no line that no branch is cut, since the start is refused
+  before a branch is looked for; and `tests/settings-update.test.mjs` expects that message for the unit run of a
+  project with no file, which still names `npx agentrite config`. `tests/sandbox-update.test.mjs` copies the kit's
+  `scripts/` beside the wrapper, which its start now runs. The comment of `container/sandbox.sh` that said every
+  other run starts whatever the file holds now says that it judges nothing of the file but `bell`. The test that the
+  hooks name the path at which the wrapper mounts `container/bell/` failed against the wrapper of `e4eee8d` and
+  passes now. `npm test` reports 722 tests, 719 passing, 2 skipped (the two Docker tests) and 1 failing, unit 0054's
+  R24 test. The status is `in-progress`
 
 ## Amendments

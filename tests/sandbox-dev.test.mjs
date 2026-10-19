@@ -10,12 +10,14 @@ const shim = new URL('../sandbox-dev.sh', import.meta.url).pathname;
 const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
 const unitClone = new URL('../container/unit-clone.sh', import.meta.url).pathname;
 const dockerfile = new URL('../container/Dockerfile', import.meta.url).pathname;
+const kitScripts = new URL('../scripts/', import.meta.url).pathname;
 const projectCompose = readFileSync(new URL('../sandbox/compose.project.yml', import.meta.url), 'utf-8');
 
 const devName = 'ritenoar-agentrite-sandbox-dev';
 const nameFromVariable = '${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}';
 
-// A checkout holding copies of the shim and of the working copy's wrapper and Dockerfile, and the host of
+// A checkout holding copies of the shim, of the working copy's wrapper and Dockerfile and of its reader of
+// agentrite.json, an agentrite.json that holds `"bell": false` alone, and the host of
 // `fakeHost`, whose `docker` says the image exists and records each call with the SANDBOX_PROJECT_NAME and the
 // AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
 // home of whoever runs the suite holds.
@@ -33,6 +35,12 @@ function setUp(t) {
     chmodSync(to, 0o755);
   }
   copyFileSync(dockerfile, join(root, 'container', 'Dockerfile'));
+  // The wrapper reads bell with the kit's reader of agentrite.json, in the checkout's scripts/.
+  mkdirSync(join(root, 'scripts'));
+  for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
+    copyFileSync(join(kitScripts, file), join(root, 'scripts', file));
+  }
+  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
   const home = join(base, 'home');
   mkdirSync(home);
   const { bin, dockerCalls } = fakeHost(base, ['SANDBOX_PROJECT_NAME', 'AGENTRITE_CONTAINER']);
@@ -75,6 +83,22 @@ test("the shim passes the wrapper's options and the command on", (t) => {
   assert.deepEqual(dockerCalls(), [
     `${prefix} build`,
     `${prefix} run --rm --volume ${workdir}:/work --volume ${mounted}:/mnt/mounted:ro ${logs}sandbox echo hi`,
+  ]);
+});
+
+// Unit 0058, R3: the bell rings in ./sandbox-dev.sh as in ./sandbox.sh, read from the checkout's agentrite.json.
+test("the shim with \"bell\": true has the checkout's wrapper mount the bell and name the plugin", (t) => {
+  const { root, run, dockerCalls, prefix, logs } = setUp(t);
+  writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+  const result = run(['--in-place']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [
+    `${prefix} build`,
+    `${prefix} run --rm ` +
+      '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ' +
+      `--volume ${root}:/work --volume ${root}/container/bell:/etc/agentrite/bell:ro ` +
+      `--volume ${root}/container/bell/claude-managed-settings.json:` +
+      `/etc/claude-code/managed-settings.d/agentrite-bell.json:ro ${logs}sandbox`,
   ]);
 });
 

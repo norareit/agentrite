@@ -25,6 +25,7 @@ import {
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
+const kitScripts = new URL('../scripts/', import.meta.url).pathname;
 const kitPath = 'project/node_modules/agentrite/container';
 
 // What an image built earlier holds, where a test needs it to differ from what the fake host has and from what
@@ -50,13 +51,14 @@ const homeLogs = (root) => logDirectory(join(dirname(root), 'home', '.local', 's
 const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root), terminal = '') =>
   `run --rm ${terminal}--volume ${mounted}:/work ${mounts}${logMounts(logs)}sandbox echo hi`;
 
-// A project with the kit's wrapper installed at `kitPath` under `root`, and nothing else of the kit beside it,
-// and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER and the two version
-// variables it saw. The project's Compose file gives the build arguments `buildArgs`, where `null` stands for a
-// configuration Compose refuses, and the image exists unless `imageExists` is false. The wrapper runs with a home
-// of its own, `home`, which is empty until a test fills it, so that no test depends on what the home of whoever
-// runs the suite holds. `run` runs the wrapper with that home alone, and `runWith` with the variables of `env`
-// besides and in the working directory `cwd`.
+// A project with the kit's wrapper installed at `kitPath` under `root`, the kit's reader of agentrite.json beside it
+// and nothing else of the kit, an agentrite.json that holds `"bell": false` alone, and the host of `fakeHost`, whose
+// `docker` records each call with the AGENTRITE_CONTAINER and the two version variables it saw. The project's
+// Compose file gives the build arguments `buildArgs`, where `null` stands for a configuration Compose refuses, and
+// the image exists unless `imageExists` is false. The wrapper runs with a home of its own, `home`, which is empty
+// until a test fills it, so that no test depends on what the home of whoever runs the suite holds. `run` runs the
+// wrapper with that home alone, and `runWith` with the variables of `env` besides and in the working directory
+// `cwd`.
 function setUp(
   t,
   kitPath = 'node_modules/agentrite/container',
@@ -71,6 +73,12 @@ function setUp(
   mkdirSync(container, { recursive: true });
   copyFileSync(wrapper, join(container, 'sandbox.sh'));
   chmodSync(join(container, 'sandbox.sh'), 0o755);
+  // The wrapper reads bell with the kit's reader of agentrite.json, in the kit's scripts/ beside its container/.
+  mkdirSync(join(container, '..', 'scripts'));
+  for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
+    copyFileSync(join(kitScripts, file), join(container, '..', 'scripts', file));
+  }
+  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
   const home = join(base, 'home');
   mkdirSync(home);
   const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'SANDBOX_CLAUDE_CODE_VERSION', 'SANDBOX_OPENCODE_VERSION']);
@@ -784,3 +792,124 @@ for (const [host, env, terminal] of [
     );
   });
 }
+
+// Unit 0058: the bell. A start reads bell from the project's agentrite.json, judging no other key, and with true
+// mounts the kit's container/bell/ and its hooks of Claude Code, and names its plugin to OpenCode.
+const bellMounts = (container) =>
+  `--volume ${container}/bell:/etc/agentrite/bell:ro ` +
+  `--volume ${container}/bell/claude-managed-settings.json:/etc/claude-code/managed-settings.d/agentrite-bell.json:ro `;
+const bellEnvironment =
+  '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ';
+
+const startForms = [
+  ['--in-place', () => ['--in-place']],
+  ['--workdir', (workdir) => ['--workdir', workdir]],
+];
+
+// The `run` of a start of `form` in the project at `root`, with `mounts` and `environment`.
+function startRun(root, container, form, workdir, mounts, environment) {
+  const mounted = form === '--in-place' ? root : workdir;
+  return composeCalls(root, container, hostVersions, runCommand(root, mounted, mounts, homeLogs(root), environment));
+}
+
+for (const [form, formArgs] of startForms) {
+  test(`a start with ${form} and "bell": true mounts the bell and names the plugin, with none of the host's`, (t) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(t, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(
+      dockerCalls(),
+      startRun(root, container, form, workdir, bellMounts(container), bellEnvironment),
+    );
+    assert.equal(existsSync(join(home, '.claude')), false);
+  });
+
+  test(`a start with ${form} and "bell": true mounts the bell after the status line`, (t) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(t, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+    mkdirSync(join(home, '.claude'));
+    writeFileSync(statusLinePath(home), 'echo line\n');
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    const statusLine =
+      `--volume ${statusLinePath(home)}:/etc/claude-code/statusline-command.sh:ro ` +
+      `--volume ${container}/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
+    assert.deepEqual(
+      dockerCalls(),
+      startRun(root, container, form, workdir, statusLine + bellMounts(container), bellEnvironment),
+    );
+  });
+
+  test(`a start with ${form} and "bell": false is the run of a project that rings nothing`, (t) => {
+    const { base, root, container, run, dockerCalls } = setUp(t, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, '', ''));
+  });
+
+  test(`a start with ${form} and a bell at fault is refused with the reader's message, asking nothing`, (t) => {
+    const BELL_MUST = 'It must hold true or false';
+    for (const [text, message] of [
+      ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
+      ['{"bell": null}', `agentrite.json: bell is null. ${BELL_MUST}`],
+      ['{"bell": 0}', `agentrite.json: bell is 0. ${BELL_MUST}`],
+      ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
+      ['{"bell": []}', `agentrite.json: bell is []. ${BELL_MUST}`],
+      ['{"bell": {}}', `agentrite.json: bell is {}. ${BELL_MUST}`],
+      ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
+      ['not json', /^agentrite\.json is not JSON: .*, so bell cannot be read\. It must hold true or false$/],
+      [
+        null,
+        'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
+          'Run: npx agentrite config, which writes one',
+      ],
+    ]) {
+      const { base, root, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      if (text === null) rmSync(join(root, 'agentrite.json'));
+      else writeFileSync(join(root, 'agentrite.json'), text);
+
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+      assert.equal(result.status, 2, String(text));
+      assert.equal(result.stdout, '', String(text));
+      const printed = result.stderr.replace(/^agentrite: /, '').trimEnd();
+      assert.ok(result.stderr.startsWith('agentrite: '), result.stderr);
+      if (typeof message === 'string') assert.equal(printed, message, String(text));
+      else assert.match(printed, message, String(text));
+      assert.deepEqual(dockerCalls(), [], String(text));
+      assert.deepEqual(npmCalls(), [], String(text));
+    }
+  });
+}
+
+test('a start reads bell again at each start, with no build in between', (t) => {
+  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+
+  const result = run(root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [
+    ...startRun(root, container, '--in-place', root, '', ''),
+    ...startRun(root, container, '--in-place', root, bellMounts(container), bellEnvironment),
+  ]);
+});

@@ -4,7 +4,8 @@
 # in a network namespace that does not exist until the container runs. container/sandbox.sh
 # is a wrapper that adds only the per-run working directory, which for a unit run is a
 # clone of the unit's branch with the host's .reviews mounted in it, any extra mounts, the
-# two directories of the host that hold the harnesses' logs and the versions of the two
+# two directories of the host that hold the harnesses' logs, the bell of the harnesses
+# when the project's agentrite.json holds "bell": true, and the versions of the two
 # harnesses the image is built with; it sets nothing that confines the container.
 #
 # A project layers its own compose file over this one, at sandbox/compose.project.yml,

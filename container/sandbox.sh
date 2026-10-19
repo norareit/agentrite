@@ -3,8 +3,10 @@
 # Wrapper around `docker compose run`. Compose cannot take an ad-hoc mount per
 # invocation: the wrapper translates the working directory and any --mount flags into
 # `docker compose run --volume` options, adds the developer's Claude Code status line
-# when the host has one and the two directories of the host that hold the harnesses'
-# logs, gives the command the host's TERM and COLORTERM, and passes the rest through.
+# when the host has one, the two directories of the host that hold the harnesses' logs,
+# and the harnesses' bell when the project's agentrite.json holds "bell": true, which it
+# reads at each start but --connect, gives the command the host's TERM and COLORTERM,
+# and passes the rest through.
 # It sets nothing that confines the container; every such setting is in
 # container/compose.yml and the project's sandbox/compose.project.yml, and the firewall
 # is in container/entrypoint.sh.
@@ -211,10 +213,21 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   exit 2
 fi
 
+# Whether the harnesses ring the terminal's bell, as the project's agentrite.json says,
+# read at each start by the kit's reader of that file, which judges bell alone and
+# prints its own message for a file at fault. Read before the host's harnesses, Docker
+# or npm are asked anything and before a branch is cut, so that a refused start has done
+# nothing. --connect starts nothing and reads nothing: the command it connects has the
+# bell of the run it joins, whose mounts and environment docker exec inherits.
+bell=false
+if [ "$connect" -eq 0 ]; then
+  bell="$(node "$here/../scripts/agentrite-settings.mjs" "$root" bell)" || exit 2
+fi
+
 # The unit's branch, found with git alone, or cut from the default branch for a unit
 # that has none yet, so that a unit that names none is refused as early. The default
 # branch is read from the project's agentrite.json, by the kit's reader of that file,
-# and only when a branch is cut: every other run starts whatever the file holds. An
+# and only when a branch is cut: every other run judges nothing of the file but bell. An
 # empty branch says that this is not a unit run. --connect finds the branch and cuts
 # none: a unit with no branch has no run to connect to. The unit is kept as it was
 # given, for the messages that name a command to run.
@@ -255,6 +268,22 @@ if [ -f "$statusline" ]; then
   mounts+=(
     --volume "$statusline:/etc/claude-code/statusline-command.sh:ro"
     --volume "$here/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro"
+  )
+fi
+
+# The bell, when agentrite.json holds "bell": true: the kit's container/bell/, read-only,
+# with Claude Code's hooks in the drop-in directory of its managed settings, which holds
+# them beside the status line's managed-settings.json or without it, and OpenCode's
+# plugin named in a configuration that OpenCode merges over the others. Both add to what
+# the developer sets in the home volume, and with false nothing of them is given.
+bell_environment=()
+if [ "$bell" = true ]; then
+  mounts+=(
+    --volume "$here/bell:/etc/agentrite/bell:ro"
+    --volume "$here/bell/claude-managed-settings.json:/etc/claude-code/managed-settings.d/agentrite-bell.json:ro"
+  )
+  bell_environment+=(
+    --env 'OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}'
   )
 fi
 
@@ -632,6 +661,7 @@ terminal_environment=()
 if [ -z "$branch" ]; then
   exec "${compose[@]}" run --rm \
     ${terminal_environment[@]+"${terminal_environment[@]}"} \
+    ${bell_environment[@]+"${bell_environment[@]}"} \
     --volume "$workdir:/work" \
     ${mounts[@]+"${mounts[@]}"} \
     sandbox "$@"
@@ -653,6 +683,7 @@ trap : INT TERM HUP
 status=0
 "${compose[@]}" run --rm --name "$container_name" \
   ${terminal_environment[@]+"${terminal_environment[@]}"} \
+  ${bell_environment[@]+"${bell_environment[@]}"} \
   --volume "$clone:/work" \
   --volume "$root/.reviews:/work/.reviews" \
   ${mounts[@]+"${mounts[@]}"} \

@@ -3,6 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import {
   chmodSync,
   copyFileSync,
+  cpSync,
   lstatSync,
   mkdirSync,
   readFileSync,
@@ -24,6 +25,7 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const kitContainer = join(import.meta.dirname, '..', 'container');
+const kitScripts = join(import.meta.dirname, '..', 'scripts');
 const kitPath = 'node_modules/agentrite/container';
 const branch = 'task-0001-update';
 
@@ -83,6 +85,8 @@ function setUp(t) {
   mkdirSync(join(root, 'agent'));
   writeFileSync(join(root, 'package.json'), '{\n  "name": "my-app"\n}\n');
   copyKitInstructions(join(root, 'node_modules', 'agentrite'));
+  // The wrapper reads bell at each start with the kit's reader of agentrite.json, in the kit's scripts/.
+  cpSync(kitScripts, join(root, 'node_modules', 'agentrite', 'scripts'), { recursive: true });
   writeFileSync(
     join(root, 'agentrite.json'),
     kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }),

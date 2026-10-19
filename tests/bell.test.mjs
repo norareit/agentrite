@@ -162,3 +162,12 @@ test(
     assert.ok(inTerminal(run.map(quoted).join(' ')).includes(`x${BEL}y`));
   },
 );
+
+// R1
+test('the hooks and the plugin name the files where container/sandbox.sh mounts container/bell/', () => {
+  const wrapper = readFileSync(new URL('../container/sandbox.sh', import.meta.url), 'utf-8');
+  const mountPoint = /--volume "\$here\/bell:([^"]+):ro"/.exec(wrapper)?.[1];
+  assert.equal(mountPoint, '/etc/agentrite/bell');
+  assert.equal(RING, `sh ${mountPoint}/ring-bell.sh`);
+  assert.ok(wrapper.includes(`"plugin":["file://${mountPoint}/opencode-plugin.js"]`));
+});

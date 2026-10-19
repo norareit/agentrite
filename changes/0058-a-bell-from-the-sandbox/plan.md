@@ -232,9 +232,9 @@ both tests import, since this is its second use.
 
 ### 3. The start
 
-- [ ] In `tests/sandbox-wrapper.test.mjs`, give `setUp`'s project an `agentrite.json` of `{"bell": false}` and the
+- [x] In `tests/sandbox-wrapper.test.mjs`, give `setUp`'s project an `agentrite.json` of `{"bell": false}` and the
   kit's two scripts beside the copied wrapper, and see the existing tests pass unchanged (R7)
-- [ ] In `tests/sandbox-wrapper.test.mjs`, test a start with `--in-place` and one with `--workdir` for each value of
+- [x] In `tests/sandbox-wrapper.test.mjs`, test a start with `--in-place` and one with `--workdir` for each value of
   `bell`, with a file that holds `bell` alone:
     * `true`: the `run` holds the two mounts of `container/bell/` and the `--env` of OpenCode, after the status
       line's mounts when the host has a status line, and with none of the host's
@@ -244,18 +244,18 @@ both tests import, since this is its second use.
       missing, and `true or false`, and `docker` and `npm` were not called
 
   See them fail (R1, R2, R6, R7, R11)
-- [ ] In `tests/bell.test.mjs`, test that the path the command of `container/bell/claude-managed-settings.json`
+- [x] In `tests/bell.test.mjs`, test that the path the command of `container/bell/claude-managed-settings.json`
   runs is the path at which `container/sandbox.sh` mounts `container/bell/`, read from the wrapper's text. See it
   fail (R1)
-- [ ] In `tests/sandbox-wrapper.test.mjs`, test that a start reads the file again at each start: one start with
+- [x] In `tests/sandbox-wrapper.test.mjs`, test that a start reads the file again at each start: one start with
   `false`, the file changed to `true`, and the next start mounts the bell with no build in between (R7)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, test that a unit run with `"bell": true` mounts the bell in its `run`,
+- [x] In `tests/sandbox-unit-run.test.mjs`, test that a unit run with `"bell": true` mounts the bell in its `run`,
   that a unit given by a number with no branch and a file lacking `bell` is refused before a branch is cut, so that
   no branch and no clone are made, and that `--connect` with a file lacking `bell` still connects, reading nothing
   (R3, R7)
-- [ ] In `tests/sandbox-dev.test.mjs`, test that `./sandbox-dev.sh` with `"bell": true` passes the bell to the
+- [x] In `tests/sandbox-dev.test.mjs`, test that `./sandbox-dev.sh` with `"bell": true` passes the bell to the
   working copy's wrapper, whose `run` holds the mounts (R3)
-- [ ] Read `bell` in `container/sandbox.sh` and add the mounts and the `--env`, as the approach gives, with the
+- [x] Read `bell` in `container/sandbox.sh` and add the mounts and the `--env`, as the approach gives, with the
   header comment and the head comment of `container/compose.yml` (R1, R2, R3, R6, R7)
 
 ### 4. The documents
@@ -311,6 +311,6 @@ Each commit is made once `npm test` is green but for the test that failed before
 - [x] After task group 1: `feature-0058 Make bell a required key of agentrite.json`
 - [x] After task group 2: `feature-0058 Ring the bell from a script, from Claude Code's hooks and from OpenCode's
   plugin`
-- [ ] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`
+- [x] After task group 3: `feature-0058 Ring in the sandbox as agentrite.json says, read at each start`
 - [ ] After task group 4: `feature-0058 Describe the bell and the key bell`
 - [ ] After the check by hand: `feature-0058 Log the check by hand of the bell`

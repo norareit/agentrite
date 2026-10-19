@@ -349,9 +349,13 @@ const noCut = [
       // The file stays committed on master: it is the one of the working tree that is read.
       rmSync(join(host.root, 'agentrite.json'));
     },
+    // Unit 0058, R7: the start reads bell before a branch is cut, and is refused for it.
     says: [
-      /^agentrite: the project has no agentrite\.json\. Run: npx agentrite config, which writes one$/m,
-      /^sandbox\.sh: so no branch is cut for '0031'\.$/m,
+      new RegExp(
+        '^agentrite: the project has no agentrite\\.json, so bell is missing\\. It must hold true or false\\. ' +
+          'Run: npx agentrite config, which writes one$',
+        'm',
+      ),
     ],
   },
   {
@@ -361,7 +365,17 @@ const noCut = [
       commitUnit(host, 'kind: feature');
       writeFileSync(join(host.root, 'agentrite.json'), 'not json');
     },
-    says: [/^agentrite: agentrite\.json is not JSON: /m, /^sandbox\.sh: so no branch is cut for '0031'\.$/m],
+    says: [/^agentrite: agentrite\.json is not JSON: .*, so bell cannot be read\. It must hold true or false$/m],
+  },
+  // Unit 0058, R7
+  {
+    name: 'an agentrite.json that lacks bell',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('  "bell": false,\n', ''));
+    },
+    says: [/^agentrite: agentrite\.json: bell is missing\. It must hold true or false$/m],
   },
   {
     name: 'an agentrite.json that is not valid in a key the wrapper does not use',
@@ -480,10 +494,12 @@ test('the wrapper reads the agentrite.json of the working tree, whatever is comm
   assert.equal(git('symbolic-ref', '--short', 'HEAD'), 'feature-0010-init');
 });
 
-// R7: the runs that cut no branch do not read the file.
-for (const [what, settings] of [
-  ['no agentrite.json', null],
-  ['an agentrite.json that is not valid', 'not json'],
+// R7: the runs that cut no branch read nothing of the file but bell, which unit 0058 has every start read, and
+// --connect, which starts nothing, reads nothing of it.
+for (const [what, settings, forms] of [
+  ['an agentrite.json of bell alone', '{"bell": false}\n', ['unit', 'in place', 'connect']],
+  ['no agentrite.json', null, ['connect']],
+  ['an agentrite.json that is not valid', 'not json', ['connect']],
 ]) {
   test(`a run that cuts no branch makes the calls it makes with a valid file, with ${what}`, (t) => {
     const withFile = setUp(t);
@@ -491,13 +507,14 @@ for (const [what, settings] of [
     if (settings === null) rmSync(join(without.root, 'agentrite.json'));
     else writeFileSync(join(without.root, 'agentrite.json'), settings);
 
-    for (const args of [
-      [branch, 'echo', 'hi'],
-      ['0026', 'echo', 'hi'],
-      ['--in-place', 'echo', 'hi'],
-      ['--workdir', (host) => host.base, 'echo', 'hi'],
-      ['--connect', branch, 'echo', 'hi'],
+    for (const [form, args] of [
+      ['unit', [branch, 'echo', 'hi']],
+      ['unit', ['0026', 'echo', 'hi']],
+      ['in place', ['--in-place', 'echo', 'hi']],
+      ['in place', ['--workdir', (host) => host.base, 'echo', 'hi']],
+      ['connect', ['--connect', branch, 'echo', 'hi']],
     ]) {
+      if (!forms.includes(form)) continue;
       const results = [withFile, without].map((host) => {
         const connects = args[0] === '--connect';
         if (connects) markRunning(host);
@@ -520,6 +537,35 @@ for (const [what, settings] of [
     }
   });
 }
+
+// Unit 0058, R1, R7: a unit run reads bell at its start, and rings as it says.
+test('a unit run with "bell": true mounts the bell and names the plugin to OpenCode', (t) => {
+  const { root, container, clone, run, dockerCalls, unitRun } = setUp(t);
+  writeFileSync(join(root, 'agentrite.json'), settingsFor('master').replace('"bell": false', '"bell": true'));
+
+  const result = run([branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const bell =
+    `--volume ${container}/bell:/etc/agentrite/bell:ro ` +
+    `--volume ${container}/bell/claude-managed-settings.json:` +
+    '/etc/claude-code/managed-settings.d/agentrite-bell.json:ro ';
+  const plugin = '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ';
+  assert.deepEqual(dockerCalls(), unitRun(clone, bell, undefined, plugin));
+});
+
+// Unit 0058, R7: --connect starts nothing, so it reads no bell and connects whatever the file holds of it.
+test('--connect with an agentrite.json that lacks bell connects, reading nothing', (t) => {
+  const host = setUp(t);
+  writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('  "bell": false,\n', ''));
+  markRunning(host);
+
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});
 
 test('the forms the wrapper lists say the default branch, and are printed without reading the file', (t) => {
   const { root, run } = setUpWithBuildDue(t);
