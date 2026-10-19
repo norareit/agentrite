@@ -45,5 +45,7 @@ timestamp: 2026-10-19T15:47:39Z
   this spec, and adds `bell` to that file, which `./sandbox-dev.sh` now reads; the human decides it. The plan reads R3
   as saying what a run with no terminal does: a headless run started from a terminal has that terminal, and rings once
   at its end. The status is `approved`
+- 2026-10-19T19:24:57Z [human] decided that unit 0054's R24 test, failing before the work, is ignored for now. The
+  status is `approved`
 
 ## Amendments
