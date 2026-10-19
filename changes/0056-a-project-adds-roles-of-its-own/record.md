@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-19T16:00:00Z
+status: implemented
+timestamp: 2026-10-19T18:10:00Z
 ---
 
 # 0056 A project adds roles of its own
@@ -86,3 +86,9 @@ timestamp: 2026-10-19T16:00:00Z
   `npm run check-changes` passed. The delta review returned no new findings, and every box of `plan.md` is ticked.
   The status stays `in-progress`, because the human has not yet decided the blocking findings S1 and C1, which are
   fixed as proposed above, and `process.md` sets `implemented` only after that decision
+- 2026-10-19T18:10:00Z [human] accepted the fixes of the blocking findings S1 and C1 and of P1, as applied in
+  `16dea31`, and decided them
+- 2026-10-19T18:10:30Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, set the status to
+  `implemented`: every box of `plan.md` is ticked, the human has decided every blocking finding, and the suites
+  were last run on the unchanged tree (`npm test` 681 of 681 passing, `npm run check-changes` passed). The status is
+  `implemented`
