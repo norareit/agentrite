@@ -15,6 +15,7 @@ By default the kit holds:
 
 The process is the same in every project. A project can replace the standards, and each of the roles, with a file of
 its own, named in its `agentrite.json`. See [Replacing a role or the standards](#replacing-a-role-or-the-standards).
+A project can add roles of its own as well. See [Adding a role](#adding-a-role).
 
 * [The name](#the-name)
 * [What is here](#what-is-here)
@@ -24,6 +25,7 @@ its own, named in its `agentrite.json`. See [Replacing a role or the standards](
 * [Installing it into a project](#installing-it-into-a-project)
 * [The project's settings](#the-projects-settings)
 * [Replacing a role or the standards](#replacing-a-role-or-the-standards)
+* [Adding a role](#adding-a-role)
 * [Updating a project to a newer kit](#updating-a-project-to-a-newer-kit)
 * [The sandbox](#the-sandbox)
 
@@ -75,6 +77,10 @@ A task has no plan, and a bug may have none, which its record then says; the imp
 without one. The rules each role works by are in `process.md`, the project's standards and the role's own file: the
 kit's `standards.md` and the files under `roles/`, unless the project replaced them.
 
+Each of the four roles covers one stage of the process and moves the unit through the statuses. A project can add
+roles that run just before or just after one of the four, within its stage, and that move it through none. See
+[Adding a role](#adding-a-role).
+
 The writers current workflow:
 
 1. Use Claude Code with Opus as the `specifier` role and ask it to refine a feature (or bug or task) together
@@ -102,11 +108,11 @@ npx agentrite init [--no-sandbox] [--default-branch <name>] <harness>...
 npx agentrite init
 ```
 
-Sets a project up, from its root: writes `agentrite.json`, the role wrappers, the list of the instruction files in
-use, the project's agent instructions and the sandbox's files, writes or amends `opencode.json` with `opencode`, and
-prints each file it wrote, changed or skipped.
-The first form is for a project with no `agentrite.json`, and writes that file from its arguments. The second is for
-a project that has one, and takes the harnesses and the sandbox setting from it.
+Sets a project up, from its root: writes `agentrite.json`, the wrappers of every role `roles` names, the list of the
+instruction files in use, the project's agent instructions and the sandbox's files, writes or amends `opencode.json`
+with `opencode`, and prints each file it wrote, changed or skipped. The first form is for a project with no
+`agentrite.json`, and writes that file from its arguments. The second is for a project that has one, and takes the
+harnesses and the sandbox setting from it.
 
 | Argument or option        | What it is                                                                              |
 |---------------------------|-----------------------------------------------------------------------------------------|
@@ -219,14 +225,22 @@ each file as written, refreshed or up to date. It takes no argument: the harness
 from `agentrite.json`, which it never writes. Given any argument, it prints its usage and that the two are read from
 `agentrite.json`, writes nothing and exits 2.
 
-It refreshes the role wrappers of the harnesses that `harnesses` names, a pinned model that survives included. Each
-role's wrappers are written from the role file that `roles` gives: its description, and a body that says to read
-that file. A role file that does not open with the front matter "Replacing a role or the standards" gives is refused:
-`refresh` names the file and the form the front matter must have, writes nothing and exits 1. It then writes the list
-`.agentrite/instructions.md` from `standards` and `roles`, whatever is at its path. With `sandbox` `true` it refreshes
-`sandbox.sh` too, and writes one that is missing. With `sandbox` `false`, `sandbox.sh` is not read or written and no
-line is printed for it: what is at its path, a symbolic link or a directory included, changes neither what `refresh`
-prints nor its exit status.
+It refreshes the wrappers of every role `roles` names, the roles of the project's own included, for the harnesses that
+`harnesses` names, a pinned model that survives included. Each role's wrappers are written from the role file that
+`roles` gives: its description, and a body that says to read that file. A role file that does not open with the front
+matter "Replacing a role or the standards" gives is refused: `refresh` names the file and the form the front matter must
+have, writes nothing and exits 1. It then writes the list `.agentrite/instructions.md` from `standards` and `roles`,
+whatever is at its path. With `sandbox` `true` it refreshes `sandbox.sh` too, and writes one that is missing. With
+`sandbox` `false`, `sandbox.sh` is not read or written and no line is printed for it: what is at its path, a symbolic
+link or a directory included, changes neither what `refresh` prints nor its exit status.
+
+After the lines of the files and before the notices, `refresh` removes the wrapper of a role that `roles` no longer
+names, as a role taken out or renamed leaves one. In the wrapper directory of each harness that `harnesses` names, it
+removes a regular file `<name>.md` whose `<name>` is not a role `roles` names, when the text after its front matter is
+the body the kit writes in a wrapper: to read a file by its path from the project root and follow it, whatever the
+path. A model pinned in the front matter does not stop the removal. It prints `removed <path>` for each file it
+removes. A file with another body, such as an agent of the project's own, a symbolic link and a directory are left as
+they are, and `refresh` says nothing of them. `init` removes nothing.
 
 It reads `CLAUDE.md` with `claude` among the harnesses, and `opencode.json` with `opencode`, and never writes or creates
 either. After the lines of the files, it prints a notice, after an empty line, for each that does not load the kit's
@@ -253,9 +267,11 @@ npx agentrite roles [--json]
 ```
 
 Lists the roles of the project, from its root, each with the description that the role file `roles` in
-`agentrite.json` gives holds, which is the description its wrappers hold. The JSON document is an object with one key,
-`roles`, an array that holds each role as an object with its `name` and its `description`, which is on one line, not
-wrapped.
+`agentrite.json` gives holds, which is the description its wrappers hold. The four roles come first, in the order
+`specifier`, `planner`, `implementer`, `reviewer`, and the roles of the project's own follow, in the order of `roles`.
+The JSON document is an object with one key, `roles`, an array that holds each role as an object with its `name`, its
+`description`, which is on one line, not wrapped, and its `path`: the path of its file as `roles` gives it, from the
+project root. The text listing does not show the path.
 
 It reads `agentrite.json` and refuses as every command that reads it does, in a project that has none or whose file
 is not valid. It refuses a role file that does not open with the front matter "Replacing a role or the standards"
@@ -275,11 +291,12 @@ npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--he
 
 Starts a harness as one of the roles, for one unit, from the project root. Run with no argument, it prints its
 usage. It reads `agentrite.json` and the role files it names, and refuses as `agentrite roles` does, starting
-nothing.
+nothing. Given a role that `roles` does not name, it refuses too: it prints on standard error the role and the roles
+the project has, starts nothing and exits 1.
 
 | Argument or option          | What it is                                                                          |
 |-----------------------------|-------------------------------------------------------------------------------------|
-| `<role>`                    | One that `agentrite roles` lists                                                    |
+| `<role>`                    | A role that `agentrite.json` names, as `agentrite roles` lists them                 |
 | `<harness>`                 | `claude` or `opencode`                                                              |
 | `<unit>`                    | A directory of `changes/`, by its name or by the four digits its name opens with    |
 | `--prompt <text>`           | Adds its text to the prompt, as it is written. Also `--prompt="<text>"`             |
@@ -430,6 +447,7 @@ The command starts nothing when:
 
 * the project has no `agentrite.json`, its file is not valid, or a role file it names does not open with the front
   matter "Replacing a role or the standards" gives. The command says why, as "agentrite roles" in "Commands" says
+* `roles` in `agentrite.json` does not name the role. The command names the role and the roles the project has
 * the role's wrapper for the harness is missing, or holds anything but what `refresh` would write from the role file
   that `roles` in `agentrite.json` gives, a pinned model aside. The command names the file and names the command that
   repairs it, which writes the wrappers of the harnesses that `agentrite.json` names:
@@ -598,11 +616,12 @@ paths below are those of a project that did not. Each file, what it must hold, a
   `CLAUDE.md`
 
 The list `.agentrite/instructions.md`, which the kit writes from `agentrite.json` with `init` and `refresh`, names by
-their paths from the project root, each linked: the kit's `process.md`, the standards, and the file of each of the
-four roles. It says that these are the files whose instructions hold in the project, that the standards are the
-project's whole set of rules on how text, documentation, commits, code and tests are written, and that the list is not
-edited by hand. The harnesses do not load it. It is there for an agent that reads files itself, from `AGENTS.md` or
-from a kit role file, which sends it to the standards and to the other role files by the list.
+their paths from the project root, each linked: the kit's `process.md`, the standards, and the file of each role, the
+four first and then the roles of the project's own. It says that these are the files whose instructions hold in the
+project, that the standards are the project's whole set of rules on how text, documentation, commits, code and tests are
+written, and that the list is not edited by hand. The harnesses do not load it. It is there for an agent that reads
+files itself, from `AGENTS.md` or from a kit role file, which sends it to the standards and to the other role files by
+the list.
 
 The three lines of `CLAUDE.md` are shown here in a block. In the file they are not in one, since Claude Code does not
 read a line inside a fenced block or a code span:
@@ -682,9 +701,22 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   `claude` and `opencode`, in which a name given more than once counts once, and `sandbox` is `true` or `false`, not
   a string. A key the kit does not know is ignored
 * `standards` and `roles` name the kit's own files in the file `config` and `init` write. A project uses another file
-  by naming its path instead, as "Replacing a role or the standards" says. `roles` holds exactly the four names
-  `specifier`, `planner`, `implementer` and `reviewer`, and two or more of them may name the same file, each role then
-  getting its wrappers, with that file's description, and its line in the list
+  by naming its path instead, as "Replacing a role or the standards" says. `roles` holds the four names
+  `specifier`, `planner`, `implementer` and `reviewer`, each with the path of its file, and may hold roles of the
+  project's own besides, as "Adding a role" says. Two or more roles may name the same file, each role then getting its
+  wrappers, with that file's description, and its line in the list
+* The name of a role of the project's own is one or more words of the lowercase letters `a` to `z`, joined by single
+  hyphens, as `security-reviewer`. A name of another form is refused, naming the name and the form. A name that a
+  harness has for an agent of its own is refused too, whichever harnesses `harnesses` names and without regard to case,
+  because a wrapper of that name and the harness's agent would take each other's place. The names are:
+
+  | Harness     | Its own agents                                                                                  |
+  |-------------|-------------------------------------------------------------------------------------------------|
+  | Claude Code | `Explore`, `Plan`, `general-purpose`, `claude`, `statusline-setup`, `claude-code-guide`, `fork` |
+  | OpenCode    | `build`, `plan`, `general`, `explore`, `scout`, `compaction`, `title`, `summary`                |
+
+  The message names the name and the harness. `agentrite roles` and the list `.agentrite/instructions.md` give the
+  four first and then the roles of the project's own, in the order of the file
 * A path in `standards` or `roles` is a string that is not empty, relative to the project root, that does not lead
   outside the project, and that names a regular file in the project's working tree. Whether it leads outside is judged
   on the path as it is written, with no symbolic link followed. Whether it names a file is judged with symbolic links
@@ -705,6 +737,9 @@ A setting is changed by editing the file by hand. What to run afterwards:
 * A harness added to `harnesses`: `npx agentrite refresh` writes its wrappers. The wrapper directories that the
   project's `AGENTS.md` lists are the project's to bring up to date
 * `sandbox` set to `true`: `npx agentrite init` writes the files of the sandbox that are missing
+* A role of the project's own added to `roles`: `npx agentrite refresh` writes its wrappers and the list
+* A role taken out of `roles`, or renamed: `npx agentrite refresh` removes the wrappers of the old name, as "agentrite
+  refresh" in "Commands" says, and writes those of the new one
 * A harness taken out, or `sandbox` set to `false`: no command removes a file, and what is left is removed by hand
 * `standards` or a file in `roles` changed: `npx agentrite refresh` rewrites the wrappers and the list, and prints the
   notices of "agentrite refresh" on a `CLAUDE.md` and an `opencode.json` that do not load the new standards, or still
@@ -759,6 +794,51 @@ rule of the kit's does.
   project's `AGENTS.md`, which every session reads. The kit has no file for an addition to a role
 * Two roles may name one file, as one file for the specifier and the planner. The process still has the two done at
   their own moments, and the file says how to do both
+
+## Adding a role
+
+A project can add roles of its own to the kit's four. An extra role adds no stage and no status: the four stages of
+`process.md` and its four statuses stay as they are, and each of the four roles still covers one stage and moves the
+unit through the statuses. An extra role runs just before or just after one of the four, within that role's stage, and
+moves the unit through none. Some examples:
+
+| Extra role          | Runs                         | The unit's status while it runs |
+|---------------------|------------------------------|---------------------------------|
+| A spec reviewer     | After the specifier          | `draft`                         |
+| A plan reviewer     | After the planner            | `approved`                      |
+| A test writer       | Before the implementer       | `approved` or `in-progress`     |
+| A security reviewer | Before or after the reviewer | `in-progress`                   |
+
+It is added by its name and the path of its file in `roles` of `agentrite.json`, after the four, with the file
+committed, and then `npx agentrite refresh`, which writes its wrappers for each harness and names it in the list
+`.agentrite/instructions.md`. A name is of the form "The project's settings" gives. Removed from `roles`, with
+`npx agentrite refresh` run after, its wrappers are removed too.
+
+```json
+  "roles": {
+    "specifier": "node_modules/agentrite/roles/specifier.md",
+    "planner": "node_modules/agentrite/roles/planner.md",
+    "implementer": "node_modules/agentrite/roles/implementer.md",
+    "reviewer": "node_modules/agentrite/roles/reviewer.md",
+    "security-reviewer": "rules/security-reviewer.md"
+  }
+```
+
+The file of an extra role opens with the front matter of a role file, and then first with an instruction to read
+`process.md` and the project's standards, as "Replacing a role or the standards" says of a role file. It also says:
+
+* which of the four roles it runs before or after, what it is given and what it produces. It sets no status: the
+  statuses stay with the four roles, and the kit cannot enforce this, so the file must say it
+* where its findings go, such as to the human, to the role whose work it judged, or to the implementer. They do not
+  block `implemented`; what blocks is in `process.md`. A project that wants a check to block makes it part of its
+  reviewer, by replacing the reviewer's file
+* that it writes at least one entry in the unit's `record.md`, as `as the <name>` with its name as `roles` gives it,
+  each time it works on the unit. The kit's reviewer reads the file of each extra role that has such an entry and
+  judges the work against it, as it does the files of the specifier, the planner and the implementer. An extra role
+  with no entry did not work on the unit, and its file is not read
+
+The kit does not yet run an extra role at its moment, and does not read where the role file says it runs. The human
+dispatches it, in a session of the harness or with `npx agentrite run <name> <harness> <unit>`, at that moment.
 
 ## Updating a project to a newer kit
 

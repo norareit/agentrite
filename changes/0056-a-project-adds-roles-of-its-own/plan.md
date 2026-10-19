@@ -214,27 +214,27 @@ change.
 
 ### 5. The README
 
-- [ ] The opening: after the sentence on replacing the standards and the roles, say that a project can add roles of
+- [x] The opening: after the sentence on replacing the standards and the roles, say that a project can add roles of
   its own as well, with a link to "Adding a role" in the place of the link to "Replacing a role or the standards",
   both links there; add "Adding a role" to the list of sections after "Replacing a role or the standards" (R12)
-- [ ] "How it works": say that each of the four roles covers one stage of the process and moves the unit through the
+- [x] "How it works": say that each of the four roles covers one stage of the process and moves the unit through the
   statuses, and that a project can add roles that run just before or just after one of the four, within its stage,
   with a link to "Adding a role" (R12)
-- [ ] "The project's settings": the `roles` row of the table and the bullet on `roles` say that it holds the four
+- [x] "The project's settings": the `roles` row of the table and the bullet on `roles` say that it holds the four
   names and may hold extra roles besides, each with the path of its file; what a name must be, as R2 has it; that a
   name of an agent of a harness's own is refused, with the names of R3's table, as a Markdown table whose lines fit
   120 characters, judged without regard to case and whatever `harnesses` names; and that the extra roles are listed
   after the four in the order of the file. In "What to run afterwards", add that a role taken out of `roles`, or
   renamed, has its wrappers removed by `npx agentrite refresh`, and keep the bullet that no command removes a file
   for a harness taken out or the sandbox set to `false` (R12)
-- [ ] "agentrite init": it writes the wrappers of every role `roles` names. "agentrite refresh": it writes the
+- [x] "agentrite init": it writes the wrappers of every role `roles` names. "agentrite refresh": it writes the
   wrappers of every role `roles` names, and removes a wrapper as R6 says, printing `removed <path>`, and says nothing
   of an agent of the project's own. "agentrite roles": the extra roles are listed after the four, and each object of
   the JSON has `path` besides `name` and `description`, the path as `roles` gives it. "agentrite run": `<role>` is
   one that `agentrite.json` names, and a role it does not name is refused, the message naming the role and the
   roles the project has, nothing started and exit 1. In "Running a role", the list of when the command starts
   nothing gets that refusal too (R12)
-- [ ] The new section "Adding a role", after "Replacing a role or the standards", with each point of R13: no stage
+- [x] The new section "Adding a role", after "Replacing a role or the standards", with each point of R13: no stage
   and no status, and the table of the examples of the spec's "Context"; how it is added and removed; the front
   matter and the first instruction, as "Replacing a role or the standards" says of a role file; what its file says,
   and that it sets no status; that its findings do not block `implemented` and go where its file says; the entry it
@@ -244,18 +244,18 @@ change.
 
 ## Verification
 
-- [ ] `npm test` passes after each commit point, and at the end the count is the baseline's 653 and the tests the
+- [x] `npm test` passes after each commit point, and at the end the count is the baseline's 653 and the tests the
   unit adds
-- [ ] `git diff 170527e -- process.md` is empty (R11)
-- [ ] No line of a file the unit changes is over 120 characters, and none of them holds an em dash
-- [ ] Every requirement has a task: R1 to R4 in step 1, R4, R5, R7, R8 and R9 in step 2, R6 in step 3, R10 in step 4,
+- [x] `git diff 170527e -- process.md` is empty (R11)
+- [x] No line of a file the unit changes is over 120 characters, and none of them holds an em dash
+- [x] Every requirement has a task: R1 to R4 in step 1, R4, R5, R7, R8 and R9 in step 2, R6 in step 3, R10 in step 4,
   R12 and R13 in step 5, R11 in the verification above
-- [ ] `npm run check-changes` passes on the committed branch
+- [x] `npm run check-changes` passes on the committed branch
 
 ## Commit Points
 
-- [ ] `feature-0056 Take roles of a project's own in agentrite.json`, after step 1
-- [ ] `feature-0056 Write, list and run every role agentrite.json names`, after step 2
-- [ ] `feature-0056 Remove the wrappers of a role that is gone on refresh`, after step 3
-- [ ] `feature-0056 Have the kit's reviewer read the files of the extra roles in the record`, after step 4
-- [ ] `feature-0056 Describe adding a role in the README`, after step 5
+- [x] `feature-0056 Take roles of a project's own in agentrite.json`, after step 1
+- [x] `feature-0056 Write, list and run every role agentrite.json names`, after step 2
+- [x] `feature-0056 Remove the wrappers of a role that is gone on refresh`, after step 3
+- [x] `feature-0056 Have the kit's reviewer read the files of the extra roles in the record`, after step 4
+- [x] `feature-0056 Describe adding a role in the README`, after step 5
