@@ -94,7 +94,10 @@ State plainly when an axis has no findings. A review that says nothing about an 
 it.
 
 Save your complete findings under `.reviews/<unit-directory>/`, in a file whose name distinguishes it from the
-reviews already there, so that a second review of the same unit does not overwrite the first. Save them as well as
+reviews already there, so that a second review of the same unit does not overwrite the first. On a variant's branch,
+a branch whose name holds `--`, the name ends in `--<name>.md` with the variant's name, which is what follows the last
+`--` of the branch's name. On the unit's branch the name holds no `--`. `process.md` says the same of the reviews of
+a variant. Save them as well as
 reporting them, not instead: the response is what the human reads now, and the file is what survives the session
 being closed or interrupted.
 
@@ -111,7 +114,8 @@ work getting worse when only the sampling changed.
 A delta review does two things and stops:
 
 * Verify the accepted findings from the last review. Each one is corrected in the diff, or it is not, and you say
-  which
+  which. The last review is looked for only among the files of the same run as yours: on a variant, those that end
+  in `--<name>.md` with its name, and on the unit's branch, those whose name holds no `--`
 * Review the diff since the commit that review named, on all three axes, as you would review any diff
 
 Say that the review was a delta and name the commit you compared against. Where the last review's commit cannot be
@@ -133,6 +137,7 @@ notices. So the one thing you write, as your last act, is a single entry appende
 * The timestamp from `date -u +%Y-%m-%dT%H:%M:%SZ`. Never a local clock: a local timezone puts entries out of order
   against the UTC ones around them
 * Your harness and provider/model, in the form the entries around it use
+* On a variant's branch, the variant, as `process.md` says of an entry made there
 * The unit and the **commit** you reviewed. A branch name does not say what was seen, and the default branch moves
 * Whether the review was a delta or a full one, and for a delta the commit it was taken from, so that the next
   reviewer knows what has been looked at and what has not

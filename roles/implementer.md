@@ -51,6 +51,9 @@ apply only where there is one.
 
 The reviewer returns findings and does not edit files, so applying them is yours.
 
+* Take findings only from the files of `.reviews/<unit-directory>/` of your own run, as `process.md` says: on a
+  variant's branch, those whose name ends in `--<name>.md` with your variant's name, and on the unit's branch, those
+  whose name holds no `--`. You read your variant from the branch you are on
 * Apply an accepted finding as part of the unit, and record its outcome
 * Answer a finding you disagree with as a proposed decline: say what you would not change and why, and leave it
   there. Record it as a proposal, so that pushing back is visible and argued rather than silent

@@ -78,7 +78,8 @@ Every entry under `## Log` and under `## Amendments` of `record.md` is a list it
   human-only action. The brackets are written, and are not a mark for something to fill in
 * Then, for an agent that acts in a role, comes `as the <role>`, with the name of the role it acts in. An entry of a
   human has none, and neither has one of an agent that acts in no role
-* Then comes the text
+* Then comes the text. In an entry of an agent made on a variant's branch, defined under the review's findings
+  below, the text names the variant, as "on the variant `opus`". An entry made on the unit's branch names none
 * In `templates/changes/record.md` the brackets around who made the entry are the written ones, and its other
   brackets mark what is to be filled in
 
@@ -115,6 +116,16 @@ root.
 A review's findings are saved in full in the ignored `.reviews/<unit-directory>/` directory. Record the outcome of
 each finding, not the full review, in `record.md`: as timestamped log entries while the unit is not frozen, and
 as amendments once it is.
+
+A unit may be worked on in more than one variant, each a separate run of the unit on a branch of its own. A branch
+whose name holds `--` is a variant's, and the variant's name is what follows the last `--`, as `opus` for
+`feature-0012-export-to-csv--opus`. A role reads which variant it is on from the branch it is on, on the host as in
+the sandbox. The reviews of the runs are kept apart by the name of their file.
+
+* A review of a variant is saved in a file whose name ends in `--<name>.md`, with the variant's name
+* A review of the unit's branch is saved in a file whose name holds no `--`
+* A role on a variant takes findings only from the files whose name ends in `--<name>.md` with its own variant's
+  name, and a role on the unit's branch only from the files whose name holds no `--`
 
 The spec is written when the human wants the unit described, and any number of units may be `draft` or `approved`
 at one time. The plan is written when the unit is next to be built and not before.
