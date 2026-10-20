@@ -5,6 +5,109 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 7.2.0
+
+### What changed
+
+* `agentrite.json` has two more required keys: `standards`, the path of the standards file the project uses, and
+  `roles`, an object from each of the four roles to the path of its file. A project uses the kit's files by naming
+  their paths, and a file of its own by naming its path instead. A path must name a regular file in the project, and
+  a file that lacks a key, lacks one of the four roles or names a path with no file is refused by every command that
+  reads it, naming the key and what is wrong. `config` and `init` write both keys with the kit's paths (0054)
+* A role's description is in the front matter of its file, in the kit's four role files as well, and no longer in
+  the kit's code. A role file of the project's own opens with front matter of one key, `description`, on one line or
+  in the folded form `>-`, and a file without it is refused. The kit's wrappers are byte for byte what 7.1.0 writes
+  (0054)
+* `init` and `refresh` write the wrappers from the role files `agentrite.json` names, and write a new file,
+  `.agentrite/instructions.md`, which lists the files whose instructions hold in the project: the kit's
+  `process.md`, the standards and each role's file. It is written from `agentrite.json`, committed with the
+  wrappers, and not edited by hand (0054)
+* `CLAUDE.md` and `opencode.json`, as `init` writes them, load the standards `agentrite.json` names. With standards
+  of the project's own, `init` and `refresh` print a notice for a `CLAUDE.md` or an `opencode.json` that still loads
+  the kit's `standards.md`, naming the line or entry to remove, and remove nothing (0054)
+* The `AGENTS.md` that `init` writes calls the files `.agentrite/instructions.md` names required reading, and lists
+  no role or standards file itself. `init` and `refresh` print a notice for an `AGENTS.md` that does not name
+  `.agentrite/instructions.md` (0054)
+* `process.md` and the kit's role files say the rules on text, documentation, commits, code and tests are in the
+  project's standards, which `.agentrite/instructions.md` names, and a broken rule of the project's standards blocks
+  `implemented`. The kit's reviewer reads the specifier's, planner's and implementer's files that the list names
+  (0054)
+* `agentrite roles` and `agentrite run` read `agentrite.json`, and refuse in a project that has none or whose file
+  is not valid. `roles` lists the descriptions of the files the settings name (0054)
+* A project can add roles of its own in `roles`, besides the four. An extra role runs just before or just after one
+  of the four, within its stage, sets no status, and its findings do not block `implemented`. Its name is lowercase
+  words joined by hyphens, and a name of an agent that Claude Code or OpenCode has of its own, such as `plan` or
+  `explore`, is refused. `init` and `refresh` write its wrappers, `.agentrite/instructions.md` names it, and
+  `agentrite run` takes it as a role. The kit does not run it at its moment: the human dispatches it (0056)
+* `refresh` removes a wrapper of the kit's whose role `roles` no longer names, and prints `removed <path>`. A file of
+  another body in the same directory, such as an agent of the project's own, is left (0056)
+* `agentrite roles --json` gives each role's `path` beside its `name` and `description`, and `agentrite run` names
+  the roles `agentrite.json` names when it is given one the file does not name (0056)
+* The kit's reviewer also reads the file of each extra role that has an entry in the unit's `record.md`, and judges
+  the work against it (0056)
+* The sandbox no longer stops when a signal reaches it, as a resize of the host's terminal sends one. Before, Docker's
+  init failed to pass the signal to the agent's command, printed
+  `[FATAL tini (1)] Unexpected error when forwarding signal: 'Operation not permitted'` and exited (0057)
+* The sandbox rings the terminal's bell when Claude Code needs the developer or stops, and when OpenCode's session
+  goes idle or it asks for a permission. The bell reaches the host's terminal, and through it tmux. It needs nothing
+  in the home volume or on the host, and is set by a new required key of `agentrite.json`, `bell`, `true` or `false`,
+  which `config` and `init` write as `true`. Every start of the sandbox but `--connect` reads `bell`, and refuses a
+  file that lacks it or holds anything else. A bell set in the home volume rings besides. `SANDBOX.md` has a section
+  "The bell" (0058)
+* A project can add software to the sandbox's image with a file `sandbox/Dockerfile`, built on the kit's image, which
+  it names by the argument `AGENTRITE_IMAGE`. A start builds it when its content changed, was added or removed, and
+  whenever the kit's image is built, and refuses an image whose entrypoint, command, user or working directory
+  differs from the kit's. The kit's own image is kept beside it, under the project's image name followed by `-base`.
+  `SANDBOX.md` has a section "Adding software to the sandbox", with an example that installs a JDK (0059)
+* `standards.md` has a rule on messages to the human: a message that needs something of the human, a decision, an
+  approval, an answer or an action, ends with a numbered list of it under the line `**Needed from you**`, and its
+  prose asks nothing (0060)
+* `standards.md` has a rule not to quote the human's messages in anything committed to the project
+* The specifier writes the items of "Beyond the request" as a numbered list, and `templates/changes/spec.md` numbers
+  them
+* Not in the package: `npm run kit` runs the installed release's command in this repository, and a release's step 6
+  carries out what "Worth knowing when you update" asks when it is exact (0055); unit 0004 is set `implemented`, its
+  work being done by unit 0012 (0004)
+
+### Worth knowing when you update
+
+* **Every command that reads `agentrite.json`, and every start of the sandbox but `--connect`, refuses a file that
+  lacks `bell`, `standards` or `roles`.** Add them before anything else runs, as the default file gives them, after
+  the line of `sandbox`, which then ends with a comma. With `false` for a project that wants no bell:
+
+  ```json
+    "bell": true,
+    "standards": "node_modules/agentrite/standards.md",
+    "roles": {
+      "specifier": "node_modules/agentrite/roles/specifier.md",
+      "planner": "node_modules/agentrite/roles/planner.md",
+      "implementer": "node_modules/agentrite/roles/implementer.md",
+      "reviewer": "node_modules/agentrite/roles/reviewer.md"
+    }
+  ```
+
+  Then run `npx agentrite refresh`, which writes `.agentrite/instructions.md`, and commit `agentrite.json` and the
+  list with `package.json` and `package-lock.json` (0054, 0058)
+* An `AGENTS.md` that an earlier `init` wrote lists the kit's `standards.md` and role files itself, and gets a notice
+  on every `refresh` until it names `.agentrite/instructions.md`. No command changes it. Replace its sections
+  Development Guidelines and Roles by those that `npx agentrite init` with no argument prints (0054)
+* **The sandbox's image is built again once, by hand**, for Claude Code in the sandbox to ring: the agent is now a
+  member of the group `tty`, which the wrapper does not build for a new kit. Until then OpenCode rings and Claude Code
+  does not. From the project root: `./sandbox.sh --in-place --rebuild` (0058)
+* What the sandbox newly admits. The agent is a member of the group `tty`, and so may write, and not read, to a
+  terminal of the container that is of that group with mode `0620`, as the session's own is. The container holds the
+  capability `KILL`, which only what runs as root in it uses, Docker's init among them. The agent's processes still
+  hold no capability, and `no-new-privileges` holds as before (0057, 0058)
+* The sandbox rings by default, in every project whose `agentrite.json` says `"bell": true`. `"bell": false` turns it
+  off from the next start. A bell that the host's hooks or plugins ring does not hold in the sandbox (0058)
+* A project that already holds a file `sandbox/Dockerfile`, for another purpose, now has it built on the sandbox's
+  image at the next start, and a start fails when it does not build (0059)
+* The kit's wrappers do not change for a project that names the kit's role files, so `refresh` rewrites none of them
+* Checked by hand on a Linux host only: the bell, with Claude Code 2.1.304 and OpenCode 1.19.3 in tmux; the signal,
+  in each form of the sandbox; and a JDK added with `sandbox/Dockerfile`, on amd64. Not tested: macOS and arm64 for
+  these three, whether either harness follows `.agentrite/instructions.md` in a live session, and a project with the
+  kit installed from the registry rather than linked (0054, 0057, 0058, 0059)
+
 ## 7.1.0
 
 ### What changed
