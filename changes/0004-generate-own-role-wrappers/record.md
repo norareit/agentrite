@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: implemented
 timestamp: 2026-09-25T00:35:00Z
 ---
 
@@ -27,3 +27,10 @@ stays `draft`.
   which names this unit in its `supersedes` field and does its work. This unit is not implemented and stays `draft`,
   the process having no status for a unit that is dropped. Its description is left as written, naming the command as
   it was called then
+- 2026-10-20T12:35:02Z [human] decided that this unit is set `implemented`, so that it is no longer listed among the
+  open units. Its work was done by `0012-depend-on-released-agentrite`, which supersedes it and is `implemented`
+- 2026-10-20T12:35:02Z [Claude Code, anthropic/claude-opus-5-5] set the status to `implemented` on the human's
+  decision, from `draft`, without `approved` and `in-progress` between, since nothing was built under this unit. The
+  status is `implemented`
+
+## Amendments
