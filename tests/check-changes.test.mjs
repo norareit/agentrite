@@ -177,6 +177,19 @@ test('findSplitEntries names a new entry of a record with CRLF line endings with
   );
 });
 
+test('findSplitEntries reports a new split entry that shares the timestamp and author of one at the base', () => {
+  const sameAuthorAndTime = '- 2026-01-02T00:00:00Z [human] wrote the third entry';
+  const base = recordWithLog(firstEntry, '', secondEntry);
+
+  assert.deepEqual(
+    findSplitEntries(
+      { unit: { status: 'in-progress', record: base } },
+      { unit: { status: 'in-progress', record: recordWithLog(firstEntry, '', secondEntry, '', sameAuthorAndTime) } },
+    ),
+    [`unit: entry after a blank line: ${sameAuthorAndTime}`],
+  );
+});
+
 test('findSplitEntries judges the whole of a record absent from the base', () => {
   const thirdEntry = '- 2026-01-03T00:00:00Z [human] wrote the third entry';
 
@@ -320,6 +333,22 @@ test('check-changes passes an entry after a blank line at the base that the bran
   const result = runChecker(repository);
 
   assert.equal(result.status, 0, result.stderr);
+});
+
+test('check-changes rejects a new split entry that shares the timestamp and author of one at the base', (t) => {
+  const sameAuthorAndTime = '- 2026-01-02T00:00:00Z [human] wrote the third entry';
+  const repository = repositoryWithFrozenUnit(t);
+  commitRecordWithLog(repository, firstEntry, '', secondEntry);
+  git(repository, 'checkout', '-b', 'change');
+  commitRecordWithLog(repository, firstEntry, '', secondEntry, '', sameAuthorAndTime);
+
+  const result = runChecker(repository);
+
+  assert.notEqual(result.status, 0);
+  assert.equal(
+    result.stderr,
+    `Change documents need attention:\n- 0001-example: entry after a blank line: ${sameAuthorAndTime}\n`,
+  );
 });
 
 // R25: the branch the file names is the base, and a branch master beside it is not read.

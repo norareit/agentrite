@@ -63,9 +63,9 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
       (review finding S1, R3)
 - [x] Identify an entry by its timestamp and its author, read across its lines with whitespace collapsed, and give
       the message the opening line without its carriage return. The tests pass (S1, R2, R3)
-- [ ] Write a unit test and a test of the command that a new entry after a blank line is reported when the base holds
+- [x] Write a unit test and a test of the command that a new entry after a blank line is reported when the base holds
       a split entry with the same timestamp and author but other text, and see them fail (review finding S2, R2)
-- [ ] Identify an entry by its whole text with whitespace collapsed, rather than by its timestamp and author. The
+- [x] Identify an entry by its whole text with whitespace collapsed, rather than by its timestamp and author. The
       tests pass (S2, R2, R3)
 - [x] Remove the blank lines between entries from every `record.md` under `changes/` with the one-off script, and
       verify that 16 records change, that only blank lines are touched, and that a second run changes nothing (R7,

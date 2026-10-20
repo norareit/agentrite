@@ -108,16 +108,14 @@ function entriesOf(record) {
 }
 
 /**
- * An entry is known by its timestamp and its author, read across its lines, so that rewrapping it or changing its
- * line endings leaves it the same entry.
+ * An entry is known by its whole text, read across its lines, so that rewrapping it or changing its line endings
+ * leaves it the same entry. Its timestamp and author alone would not do: two entries may share both.
  *
  * @param {RecordEntry} entry
  * @returns {string}
  */
 function identityOf(entry) {
-  const text = entry.lines.join(' ').replace(/\s+/g, ' ');
-  const authorEnd = text.indexOf(']');
-  return authorEnd === -1 ? text : text.slice(0, authorEnd + 1);
+  return entry.lines.join(' ').replace(/\s+/g, ' ');
 }
 
 /**
