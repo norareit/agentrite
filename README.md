@@ -316,8 +316,10 @@ node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]
 ```
 
 The change check. It compares the committed work on the current branch with the default branch, and exits non-zero
-with a list of the offending units when a frozen `spec.md` or `plan.md` changed or an implemented plan has unticked
-tasks.
+with a list of the offending units when a frozen `spec.md` or `plan.md` changed, an implemented plan has unticked
+tasks, or an entry of `## Log` or `## Amendments` of a `record.md` stands after a blank line that separates it from
+an entry before it in the same section. Such an entry is named by its first line, and one that already stood after a
+blank line on the default branch is not rejected.
 
 The default branch is the one that `defaultBranch` names in the `agentrite.json` at the repository root, as that
 file is in the working tree. The check takes the local branch of that name, and `origin/<default branch>` when the

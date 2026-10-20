@@ -51,10 +51,10 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
           entry, and on one whose base already holds the blank line it passes
 - [x] Implement `findSplitEntries`, add `record` to what `documentsAtRevision` returns, and add the function to the
       violations of `run`. The tests pass (R2, R3)
-- [ ] State the rule in `process.md` after the list of what an entry is made of: the entries of a section follow one
+- [x] State the rule in `process.md` after the list of what an entry is made of: the entries of a section follow one
       another with no blank line between them, and a new entry goes directly after the last one of its section, above
       the blank line before the next heading (R1)
-- [ ] Change "check-changes" in `README.md` so that it says the check also rejects an entry that the branch adds after
+- [x] Change "check-changes" in `README.md` so that it says the check also rejects an entry that the branch adds after
       a blank line (R4)
 - [ ] Remove the blank lines between entries from every `record.md` under `changes/` with the one-off script, and
       verify that 16 records change, that only blank lines are touched, and that a second run changes nothing (R7,
@@ -73,7 +73,7 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
 
 ## Commit Points
 
-- [ ] `bugfix-0064` the tests of the check and the check, in one commit
+- [x] `bugfix-0064` the tests of the check and the check, in one commit
 - [ ] `bugfix-0064` the rule in `process.md` and the text in `README.md`
 - [ ] `bugfix-0064` the removal of the blank lines between entries of the records, and nothing else
 - [ ] `bugfix-0064` the log entry naming the removal commit

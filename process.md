@@ -82,6 +82,10 @@ Every entry under `## Log` and under `## Amendments` of `record.md` is a list it
 * In `templates/changes/record.md` the brackets around who made the entry are the written ones, and its other
   brackets mark what is to be filled in
 
+The entries of a section follow one another with no blank line between them. A new entry goes directly after the
+last entry of its section, above the blank line before the next heading. The change check rejects an entry that the
+branch adds after a blank line.
+
 The statuses are `draft`, `approved`, `in-progress` and `implemented`, and every kind of unit goes through them in
 that order. `approved` says that the human approved the spec, or for a task its record. An approved unit may be
 built: a task always; a bug when it has a `plan.md`, or a log entry in its `record.md` that says it needs no plan; a
