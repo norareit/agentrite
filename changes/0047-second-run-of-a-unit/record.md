@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-13T20:22:53Z
 ---
 
@@ -40,5 +40,6 @@ timestamp: 2026-10-13T20:22:53Z
   `--variant <name>`; its reviews end in `--<name>`; a role reads its variant from its branch; a record's entry made
   on a variant names it. Reworded the two places of the first entry above that quoted the human, whom the standards
   of release 7.2.0 forbid quoting in anything committed. The status is `draft`
+- 2026-10-20T20:11:35Z [human] approved the spec. The status is `approved`
 
 ## Amendments
