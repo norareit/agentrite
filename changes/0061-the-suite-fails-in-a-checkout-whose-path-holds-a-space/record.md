@@ -59,5 +59,8 @@ timestamp: 2026-10-19T23:21:09Z
   its result, were the same once the durations were removed. The 23 skipped need Docker, so R1 and R5 are not
   verified for them: the run of both on the human's Linux host with Docker, a task of the plan's verification, is
   left open, and the status stays `in-progress` until it is done
+- 2026-10-20T18:13:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm run check-changes` on `e73ceb2`, which
+  passed. Its task in the plan stays open, since it is to be run after the last commit, which the run with Docker may
+  still add
 
 ## Amendments
