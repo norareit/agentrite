@@ -18,7 +18,7 @@ The human placed the rule in `standards.md`, since it holds for every role, and 
 
 1. `standards.md` holds a rule on messages to the human, among the rules on text, which says:
     * a message to the human that needs something of them, a decision, an approval, an answer, or an action only
-      they can take, ends with a list of what it needs, under a line that reads `**Needed from you**`
+      they can take, ends with a numbered list of what it needs, under a line that reads `**Needed from you**`
     * nothing of the message comes after the list
     * each item names one thing, and can be understood without the prose above it: what is to be decided, approved,
       answered or done, and where a choice is asked for, the options, with the one the agent recommends marked
@@ -38,6 +38,8 @@ The human placed the rule in `standards.md`, since it holds for every role, and 
 * **The list is under a fixed line, at the very end.** The end is where a reader looks last and where a terminal
   leaves the message, and a fixed line is found by eye and by a search alike. `**Needed from you**` is bold, and not
   a heading, so that it reads the same in a terminal that shows Markdown and in one that does not
+* **The list is numbered.** The human answers by number, as "1 yes, 2 the second option", and a number names an item
+  without quoting it
 * **Each item stands alone.** A list that only points back into the prose, as "see above", moves the hunt and does
   not end it
 * **No list when nothing is needed.** An empty list, or a line that says nothing is needed, trains the reader to skip

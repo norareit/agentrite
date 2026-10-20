@@ -13,6 +13,14 @@ project is in its own `AGENTS.md`.
 * When generating text such as documentation or commit messages, do not use em dashes
 * Do not quote the human's messages in anything committed to the project. They are written for the agent, not for
   the project's readers. Write what was asked or decided in your own words, as correct prose
+* A message to the human that needs something of them, a decision, an approval, an answer, or an action only they can
+  take, ends with a numbered list of what it needs, under a line that reads `**Needed from you**`. Nothing of the
+  message comes after the list
+    * Each item names one thing and can be understood without the prose above it: what is to be decided, approved,
+      answered or done, and where a choice is asked for, the options, with the one the agent recommends marked
+    * A message that needs nothing of the human has no such list and no such line
+    * The rule is on messages, in a session and in the last message of a run without a session, and not on the
+      documents an agent writes, such as a spec or a record
 
 ### Documentation changes
 

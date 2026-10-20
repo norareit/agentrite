@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-10-19T15:48:46Z
 ---
 
@@ -19,5 +19,14 @@ timestamp: 2026-10-19T15:48:46Z
   `spec.md` decides the form of the list. Changed the kind to `task`. `spec.md` is kept, as what the task makes
   true, and no plan is written. The status is `draft`
 - 2026-10-20T12:41:04Z [human] approved the spec. The status is `approved`
+- 2026-10-20T13:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the branch
+  `task-0060-what-the-human-must-do-ends-a-message`, cut from `master` at `07e5442`. Added the rule on messages to the
+  human to "Text" of `standards.md`, as the spec's requirement 1 words it. No role file repeats it. The status is
+  `in-progress`
+- 2026-10-20T13:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm test` on the final
+  tree: 725 tests, 724 pass and 1 fails, a test that expects an `agentrite.json` without the `bell`, `standards` and
+  `roles` keys. The same test fails with the same result on `master` with my change stashed, so it is not caused by
+  this unit and is not fixed here. The end-to-end suite is the same `npm test`. Lines of `standards.md` are within 120
+  characters
 
 ## Amendments
