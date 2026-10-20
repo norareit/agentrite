@@ -202,22 +202,22 @@ The documents:
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with `tests/sandbox-variant.test.mjs` run and not skipped, since the host has
+- [x] `npm test` passes on the host, with `tests/sandbox-variant.test.mjs` run and not skipped, since the host has
   Docker
-- [ ] `./sandbox.sh --in-place npm test` passes, with the Docker tests skipped there
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] By hand on the host, with the working copy's wrapper: `./sandbox-dev.sh 0047 --variant try echo hi` cuts
+- [x] `./sandbox.sh --in-place npm test` passes, with the Docker tests skipped there
+- [x] `npm run check-changes` passes on the committed branch
+- [x] By hand on the host, with the working copy's wrapper: `./sandbox-dev.sh 0047 --variant try echo hi` cuts
   `feature-0047-second-run-of-a-unit--try`, runs and lands; `git branch --list '*--try'` shows it; it is then deleted
   with `git branch --delete --force`
-- [ ] Each requirement R1 to R22 has a task above whose trace names it
+- [x] Each requirement R1 to R22 has a task above whose trace names it
 
 ## Commit Points
 
-- [ ] `feature-0047 Plan the variants of a unit`: `plan.md` and the record's entry
-- [ ] `feature-0047 Run a variant of a unit`: `container/unit-clone.sh`, `container/sandbox.sh`, `sandbox-dev.sh`,
+- [x] `feature-0047 Plan the variants of a unit`: `plan.md` and the record's entry
+- [x] `feature-0047 Run a variant of a unit`: `container/unit-clone.sh`, `container/sandbox.sh`, `sandbox-dev.sh`,
   `CONTRIBUTING.md` and their tests in `tests/sandbox-unit-run.test.mjs` and `tests/sandbox-dev.test.mjs`
-- [ ] `feature-0047 Test variants that run side by side`: `tests/wrapper-fixture.mjs` and
+- [x] `feature-0047 Test variants that run side by side`: `tests/wrapper-fixture.mjs` and
   `tests/sandbox-variant.test.mjs`
-- [ ] `feature-0047 Keep the reviews of each variant apart`: `process.md`, `roles/reviewer.md`,
+- [x] `feature-0047 Keep the reviews of each variant apart`: `process.md`, `roles/reviewer.md`,
   `roles/implementer.md`
-- [ ] `feature-0047 Document variants`: `SANDBOX.md`, `README.md`, and the record's entries of the work
+- [x] `feature-0047 Document variants`: `SANDBOX.md`, `README.md`, and the record's entries of the work

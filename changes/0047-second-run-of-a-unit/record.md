@@ -54,5 +54,22 @@ timestamp: 2026-10-13T20:22:53Z
   task that traces to it, and every task traces to a requirement. The status stays `approved`
 - 2026-10-20T20:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on
   `feature-0047-second-run-of-a-unit` at `9a17b1a`. The status is `in-progress`
+- 2026-10-20T21:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the plan, one commit for
+  each of its commit points on `feature-0047-second-run-of-a-unit`, tests first, in the order of its tasks, with no task
+  added or removed. Decisions of the build where the plan left the detail open: `--variant` after the unit is taken in
+  the early block of `container/sandbox.sh` by looking at the argument right after the unit only, and a second
+  `--variant` right behind the first is refused as a variant given twice. `mount_forms` keeps its existing lines and
+  adds the variant's. `tests/sandbox-variant.test.mjs` has its own `setUp`, shorter than the one of
+  `tests/sandbox-unit-run.test.mjs`, since that one is not exported and its fake host does not run containers.
+  `containerHost` also turns `docker exec` into a real one, as the user and group of the suite and without
+  `known-terminal.sh`, because the base image has no `agent` account and no such script, which the connect test needs.
+  Verified on `23b32e9`: `npm test` on the host reported 810 tests, 810 passed, none skipped, so
+  `tests/sandbox-variant.test.mjs` ran with its 5 tests; `./sandbox.sh --in-place npm test` reported 810 tests, 782
+  passed, 28 skipped, none failed, with the Docker tests among the skipped; `npm run check-changes` exited 0; by hand,
+  `./sandbox-dev.sh 0047 --variant try echo hi` cut `feature-0047-second-run-of-a-unit--try`, ran `echo hi` in the
+  container and ended with no clone left, and the branch was deleted. The new tests that need no Docker were run against
+  the wrapper before the change and 39 of the file's tests failed, and the two new tests of `sandbox-dev.sh` failed
+  without its change. Not checked: the new tests of the Docker file against the wrapper before the change, a run of a
+  variant on a macOS host, and a project other than this one. The status stays `in-progress`
 
 ## Amendments
