@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-10-19T23:21:09Z
 ---
 
@@ -39,5 +39,13 @@ timestamp: 2026-10-19T23:21:09Z
   `tests/sandbox-unit-run.test.mjs` failed for an unquoted path in the test. No test failed in the kit's code. Found
   nine files taking a path from a URL's `pathname` on this tree, where the spec's root cause counted eight on
   another, which changes no requirement. Wrote `plan.md`. The status stays `approved`
+- 2026-10-20T18:10:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on
+  `bugfix-0061-the-suite-fails-in-a-checkout-whose-path-holds-a-space` at `a3b3c97`, in an environment without
+  Docker, began the work. The status is `in-progress`
+- 2026-10-20T18:11:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, before the work, ran `npm test` at `a3b3c97`:
+  745 tests, 722 passing, 0 failing and 23 skipped, as the plan states. Wrote the regression test of R3 and saw it
+  fail naming the nine files of the plan. Took their paths with `fileURLToPath` and quoted the script's path in the
+  three commands of `sh` in `tests/bell.test.mjs`. `npm test` reported 746 tests, 723 passing, 0 failing and 23
+  skipped, the three terminal tests of `tests/bell.test.mjs` among those that ran
 
 ## Amendments

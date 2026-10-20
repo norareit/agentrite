@@ -3,9 +3,10 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
-const knownTerminal = new URL('../container/known-terminal.sh', import.meta.url).pathname;
+const knownTerminal = fileURLToPath(new URL('../container/known-terminal.sh', import.meta.url));
 const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.url), 'utf-8');
 const entrypoint = readFileSync(new URL('../container/entrypoint.sh', import.meta.url), 'utf-8');
 

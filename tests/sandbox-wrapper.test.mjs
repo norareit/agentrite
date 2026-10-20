@@ -13,6 +13,7 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import {
   fakeHost,
   hostVersions,
@@ -24,8 +25,8 @@ import {
 } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
-const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
-const kitScripts = new URL('../scripts/', import.meta.url).pathname;
+const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
+const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const kitPath = 'project/node_modules/agentrite/container';
 
 // What an image built earlier holds, where a test needs it to differ from what the fake host has and from what

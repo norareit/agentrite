@@ -94,18 +94,18 @@ file or directory at the root of the repository is added.
 
 ### The paths of the checkout
 
-- [ ] Add `tests/suite-files.mjs`, exporting `testsDirectory` and `moduleFiles` as
+- [x] Add `tests/suite-files.mjs`, exporting `testsDirectory` and `moduleFiles` as
   `tests/temporary-directory.test.mjs` defines them, with the comment that they list every module of the suite.
   Add `tests/file-paths.test.mjs` with one test: every file `moduleFiles(testsDirectory)` lists whose text
   matches the pattern of "What the regression test looks for" is an offender, and the test asserts there are none,
   naming the offenders by their path from the root of the repository and saying to take the path with
   `fileURLToPath` of `node:url`, since a URL's `pathname` is percent-encoded and fails in a checkout whose path holds
   a space. Run it and see it fail, naming the nine files (R2, R3)
-- [ ] In each of the nine files, replace `new URL(<path>, import.meta.url).pathname` with
+- [x] In each of the nine files, replace `new URL(<path>, import.meta.url).pathname` with
   `fileURLToPath(new URL(<path>, import.meta.url))`, and import `fileURLToPath` from `node:url`, into the import of
   `node:url` the file has already where it has one, as `tests/bell.test.mjs` does for `pathToFileURL`. Run the
   regression test green (R2, R3)
-- [ ] In `tests/bell.test.mjs`, quote the path of `ring-bell.sh` in the commands at lines 52, 60 and 68 as "The
+- [x] In `tests/bell.test.mjs`, quote the path of `ring-bell.sh` in the commands at lines 52, 60 and 68 as "The
   quoting of the bell tests" says (R1)
 
 ### The temporary directories
@@ -137,7 +137,7 @@ file or directory at the root of the repository is added.
 
 ## Commit Points
 
-- [ ] `bugfix-0061 Take the suite's paths with fileURLToPath and quote those given to a shell`, after the tasks of
+- [x] `bugfix-0061 Take the suite's paths with fileURLToPath and quote those given to a shell`, after the tasks of
   "The paths of the checkout"
 - [ ] `bugfix-0061 Make every temporary directory of the suite with a space in its name`, after the tasks of "The
   temporary directories"

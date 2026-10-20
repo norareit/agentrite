@@ -6,13 +6,14 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { dockerHost, hostVersions, standInLabel, writeCommand } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
-const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
-const unitClone = new URL('../container/unit-clone.sh', import.meta.url).pathname;
-const shim = new URL('../sandbox-dev.sh', import.meta.url).pathname;
-const kitScripts = new URL('../scripts/', import.meta.url).pathname;
+const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
+const unitClone = fileURLToPath(new URL('../container/unit-clone.sh', import.meta.url));
+const shim = fileURLToPath(new URL('../sandbox-dev.sh', import.meta.url));
+const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 
 const dockerLacking = spawnSync('docker', ['info'], { stdio: 'ignore' }).status !== 0;
 const skip = dockerLacking

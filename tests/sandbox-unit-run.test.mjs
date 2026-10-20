@@ -14,13 +14,14 @@ import {
 } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { skipReason } from './skip-reason.mjs';
 import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
-const kitContainer = new URL('../container/', import.meta.url).pathname;
-const kitScripts = new URL('../scripts/', import.meta.url).pathname;
+const kitContainer = fileURLToPath(new URL('../container/', import.meta.url));
+const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const kitPath = 'node_modules/agentrite/container';
 
 // An agentrite.json that names `defaultBranch`, and in which the bell does not ring.

@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const repository = new URL('..', import.meta.url).pathname;
+const repository = fileURLToPath(new URL('..', import.meta.url));
 const releasing = 'RELEASING.md';
 const skill = join('.claude', 'skills', 'release', 'SKILL.md');
 

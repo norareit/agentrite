@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
-const entrypoint = new URL('../container/entrypoint.sh', import.meta.url).pathname;
+const entrypoint = fileURLToPath(new URL('../container/entrypoint.sh', import.meta.url));
 
 /**
  * The source of the named functions as `container/entrypoint.sh` defines them, joined in the order given, so that a

@@ -2,8 +2,9 @@ import assert from 'node:assert/strict';
 import { readdirSync, readFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-const repository = new URL('..', import.meta.url).pathname;
+const repository = fileURLToPath(new URL('..', import.meta.url));
 const dockerfile = readFileSync(join(repository, 'container', 'Dockerfile'), 'utf-8');
 const compose = readFileSync(join(repository, 'container', 'compose.yml'), 'utf-8');
 

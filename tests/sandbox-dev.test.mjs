@@ -3,14 +3,15 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { fakeHost, logDirectory, logMounts } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
-const shim = new URL('../sandbox-dev.sh', import.meta.url).pathname;
-const wrapper = new URL('../container/sandbox.sh', import.meta.url).pathname;
-const unitClone = new URL('../container/unit-clone.sh', import.meta.url).pathname;
-const dockerfile = new URL('../container/Dockerfile', import.meta.url).pathname;
-const kitScripts = new URL('../scripts/', import.meta.url).pathname;
+const shim = fileURLToPath(new URL('../sandbox-dev.sh', import.meta.url));
+const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
+const unitClone = fileURLToPath(new URL('../container/unit-clone.sh', import.meta.url));
+const dockerfile = fileURLToPath(new URL('../container/Dockerfile', import.meta.url));
+const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const projectCompose = readFileSync(new URL('../sandbox/compose.project.yml', import.meta.url), 'utf-8');
 
 const devName = 'ritenoar-agentrite-sandbox-dev';

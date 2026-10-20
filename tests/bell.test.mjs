@@ -3,12 +3,12 @@ import { spawnSync } from 'node:child_process';
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { pathToFileURL } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { listEntries } from './compose-entries.mjs';
 import { skipReason } from './skip-reason.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
-const ringBell = new URL('../container/bell/ring-bell.sh', import.meta.url).pathname;
+const ringBell = fileURLToPath(new URL('../container/bell/ring-bell.sh', import.meta.url));
 
 const BEL = '\x07';
 
@@ -49,15 +49,16 @@ test('with no terminal of its own and pipes for its streams, the script exits 0 
 
 // R4
 test('in a terminal, the script writes the one byte BEL to it and nothing else', { skip: terminalSkip }, () => {
-  assert.equal(inTerminal(`sh ${ringBell}`), BEL);
+  assert.equal(inTerminal(`sh ${quoted(ringBell)}`), BEL);
 });
 
 // R1
 test('with no controlling terminal, it rings the terminal its parent writes to', { skip: terminalSkip }, () => {
   // The outer shell stands for the harness, whose standard streams are the terminal. The inner one gives the script
   // streams that are no terminal and replaces itself with it, so that the outer one is the parent, as a harness is
-  // of a hook. The `; true` keeps the outer one from replacing itself in the same way.
-  const command = `sh -c 'sh -c "exec setsid sh ${ringBell} </dev/null >/dev/null 2>&1"; true'`;
+  // of a hook. The `; true` keeps the outer one from replacing itself in the same way. The script's path is given to
+  // each shell as its `$0` rather than written into the text, so that a space in it is not split two shells deep.
+  const command = `sh -c 'sh -c "exec setsid sh \\"\\$0\\" </dev/null >/dev/null 2>&1" "$0"; true' ${quoted(ringBell)}`;
   assert.equal(inTerminal(command), BEL);
 });
 
@@ -65,7 +66,7 @@ test('with no controlling terminal, it rings the terminal its parent writes to',
 test('with JSON on its standard input, as a hook of Claude Code is given, it does the same', {
   skip: terminalSkip,
 }, () => {
-  assert.equal(inTerminal(`echo '{"hook_event_name":"Notification"}' | sh ${ringBell}`), BEL);
+  assert.equal(inTerminal(`echo '{"hook_event_name":"Notification"}' | sh ${quoted(ringBell)}`), BEL);
 });
 
 const RING = 'sh /etc/agentrite/bell/ring-bell.sh';
@@ -186,7 +187,7 @@ test(
   () => {
     const image = /^FROM (\S+) AS base$/m.exec(dockerfile)?.[1];
     assert.ok(image, 'the Dockerfile has a base stage');
-    const bell = new URL('../container/bell', import.meta.url).pathname;
+    const bell = fileURLToPath(new URL('../container/bell', import.meta.url));
     const rings = (groups) => {
       const run = [
         'docker', 'run', '--rm', '--tty', '--init', '--read-only',
