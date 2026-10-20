@@ -33,5 +33,13 @@ timestamp: 2026-10-19T15:48:11Z
   tests the labels; two decisions, and the non-goal of the compose file says the human left it out. The status is
   `draft`
 - 2026-10-20T13:29:49Z [human] approved the spec. The status is `approved`
+- 2026-10-20T13:37:55Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0059-a-project-adds-software-to-the-sandbox` from `master` at `130ac4f`. Read `container/sandbox.sh`,
+  `container/compose.yml`, `container/Dockerfile`, the fixtures of the wrapper's tests and the Docker tests of the
+  suite, and the sections of `SANDBOX.md` and `README.md` the spec names. Checked on the host's Docker that a build
+  takes a `FROM` of an image that is only local without a pull, and that a `--label` of the command line replaces a
+  `LABEL` of the same name. Ran the suite: 725 tests, 724 pass, and unit 0054's R24 test of
+  `tests/repository-own-files.test.mjs` fails, as it did before this unit. Wrote `plan.md`. The status is
+  `approved`
 
 ## Amendments
