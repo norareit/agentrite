@@ -75,6 +75,8 @@ Several runs:
 * Two runs never work on one branch: the container is named after the Compose project and the branch. See "Two
   agents on one unit"
 * Two checkouts of one project on one host share a branch's clone
+* A unit's variants run beside the unit's run and beside each other, each on a branch of its own. See "Two
+  implementations of one unit"
 
 Every command in the sandbox, of a unit run, of `--in-place`, of `--workdir` and of `--connect`, has the `TERM` and the
 `COLORTERM` of the terminal the wrapper was run from, so a harness draws in the colours it draws in there on the host.
@@ -150,6 +152,57 @@ Only a unit run can be connected to. A run with `--in-place` or `--workdir` has 
 up, and no unit to give.
 
 For a `--connect` that runs nothing, see "When something goes wrong".
+
+## Two implementations of one unit
+
+```sh
+./sandbox.sh <unit> --variant <name> [COMMAND...]
+```
+
+A variant is a second run of a unit, with its own clone, its own container and its own branch, so that two models can
+implement one unit, each on its own, and the results can be laid side by side. `--connect` is not that: it puts two
+agents on one tree. In two terminals, with another `--model` in each:
+
+```sh
+./sandbox.sh 0029 --variant opus npx agentrite run implementer claude 0029 --model <id>
+./sandbox.sh 0029 --variant gpt-6-1 npx agentrite run implementer opencode 0029 --model <id>
+```
+
+* `--variant` is optional. Without it a unit run is as "Running a unit" says. It is given before the unit or right
+  after it, and it is refused together with `--in-place` and `--workdir`, which have no unit, and when it is given
+  twice
+* A variant's name is one or more words of the lowercase letters `a` to `z` and the digits `0` to `9`, joined by
+  single hyphens, as `opus` or `gpt-6-1`. A name of another form is refused before anything is started
+* The variant works on the branch that is the unit's branch, two hyphens and the name, as
+  `feature-0029-sandbox-clone-of-the-branch--opus`. It is a unit run of that branch, and everything "Running a unit"
+  and "Getting the work back" say of a unit run holds for it
+* When that branch does not exist, the wrapper cuts it from the host's branch of the unit, at the commit that branch
+  is at, and says what it cut and from which commit before it builds an image or starts a container. A unit with no
+  branch gets its branch cut first, from the default branch, and then the variant's. Commits of a unit run that is
+  under way and has not been brought back to the host are in its clone and not in the variant. When the branch
+  exists, the run works on it as it is, and nothing of the unit's branch is taken into it
+* A variant runs while the unit's run, or another variant, runs, and while none does. Any number may run at a time.
+  Starting, running and ending one stops nothing in another container, writes nothing in another clone and moves no
+  other branch
+* A variant's commits are brought back to the variant's branch and to no other. The unit's branch and the other
+  variants' are as they were
+* Two runs of one variant are refused as two unit runs of one branch are, and the message names `--connect`
+* A number names the unit's branch alone, whatever variants the unit has. A variant is named afterwards by its unit
+  and its name, as in `./sandbox.sh --connect 0029 --variant opus`, or by its branch's full name, as in
+  `./sandbox.sh feature-0029-sandbox-clone-of-the-branch--opus`. `--variant` is not given with a branch that is
+  a variant's already
+* `--connect` with `--variant` runs the command in the variant's container, and without it in the unit run's
+
+The reviews are kept apart by the name of their file in `.reviews/<unit-directory>/`, which the runs share: a
+reviewer on a variant saves its findings in a file whose name ends in `--<name>.md`, and on the unit's branch in a file
+whose name holds no `--`. An implementer takes findings only from the files of its own run. The roles read the variant
+from the branch they are on.
+
+To compare two results and take one, use git. Compare with `git diff <unit's branch> <variant's branch>`, or of two
+variants' branches. Take one by merging its branch into the unit's branch with `git merge`, or by moving the unit's
+branch to it with `git branch --force <unit's branch> <variant's branch>` while the unit's branch is not checked out.
+A variant that is not taken is a branch to delete, with `git branch --delete --force`, and its clone with `rm -rf` of
+its directory when one was kept, as "Where things are kept on the host" says.
 
 ## Running on the tree as it is
 
@@ -402,7 +455,8 @@ What the sandbox keeps on the host, where it is and how it is removed:
 **The clone of a unit run**
 
 The clone of the unit's branch that a unit run mounts at `/work`. It is under `$XDG_STATE_HOME` when that is set.
-What it holds is in "Running a unit".
+What it holds is in "Running a unit". A variant's clone is kept as a unit run's is, at its branch's name, as in
+`~/.local/state/agentrite/<Compose project>/feature-0029-sandbox-clone-of-the-branch--opus`.
 
 To discard a clone, remove its directory with `rm -rf`. When the wrapper removes it itself is in "Getting the work
 back".

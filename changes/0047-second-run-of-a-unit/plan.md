@@ -83,12 +83,12 @@ files under `.claude/agents` and `.opencode/agents` hold no instruction and do n
 
 The wrapper, tests first:
 
-- [ ] In `tests/sandbox-unit-run.test.mjs`, add tests on the fake host for the option and its refusals, each
+- [x] In `tests/sandbox-unit-run.test.mjs`, add tests on the fake host for the option and its refusals, each
   asserting status 2, the message, no Docker or npm call, no branch made (`git for-each-ref` unchanged) and no state
   directory: a name of each wrong form (`Opus`, `opus--x`, `-opus`, `opus-`, `op_us`, `opus.1`, an empty name of
   `--variant=`), naming the name and the form; `--variant` with `--in-place` and with `--workdir`, naming the option;
   `--variant` given twice, before and after the unit and both after; `--variant` with no name. (R1, R3, R4)
-- [ ] Add tests on the fake host that `./sandbox.sh task-0026-doc --variant opus echo hi`,
+- [x] Add tests on the fake host that `./sandbox.sh task-0026-doc --variant opus echo hi`,
   `./sandbox.sh 0026 --variant=opus echo hi` and `./sandbox.sh --variant opus 0026 echo hi` cut
   `task-0026-doc--opus` at the commit of `task-0026-doc`, say
   `sandbox.sh: cut task-0026-doc--opus from task-0026-doc at <commit>.` before any `docker` call is recorded, leave
@@ -96,35 +96,35 @@ The wrapper, tests first:
   `project-sandbox-task-0026-doc--opus` and the clone `<state>/agentrite/project-sandbox/task-0026-doc--opus`, with
   `echo hi` as the command. A run without `--variant` makes exactly the calls it makes today, which the existing
   tests hold. (R1, R2, R5, R7)
-- [ ] Add a test that a variant's branch that exists, and is behind and apart from a unit's branch that has moved on
+- [x] Add a test that a variant's branch that exists, and is behind and apart from a unit's branch that has moved on
   since, is run as it is: no branch is cut, nothing is said of a cut, and the clone is at the variant's commit, not
   the unit's. (R6)
-- [ ] Add a test that `--variant opus` for the unit `0031` of the fixture's cut tests, which has no branch, cuts
+- [x] Add a test that `--variant opus` for the unit `0031` of the fixture's cut tests, which has no branch, cuts
   `feature-0031-cut-me` from `master` and then `feature-0031-cut-me--opus` from it, says both in that order, and runs
   the variant's branch; and one that a build that fails after that leaves both branches cut, as for a unit's
   branch. (R5)
-- [ ] Add tests of the lookup: with `task-0026-doc--opus` and `task-0026-doc--gpt-6-1` beside `task-0026-doc`,
+- [x] Add tests of the lookup: with `task-0026-doc--opus` and `task-0026-doc--gpt-6-1` beside `task-0026-doc`,
   `0026` runs `task-0026-doc`; a number that only a variant's branch holds, as `task-0099-x--opus` alone, names no
   branch and is handled as a number with no branch is today (the unit is looked for on `master`); a variant's
   branch given by its full name runs that branch and cuts nothing; that name together with `--variant` is refused,
   naming the branch, and nothing is cut or called. (R12, R13)
-- [ ] Add `--connect` tests: `--connect 0026 --variant opus [COMMAND...]` and `--connect task-0026-doc--opus` exec in
+- [x] Add `--connect` tests: `--connect 0026 --variant opus [COMMAND...]` and `--connect task-0026-doc--opus` exec in
   `project-sandbox-task-0026-doc--opus` with the call the existing `--connect` tests expect; `--connect 0026` with
   variants' branches present execs in `project-sandbox-task-0026-doc`; `--connect 0026 --variant nobranch` is
   refused, cuts nothing and names `sandbox.sh 0026 --variant nobranch`; while no variant's container runs,
   `--connect 0026 --variant opus` names `sandbox.sh 0026 --variant opus`; `--connect` with `--variant` and
   `--in-place` is refused. (R14)
-- [ ] Add a test that a run of a variant whose container is running is refused as a unit's is, and that its message
+- [x] Add a test that a run of a variant whose container is running is refused as a unit's is, and that its message
   names `'sandbox.sh --connect 0026 --variant opus [COMMAND...]'` and the variant's container. (R10)
-- [ ] Add a test that the forms the wrapper lists when nothing to mount is given show `--variant NAME`. (R1)
-- [ ] In `container/unit-clone.sh`, add `is_variant_branch`, make `find_unit_branch` drop branches it holds true
+- [x] Add a test that the forms the wrapper lists when nothing to mount is given show `--variant NAME`. (R1)
+- [x] In `container/unit-clone.sh`, add `is_variant_branch`, make `find_unit_branch` drop branches it holds true
   for from the number lookup, and add `resolve_variant_branch` and `find_variant_branch` as the approach says, with
   a comment above each in the file's manner. (R2, R5, R6, R12, R13, R14)
-- [ ] In `container/sandbox.sh`, take `--variant` before and after the unit, refuse as step 2 of the approach says,
+- [x] In `container/sandbox.sh`, take `--variant` before and after the unit, refuse as step 2 of the approach says,
   resolve the variant's branch as step 3 says, carry `unit_given` into the two messages of step 4, and update the
   usage in the header and `mount_forms`. Run `npm test` until the new tests and every existing one pass. (R1 to R6,
   R10, R12 to R14)
-- [ ] `sandbox-dev.sh` reads the wrapper's options to tell `--connect` from a run, and says that an option the
+- [x] `sandbox-dev.sh` reads the wrapper's options to tell `--connect` from a run, and says that an option the
   wrapper gains that takes a value is added there. In `tests/sandbox-dev.test.mjs`, add tests that
   `./sandbox-dev.sh --variant opus --connect 0026` and `./sandbox-dev.sh --variant=opus --connect 0026` pass no
   `--rebuild`, and that `./sandbox-dev.sh --variant opus 0026` passes it; then in `sandbox-dev.sh` step over
@@ -133,14 +133,14 @@ The wrapper, tests first:
 
 Running variants, with Docker:
 
-- [ ] In `tests/wrapper-fixture.mjs`, add `containerHost(base, recorded)`: the `bin` of `hostBin`, with a `docker`
+- [x] In `tests/wrapper-fixture.mjs`, add `containerHost(base, recorded)`: the `bin` of `hostBin`, with a `docker`
   that answers `config --format json` as `configAnswer` does and `image inspect` from an `imageLabels` file as
   `fakeHost`'s does, records every call as `fakeHost`'s does, passes `ps`, `rm` and `exec` to the real `docker` with
   the suite's `DOCKER_CONFIG` and `DOCKER_HOST` as `dockerHost` does, and turns a `compose ... run` into a real
   `docker run --rm --name <name>` of an image it is given, with the call's `--volume` flags, `--workdir /work`,
   `--user` of the suite's uid and gid, `--env HOME=/tmp` and the call's command. Document it above the function as
   `fakeHost` and `dockerHost` are documented. (R22)
-- [ ] Add `tests/sandbox-variant.test.mjs`, skipped with the message of the other Docker tests where `docker info`
+- [x] Add `tests/sandbox-variant.test.mjs`, skipped with the message of the other Docker tests where `docker info`
   fails, on a project set up as `setUp` of `tests/sandbox-unit-run.test.mjs` sets one up, with the image of the
   `FROM ... AS base` of `container/Dockerfile`, and every container it names removed with `docker rm -f` after each
   test. A run's command commits a file named after its run in `/work` with `git -c user.name=... -c
@@ -155,11 +155,11 @@ Running variants, with Docker:
     * a second run of a variant whose container is running is refused, and the first runs on and lands (R10)
     * `--connect 0026 --variant opus` runs its command in the variant's container and not in the unit's, shown by
       a file it writes in `/work` that appears in the variant's clone alone (R7, R14)
-- [ ] Run `npm test` on a host with Docker, and log in `record.md` whether the new file ran or was skipped. (R22)
+- [x] Run `npm test` on a host with Docker, and log in `record.md` whether the new file ran or was skipped. (R22)
 
 The kit's process and roles:
 
-- [ ] In `process.md`, where it says that a review's findings are saved in `.reviews/<unit-directory>/`, say: a
+- [x] In `process.md`, where it says that a review's findings are saved in `.reviews/<unit-directory>/`, say: a
   review of a variant, a unit run of a branch whose name holds `--`, is saved in a file whose name ends in
   `--<name>.md` with the variant's name, which is what follows the last `--` of the branch's name; a review of the
   unit's branch in a file whose name holds no `--`; and a role on a variant takes findings only from its own
@@ -167,18 +167,18 @@ The kit's process and roles:
   sandbox. In the rules on an entry of `record.md`, add that an agent's entry made on a variant's branch names the
   variant in its text, as "on the variant `opus`", and one made on the unit's branch names none. (R15, R16, R17,
   R18, R19)
-- [ ] In `roles/reviewer.md`, where it says to save the findings in a file whose name tells it apart, add that the
+- [x] In `roles/reviewer.md`, where it says to save the findings in a file whose name tells it apart, add that the
   name ends in `--<name>.md` on a variant's branch and holds no `--` on the unit's, as `process.md` says; in
   "Re-reviewing a unit", that the last review is looked for only among the files of the same run; and in "Record
   that you reviewed", that the entry names the variant as `process.md` says. (R15, R16, R18, R19)
-- [ ] In `roles/implementer.md`, in "Review findings", add that the findings taken are only those of the files of
+- [x] In `roles/implementer.md`, in "Review findings", add that the findings taken are only those of the files of
   `.reviews/<unit-directory>/` of its own run, as `process.md` says, and that it reads its variant from its branch.
   (R16, R17, R19)
-- [ ] Run `npm test`, whose tests of the package's documents read these files. (R19)
+- [x] Run `npm test`, whose tests of the package's documents read these files. (R19)
 
 The documents:
 
-- [ ] In `SANDBOX.md`, add the section "Two implementations of one unit" after "Two agents on one unit", saying what
+- [x] In `SANDBOX.md`, add the section "Two implementations of one unit" after "Two agents on one unit", saying what
   requirement 20 lists: what a variant is for, with two variants of one unit started in two terminals as
   `./sandbox.sh 0029 --variant opus npx agentrite run implementer claude 0029 --model <id>` and the same with
   `--variant` and `--model` of another; the option, that it is optional, the form of a name and the branch's name;
@@ -191,14 +191,14 @@ The documents:
   branch>` with the unit's branch not checked out, and deleting one not taken with `git branch --delete --force` and
   its clone with `rm -rf` when one was kept. Use the `agentrite run` form that "Running a role" of `README.md`
   gives, checked against `scripts/agentrite-run.mjs`. (R20)
-- [ ] In "Running a unit" of `SANDBOX.md`, in the list of several runs, add that a unit's variants run beside it and
+- [x] In "Running a unit" of `SANDBOX.md`, in the list of several runs, add that a unit's variants run beside it and
   beside each other, pointing to the new section; in "Where things are kept on the host", say under "The clone of a
   unit run" that a variant's clone is kept as a unit run's is, at its branch's name. (R20, R21)
-- [ ] In `README.md`, show `[--variant NAME]` in the unit form and the `--connect` form of "sandbox.sh", add
+- [x] In `README.md`, show `[--variant NAME]` in the unit form and the `--connect` form of "sandbox.sh", add
   `--variant NAME` to its table of options, name the new section among the `SANDBOX.md` sections the section points
   to, and in "The sandbox" add a line on a variant beside the one on `--connect`. Keep every line within 120
   characters and every table line of `SANDBOX.md` within it. (R21)
-- [ ] Run `npm test` and `npm run check-changes`, after committing. (R22)
+- [x] Run `npm test` and `npm run check-changes`, after committing. (R22)
 
 ## Verification
 

@@ -334,15 +334,16 @@ See "Installing it into a project" and "The project's settings".
 ### sandbox.sh
 
 ```sh
-./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]
 ./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
 ./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-./sandbox.sh --connect UNIT [COMMAND...]
+./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]
 ```
 
 Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
 With `--connect` it starts nothing, and runs beside a unit run that is under way. A unit given by a number that no
-branch holds gets its branch first, cut from the default branch that `agentrite.json` names.
+branch holds gets its branch first, cut from the default branch that `agentrite.json` names. With `--variant` the run
+is of a variant of the unit, on a branch of its own.
 
 Every form but `--connect` reads `bell` from the project's `agentrite.json` at each start, and with `true` has the
 harnesses ring the terminal's bell. It refuses a project with no `agentrite.json`, and a file that lacks `bell` or
@@ -352,6 +353,7 @@ starts nothing. See "The project's settings".
 | Argument or option | What it is                                                                                   |
 |--------------------|----------------------------------------------------------------------------------------------|
 | `UNIT`             | Mounts a clone of the unit's branch, given by its name or by the unit's number in its name   |
+| `--variant NAME`   | Runs a variant of the unit, on the branch `<unit's branch>--NAME`. Optional, after `UNIT`    |
 | `--in-place`       | Mounts the project root, as it is                                                            |
 | `--workdir DIR`    | Mounts `DIR`, as it is                                                                       |
 | `--connect UNIT`   | Runs the command in the container of the unit's run that is under way. Takes no other option |
@@ -374,7 +376,7 @@ the sandbox" in [`SANDBOX.md`](SANDBOX.md).
 | `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                         |
 
 See "The sandbox", and in `SANDBOX.md` "Running a unit", "Getting the work back", "Two agents on one unit",
-"Running on the tree as it is", "The bell" and "Where things are kept on the host".
+"Two implementations of one unit", "Running on the tree as it is", "The bell" and "Where things are kept on the host".
 
 ## Running a role
 
@@ -974,6 +976,9 @@ What a run does:
 * `./sandbox.sh --in-place --rebuild` builds the image again before running
 * `./sandbox.sh --connect 0029` mounts and starts nothing: it runs a command in the container of the unit run that is
   under way for the unit, beside what runs there. See "Two agents on one unit" of `SANDBOX.md`
+* `./sandbox.sh 0029 --variant opus claude` is a variant of the unit: a unit run of the branch
+  `feature-0029-sandbox-clone-of-the-branch--opus`, in a container and on a clone of its own, beside the unit's run and
+  other variants. See "Two implementations of one unit" of `SANDBOX.md`
 * In a project whose `agentrite.json` holds `"bell": true`, Claude Code and OpenCode in the sandbox ring the
   terminal's bell when they need the developer or stop, with nothing to set in the home volume or on the host. See
   "The bell" of `SANDBOX.md`
