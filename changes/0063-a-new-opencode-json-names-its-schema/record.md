@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-10-20T18:40:50Z
 ---
 
@@ -35,3 +35,4 @@ Not part of this task:
 
 - 2026-10-20T18:40:50Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, wrote the record. The status is
   `draft`
+- 2026-10-20T18:41:51Z [human] approved the record by asking for it to be built. The status is `approved`
