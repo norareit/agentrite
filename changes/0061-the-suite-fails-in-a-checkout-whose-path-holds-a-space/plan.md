@@ -133,7 +133,7 @@ file or directory at the root of the repository is added.
   kit's code under `scripts/` or `container/` when it is there, which `record.md` then names, with a regression test
   in the suite for a fault of the kit's. Commit the fix on its own, after the commits below, and run both again (R1,
   R5)
-- [ ] `npm run check-changes` passes after the last commit
+- [x] `npm run check-changes` passes after the last commit
 
 ## Commit Points
 
