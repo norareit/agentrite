@@ -62,5 +62,12 @@ timestamp: 2026-10-19T23:21:09Z
 - 2026-10-20T18:13:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm run check-changes` on `e73ceb2`, which
   passed. Its task in the plan stays open, since it is to be run after the last commit, which the run with Docker may
   still add
+- 2026-10-20T18:26:49Z [human] on the Linux host with Docker, on `014d18c`, ran `npm test` in the checkout and in a
+  worktree of the same commit at a path whose directory is named `agentrite space`, with a copy of `node_modules`,
+  since removed. Both reported 747 tests, 747 passing, 0 failing and 0 skipped, and the lines of the two reports, one
+  per test with its result, were the same once the durations were removed. No test failed for the space, so no fix
+  followed
+- 2026-10-20T18:28:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a new unit run, ticked the
+  run with Docker in `plan.md` on the human's results above
 
 ## Amendments
