@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-10-19T15:48:46Z
 ---
 
@@ -18,5 +18,6 @@ timestamp: 2026-10-19T15:48:46Z
   the unit is not a task. It is: one rule added to `standards.md`, with nothing in it left to decide now that
   `spec.md` decides the form of the list. Changed the kind to `task`. `spec.md` is kept, as what the task makes
   true, and no plan is written. The status is `draft`
+- 2026-10-20T12:41:04Z [human] approved the spec. The status is `approved`
 
 ## Amendments
