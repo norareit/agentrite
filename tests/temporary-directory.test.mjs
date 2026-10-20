@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
-import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { basename, dirname, join, relative } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { moduleFiles, testsDirectory } from './suite-files.mjs';
 import { temporaryDirectory, temporaryDirectoryNames } from './temporary-directory.mjs';
 
 test('a directory is made under the real path of the temporary directory, whatever links lead to it', (
@@ -41,16 +42,7 @@ test('the directory is removed when the test that made it ends', async (testCont
   assert.equal(existsSync(made), false);
 });
 
-const testsDirectory = dirname(fileURLToPath(import.meta.url));
 const helperFile = fileURLToPath(new URL('./temporary-directory.mjs', import.meta.url));
-
-function moduleFiles(directory) {
-  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(directory, entry.name);
-    if (entry.isDirectory()) return moduleFiles(path);
-    return entry.name.endsWith('.mjs') ? [path] : [];
-  });
-}
 
 test('no file of the suite but the helper makes a temporary directory itself', () => {
   const offenders = moduleFiles(testsDirectory)

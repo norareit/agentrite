@@ -119,7 +119,7 @@ file or directory at the root of the repository is added.
 
 ### The list of the suite's files
 
-- [ ] In `tests/temporary-directory.test.mjs`, import `testsDirectory` and `moduleFiles` from
+- [x] In `tests/temporary-directory.test.mjs`, import `testsDirectory` and `moduleFiles` from
   `tests/suite-files.mjs` and remove its own copies, with no change of behavior. Run
   `node --test tests/temporary-directory.test.mjs` green (R3)
 
@@ -141,5 +141,5 @@ file or directory at the root of the repository is added.
   "The paths of the checkout"
 - [x] `bugfix-0061 Make every temporary directory of the suite with a space in its name`, after the tasks of "The
   temporary directories"
-- [ ] `bugfix-0061 List the suite's files for the test of the temporary directories from the shared module`, after
+- [x] `bugfix-0061 List the suite's files for the test of the temporary directories from the shared module`, after
   the task of "The list of the suite's files"
