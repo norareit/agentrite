@@ -37,7 +37,7 @@ The project's file:
    project root as its context, as the kit's own file is
 3. The image the sandbox runs keeps its name, the `image:` of the project's `sandbox/compose.project.yml`. With a
    `sandbox/Dockerfile`, the kit's own image is kept beside it under that name followed by `-base`
-4. With the JDK of the example of requirement 9 in the file, `java -version` and `javac -version` succeed for the
+4. With the JDK of the example of requirement 10 in the file, `java -version` and `javac -version` succeed for the
    agent in the sandbox, and the firewall, the proxy and the drop to the agent are as they are without the file:
    the entrypoint's checks pass at start-up, and the agent holds no capability
 
@@ -50,16 +50,27 @@ When the image is built:
 6. When the kit's image is built anew, the project's file is built on it anew in the same start
 7. A build of the project's file that fails ends the start with the build's own output and a status other than 0,
    and runs nothing, as a failing build of the kit's file does today
-8. Requirements 1 to 7 hold for `./sandbox.sh` in each form that starts a container, and for `./sandbox-dev.sh`
+
+Keeping the sandbox:
+
+8. A start with a `sandbox/Dockerfile` compares the image the sandbox would run with the kit's own image, the
+   `-base` of requirement 3, and refuses when they differ in the entrypoint, the command, the user or the working
+   directory. The refusal starts nothing, and its message names each that differs, with the kit's value and the
+   image's, says that the kit's entrypoint is what installs the firewall and drops to the agent, and says to remove
+   from `sandbox/Dockerfile` what sets it. The comparison is made at every such start, a start that builds nothing
+   included, so that an image refused once is refused until the file is corrected and the image built anew. It
+   reads the images on the host and needs no network
+9. Requirements 1 to 8 hold for `./sandbox.sh` in each form that starts a container, and for `./sandbox-dev.sh`
 
 The documents:
 
-9. `SANDBOX.md` has a section on adding software to the sandbox, which says:
+10. `SANDBOX.md` has a section on adding software to the sandbox, which says:
     * where the file is, the two lines it opens with, and that it is built on the kit's image, as root, with the
       project root as the context
     * an example that installs a JDK from the image's Debian packages, and sets `JAVA_HOME`
     * that the file must not change the entrypoint, the command, the user or the working directory the kit's image
-      sets, since the entrypoint is what installs the firewall and drops to the agent
+      sets, since the entrypoint is what installs the firewall and drops to the agent, and that a start refuses an
+      image that changes one of them
     * that the build runs on the host, with the host's network, outside the sandbox's firewall, as the kit's build
       does
     * that the file is committed, and that the image is built from the file of the checkout the command is run from,
@@ -68,10 +79,16 @@ The documents:
     * when the image is built anew, by requirements 5 and 6, and that `--rebuild` builds both
     * that a tool the project adds that downloads at run time needs its hosts in the project's `ALLOWLIST`, with a
       link to "Reaching more hosts"
-10. "Where things are kept on the host" of `SANDBOX.md` names the `-base` image of requirement 3, and how to remove
+11. "Where things are kept on the host" of `SANDBOX.md` names the `-base` image of requirement 3, and how to remove
     it
-11. `README.md` names `sandbox/Dockerfile` where it says what of the sandbox a project holds and may change, as
+12. `README.md` names `sandbox/Dockerfile` where it says what of the sandbox a project holds and may change, as
     a file the project may add, and that `init` and `refresh` do not write it
+
+Tests:
+
+13. The suite tests requirements 5, 6 and 8 with Docker: a project file that adds a file to the image, one changed
+    after a build, one removed, and one each that sets its own entrypoint, command, user and working directory.
+    Where Docker is not available, they are skipped as the suite's other tests that need Docker are
 
 ## Decisions
 
@@ -87,8 +104,15 @@ The documents:
 * **The project's file is trusted as `sandbox/compose.project.yml` is.** Both are the developer's files, built and
   read from the checkout the command is run from, and the compose file can already change any setting of the
   container. The sandbox defends against the agent, which reaches either file only through what the developer takes
-  into that checkout. So the kit does not check what the file does. It says, in `SANDBOX.md`, what it must not
-  change
+  into that checkout. So the kit does not judge what the file installs
+* **A start refuses an image that would run without the kit's entrypoint.** The human moved this into the unit from
+  "Beyond the request" while the spec was a draft: a developer must not end up without a sandbox by accident. A
+  file that sets its own `ENTRYPOINT`, `CMD`, `USER` or `WORKDIR` last, as a Dockerfile copied from elsewhere often
+  does, would start a container without the firewall and the drop to the agent, and nothing would say so. The four
+  are what the image's configuration holds of how a container starts, and they are compared, not a list of what is
+  allowed. A file that replaces the entrypoint's script itself is not caught: that is not done by accident, and the
+  developer is trusted, as with the compose file. Rejected: checking only at a build, which an image built and
+  refused once would pass at the next start, since an unchanged file builds nothing
 * **A change of the file builds the image, and an unchanged file does not.** The image is built only when a start
   needs it, so that a start needs no network otherwise. Recording the file's content on the image is how the kit
   already knows the harness versions it holds, and it catches every change, the adding and the removing of the file
@@ -101,7 +125,8 @@ The documents:
 
 ## Non-goals
 
-* Checking that a project's file keeps the kit's entrypoint, command and user. See "Beyond the request"
+* A check of `sandbox/compose.project.yml`, which can set an entrypoint of its own as well. It is not new with this
+  unit, and the developer writes it for the settings of the container, not to install software
 * Software that the kit itself adds for every project, such as a JDK in the kit's image
 * OpenCode or Claude Code at versions of the project's own, which "Holding a harness version" covers
 * AloudRite-IntelliJ's own `sandbox/Dockerfile` and allowlist, which are that project's, made when it moves to the
@@ -110,7 +135,4 @@ The documents:
 
 ## Beyond the request
 
-* **Refusing an image whose entrypoint, command or user is not the kit's.** A project's file that sets its own
-  `ENTRYPOINT` by mistake starts a sandbox without the firewall, and nothing says so. Cost: a check of the built
-  image at every start that builds, and its message. Without it, the mistake is one nobody has made, and the
-  developer's compose file can make the same one today without a check
+None
