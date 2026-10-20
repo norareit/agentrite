@@ -39,3 +39,16 @@ Not part of this task:
 - 2026-10-20T18:41:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, cut
   `task-0063-a-new-opencode-json-names-its-schema` from `master` at `698ed17` and began the work. Read
   `roles/implementer.md` of the installed release 7.2.0. The status is `in-progress`
+- 2026-10-20T18:43:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the task in `c21c41c`. The
+  `opencode.json` that `opencodeVerdict` gives for a missing file, and `init` writes, now holds
+  `"$schema": "https://opencode.ai/config.json"` as its first key, before the `instructions` list, formatted as
+  before; an existing file is amended as before, with no `$schema` added. The expected file was changed in the tests
+  first, and `tests/agentrite-instructions.test.mjs` failed on the missing file's content before the code changed.
+  The tests that assert the written file, in `tests/agentrite-instructions.test.mjs` and
+  `tests/agentrite-init.test.mjs`, with the kit's standards and with a project's own, expect the key. In
+  `README.md`, the paragraph on `init` and `opencode.json` says the written file names the schema and that an
+  amended one gets no `$schema`, and the example of the written file in "How the kit's instructions reach an agent"
+  holds the key
+- 2026-10-20T18:43:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran on `c21c41c`: `npm test`
+  passed 747 of 747 tests, and `npm run check-changes` exited 0. Not checked: that OpenCode leaves the written file
+  unchanged when it starts in the project
