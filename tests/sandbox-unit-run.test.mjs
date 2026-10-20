@@ -890,8 +890,9 @@ test("the wrapper runs nothing of the clone's configuration and hooks on the hos
       `arm() { printf '#!/bin/sh\\necho ran > "${markers}/%s"\\n' "$1" > "$2"; chmod +x "$2"; }\n` +
       'for hook in post-checkout pre-commit post-merge; do arm "$hook" ".git/hooks/$hook"; done\n' +
       'arm fsmonitor .git/fsmonitor.sh\narm pack-objects .git/pack-objects.sh\n' +
-      'git config uploadpack.packObjectsHook "$PWD/.git/pack-objects.sh"\n' +
-      'git config core.fsmonitor "$PWD/.git/fsmonitor.sh"',
+      // git runs both values through a shell, so the path is quoted inside them to stay one word with a space in it.
+      'git config uploadpack.packObjectsHook "\'$PWD/.git/pack-objects.sh\'"\n' +
+      'git config core.fsmonitor "\'$PWD/.git/fsmonitor.sh\'"',
   );
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 0, result.stderr);

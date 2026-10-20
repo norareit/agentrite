@@ -11,7 +11,9 @@ export const temporaryDirectoryNames = /\b(?:mkdtemp(?:Sync)?|tmpdir)\b/;
 // the temporary directory by: on macOS `/var` is a link to `/private/var`, so a test that expects the unresolved
 // path fails there and passes on Linux, where the two are the same.
 export function temporaryDirectory(testContext, prefix) {
-  const directory = realpathSync(mkdtempSync(join(tmpdir(), prefix)));
+  // The space after the prefix puts every test that runs the kit's code in a directory of its own under a path that
+  // holds a space, so that the suite keeps the kit's commands working from such a path.
+  const directory = realpathSync(mkdtempSync(join(tmpdir(), `${prefix} `)));
   testContext.after(() => rmSync(directory, { recursive: true, force: true }));
   return directory;
 }

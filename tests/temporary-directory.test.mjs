@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
+import { basename, dirname, join, relative } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { temporaryDirectory, temporaryDirectoryNames } from './temporary-directory.mjs';
@@ -22,6 +22,13 @@ test('a directory is made under the real path of the temporary directory, whatev
 
   assert.equal(dirname(second), join(first, 'real'));
   assert.ok(second.slice(dirname(second).length + 1).startsWith('opens-with-'));
+});
+
+// R4
+test('the name of a directory the helper makes holds a space', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'temporary-directory-space-');
+
+  assert.ok(basename(directory).includes(' '), `${directory} has no space in its name`);
 });
 
 test('the directory is removed when the test that made it ends', async (testContext) => {

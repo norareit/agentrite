@@ -110,11 +110,11 @@ file or directory at the root of the repository is added.
 
 ### The temporary directories
 
-- [ ] In `tests/temporary-directory.test.mjs`, add a test that a directory the helper makes holds a space in its
+- [x] In `tests/temporary-directory.test.mjs`, add a test that a directory the helper makes holds a space in its
   name, the part after the last `/`. Run it and see it fail (R4)
-- [ ] In `tests/temporary-directory.mjs`, make the name as "The name of a temporary directory" says, with its
+- [x] In `tests/temporary-directory.mjs`, make the name as "The name of a temporary directory" says, with its
   comment. Run the helper's tests green (R4)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, quote the two values of the git trap as "The quoting of the git trap"
+- [x] In `tests/sandbox-unit-run.test.mjs`, quote the two values of the git trap as "The quoting of the git trap"
   says. Run `node --test tests/sandbox-unit-run.test.mjs` green (R5)
 
 ### The list of the suite's files
@@ -139,7 +139,7 @@ file or directory at the root of the repository is added.
 
 - [x] `bugfix-0061 Take the suite's paths with fileURLToPath and quote those given to a shell`, after the tasks of
   "The paths of the checkout"
-- [ ] `bugfix-0061 Make every temporary directory of the suite with a space in its name`, after the tasks of "The
+- [x] `bugfix-0061 Make every temporary directory of the suite with a space in its name`, after the tasks of "The
   temporary directories"
 - [ ] `bugfix-0061 List the suite's files for the test of the temporary directories from the shared module`, after
   the task of "The list of the suite's files"
