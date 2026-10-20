@@ -65,5 +65,15 @@ timestamp: 2026-10-19T15:48:11Z
   the options instead. Every line touched in `SANDBOX.md`, `README.md`, `container/compose.yml` and
   `container/sandbox.sh` fits 120 characters, and none holds an em dash. `node --test tests/*.test.mjs` on the
   Linux host with Docker 28.4.0: 745 tests, 744 pass, none skipped, and unit 0054's R24 test fails, as before
+- 2026-10-20T15:08:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, checked R4 by hand on the Linux
+  host with Docker 28.4.0 and the network, on `d3db633`. Put the example of "Adding software to the sandbox" in this
+  repository's `sandbox/Dockerfile`, uncommitted, and ran `./sandbox-dev.sh --in-place bash -c 'java -version &&
+  javac -version && echo JAVA_HOME=$JAVA_HOME && ls $JAVA_HOME/bin/java && grep CapEff /proc/self/status && id'`.
+  The wrapper said the file was not the one the image was built from, built the kit's image and the file on it
+  with no `InvalidDefaultArgInFrom` warning, and the entrypoint's checks passed: it verified the firewall and
+  dropped to the agent. `java -version` printed OpenJDK 17.0.20.1, `javac -version` printed `javac 17.0.20.1`,
+  `JAVA_HOME` was `/usr/lib/jvm/java-17-openjdk-amd64` and holds `bin/java`, `CapEff` was `0000000000000000`, and
+  the command ran as `uid=1000(agent)`. arm64 was not checked. Removed the file again. Every task of `plan.md` is
+  ticked; the status stays `in-progress` until the review's findings are decided
 
 ## Amendments

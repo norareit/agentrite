@@ -231,7 +231,7 @@ against today's wrapper for the reason it is there.
 
 ### The check by hand
 
-- [ ] On the host with Docker and the network, put the example of `SANDBOX.md` in this repository's
+- [x] On the host with Docker and the network, put the example of `SANDBOX.md` in this repository's
   `sandbox/Dockerfile`, uncommitted, and run
   `./sandbox-dev.sh --in-place bash -c 'java -version && javac -version && grep CapEff /proc/self/status'`. The
   sandbox starts, so the entrypoint's checks passed, both commands succeed, and `CapEff` is `0000000000000000`.
@@ -239,9 +239,9 @@ against today's wrapper for the reason it is there.
 
 ## Verification
 
-- [ ] `node --test tests/*.test.mjs` on a host with Docker: every test passes but the R24 test of unit 0054, and
+- [x] `node --test tests/*.test.mjs` on a host with Docker: every test passes but the R24 test of unit 0054, and
   none of the new ones is skipped
-- [ ] `npm run check-changes` passes on the committed branch
+- [x] `npm run check-changes` passes on the committed branch
 
 ## Commit Points
 
