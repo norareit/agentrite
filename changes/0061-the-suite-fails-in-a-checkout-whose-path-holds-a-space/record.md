@@ -72,5 +72,11 @@ timestamp: 2026-10-19T23:21:09Z
 - 2026-10-20T18:28:09Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm run check-changes` on `ced6a41`,
   the last commit of the work, which passed, and ticked its task. Every task of `plan.md` is ticked. The status stays
   `in-progress` until the review's findings are decided
+- 2026-10-20T18:31:19Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0061 in full at
+  `25a2e8fb7f82cd67e05467ca419f0ccdf89c94a3`, against merge base `20ddd41`. Returned no findings. `npm test`
+  reported 747 tests, 724 passing, 0 failing and 23 skipped; `npm run check-changes` and the diff whitespace check
+  passed. Did not independently repeat the checkout-path or before/after comparisons, the Docker tests, or the
+  historical test-first chronology. Saved the complete review in
+  `.reviews/0061-the-suite-fails-in-a-checkout-whose-path-holds-a-space/2026-10-20T183119Z-full.md`.
 
 ## Amendments
