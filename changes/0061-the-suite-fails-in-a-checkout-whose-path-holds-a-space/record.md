@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-19T23:21:09Z
 ---
 
@@ -78,5 +78,10 @@ timestamp: 2026-10-19T23:21:09Z
   passed. Did not independently repeat the checkout-path or before/after comparisons, the Docker tests, or the
   historical test-first chronology. Saved the complete review in
   `.reviews/0061-the-suite-fails-in-a-checkout-whose-path-holds-a-space/2026-10-20T183119Z-full.md`.
+- 2026-10-20T18:33:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on `84e70cf`, in an environment
+  without Docker, ran `npm test`: 747 tests, 724 passing, 0 failing and 23 skipped, the 23 needing Docker, which ran
+  and passed on the human's host at `014d18c` as logged above; nothing outside `changes/` changed since. Ran `npm run
+  check-changes` on `84e70cf`, which passed. The review returned no findings, so none is left to decide, and every
+  task of `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
