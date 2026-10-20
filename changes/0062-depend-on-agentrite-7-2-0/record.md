@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-10-20T16:09:25Z
 ---
 
@@ -57,5 +57,6 @@ adds a key to `agentrite.json`.
   `wrote .agentrite/instructions.md`, and the notice of `AGENTS.md`, and changed no other file; its `init` with no
   argument skipped every file and printed the notice of `AGENTS.md` with the sections it writes. Not run there:
   `npm test` and the sandbox. The status is `draft`
+- 2026-10-20T17:26:22Z [human] approved the record. The status is `approved`
 
 ## Amendments
