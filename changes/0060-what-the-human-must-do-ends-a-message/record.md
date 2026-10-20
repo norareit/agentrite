@@ -1,5 +1,5 @@
 ---
-kind: feature
+kind: task
 status: draft
 timestamp: 2026-10-19T15:48:46Z
 ---
@@ -14,5 +14,9 @@ timestamp: 2026-10-19T15:48:46Z
   Made the unit as a feature, since the form of the list needs deciding. Numbered 0060: the highest number in
   `changes/` is 0059. Read `standards.md`, `process.md` and the four role files of the working tree, none of which
   says how a message asks the human for something. Wrote `spec.md`. The status is `draft`
+- 2026-10-20T12:41:04Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's question whether
+  the unit is not a task. It is: one rule added to `standards.md`, with nothing in it left to decide now that
+  `spec.md` decides the form of the list. Changed the kind to `task`. `spec.md` is kept, as what the task makes
+  true, and no plan is written. The status is `draft`
 
 ## Amendments
