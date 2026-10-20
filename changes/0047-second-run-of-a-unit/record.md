@@ -71,5 +71,13 @@ timestamp: 2026-10-13T20:22:53Z
   the wrapper before the change and 39 of the file's tests failed, and the two new tests of `sandbox-dev.sh` failed
   without its change. Not checked: the new tests of the Docker file against the wrapper before the change, a run of a
   variant on a macOS host, and a project other than this one. The status stays `in-progress`
+- 2026-10-20T23:01:34Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0047 at
+  `d85ed256849a2ed5cce0573763ae0e21ce436e3d` in full against the merge base with `master`,
+  `00b7d5811e86cebf32a4bba5ce57ef90c1d3914d`. Returned C1, C2 and C3, saved in
+  `.reviews/0047-second-run-of-a-unit/2026-10-20T230038Z-d85ed25-opencode.md`.
+  Ran `npm test`: 810 passed, none skipped; `./sandbox.sh --in-place npm test`: 782 passed, 28 skipped;
+  `npm run check-changes` and `git diff --check master...HEAD`: both passed. Reproduced the concurrent Docker-test
+  collision and checked the CLI with an empty `node_modules`. Did not independently repeat the historical
+  pre-change failure counts or the manual dev-wrapper smoke run, and did not run on macOS.
 
 ## Amendments

@@ -353,15 +353,18 @@ starts nothing. See "The project's settings".
 | Argument or option | What it is                                                                                   |
 |--------------------|----------------------------------------------------------------------------------------------|
 | `UNIT`             | Mounts a clone of the unit's branch, given by its name or by the unit's number in its name   |
-| `--variant NAME`   | Runs a variant of the unit, on the branch `<unit's branch>--NAME`. Optional, after `UNIT`    |
+| `--variant NAME`   | Runs a variant of the unit, on the branch `<unit's branch>--NAME`. Optional                  |
 | `--in-place`       | Mounts the project root, as it is                                                            |
 | `--workdir DIR`    | Mounts `DIR`, as it is                                                                       |
-| `--connect UNIT`   | Runs the command in the container of the unit's run that is under way. Takes no other option |
+| `--connect UNIT`   | Runs the command in the container of the unit's run that is under way. Takes `--variant`     |
 | `--rebuild`        | Builds the image before running, even if it exists and holds the wanted harness versions     |
 | `--mount HOST`     | Also mounts the host directory `HOST` at `/mnt/<basename>`, read-write. It may be repeated   |
 | `--mount HOST:ro`  | The same, read-only                                                                          |
 | `--`               | Ends the options, so that what follows is the unit or the command                            |
 | `COMMAND...`       | Runs this instead of the shell                                                               |
+
+`--variant` is given as `--variant NAME` or `--variant=NAME`, before `UNIT` or as the argument right after it. It is
+refused with `--in-place` and `--workdir`, and when given twice. Besides `--variant`, `--connect` takes no option.
 
 With a project's `sandbox/Dockerfile`, `--rebuild` builds that file anew on the image too. See "Adding software to
 the sandbox" in [`SANDBOX.md`](SANDBOX.md).

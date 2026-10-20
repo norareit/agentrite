@@ -164,9 +164,11 @@ implement one unit, each on its own, and the results can be laid side by side. `
 agents on one tree. In two terminals, with another `--model` in each:
 
 ```sh
-./sandbox.sh 0029 --variant opus npx agentrite run implementer claude 0029 --model <id>
-./sandbox.sh 0029 --variant gpt-6-1 npx agentrite run implementer opencode 0029 --model <id>
+./sandbox.sh 0029 --variant opus sh -c 'npm ci && npx agentrite run implementer claude 0029 --model <id>'
+./sandbox.sh 0029 --variant gpt-6-1 sh -c 'npm ci && npx agentrite run implementer opencode 0029 --model <id>'
 ```
+
+Each clone is new and holds no `node_modules`, so each command installs first, as "Running a unit" says.
 
 * `--variant` is optional. Without it a unit run is as "Running a unit" says. It is given before the unit or right
   after it, and it is refused together with `--in-place` and `--workdir`, which have no unit, and when it is given

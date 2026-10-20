@@ -20,7 +20,8 @@ const skip = dockerLacking
 
 const unitBranch = 'task-0026-doc';
 const variantNames = ['opus', 'gpt-6-1'];
-const project = 'project-sandbox';
+// Named after the process, because Docker's container names are shared by every suite that runs on the host.
+const project = `project-sandbox-${process.pid}`;
 const containerOf = (branch) => `${project}-${branch}`;
 
 // What a run does in its container: commits a file named after the run in /work, says so by creating a file in the
@@ -56,7 +57,7 @@ function setUp(t) {
         kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true, bell: false }),
     );
     mkdirSync(join(root, 'sandbox'));
-    writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
+    writeFileSync(join(root, 'sandbox', 'compose.project.yml'), `name: ${project}\n`);
     writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\n');
     const home = join(base, 'home');
     mkdirSync(home);
