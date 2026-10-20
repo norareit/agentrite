@@ -5,6 +5,37 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 7.3.0
+
+### What changed
+
+* `process.md` says that the entries of `## Log` and `## Amendments` of a `record.md` follow one another with no
+  blank line between them, and that a new entry goes directly after the last entry of its section, above the blank
+  line before the next heading (0064)
+* The change check rejects an entry of `## Log` or `## Amendments` that the branch adds after a blank line separating
+  it from an entry before it in the same section, and names the unit and the entry's first line. A blank line that
+  already stood before an entry on the default branch is not rejected, also when the branch rewraps that entry or
+  changes the record's line endings (0064)
+* The `opencode.json` that `init` writes when nothing is at its path names OpenCode's schema,
+  `"$schema": "https://opencode.ai/config.json"`, as its first key, before the `instructions` list. An existing
+  `opencode.json` is amended as before, and gets no `$schema` (0063)
+* Not in the package: the kit's own suite passes in a checkout whose path holds a space, and runs every test that
+  uses a temporary directory from a path with a space (0061); this repository depends on AgentRite 7.2.0 (0062)
+
+### Worth knowing when you update
+
+* A branch that already adds an entry after a blank line to a `record.md` fails `npm run check-changes` once the
+  project is on 7.3.0, with `<unit>: entry after a blank line: <first line of the entry>`. Remove the blank line
+  before that entry and commit
+* Changing the text of an entry that stands after a blank line on the default branch makes the check report that
+  entry as well, and removing the blank line before it clears it
+* The blank lines between entries that a project's records already hold on its default branch are left as they are
+  and pass the check. The check was tested on this repository's records and in the kit's suite, and not on the
+  records of another project
+* An `opencode.json` that `init` writes now holds the key OpenCode would add itself. That OpenCode leaves the written
+  file unchanged when it starts was not checked
+* No `refresh` and no rebuild of the sandbox image are needed
+
 ## 7.2.0
 
 ### What changed
