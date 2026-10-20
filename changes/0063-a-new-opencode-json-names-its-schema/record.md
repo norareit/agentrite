@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-10-20T18:40:50Z
 ---
 
@@ -52,3 +52,13 @@ Not part of this task:
 - 2026-10-20T18:43:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran on `c21c41c`: `npm test`
   passed 747 of 747 tests, and `npm run check-changes` exited 0. Not checked: that OpenCode leaves the written file
   unchanged when it starts in the project
+- 2026-10-20T18:47:00Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0063 at
+  `2d69b57ba454e43a5de323a0b4c8fd8d432c198b` in a full review against the merge base with `master`,
+  `698ed175f3364ef0141ea1dfa4c088d3b37b92f1`. Returned no findings on any of the three axes. Independently ran
+  `npm test`: 747 passed, none failed or skipped; `npm run check-changes` and `git diff --check` against the merge
+  base exited 0. Could not verify the historical failing-test-first run; did not check OpenCode startup leaving the
+  generated file unchanged. Saved the full review in
+  `.reviews/0063-a-new-opencode-json-names-its-schema/full-2026-10-20T184700Z.md`
+- 2026-10-20T18:49:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, after the review returned no
+  findings, so no finding is left for the human to decide, and with no `plan.md` to tick, moved the unit on at the
+  human's word. The status is `implemented`
