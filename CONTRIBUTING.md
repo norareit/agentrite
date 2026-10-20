@@ -25,6 +25,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `AGENTS.md`                   | This repository's own instructions for agents                                        |
 | `CLAUDE.md`                   | The bridge that imports the kit's instruction files and `AGENTS.md` into Claude Code |
 | `opencode.json`               | The configuration that loads the kit's instruction files into OpenCode               |
+| `.agentrite/`                 | The list of the instruction files in use, which `refresh` writes                     |
 | `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill                          |
 | `.opencode/`                  | The role wrappers for OpenCode                                                       |
 | `agentrite.json`              | This repository's own settings, which the kit's commands read                        |

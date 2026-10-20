@@ -1,5 +1,13 @@
 {
   "defaultBranch": "master",
   "harnesses": ["claude", "opencode"],
-  "sandbox": true
+  "sandbox": true,
+  "bell": true,
+  "standards": "node_modules/agentrite/standards.md",
+  "roles": {
+    "specifier": "node_modules/agentrite/roles/specifier.md",
+    "planner": "node_modules/agentrite/roles/planner.md",
+    "implementer": "node_modules/agentrite/roles/implementer.md",
+    "reviewer": "node_modules/agentrite/roles/reviewer.md"
+  }
 }

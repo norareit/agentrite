@@ -1,12 +1,12 @@
 This document contains critical instructions for coding agents working in this repository. Follow these guidelines
 precisely.
 
-We eat our own dog food: this project uses AgentRite, and
-[`node_modules/agentrite/process.md`](node_modules/agentrite/process.md) and
-[`node_modules/agentrite/standards.md`](node_modules/agentrite/standards.md) are **required reading** before any
-change. `process.md` holds the changes process in `changes/`, the status progression and the freeze, and the commit
-prefixes; `standards.md` holds the rules on text, documentation, commits, code and tests. This file holds only what
-is specific to this project, and nothing is stated in both places.
+We eat our own dog food: this project uses AgentRite, and the files
+[`.agentrite/instructions.md`](.agentrite/instructions.md) names are **required reading** before any change: the
+kit's `process.md`, the project's standards, and the file of each role. `process.md` holds the changes process in
+`changes/`, the status progression and the freeze, and the commit prefixes; the standards hold the rules on text,
+documentation, commits, code and tests. This file holds only what is specific to this project, and nothing is stated
+in both places.
 
 Read before making changes, each for what it is the source of truth on:
 
