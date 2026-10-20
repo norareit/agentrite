@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-13T20:22:53Z
 ---
 
@@ -52,5 +52,7 @@ timestamp: 2026-10-13T20:22:53Z
   `sandbox-dev.sh`, which reads the wrapper's options and names an option that takes a value as one to add there,
   and its form in `CONTRIBUTING.md`, which "The documents" of `AGENTS.md` keeps complete. Every requirement has a
   task that traces to it, and every task traces to a requirement. The status stays `approved`
+- 2026-10-20T20:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on
+  `feature-0047-second-run-of-a-unit` at `9a17b1a`. The status is `in-progress`
 
 ## Amendments
