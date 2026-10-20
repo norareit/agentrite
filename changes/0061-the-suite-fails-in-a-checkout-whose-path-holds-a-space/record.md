@@ -52,5 +52,12 @@ timestamp: 2026-10-19T23:21:09Z
   `tests/sandbox-unit-run.test.mjs`, as the plan found; with its two values quoted, `node --test
   tests/sandbox-unit-run.test.mjs` reported 101 passing, and `npm test` 747 tests, 724 passing, 0 failing and 23
   skipped. Nothing under `scripts/` or `container/` changed
+- 2026-10-20T18:13:09Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on `5f233ab`, in an environment without
+  Docker, ran `npm test` in this checkout and in a worktree of the same commit at a path whose directory is named
+  `space tree`, with a copy of `node_modules`, since removed. Both reported 747 tests, 724 passing, 0 failing and 23
+  skipped: the 745 of before the work, plus the tests of R3 and R4. The lines of the two reports, one per test with
+  its result, were the same once the durations were removed. The 23 skipped need Docker, so R1 and R5 are not
+  verified for them: the run of both on the human's Linux host with Docker, a task of the plan's verification, is
+  left open, and the status stays `in-progress` until it is done
 
 ## Amendments

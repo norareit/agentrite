@@ -125,8 +125,8 @@ file or directory at the root of the repository is added.
 
 ## Verification
 
-- [ ] `npm test` in this checkout passes with the results of before the work, plus the tests of R3 and R4
-- [ ] `npm test` in a checkout at a path with a space, made with `git worktree add` and a copy of `node_modules`,
+- [x] `npm test` in this checkout passes with the results of before the work, plus the tests of R3 and R4
+- [x] `npm test` in a checkout at a path with a space, made with `git worktree add` and a copy of `node_modules`,
   reports the same results test for test as in this checkout (R1, R5)
 - [ ] The two runs above, done again on the human's Linux host with Docker, so that the 23 Docker tests run. Should a
   test fail there only from the path with the space, fix it: in the test when the fault is in the test, and in the
