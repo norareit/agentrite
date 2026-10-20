@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-10-20T18:40:50Z
 ---
 
@@ -36,3 +36,6 @@ Not part of this task:
 - 2026-10-20T18:40:50Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, wrote the record. The status is
   `draft`
 - 2026-10-20T18:41:51Z [human] approved the record by asking for it to be built. The status is `approved`
+- 2026-10-20T18:41:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, cut
+  `task-0063-a-new-opencode-json-names-its-schema` from `master` at `698ed17` and began the work. Read
+  `roles/implementer.md` of the installed release 7.2.0. The status is `in-progress`
