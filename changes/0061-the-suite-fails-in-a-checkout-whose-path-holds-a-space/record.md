@@ -30,5 +30,14 @@ timestamp: 2026-10-19T23:21:09Z
   space in its name, a decision says why, the non-goal names only what was not tried, and "Beyond the request" is
   numbered and says what requirements 3 and 4 do not catch. The status is `draft`
 - 2026-10-20T18:03:13Z [human] approved the spec. The status is `approved`
+- 2026-10-20T18:09:06Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `bugfix-0061-the-suite-fails-in-a-checkout-whose-path-holds-a-space` at `20ddd41`, in an environment without
+  Docker. Ran `npm test` in the checkout, 745 tests, 722 passing and 23 skipped. In a scratch worktree at a path with
+  a space, since removed, tried the fix to name every place that fails: with the paths taken by `fileURLToPath`, the
+  three tests of `tests/bell.test.mjs` that give `sh` the script's path unquoted failed, which settles what the spec
+  left open; with a space in the temporary directories besides, the git trap of a test of
+  `tests/sandbox-unit-run.test.mjs` failed for an unquoted path in the test. No test failed in the kit's code. Found
+  nine files taking a path from a URL's `pathname` on this tree, where the spec's root cause counted eight on
+  another, which changes no requirement. Wrote `plan.md`. The status stays `approved`
 
 ## Amendments
