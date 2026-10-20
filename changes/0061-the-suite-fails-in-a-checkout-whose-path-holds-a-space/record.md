@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-19T23:21:09Z
 ---
 
@@ -29,5 +29,6 @@ timestamp: 2026-10-19T23:21:09Z
   root cause gives the evidence, the fix and requirements 4 and 5 give every temporary directory of the suite a
   space in its name, a decision says why, the non-goal names only what was not tried, and "Beyond the request" is
   numbered and says what requirements 3 and 4 do not catch. The status is `draft`
+- 2026-10-20T18:03:13Z [human] approved the spec. The status is `approved`
 
 ## Amendments
