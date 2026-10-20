@@ -33,7 +33,6 @@ timestamp: 2026-10-02T10:06:16Z
   since each holds only a draft spec and record, and they will be merged by then. Requirement 10's clause on 0004,
   with its task, goes if 0004 is implemented first. The names were checked on npm and GitHub on 2026-10-02 and are
   checked again
-
 - 2026-10-02T11:20:14Z [Claude Code, anthropic/claude-opus-5-5] moved the branch onto `master` at 7cf0f6b, which holds
   0006 and 0008, both implemented. They added a README section and a block in `container/compose.yml`, neither with
   the old name, so the rename's list of files and replacements is unchanged; their specs are frozen and are left as

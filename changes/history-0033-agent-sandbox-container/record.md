@@ -68,7 +68,6 @@ timestamp: 2026-09-09T14:08:36Z
   said to settle the sandbox flags here: none are needed, and the only knob that mattered was `/dev/shm` at 1G.
   `lsof` is absent in the image so `npm test`'s port-kill step prints "lsof: not found", harmlessly swallowed by its
   own `|| true`
-
 - 2026-09-09T17:35:00Z [Claude Code, anthropic/claude-sonnet-5] task group 3 done. `agent/entrypoint.sh` runs as
   root (the Dockerfile no longer ends `USER agent`), installs an iptables default-deny OUTPUT policy with loopback,
   conntrack ESTABLISHED/RELATED and DNS allowed, resolves each allowlisted host into an ipset and accepts TCP to it,
@@ -93,7 +92,6 @@ timestamp: 2026-09-09T14:08:36Z
   reach it either). This is a host-config prerequisite, not a repo matter: the dev machine needs a `ufw` rule
   allowing the Docker bridge subnets to the model-server port. README's sandbox section should state this. Raised
   for the developer
-
 - 2026-09-09T19:20:00Z [Claude Code, anthropic/claude-sonnet-5] task group 4 done. `agent/compose.yml` now sets
   `read_only: true` with tmpfs `/tmp` and `/run`, `cap_drop: ALL`, `cap_add: [NET_ADMIN, SETUID, SETGID]`,
   `no-new-privileges:true`, `mem_limit` 8g, `cpus` 6, `pids_limit` 4096, and the `agent-home` named volume. Under
@@ -119,7 +117,6 @@ timestamp: 2026-09-09T14:08:36Z
   can rotate during a long session, a request to a newly-rotated address would be dropped until the container is
   restarted. This matches Anthropic's own reference dev-container firewall. The Google ranges are handled by CIDR;
   the others are left as-is and noted for the README
-
 - 2026-09-09T19:55:00Z [Claude Code, anthropic/claude-sonnet-5] task groups 5 and 6 done. compose.yml mounts the
   developer's `~/.gitconfig` read-only at `/etc/gitconfig` (the lowest-precedence git config), so the identity is
   supplied while the agent's own `~/.gitconfig` stays writable. A first attempt mounted it directly at
@@ -138,7 +135,6 @@ timestamp: 2026-09-09T14:08:36Z
   `github.com`/`example.com` during this session (transient), each time recovering on a rerun. The check already
   retries three times per host; a persistently flaky network would still block the container from starting, which
   is the intended fail-closed behavior but worth the developer knowing
-
 - 2026-09-09T20:30:00Z [Claude Code, anthropic/claude-sonnet-5] task group 7 done. README.md gains an "Agent
   sandbox" section (purpose, `./agent.sh`, `--workdir`, the worktree caveat, `--mount`, editing the allowlist, the
   ufw note for the local model server, the two-step harness update naming the `ARG` lines, and what does not work
@@ -159,7 +155,6 @@ timestamp: 2026-09-09T14:08:36Z
   forced by reality but contradict the spec as written, so a spec amendment or a follow-up planning pass is needed
   before this unit is marked implemented. The interactive harness logins and a host-machine suite run are the
   developer's to do
-
 - 2026-09-09T20:45:00Z [Claude Code, anthropic/claude-sonnet-5] final suite run on the committed tree (18307cd)
   via `./agent.sh`: `npm ci` clean, `npm run build` clean, `npm run test:unit` 56/56, `PORT=3100 npm test` 86/86,
   including the visual baselines. `npm run check:changes` passes. All plan tasks, verification items and commit
@@ -177,7 +172,6 @@ timestamp: 2026-09-09T14:08:36Z
   records the hosts, the Google Fonts ranges and the rejected narrower alternative. `plan.md`: tasks 3 and 4 and
   the `entrypoint.sh` file note updated to match. Traceability still holds both ways. The earlier implementer
   deviation entries above are the record of what was found; these two entries are its resolution
-
 - 2026-09-09T15:47:16Z [OpenCode, openai/gpt-6-astra] reviewed unit `0033-agent-sandbox-container` at commit
   `02401d1929edd316aae99a128b2dae0b36605642`, against merge base
   `f706fcc631e3a354f0ac758c4cb129efd5e4a342`. Returned findings C1, C2, S1, P1, C3 and P2; complete findings and
@@ -217,7 +211,6 @@ timestamp: 2026-09-09T14:08:36Z
   `PORT=3100 npm test` 86/86 including the visual baselines; `npm run check:changes` passes. `agent/entrypoint.sh`
   now logs `IPv6 egress denied` on the normal path. The pre-existing `AGENTS.md:188` indentation change is still
   unrelated to this unit and left unstaged
-
 - 2026-09-09T22:40:00Z [human] raised Docker Sandboxes (`sbx`) as a possible replacement, since it does automatic
   git-worktree branching for parallel agents. After reviewing what it supports, decided to keep this unit's
   container: `sbx` has no OpenCode template (the implementer and reviewer harness), its local-model support is

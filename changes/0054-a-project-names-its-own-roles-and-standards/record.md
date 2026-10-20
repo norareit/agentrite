@@ -118,12 +118,10 @@ timestamp: 2026-10-16T11:14:23Z
   runs the working tree's command, as unit 0055 found; the installed release's is `npm run kit --`, or its script
   under `node_modules/agentrite/scripts/`, which task 4.2 and the test of requirement 25 use. The status is
   `approved`
-
 - 2026-10-16T18:32:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on
   `feature-0054-a-project-names-its-own-roles-and-standards` at `6974c5e`, from `roles/implementer.md`,
   `process.md` and `standards.md` of release 7.1.0, installed with `npm ci` because `node_modules` was missing.
   `npm test` reported 582 tests, 582 passing, at `6974c5e`. Began the work. The status is `in-progress`
-
 - 2026-10-16T18:41:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved task 4.1 into step 1,
   before task 1.8, and changed `plan.md` to say so. The plan keeps the tests of requirements 41 and 42 of unit 0045
   until step 4, and has every step leave the suite green, but step 1 breaks both: with the default file of task 1.4,
@@ -131,7 +129,6 @@ timestamp: 2026-10-16T11:14:23Z
   the working tree's `refresh` refuses the root's file for lacking `standards` (R42). Their replacements, the tests
   of requirements 24 and 25 of this unit, hold already, since they judge the root against release 7.1.0. Task 2.9's
   note that the test of R42 stays until task 4.1 changes with it. The status is `in-progress`
-
 - 2026-10-16T18:41:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, replaced the plan's test helper
   `linkKit`, which made `node_modules/agentrite` of a test project a symbolic link to this repository's root, by
   `installKit`, which copies `process.md`, `standards.md` and `roles/` there, and changed `plan.md` to say so. With
@@ -143,7 +140,6 @@ timestamp: 2026-10-16T11:14:23Z
   25, whose copy links the installed release. Steps 1 and 4.1 are done: `npm test` reported 599 tests, 599 passing,
   none skipped, on the tree committed next, and `git status` showed no file of the kit changed by the run. The
   status is `in-progress`
-
 - 2026-10-16T18:54:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 2. Two changes to
   the plan, written into `plan.md`: the notice of requirement 16 has its words wrapped at 120 characters, since the
   plan's text with `does not name .agentrite/instructions.md` in the place of `is missing` gives a first line of 133
@@ -153,20 +149,17 @@ timestamp: 2026-10-16T11:14:23Z
   before the unit: `tests/agentrite-roles.test.mjs` compares `plannedFiles` of both harnesses, from the kit's role
   files, with the four Claude Code fixtures of before and the four OpenCode fixtures written by task 2.1 from the
   code as it was at `1501453`. The status is `in-progress`
-
 - 2026-10-16T18:56:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 3. `process.md` keeps
   the name `standards.md` once, in backticks and not linked, as the file the project's standards are unless it
   replaced them, as task 3.2 has it; the test of task 3.1 refuses a link to `standards.md` in `process.md` and the
   role files, and the words "in", "and" or "or" before it. `npm test` reported 652 tests, 652 passing, none
   skipped, on the tree committed next. The status is `in-progress`
-
 - 2026-10-16T18:56:49Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 4 at `35fe22d`.
   `node node_modules/agentrite/scripts/agentrite.mjs refresh` at the root, of release 7.1.0, printed `up to date` for
   the eight wrappers and `sandbox.sh`, exited 0 and changed no file, as `git status` showed; task 4.2 changes
   nothing, as the entry of 14:01:08 foresaw. Task 4.1 was done in step 1, so step 4 has no commit of code of its
   own: the commit point after task 4.3 is the commit of this entry. `npm test` at `35fe22d` is the run logged for
   step 3. The status is `in-progress`
-
 - 2026-10-16T19:02:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did step 5 and the
   verification of `plan.md`, on `8c2c7c7`:
   * `npm test` reported 652 tests, 652 passing, none skipped, on Linux, and `npm run check-changes` exited 0
@@ -193,7 +186,6 @@ timestamp: 2026-10-16T11:14:23Z
   The unit is not `implemented`: the review has not run, and `implemented` waits on the human deciding its blocking
   findings. Not checked: the sandbox with a real Docker, the harnesses themselves, and a project with a kit
   installed from the registry rather than linked. The status is `in-progress`
-
 - 2026-10-16T20:22:07Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
   `0054-a-project-names-its-own-roles-and-standards` at `864121c8884a583091f1c0eecdff0241b5694e11` in full,
   against merge base `f12086463b99cec805005e5cb7154323c86a5bbb` with `origin/master`. Returned S1; no separate
@@ -202,7 +194,6 @@ timestamp: 2026-10-16T11:14:23Z
   `npm test` reported 652 passing, none failed or skipped; `npm run check-changes` and the diff whitespace check
   exited 0. Did not independently reproduce the historical scratch run or test-first ordering, or verify real
   Docker, real harnesses or a consuming project installed from the registry.
-
 - 2026-10-16T20:29:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on finding S1 of the review, at
   `04427d9`, which blocks. Checked it: `listItem` linked with `encodeURI`, which leaves `#` and `?` as they are, so the
   link of a standards path `rules/house#team.md` named `rules/house` with the fragment `team.md`, and requirement 13 was
@@ -214,7 +205,6 @@ timestamp: 2026-10-16T11:14:23Z
   than these and a space, and how a harness or an editor follows such a link. `npm test` reported 653 tests, 653
   passing, none skipped, on Linux, on the tree committed next. The outcome of S1 waits on the human's decision. The
   status is `in-progress`
-
 - 2026-10-16T20:56:20Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit
   `0054-a-project-names-its-own-roles-and-standards` at `c5030065ce19aa87b5ff056379c69a90b5923fe3`, as a delta
   from `864121c8884a583091f1c0eecdff0241b5694e11`. Verified the correction of S1 and returned no new findings
@@ -224,7 +214,6 @@ timestamp: 2026-10-16T11:14:23Z
   exited 0. Independently resolved the generated links for names with `#`, `?` and parentheses. Did not reproduce
   historical test-first ordering or verify link-following by a real harness or editor, real Docker, real harness
   execution or a consuming project installed from the registry. This was not a fresh full-unit review.
-
 - 2026-10-16T21:10:51Z [human] accepted the correction of finding S1 of the review, as the delta review of
   20:56:20 verified it. The status is `in-progress`
 - 2026-10-16T21:10:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit `implemented`: the

@@ -50,7 +50,6 @@ timestamp: 2026-09-25T01:02:43Z
   0. `npm run check-changes` ran the installed kit, which is 1.0.1 here although `package.json` names 1.0.3. No test
   was added, as the spec decides there is no regression check. No review has been run, so the status stays
   `in-progress`
-
 - 2026-10-02T10:58:39Z [OpenCode, openai/gpt-6.1-sol] took the reviewer role and completed a full review of
   `0008-shared-node-modules` at `fb29dcdaccc9de12d27bd6dddc92acb04ad8309f`, against merge base
   `94b55d9b62d27fa1741d9e4cc01b7789b2a9b9a2` with `master`. Finding labels: none on all three axes. Complete review:

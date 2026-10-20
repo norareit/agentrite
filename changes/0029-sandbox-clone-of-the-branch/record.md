@@ -113,7 +113,6 @@ timestamp: 2026-10-04T15:31:37Z
   rewrap; the search for `git -C "$clone"` and `cd "$clone"` in `container/agent.sh` and `container/unit-clone.sh` found
   nothing; and `git status --short` showed only the untracked tarball. The commits after it change `plan.md` and
   `record.md` only. Every task is ticked. The status stays `in-progress`: the unit has not been reviewed
-
 - 2026-10-04T23:06:17Z [OpenCode, openai/gpt-6.1-sol] reviewed unit 0029 at
   `4da86cd5dade4561c3132a8744e0af776733ff35`, a full review against merge base
   `897a5fc9f81a027ad66162904e8493764c435fd2`. Returned labels `S1`, `S2`, `P1` and `C1`. Complete findings saved in
@@ -152,7 +151,6 @@ timestamp: 2026-10-04T15:31:37Z
 - 2026-10-04T23:13:06Z [human] on what the correction of C1 left open, that the wrapper does not make a read-only
   directory writable to get a clone removed: "C1 feels like something to fix when we run into it". Decided: it
   stays as it is. A removal that fails is reported and its remains are removed by hand
-
 - 2026-10-04T23:19:55Z [OpenCode, openai/gpt-6.1-sol] reviewed unit 0029 at
   `3bed96cde99ce05b4f816134a49b3a3b8db9afec`, a delta review from
   `4da86cd5dade4561c3132a8744e0af776733ff35`. Examined the previous labels `S1`, `S2`, `C1` and `P1` and returned

@@ -73,7 +73,6 @@ with the command the README gives, and moving any other project to 2.3.0.
   * Not checked: Claude Code's terminal showing the status line in the everyday sandbox, where only the two
     mounted files were listed; a login or a prompt there; Docker Desktop for macOS
   No review has been made, so the status stays in-progress until the human decides whether the task needs one
-
 - 2026-10-04T11:25:13Z [OpenCode, openai/gpt-6.1-sol] reviewed `0024-depend-on-agentrite-2-3-0` at
   `2c4294327f8ffe3d0449b2189631292fae663c26`: full review against merge base
   `b1ca65b4ec73f1569476b25b7b68f662699e56a3`. Returned no finding labels. Complete review:

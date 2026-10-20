@@ -59,7 +59,6 @@ check above still holds, since it runs `npm`.
   either harness in the sandbox, which is 0015's subject; whether `api.openai.com` suffices for the reviewer under
   OpenCode, beyond the entrypoint finding the host reachable at start-up; `npx agentrite refresh`, which the description
   does not ask for, so the role wrappers are as an earlier release wrote them
-
 - 2026-10-03T13:56:05Z [OpenCode, openai/gpt-6.1-sol] reviewed `0018-sandbox-for-this-repository` at
   `16db87fbbd267bce53cf1c6fada88d1ace498506`, a full review against the merge base with master,
   `5e079eaab64ba5f2166d5243c8f30f35bc01ebf1`. Returned C1 and C2. Complete findings are saved in

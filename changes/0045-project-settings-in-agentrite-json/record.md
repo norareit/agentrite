@@ -112,7 +112,6 @@ timestamp: 2026-10-11T22:10:57Z
   `shellcheck` is on this host, and the two shell files were checked with `bash -n` and by the suite. The pointer
   is at `2.0.2` in the tree and is not published.
   The unit is not reviewed. The status stays `in-progress`
-
 - 2026-10-11T21:48:06Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
   `changes/0045-project-settings-in-agentrite-json/` at `edf996026749dd70b302b819d906e66fc9814fcb`, in a full review
   against merge base `4d09d9bfa92ab6fd212315bd4ea441e2fd104186`. Returned S1 and P1. Saved the complete findings in
@@ -155,7 +154,6 @@ timestamp: 2026-10-11T22:10:57Z
   requirement 13, which is about what `init` reads and judges. Such a run leaves the `agentrite.json` it wrote,
   and nothing is changed for it. A delta review from `edf9960` comes before the unit is `implemented`. The status
   stays `in-progress`
-
 - 2026-10-11T22:03:39Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
   `changes/0045-project-settings-in-agentrite-json/` at `475b8bda3e27205ddb9b47f81bf81e8d5057d412`, in a delta review
   from `edf996026749dd70b302b819d906e66fc9814fcb`, with merge base `4d09d9bfa92ab6fd212315bd4ea441e2fd104186`.

@@ -50,7 +50,6 @@ timestamp: 2026-09-23T11:17:58Z
   replacement is for the proxy to resolve the allowed hostname itself and connect to that. This also serves R5,
   because the proxy then resolves at connection time rather than at start-up. Not changed yet; awaiting the human
   together with the ECH decision
-
 - 2026-09-23T11:46:36Z [human] brought both problems back to planning and asked for the spec and plan to be
   corrected
 - 2026-09-23T11:46:36Z [Claude Code, anthropic/claude-opus-5] took the planner role again. Both findings accepted;
@@ -75,7 +74,6 @@ timestamp: 2026-09-23T11:17:58Z
 - 2026-09-23T11:46:36Z [Claude Code, anthropic/claude-opus-5] requirements 10 and 11 were appended rather than
   inserted, so that every `(R…)` tag already in `plan.md` keeps its meaning. Status stays `draft`: the spec the
   human approved is not the spec that now exists, so it needs approving again before implementation resumes
-
 - 2026-09-23T11:53:40Z [human] approved the corrected spec and plan. Status `draft` to `approved`, with eleven
   requirements, and implementation unblocked
 - 2026-09-23T11:54:37Z [Claude Code, anthropic/claude-opus-5-5] took the implementer role again on the corrected
@@ -118,7 +116,6 @@ timestamp: 2026-09-23T11:17:58Z
   replacement drops the per-address rules altogether, which leaves egress as DNS to the resolvers, TCP 443
   through the proxy, and the local model server's port. As far as their annotations say, nothing on this
   project's allowlist needs a port other than 443. Awaiting the human
-
 - 2026-09-23T12:14:00Z [human] brought the third contradiction back to planning
 - 2026-09-23T12:14:00Z [Claude Code, anthropic/claude-opus-5] accepted it, and confirmed the mechanism in the tree
   rather than only the measurements. `container/entrypoint.sh:95` installs

@@ -39,7 +39,6 @@ timestamp: 2026-09-23T10:31:35Z
   verification items and seven commit points. Kit-managed harness wrappers are a non-goal: that work still has an
   undecided question, where a per-role model lives once the kit rewrites the file holding it, and the planner
   instructions forbid a plan that defers a decision. This unit only repoints the existing wrappers
-
 - 2026-09-23T10:31:35Z [human] asked whether a container-specific SSH key could be mounted instead, and noted the
   objection themselves: that it would also let the container push to the remotes
 - 2026-09-23T10:31:35Z [Claude Code, anthropic/claude-opus-5] confirmed that objection is avoidable but the option
@@ -58,7 +57,6 @@ timestamp: 2026-09-23T10:31:35Z
   with no addresses, keys, tokens, account or workspace names, and the README npm ships alongside them names no
   repository. What is published is the working method itself, which is not a secret but is the thing to decide
   about knowingly
-
 - 2026-09-23T11:17:58Z [human] traced the hosting question back to the sandbox's egress boundary, chose to build
   the SNI-filtering proxy that 0033 declined, and asked that this unit become the subdomain solution that depends
   on it. Separately asked that the dependency be logged here rather than left implicit
@@ -79,7 +77,6 @@ timestamp: 2026-09-23T10:31:35Z
   contradicted the new decision and were corrected: the approach said a published version cannot be taken back,
   and a task required the allowlist to be unchanged, which is now false by one hostname. Added the hosting stack
   and `agent/compose.project.yml` to the file list, two hosting tasks and a commit point for them
-
 - 2026-09-24T12:41:28Z [human] asked for this unit to be implemented, and the implementer reported three obstacles
   before starting: the hosting stack was not decided, the hosting work changes live AWS resources, and the spec and
   plan still described 0039's allowlist change as future
@@ -104,7 +101,6 @@ timestamp: 2026-09-23T10:31:35Z
   plan said this unit was blocked and could not be implemented; they now say 0039 is implemented and that the
   allowlist takes hostnames only. Nothing in either document contradicted 0039 as built, which the implementer had
   also checked
-
 - 2026-09-24T12:41:28Z [human] pointed at `~/projects/thoryn`, a POC that served a subdomain of ritenoar.com and is
   no longer live, as worth checking for the hosting pattern
 - 2026-09-24T12:41:28Z [Claude Code, anthropic/claude-opus-5] read it, and it both confirmed the decision and
@@ -117,10 +113,8 @@ timestamp: 2026-09-23T10:31:35Z
   certificate pattern does not carry over, and `ritenoar-site`'s does, since its certificate stack plus
   `crossRegionReferences` already solves exactly that for the apex. `plan.md` now says to follow that rather than
   invent a second mechanism
-
 - 2026-09-24T12:43:28Z [human] approved the unit. Status `draft` to `approved`, with eleven requirements, the
   hosting stack decided and the block on 0039 lifted, so implementation can begin
-
 - 2026-09-24T13:10:53Z [human] asked, before implementation started, that the kit be released with a
   `./deploy.sh`-style script rather than a plain `cdk deploy`, and that the spec and plan be updated if necessary
 - 2026-09-24T13:10:53Z [Claude Code, anthropic/claude-opus-5-5] as implementer, changed `plan.md` and not `spec.md`.
@@ -140,7 +134,6 @@ timestamp: 2026-09-23T10:31:35Z
   file also asks for plans to be stored in its `.claude/plans/`; this unit's plan lives here, and whether that
   repository should hold a pointer to it is left to the human. Its existing `deploy.sh` runs `npm run build` at a
   root with no `package.json`, which looks broken; that is outside this unit and was not checked further
-
 - 2026-09-24T13:20:10Z [human] confirmed the unit stays approved after the plan change for `deploy-agent-kit.sh`,
   and asked for it to be implemented
 - 2026-09-24T13:20:10Z [Claude Code, anthropic/claude-opus-5-5] started the implementation. Status `approved` to
@@ -149,7 +142,6 @@ timestamp: 2026-09-23T10:31:35Z
 - 2026-09-24T13:20:10Z [Claude Code, anthropic/claude-opus-5-5] precondition met: `master` holds
   `0039-sni-filtering-proxy` at `implemented`, this branch contains `master`, and the installed kit's
   `container/entrypoint.sh` refuses an address or CIDR entry in `ALLOWLIST`, so the allowlist takes hostnames only
-
 - 2026-09-24T13:41:43Z [human] said the hosting was never meant to live in `~/projects/ritenoar-site`, having noticed
   the
   implementer create a branch there. The CDK that deploys the kit's tarball belongs to the kit
@@ -179,7 +171,6 @@ timestamp: 2026-09-23T10:31:35Z
   read it, so it needs approving again before implementation resumes
 - 2026-09-24T14:31:00Z [human] reviewed spec and plan. Renamed `deploy-agent-kit.sh` to simply `deploy.sh`. It is easier
   if this is the same across projects. Changed default version to 1.x, not 0.x. 
-
 - 2026-09-24T14:50:46Z [human] asked how releasing works and whether a version bump is part of it, then asked whether a deploy
   uploads a specific version or the same name each time, since projects may pin different ones
 - 2026-09-24T14:50:46Z [Claude Code, anthropic/claude-opus-5] answered from the documents: each release is its own immutable
@@ -203,10 +194,8 @@ timestamp: 2026-09-23T10:31:35Z
   `0.x` I first wrote without recording why. Under semver that is a claim the surface is stable rather than
   provisional. Noting it rather than reverting it, since the human has now twice declined to treat the kit as
   unsettled
-
 - 2026-09-24T14:56:28Z [human] read the spec and plan and approved them. Status `draft` to `approved`, with the
   hosting in the kit's own repository, versioning settled on semver, and the package named `@ritenoar/agent-kit`
-
 - 2026-09-24T15:06:22Z [Claude Code, anthropic/claude-opus-5-5] as implementer, reported four leftovers from the
   `ritenoar-site` version of the plan before starting: `deploy.sh` still took the kit's path as an argument, whose
   only valid value is now its own directory; the files list still named `deploy-agent-kit.sh` and a `CLAUDE.md`
@@ -220,7 +209,6 @@ timestamp: 2026-09-23T10:31:35Z
   the `deploy.sh` task and the release task, the files list names the kit's `README.md` in place of `CLAUDE.md`,
   and `tests/install.test.mjs` is deleted with `install.sh`, in the files list, the task and the commit point.
   Status `approved` to `in-progress`
-
 - 2026-09-24T15:09:13Z [Claude Code, anthropic/claude-opus-5-5] committed `infra/`, `deploy.sh` and the kit's README
   section on releasing as kit commit "feature-0037 Serve the agent kit from agent-kit.ritenoar.com", on the kit's
   branch `feature-0037-kit-as-an-npm-package`. `AgentKitCertStack` in us-east-1 holds the certificate and
@@ -241,7 +229,6 @@ timestamp: 2026-09-23T10:31:35Z
   SSO session on this machine has expired, which only the human can renew. That task stays open, and so does the
   one confirming `files` excludes `infra/`, which waits on `files` itself. `deploy.sh` has been syntax-checked with
   `bash -n` and not run
-
 - 2026-09-24T15:10:02Z [Claude Code, anthropic/claude-opus-5-5] added a kit task to `plan.md` before doing it. The
   image build names `agent-kit/container/` in three places, not one: the two `COPY` lines in `container/Dockerfile`
   and `dockerfile` in `container/compose.yml`, which the plan did not list. Replacing them with
@@ -249,7 +236,6 @@ timestamp: 2026-09-23T10:31:35Z
   wrapper, which now knows both the root and its own directory, exports the kit's container directory relative to
   the root, and Compose and the `Dockerfile` take it from there. The project task that named the `Dockerfile`'s
   `COPY` now says it is the kit's, and names only `.dockerignore`
-
 - 2026-09-24T15:11:49Z [Claude Code, anthropic/claude-opus-5-5] kit commits "feature-0037 Make the kit an npm package"
   and "feature-0037 Document installing the kit with npm". The package is `@ritenoar/agent-kit` at `1.0.0`, kept
   `"private": true` so an accidental `npm publish` is refused, which does not affect `npm pack`. `npm pack
@@ -270,7 +256,6 @@ timestamp: 2026-09-23T10:31:35Z
   release as `npm version patch|minor|major` then `./deploy.sh`, and says nothing reports a newer release, which
   is the staleness loss the spec accepts. `grep` for `install.sh`, `agent-kit.md`, `installed-commit` and
   `--update` in it returns nothing
-
 - 2026-09-24T16:41:41Z [human] signed in to AWS and ran the kit's `./deploy.sh`, the first release, which created
   both stacks and uploaded `ritenoar-agent-kit-1.0.0.tgz` at 16:35:59Z
 - 2026-09-24T16:41:41Z [Claude Code, anthropic/claude-opus-5-5] verified the release.
@@ -286,7 +271,6 @@ timestamp: 2026-09-23T10:31:35Z
   lockfile records the URL as `resolved` with a `sha512` integrity hash, and the installed package holds
   `container`, `process.md`, `roles`, `scripts`, `templates`, `package.json` and `README.md`, with no `changes/` or
   `tests/`
-
 - 2026-09-24T16:46:07Z [Claude Code, anthropic/claude-opus-5-5] committed "feature-0037 Allow the kit's host in the
   sandbox", after the host was serving, and "feature-0037 Depend on the agent kit package". The roles test was
   changed to expect `node_modules/@ritenoar/agent-kit/roles/` first, and failed three tests, the Roles section,
@@ -311,7 +295,6 @@ timestamp: 2026-09-23T10:31:35Z
   second full run passed 86 of 86, and `callouts.spec.ts` with `--repeat-each=2` five times passed 30 of 30. Its
   output was cut off before the diff, so the cause is not known; nothing in this unit touches the page or the
   baselines, which is a reason to suspect the environment but not evidence of it
-
 - 2026-09-24T16:52:24Z [Claude Code, anthropic/claude-opus-5-5] committed "feature-0037 Drop the installer's
   bootstrap". `tests/unit/check-agent-kit.test.ts`, which tests the deleted check, was not in the plan and failed
   the unit suite once the script was gone; it was added to `plan.md` and deleted in the same commit, the same gap
@@ -341,7 +324,6 @@ timestamp: 2026-09-23T10:31:35Z
 - 2026-09-24T16:52:24Z [Claude Code, anthropic/claude-opus-5-5] one verification item is open and blocks
   `implemented`: that updating to a newer kit changes only `package.json` and `package-lock.json` (R4). It needs a
   second release to exist, and only 1.0.0 does; making one is a live release, which is the human's to approve
-
 - 2026-09-24T19:57:17Z [human] ran `npm version patch` in the kit, amended its commit message to
   "feature-0037 Release 1.0.1" and moved the annotated tag `v1.0.1` onto it, then released 1.0.1 with `./deploy.sh`
 - 2026-09-24T19:57:17Z [Claude Code, anthropic/claude-opus-5-5] verified R4.
@@ -364,12 +346,10 @@ timestamp: 2026-09-23T10:31:35Z
 - 2026-09-24T19:57:17Z [Claude Code, anthropic/claude-opus-5-5] every task and verification item in `plan.md` is
   ticked. Status stays `in-progress`: the unit has not been reviewed, and `implemented` waits on the human deciding
   the review's blocking findings
-
 - 2026-09-24T20:24:00Z [OpenCode, openai/gpt-6-sol] full review of unit 0037 at project commit `57434cc` and kit
   commit `9ca436e`, against their respective merge bases. Findings S1 and C1, saved in
   `.reviews/0037-kit-as-an-npm-package/2026-09-24-full-57434cc.md`. Live AWS deployment, the same-version release
   refusal and historical scratch-clone and update checks were not independently rerun
-
 - 2026-09-24T20:46:39Z [Claude Code, anthropic/claude-opus-5-5] S1, proposed decline, open until the human
   decides. The failure predates this unit and is planned as its own bug, `0041-sandbox-font-timeout`, on branch
   `bugfix-0041-sandbox-font-timeout`. Checked on `master` rather than argued: a scratch clone of `master` at
@@ -386,7 +366,6 @@ timestamp: 2026-09-23T10:31:35Z
   argument and path checks. Added to `plan.md` before doing it: the guard moves into a module of its own so that it
   can be tested without `aws-cdk-lib`, and three test files cover the three, with `deploy.sh` and the wrapper run
   against stubbed commands; each test is to be shown failing once against broken behavior
-
 - 2026-09-24T20:49:55Z [Claude Code, anthropic/claude-opus-5-5] C1 applied, in two kit commits. "feature-0037 Move
   the record name out of the hosting stack" puts the guard in `infra/lib/record-name.ts`; `npx tsc -p infra` passes
   and the two synthesized templates are byte-identical before and after. "feature-0037 Test the release script, the
@@ -408,12 +387,10 @@ timestamp: 2026-09-23T10:31:35Z
   is open as a proposed decline, and it will recur in the sandbox until 0041 is fixed
 - 2026-09-24T20:49:55Z [Claude Code, anthropic/claude-opus-5-5] every task, verification item and commit point in
   `plan.md` is ticked. Status stays `in-progress`: S1 needs the human's decision before the unit can be `implemented`
-
 - 2026-09-24T20:57:34Z [OpenCode, openai/gpt-6-sol] delta review of unit 0037 at project commit `a22fdeb` from
   `57434cc` and kit commit `c26feb7` from `9ca436e`. C1 was corrected; S1 remains open. Findings returned: S1,
   saved in `.reviews/0037-kit-as-an-npm-package/2026-09-24-delta-a22fdeb.md`. The reported `master`-branch font
   timeout and live AWS deployment were not independently rerun
-
 - 2026-09-24T22:54:37Z [human] accepted the proposed decline of S1: the intermittent sandbox font-loading timeout
   is tracked separately as `0041-sandbox-font-timeout`, and resolving it is not part of unit 0037. This accepts the
   known limitation in R10 for this unit; the sandbox suite has both passed and failed on fresh runs

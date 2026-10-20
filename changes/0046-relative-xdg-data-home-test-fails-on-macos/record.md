@@ -106,7 +106,6 @@ timestamp: 2026-10-12T15:10:00Z
   Not checked: that a Linux host without the sandbox passes, other than through the sandbox run above, and the
   formatting of the new files with a formatter, since the repository has none configured. Lines of the changed
   files are within 120 characters (checked with `awk` over `tests/*.mjs` and `CONTRIBUTING.md`).
-
 - 2026-10-12T15:07:54Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, full review of unit 0046 at commit
   `446cbb5ddbdca8448fe91d507d8ce0749754a366`, against merge base `16131d5e845bd5148e45f59a893644e238dbb7e2`.
   Returned C1 and P1. Findings saved in
@@ -122,7 +121,6 @@ timestamp: 2026-10-12T15:10:00Z
   `6de78db`. P1: ignored by the human's decision, no change. On `6de78db` on macOS, `npm test` reported 500 tests, 483
   passing, 17 skipped, none failing or cancelled, and `npm run check-changes` passed. The sandbox run was not repeated
   after the rename.
-
 - 2026-10-12T15:31:46Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta review of unit 0046 at commit
   `1431f08bebd5891e98284cbc8f74a4f5f76f26e2`, from the previously reviewed commit
   `446cbb5ddbdca8448fe91d507d8ce0749754a366`. Returned S1. Findings saved in
@@ -131,7 +129,6 @@ timestamp: 2026-10-12T15:10:00Z
   `./sandbox.sh --in-place npm test`: 500 passing, none skipped, failing or cancelled. Both change checks and
   `git diff --check 446cbb5..HEAD` pass. The tests at `1c58216` are identical to those at `6de78db`.
   The historical tests-first sequence and mutation failure output cannot be verified from the committed artifacts.
-
 - 2026-10-12T16:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, outcome of the delta review of
   `1431f08`. S1: accepted. The stray `tests/temporary-directory.mjs-E`, a `sed -i` backup of the old helper added by
   `6de78db`, is removed in `13e5a07`. `git ls-files` lists no other file ending in `-E`, `~`, `.bak`, `.orig` or
@@ -140,7 +137,6 @@ timestamp: 2026-10-12T15:10:00Z
   `446cbb5`. The reviewer's entry above names `1c58216` as that reviewer wrote it, and is left as it is. On macOS,
   `npm test` reported 500 tests, 483 passing, 17 skipped, none failing or cancelled, and `npm run check-changes` and
   `node scripts/check-changes.mjs` passed. Not checked: the sandbox run after these changes, which touch no code.
-
 - 2026-10-12T16:20:00Z [human] asked to mark the unit implemented, after C1 and S1 were fixed and P1 was ignored by
   their decision. Every task of `plan.md` is ticked. The status is `implemented`.
 

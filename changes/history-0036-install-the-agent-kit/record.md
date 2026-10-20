@@ -47,7 +47,6 @@ timestamp: 2026-09-22T23:48:42Z
   kit because the kit's own change process, its unit 0001, is still `draft`. Judged that this could not be folded
   into 0035, which names `git subtree` in an approved requirement and whose record documents subtree behavior that
   was genuinely verified; 0035 is marked `implemented` and amended to point here instead of being rewritten
-
 - 2026-09-22T23:48:42Z [human] asked that the revision of the kit's draft unit 0001 be a deliberate plan item, so
   that it must be addressed once everything else is implemented
 - 2026-09-22T23:48:42Z [Claude Code, anthropic/claude-opus-5] added it as requirement 14, with a decision, two
@@ -57,9 +56,7 @@ timestamp: 2026-09-22T23:48:42Z
   tasks carry out is written into `spec.md` rather than left open, since the planner instructions forbid a task
   that defers a decision: the numbering requirement goes, because the installer's payload excludes the kit's
   `changes/` and the collision cannot occur, and the false claim about dispatch goes regardless of this unit
-
 - 2026-09-22T23:58:57Z [human] approved the unit. Status `draft` to `approved`, ready to implement
-
 - 2026-09-23T00:01:36Z [Claude Code, anthropic/claude-opus-5.5] took the implementer role. Status `approved` to
   `in-progress`
 - 2026-09-23T00:01:36Z [Claude Code, anthropic/claude-opus-5.5] added two tasks and two files to `plan.md`: a test
@@ -139,7 +136,6 @@ timestamp: 2026-09-22T23:48:42Z
   P1, C1 in `.reviews/0036-install-the-agent-kit/2026-09-23-full-dbeb57e.md`. Could not independently verify the
   prior red-before-green, scratch-clone, real-kit reinstall/update or sandbox/firewall runs; the attempted
   `opencode debug agent` invocation without a role name did not verify role resolution
-
 - 2026-09-23T09:32:24Z [Claude Code, anthropic/claude-opus-5.5] took the implementer role for the review's findings
 - 2026-09-23T09:32:24Z [Claude Code, anthropic/claude-opus-5.5] S2 accepted and applied. A directory holding any regular file named
   `.installed-commit` was taken as a previous installation and deleted, which the reviewer is right breaks R3 for a

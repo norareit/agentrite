@@ -39,7 +39,6 @@ timestamp: 2026-10-03T13:21:26Z
     files
   * Not checked: Docker Desktop for macOS and Docker Engine 24.0.7, which the spec names as non-goals; the image
     was not rebuilt, since the fix changes no file the image holds
-
 - 2026-10-03T13:02:16Z [OpenCode, openai/gpt-6.1-sol] took the reviewer role and completed a full review of
   0020 on `8a142fae799e3950f7d77ab9dbe82408f4c5a945`, against the merge base with `master`. Returned P1;
   complete findings are in `.reviews/0020-sandbox-tmp-noexec/2026-10-03T130024Z-full-8a142fa.md`. Independently

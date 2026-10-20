@@ -67,7 +67,6 @@ timestamp: 2026-09-21T00:25:22Z
 - 2026-09-22T18:47:21Z [Claude Code, anthropic/claude-opus-5] the kit's ported `check-changes` suite passed before
   anything else touched the script: 16 tests, 16 passing, on `~/projects/agent-kit` with `npm test`. The port is
   dependency-free ESM and the tests are unchanged apart from the import path and dropping the `ts-node` invocation
-
 - 2026-09-22T18:47:21Z [Claude Code, anthropic/claude-opus-5] the kit is on Bitbucket at
   `git@bitbucket.org:ritenoar/agent-kit.git`, one commit, "Add the shared agent kit". Vendored here with
   `git subtree add --prefix agent-kit agent-kit master --squash`, whose merge commit was amended to carry the
@@ -118,7 +117,6 @@ timestamp: 2026-09-21T00:25:22Z
   measurement of the container. `docker compose --project-directory . -f agent-kit/container/compose.yml -f
   agent/compose.project.yml config --images` does resolve to `norareit-agent`, which is client-side only and proves
   the two files merge, not that the image builds
-
 - 2026-09-22T19:44:00Z [human] ran `sudo usermod -aG docker stef`, which unblocked the sandbox verification
 - 2026-09-22T19:44:00Z [Claude Code, anthropic/claude-opus-5] verified the sandbox on the migrated tree at
   `d8c9121`. `./agent.sh --rebuild` built the image from `agent-kit/container/Dockerfile` with the project root as
@@ -145,7 +143,6 @@ timestamp: 2026-09-21T00:25:22Z
   empty Bitbucket remote, the Bitbucket visibility flag, the prior subtree push/pull and scratch round trip,
   test-first timing and deliberate failing probes, Claude Code's displayed subagent list, or the sandbox `npm ci`;
   the exact unwrapped `./agent.sh --rebuild` invocation was also unavailable to this shell's stale group credentials
-
 - 2026-09-22T22:44:05Z [Claude Code, anthropic/claude-opus-5] the reason the `.gitignore` task was added to
   `plan.md`, which finding P2 correctly reports was never logged at the time. The kit repository was created with no
   `.gitignore`, and `~/projects/agent-kit` already held an untracked `.idea/` directory. Without one, the editor
@@ -178,7 +175,6 @@ timestamp: 2026-09-21T00:25:22Z
   for what is the same everywhere and `AGENTS.md` for what is specific here, and say how a rule reaches the kit.
   `CLAUDE.md` and `README.md` are already in the roles test's instruction-file list, so a path in either going stale
   fails a test
-
 - 2026-09-22T22:44:05Z [Claude Code, anthropic/claude-opus-5] the S1 fix touches a vendored kit file, so it was sent
   back with `git subtree push --prefix agent-kit agent-kit master`, which pushed `03112fb..651ecf8` to Bitbucket.
   `~/projects/agent-kit` was then pulled and `diff -r` reports the kit clone and the vendored copy identical. That
@@ -192,21 +188,18 @@ timestamp: 2026-09-21T00:25:22Z
 - 2026-09-22T22:44:05Z [Claude Code, anthropic/claude-opus-5] every finding from the first review is applied and
   every task and verification item in `plan.md` is ticked. The unit waits on the human: `process.md` gates
   `implemented` on their having decided every blocking finding, and S1 and S2 were blocking
-
 - 2026-09-22T22:57:44Z [OpenCode, openai/gpt-5.6-sol] performed a delta review of unit
   `0035-shared-agent-kit` at commit `438026f`, from the prior reviewed commit `141e69e`. Returned finding P3 in
   `.reviews/0035-shared-agent-kit/delta-review-438026f-from-141e69e-gpt-5.6-sol.md`. Could not independently verify
   the historical untracked `.idea/` directory, the precise uncommitted ordering of the `.gitignore` plan extension,
   or the exact subtree command used to produce the verified remote state; did not rebuild the sandbox because the
   delta changes no runtime sandbox behavior
-
 - 2026-09-22T23:10:00Z [Claude Code, anthropic/claude-opus-5] **P3 accepted and fixed.** The delta review is correct
   that `plan.md`'s file map never listed `CLAUDE.md`, although C1 edited it and the review-response commit point
   named it. Both `README.md` and `CLAUDE.md` entries now say they also carry the maintenance guidance that C1
   corrected. This is the same class of gap as P1 and the third time the file map has lagged the work, which is worth
   noting for whoever plans the next unit: the map is easiest to keep true by updating it in the same edit as the
   file, not at the commit
-
 - 2026-09-22T23:48:42Z [human] decided the blocking findings S1 and S2 and the non-blocking P1, P2, P3 and C1, all
   of which were accepted and applied, and marked the unit done. Status moved to `implemented`, freezing `spec.md`
   and `plan.md`. The branch is deliberately not merged to `master` yet: unit 0036 branches from it and is
