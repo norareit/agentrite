@@ -179,6 +179,10 @@ npm run check-changes
 
 * `npm install` fetches the version `npm publish` published and fails when the registry does not have it. When the
   session may not run it, ask the human to, and go on from its result
+* Right after `npm publish` has printed `+ agentrite@<version>`, the registry can still answer 404 for that version,
+  and name the release before as `latest`, for a minute or more while it catches up. That is no failed publish: the
+  line `npm publish` printed settles it. Before `npm install`, wait until
+  `npm view agentrite@<version> version --prefer-online` prints the version
 * `npm run kit -- refresh` runs the `refresh` of the release just installed. It brings the role wrappers and
   `sandbox.sh` to what the release writes, and prints each file as written, refreshed or up to date. In this
   repository `npx agentrite refresh` would run the working tree's `refresh`, as "Commands" of `CONTRIBUTING.md`
