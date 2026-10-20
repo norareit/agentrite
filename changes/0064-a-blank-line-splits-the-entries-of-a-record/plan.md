@@ -56,24 +56,24 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
       the blank line before the next heading (R1)
 - [x] Change "check-changes" in `README.md` so that it says the check also rejects an entry that the branch adds after
       a blank line (R4)
-- [ ] Remove the blank lines between entries from every `record.md` under `changes/` with the one-off script, and
+- [x] Remove the blank lines between entries from every `record.md` under `changes/` with the one-off script, and
       verify that 16 records change, that only blank lines are touched, and that a second run changes nothing (R7,
       R8)
-- [ ] Log in `record.md` of this unit the commit of the removal (R8)
+- [x] Log in `record.md` of this unit the commit of the removal (R8)
 
 ## Verification
 
-- [ ] `npm test` passes, the new tests among it, and they failed before the check was changed (R5)
-- [ ] The end-to-end tests are run, as the standards ask after every change
-- [ ] `git diff -w --stat` of the removal commit against its parent is empty, and `git diff --stat` shows only
+- [x] `npm test` passes, the new tests among it, and they failed before the check was changed (R5)
+- [x] The end-to-end tests are run, as the standards ask after every change
+- [x] `git diff -w --stat` of the removal commit against its parent is empty, and `git diff --stat` shows only
       `changes/*/record.md` (R8)
-- [ ] `awk` over every `record.md` finds no entry after a blank line in `## Log` or `## Amendments` (R7)
-- [ ] With the work committed, `npm run check-changes` and `node scripts/check-changes.mjs` both pass (R6)
-- [ ] The text added to `process.md` and `README.md` has no em dash and no line over 120 characters (R1, R4)
+- [x] `awk` over every `record.md` finds no entry after a blank line in `## Log` or `## Amendments` (R7)
+- [x] With the work committed, `npm run check-changes` and `node scripts/check-changes.mjs` both pass (R6)
+- [x] The text added to `process.md` and `README.md` has no em dash and no line over 120 characters (R1, R4)
 
 ## Commit Points
 
 - [x] `bugfix-0064` the tests of the check and the check, in one commit
-- [ ] `bugfix-0064` the rule in `process.md` and the text in `README.md`
-- [ ] `bugfix-0064` the removal of the blank lines between entries of the records, and nothing else
-- [ ] `bugfix-0064` the log entry naming the removal commit
+- [x] `bugfix-0064` the rule in `process.md` and the text in `README.md`
+- [x] `bugfix-0064` the removal of the blank lines between entries of the records, and nothing else
+- [x] `bugfix-0064` the log entry naming the removal commit

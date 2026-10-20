@@ -33,5 +33,17 @@ timestamp: 2026-10-20T18:51:02Z
 - 2026-10-20T19:20:09Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
   `bugfix-0064-a-blank-line-splits-the-entries-of-a-record` at `878b490`, began the work. Read `roles/implementer.md`
   of the installed release 7.2.0. The status is `in-progress`
+- 2026-10-20T19:22:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the unit's branch. Wrote the
+  tests of `findSplitEntries` and of the command first, and saw the three unit tests that expect a report and the test
+  of the command that expects a rejection fail against a stub that reports nothing. Built the check in `47fad68`, and
+  stated the rule in `process.md` and `README.md` in `ccc65ba`. Removed the blank lines between entries in `8e6771f`,
+  with a one-off script that is not committed: 72 blank lines in 16 records, as the spec counted, and nothing else. A
+  second run of the script changed nothing, and `awk` over every `record.md` finds no entry after a blank line in
+  `## Log` or `## Amendments`. The plan's check of the removal with `git diff -w --stat` cannot be empty, since `-w`
+  still shows a removed blank line, so it was made with `git diff --ignore-blank-lines --stat` of `8e6771f` against its
+  parent, which is empty, and `git diff --name-only`, which names only `changes/*/record.md`. On `8e6771f`, `npm test`
+  passed all 754 tests with Docker present and none skipped, the end-to-end tests among them, and
+  `node scripts/check-changes.mjs` and `npm run check-changes` both passed. The text added to `process.md` and
+  `README.md` has no em dash and no line over 120 characters. The status stays `in-progress`
 
 ## Amendments
