@@ -6,6 +6,7 @@ import { readSettings, SETTINGS_FILE } from './agentrite-settings.mjs';
 /**
  * @typedef {object} ChangeDocuments
  * @property {string} status
+ * @property {string} [record]
  * @property {string} [spec]
  * @property {string} [plan]
  */
@@ -53,6 +54,68 @@ export function findIncompletePlans(head) {
     const open = documents.plan.match(UNTICKED_TASK)?.length ?? 0;
     if (open > 0) {
       violations.push(`${unit}: plan.md has ${open} unticked task${open === 1 ? '' : 's'}`);
+    }
+  }
+
+  return violations;
+}
+
+const ENTRY_SECTION = /^## (Log|Amendments)\s*$/;
+const HEADING = /^#/;
+const ENTRY_OPENING = /^- /;
+
+/**
+ * The opening lines of the entries of `## Log` and `## Amendments` that stand after a blank line and are not the
+ * first of their section. A blank line before an indented continuation is inside an entry and opens none.
+ *
+ * @param {string} record
+ * @returns {Set<string>}
+ */
+function splitEntriesOf(record) {
+  const split = new Set();
+  let inEntrySection = false;
+  let entrySeen = false;
+  let blankBefore = false;
+
+  for (const line of record.split('\n')) {
+    if (HEADING.test(line)) {
+      inEntrySection = ENTRY_SECTION.test(line);
+      entrySeen = false;
+      blankBefore = false;
+      continue;
+    }
+    if (!inEntrySection) continue;
+    if (line.trim() === '') {
+      blankBefore = true;
+      continue;
+    }
+    if (ENTRY_OPENING.test(line)) {
+      if (entrySeen && blankBefore) split.add(line);
+      entrySeen = true;
+    }
+    blankBefore = false;
+  }
+
+  return split;
+}
+
+/**
+ * An entry is known by its opening line, which holds its timestamp and its author. Only the separations the branch
+ * adds are judged: the records at the base may hold blank lines between entries, and many of them are frozen.
+ *
+ * @param {Record<string, ChangeDocuments>} base
+ * @param {Record<string, ChangeDocuments>} head
+ * @returns {string[]}
+ */
+export function findSplitEntries(base, head) {
+  const violations = [];
+
+  for (const [unit, documents] of Object.entries(head)) {
+    if (documents.record === undefined) continue;
+
+    const known = splitEntriesOf(base[unit]?.record ?? '');
+    for (const opening of splitEntriesOf(documents.record)) {
+      if (!known.has(opening)) violations.push(`${unit}: entry after a blank line: ${opening}`);
     }
   }
 
@@ -119,6 +182,7 @@ function documentsAtRevision(root, revision) {
 
     return [unit, {
       status: statusFrom(record, recordFile),
+      record,
       spec: readAtRevision(root, revision, `${directory}/spec.md`),
       plan: readAtRevision(root, revision, `${directory}/plan.md`),
     }];
@@ -156,10 +220,12 @@ function mergeBaseWithDefaultBranch(root, defaultBranch) {
 export function run(root = process.cwd()) {
   const repository = resolve(root);
   const mergeBase = mergeBaseWithDefaultBranch(repository, readSettings(repository).defaultBranch);
+  const base = documentsAtRevision(repository, mergeBase);
   const head = documentsAtRevision(repository, 'HEAD');
   const violations = [
-    ...findFrozenViolations(documentsAtRevision(repository, mergeBase), head),
+    ...findFrozenViolations(base, head),
     ...findIncompletePlans(head),
+    ...findSplitEntries(base, head),
   ];
 
   if (violations.length > 0) {

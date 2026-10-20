@@ -3,7 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { findFrozenViolations, findIncompletePlans } from '../scripts/check-changes.mjs';
+import { findFrozenViolations, findIncompletePlans, findSplitEntries } from '../scripts/check-changes.mjs';
 import { installKit, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -116,6 +116,63 @@ test('findIncompletePlans counts every unticked task and finds indented ones', (
   );
 });
 
+/** A record whose `## Log` holds the given lines, followed by an empty `## Amendments`. */
+function recordWithLog(...lines) {
+  return ['---', 'status: in-progress', '---', '', '# Unit', '', '## Log', '', ...lines, '', '## Amendments', '']
+    .join('\n');
+}
+
+const firstEntry = '- 2026-01-01T00:00:00Z [human] approved the spec. The status is `approved`';
+const secondEntry = '- 2026-01-02T00:00:00Z [human] wrote the second entry';
+
+test('findSplitEntries reports a new entry of the log after a blank line, naming the unit and the entry', () => {
+  assert.deepEqual(
+    findSplitEntries(
+      { unit: { status: 'approved', record: recordWithLog(firstEntry) } },
+      { unit: { status: 'in-progress', record: recordWithLog(firstEntry, '', secondEntry) } },
+    ),
+    [`unit: entry after a blank line: ${secondEntry}`],
+  );
+});
+
+test('findSplitEntries reports a new entry of the amendments after a blank line', () => {
+  const record = `${recordWithLog(firstEntry)}\n${firstEntry}\n\n${secondEntry}\n`;
+
+  assert.deepEqual(
+    findSplitEntries({}, { unit: { status: 'implemented', record } }),
+    [`unit: entry after a blank line: ${secondEntry}`],
+  );
+});
+
+test('findSplitEntries ignores an entry after a blank line that the record at the base holds', () => {
+  const record = recordWithLog(firstEntry, '', secondEntry);
+
+  assert.deepEqual(
+    findSplitEntries(
+      { unit: { status: 'implemented', record } },
+      { unit: { status: 'implemented', record: `${record}- 2026-01-03T00:00:00Z [human] amended it\n` } },
+    ),
+    [],
+  );
+});
+
+test('findSplitEntries judges the whole of a record absent from the base', () => {
+  const thirdEntry = '- 2026-01-03T00:00:00Z [human] wrote the third entry';
+
+  const record = recordWithLog(firstEntry, '', secondEntry, '', thirdEntry);
+
+  assert.deepEqual(
+    findSplitEntries({}, { unit: { status: 'draft', record } }),
+    [`unit: entry after a blank line: ${secondEntry}`, `unit: entry after a blank line: ${thirdEntry}`],
+  );
+});
+
+test('findSplitEntries ignores the blank lines around a heading and one before an indented continuation', () => {
+  const record = recordWithLog(firstEntry, '  continued', '', '  after a blank line', secondEntry);
+
+  assert.deepEqual(findSplitEntries({}, { unit: { status: 'draft', record: `${record}\n${firstEntry}\n` } }), []);
+});
+
 const checker = join(import.meta.dirname, '..', 'scripts', 'check-changes.mjs');
 
 function git(cwd, ...args) {
@@ -199,6 +256,38 @@ test('check-changes rejects an implemented unit with an unticked task', (t) => {
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /^- 0002-open: plan\.md has 1 unticked task$/m);
+});
+
+/** Commits, on a new branch `change`, a record of 0001-example whose log holds the given lines. */
+function commitRecordWithLog(repository, ...lines) {
+  writeFileSync(join(repository, 'changes', '0001-example', 'record.md'), recordWithLog(...lines));
+  git(repository, 'commit', '-am', 'change the record');
+}
+
+test('check-changes rejects an entry that the branch adds after a blank line, naming the unit and the entry', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  commitRecordWithLog(repository, firstEntry);
+  git(repository, 'checkout', '-b', 'change');
+  commitRecordWithLog(repository, firstEntry, '', secondEntry);
+
+  const result = runChecker(repository);
+
+  assert.notEqual(result.status, 0);
+  assert.equal(
+    result.stderr,
+    `Change documents need attention:\n- 0001-example: entry after a blank line: ${secondEntry}\n`,
+  );
+});
+
+test('check-changes passes an entry after a blank line that the base already holds', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  commitRecordWithLog(repository, firstEntry, '', secondEntry);
+  git(repository, 'checkout', '-b', 'change');
+  commitRecordWithLog(repository, firstEntry, '', secondEntry, '- 2026-01-03T00:00:00Z [human] wrote the third entry');
+
+  const result = runChecker(repository);
+
+  assert.equal(result.status, 0, result.stderr);
 });
 
 // R25: the branch the file names is the base, and a branch master beside it is not read.

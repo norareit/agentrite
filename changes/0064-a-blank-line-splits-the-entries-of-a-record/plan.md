@@ -40,16 +40,16 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
 
 ## Tasks
 
-- [ ] Write the unit tests of `findSplitEntries` and the two tests of the command, and see them fail (R2, R3, R5)
-    - [ ] A new entry after a blank line is reported, in `## Log` and in `## Amendments`, with the unit and the entry
+- [x] Write the unit tests of `findSplitEntries` and the two tests of the command, and see them fail (R2, R3, R5)
+    - [x] A new entry after a blank line is reported, in `## Log` and in `## Amendments`, with the unit and the entry
           in the message
-    - [ ] A split that the record at the base holds is not reported, and a record absent from the base is judged
+    - [x] A split that the record at the base holds is not reported, and a record absent from the base is judged
           whole
-    - [ ] The blank line before the next heading, the blank line between a heading and its first entry, and a blank
+    - [x] The blank line before the next heading, the blank line between a heading and its first entry, and a blank
           line before an indented continuation are not reported
-    - [ ] On a repository whose branch adds an entry after a blank line the command fails and names the unit and the
+    - [x] On a repository whose branch adds an entry after a blank line the command fails and names the unit and the
           entry, and on one whose base already holds the blank line it passes
-- [ ] Implement `findSplitEntries`, add `record` to what `documentsAtRevision` returns, and add the function to the
+- [x] Implement `findSplitEntries`, add `record` to what `documentsAtRevision` returns, and add the function to the
       violations of `run`. The tests pass (R2, R3)
 - [ ] State the rule in `process.md` after the list of what an entry is made of: the entries of a section follow one
       another with no blank line between them, and a new entry goes directly after the last one of its section, above
