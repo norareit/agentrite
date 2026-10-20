@@ -61,5 +61,23 @@ adds a key to `agentrite.json`.
 - 2026-10-20T17:26:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   cut `task-0062-depend-on-agentrite-7-2-0` from `master` at `e768458` and began the work. Read
   `roles/implementer.md` of the installed release 7.1.0. The status is `in-progress`
+- 2026-10-20T17:29:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the task in `a6d2f9a`.
+  `npm install --save-dev --save-exact agentrite@7.2.0` changed the version in `package.json` and the lockfile with
+  it. The root `agentrite.json` is now byte for byte `templates/project/agentrite.json` of 7.2.0, checked with
+  `diff`. `npm run kit -- refresh` then exited 0, printed `up to date` for the eight role wrappers and `sandbox.sh`,
+  `wrote .agentrite/instructions.md`, and the notice that `AGENTS.md` does not name it. The opening paragraph of
+  `AGENTS.md` now calls the files `.agentrite/instructions.md` names required reading, with a link to it, in the
+  wording of the `AGENTS.md` that 7.2.0's `init` writes; the rest of `AGENTS.md` is unchanged. "What the repository
+  holds besides the package" of `CONTRIBUTING.md` has a row for `.agentrite/`
+- 2026-10-20T17:29:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, settled the instructions of
+  "Worth knowing when you update" of 7.2.0: the keys of `agentrite.json`, the notice of `AGENTS.md` and the rebuild
+  are done by the steps of the task, as above and below; what the sandbox newly admits and that it rings by default
+  ask nothing; the one on `sandbox/Dockerfile` does not hold here, since `sandbox/` holds `compose.project.yml` alone
+- 2026-10-20T17:29:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran on `a6d2f9a`: `npm run kit
+  -- refresh` printed `up to date` for the eight role wrappers, `.agentrite/instructions.md` and `sandbox.sh`, and no
+  notice, and changed no file; `npm test` passed 745 of 745 tests, including the one that the root `agentrite.json`
+  is the installed release's default file; `npm run check-changes` exited 0; `./sandbox.sh --in-place --rebuild
+  true` exited 0, its entrypoint verifying the firewall. Not checked: that the agent in the rebuilt sandbox is a
+  member of the group `tty`, or that the bell rings there
 
 ## Amendments
