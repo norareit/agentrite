@@ -14,8 +14,8 @@ export SANDBOX_PROJECT_NAME=ritenoar-agentrite-sandbox-dev
 # under test. Not for --connect, which starts no run and which the wrapper refuses
 # together with --rebuild. Whether --connect is given is read as the wrapper reads its
 # options: up to a -- or the first word that is no option, which opens the unit or the
-# command, and past the directory of --workdir and of --mount. The options are the
-# wrapper's, so one it gains that takes a value is added here too.
+# command, and past the directory of --workdir and of --mount and the name of --variant.
+# The options are the wrapper's, so one it gains that takes a value is added here too.
 rebuild=(--rebuild)
 arguments=("$@")
 index=0
@@ -25,8 +25,8 @@ while [ "$index" -lt $# ]; do
       rebuild=()
       break
       ;;
-    --workdir | --mount) index=$((index + 2)) ;;
-    --rebuild | --in-place) index=$((index + 1)) ;;
+    --workdir | --mount | --variant) index=$((index + 2)) ;;
+    --rebuild | --in-place | --variant=*) index=$((index + 1)) ;;
     *) break ;;
   esac
 done

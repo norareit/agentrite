@@ -1312,3 +1312,294 @@ for (const [what, args] of [
     assert.equal(existsSync(join(state, 'agentrite')), false);
   });
 }
+
+// Variants. A variant is a unit run of the branch `<unit's branch>--<name>`, in a container and on a clone of its
+// own.
+const variantBranch = `${branch}--opus`;
+const variantContainer = `project-sandbox-${variantBranch}`;
+const nameForm = 'one or more words of the lowercase letters a to z and the digits 0 to 9,';
+
+// The calls of a unit run of `variant`, as `unitRun` gives those of the unit's branch.
+const variantRun = (host, variant, clone) =>
+  host.unitRun(clone).map((call) => call.replaceAll(containerName, `project-sandbox-${variant}`));
+
+// A refusal of the option: status 2, nothing called, nothing made, and no branch cut.
+function assertVariantRefused(host, result, refs) {
+  assert.equal(result.status, 2, result.stderr);
+  assert.deepEqual(host.dockerCalls(), []);
+  assert.deepEqual(host.npmCalls(), []);
+  assert.equal(existsSync(host.state), false);
+  assert.equal(host.git('for-each-ref'), refs);
+}
+
+for (const name of ['Opus', 'opus--x', '-opus', 'opus-', 'op_us', 'opus.1', '']) {
+  for (const [form, args] of [
+    ['--variant NAME before the unit', ['--variant', name, '0026', 'echo', 'hi']],
+    ['--variant=NAME after the unit', ['0026', `--variant=${name}`, 'echo', 'hi']],
+  ]) {
+    test(`a variant named '${name}' is refused with ${form}, naming the name and the form`, (t) => {
+      const host = setUpWithBuildDue(t);
+      const refs = host.git('for-each-ref');
+      const result = host.run(args);
+      assertVariantRefused(host, result, refs);
+      assert.ok(result.stderr.includes(`sandbox.sh: '${name}' is not a name a variant can have.\n`), result.stderr);
+      assert.ok(result.stderr.includes(nameForm), result.stderr);
+    });
+  }
+}
+
+for (const option of ['--in-place', '--workdir']) {
+  test(`--variant is refused together with ${option}, which has no unit`, (t) => {
+    const host = setUpWithBuildDue(t);
+    const refs = host.git('for-each-ref');
+    const args = option === '--workdir' ? [option, host.base] : [option];
+    const result = host.run(['--variant', 'opus', ...args, 'echo', 'hi']);
+    assertVariantRefused(host, result, refs);
+    assert.ok(result.stderr.includes(`--variant cannot be given together with ${option}.`), result.stderr);
+    assert.ok(result.stderr.includes(`${option} has no unit.`), result.stderr);
+  });
+}
+
+for (const [what, args] of [
+  ['before and after the unit', ['--variant', 'opus', '0026', '--variant', 'gpt', 'echo', 'hi']],
+  ['before the unit twice', ['--variant', 'opus', '--variant=gpt', '0026', 'echo', 'hi']],
+  ['after the unit twice', ['0026', '--variant', 'opus', '--variant', 'gpt', 'echo', 'hi']],
+  ['after the unit in the other form twice', ['0026', '--variant=opus', '--variant=gpt', 'echo', 'hi']],
+]) {
+  test(`--variant given ${what} is refused`, (t) => {
+    const host = setUpWithBuildDue(t);
+    const refs = host.git('for-each-ref');
+    const result = host.run(args);
+    assertVariantRefused(host, result, refs);
+    assert.ok(result.stderr.includes('sandbox.sh: --variant is given more than once.\n'), result.stderr);
+  });
+}
+
+for (const args of [['--variant'], ['0026', '--variant']]) {
+  test(`--variant with no name is refused, given as ${args.join(' ')}`, (t) => {
+    const host = setUpWithBuildDue(t);
+    const refs = host.git('for-each-ref');
+    const result = host.run(args);
+    assertVariantRefused(host, result, refs);
+    assert.ok(result.stderr.includes('sandbox.sh: --variant needs a name\n'), result.stderr);
+  });
+}
+
+for (const args of [
+  [branch, '--variant', 'opus', 'echo', 'hi'],
+  ['0026', '--variant=opus', 'echo', 'hi'],
+  ['--variant', 'opus', '0026', 'echo', 'hi'],
+]) {
+  test(`${args.slice(0, -2).join(' ')} cuts ${variantBranch} and runs it, in a container of its own`, (t) => {
+    const host = setUp(t);
+    const { state, run, git, dockerCalls } = host;
+    const refs = git('for-each-ref');
+    const checkedOut = git('symbolic-ref', 'HEAD');
+    const commit = git('rev-parse', branch);
+    const result = run(args);
+    assert.equal(result.status, 0, result.stderr);
+    const short = git('rev-parse', '--short', branch);
+    assert.ok(result.stderr.includes(`sandbox.sh: cut ${variantBranch} from ${branch} at ${short}.\n`), result.stderr);
+    assert.equal(git('rev-parse', `refs/heads/${variantBranch}`), commit);
+    assert.equal(git('symbolic-ref', 'HEAD'), checkedOut);
+    const cutRef = `${commit} commit\trefs/heads/${variantBranch}`;
+    assert.deepEqual(
+      git('for-each-ref')
+        .split('\n')
+        .filter((ref) => ref !== cutRef),
+      refs.split('\n'),
+    );
+    const clone = join(state, 'agentrite', 'project-sandbox', variantBranch);
+    assert.deepEqual(dockerCalls(), variantRun(host, variantBranch, clone));
+  });
+}
+
+test('a run without --variant makes the calls it made before, and cuts no variant', (t) => {
+  const { clone, run, git, dockerCalls, unitRun } = setUp(t);
+  const result = run([branch, 'echo', '--variant', 'opus']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), unitRun(clone).map((call) => call.replace(/echo hi$/, 'echo --variant opus')));
+  assert.equal(git('for-each-ref', `refs/heads/${variantBranch}`), '');
+});
+
+test('a variant whose branch exists is run as it is, apart from the unit that moved on, and cuts nothing', (t) => {
+  const host = setUp(t);
+  const { state, run, git } = host;
+  git('branch', variantBranch, 'master');
+  const variantCommit = git('rev-parse', variantBranch);
+  git('checkout', '--quiet', branch);
+  writeFileSync(join(host.root, 'later.md'), 'later\n');
+  git('add', 'later.md');
+  git('commit', '--quiet', '--message', 'the unit moves on');
+  git('checkout', '--quiet', 'master');
+  host.agent('git rev-parse HEAD > ../commit-seen');
+  const refs = git('for-each-ref');
+
+  const result = run([branch, '--variant', 'opus', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stderr, /cut /);
+  assert.equal(git('for-each-ref'), refs);
+  assert.equal(
+    readFileSync(join(state, 'agentrite', 'project-sandbox', 'commit-seen'), 'utf-8').trim(),
+    variantCommit,
+  );
+});
+
+test('--variant for a unit with no branch cuts the unit and then the variant, and runs the variant', (t) => {
+  const host = setUp(t);
+  const { state, run, git } = host;
+  commitUnit(host, 'kind: feature');
+  const cut = 'feature-0031-cut-me';
+  const result = run(['0031', '--variant', 'opus', 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  const unitCut = result.stderr.indexOf(`sandbox.sh: cut ${cut} from master at `);
+  const variantCut = result.stderr.indexOf(`sandbox.sh: cut ${cut}--opus from ${cut} at `);
+  assert.ok(unitCut >= 0 && variantCut > unitCut, result.stderr);
+  assert.equal(git('rev-parse', `refs/heads/${cut}--opus`), git('rev-parse', 'master'));
+  assert.deepEqual(
+    host.dockerCalls(),
+    variantRun(host, `${cut}--opus`, join(state, 'agentrite', 'project-sandbox', `${cut}--opus`)),
+  );
+});
+
+test('a build that fails after a variant was cut leaves both branches cut', (t) => {
+  const host = setUp(t, { imageExists: false });
+  commitUnit(host, 'kind: feature');
+  writeFileSync(host.buildFails, '');
+  const result = host.run(['0031', '--variant', 'opus', 'echo', 'hi']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^sandbox\.sh: cut feature-0031-cut-me--opus from feature-0031-cut-me at /m);
+  assert.equal(host.git('rev-parse', 'refs/heads/feature-0031-cut-me'), host.git('rev-parse', 'master'));
+  assert.equal(host.git('rev-parse', 'refs/heads/feature-0031-cut-me--opus'), host.git('rev-parse', 'master'));
+  assert.equal(host.dockerCalls().filter((call) => / run /.test(call)).length, 0);
+});
+
+test('a number names the unit, whatever variants the unit has', (t) => {
+  const host = setUp(t);
+  host.git('branch', variantBranch, branch);
+  host.git('branch', `${branch}--gpt-6-1`, branch);
+  const result = host.run(['0026', 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), host.unitRun(host.clone));
+});
+
+test('a number that only a variant branch holds names no branch', (t) => {
+  const host = setUpWithBuildDue(t);
+  host.git('branch', 'task-0099-x--opus', 'master');
+  const refs = host.git('for-each-ref');
+  const result = host.run(['0099', 'echo', 'hi']);
+  assert.equal(result.status, 2, result.stderr);
+  assert.ok(result.stderr.includes("sandbox.sh: '0099' names no local branch"), result.stderr);
+  assert.equal(host.git('for-each-ref'), refs);
+  assert.deepEqual(host.dockerCalls(), []);
+});
+
+test('a variant branch given by its full name is run as it is, and cuts nothing', (t) => {
+  const host = setUp(t);
+  host.git('branch', variantBranch, branch);
+  const refs = host.git('for-each-ref');
+  const result = host.run([variantBranch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stderr, /cut /);
+  assert.equal(host.git('for-each-ref'), refs);
+  assert.deepEqual(
+    host.dockerCalls(),
+    variantRun(host, variantBranch, join(host.state, 'agentrite', 'project-sandbox', variantBranch)),
+  );
+});
+
+test("--variant with a unit given by a variant's branch is refused, naming the branch", (t) => {
+  const host = setUpWithBuildDue(t);
+  host.git('branch', variantBranch, branch);
+  const refs = host.git('for-each-ref');
+  const result = host.run([variantBranch, '--variant', 'gpt', 'echo', 'hi']);
+  assertVariantRefused(host, result, refs);
+  assert.ok(result.stderr.includes(`${variantBranch} is the branch of a variant`), result.stderr);
+});
+
+const variantConnectCall = (command) => connectCall(command).replace(containerName, variantContainer);
+
+for (const args of [
+  ['--connect', '0026', '--variant', 'opus'],
+  ['--connect', branch, '--variant=opus'],
+  ['--connect', '--variant', 'opus', '0026'],
+  ['--connect', variantBranch],
+]) {
+  test(`${args.join(' ')} runs the command in the container of the variant's run`, (t) => {
+    const host = setUp(t);
+    host.git('branch', variantBranch, branch);
+    markRunning(host);
+    const result = host.run([...args, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(host.dockerCalls(), [variantConnectCall('echo hi')]);
+  });
+}
+
+test("--connect with a number connects to the unit's run alone, whatever variants there are", (t) => {
+  const host = setUp(t);
+  host.git('branch', variantBranch, branch);
+  markRunning(host);
+  const result = host.run(['--connect', '0026', 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});
+
+test('--connect for a variant that has no branch is refused, cuts none, and names the command that starts one', (t) => {
+  const host = setUpWithBuildDue(t);
+  markRunning(host);
+  const refs = host.git('for-each-ref');
+  const result = host.run(['--connect', '0026', '--variant', 'nobranch', 'echo', 'hi']);
+  assertNothingRan(host, result);
+  assert.ok(result.stderr.includes("'0026' has no variant 'nobranch'"), result.stderr);
+  assert.ok(result.stderr.includes("Start one with 'sandbox.sh 0026 --variant nobranch'.\n"), result.stderr);
+  assert.equal(host.git('for-each-ref'), refs);
+});
+
+test('--connect for a variant is refused while its container is not running, and names the command', (t) => {
+  const host = setUpWithBuildDue(t);
+  host.git('branch', variantBranch, branch);
+  const result = host.run(['--connect', '0026', '--variant', 'opus']);
+  assertNothingRan(host, result);
+  assert.ok(
+    result.stderr.includes(
+      `sandbox.sh: no run is under way for '0026 --variant opus': the container ${variantContainer} is not running.\n`,
+    ),
+    result.stderr,
+  );
+  assert.ok(result.stderr.includes("Start one with 'sandbox.sh 0026 --variant opus'.\n"), result.stderr);
+});
+
+test('--connect with --variant and --in-place is refused', (t) => {
+  const host = setUpWithBuildDue(t);
+  const result = host.run(['--connect', '--in-place', '--variant', 'opus', '0026']);
+  assertNothingRan(host, result);
+  assert.ok(result.stderr.includes('--connect cannot be given together with --in-place.'), result.stderr);
+});
+
+test('a second run of a variant whose container is running is refused, and names the variant', (t) => {
+  const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+  writeFileSync(runningContainer, '0123456789ab\n');
+  const refs = git('for-each-ref');
+  git('branch', variantBranch, branch);
+  const withVariant = git('for-each-ref');
+  const result = run(['0026', '--variant', 'opus', 'echo', 'hi']);
+  assert.equal(result.status, 2);
+  assert.ok(result.stderr.includes(variantContainer), result.stderr);
+  assert.ok(result.stderr.includes(`'docker stop ${variantContainer}'`), result.stderr);
+  assert.ok(result.stderr.includes("'sandbox.sh --connect 0026 --variant opus [COMMAND...]'"), result.stderr);
+  assert.deepEqual(dockerCalls(), []);
+  assert.deepEqual(npmCalls(), []);
+  assert.equal(existsSync(state), false);
+  assert.equal(git('for-each-ref'), withVariant);
+  assert.notEqual(refs, withVariant);
+});
+
+test('the forms the wrapper lists when nothing to mount is given show --variant NAME', (t) => {
+  const host = setUpWithBuildDue(t);
+  const result = host.run([]);
+  assert.equal(result.status, 2);
+  assert.ok(result.stderr.includes('sandbox.sh UNIT [--variant NAME] [COMMAND...]'), result.stderr);
+  assert.ok(result.stderr.includes('sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]'), result.stderr);
+});

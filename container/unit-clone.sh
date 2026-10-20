@@ -74,21 +74,34 @@ cut_unit_branch() {
   echo "$name"
 }
 
+# Whether a branch is a variant's: a branch whose name holds two hyphens in a row. A
+# unit's branch is in single hyphens, so the mark tells the two apart wherever it stands,
+# and it is decided here and nowhere else.
+is_variant_branch() {
+  [[ "$1" == *--* ]]
+}
+
 # Prints the branch a unit names: the local branch of that name, or else, for a unit of
-# digits only, the one local branch whose name holds it as a whole number. Runs git in
+# digits only, the one local branch whose name holds it as a whole number, a variant's
+# branch left out, so that a number names the unit's branch alone. Runs git in
 # the host's repository only, and changes nothing there: it finds a branch and never
 # cuts one. Fails with 1, and says nothing, when the unit names no branch, which is the
 # caller's to say. Fails with 3, and lists them, when it names several.
 find_unit_branch() {
-  local root="$1" unit="$2" matches="" match
+  local root="$1" unit="$2" candidates="" candidate matches="" match
   if git -C "$root" show-ref --verify --quiet "refs/heads/$unit" 2>/dev/null; then
     echo "$unit"
     return 0
   fi
   if [[ "$unit" =~ ^[0-9]+$ ]]; then
-    matches="$(git -C "$root" for-each-ref --format='%(refname:short)' refs/heads \
-      | grep -E "(^|[^0-9A-Za-z])$unit([^0-9A-Za-z]|\$)")" || matches=""
+    candidates="$(git -C "$root" for-each-ref --format='%(refname:short)' refs/heads \
+      | grep -E "(^|[^0-9A-Za-z])$unit([^0-9A-Za-z]|\$)")" || candidates=""
   fi
+  while IFS= read -r candidate; do
+    [ -n "$candidate" ] || continue
+    ! is_variant_branch "$candidate" || continue
+    matches+="${matches:+$'\n'}$candidate"
+  done <<< "$candidates"
   [ -n "$matches" ] || return 1
   if [ "$(grep -c '' <<< "$matches")" -gt 1 ]; then
     echo "sandbox.sh: '$unit' names more than one branch. Give one by its name:" >&2
@@ -123,6 +136,38 @@ resolve_unit_branch() {
   echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
   echo "A unit's branch is cut from the default branch when the unit is given by its number." >&2
   return 1
+}
+
+# Prints the branch of a variant of a unit: the unit's branch, two hyphens and the
+# variant's name. The branch is the local one of that name when there is one, and is
+# run as it is. Otherwise it is cut at the commit the host's branch of the unit is at,
+# with nothing checked out, as cut_unit_branch cuts, and says on standard error what it
+# cut, because standard output is the branch's name. Fails with 3, and says so, when the
+# cut fails.
+resolve_variant_branch() {
+  local root="$1" unit_branch="$2" name="$3"
+  local variant="$unit_branch--$name"
+  if git -C "$root" show-ref --verify --quiet "refs/heads/$variant"; then
+    echo "$variant"
+    return 0
+  fi
+  if ! git -C "$root" branch --quiet --no-track "$variant" "refs/heads/$unit_branch"; then
+    echo "sandbox.sh: cutting $variant from $unit_branch failed." >&2
+    return 3
+  fi
+  echo "sandbox.sh: cut $variant from $unit_branch at" \
+    "$(git -C "$root" rev-parse --short "refs/heads/$unit_branch")." >&2
+  echo "$variant"
+}
+
+# Prints the branch of a variant of a unit when that local branch exists, for --connect,
+# which cuts nothing. Fails with 1, and says nothing, when there is none, which is the
+# caller's to say.
+find_variant_branch() {
+  local root="$1" unit_branch="$2" name="$3"
+  local variant="$unit_branch--$name"
+  git -C "$root" show-ref --verify --quiet "refs/heads/$variant" || return 1
+  echo "$variant"
 }
 
 # Fails, saying what to do first, when a new clone would be made while sandbox/<branch>

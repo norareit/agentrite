@@ -173,6 +173,33 @@ test('the shim builds for a unit run whose command holds --connect', (t) => {
   assert.match(calls.at(-1), / run --rm --name project-sandbox-task-0026-doc .* sandbox echo --connect$/);
 });
 
+// The name of --variant is passed over as the directory of --mount is, so the --connect after it is seen. Without
+// the pass, the name would be taken for the unit and the shim would add the --rebuild the wrapper refuses.
+for (const variantOption of [['--variant', 'opus'], ['--variant=opus']]) {
+  test(`the shim adds no --rebuild to a --connect that follows ${variantOption.join(' ')}`, (t) => {
+    const host = setUp(t);
+    withUnitRun(host);
+    execFileSync('git', ['branch', `${unitBranch}--opus`], { cwd: host.root });
+    const result = host.run([...variantOption, '--connect', '0026']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(host.dockerCalls().length, 1);
+    assert.match(host.dockerCalls()[0], new RegExp(` docker exec .* project-sandbox-${unitBranch}--opus `));
+    assert.doesNotMatch(host.dockerCalls()[0], /--rebuild/);
+  });
+}
+
+test('the shim builds for a unit run of a variant that follows --variant and its name', (t) => {
+  const host = setUp(t);
+  withUnitRun(host);
+  rmSync(join(host.base, 'running-container'));
+  const result = host.run(['--variant', 'opus', '0026', 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  const calls = host.dockerCalls();
+  assert.equal(calls[0], `${host.prefix} build`);
+  assert.match(calls.at(-1), / run --rm --name project-sandbox-task-0026-doc--opus .* sandbox echo hi$/);
+});
+
 // With the variable unset both resolve to the names ./sandbox.sh has always used, and with the shim's value to a
 // project, an image and so a home volume of their own.
 test("this repository's project Compose file names its project and its image after the variable", () => {

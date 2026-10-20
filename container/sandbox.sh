@@ -27,7 +27,10 @@
 #   when it can, and removes the clone unless it holds work the host does not. A clone
 #   that is still there is resumed. A unit given by its number that has no branch yet
 #   gets one first, cut from the default branch, which is the one the project's
-#   agentrite.json names. The git work is in container/unit-clone.sh.
+#   agentrite.json names. The git work is in container/unit-clone.sh. With --variant the
+#   run is of the unit's variant: the branch is the unit's followed by two hyphens and
+#   the variant's name, so a variant has the container, the clone and the bringing back
+#   of a unit run of its own, and runs beside the unit's.
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
@@ -63,22 +66,27 @@
 # either file resolves from there.
 #
 # Usage:
-#   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+#   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]
 #   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
 #   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-#   sandbox.sh PROJECT_ROOT --connect UNIT [COMMAND...]
+#   sandbox.sh PROJECT_ROOT --connect UNIT [--variant NAME] [COMMAND...]
 #
 #   PROJECT_ROOT     the project's root, which the project's sandbox.sh shim passes
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
 #                    name, or by a unit's number that one branch name holds. A number
 #                    that no branch holds and that is a unit of changes/ on the default
 #                    branch gets its branch first, cut from the head of that branch
+#   --variant NAME   run a variant of the unit: a unit run of the branch <the unit's
+#                    branch>--NAME, cut from the host's branch of the unit when it does not
+#                    exist, in a container and on a clone of its own. Given before the
+#                    unit or right after it, optional, and not with --in-place or --workdir
 #   --in-place       mount the project root at /work, as it is
 #   --workdir DIR    mount DIR at /work, as it is
 #   --connect UNIT   run the command in the container of the run that is under way for
 #                    the unit, as the agent, and start nothing. The unit is a local
 #                    branch, by its name or by a unit's number, and no branch is cut.
-#                    Takes none of the options below
+#                    With --variant, the run of that variant of the unit. Takes none of
+#                    the options below
 #   --rebuild        build the image before running, even if it already exists and
 #                    holds the wanted harness versions, and the project's
 #                    sandbox/Dockerfile on it when there is one
@@ -133,6 +141,9 @@ in_place=0
 workdir_given=0
 rebuild=0
 connect=0
+variant=""
+variant_given=0
+variant_twice=0
 mount_specs=()
 mounts=()
 
@@ -156,6 +167,18 @@ while [ $# -gt 0 ]; do
     --connect)
       connect=1
       shift
+      ;;
+    --variant | --variant=*)
+      if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
+      variant_given=1
+      if [ "$1" = --variant ]; then
+        [ $# -ge 2 ] || { echo "sandbox.sh: --variant needs a name" >&2; exit 2; }
+        variant="$2"
+        shift 2
+      else
+        variant="${1#--variant=}"
+        shift
+      fi
       ;;
     --mount)
       [ $# -ge 2 ] || { echo "sandbox.sh: --mount needs a path" >&2; exit 2; }
@@ -194,6 +217,59 @@ if [ "$connect" -eq 1 ]; then
   fi
 fi
 
+# A variant is of a unit, so --variant is refused where there is no unit. It is also given
+# right after the unit, as the first argument left once --in-place and --workdir are known
+# to be absent. Only that argument is looked at, so that a command whose own arguments
+# hold --variant is passed on as it is. Refused here, before a directory, agentrite.json,
+# Docker or npm is read.
+is_variant_name() {
+  local shape='^[a-z0-9]+(-[a-z0-9]+)*$'
+  # The ranges of the shape are those of ASCII only in this locale.
+  local LC_ALL=C
+  [[ "$1" =~ $shape ]]
+}
+if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -ge 1 ]; then
+  case "${2:-}" in
+    --variant)
+      if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
+      variant_given=1
+      [ $# -ge 3 ] || { echo "sandbox.sh: --variant needs a name" >&2; exit 2; }
+      variant="$3"
+      set -- "$1" "${@:4}"
+      ;;
+    --variant=*)
+      if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
+      variant_given=1
+      variant="${2#--variant=}"
+      set -- "$1" "${@:3}"
+      ;;
+  esac
+  case "${2:-}" in
+    --variant | --variant=*) variant_twice=1 ;;
+  esac
+fi
+if [ "$variant_twice" -eq 1 ]; then
+  echo "sandbox.sh: --variant is given more than once." >&2
+  echo "A run is of one variant." >&2
+  exit 2
+fi
+if [ "$variant_given" -eq 1 ]; then
+  for no_unit_option in --in-place --workdir; do
+    if { [ "$no_unit_option" = --in-place ] && [ "$in_place" -eq 1 ]; } \
+      || { [ "$no_unit_option" = --workdir ] && [ "$workdir_given" -eq 1 ]; }; then
+      echo "sandbox.sh: --variant cannot be given together with $no_unit_option." >&2
+      echo "A variant is a run of a unit's branch, and $no_unit_option has no unit." >&2
+      exit 2
+    fi
+  done
+  if ! is_variant_name "$variant"; then
+    echo "sandbox.sh: '$variant' is not a name a variant can have." >&2
+    echo "A name is one or more words of the lowercase letters a to z and the digits 0 to 9," >&2
+    echo "joined by single hyphens, as 'opus' or 'gpt-6-1'." >&2
+    exit 2
+  fi
+fi
+
 # The directories of a run, as absolute paths. One that is not there ends the wrapper
 # here, with the shell's own error.
 workdir="$(cd "$workdir" && pwd)"
@@ -212,12 +288,15 @@ done
 # with the one that mounts nothing, --connect, for whoever wanted a second shell.
 mount_forms() {
   echo "Say what to mount at /work, as one of:" >&2
-  echo "  sandbox.sh UNIT [COMMAND...]           a clone of the unit's branch, named by its ID or its branch." >&2
+  echo "  sandbox.sh UNIT [--variant NAME] [COMMAND...]" >&2
+  echo "                                       a clone of the unit's branch, named by its ID or its branch." >&2
   echo "                                       An ID with no branch gets one, cut from the default branch" >&2
+  echo "                                       With --variant, a clone of the branch of that variant of the unit," >&2
+  echo "                                       cut from the unit's branch when it does not exist" >&2
   echo "  sandbox.sh --in-place [COMMAND...]     the project root as it is" >&2
   echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
   echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
-  echo "  sandbox.sh --connect UNIT [COMMAND...]" >&2
+  echo "  sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]" >&2
 }
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   echo "sandbox.sh: nothing to mount at /work was given." >&2
@@ -242,9 +321,12 @@ fi
 # and only when a branch is cut: every other run judges nothing of the file but bell. An
 # empty branch says that this is not a unit run. --connect finds the branch and cuts
 # none: a unit with no branch has no run to connect to. The unit is kept as it was
-# given, for the messages that name a command to run.
+# given, for the messages that name a command to run, followed by the variant's option when
+# there is one, so that the command named is the one for the same branch. With --variant the
+# branch is the variant's, cut from the unit's branch for a run and only found for --connect.
 branch=""
 unit=""
+unit_given=""
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   # shellcheck source=unit-clone.sh
   . "$here/unit-clone.sh"
@@ -265,6 +347,25 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
       [ "$resolved" -ne 1 ] || mount_forms
       exit 2
     fi
+  fi
+  unit_given="$unit"
+  if [ "$variant_given" -eq 1 ]; then
+    if is_variant_branch "$branch"; then
+      echo "sandbox.sh: $branch is the branch of a variant, so --variant cannot be given with it." >&2
+      echo "Run it by its name without --variant, or give the unit's branch or its number." >&2
+      exit 2
+    fi
+    unit_given="$unit --variant $variant"
+    if [ "$connect" -eq 1 ]; then
+      branch="$(find_variant_branch "$root" "$branch" "$variant")" || resolved=$?
+      if [ "$resolved" -eq 1 ]; then
+        echo "sandbox.sh: '$unit' has no variant '$variant': there is no local branch of that variant." >&2
+        echo "So there is no run to connect to. Start one with 'sandbox.sh $unit_given'." >&2
+      fi
+    else
+      branch="$(resolve_variant_branch "$root" "$branch" "$variant")" || resolved=$?
+    fi
+    [ "$resolved" -eq 0 ] || exit 2
   fi
   shift
 fi
@@ -558,8 +659,8 @@ if [ "$connect" -eq 1 ]; then
   running=0
   unit_container_running || running=$?
   if [ "$running" -eq 1 ]; then
-    echo "sandbox.sh: no run is under way for '$unit': the container $container_name is not running." >&2
-    echo "Start one with 'sandbox.sh $unit'." >&2
+    echo "sandbox.sh: no run is under way for '$unit_given': the container $container_name is not running." >&2
+    echo "Start one with 'sandbox.sh $unit_given'." >&2
     exit 2
   fi
   if [ "$running" -eq 2 ]; then
@@ -608,7 +709,7 @@ if [ -n "$branch" ]; then
   if [ "$running" -eq 0 ]; then
     echo "sandbox.sh: the container $container_name is running, so a run for $branch is under way." >&2
     echo "Two runs never work on one branch. Wait for it, or stop it with 'docker stop $container_name'." >&2
-    echo "To run a command beside it: 'sandbox.sh --connect $unit [COMMAND...]'." >&2
+    echo "To run a command beside it: 'sandbox.sh --connect $unit_given [COMMAND...]'." >&2
     exit 2
   fi
   if [ "$running" -eq 2 ]; then

@@ -72,10 +72,10 @@ See "The kit's own copy of the kit".
 ### sandbox-dev.sh
 
 ```sh
-./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... UNIT [COMMAND...]
+./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]
 ./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
 ./sandbox-dev.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
-./sandbox-dev.sh --connect UNIT [COMMAND...]
+./sandbox-dev.sh --connect UNIT [--variant NAME] [COMMAND...]
 ```
 
 Runs the sandbox from the working copy, in place of the installed release's. It runs on the host.
