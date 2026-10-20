@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-20T18:51:02Z
 ---
 
@@ -18,5 +18,12 @@ timestamp: 2026-10-20T18:51:02Z
   rules on entries in `process.md`, "Record that you reviewed" in `roles/reviewer.md`, and
   `scripts/check-changes.mjs`, which reads only `status:` of a record. Did not reproduce the bug in a run of an
   agent, which the spec says. Wrote `spec.md`. The status is `draft`
+- 2026-10-20T19:04:59Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `c3acf3f`, on the
+  human's decision to take the first item of "Beyond the request" into the unit for every record, the `history-`
+  ones among them, and to remove the blank lines in a commit of their own. Counted 16 records that hold such lines.
+  Changed `spec.md`: the fix and requirements 7 and 8 remove them, a decision says why in a commit of its own and
+  without amendments, the non-goal keeps only the records of projects, and the item left in "Beyond the request" is
+  numbered 1. The status is `draft`
+- 2026-10-20T19:05:27Z [human] approved the spec. The status is `approved`
 
 ## Amendments
