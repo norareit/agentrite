@@ -358,6 +358,9 @@ starts nothing. See "The project's settings".
 | `--`               | Ends the options, so that what follows is the unit or the command                            |
 | `COMMAND...`       | Runs this instead of the shell                                                               |
 
+With a project's `sandbox/Dockerfile`, `--rebuild` builds that file anew on the image too. See "Adding software to
+the sandbox" in [`SANDBOX.md`](SANDBOX.md).
+
 | Environment variable | What it is                                                                                 |
 |----------------------|--------------------------------------------------------------------------------------------|
 | `SANDBOX_MEM_LIMIT`  | The memory limit, in place of the `8g` that `init` writes in `sandbox/compose.project.yml` |
@@ -993,9 +996,12 @@ Nothing of the host is reachable but what is mounted at `/work`, with these exce
 
 The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
 
-A project configures the sandbox with two files:
+A project configures the sandbox with two files, and may add a third:
 
 * `sandbox.sh` at the project root, a shim that execs `node_modules/agentrite/container/sandbox.sh` with the
   project root as its first argument
 * `sandbox/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
   allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
+* `sandbox/Dockerfile`, which the project may add for software it needs in the sandbox, such as a JDK, and which
+  the wrapper builds on the kit's image. `init` and `refresh` do not write it. See "Adding software to the sandbox"
+  in [`SANDBOX.md`](SANDBOX.md#adding-software-to-the-sandbox)

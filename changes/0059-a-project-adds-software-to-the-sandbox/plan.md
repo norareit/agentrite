@@ -208,7 +208,7 @@ against today's wrapper for the reason it is there.
 
 ### The documents
 
-- [ ] In `SANDBOX.md`, add "Adding software to the sandbox" after "Holding a harness version", and its line in the
+- [x] In `SANDBOX.md`, add "Adding software to the sandbox" after "Holding a harness version", and its line in the
   contents. It says each point of R11, in its order: where the file is, the two lines, that it is built on the
   kit's image as root with the project root as the context; the JDK example, which installs `openjdk-17-jdk-headless`
   from bookworm's packages with `apt-get` and sets `JAVA_HOME` to `/usr/lib/jvm/java-17-openjdk-${arch}` through
@@ -216,17 +216,17 @@ against today's wrapper for the reason it is there.
   refuses it; the build on the host's network; the committed file and the checkout it is read from; when the image
   is built anew and that `--rebuild` builds both; the `ALLOWLIST` with a link to "Reaching more hosts"; and the four
   things a file must not do, each with what goes wrong and what to do instead (R11)
-- [ ] In "Where things are kept on the host" of `SANDBOX.md`, add the kit's image `<image>-base` to the table, with
+- [x] In "Where things are kept on the host" of `SANDBOX.md`, add the kit's image `<image>-base` to the table, with
   `docker image rm <image>-base`, and say under "The image" when it is there, that it is the base of the project's
   file, and that the next start with a project file builds it again (R12)
-- [ ] In "When something goes wrong" of `SANDBOX.md`, extend "The sandbox does not start, although an image exists."
+- [x] In "When something goes wrong" of `SANDBOX.md`, extend "The sandbox does not start, although an image exists."
   with a failing build of `sandbox/Dockerfile`: Docker's output names the instruction that failed; correct the file,
   or remove it without committing the removal to start while it cannot build. No requirement names it: the rule of
   `AGENTS.md` that a failure a reader recovers from is an entry of that section does
-- [ ] In `README.md`, list `sandbox/Dockerfile` among the files a project configures the sandbox with in "The
+- [x] In `README.md`, list `sandbox/Dockerfile` among the files a project configures the sandbox with in "The
   sandbox", as a file the project may add, which `init` and `refresh` do not write, with a link to its section of
   `SANDBOX.md`. Say in the row of `--rebuild` in "Commands" that it builds the project's file too (R13)
-- [ ] Check that every line touched in the four documents and the two comments fits 120 characters, and that the
+- [x] Check that every line touched in the four documents and the two comments fits 120 characters, and that the
   documents hold no em dash
 
 ### The check by hand
@@ -250,4 +250,4 @@ against today's wrapper for the reason it is there.
   green as before
 - [x] `feature-0059 Build a project's Dockerfile on the kit's image, and refuse one that changes how it starts`: the
   Docker tests, the wrapper and its two comments
-- [ ] `feature-0059 Describe a project's Dockerfile`: `SANDBOX.md` and `README.md`
+- [x] `feature-0059 Describe a project's Dockerfile`: `SANDBOX.md` and `README.md`

@@ -59,5 +59,11 @@ timestamp: 2026-10-19T15:48:11Z
   `--build-arg BUILDKIT_DOCKERFILE_CHECK=skip=InvalidDefaultArgInFrom`, which the first Docker test holds. The
   refusal names the instructions that differ separated by commas. `node --test tests/*.test.mjs` on the Linux host
   with Docker 28.4.0: 745 tests, 744 pass, none skipped, and unit 0054's R24 test fails, as before
+- 2026-10-20T14:52:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the documents. The row of
+  `--rebuild` in "Commands" of `README.md` has no room in its column for the project's file without losing what it
+  says of the harness versions, so the sentence that `--rebuild` builds the project's file too follows the table of
+  the options instead. Every line touched in `SANDBOX.md`, `README.md`, `container/compose.yml` and
+  `container/sandbox.sh` fits 120 characters, and none holds an em dash. `node --test tests/*.test.mjs` on the
+  Linux host with Docker 28.4.0: 745 tests, 744 pass, none skipped, and unit 0054's R24 test fails, as before
 
 ## Amendments

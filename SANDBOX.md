@@ -10,6 +10,7 @@ option, are in "Commands" of [`README.md`](README.md), and what the sandbox conf
 * [Logging in](#logging-in)
 * [Reaching more hosts](#reaching-more-hosts)
 * [Holding a harness version](#holding-a-harness-version)
+* [Adding software to the sandbox](#adding-software-to-the-sandbox)
 * [The status line](#the-status-line)
 * [The local model server](#the-local-model-server)
 * [Where things are kept on the host](#where-things-are-kept-on-the-host)
@@ -266,6 +267,75 @@ See "Running a unit".
 
 For a build that fails, and for a version of a harness that breaks something, see "When something goes wrong".
 
+## Adding software to the sandbox
+
+```dockerfile
+ARG AGENTRITE_IMAGE
+FROM ${AGENTRITE_IMAGE}
+
+ARG TARGETARCH
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends openjdk-17-jdk-headless \
+    && rm -rf /var/lib/apt/lists/*
+ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-${TARGETARCH}
+```
+
+A project adds software to the sandbox's image with a Dockerfile of its own, at `sandbox/Dockerfile`. It opens with
+these two lines:
+
+```dockerfile
+ARG AGENTRITE_IMAGE
+FROM ${AGENTRITE_IMAGE}
+```
+
+The kit gives `AGENTRITE_IMAGE` the name of its own image, so the file is built on the kit's image. What the file
+runs, it runs as root, and the project root is its context, as it is for the kit's own Dockerfile. A project without
+the file runs the kit's image as it is.
+
+The example above installs a JDK from the Debian packages of the image, which is Debian bookworm, and sets
+`JAVA_HOME`. `TARGETARCH` is `amd64` or `arm64`, as the machine is, so the path holds on both.
+
+The file must not change the entrypoint, the command, the user or the working directory that the kit's image sets,
+with `ENTRYPOINT`, `CMD`, `USER` or `WORKDIR`. The kit's entrypoint is what installs the firewall and drops to the
+agent. At every start with the file, the wrapper compares the image with the kit's, and refuses to start an image
+that changes one of them.
+
+The build runs on the host, with the host's network, outside the sandbox's firewall, as the build of the kit's image
+does.
+
+The file is committed with the project. The image is built from the file of the checkout the command is run from,
+also for a unit run. So a change to it that an agent made in a unit run's clone reaches the image only once the
+developer has it in that checkout. See "Running a unit".
+
+The image is built anew at a start:
+
+* when the content of `sandbox/Dockerfile` is not the content the image was built from, which the image records as
+  a label, and when the file was added or removed since the image was built. The wrapper says so
+* whenever the kit's image is built, for a reason in "Holding a harness version" or because there is none. The
+  project's file is then built on it in the same start
+* with `--rebuild`, which builds both
+
+Otherwise a start builds nothing, and needs no network.
+
+A tool the file adds that downloads at run time, such as a build tool that fetches dependencies, needs its hosts in
+the project's `ALLOWLIST`. See "Reaching more hosts".
+
+What the file must not do besides, with what goes wrong and what to do instead:
+
+* Install into `/home/agent` or `/work`. Both are mounted over at run time, so what the file put there is hidden,
+  or, in the home, seen only in a home volume made after the build. Install under `/usr/local` or `/opt`
+* Leave a tool to write outside the agent's home, `/work` and `/tmp` at run time. The root filesystem is read-only
+  then, and the tool fails when it writes elsewhere. Point its cache and its settings into the home or `/tmp`, as
+  with an environment variable the tool reads
+* Install or upgrade Claude Code or OpenCode. The image then holds another version than the kit takes it to hold.
+  Hold a version as "Holding a harness version" says
+* Set an environment variable the kit's image sets: `DISABLE_AUTOUPDATER`, `DISABLE_UPDATES` and `OPENCODE_CONFIG`,
+  which keep the harnesses from updating themselves, and `PLAYWRIGHT_BROWSERS_PATH`, where the browser tests find
+  the browser. Setting one anew changes how the harnesses or the browser tests behave. Leave them as the kit's image
+  sets them
+
+For a build of the file that fails, see "When something goes wrong".
+
 ## The status line
 
 A developer's own Claude Code status line is shown in the sandbox. When `~/.claude/statusline-command.sh` is a file
@@ -327,6 +397,7 @@ What the sandbox keeps on the host, where it is and how it is removed:
 | The log directory | `<data>/agentrite/<name>`                             | `rm -rf` of the directory               |
 | The home volume   | `<project>_agent-home`                                | `docker volume rm <project>_agent-home` |
 | The image         | `<image>`                                             | `docker image rm <image>`               |
+| The kit's image   | `<image>-base`                                        | `docker image rm <image>-base`          |
 
 **The clone of a unit run**
 
@@ -399,6 +470,19 @@ docker image rm <image>
 
 The next start builds the image again. Each rebuild leaves the image it replaced behind, untagged, at about 0.6 GB.
 `docker image prune` removes them.
+
+**The kit's image**
+
+A project with a `sandbox/Dockerfile` has two images. `<image>` is the project's file built on the kit's image, and
+the kit's image is kept beside it as `<image>-base`, the base the project's file is built on. A project without the
+file has no `<image>-base`, and one that removed the file keeps the one it had until it is removed. See "Adding
+software to the sandbox".
+
+```sh
+docker image rm <image>-base
+```
+
+The next start with a project's file builds it again, and the project's file on it.
 
 ## What the sandbox defends against
 
@@ -587,10 +671,12 @@ fails. The message names the check that failed. The checks, and what to do for e
 
 **The sandbox does not start, although an image exists.**
 
-Why: a build that the wrapper started by itself failed, for example with no network.
+Why: a build that the wrapper started by itself failed, for example with no network, or a build of the project's
+`sandbox/Dockerfile` failed. Docker's output names the instruction of the file that failed.
 
 What to do: holding the versions the image already has, in the project's `sandbox/compose.project.yml`, without
-committing the edit, is how to start the sandbox while a build cannot run.
+committing the edit, is how to start the sandbox while a build cannot run. For the project's `sandbox/Dockerfile`,
+correct the file, or remove it without committing the removal to start without it while it cannot build.
 
 **A version of a harness breaks something.**
 
