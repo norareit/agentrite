@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-19T15:48:11Z
 ---
 
@@ -75,5 +75,19 @@ timestamp: 2026-10-19T15:48:11Z
   `JAVA_HOME` was `/usr/lib/jvm/java-17-openjdk-amd64` and holds `bin/java`, `CapEff` was `0000000000000000`, and
   the command ran as `uid=1000(agent)`. arm64 was not checked. Removed the file again. Every task of `plan.md` is
   ticked; the status stays `in-progress` until the review's findings are decided
+- 2026-10-20T14:03:22Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0059 at
+  `e0e9e9a502e1fa4b8626324df6f7be14cd8302bb`, against merge base `130ac4f5217b01372eacf0f217af17458671d207` with
+  `master`. Returned C1. Saved the complete review in
+  `.reviews/0059-a-project-adds-software-to-the-sandbox/20261020T140322Z-opencode-full.md`. Ran `npm test`: 745 tests,
+  744 pass, the pre-existing root-settings comparison fails, and none are skipped; all 20 new Docker-backed tests
+  pass. `npm run check-changes` and the diff whitespace check pass. Reproduced C1 from a read-only checkout mounted
+  at `/review tree`. Did not independently repeat the manual JDK build and run, check arm64, or establish the
+  historical test-first run
+- 2026-10-20T14:09:18Z [human] decided that C1 of the review, that the new Docker tests of
+  `tests/sandbox-project-dockerfile.test.mjs` take their source paths from a file URL's `pathname` and so fail in a
+  checkout whose path holds a space, is not fixed in this unit: unit 0061 fixes it for the whole suite, of which
+  this file is one more
+- 2026-10-20T14:09:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision, with the review's one
+  finding decided and every task of `plan.md` ticked. The status is `implemented`
 
 ## Amendments
