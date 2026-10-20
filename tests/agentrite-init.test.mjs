@@ -58,8 +58,10 @@ const STANDARDS = 'node_modules/agentrite/standards.md';
 const LIST = '.agentrite/instructions.md';
 // The notice of init for a CLAUDE.md that holds none of the lines.
 const CLAUDE_NOTICE = claudeInitNotice([`@${PROCESS}`, `@${STANDARDS}`, '@AGENTS.md']);
-// The opencode.json of R3 of unit 0048 and R18 of unit 0052, byte for byte.
-const OPENCODE = `{\n  "instructions": [\n    "${PROCESS}",\n    "${STANDARDS}"\n  ]\n}\n`;
+// The opencode.json of R3 of unit 0048, R18 of unit 0052 and task 0063, byte for byte.
+const OPENCODE =
+  `{\n  "$schema": "https://opencode.ai/config.json",\n` +
+  `  "instructions": [\n    "${PROCESS}",\n    "${STANDARDS}"\n  ]\n}\n`;
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
 
 function files(harnesses, overrides = {}) {
@@ -1511,7 +1513,11 @@ test('init in a project with its own standards and planner writes everything fro
     '@AGENTS.md',
   ]);
   assert.doesNotMatch(read('CLAUDE.md'), /standards\.md/);
-  assert.equal(read('opencode.json'), `{\n  "instructions": [\n    "${PROCESS}",\n    "${HOUSE}"\n  ]\n}\n`);
+  assert.equal(
+    read('opencode.json'),
+    `{\n  "$schema": "https://opencode.ai/config.json",\n` +
+      `  "instructions": [\n    "${PROCESS}",\n    "${HOUSE}"\n  ]\n}\n`,
+  );
   assert.ok(read(LIST).includes(`* Standards: [\`${HOUSE}\`](../${HOUSE})\n`));
   assert.ok(read(LIST).includes('* planner: [`rules/planner.md`](../rules/planner.md)\n'));
   for (const directory of ['.claude/agents', '.opencode/agents']) {

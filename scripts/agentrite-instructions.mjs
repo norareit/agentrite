@@ -33,6 +33,9 @@ export function claudeLines(standards) {
 /** OpenCode's configuration file at the project root, whose `instructions` list loads the kit's instructions. */
 export const OPENCODE_FILE = 'opencode.json';
 
+/** The schema of OpenCode's configuration, which OpenCode adds to `opencode.json` when it lacks it. */
+const OPENCODE_SCHEMA = 'https://opencode.ai/config.json';
+
 const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/README.md.';
 
 // The longest line of a notice whose words are wrapped by the kit rather than by hand.
@@ -118,7 +121,7 @@ export function claudeLacks(read, standards) {
 export function opencodeVerdict(read, standards) {
   const all = instructionPaths(standards);
   if (!read.found) {
-    const content = formattedLike('{}\n', { instructions: all });
+    const content = formattedLike('{}\n', { $schema: OPENCODE_SCHEMA, instructions: all });
     return { loads: false, problem: 'it is missing', lacks: all, content };
   }
   if ('error' in read) {

@@ -33,10 +33,10 @@ const IMPORT = `@${PROCESS}`;
 const STANDARDS_IMPORT = `@${STANDARDS}`;
 const LINES = [IMPORT, STANDARDS_IMPORT, '@AGENTS.md'];
 const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/README.md.';
-// The file of R3 of unit 0048 and R18 of unit 0052, byte for byte.
+// The file of R3 of unit 0048, R18 of unit 0052 and task 0063, byte for byte.
 const WRITTEN =
-  '{\n  "instructions": [\n    "node_modules/agentrite/process.md",\n    "node_modules/agentrite/standards.md"\n' +
-  '  ]\n}\n';
+  '{\n  "$schema": "https://opencode.ai/config.json",\n  "instructions": [\n' +
+  '    "node_modules/agentrite/process.md",\n    "node_modules/agentrite/standards.md"\n  ]\n}\n';
 
 /** @param {string} text */
 function found(text) {
@@ -335,7 +335,9 @@ test('an opencode.json is judged against the standards given, and written or ame
     loads: false,
     problem: 'it is missing',
     lacks: [PROCESS, HOUSE],
-    content: `{\n  "instructions": [\n    "${PROCESS}",\n    "${HOUSE}"\n  ]\n}\n`,
+    content:
+      `{\n  "$schema": "https://opencode.ai/config.json",\n` +
+      `  "instructions": [\n    "${PROCESS}",\n    "${HOUSE}"\n  ]\n}\n`,
   });
   assert.deepEqual(opencodeVerdict(found(`{\n  "instructions": ["${PROCESS}", "${STANDARDS}"]\n}\n`), HOUSE), {
     loads: false,

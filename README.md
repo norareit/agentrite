@@ -152,12 +152,13 @@ in `agentrite.json`. Below, the standards path is the one `standards` names, whi
 point at that file, and `init` refuses, writing nothing, a role file that does not open with the front matter that
 "Replacing a role or the standards" gives, naming the file and the form it must have.
 
-With `opencode` among the harnesses, `init` writes `opencode.json` when nothing is at its path, and prints
+With `opencode` among the harnesses, `init` writes `opencode.json` when nothing is at its path, naming OpenCode's
+schema `https://opencode.ai/config.json` and holding both paths in its `instructions` list, and prints
 `wrote opencode.json`. One that is a JSON object it amends, keeping every other key, their order, the indentation and
-whether it ends in a line break: it adds whichever of `node_modules/agentrite/process.md` and the standards path its
-`instructions` list lacks at the end of the list, in that order, or adds the list with both, and prints
-`changed opencode.json`. One whose list holds both paths already, or that is not JSON and whose text holds each of
-the two paths in quotes, as one with a comment in it can, it leaves as it is, and prints
+whether it ends in a line break, and adding no `$schema`: it adds whichever of `node_modules/agentrite/process.md` and
+the standards path its `instructions` list lacks at the end of the list, in that order, or adds the list with both,
+and prints `changed opencode.json`. One whose list holds both paths already, or that is not JSON and whose text holds
+each of the two paths in quotes, as one with a comment in it can, it leaves as it is, and prints
 `skipped opencode.json, which loads node_modules/agentrite/process.md and <standards path>`. Any other it leaves as it
 is, and prints `skipped opencode.json, which cannot be amended` and a notice that says why and names the paths to add
 by hand: one that cannot be read, is not JSON, is not a JSON object, or has an `instructions` that is not a list. No
@@ -644,6 +645,7 @@ The `opencode.json` that `init` writes into a project that has none:
 
 ```json
 {
+  "$schema": "https://opencode.ai/config.json",
   "instructions": [
     "node_modules/agentrite/process.md",
     "node_modules/agentrite/standards.md"
