@@ -68,5 +68,7 @@ timestamp: 2026-10-20T18:51:02Z
   splits a record on LF and CRLF alike. On `44baf54`, `npm test` passed all 757 tests with Docker present and none
   skipped, the end-to-end tests among them, and `node scripts/check-changes.mjs` and `npm run check-changes` both
   passed. Every task of `plan.md` is ticked. The status stays `in-progress`
+- 2026-10-20T19:34:33Z [human] accepted S1 as applied in `44baf54`, and asked for a delta review before the unit is
+  marked `implemented`. The status stays `in-progress`
 
 ## Amendments
