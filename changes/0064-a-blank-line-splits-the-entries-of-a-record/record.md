@@ -82,5 +82,16 @@ timestamp: 2026-10-20T18:51:02Z
   delta review. Took on S2, which shows R2 false when a new split entry shares the timestamp and the author of a split
   entry at the base: extended `plan.md` with a test task, an implementation task and a commit point, and changed its
   approach so that an entry is identified by its whole text with whitespace collapsed. The status stays `in-progress`
+- 2026-10-20T19:41:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the unit's branch. Applied S2 in
+  `b04bd9c`. Wrote first a unit test and a test of the command that a new entry after a blank line is reported when the
+  base holds a split entry with the same timestamp and author and other text, and saw both fail against the check of
+  `2e77a6d`. The check now identifies an entry by its whole text, its lines joined and its whitespace collapsed, and the
+  tests of rewrapping and of CRLF line endings still pass. Replayed the reviewer's case on
+  `changes/history-0035-shared-agent-kit/record.md` as at `0646f76`: with a blank line inserted before the entry of
+  `2026-09-22T18:47:21Z` that took the implementer role, the check reports that entry, and the unchanged record gives no
+  report. A consequence: changing the text of an entry that already stands after a blank line at the base makes the
+  check report it, and removing that blank line clears it. On `b04bd9c`, `npm test` passed all 759 tests with Docker
+  present and none skipped, the end-to-end tests among them, and `node scripts/check-changes.mjs` and
+  `npm run check-changes` both passed. Every task of `plan.md` is ticked. The status stays `in-progress`
 
 ## Amendments
