@@ -93,5 +93,7 @@ timestamp: 2026-10-20T18:51:02Z
   check report it, and removing that blank line clears it. On `b04bd9c`, `npm test` passed all 759 tests with Docker
   present and none skipped, the end-to-end tests among them, and `node scripts/check-changes.mjs` and
   `npm run check-changes` both passed. Every task of `plan.md` is ticked. The status stays `in-progress`
+- 2026-10-20T19:42:19Z [human] accepted S2 as applied in `b04bd9c`, and asked for another delta review before the unit
+  is marked `implemented`. The status stays `in-progress`
 
 ## Amendments
