@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-10-20T16:09:25Z
 ---
 
@@ -58,5 +58,8 @@ adds a key to `agentrite.json`.
   argument skipped every file and printed the notice of `AGENTS.md` with the sections it writes. Not run there:
   `npm test` and the sandbox. The status is `draft`
 - 2026-10-20T17:26:22Z [human] approved the record. The status is `approved`
+- 2026-10-20T17:26:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  cut `task-0062-depend-on-agentrite-7-2-0` from `master` at `e768458` and began the work. Read
+  `roles/implementer.md` of the installed release 7.1.0. The status is `in-progress`
 
 ## Amendments
