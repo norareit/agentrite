@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-10-20T18:51:02Z
 ---
 
@@ -30,5 +30,8 @@ timestamp: 2026-10-20T18:51:02Z
   check gains `findSplitEntries`, which compares the entries after a blank line with those of the record at the merge
   base, then the rule in `process.md`, the text in `README.md`, and the removal of the blank lines of 16 records in a
   commit of its own. The status stays `approved`
+- 2026-10-20T19:20:09Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `bugfix-0064-a-blank-line-splits-the-entries-of-a-record` at `878b490`, began the work. Read `roles/implementer.md`
+  of the installed release 7.2.0. The status is `in-progress`
 
 ## Amendments
