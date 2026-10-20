@@ -1,7 +1,7 @@
 ---
 kind: task
-status: in-progress
-timestamp: 2026-10-19T15:48:46Z
+status: implemented
+timestamp: 2026-10-20T13:45:00Z
 ---
 
 # 0060 What the human must do ends a message
@@ -28,5 +28,8 @@ timestamp: 2026-10-19T15:48:46Z
   `roles` keys. The same test fails with the same result on `master` with my change stashed, so it is not caused by
   this unit and is not fixed here. The end-to-end suite is the same `npm test`. Lines of `standards.md` are within 120
   characters
+- 2026-10-20T13:45:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on the human's word that they
+  reviewed the unit themselves, so that no reviewer ran and no finding is open. The task has no `plan.md`. The status
+  is `implemented`
 
 ## Amendments
