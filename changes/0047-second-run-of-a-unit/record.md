@@ -41,5 +41,16 @@ timestamp: 2026-10-13T20:22:53Z
   on a variant names it. Reworded the two places of the first entry above that quoted the human, whom the standards
   of release 7.2.0 forbid quoting in anything committed. The status is `draft`
 - 2026-10-20T20:11:35Z [human] approved the spec. The status is `approved`
+- 2026-10-20T20:14:53Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host. Cut
+  `feature-0047-second-run-of-a-unit` from `master` at `00b7d58` and wrote `plan.md` against it. Read
+  `roles/planner.md` of the installed release, and of the working tree `container/sandbox.sh`,
+  `container/unit-clone.sh`, `sandbox-dev.sh`, the wrapper's tests and their fixtures, `SANDBOX.md`, `README.md`,
+  `process.md`, `roles/reviewer.md` and `roles/implementer.md`. What the spec says of the sandbox still holds there.
+  The option is taken before the unit, as the wrapper's other options are, and as the first argument after it, as
+  the spec's forms give it. Requirements 7 to 11 are tested with Docker on a new fixture that runs real containers of
+  the image `container/Dockerfile` builds on, as `tests/sandbox-signal.test.mjs` does. The plan also changes
+  `sandbox-dev.sh`, which reads the wrapper's options and names an option that takes a value as one to add there,
+  and its form in `CONTRIBUTING.md`, which "The documents" of `AGENTS.md` keeps complete. Every requirement has a
+  task that traces to it, and every task traces to a requirement. The status stays `approved`
 
 ## Amendments
