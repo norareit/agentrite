@@ -78,5 +78,9 @@ timestamp: 2026-10-20T18:51:02Z
   check passed. Reproduced S2 through the command and with an in-memory copy of a historical record, and compared the
   identity behavior with the previously reviewed checker. Could not independently verify the historical uncommitted
   test-first ordering and failing test run before `44baf54`
+- 2026-10-20T19:39:57Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request to act on the
+  delta review. Took on S2, which shows R2 false when a new split entry shares the timestamp and the author of a split
+  entry at the base: extended `plan.md` with a test task, an implementation task and a commit point, and changed its
+  approach so that an entry is identified by its whole text with whitespace collapsed. The status stays `in-progress`
 
 ## Amendments

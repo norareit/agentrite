@@ -15,10 +15,10 @@ more blank lines stand between it and the line before it. A blank line inside an
 continuation, does not open an entry and is not judged, which the spec lists as a non-goal. The blank line before
 the next heading is not before an entry and is not judged either.
 
-An entry is identified by its timestamp and its author: the text of the entry, its lines joined and its whitespace,
-carriage returns among it, collapsed to single spaces, up to and including the first `]`. Rewrapping an entry or
-changing its line endings leaves it the same entry. A split entry is a violation when the record of the same unit at the
-merge base holds no split entry with the same timestamp and author. A unit absent from the base has all of its split
+An entry is identified by its text: its lines joined and its whitespace, carriage returns among it, collapsed to
+single spaces. Rewrapping an entry or changing its line endings leaves it the same entry, and two entries that share a
+timestamp and an author but differ in text stay two. A split entry is a violation when the record of the same unit at
+the merge base holds no split entry with the same text. A unit absent from the base has all of its split
 entries judged. The message is `<unit>: entry after a blank line: <opening line>`, which names the unit and the entry.
 The check keeps its behaviour for every other input.
 
@@ -63,6 +63,10 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
       (review finding S1, R3)
 - [x] Identify an entry by its timestamp and its author, read across its lines with whitespace collapsed, and give
       the message the opening line without its carriage return. The tests pass (S1, R2, R3)
+- [ ] Write a unit test and a test of the command that a new entry after a blank line is reported when the base holds
+      a split entry with the same timestamp and author but other text, and see them fail (review finding S2, R2)
+- [ ] Identify an entry by its whole text with whitespace collapsed, rather than by its timestamp and author. The
+      tests pass (S2, R2, R3)
 - [x] Remove the blank lines between entries from every `record.md` under `changes/` with the one-off script, and
       verify that 16 records change, that only blank lines are touched, and that a second run changes nothing (R7,
       R8)
@@ -85,3 +89,4 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
 - [x] `bugfix-0064` the removal of the blank lines between entries of the records, and nothing else
 - [x] `bugfix-0064` the log entry naming the removal commit
 - [x] `bugfix-0064` the identification of an entry by its timestamp and its author, with its tests, in one commit
+- [ ] `bugfix-0064` the identification of an entry by its whole text, with its tests, in one commit
