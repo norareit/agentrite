@@ -33,3 +33,8 @@ timestamp: 2026-10-20T13:45:00Z
   is `implemented`
 
 ## Amendments
+
+- 2026-10-20T14:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on the human's request, added
+  to the rule in `standards.md` that the prose above the list does not ask or restate what the list asks. The reason:
+  a message that asked in its prose and again in the list made the list repeat the message. `spec.md` is frozen and
+  is not changed

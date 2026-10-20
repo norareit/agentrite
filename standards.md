@@ -18,6 +18,8 @@ project is in its own `AGENTS.md`.
   message comes after the list
     * Each item names one thing and can be understood without the prose above it: what is to be decided, approved,
       answered or done, and where a choice is asked for, the options, with the one the agent recommends marked
+    * The prose above the list explains and does not ask. Whatever is asked of the human is asked in the list only,
+      and the prose does not restate it
     * A message that needs nothing of the human has no such list and no such line
     * The rule is on messages, in a session and in the last message of a run without a session, and not on the
       documents an agent writes, such as a spec or a record
