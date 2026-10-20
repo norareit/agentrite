@@ -37,7 +37,7 @@ The project's file:
    project root as its context, as the kit's own file is
 3. The image the sandbox runs keeps its name, the `image:` of the project's `sandbox/compose.project.yml`. With a
    `sandbox/Dockerfile`, the kit's own image is kept beside it under that name followed by `-base`
-4. With the JDK of the example of requirement 10 in the file, `java -version` and `javac -version` succeed for the
+4. With the JDK of the example of requirement 11 in the file, `java -version` and `javac -version` succeed for the
    agent in the sandbox, and the firewall, the proxy and the drop to the agent are as they are without the file:
    the entrypoint's checks pass at start-up, and the agent holds no capability
 
@@ -60,11 +60,13 @@ Keeping the sandbox:
    from `sandbox/Dockerfile` what sets it. The comparison is made at every such start, a start that builds nothing
    included, so that an image refused once is refused until the file is corrected and the image built anew. It
    reads the images on the host and needs no network
-9. Requirements 1 to 8 hold for `./sandbox.sh` in each form that starts a container, and for `./sandbox-dev.sh`
+9. Whether a start builds, and which versions of the harnesses it takes the image to hold, do not depend on a label
+   that `sandbox/Dockerfile` sets, one with the name of a label of the kit's included
+10. Requirements 1 to 9 hold for `./sandbox.sh` in each form that starts a container, and for `./sandbox-dev.sh`
 
 The documents:
 
-10. `SANDBOX.md` has a section on adding software to the sandbox, which says:
+11. `SANDBOX.md` has a section on adding software to the sandbox, which says:
     * where the file is, the two lines it opens with, and that it is built on the kit's image, as root, with the
       project root as the context
     * an example that installs a JDK from the image's Debian packages, and sets `JAVA_HOME`
@@ -79,16 +81,27 @@ The documents:
     * when the image is built anew, by requirements 5 and 6, and that `--rebuild` builds both
     * that a tool the project adds that downloads at run time needs its hosts in the project's `ALLOWLIST`, with a
       link to "Reaching more hosts"
-11. "Where things are kept on the host" of `SANDBOX.md` names the `-base` image of requirement 3, and how to remove
+    * what the file must not do besides, each with what goes wrong and what to do instead:
+        * install into `/home/agent` or `/work`, which are mounted over at run time, so that what is there is hidden,
+          or, in the home, seen only in a home volume made after the build. Install under `/usr/local` or `/opt`
+        * leave a tool to write outside the agent's home, `/work` and `/tmp` at run time, since the root filesystem
+          is read-only then. Point its cache and its settings into the home or `/tmp`, as with an environment
+          variable the tool reads
+        * install or upgrade Claude Code or OpenCode, which leaves the image holding another version than the kit
+          takes it to hold. Hold a version as "Holding a harness version" says
+        * set an environment variable the kit's image sets, which changes how the harnesses or the browser tests
+          behave, naming them
+12. "Where things are kept on the host" of `SANDBOX.md` names the `-base` image of requirement 3, and how to remove
     it
-12. `README.md` names `sandbox/Dockerfile` where it says what of the sandbox a project holds and may change, as
+13. `README.md` names `sandbox/Dockerfile` where it says what of the sandbox a project holds and may change, as
     a file the project may add, and that `init` and `refresh` do not write it
 
 Tests:
 
-13. The suite tests requirements 5, 6 and 8 with Docker: a project file that adds a file to the image, one changed
-    after a build, one removed, and one each that sets its own entrypoint, command, user and working directory.
-    Where Docker is not available, they are skipped as the suite's other tests that need Docker are
+14. The suite tests requirements 5, 6, 8 and 9 with Docker: a project file that adds a file to the image, one
+    changed after a build, one removed, one each that sets its own entrypoint, command, user and working directory,
+    and one that sets each label of the kit's to another value. Where Docker is not available, they are skipped as
+    the suite's other tests that need Docker are
 
 ## Decisions
 
@@ -120,13 +133,24 @@ Tests:
   which leaves an image without what the file now says, with nothing to say so
 * **The kit's own image is kept under a name of its own.** The project's file needs it as a base, and a start that
   rebuilds only the project's layer then builds it from that base without building the kit's again
+* **The kit's labels are the kit's.** A file built on the kit's image can set a label of the same name as one of the
+  kit's, and the image then holds the file's value. The kit decides on its labels whether to build, so such a label
+  could leave an image unbuilt that should be built. Few would set one, and none on purpose, but it is cheap to rule
+  out, where a check would need a message for it
+* **What else a file can do wrong is said, and not checked.** Software installed where a mount hides it, a tool
+  that writes to the read-only root filesystem, a harness installed over the kit's and a variable of the kit's set
+  anew do not weaken the sandbox: the firewall and the drop to the agent are as they were, and the entrypoint's
+  checks at start-up still judge the image as it is built, the agent's account and the firewall's tools among it.
+  What breaks is the tool added, which the developer sees when they first use it. Rejected: checking for each, which
+  would have the kit guess at what a file meant
 * **`init` writes no `sandbox/Dockerfile`.** Most projects need none, and a file that adds nothing would be built on
   every project's image
 
 ## Non-goals
 
 * A check of `sandbox/compose.project.yml`, which can set an entrypoint of its own as well. It is not new with this
-  unit, and the developer writes it for the settings of the container, not to install software
+  unit, and the developer writes it for the settings of the container, not to install software. The human decided
+  to leave it out
 * Software that the kit itself adds for every project, such as a JDK in the kit's image
 * OpenCode or Claude Code at versions of the project's own, which "Holding a harness version" covers
 * AloudRite-IntelliJ's own `sandbox/Dockerfile` and allowlist, which are that project's, made when it moves to the
