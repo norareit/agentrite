@@ -79,5 +79,13 @@ timestamp: 2026-10-13T20:22:53Z
   `npm run check-changes` and `git diff --check master...HEAD`: both passed. Reproduced the concurrent Docker-test
   collision and checked the CLI with an empty `node_modules`. Did not independently repeat the historical
   pre-change failure counts or the manual dev-wrapper smoke run, and did not run on macOS.
+- 2026-10-21T08:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, applied the three findings of the
+  review of `d85ed25` (C1, C2, C3), all nonblocking and all accepted as valid after checking each against the tree. C1:
+  `tests/sandbox-variant.test.mjs` names the Compose project after the process, in the project's compose file, so that
+  the container names and clone paths differ between suite invocations. C2: the two examples of `SANDBOX.md` run `npm
+  ci` before `npx agentrite run`, and say why. C3: the table of `README.md` says that `--connect` takes `--variant`, and
+  a sentence below it gives both spellings and both places of the option. Verified on `e2a8aa7`: `npm test` reported 810
+  passed, none skipped, and two invocations of `tests/sandbox-variant.test.mjs` run at once each passed its 5 tests. Not
+  checked: the `npm ci` of the new examples in a real clone, which needs the registry. The status stays `in-progress`
 
 ## Amendments
