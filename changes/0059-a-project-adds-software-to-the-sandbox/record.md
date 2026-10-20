@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-19T15:48:11Z
 ---
 
@@ -32,5 +32,6 @@ timestamp: 2026-10-19T15:48:11Z
   the labels, and the requirements after it renumbered; the list in the section of `SANDBOX.md`; requirement 14
   tests the labels; two decisions, and the non-goal of the compose file says the human left it out. The status is
   `draft`
+- 2026-10-20T13:29:49Z [human] approved the spec. The status is `approved`
 
 ## Amendments
