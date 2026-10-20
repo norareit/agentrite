@@ -1,6 +1,7 @@
 // The host the two wrapper tests run the wrapper on: a `bin` directory that is the whole PATH, so that no test
 // depends on which harnesses the host that runs the suite has, or at which version.
 import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { homedir } from 'node:os';
 import { basename, delimiter, join } from 'node:path';
 
 // What the fake harnesses print, in the two forms the real commands use. The versions are ones no release of either
@@ -58,70 +59,9 @@ export function writeCommand(bin, name, script) {
   chmodSync(join(bin, name), 0o755);
 }
 
-// Creates `bin` under `base` and returns what a test needs of it:
-//
-// * `claude` and `opencode` that print `hostVersions`. A test that wants a harness absent removes its file, and
-//   one that wants it to misbehave rewrites it with `writeCommand`
-// * a `docker` that records each call in `calls`, opened by the variables named in `recorded` as it saw them. Three
-//   questions it answers without recording them:
-//     * `config --format json`, with the merged configuration: the image name, and the build arguments the base
-//       Compose file takes from the wrapper's two variables with the JSON object in `projectBuildArgs` over them,
-//       which stands for what the project's Compose file gives. An empty file stands for a configuration Compose
-//       refuses. The name and the services come from the file of the last `-f` of the call: a line
-//       `name: <name>` at the left margin gives the name and the image, and a line `  agent:` makes a service
-//       `agent` beside a `sandbox` that has no image, as Compose merges the two files
-//     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
-//       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image
-//     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
-//       running under the name the file holds, and with nothing otherwise. It fails instead, as it does with no
-//       daemon to ask, when the file `psFails` is there
-//   A `build` is recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does
-//   nothing. An `exec` is recorded, runs nothing, and exits with the status the file `execStatus` holds when that
-//   is there, which stands for the status of the command Docker ran in the container. A `run` is recorded and
-//   then plays the agent when the file `agentScript` is there: it runs that file with `bash` in the directory the
-//   call mounts at `/work`, and exits with its status
-// * an `npm` that records each call, which `npmCalls` reads, and answers `view <package> version` with the
-//   package's version of `latestVersions`. It prints the content of the file `npmPrints` instead when that is
-//   there, and fails, as the real one does with no registry to reach, when the file `npmFails` is. A test that
-//   wants a host without `npm` removes its file
-export function fakeHost(base, recorded) {
-  const bin = join(base, 'bin');
-  mkdirSync(bin);
-  symlinkSync(process.execPath, join(bin, 'node'));
-  for (const command of linkedCommands) symlinkSync(findOnPath(command), join(bin, command));
-  writeCommand(bin, 'claude', `echo '${hostVersions.claude} (Claude Code)'`);
-  writeCommand(bin, 'opencode', `echo '${hostVersions.opencode}'`);
-
-  const calls = join(base, 'docker-calls');
-  const projectBuildArgs = join(base, 'project-build-args.json');
-  const imageLabels = join(base, 'image-labels');
-  const buildFails = join(base, 'build-fails');
-  const runningContainer = join(base, 'running-container');
-  const agentScript = join(base, 'agent-script');
-  const psFails = join(base, 'ps-fails');
-  const execStatus = join(base, 'exec-status');
-  writeFileSync(projectBuildArgs, '{}');
-  writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
-  const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
-  writeCommand(
-    bin,
-    'docker',
-    `if [ "$1 $2" = "image inspect" ]; then
-  [ -f "${imageLabels}" ] || exit 1
-  cat "${imageLabels}"; exit 0
-fi
-if [ "$1" = "ps" ]; then
-  if [ -f "${psFails}" ]; then echo "Cannot connect to the Docker daemon" >&2; exit 1; fi
-  [ ! -f "${runningContainer}" ] || cat "${runningContainer}"
-  exit 0
-fi
-if [[ " $* " == *" config --format json "* ]]; then
-  [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
-  for argument in "$@"; do
-    [ "$previous" != "-f" ] || export PROJECT_COMPOSE="$argument"
-    previous="$argument"
-  done
-  exec node -e '
+// The node script with which both hosts' `docker` answers `config --format json`: it reads the JSON object of the
+// project's build arguments on its input, and the project's Compose file from PROJECT_COMPOSE.
+const mergedConfiguration = `
     let json = "";
     process.stdin.on("data", (chunk) => (json += chunk));
     process.stdin.on("end", () => {
@@ -139,21 +79,39 @@ if [[ " $* " == *" config --format json "* ]]; then
       const services = /^  agent:$/m.test(project) ? { agent: sandbox, sandbox: { build: { args } } } : { sandbox };
       console.log(JSON.stringify({ name, services }));
     });
-  ' < "${projectBuildArgs}"
-fi
-echo "${record} docker $*" >> "${calls}"
-if [ "$1" = "exec" ]; then
-  [ ! -f "${execStatus}" ] || exit "$(cat "${execStatus}")"
-  exit 0
-fi
-if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi
-if [[ " $* " == *" run "* ]] && [ -f "${agentScript}" ]; then
+  `;
+
+// The lines of a fake `docker` that answer `config --format json` with the build arguments of the file
+// `projectBuildArgs`, as `fakeHost` describes.
+function configAnswer(projectBuildArgs) {
+  return `if [[ " $* " == *" config --format json "* ]]; then
+  [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
   for argument in "$@"; do
-    case "$argument" in *:/work) work="\${argument%:/work}" ;; esac
+    [ "$previous" != "-f" ] || export PROJECT_COMPOSE="$argument"
+    previous="$argument"
   done
-  cd "$work" && exec bash "${agentScript}"
-fi`,
-  );
+  exec node -e '${mergedConfiguration}' < "${projectBuildArgs}"
+fi`;
+}
+
+// The lines of `file` as a function that reads them each time it is called, with none for a file not there.
+const linesOf = (file) => () => {
+  try {
+    return readFileSync(file, 'utf-8').trim().split('\n');
+  } catch {
+    return [];
+  }
+};
+
+// Creates `bin` under `base`, holding `node`, the commands of `linkedCommands`, the `claude`, `opencode` and `npm`
+// that `fakeHost` describes, and no `docker`, and returns `bin` and what a test needs of `npm`.
+function hostBin(base) {
+  const bin = join(base, 'bin');
+  mkdirSync(bin);
+  symlinkSync(process.execPath, join(bin, 'node'));
+  for (const command of linkedCommands) symlinkSync(findOnPath(command), join(bin, command));
+  writeCommand(bin, 'claude', `echo '${hostVersions.claude} (Claude Code)'`);
+  writeCommand(bin, 'opencode', `echo '${hostVersions.opencode}'`);
 
   const npmRecord = join(base, 'npm-calls');
   const npmPrints = join(base, 'npm-prints');
@@ -172,27 +130,166 @@ case "$2" in
 esac`,
   );
 
-  const linesOf = (file) => () => {
-    try {
-      return readFileSync(file, 'utf-8').trim().split('\n');
-    } catch {
-      return [];
-    }
-  };
-  const dockerCalls = linesOf(calls);
-  const npmCalls = linesOf(npmRecord);
-  return {
+  return { bin, npmPrints, npmFails, npmCalls: linesOf(npmRecord) };
+}
+
+// Creates `bin` under `base` and returns what a test needs of it:
+//
+// * `claude` and `opencode` that print `hostVersions`. A test that wants a harness absent removes its file, and
+//   one that wants it to misbehave rewrites it with `writeCommand`
+// * a `docker` that records each call in `calls`, opened by the variables named in `recorded` as it saw them. Three
+//   questions it answers without recording them:
+//     * `config --format json`, with the merged configuration: the image name, and the build arguments the base
+//       Compose file takes from the wrapper's two variables with the JSON object in `projectBuildArgs` over them,
+//       which stands for what the project's Compose file gives. An empty file stands for a configuration Compose
+//       refuses. The name and the services come from the file of the last `-f` of the call: a line
+//       `name: <name>` at the left margin gives the name and the image, and a line `  agent:` makes a service
+//       `agent` beside a `sandbox` that has no image, as Compose merges the two files
+//     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
+//       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image. An
+//       `image inspect` whose format names the label of a project's Dockerfile is answered with the content of
+//       `imageProjectDockerfile` instead, which is empty unless a test writes it, and with exit 1 likewise
+//     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
+//       running under the name the file holds, and with nothing otherwise. It fails instead, as it does with no
+//       daemon to ask, when the file `psFails` is there
+//   A `build` is recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does
+//   nothing. An `exec` is recorded, runs nothing, and exits with the status the file `execStatus` holds when that
+//   is there, which stands for the status of the command Docker ran in the container. A `run` is recorded and
+//   then plays the agent when the file `agentScript` is there: it runs that file with `bash` in the directory the
+//   call mounts at `/work`, and exits with its status
+// * an `npm` that records each call, which `npmCalls` reads, and answers `view <package> version` with the
+//   package's version of `latestVersions`. It prints the content of the file `npmPrints` instead when that is
+//   there, and fails, as the real one does with no registry to reach, when the file `npmFails` is. A test that
+//   wants a host without `npm` removes its file
+export function fakeHost(base, recorded) {
+  const host = hostBin(base);
+  const { bin } = host;
+
+  const calls = join(base, 'docker-calls');
+  const projectBuildArgs = join(base, 'project-build-args.json');
+  const imageLabels = join(base, 'image-labels');
+  const imageProjectDockerfile = join(base, 'image-project-dockerfile');
+  const buildFails = join(base, 'build-fails');
+  const runningContainer = join(base, 'running-container');
+  const agentScript = join(base, 'agent-script');
+  const psFails = join(base, 'ps-fails');
+  const execStatus = join(base, 'exec-status');
+  writeFileSync(projectBuildArgs, '{}');
+  writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
+  writeFileSync(imageProjectDockerfile, '');
+  const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
+  writeCommand(
     bin,
+    'docker',
+    `if [ "$1 $2" = "image inspect" ]; then
+  [ -f "${imageLabels}" ] || exit 1
+  [[ " $* " != *com.ritenoar.agentrite.project-dockerfile* ]] || { cat "${imageProjectDockerfile}"; exit 0; }
+  cat "${imageLabels}"; exit 0
+fi
+if [ "$1" = "ps" ]; then
+  if [ -f "${psFails}" ]; then echo "Cannot connect to the Docker daemon" >&2; exit 1; fi
+  [ ! -f "${runningContainer}" ] || cat "${runningContainer}"
+  exit 0
+fi
+${configAnswer(projectBuildArgs)}
+echo "${record} docker $*" >> "${calls}"
+if [ "$1" = "exec" ]; then
+  [ ! -f "${execStatus}" ] || exit "$(cat "${execStatus}")"
+  exit 0
+fi
+if [[ " $* " == *" build "* ]] && [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi
+if [[ " $* " == *" run "* ]] && [ -f "${agentScript}" ]; then
+  for argument in "$@"; do
+    case "$argument" in *:/work) work="\${argument%:/work}" ;; esac
+  done
+  cd "$work" && exec bash "${agentScript}"
+fi`,
+  );
+
+  const dockerCalls = linesOf(calls);
+  return {
+    ...host,
     projectBuildArgs,
     imageLabels,
+    imageProjectDockerfile,
     buildFails,
     runningContainer,
     agentScript,
     psFails,
     execStatus,
     dockerCalls,
-    npmPrints,
-    npmFails,
-    npmCalls,
   };
+}
+
+// The Dockerfile of the stand-in for the kit's image that `dockerHost` builds: an image of one marker file, with the
+// two version labels the kit's image has, from the build arguments of the same names, and the working directory,
+// the entrypoint and the command of the kit's. It runs nothing, so it builds without the network.
+const standInDockerfile = `FROM scratch
+COPY kit-marker /kit-marker
+ARG CLAUDE_CODE_VERSION
+ARG OPENCODE_VERSION
+LABEL com.ritenoar.agentrite.claude-code-version=$CLAUDE_CODE_VERSION
+LABEL com.ritenoar.agentrite.opencode-version=$OPENCODE_VERSION
+WORKDIR /work
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
+CMD ["bash"]
+`;
+
+// Creates `bin` under `base` as `fakeHost` does, with the same `claude`, `opencode` and `npm`, and a `docker` that is
+// the real one of the suite's PATH but for Compose, so that images are built and read without building the kit's
+// image, which needs the network and minutes. Its `docker` records each call it records in `calls`, opened by the
+// variables named in `recorded` as it saw them:
+//
+// * `config --format json` it answers as `fakeHost`'s does, from `projectBuildArgs`, without recording it
+// * `compose ... build` it records, and then runs a real `docker build` of the stand-in for the kit's image under
+//   `base`, tagged with the image name of the merged configuration and given the two versions of the wrapper's
+//   variables. It fails instead, without building, when the file `buildFails` is there
+// * `compose ... run` it records, and runs nothing
+// * every other call it passes to the real `docker`, recording a `build` and a `tag`. It gives the real one the
+//   suite's DOCKER_CONFIG and DOCKER_HOST, which the home of a test would otherwise hide
+export function dockerHost(base, recorded) {
+  const host = hostBin(base);
+  const { bin } = host;
+  const docker = findOnPath('docker');
+  const standIn = join(base, 'kit-stand-in');
+  mkdirSync(standIn);
+  writeFileSync(join(standIn, 'Dockerfile'), standInDockerfile);
+  writeFileSync(join(standIn, 'kit-marker'), 'the kit\n');
+
+  const calls = join(base, 'docker-calls');
+  const projectBuildArgs = join(base, 'project-build-args.json');
+  const buildFails = join(base, 'build-fails');
+  writeFileSync(projectBuildArgs, '{}');
+  const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
+  const passed = [
+    `export DOCKER_CONFIG="${process.env.DOCKER_CONFIG ?? join(homedir(), '.docker')}"`,
+    ...(process.env.DOCKER_HOST ? [`export DOCKER_HOST="${process.env.DOCKER_HOST}"`] : []),
+  ].join('\n');
+  writeCommand(
+    bin,
+    'docker',
+    `${passed}
+${configAnswer(projectBuildArgs)}
+if [ "$1" = "compose" ]; then
+  echo "${record} docker $*" >> "${calls}"
+  [[ " $* " == *" build "* ]] || exit 0
+  if [ -f "${buildFails}" ]; then echo "failed to solve: no network" >&2; exit 17; fi
+  # The image is the name the merged configuration gives, from the project's file of the last -f.
+  for argument in "$@"; do
+    [ "$previous" != "-f" ] || project_compose="$argument"
+    previous="$argument"
+  done
+  image=image
+  while read -r line; do
+    [[ ! "$line" =~ ^name:\\ (.+)$ ]] || image="\${BASH_REMATCH[1]}"
+  done < "$project_compose"
+  exec "${docker}" build --quiet --tag "$image" \\
+    --build-arg "CLAUDE_CODE_VERSION=$SANDBOX_CLAUDE_CODE_VERSION" \\
+    --build-arg "OPENCODE_VERSION=$SANDBOX_OPENCODE_VERSION" "${standIn}"
+fi
+[ "$1" != "build" ] && [ "$1" != "tag" ] || echo "${record} docker $*" >> "${calls}"
+exec "${docker}" "$@"`,
+  );
+
+  return { ...host, projectBuildArgs, buildFails, dockerCalls: linesOf(calls) };
 }

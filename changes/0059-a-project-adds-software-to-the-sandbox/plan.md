@@ -137,14 +137,14 @@ Docker tests of `tests/bell.test.mjs` and `tests/sandbox-signal.test.mjs` give.
 
 ### The fixtures
 
-- [ ] In `tests/wrapper-fixture.mjs`, move the node script that answers `config --format json` into a constant used
+- [x] In `tests/wrapper-fixture.mjs`, move the node script that answers `config --format json` into a constant used
   by `fakeHost`, with no change of behavior, and run `tests/sandbox-wrapper.test.mjs`,
   `tests/sandbox-unit-run.test.mjs` and `tests/sandbox-dev.test.mjs` green (R14)
-- [ ] Have `fakeHost`'s `docker` answer an `image inspect` whose format names
+- [x] Have `fakeHost`'s `docker` answer an `image inspect` whose format names
   `com.ritenoar.agentrite.project-dockerfile` with the content of `imageProjectDockerfile`, empty unless a test
   writes it, and every other `image inspect` as today. Return the path from `fakeHost` and describe it in the
   fixture's comment (R5)
-- [ ] Add `dockerHost(base, recorded)` to `tests/wrapper-fixture.mjs` as "The Docker host of the tests" says, with
+- [x] Add `dockerHost(base, recorded)` to `tests/wrapper-fixture.mjs` as "The Docker host of the tests" says, with
   a comment in the manner of `fakeHost`'s that lists what its `docker` answers itself, what it records and what it
   passes on (R14)
 
@@ -241,8 +241,8 @@ against today's wrapper for the reason it is there.
 
 ## Commit Points
 
-- [ ] `feature-0059 Plan the unit`: `plan.md` and the log entry of `record.md`
-- [ ] `feature-0059 Give the tests a host whose Docker is real but for Compose`: the fixtures, with every test as
+- [x] `feature-0059 Plan the unit`: `plan.md` and the log entry of `record.md`
+- [x] `feature-0059 Give the tests a host whose Docker is real but for Compose`: the fixtures, with every test as
   green as before
 - [ ] `feature-0059 Build a project's Dockerfile on the kit's image, and refuse one that changes how it starts`: the
   Docker tests, the wrapper and its two comments

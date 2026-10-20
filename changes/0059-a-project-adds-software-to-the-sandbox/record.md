@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-19T15:48:11Z
 ---
 
@@ -41,5 +41,13 @@ timestamp: 2026-10-19T15:48:11Z
   `LABEL` of the same name. Ran the suite: 725 tests, 724 pass, and unit 0054's R24 test of
   `tests/repository-own-files.test.mjs` fails, as it did before this unit. Wrote `plan.md`. The status is
   `approved`
+- 2026-10-20T13:45:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0059-a-project-adds-software-to-the-sandbox` at `395dfb0`, began the work. The status is `in-progress`
+- 2026-10-20T13:58:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the fixtures. Beyond the
+  plan's moving of the `config` answer into a constant, `fakeHost` and `dockerHost` share the making of `bin` with
+  its `claude`, `opencode` and `npm`, which the plan has `dockerHost` make as `fakeHost` does. `dockerHost`'s
+  `docker` gives the real one the suite's `DOCKER_CONFIG` and `DOCKER_HOST`, since a test runs the wrapper with a
+  home of its own, which would otherwise hide a Docker context the suite's host sets. `node --test tests/*.test.mjs`
+  on the Linux host with Docker 28.4.0: 725 tests, 724 pass, and unit 0054's R24 test fails, as before
 
 ## Amendments
