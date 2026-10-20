@@ -54,5 +54,11 @@ timestamp: 2026-10-20T18:51:02Z
   command, using in-memory probes. Verified that `8e6771f` removes only 72 empty lines from 16 records, and scanned
   all 73 committed records for split entries. Could not independently verify the historical uncommitted test-first
   ordering and failing stub run, or the second run of the uncommitted cleanup script
+- 2026-10-20T19:32:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request to act on the
+  review. Applied P1: the ticked verification in `plan.md` now names `git diff --ignore-blank-lines --stat`, which is
+  what was run. Took on S1, which shows R3 false for an entry whose opening line is rewrapped or whose record gets CRLF
+  line endings: extended `plan.md` with a test task, an implementation task and a commit point, and changed its approach
+  so that an entry is identified by its timestamp and its author, read across its lines with whitespace collapsed,
+  instead of by its whole opening line. The status stays `in-progress`
 
 ## Amendments
