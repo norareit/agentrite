@@ -155,51 +155,55 @@ Each in `tests/sandbox-project-dockerfile.test.mjs`, with a project set up as `s
 that says a start builds nothing holds that the second start records no `build`. Run them, and see each fail
 against today's wrapper for the reason it is there.
 
-- [ ] A project file that copies a file in: the first start builds the kit's image and then the project's, `$image`
+- [x] A project file that copies a file in: the first start builds the kit's image and then the project's, `$image`
   holds the copied file and the stand-in's marker, `$image-base` holds the marker and not the copied file, and
   `$image` holds the label of the file's digest. A second start builds nothing and runs (R1, R2, R3, R5)
-- [ ] Without a project file, a start builds the kit's image under `$image` and no `$image-base`, as today (R1)
-- [ ] A project file changed after a build: the next start says the file is not the one the image was built from,
+- [x] Without a project file, a start builds the kit's image under `$image` and no `$image-base`, as today (R1)
+- [x] A project file changed after a build: the next start says the file is not the one the image was built from,
   builds the project's file and not the kit's image, and `$image` holds the new file's digest (R5)
-- [ ] A project file added after a build without one, and one removed after a build with one: each next start says
+- [x] A project file added after a build without one, and one removed after a build with one: each next start says
   why and builds, and the start after it builds nothing. After the removal, `$image` holds no label of a project's
   file (R5)
-- [ ] A kit's image built anew, by `--rebuild` and by a host whose `claude` reports another version: the project's
+- [x] A kit's image built anew, by `--rebuild` and by a host whose `claude` reports another version: the project's
   file is built in the same start, and `$image` holds the new version's label, inherited from `$image-base` (R6)
-- [ ] A project file whose build fails, by a `COPY` of a file that is not there: the start exits with a status
+- [x] A project file whose build fails, by a `COPY` of a file that is not there: the start exits with a status
   other than 0, prints Docker's own output, and records no `run`. With `buildFails`, the kit's build that fails
   ends the start before the project's file is built (R7)
-- [ ] One test each for a project file that sets `ENTRYPOINT`, `CMD`, `USER` and `WORKDIR`: the start exits with 2
+- [x] One test each for a project file that sets `ENTRYPOINT`, `CMD`, `USER` and `WORKDIR`: the start exits with 2
   and records no `run`, its message names what differs with both values, the firewall and the drop to the agent,
   and the instruction to remove. A second start, which builds nothing, is refused the same. With the instruction
   removed from the file, the next start builds and runs (R8)
-- [ ] A project file that sets `ENTRYPOINT` is refused in a unit run before its clone is made: no directory under
+- [x] A project file that sets `ENTRYPOINT` is refused in a unit run before its clone is made: no directory under
   the state home, and no `run` recorded (R8, R10)
-- [ ] One test each for a project file that sets `com.ritenoar.agentrite.claude-code-version`,
+- [x] One test each for a project file that sets `com.ritenoar.agentrite.claude-code-version`,
   `com.ritenoar.agentrite.opencode-version` and `com.ritenoar.agentrite.project-dockerfile` to another value: the
   second start builds nothing. For the version labels, a host whose `claude` reports another version still builds
   both images, and a file whose label names the host's new version while `$image-base` holds the old one does not
   stop that build (R9)
-- [ ] The dev shim, run as `tests/sandbox-dev.test.mjs` runs it, on `dockerHost`, with a project file: a start
+- [x] The dev shim, run as `tests/sandbox-dev.test.mjs` runs it, on `dockerHost`, with a project file: a start
   builds both images although they exist, and `--connect` builds nothing (R10)
 
 ### The wrapper
 
-- [ ] In `container/sandbox.sh`, compute the digest of `sandbox/Dockerfile` when there is one, with `node`, and
+- [x] In `container/sandbox.sh`, compute the digest of `sandbox/Dockerfile` when there is one, with `node`, and
   name the kit's image `$image-base` or `$image` as "The names" says (R1, R3, R5)
-- [ ] Read the harness versions from the kit's image, and decide the kit's build as "When a start builds" says,
+- [x] Read the harness versions from the kit's image, and decide the kit's build as "When a start builds" says,
   with its line for a file removed since. Keep the registry asked only when the kit's image is built (R5, R9)
-- [ ] Decide the project's build as "When a start builds" says, with its line for a file added or changed since
+- [x] Decide the project's build as "When a start builds" says, with its line for a file added or changed since
   (R5, R6)
-- [ ] Build: the kit's image as today, then, with a project file, its tag `$image-base` and the `docker build` of
+- [x] Build: the kit's image as today, then, with a project file, its tag `$image-base` and the `docker build` of
   "How the two are built" (R2, R3, R6, R7)
-- [ ] Refuse an image that changes how a container starts, as "The refusal" says, at every start with a project
+- [x] Give the `docker build` of the project's file
+  `--build-arg BUILDKIT_DOCKERFILE_CHECK=skip=InvalidDefaultArgInFrom`, so that BuildKit does not warn at every
+  build that the `FROM` of the two opening lines has no valid default, which the kit's argument always gives it.
+  The first Docker test holds that the build prints no such warning (R2)
+- [x] Refuse an image that changes how a container starts, as "The refusal" says, at every start with a project
   file that runs a container, before the log directory is made (R8, R10)
-- [ ] Update the header comment of `container/sandbox.sh`, which says how the wrapper decides to build, and the
+- [x] Update the header comment of `container/sandbox.sh`, which says how the wrapper decides to build, and the
   usage line of `--rebuild`, which then builds both images. Update the header comment of `container/compose.yml`,
   which says what a project layers over the kit, to name `sandbox/Dockerfile`. No requirement names them: the
   comments would otherwise be untrue
-- [ ] Run the whole suite on the host with Docker: the new tests pass, and every other but the R24 test of unit 0054
+- [x] Run the whole suite on the host with Docker: the new tests pass, and every other but the R24 test of unit 0054
   (R14)
 
 ### The documents
@@ -244,6 +248,6 @@ against today's wrapper for the reason it is there.
 - [x] `feature-0059 Plan the unit`: `plan.md` and the log entry of `record.md`
 - [x] `feature-0059 Give the tests a host whose Docker is real but for Compose`: the fixtures, with every test as
   green as before
-- [ ] `feature-0059 Build a project's Dockerfile on the kit's image, and refuse one that changes how it starts`: the
+- [x] `feature-0059 Build a project's Dockerfile on the kit's image, and refuse one that changes how it starts`: the
   Docker tests, the wrapper and its two comments
 - [ ] `feature-0059 Describe a project's Dockerfile`: `SANDBOX.md` and `README.md`

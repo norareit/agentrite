@@ -49,5 +49,15 @@ timestamp: 2026-10-19T15:48:11Z
   `docker` gives the real one the suite's `DOCKER_CONFIG` and `DOCKER_HOST`, since a test runs the wrapper with a
   home of its own, which would otherwise hide a Docker context the suite's host sets. `node --test tests/*.test.mjs`
   on the Linux host with Docker 28.4.0: 725 tests, 724 pass, and unit 0054's R24 test fails, as before
+- 2026-10-20T14:31:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the Docker tests of
+  `tests/sandbox-project-dockerfile.test.mjs` and ran them against the wrapper of `86b7951`: 18 of the 20 fail, each
+  because no project file is built or nothing is refused. The two that pass hold what the wrapper did before the
+  unit: a start without a project file builds the kit's image alone, and a failing build of the kit's image ends the
+  start. Then built the wrapper. A first run showed BuildKit warning `InvalidDefaultArgInFrom` at every build of a
+  project file, for the `FROM ${AGENTRITE_IMAGE}` of the two lines R2 prescribes, although the kit always gives the
+  argument. Added a task to `plan.md` and gave the build
+  `--build-arg BUILDKIT_DOCKERFILE_CHECK=skip=InvalidDefaultArgInFrom`, which the first Docker test holds. The
+  refusal names the instructions that differ separated by commas. `node --test tests/*.test.mjs` on the Linux host
+  with Docker 28.4.0: 745 tests, 744 pass, none skipped, and unit 0054's R24 test fails, as before
 
 ## Amendments

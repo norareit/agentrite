@@ -47,6 +47,17 @@
 # own: a harness with neither keeps the version the image holds, and gets the latest
 # published one, which the wrapper asks npm for and names, whenever the image is built.
 #
+# A project may add to the image with a sandbox/Dockerfile of its own, which the wrapper
+# builds on the kit's image. The image the sandbox runs keeps the name the compose files
+# give it, and the kit's image is kept beside it under that name followed by -base. The
+# project's file is built when the kit's image is, when there is no image, and when the
+# image was built from another content of the file, which a label of the image records;
+# an image built from a file that is no longer there has the kit's image built anew. The
+# harness versions are read from the kit's image, and the wrapper sets the label of the
+# file itself, so that no label the project's file sets decides a build. Every start with
+# the file refuses an image whose entrypoint, command, user or working directory is not
+# the kit's: the kit's entrypoint installs the firewall and drops to the agent.
+#
 # It layers the project's compose file over the kit's base, with
 # --project-directory set to the project root so that every relative path in
 # either file resolves from there.
@@ -69,7 +80,8 @@
 #                    branch, by its name or by a unit's number, and no branch is cut.
 #                    Takes none of the options below
 #   --rebuild        build the image before running, even if it already exists and
-#                    holds the wanted harness versions
+#                    holds the wanted harness versions, and the project's
+#                    sandbox/Dockerfile on it when there is one
 #   --mount HOST     also mount HOST at /mnt/<basename>, read-write
 #   --mount HOST:ro  the same, read-only
 #   COMMAND...       run this instead of an interactive shell
@@ -447,6 +459,57 @@ read_merged_configuration() {
   } <<< "$merged"
 }
 
+# The label that records on the image which content of the project's sandbox/Dockerfile
+# it was built from: sha256: and the SHA-256 of the file's bytes, in hex.
+project_dockerfile_label="com.ritenoar.agentrite.project-dockerfile"
+
+# Prints the content of the project's file that the image records, or nothing for an
+# image built from none. A value of another shape is none, which is what Docker prints for
+# an image without labels. Fails when there is no image.
+recorded_project_dockerfile() {
+  local recorded shape='^sha256:[0-9a-f]{64}$'
+  recorded="$(docker image inspect --format "{{ index .Config.Labels \"$project_dockerfile_label\" }}" \
+    "$image" 2>/dev/null)" || return 1
+  if [[ "$recorded" =~ $shape ]]; then
+    echo "$recorded"
+  fi
+}
+
+# Refuses, with 2, an image that would start otherwise than the kit's image: one whose
+# entrypoint, command, user or working directory the project's file changed. Each that
+# differs is named with both values, an empty one as none.
+refuse_changed_start() {
+  local format='{{json .Config.Entrypoint}}{{"\n"}}{{json .Config.Cmd}}{{"\n"}}'
+  format="$format"'{{.Config.User}}{{"\n"}}{{.Config.WorkingDir}}'
+  local whats=(entrypoint command user "working directory")
+  local instructions=(ENTRYPOINT CMD USER WORKDIR)
+  local settings kit_settings index value kit_value named=""
+  settings="$(docker image inspect --format "$format" "$image")"
+  kit_settings="$(docker image inspect --format "$format" "$kit_image")"
+  # read takes one line of each at a time, an empty one included.
+  for index in 0 1 2 3; do
+    read -r value <&3
+    read -r kit_value <&4
+    [ "$value" != "$kit_value" ] || continue
+    echo "sandbox.sh: the image $image has the ${whats[$index]} $(shown "$value")," \
+      "and the kit's image $kit_image has $(shown "$kit_value")." >&2
+    named="${named:+$named, }${instructions[$index]}"
+  done 3<<< "$settings" 4<<< "$kit_settings"
+  [ -n "$named" ] || return 0
+  echo "The kit's entrypoint is what installs the firewall and drops to the agent, so nothing was started." >&2
+  echo "Remove from sandbox/Dockerfile the instructions that set what differs: $named." \
+    "Then start again, which builds the image anew." >&2
+  exit 2
+}
+
+# A value of the image's configuration as the refusal writes it: none for one not set.
+shown() {
+  case "$1" in
+    "" | null) echo none ;;
+    *) echo "$1" ;;
+  esac
+}
+
 # Prints the name of the container of a unit run: the Compose project's name, a dash and
 # the branch, with every character a container's name cannot hold made a dash.
 unit_container_name() {
@@ -555,6 +618,21 @@ if [ -n "$branch" ]; then
   refuse_unlanded "$root" "$branch" "$clone" || exit 2
 fi
 
+# The project's own Dockerfile, when it has one, and the content it is built from. The
+# kit's image is then kept under a name of its own, the base of the project's file, and
+# the image the sandbox runs is the project's file built on it. node computes the digest;
+# the host has node for npm already.
+project_dockerfile="$root/sandbox/Dockerfile"
+project_dockerfile_digest=""
+kit_image="$image"
+if [ -f "$project_dockerfile" ]; then
+  project_dockerfile_digest="sha256:$(node -e '
+    const { createHash } = require("crypto");
+    process.stdout.write(createHash("sha256").update(require("fs").readFileSync(process.argv[1])).digest("hex"));
+  ' "$project_dockerfile")"
+  kit_image="$image-base"
+fi
+
 # The wanted version of each harness and where it comes from. An origin left empty says
 # that neither the project nor the host gives one.
 claude_code_origin="the project's compose file"
@@ -568,16 +646,17 @@ if [ "$opencode_wanted" = "$unheld" ]; then
   opencode_origin="${opencode_host:+the host}"
 fi
 
-# Build on --rebuild, when there is no image, and when a harness needs it, which the
-# image's two labels say. A build that fails ends the wrapper: the image that exists
-# holds versions nobody asked for.
+# Build the kit's image on --rebuild, when there is none, when a harness needs it, which
+# the two labels of the kit's image say, and, without a project's file, when the image
+# was built from one. A build that fails ends the wrapper: the image that exists holds
+# versions nobody asked for.
 build="$rebuild"
 claude_code_held=""
 opencode_held=""
 if [ "$build" -eq 0 ]; then
   labels='{{ index .Config.Labels "com.ritenoar.agentrite.claude-code-version" }}'
   labels="$labels|"'{{ index .Config.Labels "com.ritenoar.agentrite.opencode-version" }}'
-  if held="$(docker image inspect --format "$labels" "$image" 2>/dev/null)"; then
+  if held="$(docker image inspect --format "$labels" "$kit_image" 2>/dev/null)"; then
     claude_code_held="${held%%|*}"
     opencode_held="${held#*|}"
     if needs_build "Claude Code" "$claude_code_held" "$claude_code_wanted" "$claude_code_origin"; then
@@ -589,6 +668,24 @@ if [ "$build" -eq 0 ]; then
   else
     build=1
   fi
+fi
+if [ "$build" -eq 0 ] && [ -z "$project_dockerfile_digest" ] && [ -n "$(recorded_project_dockerfile)" ]; then
+  echo "sandbox.sh: the image was built from a sandbox/Dockerfile that is no longer there. Rebuilding." >&2
+  build=1
+fi
+
+# Build the project's file when the kit's image is built, which it is built on, when there
+# is no image, and when the image was built from another content of the file, or from
+# none, as when the file was added since.
+project_build=0
+if [ -n "$project_dockerfile_digest" ]; then
+  if ! recorded="$(recorded_project_dockerfile)"; then
+    project_build=1
+  elif [ "$recorded" != "$project_dockerfile_digest" ]; then
+    echo "sandbox.sh: sandbox/Dockerfile is not the file the image was built from. Rebuilding." >&2
+    project_build=1
+  fi
+  [ "$build" -eq 0 ] || project_build=1
 fi
 
 # A harness with a version from neither the project nor the host keeps the one the image
@@ -631,9 +728,26 @@ export SANDBOX_CLAUDE_CODE_VERSION SANDBOX_OPENCODE_VERSION
 SANDBOX_CLAUDE_CODE_VERSION="$claude_code_wanted"
 SANDBOX_OPENCODE_VERSION="$opencode_wanted"
 
+# Compose tags the kit's image with the image's name, and the project's file then takes
+# that name over. The label is given here rather than in the file, so that one the file
+# sets does not count. BuildKit's check of a FROM whose argument has no default is
+# skipped: it warns of the two lines the file opens with, whose argument the kit always
+# gives. A project build that fails leaves the kit's image under the name, without the
+# label, so the next start builds it again.
 if [ "$build" -eq 1 ]; then
   "${compose[@]}" build
+  [ -z "$project_dockerfile_digest" ] || docker tag "$image" "$kit_image"
 fi
+if [ "$project_build" -eq 1 ]; then
+  docker build --build-arg "AGENTRITE_IMAGE=$kit_image" \
+    --build-arg BUILDKIT_DOCKERFILE_CHECK=skip=InvalidDefaultArgInFrom \
+    --label "$project_dockerfile_label=$project_dockerfile_digest" \
+    --file "$project_dockerfile" --tag "$image" "$root"
+fi
+
+# Checked at every start with the file, and not only after a build: an image refused once
+# is refused until its file is corrected, since an unchanged file builds nothing.
+[ -z "$project_dockerfile_digest" ] || refuse_changed_start
 
 # The harnesses' logs, on the host: Claude Code's sessions and OpenCode's data directory,
 # from the project's log directory, which is named after the project root's directory

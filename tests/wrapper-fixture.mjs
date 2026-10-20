@@ -223,9 +223,12 @@ fi`,
 
 // The Dockerfile of the stand-in for the kit's image that `dockerHost` builds: an image of one marker file, with the
 // two version labels the kit's image has, from the build arguments of the same names, and the working directory,
-// the entrypoint and the command of the kit's. It runs nothing, so it builds without the network.
+// the entrypoint and the command of the kit's. It runs nothing, so it builds without the network. The label
+// `standInLabel` marks it, and every image built on it, so that a test can remove the ones its builds left unnamed.
+export const standInLabel = 'com.ritenoar.agentrite.test-stand-in';
 const standInDockerfile = `FROM scratch
 COPY kit-marker /kit-marker
+LABEL ${standInLabel}=true
 ARG CLAUDE_CODE_VERSION
 ARG OPENCODE_VERSION
 LABEL com.ritenoar.agentrite.claude-code-version=$CLAUDE_CODE_VERSION
