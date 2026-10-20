@@ -296,3 +296,77 @@ exec "${docker}" "$@"`,
 
   return { ...host, projectBuildArgs, buildFails, dockerCalls: linesOf(calls) };
 }
+
+// Creates `bin` under `base` as `fakeHost` does, with the same `claude`, `opencode` and `npm`, and a `docker` that
+// runs real containers of `image`, so that the containers of several runs of one unit can run at once. The image is
+// one that is on the host already, and no image is built. Its `docker` records each call it records in `calls`,
+// opened by the variables named in `recorded` as it saw them:
+//
+// * `config --format json` and `image inspect` it answers as `fakeHost`'s does, from `projectBuildArgs` and
+//   `imageLabels`, without recording them
+// * `compose ... run` it records, and turns into a real `docker run --rm --name <name>` of `image`, with the volumes
+//   of the call, the user and group of the suite, `/work` as its working directory, `HOME` in `/tmp`, and the
+//   call's command. The flags of the call besides its name and its volumes are not passed on
+// * `exec` it records, and turns into a real `docker exec` as the user and group of the suite, with the call's working
+//   directory, environment and command. The image has no `agent` account and no `known-terminal.sh`, so the call's
+//   user is replaced and the script is left out
+// * every other call, `ps` and `rm` among them, it passes to the real `docker`, giving it the suite's DOCKER_CONFIG
+//   and DOCKER_HOST, which the home of a test would otherwise hide
+export function containerHost(base, recorded, image) {
+  const host = hostBin(base);
+  const { bin } = host;
+  const docker = findOnPath('docker');
+
+  const calls = join(base, 'docker-calls');
+  const projectBuildArgs = join(base, 'project-build-args.json');
+  const imageLabels = join(base, 'image-labels');
+  writeFileSync(projectBuildArgs, '{}');
+  writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
+  const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
+  const passed = [
+    `export DOCKER_CONFIG="${process.env.DOCKER_CONFIG ?? join(homedir(), '.docker')}"`,
+    ...(process.env.DOCKER_HOST ? [`export DOCKER_HOST="${process.env.DOCKER_HOST}"`] : []),
+  ].join('\n');
+  writeCommand(
+    bin,
+    'docker',
+    `${passed}
+if [ "$1 $2" = "image inspect" ]; then
+  [[ " $* " != *com.ritenoar.agentrite.project-dockerfile* ]] || exit 1
+  cat "${imageLabels}"; exit 0
+fi
+${configAnswer(projectBuildArgs)}
+if [ "$1" = "compose" ]; then
+  echo "${record} docker $*" >> "${calls}"
+  while [ "$1" != "run" ]; do shift; done
+  shift
+  flags=()
+  while [ "$1" != "sandbox" ]; do
+    case "$1" in
+      --name | --volume) flags+=("$1" "$2"); shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  shift
+  exec "${docker}" run --rm "\${flags[@]}" --user "$(id -u):$(id -g)" --workdir /work --env HOME=/tmp "${image}" "$@"
+fi
+if [ "$1" = "exec" ]; then
+  echo "${record} docker $*" >> "${calls}"
+  shift
+  flags=()
+  while [[ "$1" == --* ]]; do
+    case "$1" in
+      --user) flags+=(--user "$(id -u):$(id -g)"); shift 2 ;;
+      --workdir | --env) flags+=("$1" "$2"); shift 2 ;;
+      *) shift ;;
+    esac
+  done
+  name="$1"
+  shift 2
+  exec "${docker}" exec "\${flags[@]}" "$name" "$@"
+fi
+exec "${docker}" "$@"`,
+  );
+
+  return { ...host, projectBuildArgs, imageLabels, dockerCalls: linesOf(calls) };
+}
