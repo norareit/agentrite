@@ -25,5 +25,10 @@ timestamp: 2026-10-20T18:51:02Z
   without amendments, the non-goal keeps only the records of projects, and the item left in "Beyond the request" is
   numbered 1. The status is `draft`
 - 2026-10-20T19:05:27Z [human] approved the spec. The status is `approved`
+- 2026-10-20T19:20:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the planner, on the branch
+  `bugfix-0064-a-blank-line-splits-the-entries-of-a-record` cut from `master` at `0646f76`. Wrote `plan.md`: the
+  check gains `findSplitEntries`, which compares the entries after a blank line with those of the record at the merge
+  base, then the rule in `process.md`, the text in `README.md`, and the removal of the blank lines of 16 records in a
+  commit of its own. The status stays `approved`
 
 ## Amendments
