@@ -84,4 +84,4 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
 - [x] `bugfix-0064` the rule in `process.md` and the text in `README.md`
 - [x] `bugfix-0064` the removal of the blank lines between entries of the records, and nothing else
 - [x] `bugfix-0064` the log entry naming the removal commit
-- [ ] `bugfix-0064` the identification of an entry by its timestamp and its author, with its tests, in one commit
+- [x] `bugfix-0064` the identification of an entry by its timestamp and its author, with its tests, in one commit

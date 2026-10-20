@@ -60,5 +60,13 @@ timestamp: 2026-10-20T18:51:02Z
   line endings: extended `plan.md` with a test task, an implementation task and a commit point, and changed its approach
   so that an entry is identified by its timestamp and its author, read across its lines with whitespace collapsed,
   instead of by its whole opening line. The status stays `in-progress`
+- 2026-10-20T19:32:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the unit's branch. Applied S1 in
+  `44baf54`. Wrote first a unit test that a split at the base passes when the branch rewraps the entry's opening line
+  and when it gives the record CRLF line endings, a unit test that the message of a record with CRLF line endings holds
+  no carriage return, and a test of the command for the rewrap, and saw all three fail against the check of `f499f1e`.
+  The check now identifies an entry by its text up to the first `]`, its lines joined and its whitespace collapsed, and
+  splits a record on LF and CRLF alike. On `44baf54`, `npm test` passed all 757 tests with Docker present and none
+  skipped, the end-to-end tests among them, and `node scripts/check-changes.mjs` and `npm run check-changes` both
+  passed. Every task of `plan.md` is ticked. The status stays `in-progress`
 
 ## Amendments
