@@ -58,10 +58,10 @@ rule, and the tests and `node scripts/check-changes.mjs` run the working tree's.
       the blank line before the next heading (R1)
 - [x] Change "check-changes" in `README.md` so that it says the check also rejects an entry that the branch adds after
       a blank line (R4)
-- [ ] Write a unit test that an entry after a blank line at the base is not reported when the branch rewraps its
+- [x] Write a unit test that an entry after a blank line at the base is not reported when the branch rewraps its
       opening line or gives the record CRLF line endings, and a test of the command for the rewrap, and see them fail
       (review finding S1, R3)
-- [ ] Identify an entry by its timestamp and its author, read across its lines with whitespace collapsed, and give
+- [x] Identify an entry by its timestamp and its author, read across its lines with whitespace collapsed, and give
       the message the opening line without its carriage return. The tests pass (S1, R2, R3)
 - [x] Remove the blank lines between entries from every `record.md` under `changes/` with the one-off script, and
       verify that 16 records change, that only blank lines are touched, and that a second run changes nothing (R7,

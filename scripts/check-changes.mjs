@@ -65,22 +65,28 @@ const HEADING = /^#/;
 const ENTRY_OPENING = /^- /;
 
 /**
- * The opening lines of the entries of `## Log` and `## Amendments` that stand after a blank line and are not the
- * first of their section. A blank line before an indented continuation is inside an entry and opens none.
+ * @typedef {object} RecordEntry
+ * @property {string[]} lines
+ * @property {boolean} afterBlankLine whether it stands after a blank line and is not the first of its section
+ */
+
+/**
+ * The entries of `## Log` and `## Amendments`. A blank line before an indented continuation is inside an entry and
+ * opens none.
  *
  * @param {string} record
- * @returns {Set<string>}
+ * @returns {RecordEntry[]}
  */
-function splitEntriesOf(record) {
-  const split = new Set();
+function entriesOf(record) {
+  const entries = [];
   let inEntrySection = false;
-  let entrySeen = false;
+  let currentEntry;
   let blankBefore = false;
 
-  for (const line of record.split('\n')) {
+  for (const line of record.split(/\r?\n/)) {
     if (HEADING.test(line)) {
       inEntrySection = ENTRY_SECTION.test(line);
-      entrySeen = false;
+      currentEntry = undefined;
       blankBefore = false;
       continue;
     }
@@ -90,18 +96,33 @@ function splitEntriesOf(record) {
       continue;
     }
     if (ENTRY_OPENING.test(line)) {
-      if (entrySeen && blankBefore) split.add(line);
-      entrySeen = true;
+      currentEntry = { lines: [line], afterBlankLine: currentEntry !== undefined && blankBefore };
+      entries.push(currentEntry);
+    } else {
+      currentEntry?.lines.push(line);
     }
     blankBefore = false;
   }
 
-  return split;
+  return entries;
 }
 
 /**
- * An entry is known by its opening line, which holds its timestamp and its author. Only the separations the branch
- * adds are judged: the records at the base may hold blank lines between entries, and many of them are frozen.
+ * An entry is known by its timestamp and its author, read across its lines, so that rewrapping it or changing its
+ * line endings leaves it the same entry.
+ *
+ * @param {RecordEntry} entry
+ * @returns {string}
+ */
+function identityOf(entry) {
+  const text = entry.lines.join(' ').replace(/\s+/g, ' ');
+  const authorEnd = text.indexOf(']');
+  return authorEnd === -1 ? text : text.slice(0, authorEnd + 1);
+}
+
+/**
+ * Only the separations the branch adds are judged: the records at the base may hold blank lines between entries, and
+ * many of them are frozen.
  *
  * @param {Record<string, ChangeDocuments>} base
  * @param {Record<string, ChangeDocuments>} head
@@ -113,9 +134,11 @@ export function findSplitEntries(base, head) {
   for (const [unit, documents] of Object.entries(head)) {
     if (documents.record === undefined) continue;
 
-    const known = splitEntriesOf(base[unit]?.record ?? '');
-    for (const opening of splitEntriesOf(documents.record)) {
-      if (!known.has(opening)) violations.push(`${unit}: entry after a blank line: ${opening}`);
+    const known = new Set(entriesOf(base[unit]?.record ?? '').filter(entry => entry.afterBlankLine).map(identityOf));
+    for (const entry of entriesOf(documents.record)) {
+      if (entry.afterBlankLine && !known.has(identityOf(entry))) {
+        violations.push(`${unit}: entry after a blank line: ${entry.lines[0]}`);
+      }
     }
   }
 

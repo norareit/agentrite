@@ -156,6 +156,27 @@ test('findSplitEntries ignores an entry after a blank line that the record at th
   );
 });
 
+test('findSplitEntries ignores a split at the base whose entry the branch rewraps or gives CRLF line endings', () => {
+  const base = recordWithLog(firstEntry, '', secondEntry);
+  const rewrapped = recordWithLog(firstEntry, '', '- 2026-01-02T00:00:00Z [human] wrote the second', '  entry');
+
+  for (const record of [rewrapped, base.replaceAll('\n', '\r\n')]) {
+    assert.deepEqual(
+      findSplitEntries({ unit: { status: 'implemented', record: base } }, { unit: { status: 'implemented', record } }),
+      [],
+    );
+  }
+});
+
+test('findSplitEntries names a new entry of a record with CRLF line endings without its carriage return', () => {
+  const record = recordWithLog(firstEntry, '', secondEntry).replaceAll('\n', '\r\n');
+
+  assert.deepEqual(
+    findSplitEntries({}, { unit: { status: 'draft', record } }),
+    [`unit: entry after a blank line: ${secondEntry}`],
+  );
+});
+
 test('findSplitEntries judges the whole of a record absent from the base', () => {
   const thirdEntry = '- 2026-01-03T00:00:00Z [human] wrote the third entry';
 
@@ -284,6 +305,17 @@ test('check-changes passes an entry after a blank line that the base already hol
   commitRecordWithLog(repository, firstEntry, '', secondEntry);
   git(repository, 'checkout', '-b', 'change');
   commitRecordWithLog(repository, firstEntry, '', secondEntry, '- 2026-01-03T00:00:00Z [human] wrote the third entry');
+
+  const result = runChecker(repository);
+
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test('check-changes passes an entry after a blank line at the base that the branch rewraps', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  commitRecordWithLog(repository, firstEntry, '', secondEntry);
+  git(repository, 'checkout', '-b', 'change');
+  commitRecordWithLog(repository, firstEntry, '', '- 2026-01-02T00:00:00Z [human] wrote the second', '  entry');
 
   const result = runChecker(repository);
 
