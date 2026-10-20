@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-13T20:22:53Z
 ---
 
@@ -87,5 +87,16 @@ timestamp: 2026-10-13T20:22:53Z
   a sentence below it gives both spellings and both places of the option. Verified on `e2a8aa7`: `npm test` reported 810
   passed, none skipped, and two invocations of `tests/sandbox-variant.test.mjs` run at once each passed its 5 tests. Not
   checked: the `npm ci` of the new examples in a real clone, which needs the registry. The status stays `in-progress`
+- 2026-10-20T23:07:24Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0047 at
+  `e8616861669182850afd8fecb6e158bb077afd1f` as a delta from `d85ed256849a2ed5cce0573763ae0e21ce436e3d`, checking
+  the corrections to C1, C2 and C3 and the intervening diff. Returned no new findings; the review is saved in
+  `.reviews/0047-second-run-of-a-unit/2026-10-20T230724Z-e861686-opencode-delta.md`.
+  Ran `npm test`: 810 passed, none skipped; two concurrent invocations of
+  `node --test --test-timeout=10000 tests/sandbox-variant.test.mjs`: each passed all five tests, none skipped;
+  `npm run check-changes`, `git diff --check d85ed25..HEAD` and syntax checks of both revised example command bodies
+  with model IDs substituted: all passed. Did not run the registry-backed example starts or run on macOS.
+- 2026-10-21T09:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, found that the delta review of
+  `e861686` returned C1, C2 and C3 as corrected and no new finding, so no finding is open and none blocks, and that
+  every task of `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
