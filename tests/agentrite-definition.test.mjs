@@ -15,7 +15,7 @@ const ROLES_MUST = 'a role that roles in agentrite.json names: specifier, planne
 const HARNESS_MUST = 'a harness that harnesses in agentrite.json names: claude and opencode';
 const MODEL_MUST = "the harness's own id of a model, as a string that is not empty";
 const OBJECT_MUST = 'It must hold a JSON object with one key, steps';
-const STEP_KEYS = 'A step holds role, harness and model, and may hold prompt and stopWhen';
+const STEP_KEYS = 'A step holds role, harness and model, and may hold prompt, stopWhen and timeoutMinutes';
 
 function parse(definition, context = CONTEXT) {
   return parseDefinition(typeof definition === 'string' ? definition : JSON.stringify(definition), context);
@@ -162,6 +162,30 @@ test('stopWhen and until of any other value are refused', () => {
     refuses(
       { steps: [repeat({ until })] },
       `steps[0].repeat.until is ${JSON.stringify(until)}. It must hold "no-blocking-findings"`,
+    );
+  }
+});
+
+// R1, R2 and R11 of unit 0069
+
+test('a step with timeoutMinutes from 0.05 to 1440 is taken with the value, inside a repeat and outside one', () => {
+  for (const timeoutMinutes of [0.05, 1, 30, 1440]) {
+    const limited = step({ timeoutMinutes });
+    assert.deepEqual(parse({ steps: [limited, repeat({ steps: [limited] })] }), {
+      steps: [limited, { repeat: { times: 2, steps: [limited] } }],
+    });
+  }
+  assert.ok(!Object.hasOwn(parse({ steps: [step()] }).steps[0], 'timeoutMinutes'));
+});
+
+test('timeoutMinutes that is no number greater than 0 and at most 1440 is refused, inside a repeat and outside', () => {
+  const must = 'It must hold a number greater than 0 and at most 1440';
+  for (const timeoutMinutes of [0, -1, 1440.5, 1441, '30', true, null, [], {}]) {
+    const value = JSON.stringify(timeoutMinutes);
+    refuses({ steps: [step({ timeoutMinutes })] }, `steps[0].timeoutMinutes is ${value}. ${must}`);
+    refuses(
+      { steps: [repeat({ steps: [step({ timeoutMinutes })] })] },
+      `steps[0].repeat.steps[0].timeoutMinutes is ${value}. ${must}`,
     );
   }
 });

@@ -632,7 +632,7 @@ with no blocking finding ends the repeat, and a third review with one stops the 
   and the items run in the order of the list
 * A step holds `role`, a role that `roles` in `agentrite.json` names, `harness`, one that `harnesses` names, and
   `model`, the harness's own id of a model, each a string that is not empty. It may hold `prompt`, a string that is
-  not empty, which the step's prompt gets after the unit, and `stopWhen`
+  not empty, which the step's prompt gets after the unit, `stopWhen` and `timeoutMinutes`
 * A repeat is an object with one key, `repeat`, an object that holds `times`, a whole number of one or more, and
   `steps`, a list of one or more steps, and may hold `until`. It runs its steps in order, round after round. A repeat
   holds no repeat
@@ -642,6 +642,9 @@ with no blocking finding ends the repeat, and a third review with one stops the 
   by itself
 * `stopWhen`, whose only value is `"blocking-findings"`, stops the run after the step when a finding of its outcome
   is blocking. Any step may hold it, in a repeat or not
+* `timeoutMinutes` is the step's time limit in minutes, a number greater than 0 and at most 1440, the minutes of a
+  day. A fraction is taken, as `0.5` for 30 seconds. Any step may hold it, in a repeat or not, and a step without it
+  has no time limit
 * A step in a repeat is told its round, and how many rounds the repeat has at most, so that its `prompt` can say from
   which round something holds, as the default's implementer's does
 * Within one run, a step of a role and a harness that already ran continues that step's session of the harness, so

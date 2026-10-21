@@ -118,16 +118,16 @@ stopped as before, and the key is described where the definition is, in `README.
 
 ### 3. The key
 
-- [ ] In `tests/agentrite-definition.test.mjs`, change `STEP_KEYS` to the new sentence, and add tests that a step
+- [x] In `tests/agentrite-definition.test.mjs`, change `STEP_KEYS` to the new sentence, and add tests that a step
   with `timeoutMinutes` of `0.05`, `1`, `30` and `1440` is taken with the value, in a repeat and outside one, that a
   step without it has no such key, and that `0`, `-1`, `1440.5`, `1441`, `"30"`, `true`, `null`, `[]` and `{}` are
   refused with `steps[0].timeoutMinutes is <value>. It must hold a number greater than 0 and at most 1440`, also at
   `steps[0].repeat.steps[0].timeoutMinutes` (R1, R2, R11)
-- [ ] In `scripts/agentrite-definition.mjs`, add `timeoutMinutes?: number` to the `Step` typedef, `timeoutMinutes`
+- [x] In `scripts/agentrite-definition.mjs`, add `timeoutMinutes?: number` to the `Step` typedef, `timeoutMinutes`
   after `stopWhen` to the keys of `PLACES.step`, with the sentence `A step holds role, harness and model, and may
   hold prompt, stopWhen and timeoutMinutes`, and judge it in `parseStep` after `stopWhen`, with `valueAt` and a
   `holds` that takes a `number` greater than 0 and at most 1440 (R1, R2)
-- [ ] In "The orchestrator" of `README.md`, add `timeoutMinutes` to the bullet of what a step may hold, and a bullet
+- [x] In "The orchestrator" of `README.md`, add `timeoutMinutes` to the bullet of what a step may hold, and a bullet
   of its own: a number greater than 0 and at most 1440, the minutes of a day, that a fraction is taken, and that a
   step without it has no time limit (R1, R2, R10)
 
@@ -187,6 +187,6 @@ Each commit is made once `npm test` is green.
 - [x] Before the work: `feature-0069 Plan the unit`
 - [x] After task group 1: `feature-0069 Run the steps of the orchestrator asynchronously`
 - [x] After task group 2: `feature-0069 Run each step in a process group of its own, and pass the signals on`
-- [ ] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
+- [x] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
 - [ ] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`
 - [ ] After the check by hand: `feature-0069 Log the check by hand of the time limit`

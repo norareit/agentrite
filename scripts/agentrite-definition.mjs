@@ -2,7 +2,14 @@ import { SETTINGS_FILE } from './agentrite-settings.mjs';
 import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
 
 /**
- * @typedef {{ role: string, harness: string, model: string, prompt?: string, stopWhen?: 'blocking-findings' }} Step
+ * @typedef {{
+ *   role: string,
+ *   harness: string,
+ *   model: string,
+ *   prompt?: string,
+ *   stopWhen?: 'blocking-findings',
+ *   timeoutMinutes?: number,
+ * }} Step
  * @typedef {{ times: number, until?: 'no-blocking-findings', steps: Step[] }} Repeat
  * @typedef {{ steps: (Step | { repeat: Repeat })[] }} Definition
  * @typedef {{ roles: string[], harnesses: string[] }} Names What `agentrite.json` names, which a step must name
@@ -19,8 +26,8 @@ const PLACES = {
   definition: { name: 'a definition', keys: ['steps'], holds: 'A definition holds one key, steps' },
   step: {
     name: 'a step',
-    keys: ['role', 'harness', 'model', 'prompt', 'stopWhen'],
-    holds: 'A step holds role, harness and model, and may hold prompt and stopWhen',
+    keys: ['role', 'harness', 'model', 'prompt', 'stopWhen', 'timeoutMinutes'],
+    holds: 'A step holds role, harness and model, and may hold prompt, stopWhen and timeoutMinutes',
   },
   item: { name: 'a repeat', keys: ['repeat'], holds: 'A repeat holds one key, repeat' },
   repeat: {
@@ -117,6 +124,12 @@ function parseStep(value, path, { roles, harnesses }) {
   if (Object.hasOwn(value, 'stopWhen')) {
     valueAt(value, path, 'stopWhen', (stop) => stop === 'blocking-findings', '"blocking-findings"');
     step.stopWhen = 'blocking-findings';
+  }
+  if (Object.hasOwn(value, 'timeoutMinutes')) {
+    // At most a day, far below the longest delay a timer of Node.js takes, past which it fires at once.
+    const isLimit = (/** @type {unknown} */ minutes) => typeof minutes === 'number' && minutes > 0 && minutes <= 1440;
+    const must = 'a number greater than 0 and at most 1440';
+    step.timeoutMinutes = /** @type {number} */ (valueAt(value, path, 'timeoutMinutes', isLimit, must));
   }
   return step;
 }
