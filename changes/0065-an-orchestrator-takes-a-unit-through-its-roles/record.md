@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-20T23:55:38Z
 ---
 
@@ -69,3 +69,4 @@ timestamp: 2026-10-20T23:55:38Z
   the plan verifies with a real run that a headless resume of OpenCode sends its prompt, as the review found in
   OpenCode's source. Also had requirements 20 and 27 follow "Exit statuses" of `README.md`, which unit 0066 wrote
   meanwhile. The status is `draft`
+- 2026-10-21T11:25:29Z [human] approved the spec. The status is `approved`
