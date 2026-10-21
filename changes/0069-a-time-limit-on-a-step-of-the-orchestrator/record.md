@@ -16,5 +16,9 @@ timestamp: 2026-10-21T14:18:50Z
   `scripts/agentrite.mjs`, and "Stopping a run" of "Running a role" in `README.md`. Found that a step in a process group
   of its own, which ending its harness takes, no longer gets the terminal's Ctrl-C, and specified that the command
   passes the signals on. Wrote `spec.md`. The status is `draft`
+- 2026-10-21T15:03:35Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decisions that
+  `timeoutMinutes` is bounded and that both items of "Beyond the request" stay out: bounded the key at 1440 minutes, a
+  day, in requirements 1 and 2, recorded why under "Decisions", named the declined items among the non-goals, and
+  left "Beyond the request" with none. The status is `draft`
 
 ## Amendments

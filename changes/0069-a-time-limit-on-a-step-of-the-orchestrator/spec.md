@@ -18,10 +18,10 @@ harness.
 
 The definition:
 
-1. A step may hold the key `timeoutMinutes`, a number greater than 0, in a repeat or not. A step without it has no
-   time limit, as today
+1. A step may hold the key `timeoutMinutes`, a number greater than 0 and at most 1440, the minutes of a day, in a
+   repeat or not. A step without it has no time limit, as today
 2. A definition whose `timeoutMinutes` is of another form is refused as requirement 9 of 0065 refuses a value of
-   another form, naming where it is and that it must hold a number greater than 0
+   another form, naming where it is and that it must hold a number greater than 0 and at most 1440
 
 The run:
 
@@ -66,6 +66,10 @@ Tests:
 * **The key is on a step, in minutes.** The human named its shape when it was kept out of 0065. A step is what runs
   long, and steps differ: a planner and an implementer of the same definition take very different times. Minutes are
   the unit a human thinks of a step's length in, and the lines of a run give its time in minutes and seconds
+* **The value is at most 1440, a day.** The human wants the key bounded. A step of a role takes minutes or hours,
+  so a day leaves room for any step while every limit still ends within one, and it stays far below the longest
+  delay a timer of Node.js takes, about 24.8 days, past which the timer fires at once. Rejected: no bound, where a
+  value too large for the timer would end the step at its start
 * **The value is a number greater than 0, not a whole number.** A fraction costs nothing to allow and lets the
   end-to-end tests run with a limit of seconds, without a second key or a variable only the tests use. Rejected: a
   whole number of one or more, which would hold each such test for a minute
@@ -91,7 +95,8 @@ Tests:
 ## Non-goals
 
 * A time limit on a repeat, or a default limit for every step of a definition
-* A time limit on a whole run
+* A time limit on a whole run. The human declined it and the limit on a repeat or a definition, both offered as
+  beyond the request, until using the limit on a step shows them to be needed
 * A grace period other than 10 seconds, or one a definition sets
 * A warning before a step's time runs out
 * Picking up a stopped run, which is a later unit, as 0065 says
@@ -99,9 +104,4 @@ Tests:
 
 ## Beyond the request
 
-1. `timeoutMinutes` on a repeat, or at the top of a definition, as the limit of every step that names none. Cost: a
-   second place to judge the key and a rule of which one counts. Without it, each step that needs a limit names one,
-   which the default definition does in three places at most
-2. A time limit on the whole run, as a key of the definition or an option of the command. Cost: a second clock and a
-   case of the end report of its own. Without it, a run is bounded by its steps' limits times its rounds, which a
-   human can work out from the definition
+None
