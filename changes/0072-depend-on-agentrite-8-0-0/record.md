@@ -53,5 +53,25 @@ Not part of this task: moving any other project to 8.0.0, and the order of step 
 - 2026-10-21T21:15:01Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   cut `task-0072-depend-on-agentrite-8-0-0` from `master` at `fce1406` and began the work. The status is
   `in-progress`
+- 2026-10-21T21:16:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the move in `b386a3f`. `npm
+  install --save-dev --save-exact agentrite@8.0.0` changed the one version in `package.json` and, with it, the entry
+  of `agentrite` in `package-lock.json`. The line of `orchestrator` went into the root `agentrite.json` after
+  `standards`. `npm run kit -- refresh` exited 0, printed `refreshed` for `.claude/agents/reviewer.md` and
+  `.opencode/agents/reviewer.md` and `up to date` for the ten other files it writes; run again, it printed `up to
+  date` for all twelve. On `b386a3f`: the first `npm test` failed one test of 934, `a unit run and its variants run
+  at once, each on its own clone, and land on their own branches` in `tests/sandbox-variant.test.mjs`, which found a
+  variant's container still running while other suites had containers up; that file alone then passed 5 of 5, and
+  the whole of `npm test` run again passed 934 of 934. The failure was not looked into further and is not touched by
+  this task. `npm run check-changes` exited 0, and `./sandbox.sh --in-place --rebuild true` rebuilt the image,
+  verified the firewall and exited 0. Not run: `npx agentrite orchestrate`
+- 2026-10-21T21:16:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, settled "Worth knowing when you
+  update" of 8.0.0 item by item. The key `orchestrator` of `agentrite.json`: added as above. The status `1` of the
+  refusals of `./sandbox.sh`: `sandbox-dev.sh`, the one script of the root that runs it, reads no status of it, and
+  the tests run the working tree's sandbox, which is 8.0.0's already, so it asks nothing. The
+  directory `.orchestrator`: the start with `--in-place` made none, and the command writes its own `.gitignore` of
+  `*` into it, so it asks nothing of `.gitignore`. The reviewer's own commit and the branches whose name holds `--`:
+  they change how a unit is run and ask nothing of the files here. The limits of the checks by hand: noted, and ask
+  nothing. The reviewer's wrappers: refreshed and committed as above. No rebuild needed: the rebuild was run all the
+  same, as the task asks
 
 ## Amendments
