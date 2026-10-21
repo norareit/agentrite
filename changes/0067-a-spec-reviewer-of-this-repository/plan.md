@@ -109,12 +109,15 @@ The role:
 
 The documents:
 
-- [ ] Add a row `extra-roles/` to "What the repository holds besides the package" of `CONTRIBUTING.md`, after
+- [x] Add a row `extra-roles/` to "What the repository holds besides the package" of `CONTRIBUTING.md`, after
   `.opencode/`, saying that it holds the roles of this repository's own, which are not in the package, keeping the
   table aligned and within 120 characters (R17)
-- [ ] Change the statement in "The kit's own copy of the kit" of `CONTRIBUTING.md` that the root `agentrite.json`
+- [x] Change the statement in "The kit's own copy of the kit" of `CONTRIBUTING.md` that the root `agentrite.json`
   is the installed release's default file byte for byte, so that it says it is that file with the roles of this
   repository's own added to `roles` after the four, and nothing else differs, which the suite checks (R1)
+- [x] Change the statement in "The kit's own tests" of `CONTRIBUTING.md` that two tests judge this repository's
+  own files against the installed release and fail without `npm ci`, so that it says three: the test of the listing
+  of `roles` runs the installed release's `roles` too (R3)
 
 ## Verification
 
@@ -130,6 +133,6 @@ The documents:
 - [x] `feature-0067 Plan the unit`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0067 Add the spec reviewer as a role of this repository`: the tasks of the tests and of the role,
   which only pass together
-- [ ] `feature-0067 Name extra-roles in the documents`: the tasks of the documents
+- [x] `feature-0067 Name extra-roles in the documents`: the tasks of the documents
 - [ ] `feature-0067 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
   what was run on the committed work

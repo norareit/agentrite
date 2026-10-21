@@ -28,6 +28,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `.agentrite/`                 | The list of the instruction files in use, which `refresh` writes                     |
 | `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill                          |
 | `.opencode/`                  | The role wrappers for OpenCode                                                       |
+| `extra-roles/`                | The roles of this repository's own, which are not in the package                     |
 | `agentrite.json`              | This repository's own settings, which the kit's commands read                        |
 | `sandbox.sh`                  | The shim that runs the sandbox of the installed release                              |
 | `sandbox/`                    | This repository's `compose.project.yml`                                              |
@@ -123,7 +124,7 @@ npm test
 ```
 
 * It runs node's built-in test runner over `tests/`
-* It needs `npm ci` first: two tests judge this repository's own files against the installed release, as "The
+* It needs `npm ci` first: three tests judge this repository's own files against the installed release, as "The
   kit's own copy of the kit" says, and fail, naming `npm ci`, when `node_modules/agentrite` is missing. The other
   tests need no install
 
@@ -175,9 +176,10 @@ The kit is also a devDependency of itself, installed from the npm registry at on
   sandbox
 * The root is a project of the installed release, and its own files are judged against that release, not against
   the working tree: the root's `agentrite.json` is the installed release's default file,
-  `node_modules/agentrite/templates/project/agentrite.json`, byte for byte, and the installed release's `refresh`,
-  run at the root with no argument as `npm run kit -- refresh`, prints `up to date` for every file it writes and
-  changes none. The suite checks both. A unit that changes what a project holds changes the root's files only when
+  `node_modules/agentrite/templates/project/agentrite.json`, with the roles of this repository's own added to
+  `roles` after the four, and differs from it in nothing else, and the installed release's `refresh`, run at the root
+  with no argument as `npm run kit -- refresh`, prints `up to date` for every file it writes and changes none. The
+  suite checks both. A unit that changes what a project holds changes the root's files only when
   the repository moves to the release that holds it
 
 ## Trying the working copy's sandbox
