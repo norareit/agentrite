@@ -97,11 +97,12 @@ function setUp(t, { imageExists = true } = {}) {
   // sets XDG_DATA_HOME.
   const logs = logDirectory(join(home, '.local', 'share'), root);
   // The calls of a unit run that mounts `mounted` at /work, with the flags of the host's terminal in `terminal`
-  // before the mounts, `mounts` after the two of the unit run and the two directories of `logDirectory` last.
+  // before the mounts, `mounts` after the three of the unit run and the two directories of `logDirectory` last.
   const unitRun = (mounted, mounts = '', logDirectory = logs, terminal = '') => [
     `AGENTRITE_CONTAINER=${kitPath} docker rm ${containerName}`,
     `${compose} run --rm --name ${containerName} ${terminal}--volume ${mounted}:/work ` +
-      `--volume ${root}/.reviews:/work/.reviews ${mounts}${logMounts(logDirectory)}sandbox echo hi`,
+      `--volume ${root}/.reviews:/work/.reviews --volume ${root}/.orchestrator:/work/.orchestrator ` +
+      `${mounts}${logMounts(logDirectory)}sandbox echo hi`,
   ];
   // The script the stand-in `docker` runs as the agent, in the directory mounted at /work.
   const agent = (script) => writeFileSync(host.agentScript, `set -e\n${script}\n`);
@@ -744,19 +745,46 @@ test('the wrapper takes --rebuild and --mount before the unit as its options', (
   assert.deepEqual(dockerCalls(), [`${compose} build`, ...unitRun(clone, `--volume ${mounted}:/mnt/mounted:ro `)]);
 });
 
-// The stand-in mounts nothing, so that a file written at /work/.reviews reaches the host is left to the check on
-// a host with Docker.
-test("the wrapper mounts the host's .reviews in the clone, and makes both directories itself", (t) => {
+// The stand-in mounts nothing, so that a file written at /work/.reviews or /work/.orchestrator reaches the host is
+// left to the checks on a host with Docker.
+test("the wrapper mounts the host's .reviews and .orchestrator in the clone, and makes the directories itself", (t) => {
   const { base, root, clone, run, agent } = setUp(t);
   const seen = join(base, 'seen');
-  agent(`[ -d .reviews ] && [ -d "${root}/.reviews" ] && echo both > "${seen}"\necho kept > kept.txt`);
+  agent(
+    `[ -d .reviews ] && [ -d "${root}/.reviews" ] && [ -d .orchestrator ] && [ -d "${root}/.orchestrator" ] && ` +
+      `echo all > "${seen}"\necho kept > kept.txt`,
+  );
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
-  for (const directory of [join(root, '.reviews'), join(clone, '.reviews')]) {
-    assert.equal(statSync(directory).uid, process.getuid());
-    assert.deepEqual(readdirSync(directory), []);
+  assert.equal(readFileSync(seen, 'utf-8'), 'all\n');
+  for (const name of ['.reviews', '.orchestrator']) {
+    for (const directory of [join(root, name), join(clone, name)]) {
+      assert.equal(statSync(directory).uid, process.getuid(), directory);
+      assert.deepEqual(readdirSync(directory), [], directory);
+    }
   }
+});
+
+// Unit 0065, R25: the wrapper reads nothing of orchestrator.
+test('a unit run that cuts a branch mounts .orchestrator also when agentrite.json holds orchestrator false', (t) => {
+  const host = setUp(t);
+  const { root, state, run, git, dockerCalls, unitRun } = host;
+  const settings = { defaultBranch: 'master', harnesses: ['claude'], sandbox: true, bell: false, orchestrator: false };
+  writeFileSync(join(root, 'agentrite.json'), kitSettingsText(settings));
+  git('add', 'agentrite.json');
+  git('commit', '--quiet', '--message', 'opt out of the orchestrator');
+  commitUnit(host, 'kind: task\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z');
+  const cut = `task-${cutDirectory}`;
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const calls = unitRun(join(state, 'agentrite', 'project-sandbox', cut));
+  assert.deepEqual(
+    dockerCalls(),
+    calls.map((call) => call.replaceAll(containerName, `project-sandbox-${cut}`)),
+  );
+  assert.ok(dockerCalls()[1].includes(`--volume ${root}/.orchestrator:/work/.orchestrator `));
 });
 
 // After the container. The script the stand-in runs is the agent, and what it leaves in the clone is what the

@@ -134,3 +134,10 @@ timestamp: 2026-10-20T23:55:38Z
   `tests/wrapper-fixture.mjs`, with the unit's branch as `containerUnitBranch`. It takes the Compose project's name as
   a third argument beside the plan's two, so that the variant tests keep the container names they had. The variant
   tests pass on the host with Docker, 5 tests, none skipped, and `npm test` passes: 912 tests, none skipped
+- 2026-10-21T12:10:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 7: every unit run
+  of `container/sandbox.sh` makes `.orchestrator` in the root and in the clone and mounts the root's at
+  `/work/.orchestrator` after `.reviews`, and the comments of `container/sandbox.sh` and `container/compose.yml` name
+  it. The tests of `tests/sandbox-unit-run.test.mjs` failed before the change, 24 of them, and pass after it, a unit
+  run that cuts a branch with `"orchestrator": false` among them. The Docker test,
+  `tests/sandbox-orchestrator-mount.test.mjs`, passes on the host with Docker, and failed with the line of the mount
+  taken out of the wrapper for the check. `npm test` passes: 914 tests, none skipped

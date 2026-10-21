@@ -20,17 +20,19 @@
 # What is mounted at /work has no default, and there are two ways to run:
 #
 # * A unit run, given a unit. The wrapper makes a clone of the unit's branch in the
-#   developer's state directory, mounts that at /work and the host's .reviews at
-#   /work/.reviews, and names the container after the Compose project and the branch,
-#   so that two runs never work on one branch. When the container has exited it
-#   fetches the clone's branch as sandbox/<branch>, fast-forwards the host's branch
-#   when it can, and removes the clone unless it holds work the host does not. A clone
-#   that is still there is resumed. A unit given by its number that has no branch yet
-#   gets one first, cut from the default branch, which is the one the project's
-#   agentrite.json names. The git work is in container/unit-clone.sh. With --variant the
-#   run is of the unit's variant: the branch is the unit's followed by two hyphens and
-#   the variant's name, so a variant has the container, the clone and the bringing back
-#   of a unit run of its own, and runs beside the unit's.
+#   developer's state directory, mounts that at /work, the host's .reviews at
+#   /work/.reviews and the host's .orchestrator at /work/.orchestrator, whatever
+#   orchestrator the project's agentrite.json holds, and names the container after the
+#   Compose project and the branch, so that two runs never work on one branch. When
+#   the container has exited it fetches the clone's branch as sandbox/<branch>,
+#   fast-forwards the host's branch when it can, and removes the clone unless it holds
+#   work the host does not. A clone that is still there is resumed. A unit given by its
+#   number that has no branch yet gets one first, cut from the default branch, which
+#   is the one the project's agentrite.json names. The git work is in
+#   container/unit-clone.sh. With --variant the run is of the unit's variant: the
+#   branch is the unit's followed by two hyphens and the variant's name, so a variant
+#   has the container, the clone and the bringing back of a unit run of its own, and
+#   runs beside the unit's.
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
@@ -894,12 +896,12 @@ if [ -z "$branch" ]; then
     sandbox "$@"
 fi
 
-# The clone is made only now, so that a build that failed left none behind. Both
-# .reviews directories are made here because Docker creates a mount's missing source
-# and its missing mount point as root. A stopped container that a crash left under the
+# The clone is made only now, so that a build that failed left none behind. The
+# .reviews and .orchestrator directories, of the root and of the clone, are made here
+# because Docker creates a mount's missing source and its missing mount point as root. A stopped container that a crash left under the
 # name is removed, and Docker refuses to remove one that is running.
 prepare_clone "$root" "$branch" "$clone"
-mkdir -p "$root/.reviews" "$clone/.reviews"
+mkdir -p "$root/.reviews" "$clone/.reviews" "$root/.orchestrator" "$clone/.orchestrator"
 docker rm "$container_name" >/dev/null 2>&1 || true
 
 # The wrapper sees the container out. An interrupt, a terminate and a hangup reach the
@@ -913,6 +915,7 @@ status=0
   ${bell_environment[@]+"${bell_environment[@]}"} \
   --volume "$clone:/work" \
   --volume "$root/.reviews:/work/.reviews" \
+  --volume "$root/.orchestrator:/work/.orchestrator" \
   ${mounts[@]+"${mounts[@]}"} \
   sandbox "$@" || status=$?
 

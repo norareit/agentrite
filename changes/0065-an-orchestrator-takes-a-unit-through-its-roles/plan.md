@@ -515,12 +515,12 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 7. The mount
 
-- [ ] In `tests/sandbox-unit-run.test.mjs`, the calls of a unit run hold the mount of `.orchestrator` after that of
+- [x] In `tests/sandbox-unit-run.test.mjs`, the calls of a unit run hold the mount of `.orchestrator` after that of
   `.reviews`; the test of the `.reviews` directories finds both `.orchestrator` directories made, owned by the suite's
   user and empty, before the agent runs; a unit run that cuts a branch with `"orchestrator": false` in its file mounts
   it too. See them fail (R25)
-- [ ] Add the mount, the directories and the comments to `container/sandbox.sh` and `container/compose.yml` (R25)
-- [ ] Add `tests/sandbox-orchestrator-mount.test.mjs`, the Docker test of the approach. On the host with Docker see
+- [x] Add the mount, the directories and the comments to `container/sandbox.sh` and `container/compose.yml` (R25)
+- [x] Add `tests/sandbox-orchestrator-mount.test.mjs`, the Docker test of the approach. On the host with Docker see
   it pass; in the sandbox it is skipped with the reason of the variant tests (R31)
 
 ### 8. The documents
@@ -611,6 +611,6 @@ Each commit is made once `npm test` is green.
 - [x] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
 - [x] After task group 5: `feature-0065 Add agentrite orchestrate`
 - [x] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
-- [ ] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
+- [x] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
 - [ ] After task group 8: `feature-0065 Describe the orchestrator`
 - [ ] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`

@@ -3,11 +3,12 @@
 # exception and holds only the start-up firewall, because iptables rules are kernel state
 # in a network namespace that does not exist until the container runs. container/sandbox.sh
 # is a wrapper that adds only the per-run working directory, which for a unit run is a
-# clone of the unit's branch with the host's .reviews mounted in it, any extra mounts, the
-# two directories of the host that hold the harnesses' logs, the bell of the harnesses
-# when the project's agentrite.json holds "bell": true, the versions of the two
-# harnesses the image is built with, and the build of the project's own Dockerfile on the
-# image this file builds; it sets nothing that confines the container.
+# clone of the unit's branch with the host's .reviews and .orchestrator mounted in it,
+# any extra mounts, the two directories of the host that hold the harnesses' logs, the
+# bell of the harnesses when the project's agentrite.json holds "bell": true, the
+# versions of the two harnesses the image is built with, and the build of the project's
+# own Dockerfile on the image this file builds; it sets nothing that confines the
+# container.
 #
 # A project layers its own compose file over this one, at sandbox/compose.project.yml,
 # holding what varies per project: the Compose project name, the image name, the egress
@@ -136,11 +137,12 @@ services:
     volumes:
       # Nothing is declared at /work. container/sandbox.sh passes the mount at /work for
       # every run, as a `docker compose run --volume`: the clone of a unit run, with the
-      # host's .reviews at /work/.reviews, or the project root with --in-place, or the
-      # directory of --workdir. It adds extra mounts the same way. A Compose older than
-      # 2.35.0 mounts a volume this file declares at a target in place of a run's
-      # --volume to the same target, so a volume here at /work would have every unit run
-      # work in the project root rather than in its clone.
+      # host's .reviews at /work/.reviews and its .orchestrator at /work/.orchestrator,
+      # or the project root with --in-place, or the directory of --workdir. It adds
+      # extra mounts the same way. A Compose older than 2.35.0 mounts a volume this file
+      # declares at a target in place of a run's --volume to the same target, so a
+      # volume here at /work would have every unit run work in the project root rather
+      # than in its clone.
       #
       # The agent's home, which survives a container. Holds Claude Code's login and
       # settings, whatever else a harness keeps there and the npm cache, so
