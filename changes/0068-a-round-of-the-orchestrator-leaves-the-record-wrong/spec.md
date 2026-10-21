@@ -59,9 +59,11 @@ role file has it commit its entry as its last act, in a commit that holds nothin
 4. The reviewer's role file has the reviewer commit its record entry as its last act, on the branch it reviewed, in
    a commit that holds that entry and nothing else, with the prefix of the unit's commits. Its rule that it changes
    nothing under review allows that one commit and no other, and its description says so
-5. The suite holds a test that the kit's default definition holds the prompt of requirement 1, and a test that the
+5. When `record.md` holds uncommitted changes besides the reviewer's entry, the reviewer commits nothing, and says
+   in its response that its entry is left uncommitted and why
+6. The suite holds a test that the kit's default definition holds the prompt of requirement 1, and a test that the
    request of every step says what requirement 2 gives, each failing on the tree this unit is cut from
-6. A check by hand repeats the run of the amendment of 0065, with the new default definition changed only as that
+7. A check by hand repeats the run of the amendment of 0065, with the new default definition changed only as that
    run's was. It ends with the status `in-progress`, with no entry that says that the human accepted a finding, with
    the entries of both reviews under `## Log` and committed, and with no uncommitted change to `record.md`
 
@@ -86,6 +88,9 @@ role file has it commit its entry as its last act, in a commit that holds nothin
   every run uncommitted, as observed
 * **The commit holds the entry alone.** The reviewer changes nothing under review, and a commit that took more would
   commit what it was judging. The findings file is under the ignored `.reviews/` and is not committed
+* **A record changed by another is left uncommitted.** The human took it into the unit from "Beyond the request". A
+  reviewer that finds lines of another uncommitted in `record.md` cannot commit its entry without them, and committing
+  them would put another's work under the reviewer's commit. Saying so leaves the human to commit both
 * **The spec of 0065 stays as it is.** It is frozen, and this unit changes its requirement 4 and adds to its
   requirement 15 by the requirements above, as a bug of an implemented feature does
 
@@ -99,7 +104,4 @@ role file has it commit its entry as its last act, in a commit that holds nothin
 
 ## Beyond the request
 
-1. The reviewer commits nothing, and says so, when `record.md` already holds uncommitted changes besides its entry,
-   so that it cannot commit another's lines with its own. Cost: one sentence in the role file. Without it, a
-   reviewer that finds the record changed commits those lines along with its entry, which the human sees in the
-   commit and can undo
+None

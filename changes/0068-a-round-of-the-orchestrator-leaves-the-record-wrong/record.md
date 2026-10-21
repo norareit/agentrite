@@ -16,5 +16,9 @@ timestamp: 2026-10-21T14:10:24Z
   record it left in the scratch project, `roles/reviewer.md`, "Finishing" of `roles/implementer.md`, `outcomeRequest` of
   `scripts/agentrite-outcome.mjs`, the orchestrator's section of `README.md`, and the records of 0030 and 0034,
   where the implementer committed a reviewer's entry later. Wrote `spec.md`. The status is `draft`
+- 2026-10-21T14:23:33Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision to take item 1
+  of "Beyond the request" into the unit: added requirement 5, that the reviewer commits nothing and says so when
+  `record.md` holds uncommitted changes besides its entry, renumbered the requirements after it, recorded why under
+  "Decisions", and left "Beyond the request" with none. The status is `draft`
 
 ## Amendments
