@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-21T14:10:24Z
 ---
 
@@ -20,5 +20,6 @@ timestamp: 2026-10-21T14:10:24Z
   of "Beyond the request" into the unit: added requirement 5, that the reviewer commits nothing and says so when
   `record.md` holds uncommitted changes besides its entry, renumbered the requirements after it, recorded why under
   "Decisions", and left "Beyond the request" with none. The status is `draft`
+- 2026-10-21T14:23:43Z [human] approved the spec. The status is `approved`
 
 ## Amendments
