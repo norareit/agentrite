@@ -141,3 +141,13 @@ timestamp: 2026-10-20T23:55:38Z
   run that cuts a branch with `"orchestrator": false` among them. The Docker test,
   `tests/sandbox-orchestrator-mount.test.mjs`, passes on the host with Docker, and failed with the line of the mount
   taken out of the wrapper for the check. `npm test` passes: 914 tests, none skipped
+- 2026-10-21T12:13:38Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 8: `README.md` has
+  the section "The orchestrator" after "Running a role", "agentrite orchestrate" in "Commands",
+  `--no-orchestrator` in "agentrite init", the status 3 in "Exit statuses", the key in "The project's settings",
+  `orchestrator.json` in "What is here", the line to add in "Updating a project to a newer kit", and the row of
+  `.orchestrator` in the table of what of the host is reachable; `SANDBOX.md` names the mount and the run of the
+  orchestrator in "Running a unit", and `.orchestrator` in "What the sandbox defends against". The orchestrator in a
+  unit run is shown as `sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions'`, the form
+  `SANDBOX.md` gives the variants. A comment line of `container/sandbox.sh` from task group 7 that ran past 120
+  characters is rewrapped in this commit. No line the unit adds is over 120 characters, and none holds an em dash.
+  `npm test` passes: 915 tests, none skipped

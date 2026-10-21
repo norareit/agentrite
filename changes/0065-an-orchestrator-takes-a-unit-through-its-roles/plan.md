@@ -525,7 +525,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 8. The documents
 
-- [ ] `README.md`, a section "The orchestrator" after "Running a role", in the list of sections, with each point of
+- [x] `README.md`, a section "The orchestrator" after "Running a role", in the list of sections, with each point of
   requirement 26: what a run does and that it starts the work of an `approved` unit; the form of a definition, with
   `orchestrator.json` as its example, every key, and that a step is judged before the `until` of its repeat, so that
   `stopWhen` on the last step of a repeat with `until` stops the run before `until` is judged; a definition of the
@@ -535,27 +535,27 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
   there; a run on the host and one in a unit run of the sandbox; and that `--skip-permissions` is passed to the
   `agentrite run` of every step, linking "Running a role" for what it does, and that a headless step without it gets
   only what the harness's settings allow (R26)
-- [ ] `README.md`, "Commands": a section "agentrite orchestrate" after "agentrite run", with its form, its arguments
+- [x] `README.md`, "Commands": a section "agentrite orchestrate" after "agentrite run", with its form, its arguments
   in a table, its refusals, and its exit statuses `0`, `1`, `2` and `3`, linking "Exit statuses"; in
   "agentrite init", `--no-orchestrator` in both forms, the table and the bullets of what is written. "Exit
   statuses": the sentence that no command has a status of its own of `3` and up says that `agentrite orchestrate`
   has `3`, for a run that stopped for the human (R20, R27)
-- [ ] `README.md`, "The project's settings": the key in the table, read by every command that reads the file and
+- [x] `README.md`, "The project's settings": the key in the table, read by every command that reads the file and
   used by `orchestrate`; seven keys; the default file; what it holds and that its path is judged as `standards`'s;
   `orchestrate` among the commands that read the file; and in what to run afterwards, nothing for a change of
   `orchestrator`. "What is here": `orchestrator.json`. "Updating a project to a newer kit": a project whose
   `agentrite.json` lacks `orchestrator` adds `"orchestrator": "node_modules/agentrite/orchestrator.json",` after
   `standards`, or `false`, before any command that reads the file runs again (R27)
-- [ ] `README.md`, "The sandbox": the row `The project's .orchestrator, in a unit run only`, `Read-write`,
+- [x] `README.md`, "The sandbox": the row `The project's .orchestrator, in a unit run only`, `Read-write`,
   `"Running a unit"` in the table of what of the host is reachable (R28)
-- [ ] `SANDBOX.md`, "Running a unit": the mount of `.orchestrator` beside that of `.reviews`, and how the orchestrator
+- [x] `SANDBOX.md`, "Running a unit": the mount of `.orchestrator` beside that of `.reviews`, and how the orchestrator
   is run in a unit run, as `./sandbox.sh 0029 npx agentrite orchestrate 0029 --skip-permissions` after `npm ci` in the
   clone, or from the shell of the run. "What the sandbox defends against": the files under `.orchestrator` among what
   reaches the host's repository, and what a file under `.orchestrator` says, to a human or a program that reads it
   on the host, among what it does not defend against. No HTML (R28)
-- [ ] In `tests/package-documents.test.mjs`, test that `README.md` holds the text of `orchestrator.json` in a block
+- [x] In `tests/package-documents.test.mjs`, test that `README.md` holds the text of `orchestrator.json` in a block
   marked `json`. See it pass with the section (R26)
-- [ ] Check every line changed against the limit of 120 characters, and that no em dash was written (R26 to R28)
+- [x] Check every line changed against the limit of 120 characters, and that no em dash was written (R26 to R28)
 
 ## Verification
 
@@ -612,5 +612,5 @@ Each commit is made once `npm test` is green.
 - [x] After task group 5: `feature-0065 Add agentrite orchestrate`
 - [x] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
 - [x] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
-- [ ] After task group 8: `feature-0065 Describe the orchestrator`
+- [x] After task group 8: `feature-0065 Describe the orchestrator`
 - [ ] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`

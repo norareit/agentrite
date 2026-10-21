@@ -124,6 +124,11 @@ test('the package ships the default definition of the orchestrator, as the spec 
   assert.equal(readDocument('orchestrator.json'), DEFAULT_DEFINITION);
 });
 
+// R26 of unit 0065: the README gives the default definition as its example, as it ships.
+test('README.md holds the default definition of the orchestrator in a block marked json', () => {
+  assert.ok(readDocument('README.md').includes(`\n\`\`\`json\n${DEFAULT_DEFINITION}\`\`\`\n`));
+});
+
 test('LICENSE is the MIT License at the root, with the copyright holder', () => {
   const license = new URL('../LICENSE', import.meta.url);
   assert.ok(existsSync(license), 'LICENSE is a file at the root');

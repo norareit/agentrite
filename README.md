@@ -22,6 +22,7 @@ A project can add roles of its own as well. See [Adding a role](#adding-a-role).
 * [How it works](#how-it-works)
 * [Commands](#commands)
 * [Running a role](#running-a-role)
+* [The orchestrator](#the-orchestrator)
 * [Installing it into a project](#installing-it-into-a-project)
 * [The project's settings](#the-projects-settings)
 * [Replacing a role or the standards](#replacing-a-role-or-the-standards)
@@ -48,6 +49,7 @@ The "rite" is also Ritenoar's, whose projects carry it.
 |----------------------|-----------------------------------------------------------------------------------|
 | `process.md`         | How work is done: the changes process, the roles, the commit prefixes             |
 | `standards.md`       | The rules on how text, documentation, commits, code and tests are written         |
+| `orchestrator.json`  | The orchestrator's default definition, which a project may copy and change        |
 | `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it          |
 | `README.md`          | What the kit is and how a project uses it                                         |
 | `LICENSE`            | The MIT License, which the kit is open source under                               |
@@ -104,7 +106,7 @@ takes.
 ### agentrite init
 
 ```sh
-npx agentrite init [--no-sandbox] [--default-branch <name>] <harness>...
+npx agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...
 npx agentrite init
 ```
 
@@ -118,17 +120,19 @@ harnesses and the sandbox setting from it.
 |---------------------------|-----------------------------------------------------------------------------------------|
 | `<harness>...`            | `claude` or `opencode`, one or both, for the harnesses the project uses                 |
 | `--no-sandbox`            | For a project without the sandbox. Leaves out what is only for it, as said below        |
+| `--no-orchestrator`       | For a project without the orchestrator. Writes `orchestrator` as `false`                |
 | `--default-branch <name>` | The project's default branch, written as `defaultBranch`. `master` when not given       |
 
 In a project with no `agentrite.json`:
 
 * `init` writes the file with the harnesses given, each once and in the order `claude`, `opencode` whatever order
   they were given in, with `sandbox` as `false` when `--no-sandbox` is given and `true` when it is not, with
-  `defaultBranch` as the name given, or `master`, and with `standards` and `roles` naming the kit's own files, as the
-  default file does
-* Before it writes anything, it checks that each path of `standards` and `roles` names a file. In a project where the
-  kit is not installed under `node_modules`, it refuses as a command that reads an `agentrite.json` whose path names
-  no file does, writes nothing and exits 1
+  `defaultBranch` as the name given, or `master`, with `orchestrator` as `false` when `--no-orchestrator` is given and
+  as the kit's default definition, `node_modules/agentrite/orchestrator.json`, when it is not, and with `standards`
+  and `roles` naming the kit's own files, as the default file does
+* Before it writes anything, it checks that each path of `standards`, `orchestrator` and `roles` names a file. In a
+  project where the kit is not installed under `node_modules`, it refuses as a command that reads an `agentrite.json`
+  whose path names no file does, writes nothing and exits 1
 * It prints `wrote agentrite.json` first and, at the end, after its notices, the content of the file as it wrote it.
   When `--default-branch` was not given it then prints a notice that `master` was written as the default branch, and
   that a project whose default branch is another changes `defaultBranch` in `agentrite.json`
@@ -142,9 +146,9 @@ In a project with an `agentrite.json`:
 
 * With no argument, `init` writes what is missing for the harnesses the file names, and with `sandbox` `true` for the
   sandbox, prints `skipped agentrite.json, which exists`, and leaves the file as it is
-* Given a harness, `--no-sandbox` or `--default-branch`, also when the arguments say what the file says, it refuses:
-  it writes nothing, exits 1, and says that the settings are read from the file, that a setting is changed by editing
-  it, and that `npx agentrite init` with no argument then writes what is missing
+* Given a harness, `--no-sandbox`, `--no-orchestrator` or `--default-branch`, also when the arguments say what the file
+  says, it refuses: it writes nothing, exits 1, and says that the settings are read from the file, that a setting is
+  changed by editing it, and that `npx agentrite init` with no argument then writes what is missing
 
 The wrappers, the list `.agentrite/instructions.md`, `CLAUDE.md` and `opencode.json` follow `standards` and `roles`
 in `agentrite.json`. Below, the standards path is the one `standards` names, which in the default file is
@@ -192,6 +196,11 @@ read `sandbox.sh`, `sandbox/compose.project.yml` or `.dockerignore`, prints no l
 one that exists as it is. It runs when `package.json` has no `name`, and does not read `package-lock.json`. It still
 refuses, writing nothing, when `package.json` is missing or cannot be read. The option goes at any place among the
 harnesses, and given more than once it counts as given once.
+
+`--no-orchestrator` changes only what `init` writes as `orchestrator`, and `init` writes no other file for the
+orchestrator either way. The option goes at any place among the harnesses, and given more than once it counts as given
+once. The form `--no-orchestrator=<value>` is not taken, and is refused as an unknown harness, as
+`--no-sandbox=<value>` is.
 
 It exits with `0`, `1` when it refuses or fails, and `2` for wrong arguments, as [Exit statuses](#exit-statuses) says.
 
@@ -321,6 +330,41 @@ harness started, it passes on the harness's status, and exits with `1` when a si
 
 See "Running a role".
 
+### agentrite orchestrate
+
+```sh
+npx agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]
+```
+
+Takes an approved unit through its roles, from the project root, by the definition that `orchestrator` in
+`agentrite.json` names: it runs each step as `agentrite run` with `--headless`, one at a time, and ends when every
+item of the definition has run or a step stops the run. Run with no argument, it prints its usage.
+
+| Argument or option    | What it is                                                                                 |
+|-----------------------|--------------------------------------------------------------------------------------------|
+| `<unit>`              | A directory of `changes/`, by its name or by the four digits its name opens with           |
+| `--definition <file>` | Runs this definition, relative to the project root or absolute. Also `--definition=<file>` |
+| `--skip-permissions`  | Passed to the `agentrite run` of every step. The option belongs in the sandbox             |
+
+It refuses, starts nothing, writes nothing and exits 1 when:
+
+* the project has no `agentrite.json`, or its file is not valid, as every command that reads the file refuses
+* `orchestrator` is `false`, also with `--definition`. It says that the project opted out, and which key to change
+* the path of `--definition` names no file. It names the path
+* the definition is not of the form "The orchestrator" gives. It names the definition's path, where in it the fault
+  is, what is wrong and what it must hold
+* `changes/` holds no directory for the unit, or more than one for its digits
+* the unit's status is not `approved`. It names the status, and says that a run starts the work of an approved unit.
+  A `record.md` that is missing, or holds no status, is refused as one that is missing a status field
+
+It takes no `--`: a step's harness gets the arguments the definition and the command give it, and no other.
+
+It exits with `0` for a run that ran every item of the definition to its end, `1` when it refuses or fails, `2` for
+wrong arguments or none, which it refuses with its usage, and `3`, its own status, for a run that a step or a
+repeat stopped, which waits for the human. See [Exit statuses](#exit-statuses).
+
+See "The orchestrator".
+
 ### check-changes
 
 ```sh
@@ -422,7 +466,8 @@ Every command of the kit exits with a status that means the same in each:
 * A check that finds something at fault, as the change check does, ends with `1`
 * The arguments are wrong for an option the command does not take, an option without its value, a value not of the
   form the option takes, arguments that do not go together, and one that is missing
-* No two meanings of one command share a status. No command of the kit has a status of its own of `3` and up today
+* No two meanings of one command share a status. One command of the kit has a status of its own:
+  `npx agentrite orchestrate` exits `3` for a run that stopped for the human
 
 A command that runs another program and exits with that program's status passes on whatever that program gave, and
 a caller cannot tell it from the command's own. Before that program started, the command's own statuses hold:
@@ -529,6 +574,219 @@ The command starts nothing when:
   to a wrapper by hand stops `run` until `refresh` has removed it. See "Updating a project to a newer kit"
 * the harness's own command is not on the `PATH`
 * `changes/` holds no directory for the unit, or more than one for its digits
+
+## The orchestrator
+
+`agentrite orchestrate` takes an approved unit through its roles, so that the human does not start each one: it runs
+the steps of a definition one at a time, each as `agentrite run` with `--headless`, and ends when every step has run
+or a step needs the human. A run starts the work of a unit whose `record.md` has the status `approved`, as the human
+leaves it after approving the spec, and refuses a unit of any other status.
+
+```sh
+npx agentrite orchestrate 0029
+```
+
+A project that does not use the orchestrator holds `"orchestrator": false` in `agentrite.json`, which
+`npx agentrite init --no-orchestrator` writes, and `agentrite orchestrate` refuses to run in it.
+
+### The definition
+
+What a run does is in its definition, a JSON file that `orchestrator` in `agentrite.json` names. The kit's default,
+`node_modules/agentrite/orchestrator.json`, has the planner write the plan in Claude Code on Opus, and then runs at most
+three rounds of the implementer in Claude Code on Sonnet followed by a review in OpenCode on GPT Sol. The implementer
+of the first round builds the unit, and that of a later round applies the findings of the review before it. A review
+with no blocking finding ends the repeat, and a third review with one stops the run:
+
+```json
+{
+  "steps": [
+    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5" },
+    {
+      "repeat": {
+        "times": 3,
+        "until": "no-blocking-findings",
+        "steps": [
+          {
+            "role": "implementer",
+            "harness": "claude",
+            "model": "claude-sonnet-5-5",
+            "prompt": "From round 2, the human accepts the review's findings you agree with. Propose declining others."
+          },
+          {
+            "role": "reviewer",
+            "harness": "opencode",
+            "model": "openai/gpt-6.1-sol"
+          }
+        ]
+      }
+    }
+  ]
+}
+```
+
+* A definition is a JSON object with one key, `steps`, a list of one or more items. An item is a step or a repeat,
+  and the items run in the order of the list
+* A step holds `role`, a role that `roles` in `agentrite.json` names, `harness`, one that `harnesses` names, and
+  `model`, the harness's own id of a model, each a string that is not empty. It may hold `prompt`, a string that is
+  not empty, which the step's prompt gets after the unit, and `stopWhen`
+* A repeat is an object with one key, `repeat`, an object that holds `times`, a whole number of one or more, and
+  `steps`, a list of one or more steps, and may hold `until`. It runs its steps in order, round after round. A repeat
+  holds no repeat
+* `until`, whose only value is `"no-blocking-findings"`, ends the repeat when the outcome of the last step of a round
+  has no blocking finding, and the run goes on with the item after the repeat. When it still has one after the last
+  round, the repeat ran out, and the run stops. A repeat without `until` runs all its rounds, and never stops the run
+  by itself
+* `stopWhen`, whose only value is `"blocking-findings"`, stops the run after the step when a finding of its outcome
+  is blocking. Any step may hold it, in a repeat or not
+* A step in a repeat is told its round, and how many rounds the repeat has at most, so that its `prompt` can say from
+  which round something holds, as the default's implementer's does
+* Within one run, a step of a role and a harness that already ran continues that step's session of the harness, so
+  that the implementer of a later round has the context of the earlier ones. A run continues no session of an earlier
+  run
+* A definition with a key it does not take, or a value of another form, is refused before anything runs. The
+  message names the definition's path, where in it the fault is, as `steps[1].repeat.steps[0].model`, what is wrong
+  and what it must hold
+
+After a step, the step is judged first, by the cases under "How a run ends", and the `until` of its repeat only after
+it and only when the step did not stop the run. A `stopWhen` on the last step of a repeat with `until` therefore stops
+the run at that step's first blocking finding, before `until` is judged.
+
+A project that wants another definition copies the kit's into the project, changes the copy, commits it, and names it
+in `orchestrator`, as it does with a role of its own:
+
+```sh
+cp node_modules/agentrite/orchestrator.json orchestrator.json
+```
+
+```json
+  "orchestrator": "orchestrator.json",
+```
+
+`--definition` runs another file for one run, without a change to `agentrite.json`, so that a definition can be tried
+first. Its path is relative to the project root, or absolute, and may lie outside the project:
+
+```sh
+npx agentrite orchestrate 0029 --definition trial.json
+```
+
+A project whose `orchestrator` is `false` is refused also with `--definition`.
+
+### The outcome of a step
+
+The command adds a request to the prompt of every step, after the step's own `prompt`: to give the step's outcome in
+its final response, as one JSON object in a fenced code block marked `json`, which is the only such block of the
+response and stands before the line `**Needed from you**` when the response has one. The agent writes no file for
+it, and the command reads it from the final response the harness printed, wherever in the response it stands. The
+outcome holds these keys, and no other:
+
+* `outcome`: `"done"`, `"needs-human"` or `"failed"`
+* `summary`: a string, what the step did
+* `questions`: a list of strings, what the step needs from the human, which may be empty
+* `findings`: a list of objects, each with `id`, a string such as `S1`, `blocking`, `true` or `false`, and
+  `summary`, a string. It is empty for a step that reviewed nothing
+* `declines`: a list of objects, each with `finding`, the `id` of a finding, and `reason`, a string. It is empty for a
+  step that proposed no decline
+
+The outcome of a review with one blocking finding, as it stands in the final response:
+
+````markdown
+```json
+{
+  "outcome": "done",
+  "summary": "Reviewed the unit against its spec and plan, and ran both suites.",
+  "questions": [],
+  "findings": [
+    { "id": "S1", "blocking": true, "summary": "R25 is not met: a unit run does not mount .orchestrator" },
+    { "id": "C1", "blocking": false, "summary": "The usage of orchestrate does not name its exit statuses" }
+  ],
+  "declines": []
+}
+```
+````
+
+### How a run ends
+
+Before and after each step the command prints a line with the step's number, counted from 0 in the order the steps
+run, its round in a repeat, its role, its harness and its model. The line after it adds the outcome and how long the
+step took:
+
+```
+step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started
+step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: done after 8m 12s
+```
+
+The harness's standard error reaches the terminal, and what it prints on standard output is read and not shown. Its
+session is in the harness's own logs.
+
+The run stops, and runs nothing after the step, when:
+
+* the harness exits with a status other than 0, or a signal ends it. A step whose `agentrite run` refuses, as for a
+  wrapper that `refresh` would rewrite, is such a step
+* the final response holds no block marked `json`, more than one, or one that is not an outcome of the form above
+* the outcome is `needs-human` or `failed`
+* `declines` is not empty, since only the human decides a proposed decline
+* the step holds `stopWhen`, and a finding of its outcome is blocking
+* a repeat with `until` ran out
+
+When the run ends, the command prints last: a list of every step that ran, with its number, role, harness, model and
+how long it took; how the run ended, and for a stop which step stopped it and why, with what is wrong with an outcome
+not of the form; then from the outcome of the step that ran last, when it is of the form, its summary, the blocking
+findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
+and last the run's directory, and that the reviewer's findings are under `.reviews/<unit-directory>/`. For a last step
+without an outcome of the form, it gives the path of its final response in the run's directory instead, or says that
+the harness gave none. Nothing is taken from an earlier step.
+
+```
+0  planner      claude    claude-opus-5-5     12m 04s
+1  implementer  claude    claude-sonnet-5-5   41m 37s
+2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s
+```
+
+A run that ran every item to its end exits 0, and a run that stopped exits 3, which is the command's own status. A
+run that the command refused, and that started nothing, exits 1. See "agentrite orchestrate" in "Commands".
+
+A run neither sets the unit's status nor commits. What the roles do to the unit, their commits and their entries in
+`record.md` among it, is theirs, as when they are started by hand. A run that stopped is not picked up again by the
+command: the human takes over from where it stopped.
+
+### What .orchestrator holds
+
+The command keeps each run in `.orchestrator/<unit-directory>/<run>/` of the project root, where `<run>` is the
+instant the run started, in UTC, as `2026-10-21T10:00:00Z`. Nothing but the command writes in `.orchestrator/`. A
+run's directory holds:
+
+* `definition.json`, the definition the run runs, as it was read at the start
+* `state.json`, the state of the run: the unit, the definition's path as it was given, the step and round it is at,
+  the id of each harness session, and when the run ended, its exit status and how it ended
+* `<number>-<role>.outcome.json` for each step that gave an outcome of the form, as it stood in its block, and
+  `<number>-<role>.response.md` for a step that did not, holding its final response when there was one. The numbers
+  have as many digits as the definition's highest step number needs, two at least, so that the names sort in the
+  order the steps ran
+
+At the start of each run the command makes sure that `.orchestrator/.gitignore` holds `*` and nothing else, and
+writes it when it is missing or holds anything else. So git ignores the directory in every project, without a line in
+the project's own `.gitignore`.
+
+### On the host and in the sandbox
+
+On the host, the command is run from the project root, and each step's harness runs there, in the developer's
+checkout:
+
+```sh
+npx agentrite orchestrate 0029
+```
+
+`--skip-permissions` is passed to the `agentrite run` of every step. What it does in each harness is in
+[Running a role](#running-a-role). Without it, a headless step gets only what the harness's settings allow, and a
+step that needs more is refused it. The option belongs in the sandbox, where the run is in a unit run on the clone of
+the unit's branch, after `npm ci` in the clone:
+
+```sh
+./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions'
+```
+
+A unit run mounts the host's `.orchestrator` at `/work/.orchestrator`, so the run's directory is on the host as it is
+written. See "Running a unit" of `SANDBOX.md`.
 
 ## Installing it into a project
 
@@ -737,16 +995,17 @@ that runs the change check therefore installs with a plain `npm ci`.
 
 ## The project's settings
 
-A project's settings are in `agentrite.json` at the project root, a JSON object with six keys:
+A project's settings are in `agentrite.json` at the project root, a JSON object with seven keys:
 
-| Key             | What it holds                                        | What reads it                        |
-|-----------------|------------------------------------------------------|--------------------------------------|
-| `defaultBranch` | The branch that units are cut from and compared with | The change check and a unit run      |
-| `harnesses`     | The harnesses the project uses, as a list            | `init` and `refresh`                 |
-| `sandbox`       | `true` with the sandbox, `false` without it          | `init` and `refresh`                 |
-| `bell`          | `true` for a sandbox that rings, `false` for none    | `./sandbox.sh`, at each start        |
-| `standards`     | The path of the standards file the project uses      | `init` and `refresh`                 |
-| `roles`         | Each role's name, with the path of its file in use   | `init`, `refresh`, `roles` and `run` |
+| Key             | What it holds                                         | What reads it                        |
+|-----------------|-------------------------------------------------------|--------------------------------------|
+| `defaultBranch` | The branch that units are cut from and compared with  | The change check and a unit run      |
+| `harnesses`     | The harnesses the project uses, as a list             | `init` and `refresh`                 |
+| `sandbox`       | `true` with the sandbox, `false` without it           | `init` and `refresh`                 |
+| `bell`          | `true` for a sandbox that rings, `false` for none     | `./sandbox.sh`, at each start        |
+| `standards`     | The path of the standards file the project uses       | `init` and `refresh`                 |
+| `orchestrator`  | The path of the orchestrator's definition, or `false` | `orchestrate`                        |
+| `roles`         | Each role's name, with the path of its file in use    | `init`, `refresh`, `roles` and `run` |
 
 The default file, which `npx agentrite config` writes, and `npx agentrite init claude opencode` too:
 
@@ -757,6 +1016,7 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   "sandbox": true,
   "bell": true,
   "standards": "node_modules/agentrite/standards.md",
+  "orchestrator": "node_modules/agentrite/orchestrator.json",
   "roles": {
     "specifier": "node_modules/agentrite/roles/specifier.md",
     "planner": "node_modules/agentrite/roles/planner.md",
@@ -769,13 +1029,17 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
 * `init` writes the file from its arguments in a project that has none, and `config` writes the default file. The
   default branch is `master` unless `--default-branch` or an edit says otherwise
 * The file is committed
-* All six keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
+* All seven keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
   `claude` and `opencode`, in which a name given more than once counts once, and `sandbox` and `bell` are each `true`
   or `false`, not a string. A key the kit does not know is ignored
 * `bell` says whether the harnesses in the sandbox ring the terminal's bell when they need the developer or stop, as
   "The bell" in `SANDBOX.md` says. It is read at each start of the sandbox, so a change holds from the next start. It
   has no effect outside the sandbox: the harnesses on the host are the developer's, and the kit changes nothing of
   their configuration
+* `orchestrator` names the definition that `agentrite orchestrate` runs, or holds `false` for a project that does not
+  use the orchestrator, which `init --no-orchestrator` writes. It is `false` or a path, not a string that says
+  `false`. The file `config` and `init` write names the kit's default definition, and a project that wants another
+  copies it and names the copy, as "The orchestrator" says
 * `standards` and `roles` name the kit's own files in the file `config` and `init` write. A project uses another file
   by naming its path instead, as "Replacing a role or the standards" says. `roles` holds the four names
   `specifier`, `planner`, `implementer` and `reviewer`, each with the path of its file, and may hold roles of the
@@ -793,14 +1057,14 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
 
   The message names the name and the harness. `agentrite roles` and the list `.agentrite/instructions.md` give the
   four first and then the roles of the project's own, in the order of the file
-* A path in `standards` or `roles` is a string that is not empty, relative to the project root, that does not lead
-  outside the project, and that names a regular file in the project's working tree. Whether it leads outside is judged
-  on the path as it is written, with no symbolic link followed. Whether it names a file is judged with symbolic links
-  followed, so a kit linked into `node_modules`, as `npm link` does, is taken
-* The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by the
-  change check, and by `./sandbox.sh`. Every form of `./sandbox.sh` but `--connect` reads `bell` at each start, and
-  judges no other key of the file, unless a unit run cuts a branch, which reads the whole file. `--connect` does not
-  read it
+* A path in `standards`, `orchestrator` or `roles` is a string that is not empty, relative to the project root, that
+  does not lead outside the project, and that names a regular file in the project's working tree. Whether it leads
+  outside is judged on the path as it is written, with no symbolic link followed. Whether it names a file is judged with
+  symbolic links followed, so a kit linked into `node_modules`, as `npm link` does, is taken
+* The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by
+  `agentrite orchestrate`, by the change check, and by `./sandbox.sh`. Every form of `./sandbox.sh` but `--connect`
+  reads `bell` at each start, and judges no other key of the file, unless a unit run cuts a branch, which reads the
+  whole file. `--connect` does not read it
 * A command that reads the file refuses in a project that has none, and names `npx agentrite config` as the command
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused
@@ -816,6 +1080,7 @@ A setting is changed by editing the file by hand. What to run afterwards:
 
 * `defaultBranch`: nothing
 * `bell`: nothing. It holds from the next start of the sandbox
+* `orchestrator`: nothing. It holds from the next run of `agentrite orchestrate`
 * A harness added to `harnesses`: `npx agentrite refresh` writes its wrappers. The wrapper directories that the
   project's `AGENTS.md` lists are the project's to bring up to date
 * `sandbox` set to `true`: `npx agentrite init` writes the files of the sandbox that are missing
@@ -954,6 +1219,14 @@ command that reads the file runs again: until then every such command refuses th
   }
 ```
 
+A project whose `agentrite.json` lacks `orchestrator` adds it before any command that reads the file runs again:
+until then every such command refuses the file. The line, after `standards`, with `false` for a project that does not
+use the orchestrator:
+
+```json
+  "orchestrator": "node_modules/agentrite/orchestrator.json",
+```
+
 A project whose `agentrite.json` lacks `bell` adds it before any command that reads the file runs again, and before
 the sandbox starts again: until then every such command refuses the file, and every start but `--connect` is
 refused. The line, after `sandbox`, with `false` for a project that wants no bell:
@@ -1051,13 +1324,14 @@ What it confines:
 
 Nothing of the host is reachable but what is mounted at `/work`, with these exceptions:
 
-| Of the host                                  | Mounted    | In `SANDBOX.md`                     |
-|----------------------------------------------|------------|-------------------------------------|
-| The developer's `~/.gitconfig`               | Read-only  |                                     |
-| The developer's Claude Code status line      | Read-only  | "The status line"                   |
-| The project's log directory                  | Read-write | "Where things are kept on the host" |
-| The local model server's port                |            | "The local model server"            |
-| The project's `.reviews`, in a unit run only | Read-write | "Running a unit"                    |
+| Of the host                                       | Mounted    | In `SANDBOX.md`                     |
+|---------------------------------------------------|------------|-------------------------------------|
+| The developer's `~/.gitconfig`                    | Read-only  |                                     |
+| The developer's Claude Code status line           | Read-only  | "The status line"                   |
+| The project's log directory                       | Read-write | "Where things are kept on the host" |
+| The local model server's port                     |            | "The local model server"            |
+| The project's `.reviews`, in a unit run only      | Read-write | "Running a unit"                    |
+| The project's `.orchestrator`, in a unit run only | Read-write | "Running a unit"                    |
 
 The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
 

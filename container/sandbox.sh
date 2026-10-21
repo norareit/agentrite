@@ -898,8 +898,9 @@ fi
 
 # The clone is made only now, so that a build that failed left none behind. The
 # .reviews and .orchestrator directories, of the root and of the clone, are made here
-# because Docker creates a mount's missing source and its missing mount point as root. A stopped container that a crash left under the
-# name is removed, and Docker refuses to remove one that is running.
+# because Docker creates a mount's missing source and its missing mount point as root.
+# A stopped container that a crash left under the name is removed, and Docker refuses
+# to remove one that is running.
 prepare_clone "$root" "$branch" "$clone"
 mkdir -p "$root/.reviews" "$clone/.reviews" "$root/.orchestrator" "$clone/.orchestrator"
 docker rm "$container_name" >/dev/null 2>&1 || true

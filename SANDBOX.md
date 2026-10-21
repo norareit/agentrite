@@ -63,6 +63,10 @@ host's branch is at:
   branch. So the file is committed: with none in the clone, the check refuses there
 * The host's `.reviews` directory is mounted at `/work/.reviews`, so what the reviewer writes there is on the host
   as it is written
+* The host's `.orchestrator` directory is mounted at `/work/.orchestrator`, whatever `orchestrator` in
+  `agentrite.json` holds, so the runs of the orchestrator are on the host as they are written. The wrapper makes the
+  directory on the host, and its mount point in the clone, as the developer before the container starts, as it does
+  for `.reviews`
 * The image, the allowlist, the limits and the harness versions are those of the checkout the command is run
   from, on whatever branch that is, and not those of the clone. A unit that changes `sandbox/compose.project.yml`
   runs without its own change until that is checked out on the host
@@ -84,6 +88,15 @@ Run from a shell without a `TERM`, as a script may be, the command has the `TERM
 terminal, and none without one. A `TERM` that the image holds no description of, as that of a terminal named after its
 own program may be, is `xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. `echo $TERM` in the
 sandbox shows which it is.
+
+The orchestrator, which takes a unit through its roles, runs in a unit run as any command does, after `npm ci` in
+the clone, and passes `--skip-permissions` to every step. See "The orchestrator" of `README.md`:
+
+```sh
+./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions'
+```
+
+From the shell of a unit run, it is `npx agentrite orchestrate 0029 --skip-permissions` after `npm ci`.
 
 For a unit run that starts nothing, see "When something goes wrong".
 
@@ -547,7 +560,8 @@ through a dependency, and that writes whatever it likes under `/work`, the clone
 that agent:
 
 * nothing it writes is run on the host by the wrapper
-* nothing reaches the host's repository but the commits of the unit's branch and the files under `.reviews`
+* nothing reaches the host's repository but the commits of the unit's branch and the files under `.reviews` and
+  `.orchestrator`
 * a git hook, a line in `.git/config` and a file in `node_modules` stay in the clone
 
 It does not defend against:
@@ -555,6 +569,7 @@ It does not defend against:
 * what a commit contains. A script in a commit runs on the host once the developer checks it out and runs it. The
   commit is in a diff the developer can read first
 * what a review file says, to a human or to an agent that reads it on the host
+* what a file under `.orchestrator` says, to a human or a program that reads it on the host
 * a run with `--in-place` or `--workdir`, which mounts a directory as it is
 * a flaw in git's handling of a fetch from a hostile repository, or in Docker
 * the saved logins. Where they are is in "Where things are kept on the host"
