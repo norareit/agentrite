@@ -36,14 +36,24 @@ timestamp: 2026-10-21T09:50:41Z
   given two arguments, which failed with status 1 before the refusal, then made the entry point of
   `scripts/check-changes.mjs` refuse more than one argument with its usage and status 2.
   `node --test tests/check-changes.test.mjs` passes: 37 tests
-- 2026-10-21T10:32:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the option loop of `container/sandbox.sh`
-  refuse with 2 a word that opens with `-` where an option stands, naming it, saying that a unit or a command that
-  opens with `-` goes after `--`, and printing the forms. Its four tests failed before it: given alone, after
-  `--rebuild` and after `--connect` with 1, and after `--in-place` with 0, run as the command. Changed to 1 the 24
-  assertions of status 2 the plan lists, and gave `assertNothingRan` the status it expects: 1 at six of its calls
-  and 2 at four. With the wrapper's statuses unchanged,
-  `node --test tests/sandbox*.test.mjs tests/settings-update.test.mjs` failed 56 tests, each one a test changed to
-  1. Then changed to 1 the 17 `exit 2` the plan's table marks 1, which left 12 `exit 2`, each a refusal of the
-  arguments. The same suites pass: 276 tests, none skipped. The test of `./sandbox-dev.sh` with an `agentrite.json`
-  of `{}` was written after the change, as the plan orders it, and passed when first run. The record's previous
-  entry was rewrapped to the line limit, which it broke
+- 2026-10-21T10:32:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the option loop of
+  `container/sandbox.sh` refuse with 2 a word that opens with `-` where an option stands, naming it, saying that a unit
+  or a command that opens with `-` goes after `--`, and printing the forms. Its four tests failed before it: given
+  alone, after `--rebuild` and after `--connect` with 1, and after `--in-place` with 0, run as the command. Changed to 1
+  the 24 assertions of status 2 the plan lists, and gave `assertNothingRan` the status it expects: 1 at six of its calls
+  and 2 at four. With the wrapper's statuses unchanged, `node --test tests/sandbox*.test.mjs
+  tests/settings-update.test.mjs` failed 56 tests, each one a test changed to 1. Then changed to 1 the 17 `exit 2` the
+  plan's table marks 1, which left 12 `exit 2`, each a refusal of the arguments. The same suites pass: 276 tests, none
+  skipped. The test of `./sandbox-dev.sh` with an `agentrite.json` of `{}` was written after the change, as the plan
+  orders it, and passed when first run. The record's previous entry was rewrapped to the line limit, which it broke
+- 2026-10-21T10:35:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the documents: the section "Exit statuses"
+  of `README.md` after "Commands", the statuses in each section of "Commands" with a link to it, 1 in place of
+  "non-zero", "a status other than 0" and the 2 of a start of `./sandbox.sh` with a file at fault, the statuses of
+  the entry on `--connect` in "When something goes wrong" of `SANDBOX.md`, the status of `sandbox-dev.sh` in
+  `CONTRIBUTING.md`, and the section "Exit statuses" of `AGENTS.md`. The row of `--` in the table of `sandbox.sh`
+  says that what follows it may open with `-`. A search of the three documents for "non-zero", "other than 0",
+  "exits 2", "exits with 2" and "status 2" leaves four statements of 2, each for wrong arguments of
+  `npx agentrite init`, `config` or `refresh`, and the heading of the entry on `--connect`, which names both. The
+  record had a line over 120 characters in the previous entry, which was rewrapped. `npm test` passes on this tree:
+  817 tests, none skipped. Added to `plan.md` a commit point for the verification, since the change check reads
+  committed work and its result is recorded after the documents are committed

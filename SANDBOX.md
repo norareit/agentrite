@@ -636,18 +636,18 @@ Why: the removal itself failed, for example on a directory the agent made read-o
 
 What to do: remove the remains by hand.
 
-**`--connect` runs nothing, says why and exits with 2.**
+**`--connect` runs nothing, says why and exits with 1, or with 2 for an option of a run.**
 
 Why, and what to do for each:
 
-* The unit names no local branch. A number that no branch holds is refused although the default branch holds a unit
-  of that number: a unit with no branch has no run to connect to, and only a unit run cuts the branch. Start a unit
-  run of the unit first, giving the unit by its number, as in `./sandbox.sh 0029`: a branch that is not there yet is
-  cut for a number and not for a name. Then connect to it while it runs
-* Docker could not be asked whether the container is running. See that Docker runs and that the user may use it:
-  Docker's own error is printed above the wrapper's. Then give the command again
-* It is given together with `--in-place`, `--workdir`, `--mount` or `--rebuild`, which are options of a run. It
-  names the option. Leave the option out: `--connect` takes the unit and a command, and nothing else
+* The unit names no local branch, and it exits with 1. A number that no branch holds is refused although the default
+  branch holds a unit of that number: a unit with no branch has no run to connect to, and only a unit run cuts the
+  branch. Start a unit run of the unit first, giving the unit by its number, as in `./sandbox.sh 0029`: a branch that is
+  not there yet is cut for a number and not for a name. Then connect to it while it runs
+* Docker could not be asked whether the container is running, and it exits with 1. See that Docker runs and that the
+  user may use it: Docker's own error is printed above the wrapper's. Then give the command again
+* It is given together with `--in-place`, `--workdir`, `--mount` or `--rebuild`, which are options of a run, and it
+  exits with 2. It names the option. Leave the option out: `--connect` takes the unit and a command, and nothing else
 
 **After an install on one side of a shared `node_modules`, packages of the other side are gone, and nothing
 reports it.**

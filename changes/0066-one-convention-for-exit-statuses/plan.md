@@ -154,34 +154,34 @@ The change check:
 
 The documents:
 
-- [ ] Add `## Exit statuses` to `README.md`, after `## Commands` and before `## Running a role`. It defines `0`, `1`,
+- [x] Add `## Exit statuses` to `README.md`, after `## Commands` and before `## Running a role`. It defines `0`, `1`,
   `2`, `3` and above, and a status passed on, as requirement 1 words them, and says that a caller cannot tell a
   status passed on from the command's own. It names the commands that pass a status on and from when: `npx agentrite
   run` once the harness started, `./sandbox.sh` with a unit, `--in-place` or `--workdir` once the command, or the
   shell, in the container started, and `./sandbox.sh --connect` once the connected command started, and that before
   that their own statuses hold. It says that `./sandbox.sh` of a unit exits 1 when the command exited 0 and the work
   was not brought back, and that `npx agentrite run` exits 1 when a signal ended the harness (R1, R2)
-- [ ] In each section of "Commands" of `README.md`, `agentrite init`, `agentrite config`, `agentrite refresh`,
+- [x] In each section of "Commands" of `README.md`, `agentrite init`, `agentrite config`, `agentrite refresh`,
   `agentrite roles`, `agentrite run`, `check-changes` and `sandbox.sh`, say which statuses it exits with, by the
   meanings of "Exit statuses", and link that section. No command has a status of its own of 3 and above, so none is
   named. `check-changes` says 0, 1 for units at fault or a check that failed, and 2 for more than one argument, and
   its argument table says it takes one. `sandbox.sh` says 1 and 2 for its own refusals, the status passed on, and
   that a word that opens with `-` where an option stands is refused and that a unit or a command that opens with
   `-` goes after `--` (R3, R5, R7)
-- [ ] Name the status the convention gives where `README.md` says otherwise of one the kit chooses: in
+- [x] Name the status the convention gives where `README.md` says otherwise of one the kit chooses: in
   "check-changes", "exits non-zero" becomes 1; in "Running a role", "a status other than 0 when a signal ended the
   harness" becomes 1; in "The project's settings", "exits with a status other than 0" becomes 1 and the start of
   `./sandbox.sh` with a file at fault "exits 2" becomes 1; in "Updating a project to a newer kit", "the command
   exits non-zero" becomes 1 (R3)
-- [ ] In "When something goes wrong" of `SANDBOX.md`, the entry headed "`--connect` runs nothing, says why and exits
+- [x] In "When something goes wrong" of `SANDBOX.md`, the entry headed "`--connect` runs nothing, says why and exits
   with 2" says that it exits with 1, or with 2 for an option of a run, and each of its cases names its status: 1
   for a unit that names no local branch and for Docker that cannot be asked, 2 for an option of a run (R3)
-- [ ] In "Commands" of `CONTRIBUTING.md`, the section `sandbox-dev.sh` says that it exits as `./sandbox.sh` does,
+- [x] In "Commands" of `CONTRIBUTING.md`, the section `sandbox-dev.sh` says that it exits as `./sandbox.sh` does,
   by "Exit statuses" of `README.md` (R6)
-- [ ] Add to `AGENTS.md` a section `## Exit statuses`, after "The kit's command", that says that every command of
+- [x] Add to `AGENTS.md` a section `## Exit statuses`, after "The kit's command", that says that every command of
   the kit and every command of this repository's own follows "Exit statuses" of `README.md`, and that a unit that
   adds a command, or a status of one, does so by that section (R8)
-- [ ] Search `README.md`, `SANDBOX.md` and `CONTRIBUTING.md` for "non-zero", "other than 0", "exits 2", "exits with
+- [x] Search `README.md`, `SANDBOX.md` and `CONTRIBUTING.md` for "non-zero", "other than 0", "exits 2", "exits with
   2" and "status 2", and confirm that each that is left is a status that the convention gives as it is said (R3)
 
 ## Verification
@@ -198,4 +198,6 @@ The documents:
 - [x] `feature-0066 Refuse a second argument to the change check`: the two tasks of the change check
 - [x] `feature-0066 Exit 1 for every refusal of the sandbox but its arguments`: the tasks of `./sandbox.sh`,
   `sandbox-dev.sh`'s test among them
-- [ ] `feature-0066 Define the exit statuses once`: the tasks of the documents
+- [x] `feature-0066 Define the exit statuses once`: the tasks of the documents
+- [ ] `feature-0066 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
+  what was run on the committed work

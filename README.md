@@ -193,6 +193,8 @@ one that exists as it is. It runs when `package.json` has no `name`, and does no
 refuses, writing nothing, when `package.json` is missing or cannot be read. The option goes at any place among the
 harnesses, and given more than once it counts as given once.
 
+It exits with `0`, `1` when it refuses or fails, and `2` for wrong arguments, as [Exit statuses](#exit-statuses) says.
+
 See "Installing it into a project", "How the kit's instructions reach an agent", "The project's settings" and
 "Replacing a role or the standards".
 
@@ -212,6 +214,8 @@ that has no `package.json`.
 
 Where something is at the path of `agentrite.json`, a file that is not valid among it, `config` leaves it as it is,
 prints `skipped agentrite.json, which exists`, prints no content and no notice, and exits 0.
+
+It exits with `0`, `1` when it fails, and `2` for an argument, as [Exit statuses](#exit-statuses) says.
 
 See "The project's settings".
 
@@ -258,6 +262,8 @@ standards files the project uses, that `refresh` does not change `AGENTS.md`, an
 hold. The notices come in this order: the lines `CLAUDE.md` lacks, the kit's standards in it, what `opencode.json`
 lacks, the kit's standards in it, then `AGENTS.md`. None of them changes what `refresh` writes or its exit status.
 
+It exits with `0`, `1` when it refuses or fails, and `2` for an argument, as [Exit statuses](#exit-statuses) says.
+
 See "Updating a project to a newer kit", "How the kit's instructions reach an agent", "The project's settings" and
 "Replacing a role or the standards".
 
@@ -283,6 +289,9 @@ output and exits 1.
 |--------------------|------------------------------------------------------------------------------|
 | `--json`           | Prints the same roles, in the same order, as one JSON document, for a script |
 
+It exits with `0`, `1` when it refuses or fails, and `2` for an argument other than `--json`, as
+[Exit statuses](#exit-statuses) says.
+
 ### agentrite run
 
 ```sh
@@ -306,6 +315,10 @@ the project has, starts nothing and exits 1.
 | `--skip-permissions`        | Ends the harness's questions about permissions. The option belongs in the sandbox   |
 | `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
 
+Before it starts the harness, it exits with `1` when it refuses or fails, and `2` for wrong arguments. Once the
+harness started, it passes on the harness's status, and exits with `1` when a signal ended the harness. See
+[Exit statuses](#exit-statuses).
+
 See "Running a role".
 
 ### check-changes
@@ -315,8 +328,8 @@ npm run check-changes
 node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]
 ```
 
-The change check. It compares the committed work on the current branch with the default branch, and exits non-zero
-with a list of the offending units when a frozen `spec.md` or `plan.md` changed, an implemented plan has unticked
+The change check. It compares the committed work on the current branch with the default branch, and exits with 1
+and a list of the offending units when a frozen `spec.md` or `plan.md` changed, an implemented plan has unticked
 tasks, or an entry of `## Log` or `## Amendments` of a `record.md` stands after a blank line that separates it from
 an entry before it in the same section. Such an entry is named by its first line, and one that already stood after a
 blank line on the default branch is not rejected.
@@ -325,9 +338,12 @@ The default branch is the one that `defaultBranch` names in the `agentrite.json`
 file is in the working tree. The check takes the local branch of that name, and `origin/<default branch>` when the
 local one gives no common ancestor. When neither gives one it fails, and names the two it tried.
 
-| Argument or option  | What it is                                               |
-|---------------------|----------------------------------------------------------|
-| `<repository root>` | Optional, and the working directory when it is not given |
+| Argument or option  | What it is                                                                           |
+|---------------------|--------------------------------------------------------------------------------------|
+| `<repository root>` | Optional, and the working directory when it is not given. It takes no other argument |
+
+It exits with `0`, `1` for units at fault or a check that failed, and `2` for more than one argument, which it
+refuses with its usage and without checking anything, as [Exit statuses](#exit-statuses) says.
 
 See "Installing it into a project" and "The project's settings".
 
@@ -360,11 +376,20 @@ starts nothing. See "The project's settings".
 | `--rebuild`        | Builds the image before running, even if it exists and holds the wanted harness versions     |
 | `--mount HOST`     | Also mounts the host directory `HOST` at `/mnt/<basename>`, read-write. It may be repeated   |
 | `--mount HOST:ro`  | The same, read-only                                                                          |
-| `--`               | Ends the options, so that what follows is the unit or the command                            |
+| `--`               | Ends the options, so that what follows is the unit or the command, even one opening with `-` |
 | `COMMAND...`       | Runs this instead of the shell                                                               |
 
 `--variant` is given as `--variant NAME` or `--variant=NAME`, before `UNIT` or as the argument right after it. It is
 refused with `--in-place` and `--workdir`, and when given twice. Besides `--variant`, `--connect` takes no option.
+
+A word that opens with `-` where an option stands, and is none of the options above, is refused, named, and the
+forms printed. A unit or a command that opens with `-` goes after `--`. A command's own options after the unit, or
+after `--in-place COMMAND`, are the command's, and are passed on as they are.
+
+Before the command in the container starts, or the one of `--connect`, it exits with `2` for wrong arguments and with
+`1` for every other refusal or failure: among them an `agentrite.json` at fault, a unit that names no branch, a run
+under way for the branch or none to connect to, a clone not yet brought back, and Docker or npm that cannot be
+asked. Once the command started, it passes on the command's status, as [Exit statuses](#exit-statuses) says.
 
 With a project's `sandbox/Dockerfile`, `--rebuild` builds that file anew on the image too. See "Adding software to
 the sandbox" in [`SANDBOX.md`](SANDBOX.md).
@@ -381,6 +406,31 @@ the sandbox" in [`SANDBOX.md`](SANDBOX.md).
 See "The sandbox", and in `SANDBOX.md` "Running a unit", "Getting the work back", "Two agents on one unit",
 "Two implementations of one unit", "Running on the tree as it is", "The bell" and "Where things are kept on the host".
 
+## Exit statuses
+
+Every command of the kit exits with a status that means the same in each:
+
+| Status     | What it means                                                                                     |
+|------------|---------------------------------------------------------------------------------------------------|
+| `0`        | The command did what it was asked                                                                 |
+| `1`        | The command was given arguments it takes, and refused or failed. Its message says why             |
+| `2`        | The arguments are wrong. It says what is wrong, prints its usage or its forms, and starts nothing |
+| `3` and up | A meaning of one command's own, which that command's section in "Commands" names                  |
+
+* A check that finds something at fault, as the change check does, ends with `1`
+* The arguments are wrong for an option the command does not take, an option without its value, a value not of the
+  form the option takes, arguments that do not go together, and one that is missing
+* No two meanings of one command share a status. No command of the kit has a status of its own of `3` and up today
+
+A command that runs another program and exits with that program's status passes on whatever that program gave, and
+a caller cannot tell it from the command's own. Before that program started, the command's own statuses hold:
+
+* `npx agentrite run`, once the harness started. A harness that a signal ended has no status to pass on, and the
+  command exits `1`
+* `./sandbox.sh` with a unit, `--in-place` or `--workdir`, once the command, or the shell, in the container started.
+  A unit run whose command exited `0` and whose work was not brought back exits `1`
+* `./sandbox.sh --connect`, once the connected command started
+
 ## Running a role
 
 `agentrite run` starts the harness in the directory the command is run from, with the role as its agent and one
@@ -395,8 +445,8 @@ npx agentrite run reviewer opencode 0032
   four digits its name opens with
 * The command takes a unit that has a directory, so the specifier of a unit that does not exist yet is started in a
   session of the harness, not with `run`
-* The command waits for the harness, and exits with the status the harness exited with, or with a status other than
-  0 when a signal ended the harness
+* The command waits for the harness, and exits with the status the harness exited with, or with 1 when a signal ended
+  the harness
 * The command starts no sandbox: it starts the harness where it is run, on the host or inside the sandbox, and
   `./sandbox.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there after
   `npm ci` in the clone, like the role files
@@ -752,11 +802,11 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused
   so by every command that reads the file, also one that does not use it: the message names the key, the path and
-  that there is no file at it. Either way it writes and changes nothing and exits with a status other than 0. No
+  that there is no file at it. Either way it writes and changes nothing and exits with 1. No
   command takes a missing file for the default file, or a missing key for its default value
 * A start of `./sandbox.sh` that cuts no branch judges `bell` alone. It refuses a project with no file, a file that
   is not a JSON object, one that lacks `bell` and one whose `bell` is neither `true` nor `false`, names the file, the
-  key, what it holds or that it is missing, and what it must hold, starts nothing and exits 2. Another key at fault
+  key, what it holds or that it is missing, and what it must hold, starts nothing and exits 1. Another key at fault
   does not stop it
 
 A setting is changed by editing the file by hand. What to run afterwards:
@@ -946,7 +996,7 @@ copies stay as an older release wrote them, and nothing says so. In a project wh
   Development Guidelines and Roles are replaced by those that `npx agentrite init` with no argument prints, which
   link the list, so that agents are sent to the files `agentrite.json` names
 * A path that holds something other than a regular file, such as a symbolic link, is left as it is and named on
-  standard error. The other files are still refreshed, and the command exits non-zero
+  standard error. The other files are still refreshed, and the command exits 1
 
 An improvement found while working in a project is made in the kit's repository, and committed there. The installed
 copy under a project's `node_modules` is not a working copy of that repository, and nothing in it reaches there. The

@@ -55,6 +55,11 @@ In this repository `npx agentrite` runs the working tree's `agentrite`, not the 
 installed release's command as `npm run kit -- <command>`, with the arguments `npx agentrite <command>` takes. The
 rest is in "Commands" of [CONTRIBUTING.md](CONTRIBUTING.md#commands).
 
+## Exit statuses
+
+Every command of the kit, and every command of this repository's own, follows "Exit statuses" of
+[README.md](README.md#exit-statuses). A unit that adds a command, or a status of one, does so by that section.
+
 ## Releasing
 
 `CHANGELOG.md` holds one section per release and ships in the package. A section is written when a release is made,

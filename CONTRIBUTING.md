@@ -89,6 +89,8 @@ Runs the sandbox from the working copy, in place of the installed release's. It 
 |------------------------|--------------------------------------------------------------------------------------------|
 | `SANDBOX_PROJECT_NAME` | Names the Compose project and the image. The command sets it, whatever the environment has |
 
+It exits as the working copy's `./sandbox.sh` does, by "Exit statuses" of [`README.md`](README.md#exit-statuses).
+
 See "Trying the working copy's sandbox".
 
 ### npm publish
