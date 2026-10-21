@@ -225,3 +225,10 @@ timestamp: 2026-10-20T23:55:38Z
   fence, its blockquote or the response, and says that another form may stop the run by requirement 18. A decision
   records why, what was accepted with it and what was rejected. The correction is made on the unit's branch and awaits
   the human's approval. The status stays `in-progress`
+- 2026-10-21T12:57:30Z [human] approved the correction of requirement 15 and the decision that names the forms of a
+  final response that are read. The status is `in-progress`
+- 2026-10-21T12:57:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request, named in
+  "The outcome of a step" of `README.md` the forms of a final response that requirement 15 says are read, that a fence
+  in a code block indented four spaces counts, and that another form may stop the run; added to `plan.md` with its task
+  and commit point. `npm test` passes: 920 tests, none skipped. Every task of `plan.md` is ticked. The status
+  stays `in-progress`: the review is done elsewhere

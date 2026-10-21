@@ -676,8 +676,12 @@ A project whose `orchestrator` is `false` is refused also with `--definition`.
 The command adds a request to the prompt of every step, after the step's own `prompt`: to give the step's outcome in
 its final response, as one JSON object in a fenced code block marked `json`, which is the only such block of the
 response and stands before the line `**Needed from you**` when the response has one. The agent writes no file for
-it, and the command reads it from the final response the harness printed, wherever in the response it stands. The
-outcome holds these keys, and no other:
+it, and the command reads it from the final response the harness printed. The block is read at the top level of the
+response, in a blockquote, nested or not, and in a list item, at any indentation. It ends at its closing fence, at the
+end of its blockquote, or at the end of the response. A fence shown in a code block indented by four spaces counts as
+a block too. A response whose block stands in another form may be read as having no outcome, or more than one, and
+the run then stops, as "How a run ends" says, with the final response in the run's directory. The outcome holds
+these keys, and no other:
 
 * `outcome`: `"done"`, `"needs-human"` or `"failed"`
 * `summary`: a string, what the step did

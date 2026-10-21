@@ -584,6 +584,8 @@ The human accepted S1 and C1 of the review saved as `review-20261021T122857Z-gpt
   `tests/agentrite-orchestrate.test.mjs`, test that a run whose step gives such a response goes on. See them fail
   (S2 of the delta review, R15)
 - [x] End a block in a blockquote where its blockquote ends, in `scripts/agentrite-outcome.mjs` (S2, R15)
+- [x] In "The outcome of a step" of `README.md`, name the forms of a final response that requirement 15, as the human
+  approved its correction, says are read, and that another form may stop the run (R15, R26)
 
 ## Verification
 
@@ -645,3 +647,4 @@ Each commit is made once `npm test` is green.
 - [x] After the tasks of S1: `feature-0065 Read an outcome in a blockquote or an indented list item`
 - [x] After the task of C1: `feature-0065 Narrow the events of OpenCode from unknown`
 - [x] After the tasks of S2: `feature-0065 End a block in a blockquote where the blockquote ends`
+- [x] After the task of the README: `feature-0065 Name the forms of a final response that are read in the README`
