@@ -34,3 +34,4 @@ Not part of this task:
   role and work in no role reads it while the specifier's role file and the spec template are read only by whoever
   writes a spec, and chose the kind `task`. Numbered 0070: the highest number in `changes/` is 0069. Wrote this
   record. The status is `draft`
+- 2026-10-21T15:04:25Z [human] approved the record. The status is `approved`
