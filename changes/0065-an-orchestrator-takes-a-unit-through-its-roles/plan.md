@@ -22,7 +22,8 @@ The work is in nine steps, each a commit of its own:
 6. **A fixture for the Docker test.** A refactoring of the suite only, with no change of behavior (R31)
 7. **The mount.** Every unit run of `./sandbox.sh` mounts `.orchestrator`, with the Docker test (R25, R31)
 8. **The documents** (R26 to R28)
-9. **The check by hand**, with real harnesses, logged in `record.md` (R12, R13, R15)
+9. **The checks by hand**, with real harnesses: the mechanics on a role made for the check, and the default
+   definition with the kit's own roles on a small unit, both logged in `record.md` (R4, R12, R13, R15)
 
 ### Verified while planning
 
@@ -179,7 +180,9 @@ harness:
 * `claude`: `arguments(session)` gives `['--output-format', 'json', '--session-id', <randomUUID()>]` when `session`
   is `undefined`, and `['--output-format', 'json', '--resume', session]` otherwise, together with the session's id.
   `read(stdout)` parses the whole output as JSON and gives as the final response its `result` when that is a string,
-  and none otherwise, also when the output is no JSON
+  and none otherwise, also when the output is no JSON. It gives as the session's id its `session_id` when that is a
+  string, so that a later Claude Code that hands out a new id on a resume is still followed; the id `arguments` gave
+  stands only when the output has none
 * `opencode`: `arguments(session)` gives `['--format', 'json']`, and `['--format', 'json', '--session', session]`
   when there is one. `read(stdout)` parses each line that is not empty as JSON, and skips one that is not. The
   session's id is the first string `sessionID` of an event. The final response is the text of the message that the
@@ -423,8 +426,11 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 - [ ] Add `scripts/agentrite-outcome.mjs` (R15, R16)
 - [ ] In the same test file, test the readers of `scripts/agentrite-headless.mjs` (R13, R15):
     * `claude`: the arguments of a first step hold `--session-id` and a UUID, which it gives as the session, and
-      those of a later one `--resume` and the session given; `read` gives `result`, and none for an output that is
-      no JSON, for a JSON object without a string `result`, and for an empty output
+      those of a later one `--resume` and the session given; `read` gives `result` and `session_id`, and no final
+      response for an output that is no JSON, for a JSON object without a string `result`, and for an empty output;
+      no session for an output without a string `session_id`. In `tests/agentrite-orchestrate.test.mjs`, an
+      end-to-end run whose second Claude Code call prints another `session_id` than it was given has the third call
+      of that role resume the one printed
     * `opencode`: the arguments with and without a session; `read` of the two outputs the planner saw, a message
       with a tool call before the message of the answer, gives the answer alone and the session's id; two text
       parts of one message are joined by an empty line; a part given twice counts once, as its last event; a line
@@ -563,6 +569,28 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
   run's directory. Log in `record.md` what was seen, with `claude --version` and `opencode --version`. Should an
   outcome not be read from a real harness, stop and log it, and the plan goes back to the planner (R12, R13, R15,
   R17, R21)
+- [ ] The check by hand of the kit's own roles, which shows that the planner, the implementer and the reviewer, with
+  their role files, their lists of what the human must do and the reviewer's limit of two files, each end with an
+  outcome the command reads. The roles commit and write, so it runs in the working copy's sandbox, on the host:
+    * A project in a temporary directory outside the repository, a git repository on `master`: `package.json` of
+      `{ "name": "orchestrator-roles-check", "private": true, "type": "module", "scripts": { "test": "node --test" }
+      }`, the working tree's kit packed with `npm pack` and installed from the tarball with
+      `npm install --save-dev <tarball>`, so that `node_modules` holds a copy and no link that the container cannot
+      follow, then `npx agentrite init --no-sandbox claude opencode`
+    * A feature `changes/0001-greet/`, made from the kit's templates: a `spec.md` with one requirement, that
+      `greet.mjs` at the root exports `greet()`, which returns `hello`, covered by a unit test, and a `record.md`
+      whose status is `approved`, with a log entry of the human's approval. All of it committed on `master`
+    * `./sandbox-dev.sh --workdir <the project> npx agentrite orchestrate 0001 --skip-permissions`, from the
+      repository, which runs the default definition as `orchestrator` names it, on the models it names. The
+      harnesses need their logins in the home volume of `./sandbox-dev.sh` first, as "Logging in" of `SANDBOX.md`
+      says
+    * No step stops the run by a missing outcome, two outcomes or a malformed one; the reviewer wrote no file but
+      its findings under `.reviews/0001-greet/` and its entry in `record.md`; each step's outcome is in the run's
+      directory. A run that ends by `needs-human`, by a decline, or by a repeat that ran out still passes, since
+      those are the roles' to decide. Log in `record.md` how the run ended, the steps it ran and how long each took,
+      with `claude --version` and `opencode --version` in the sandbox. Should a role's outcome not be read, stop and
+      log the response the run's directory holds, and the plan goes back to the planner, since the request of the
+      outcome is the plan's (R4, R12, R15, R16, R21)
 
 ## Commit Points
 
@@ -577,4 +605,4 @@ Each commit is made once `npm test` is green.
 - [ ] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
 - [ ] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
 - [ ] After task group 8: `feature-0065 Describe the orchestrator`
-- [ ] After the check by hand: `feature-0065 Log the check by hand of the orchestrator`
+- [ ] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`

@@ -78,3 +78,9 @@ timestamp: 2026-10-20T23:55:38Z
   the plan's readers are built on. Both are recorded in the plan's approach. This repository's own `agentrite.json`
   does not get the key `orchestrator` in this unit, since the suite holds it to the installed release's default
   file; the release that ships the unit moves it. The status is `approved`
+- 2026-10-21T11:46:00Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on two points the human passed on
+  from a reading of the plan, changed `plan.md`: a second check by hand runs the default definition with the kit's
+  own roles on a small unit, in the working copy's sandbox, so that whether the real roles end with an outcome the
+  command reads is known before the unit is implemented; and the reader of Claude Code's output takes the session's
+  id from its `session_id`, falling back to the id the command gave, so that a resume that hands out a new id is
+  still followed. The status is `approved`
