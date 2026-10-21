@@ -391,9 +391,9 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 2. The definition
 
-- [ ] In `tests/agentrite-json.test.mjs`, test `jsonPath` for a key and an index from the root and below, and
+- [x] In `tests/agentrite-json.test.mjs`, test `jsonPath` for a key and an index from the root and below, and
   `jsonFault` for a missing and a present value. See them fail, then add both (R9, R16)
-- [ ] In a new `tests/agentrite-definition.test.mjs`, test `parseDefinition` (R5 to R9, R29):
+- [x] In a new `tests/agentrite-definition.test.mjs`, test `parseDefinition` (R5 to R9, R29):
     * `orchestrator.json` read from the repository is taken with the template's roles and harnesses, and gives the
       typed definition, its repeat and its prompt included (R4)
     * a step with `prompt` and `stopWhen`, inside a repeat and outside one; a repeat without `until`; `times` of 1
@@ -408,7 +408,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
       value of the wrong form
 
   See them fail
-- [ ] Add `scripts/agentrite-definition.mjs` (R5 to R9)
+- [x] Add `scripts/agentrite-definition.mjs` (R5 to R9)
 
 ### 3. The outcome
 
@@ -598,7 +598,7 @@ Each commit is made once `npm test` is green.
 
 - [x] After task group 1: `feature-0065 Make orchestrator a required key of agentrite.json, and ship the default
   definition`
-- [ ] After task group 2: `feature-0065 Judge a definition of the orchestrator`
+- [x] After task group 2: `feature-0065 Judge a definition of the orchestrator`
 - [ ] After task group 3: `feature-0065 Ask a step for its outcome, and read it from what the harness printed`
 - [ ] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
 - [ ] After task group 5: `feature-0065 Add agentrite orchestrate`

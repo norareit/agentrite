@@ -1,0 +1,209 @@
+import { SETTINGS_FILE } from './agentrite-settings.mjs';
+import { jsonFault, jsonPath } from './agentrite-json.mjs';
+
+/**
+ * @typedef {{ role: string, harness: string, model: string, prompt?: string, stopWhen?: 'blocking-findings' }} Step
+ * @typedef {{ times: number, until?: 'no-blocking-findings', steps: Step[] }} Repeat
+ * @typedef {{ steps: (Step | { repeat: Repeat })[] }} Definition
+ * @typedef {{ roles: string[], harnesses: string[] }} Names What `agentrite.json` names, which a step must name
+ */
+
+const OBJECT_MUST = 'It must hold a JSON object with one key, steps';
+
+/**
+ * The keys each kind of object takes, in the order they are judged in, and the sentence that says so.
+ *
+ * @type {Record<'definition' | 'step' | 'item' | 'repeat', { name: string, keys: string[], holds: string }>}
+ */
+const PLACES = {
+  definition: { name: 'a definition', keys: ['steps'], holds: 'A definition holds one key, steps' },
+  step: {
+    name: 'a step',
+    keys: ['role', 'harness', 'model', 'prompt', 'stopWhen'],
+    holds: 'A step holds role, harness and model, and may hold prompt and stopWhen',
+  },
+  item: { name: 'a repeat', keys: ['repeat'], holds: 'A repeat holds one key, repeat' },
+  repeat: {
+    name: 'the object of repeat',
+    keys: ['times', 'steps', 'until'],
+    holds: 'The object of repeat holds times and steps, and may hold until',
+  },
+};
+
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
+function isObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {value is string}
+ */
+function isFilledString(value) {
+  return typeof value === 'string' && value !== '';
+}
+
+/**
+ * True for a string that `names` holds.
+ *
+ * @param {unknown} value
+ * @param {string[]} names
+ * @returns {boolean}
+ */
+function isNamed(value, names) {
+  return typeof value === 'string' && names.includes(value);
+}
+
+/**
+ * @param {string[]} names
+ * @returns {string}
+ */
+function inWords(names) {
+  return names.length === 1 ? names[0] : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+}
+
+/**
+ * Throws, naming where, for the first key of `object` that its kind of place does not take, in the order of the text.
+ *
+ * @param {Record<string, unknown>} object
+ * @param {string} path
+ * @param {(typeof PLACES)[keyof typeof PLACES]} place
+ */
+function checkKeys(object, path, place) {
+  const extra = Object.keys(object).find((key) => !place.keys.includes(key));
+  if (extra === undefined) return;
+  throw new Error(`${jsonPath(path, extra)} is no key of ${place.name}. ${place.holds}`);
+}
+
+/**
+ * The value at `key` of `object`, or a throw of its fault when `holds` is false for it.
+ *
+ * @param {Record<string, unknown>} object
+ * @param {string} path
+ * @param {string} key
+ * @param {(value: unknown) => boolean} holds
+ * @param {string} must
+ * @returns {unknown}
+ */
+function valueAt(object, path, key, holds, must) {
+  const value = Object.hasOwn(object, key) ? object[key] : undefined;
+  if (!holds(value)) throw new Error(jsonFault(jsonPath(path, key), value, must));
+  return value;
+}
+
+/**
+ * The step `value` at `path` holds, with only the keys it was given.
+ *
+ * @param {Record<string, unknown>} value
+ * @param {string} path
+ * @param {Names} names
+ * @returns {Step}
+ */
+function parseStep(value, path, { roles, harnesses }) {
+  checkKeys(value, path, PLACES.step);
+  const roleMust = `a role that roles in ${SETTINGS_FILE} names: ${inWords(roles)}`;
+  const harnessMust = `a harness that harnesses in ${SETTINGS_FILE} names: ${inWords(harnesses)}`;
+  const modelMust = "the harness's own id of a model, as a string that is not empty";
+  /** @type {Step} */ const step = {
+    role: /** @type {string} */ (valueAt(value, path, 'role', (role) => isNamed(role, roles), roleMust)),
+    harness: /** @type {string} */ (valueAt(value, path, 'harness', (name) => isNamed(name, harnesses), harnessMust)),
+    model: /** @type {string} */ (valueAt(value, path, 'model', isFilledString, modelMust)),
+  };
+  if (Object.hasOwn(value, 'prompt')) {
+    step.prompt = /** @type {string} */ (valueAt(value, path, 'prompt', isFilledString, 'a string that is not empty'));
+  }
+  if (Object.hasOwn(value, 'stopWhen')) {
+    valueAt(value, path, 'stopWhen', (stop) => stop === 'blocking-findings', '"blocking-findings"');
+    step.stopWhen = 'blocking-findings';
+  }
+  return step;
+}
+
+/**
+ * The repeat that the object of `repeat` at `path` holds.
+ *
+ * @param {Record<string, unknown>} item
+ * @param {string} itemPath
+ * @param {Names} names
+ * @returns {Repeat}
+ */
+function parseRepeat(item, itemPath, names) {
+  const object = valueAt(item, itemPath, 'repeat', isObject, 'an object with times and steps, and optionally until');
+  const value = /** @type {Record<string, unknown>} */ (object);
+  const path = jsonPath(itemPath, 'repeat');
+  checkKeys(value, path, PLACES.repeat);
+  const isCount = (/** @type {unknown} */ count) => Number.isInteger(count) && Number(count) >= 1;
+  const times = /** @type {number} */ (valueAt(value, path, 'times', isCount, 'a whole number of one or more'));
+  const list = /** @type {unknown[]} */ (
+    valueAt(value, path, 'steps', (steps) => Array.isArray(steps) && steps.length > 0, 'a list of one or more steps')
+  );
+  const steps = list.map((entry, index) => {
+    const entryPath = jsonPath(jsonPath(path, 'steps'), index);
+    if (!isObject(entry)) throw new Error(jsonFault(entryPath, entry, 'a step'));
+    if (Object.hasOwn(entry, 'repeat')) {
+      throw new Error(jsonFault(entryPath, entry, 'a step. A repeat holds no repeat'));
+    }
+    return parseStep(entry, entryPath, names);
+  });
+  /** @type {Repeat} */ const repeat = { times, steps };
+  if (Object.hasOwn(value, 'until')) {
+    valueAt(value, path, 'until', (until) => until === 'no-blocking-findings', '"no-blocking-findings"');
+    repeat.until = 'no-blocking-findings';
+  }
+  return repeat;
+}
+
+/**
+ * The definition of an orchestrator that `text` holds, judged against the roles and harnesses that `agentrite.json`
+ * names. Throws, opening with `path` and naming where in the definition the first fault is, what is wrong and what
+ * must be there. The faults are judged in the order of the text, and in one object the keys it does not take first.
+ *
+ * @param {string} text
+ * @param {{ path: string } & Names} context
+ * @returns {Definition}
+ */
+export function parseDefinition(text, { path, ...names }) {
+  /** @type {unknown} */ let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${path} is not JSON: ${error instanceof Error ? error.message : String(error)}. ${OBJECT_MUST}`);
+  }
+  if (!isObject(parsed)) {
+    throw new Error(`${path} holds ${JSON.stringify(parsed)}, which is no JSON object. ${OBJECT_MUST}`);
+  }
+  try {
+    return parseItems(parsed, names);
+  } catch (error) {
+    throw new Error(`${path}: ${error instanceof Error ? error.message : String(error)}`);
+  }
+}
+
+/**
+ * @param {Record<string, unknown>} definition
+ * @param {Names} names
+ * @returns {Definition}
+ */
+function parseItems(definition, names) {
+  checkKeys(definition, '', PLACES.definition);
+  const list = /** @type {unknown[]} */ (
+    valueAt(
+      definition,
+      '',
+      'steps',
+      (steps) => Array.isArray(steps) && steps.length > 0,
+      'a list of one or more items, each a step or a repeat',
+    )
+  );
+  const steps = list.map((item, index) => {
+    const path = jsonPath('steps', index);
+    if (!isObject(item)) throw new Error(jsonFault(path, item, 'a step or a repeat, as an object'));
+    if (!Object.hasOwn(item, 'repeat')) return parseStep(item, path, names);
+    checkKeys(item, path, PLACES.item);
+    return { repeat: parseRepeat(item, path, names) };
+  });
+  return { steps };
+}

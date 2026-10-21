@@ -95,3 +95,9 @@ timestamp: 2026-10-20T23:55:38Z
   settings code and passed at once, since the key is judged where every key is. No other fixture of the suite needed
   the key: the projects that judge the whole file take it from the template through `tests/installed-kit.mjs`.
   `npm test` passes: 829 tests, none skipped
+- 2026-10-21T11:54:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 2: `jsonPath` and
+  `jsonFault` in `scripts/agentrite-json.mjs`, whose tests failed on the missing exports first, and
+  `parseDefinition` in the new `scripts/agentrite-definition.mjs`, whose tests were written before the module. A text
+  that is not JSON, and JSON that is no object, are refused as `<path> is not JSON: ...` and `<path> holds ...`,
+  without a colon after the path, as `agentrite.json` is refused for the same faults; every other fault opens with
+  `<path>: ` and where in the definition it is, as the plan gives. `npm test` passes: 848 tests, none skipped
