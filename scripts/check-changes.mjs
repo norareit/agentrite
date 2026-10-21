@@ -179,7 +179,7 @@ function readAtRevision(root, revision, file) {
  * @param {string} recordFile
  * @returns {string}
  */
-function statusFrom(record, recordFile) {
+export function statusFrom(record, recordFile) {
   const match = record.match(/^status:\s*(\S+)\s*$/m);
   if (!match) throw new Error(`${recordFile} is missing a status field`);
   return match[1];

@@ -223,7 +223,7 @@ export function ranTable(ran) {
  * @param {End} end
  * @returns {string}
  */
-function endLine(end) {
+export function endLine(end) {
   if (end.kind === 'complete') return 'The run ran every item of the definition to its end.';
   const opening = `Step ${end.ran.planned.number} stopped the run: `;
   if (end.kind === 'ran-out') {

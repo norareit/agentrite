@@ -121,3 +121,11 @@ timestamp: 2026-10-20T23:55:38Z
   a repeat a planned step's `round` and `index` are both `undefined`. A stop by `none` uses the plan's line, that the
   final response holds no block marked json, also when there was no final response; the line after it then says that
   the harness gave none. `npm test` passes: 899 tests, none skipped
+- 2026-10-21T12:06:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 5: `agentrite
+  orchestrate` in `scripts/agentrite.mjs`, `statusFrom` exported from `scripts/check-changes.mjs`, and
+  `isRegularFile` exported from `scripts/agentrite-settings.mjs` for the check of `--definition`, which follows
+  symbolic links as the check of the settings' paths does. A step's model and prompt are given to `agentrite run` as
+  `--model=<id>` and `--prompt=<text>`, so that a prompt that opens with a dash is not taken for a missing value. The
+  end-to-end tests were written after the command's code, not before it as the plan has them; the end-to-end test of
+  a Claude Code session that prints another id, left open in task group 3, is among them. `npm test` passes: 912
+  tests, none skipped

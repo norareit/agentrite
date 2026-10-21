@@ -1,5 +1,17 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  rmSync,
+  statSync,
+  utimesSync,
+  writeFileSync,
+} from 'node:fs';
+import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { parseDefinition } from '../scripts/agentrite-definition.mjs';
 import {
@@ -13,6 +25,8 @@ import {
   stepLine,
 } from '../scripts/agentrite-orchestrate.mjs';
 import { readOutcome } from '../scripts/agentrite-outcome.mjs';
+import { installKit } from './installed-kit.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 const NAMES = { roles: ['specifier', 'planner', 'implementer', 'reviewer'], harnesses: ['claude', 'opencode'] };
 const DEFAULT = parseDefinition(readFileSync(new URL('../orchestrator.json', import.meta.url), 'utf-8'), {
@@ -21,6 +35,7 @@ const DEFAULT = parseDefinition(readFileSync(new URL('../orchestrator.json', imp
 });
 
 const FENCE = '```';
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 // The final response of a step that gives `outcome`, with prose around it.
 function responseOf(outcome) {
@@ -514,3 +529,579 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
     );
   }
 });
+
+// R10 to R24, R30: `agentrite orchestrate` as a command, in a project with the kit installed, the wrappers refresh
+// writes, an approved unit, and a PATH that holds nothing but one fake that stands for both harnesses.
+
+// Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n> and exits with the status
+// in status-<n>, or 0. Nothing but the builtins of sh, since the PATH holds no other command.
+const FAKE_HARNESS = `#!/bin/sh
+count=0
+if [ -f "$FAKE_DIR/count" ]; then read -r count < "$FAKE_DIR/count"; fi
+count=$((count + 1))
+printf '%s\\n' "$count" > "$FAKE_DIR/count"
+printf '%s\\n' "\${0##*/}" "$@" > "$FAKE_DIR/call-$count"
+if [ -f "$FAKE_DIR/out-$count" ]; then
+  while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line"; done < "$FAKE_DIR/out-$count"
+fi
+status=0
+if [ -f "$FAKE_DIR/status-$count" ]; then read -r status < "$FAKE_DIR/status-$count"; fi
+exit "$status"
+`;
+
+const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
+const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
+const UNIT = '0029-try-the-orchestrator';
+const APPROVED = '---\nkind: feature\nstatus: approved\ntimestamp: 2026-10-21T10:00:00Z\n---\n\n# 0029\n';
+
+function project(t) {
+  const base = temporaryDirectory(t, 'agentrite-orchestrate-');
+  installKit(base);
+  const fakes = join(base, 'fakes');
+  mkdirSync(fakes);
+  const write = (path, content) => {
+    mkdirSync(dirname(join(base, path)), { recursive: true });
+    writeFileSync(join(base, path), content);
+  };
+  const read = (path) => readFileSync(join(base, path), 'utf-8');
+  for (const harness of ['claude', 'opencode']) {
+    write(`bin/${harness}`, FAKE_HARNESS);
+    chmodSync(join(base, 'bin', harness), 0o755);
+  }
+  const agentrite = (...args) =>
+    spawnSync(process.execPath, [script, ...args], {
+      cwd: base,
+      encoding: 'utf-8',
+      env: { PATH: join(base, 'bin'), FAKE_DIR: fakes },
+    });
+  write('agentrite.json', SETTINGS);
+  assert.equal(agentrite('refresh').status, 0);
+  write(`changes/${UNIT}/record.md`, APPROVED);
+  // What the fake prints, and the status it exits with, at its call `number`, counted from 1.
+  const answer = (number, printed, status) => {
+    writeFileSync(join(fakes, `out-${number}`), printed);
+    if (status !== undefined) writeFileSync(join(fakes, `status-${number}`), `${status}\n`);
+  };
+  const calls = () =>
+    readdirSync(fakes)
+      .filter((name) => name.startsWith('call-'))
+      .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
+      .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
+  return { base, write, read, agentrite, answer, calls };
+}
+
+// A call of the fake: its name, the arguments before the prompt, and the prompt, which is the last argument and may
+// hold line breaks.
+function callOf(text) {
+  const lines = text.slice(0, -1).split('\n');
+  const end = lines.indexOf('--');
+  return { harness: lines[0], options: lines.slice(1, end), prompt: lines.slice(end + 1).join('\n') };
+}
+
+// What Claude Code prints headless for a final response, with the session's id when one is given.
+function claudePrinted(response, session) {
+  const printed = { type: 'result', subtype: 'success', is_error: false, result: response };
+  return `${JSON.stringify(session === undefined ? printed : { ...printed, session_id: session })}\n`;
+}
+
+// What OpenCode prints headless for a final response: its text event and the step_finish of its message.
+function opencodePrinted(response) {
+  const part = { messageID: 'msg_1', sessionID: 'ses_test' };
+  return [
+    { type: 'step_start', sessionID: 'ses_test', part: { ...part, id: 'prt_0', type: 'step-start' } },
+    { type: 'text', sessionID: 'ses_test', part: { ...part, id: 'prt_1', type: 'text', text: response } },
+    { type: 'step_finish', sessionID: 'ses_test', part: { ...part, id: 'prt_2', type: 'step-finish', reason: 'stop' } },
+  ]
+    .map((event) => `${JSON.stringify(event)}\n`)
+    .join('');
+}
+
+const PRINTED = { claude: claudePrinted, opencode: opencodePrinted };
+// The harness of each call of the default definition, from 1: the planner, then the implementer and the reviewer in
+// turn.
+const DEFAULT_HARNESSES = ['claude', 'claude', 'opencode', 'claude', 'opencode', 'claude', 'opencode'];
+
+// Answers the calls of the default definition, from 1, with the outcomes given, each as its harness prints it.
+function answerDefault(answer, outcomes) {
+  outcomes.forEach((outcome, index) => {
+    const harness = DEFAULT_HARNESSES[index];
+    answer(index + 1, PRINTED[harness](responseOf({ ...DONE, ...outcome })));
+  });
+}
+
+function runDirectoryOf(base) {
+  const unitDirectory = join(base, '.orchestrator', UNIT);
+  const runs = readdirSync(unitDirectory);
+  assert.equal(runs.length, 1, runs.join(', '));
+  assert.match(runs[0], /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+  return { name: `.orchestrator/${UNIT}/${runs[0]}`, path: join(unitDirectory, runs[0]) };
+}
+
+// The lines of requirement 14, before and after each step, as the command printed them.
+function stepLines(stdout) {
+  return stdout.split('\n').filter((line) => line.startsWith('step '));
+}
+
+const REQUEST_LINE = "AgentRite's orchestrator runs this step";
+const IMPLEMENTER_PROMPT =
+  "From round 2, the human accepts the review's findings you agree with. Propose declining others.";
+
+test('a run whose every item ends runs the default definition and exits 0', (t) => {
+  const { base, agentrite, answer, calls, read } = project(t);
+  answerDefault(answer, [{ summary: 'Planned.' }, { summary: 'Built.' }, { summary: 'Reviewed.', findings: [MINOR] }]);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  const lines = stepLines(result.stdout);
+  assert.equal(lines.length, 6);
+  assert.equal(lines[0], 'step 0, planner, claude, claude-opus-5-5: started');
+  assert.match(lines[1], /^step 0, planner, claude, claude-opus-5-5: done after 0m 0\ds$/);
+  assert.equal(lines[2], 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5: started');
+  assert.equal(lines[4], 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started');
+  assert.match(lines[5], /^step 2, round 1 of 3, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
+
+  const run = runDirectoryOf(base);
+  assert.ok(
+    result.stdout.endsWith(
+      '\nThe run ran every item of the definition to its end.\nSummary: Reviewed.\n\n' +
+        `The run's directory: ${run.name}/\nThe reviewer's findings are under .reviews/${UNIT}/.\n`,
+    ),
+    result.stdout,
+  );
+
+  const [planner, implementer, reviewer] = calls();
+  assert.equal(calls().length, 3);
+  assert.equal(planner.harness, 'claude');
+  assert.deepEqual(planner.options.slice(0, 7), [
+    '--print',
+    '--agent',
+    'planner',
+    '--model',
+    'claude-opus-5-5',
+    '--output-format',
+    'json',
+  ]);
+  assert.equal(planner.options[7], '--session-id');
+  assert.match(planner.options[8], UUID);
+  assert.ok(planner.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${REQUEST_LINE}, and reads`), planner.prompt);
+  assert.ok(implementer.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${IMPLEMENTER_PROMPT}\n\n`));
+  assert.ok(implementer.prompt.includes(`${REQUEST_LINE}, in round 1 of a repeat of at most 3 rounds, and reads`));
+  assert.equal(reviewer.harness, 'opencode');
+  assert.deepEqual(reviewer.options, [
+    'run',
+    '--agent',
+    'reviewer',
+    '--model',
+    'openai/gpt-6.1-sol',
+    '--format',
+    'json',
+  ]);
+  assert.ok(reviewer.prompt.includes(`${REQUEST_LINE}, in round 1 of a repeat of at most 3 rounds, and reads`));
+
+  assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-planner.outcome.json',
+    '01-implementer.outcome.json',
+    '02-reviewer.outcome.json',
+    'definition.json',
+    'state.json',
+  ]);
+  assert.equal(read(`${run.name}/definition.json`), read('node_modules/agentrite/orchestrator.json'));
+  assert.deepEqual(JSON.parse(read(`${run.name}/00-planner.outcome.json`)), { ...DONE, summary: 'Planned.' });
+  const state = JSON.parse(read(`${run.name}/state.json`));
+  assert.equal(state.unit, UNIT);
+  assert.equal(state.definition, 'node_modules/agentrite/orchestrator.json');
+  assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1 });
+  assert.deepEqual(state.sessions, [
+    { role: 'planner', harness: 'claude', session: planner.options[8] },
+    { role: 'implementer', harness: 'claude', session: implementer.options[8] },
+    { role: 'reviewer', harness: 'opencode', session: 'ses_test' },
+  ]);
+  assert.deepEqual(state.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
+});
+
+test('a run whose repeat ends at its first round goes on with the item after the repeat', (t) => {
+  const { base, write, agentrite, answer, calls } = project(t);
+  write(
+    'definitions/after.json',
+    JSON.stringify({
+      steps: [
+        {
+          repeat: {
+            times: 3,
+            until: 'no-blocking-findings',
+            steps: [{ role: 'reviewer', harness: 'opencode', model: 'm' }],
+          },
+        },
+        { role: 'planner', harness: 'claude', model: 'claude-opus-5-5' },
+      ],
+    }),
+  );
+  answer(1, opencodePrinted(responseOf({ ...DONE, findings: [MINOR] })));
+  answer(2, claudePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'definitions/after.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(
+    calls().map((call) => [call.harness, call.options[2]]),
+    [
+      ['opencode', 'reviewer'],
+      ['claude', 'planner'],
+    ],
+  );
+  assert.equal(stepLines(result.stdout)[2], 'step 1, planner, claude, claude-opus-5-5: started');
+  assert.ok(readdirSync(runDirectoryOf(base).path).includes('01-planner.outcome.json'));
+});
+
+test('a run whose repeat runs out exits 3, with the open findings and the rounds, the sessions continued', (t) => {
+  const { agentrite, answer, calls } = project(t);
+  const blocking = { findings: [BLOCKING, MINOR] };
+  answerDefault(answer, [{}, {}, blocking, {}, blocking, {}, { ...blocking, summary: 'Still blocked.' }]);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.equal(stepLines(result.stdout).length, 14);
+  assert.ok(
+    result.stdout.includes(
+      '\nStep 6 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.\n' +
+        'Summary: Still blocked.\nBlocking findings still open:\n  S1: R1 is not met\n\n',
+    ),
+    result.stdout,
+  );
+  const made = calls();
+  assert.equal(made.length, 7);
+  const session = made[1].options.at(-1);
+  assert.equal(made[1].options.at(-2), '--session-id');
+  for (const later of [made[3], made[5]]) assert.deepEqual(later.options.slice(-2), ['--resume', session]);
+  assert.deepEqual(made[2].options.slice(-2), ['--format', 'json']);
+  for (const later of [made[4], made[6]]) assert.deepEqual(later.options.slice(-2), ['--session', 'ses_test']);
+  assert.ok(made[3].prompt.includes('in round 2 of a repeat of at most 3 rounds'));
+  assert.ok(made[6].prompt.includes('in round 3 of a repeat of at most 3 rounds'));
+});
+
+test('a Claude Code session that prints another id is resumed by the id it printed', (t) => {
+  const { agentrite, answer, calls } = project(t);
+  const blocking = responseOf({ ...DONE, findings: [BLOCKING] });
+  answer(1, claudePrinted(responseOf(DONE)));
+  answer(2, claudePrinted(responseOf(DONE), 'printed-by-the-second'));
+  answer(3, opencodePrinted(blocking));
+  answer(4, claudePrinted(responseOf(DONE), 'printed-by-the-fourth'));
+  answer(5, opencodePrinted(blocking));
+  answer(6, claudePrinted(responseOf(DONE)));
+  answer(7, opencodePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  const made = calls();
+  assert.deepEqual(made[3].options.slice(-2), ['--resume', 'printed-by-the-second']);
+  assert.deepEqual(made[5].options.slice(-2), ['--resume', 'printed-by-the-fourth']);
+});
+
+test('a repeat without until runs all its rounds, and the run then ends', (t) => {
+  const { write, agentrite, answer, calls } = project(t);
+  write(
+    'other.json',
+    JSON.stringify({
+      steps: [{ repeat: { times: 2, steps: [{ role: 'reviewer', harness: 'opencode', model: 'm' }] } }],
+    }),
+  );
+  answer(1, opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] })));
+  answer(2, opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] })));
+
+  const result = agentrite('orchestrate', '0029', '--definition=other.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(calls().length, 2);
+  assert.ok(result.stdout.includes('\nThe run ran every item of the definition to its end.\n'));
+});
+
+test('stopWhen stops a run outside a repeat, and inside it on the review, exiting 3', (t) => {
+  for (const definition of [
+    {
+      steps: [
+        { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' },
+        { role: 'planner', harness: 'claude', model: 'm' },
+      ],
+    },
+    {
+      steps: [
+        {
+          repeat: {
+            times: 3,
+            until: 'no-blocking-findings',
+            steps: [{ role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' }],
+          },
+        },
+      ],
+    },
+  ]) {
+    const { write, agentrite, answer, calls } = project(t);
+    write('stop.json', JSON.stringify(definition));
+    answer(1, opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] })));
+
+    const result = agentrite('orchestrate', '0029', '--definition', 'stop.json');
+
+    assert.equal(result.status, 3, result.stderr);
+    assert.equal(calls().length, 1);
+    assert.ok(
+      result.stdout.includes(
+        'Step 0 stopped the run: it holds stopWhen "blocking-findings", and a finding of its outcome blocks.\n' +
+          'Summary: Did it.\nBlocking findings still open:\n  S1: R1 is not met\n',
+      ),
+      result.stdout,
+    );
+  }
+});
+
+test('each stop of a step exits 3, starts nothing after the step and says what the human needs', (t) => {
+  for (const [printed, status, lines, file] of [
+    [
+      claudePrinted(responseOf({ ...DONE, outcome: 'needs-human', questions: ['Which branch?'] })),
+      undefined,
+      ['Step 1 stopped the run: its outcome is needs-human.', 'Summary: Did it.', 'Questions:', '  - Which branch?'],
+      'outcome.json',
+    ],
+    [
+      claudePrinted(responseOf({ ...DONE, declines: [{ finding: 'S1', reason: 'It holds.' }] })),
+      undefined,
+      [
+        'Step 1 stopped the run: it proposes declines of findings, which the human decides.',
+        'Summary: Did it.',
+        'Proposed declines:',
+        '  S1: It holds.',
+      ],
+      'outcome.json',
+    ],
+    [
+      claudePrinted('I did the work, and give no block.'),
+      undefined,
+      ['Step 1 stopped the run: its final response holds no block marked json.', 'The final response of step 1 is at'],
+      'response.md',
+    ],
+    [
+      claudePrinted(`${responseOf(DONE)}\n${responseOf(DONE)}`),
+      undefined,
+      ['Step 1 stopped the run: its final response holds 2 blocks marked json, not one.'],
+      'response.md',
+    ],
+    [
+      claudePrinted(`${FENCE}json\n{"outcome": "done", "summary": "Hidden."}\n${FENCE}\n`),
+      undefined,
+      [
+        'Step 1 stopped the run: its outcome is not of the form asked for. questions is missing. ' +
+          'It must hold a list of strings.',
+        'The final response of step 1 is at',
+      ],
+      'response.md',
+    ],
+    ['', 1, ['Step 1 stopped the run: its harness exited with 1.', 'The harness gave step 1 no final response.'], null],
+  ]) {
+    const { base, agentrite, answer, calls, read } = project(t);
+    answer(1, claudePrinted(responseOf(DONE)));
+    answer(2, printed, status);
+
+    const result = agentrite('orchestrate', '0029');
+
+    assert.equal(result.status, 3, `${lines[0]}: ${result.stderr}`);
+    assert.equal(calls().length, 2, lines[0]);
+    assert.equal(stepLines(result.stdout).length, 4, lines[0]);
+    const report = result.stdout.split('\n');
+    const at = report.indexOf(lines[0]);
+    assert.notEqual(at, -1, result.stdout);
+    for (const [offset, line] of lines.entries()) assert.ok(report[at + offset].startsWith(line), report[at + offset]);
+    assert.ok(!result.stdout.includes('Hidden.'));
+    const run = runDirectoryOf(base);
+    const names = readdirSync(run.path);
+    if (file === null) {
+      assert.ok(!names.some((name) => name.startsWith('01-')), names.join(', '));
+    } else {
+      assert.ok(names.includes(`01-implementer.${file}`), names.join(', '));
+    }
+    if (file === 'response.md') {
+      const path = `${run.name}/01-implementer.response.md`;
+      assert.ok(result.stdout.includes(`The final response of step 1 is at ${path}.`));
+      assert.ok(read(path).length > 0);
+    }
+    assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.status, 3);
+  }
+});
+
+test('--skip-permissions gives every call the flag of its harness', (t) => {
+  const { agentrite, answer, calls } = project(t);
+  answerDefault(answer, [{}, {}, {}]);
+
+  const result = agentrite('orchestrate', '--skip-permissions', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  const [planner, implementer, reviewer] = calls();
+  assert.ok(planner.options.includes('--dangerously-skip-permissions'));
+  assert.ok(implementer.options.includes('--dangerously-skip-permissions'));
+  assert.ok(reviewer.options.includes('--auto'));
+});
+
+test('a definition given with --definition, relative or absolute, is run and copied into the run directory', (t) => {
+  for (const absolute of [false, true]) {
+    const { base, write, read, agentrite, answer, calls } = project(t);
+    const definition = { steps: [{ role: 'reviewer', harness: 'opencode', model: 'theirs' }] };
+    const text = `${JSON.stringify(definition, null, 2)}\n`;
+    write('trial/one.json', text);
+    answer(1, opencodePrinted(responseOf(DONE)));
+    const given = absolute ? join(base, 'trial/one.json') : 'trial/one.json';
+
+    const result = agentrite('orchestrate', '0029', '--definition', given);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(calls().length, 1);
+    assert.equal(calls()[0].options[4], 'theirs');
+    const run = runDirectoryOf(base);
+    assert.equal(read(`${run.name}/definition.json`), text);
+    assert.equal(JSON.parse(read(`${run.name}/state.json`)).definition, given);
+    assert.match(read('agentrite.json'), /"orchestrator": "node_modules\/agentrite\/orchestrator\.json"/);
+  }
+});
+
+// R11
+
+function refused(t, prepare, args, message) {
+  const { base, agentrite, calls, write } = project(t);
+  prepare({ base, write });
+
+  const result = agentrite('orchestrate', ...args);
+
+  assert.equal(result.status, 1, `${message}: ${result.stdout}`);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, `agentrite: ${message}\n`);
+  assert.equal(calls().length, 0);
+  assert.ok(!existsSync(join(base, '.orchestrator')), message);
+}
+
+const OPTED_OUT =
+  'the project opted out of the orchestrator: orchestrator in agentrite.json is false. ' +
+  'To use it, set orchestrator to the path of a definition, as node_modules/agentrite/orchestrator.json';
+
+test('the refusals of requirement 11 exit 1, start nothing and make no .orchestrator', (t) => {
+  const settings = JSON.parse(SETTINGS);
+  const optOut = ({ write }) => write('agentrite.json', JSON.stringify({ ...settings, orchestrator: false }));
+  const status = (record) => ({ write }) => write(`changes/${UNIT}/record.md`, record);
+  for (const [prepare, args, message] of [
+    [
+      ({ base }) => rmSync(join(base, 'agentrite.json')),
+      ['0029'],
+      'the project has no agentrite.json. Run: npx agentrite config, which writes one',
+    ],
+    [
+      ({ write }) => write('agentrite.json', JSON.stringify({ ...settings, orchestrator: true })),
+      ['0029'],
+      'agentrite.json: orchestrator is true. It must hold false, for a project that does not use the orchestrator, ' +
+        'or the path of a file, relative to the project root, that does not lead outside the project',
+    ],
+    [optOut, ['0029'], OPTED_OUT],
+    [optOut, ['0029', '--definition', 'node_modules/agentrite/orchestrator.json'], OPTED_OUT],
+    [() => {}, ['0029', '--definition', 'missing.json'], '--definition names missing.json, and there is no file at it'],
+    [
+      ({ write }) => write('dir.json/x', ''),
+      ['0029', '--definition=dir.json'],
+      '--definition names dir.json, and there is no file at it',
+    ],
+    [
+      ({ write }) => {
+        const step = { role: 'reviewer', harness: 'opencode', model: '' };
+        write('bad.json', JSON.stringify({ steps: [{ repeat: { times: 2, steps: [step] } }] }));
+      },
+      ['0029', '--definition', 'bad.json'],
+      'bad.json: steps[0].repeat.steps[0].model is "". It must hold the harness\'s own id of a model, as a string ' +
+        'that is not empty',
+    ],
+    [() => {}, ['0042'], 'changes/ holds no directory for the unit 0042'],
+    [
+      ({ write }) => write('changes/0029-another/record.md', APPROVED),
+      ['0029'],
+      'the digits 0029 open more than one directory of changes/, so give the unit by its name:\n' +
+        `- changes/0029-another\n- changes/${UNIT}`,
+    ],
+    ...['draft', 'in-progress', 'implemented'].map((name) => [
+      status(APPROVED.replace('approved', name)),
+      ['0029'],
+      `the unit changes/${UNIT}/ is ${name}, and a run starts the work of an approved unit`,
+    ]),
+    [status('# 0029\n'), ['0029'], `changes/${UNIT}/record.md is missing a status field`],
+    [
+      ({ base }) => rmSync(join(base, 'changes', UNIT, 'record.md')),
+      ['0029'],
+      `changes/${UNIT}/record.md is missing a status field`,
+    ],
+  ]) {
+    refused(t, prepare, args, message);
+  }
+});
+
+const ORCHESTRATE_USAGE_FORM = 'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]';
+
+test('no argument, or one it does not take, prints the usage on standard error and exits 2, starting nothing', (t) => {
+  for (const [args, first] of [
+    [[], ORCHESTRATE_USAGE_FORM],
+    [['0029', '--model', 'x'], 'unknown option: --model'],
+  ]) {
+    const { base, agentrite, calls } = project(t);
+
+    const result = agentrite('orchestrate', ...args);
+
+    assert.equal(result.status, 2);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr.split('\n')[0], first);
+    assert.ok(result.stderr.includes(`${ORCHESTRATE_USAGE_FORM}\n\n  <unit>`), result.stderr);
+    assert.equal(calls().length, 0);
+    assert.ok(!existsSync(join(base, '.orchestrator')));
+  }
+});
+
+// R24
+
+test('.orchestrator/.gitignore is written when missing or holding anything else, and left when it holds *', (t) => {
+  for (const [before, kept] of [
+    [undefined, false],
+    ['node_modules\n', false],
+    ['*', false],
+    ['*\n', true],
+  ]) {
+    const { base, write, agentrite, answer } = project(t);
+    const path = join(base, '.orchestrator', '.gitignore');
+    if (before !== undefined) {
+      write('.orchestrator/.gitignore', before);
+      utimesSync(path, new Date(2020, 0, 1), new Date(2020, 0, 1));
+    }
+    answerDefault(answer, [{}, {}, {}]);
+
+    assert.equal(agentrite('orchestrate', '0029').status, 0);
+
+    assert.equal(readFileSync(path, 'utf-8'), '*\n');
+    assert.equal(statSync(path).mtime.getFullYear() === 2020, kept, JSON.stringify(before));
+  }
+});
+
+// R22
+
+test('a run writes nothing outside .orchestrator, and leaves the record as it was', (t) => {
+  const { base, agentrite, answer } = project(t);
+  answerDefault(answer, [{}, { findings: [BLOCKING] }, { findings: [BLOCKING] }, {}, {}]);
+  const before = snapshot(base);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(snapshot(base), before);
+});
+
+// Every file of the project with its content, but those under .orchestrator and the fakes' own.
+function snapshot(base, relative = '') {
+  return readdirSync(join(base, relative), { withFileTypes: true })
+    .filter((entry) => !['.orchestrator', 'fakes'].includes(join(relative, entry.name)))
+    .flatMap((entry) => {
+      const path = join(relative, entry.name);
+      if (entry.isDirectory()) return [[path, null], ...snapshot(base, path)];
+      return [[path, readFileSync(join(base, path), 'utf-8')]];
+    });
+}

@@ -428,7 +428,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
       values of the wrong type in each key, each with its whole fault
 - [x] Add `jsonKeyFault` to `scripts/agentrite-json.mjs`, with its test, and have `parseDefinition` use it (R9, R16)
 - [x] Add `scripts/agentrite-outcome.mjs` (R15, R16)
-- [ ] In the same test file, test the readers of `scripts/agentrite-headless.mjs` (R13, R15):
+- [x] In the same test file, test the readers of `scripts/agentrite-headless.mjs` (R13, R15):
     * `claude`: the arguments of a first step hold `--session-id` and a UUID, which it gives as the session, and
       those of a later one `--resume` and the session given; `read` gives `result` and `session_id`, and no final
       response for an output that is no JSON, for a JSON object without a string `result`, and for an empty output;
@@ -475,7 +475,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 5. The command
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, end-to-end tests of `agentrite orchestrate` against the fakes of
+- [x] In `tests/agentrite-orchestrate.test.mjs`, end-to-end tests of `agentrite orchestrate` against the fakes of
   the approach, each asserting the exit status, the lines of requirement 14 in order, the end report and the files
   of the run's directory (R10 to R24, R30):
     * a run whose every item ends: the default definition, with the review of round 1 giving no blocking finding;
@@ -502,9 +502,9 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
     * `.orchestrator/.gitignore` written when missing and when it holds `node_modules`, and left with its time when
       it holds `*` and a line break (R24)
     * after a run, the files of the project outside `.orchestrator/` are as they were, `record.md` among them (R22)
-- [ ] Export `statusFrom` from `scripts/check-changes.mjs`, and add `orchestrate` to `scripts/agentrite.mjs` (R10 to
+- [x] Export `statusFrom` from `scripts/check-changes.mjs`, and add `orchestrate` to `scripts/agentrite.mjs` (R10 to
   R12, R17, R20, R22 to R24)
-- [ ] List `scripts/agentrite-definition.mjs`, `scripts/agentrite-outcome.mjs`, `scripts/agentrite-headless.mjs`
+- [x] List `scripts/agentrite-definition.mjs`, `scripts/agentrite-outcome.mjs`, `scripts/agentrite-headless.mjs`
   and `scripts/agentrite-orchestrate.mjs` in `files` of `package.json` and in the test of `files`, which the test of
   imports then holds to it (R10)
 
@@ -606,10 +606,10 @@ Each commit is made once `npm test` is green.
 - [x] After task group 1: `feature-0065 Make orchestrator a required key of agentrite.json, and ship the default
   definition`
 - [x] After task group 2: `feature-0065 Judge a definition of the orchestrator`
-- [ ] After task group 3: `feature-0065 Ask a step for its outcome, and read it from what the harness printed`
+- [x] After task group 3: `feature-0065 Ask a step for its outcome, and read it from what the harness printed`
 - [x] Before task group 4's other tasks: `feature-0065 Let the judging of an option serve another command`
 - [x] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
-- [ ] After task group 5: `feature-0065 Add agentrite orchestrate`
+- [x] After task group 5: `feature-0065 Add agentrite orchestrate`
 - [ ] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
 - [ ] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
 - [ ] After task group 8: `feature-0065 Describe the orchestrator`

@@ -227,10 +227,12 @@ export function checkSettingsFiles(root, settings) {
 }
 
 /**
+ * True for a path that names a regular file, symbolic links followed.
+ *
  * @param {string} path
  * @returns {boolean}
  */
-function isRegularFile(path) {
+export function isRegularFile(path) {
   try {
     return statSync(path).isFile();
   } catch {

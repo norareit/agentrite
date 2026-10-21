@@ -10,7 +10,8 @@ import {
   rmSync,
   writeFileSync,
 } from 'node:fs';
-import { basename, dirname, posix, resolve } from 'node:path';
+import { basename, dirname, join, posix, resolve } from 'node:path';
+import { performance } from 'node:perf_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   agentsListNotice,
@@ -31,7 +32,19 @@ import {
   opencodeVerdict,
   readProjectFile,
 } from './agentrite-instructions.mjs';
+import { parseDefinition } from './agentrite-definition.mjs';
+import { HEADLESS } from './agentrite-headless.mjs';
 import { formattedLike } from './agentrite-json.mjs';
+import {
+  endLine,
+  endReport,
+  exitStatus,
+  orchestrate,
+  ORCHESTRATE_FORM,
+  parseOrchestrateArgs,
+  stepLine,
+} from './agentrite-orchestrate.mjs';
+import { outcomeRequest } from './agentrite-outcome.mjs';
 import { HARNESS_NAMES, isKitWrapper, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
 import {
   harnessCommand,
@@ -44,11 +57,13 @@ import {
 } from './agentrite-run.mjs';
 import {
   checkSettingsFiles,
+  isRegularFile,
   parseSettings,
   readSettings,
   SETTINGS_FILE,
   settingsText,
 } from './agentrite-settings.mjs';
+import { statusFrom } from './check-changes.mjs';
 
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -1096,6 +1111,194 @@ function run(root, { role, harness, unit, text, ...start }) {
   return result.status ?? 1;
 }
 
+/** The directory of the project root that holds the orchestrator's runs, and nothing else. */
+const ORCHESTRATOR_DIRECTORY = '.orchestrator';
+
+const OPTED_OUT =
+  `the project opted out of the orchestrator: orchestrator in ${SETTINGS_FILE} is false. ` +
+  'To use it, set orchestrator to the path of a definition, as node_modules/agentrite/orchestrator.json';
+
+/**
+ * The definition a run runs: the one `--definition` names, or else the one `orchestrator` names, with the path as
+ * it was given, its text as it was read, and what it holds.
+ *
+ * @param {string} root
+ * @param {string | undefined} given
+ * @param {import('./agentrite-settings.mjs').Settings} settings
+ * @returns {{ path: string, text: string, definition: import('./agentrite-definition.mjs').Definition }}
+ */
+function readDefinition(root, given, settings) {
+  if (settings.orchestrator === false) throw new Error(OPTED_OUT);
+  const path = given ?? settings.orchestrator;
+  if (given !== undefined && !isRegularFile(resolve(root, given))) {
+    throw new Error(`--definition names ${given}, and there is no file at it`);
+  }
+  const text = readFileSync(resolve(root, path), 'utf-8');
+  const names = { roles: Object.keys(settings.roles), harnesses: settings.harnesses };
+  return { path, text, definition: parseDefinition(text, { path, ...names }) };
+}
+
+/**
+ * Throws unless the unit's record says that it is approved. A record that is missing is refused as one that holds
+ * no status.
+ *
+ * @param {string} root
+ * @param {string} directory
+ */
+function checkApproved(root, directory) {
+  const recordFile = `changes/${directory}/record.md`;
+  const path = resolve(root, recordFile);
+  const status = statusFrom(isRegularFile(path) ? readFileSync(path, 'utf-8') : '', recordFile);
+  if (status === 'approved') return;
+  throw new Error(`the unit changes/${directory}/ is ${status}, and a run starts the work of an approved unit`);
+}
+
+/**
+ * Makes the directory of a new run of the unit, after making sure that `.orchestrator/.gitignore` holds `*` alone,
+ * and returns its path from the root. It is named by the instant the run started, and made without `recursive`, so
+ * that a second run in the same second fails rather than mixing with the first.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {string}
+ */
+function makeRunDirectory(root, directory) {
+  const ignore = resolve(root, ORCHESTRATOR_DIRECTORY, '.gitignore');
+  mkdirSync(dirname(ignore), { recursive: true });
+  if (!isRegularFile(ignore) || readFileSync(ignore, 'utf-8') !== '*\n') writeFileSync(ignore, '*\n');
+  const unitDirectory = join(ORCHESTRATOR_DIRECTORY, directory);
+  mkdirSync(resolve(root, unitDirectory), { recursive: true });
+  const run = join(unitDirectory, new Date().toISOString().replace(/\.\d+Z$/, 'Z'));
+  mkdirSync(resolve(root, run));
+  return run;
+}
+
+/**
+ * How many digits the number of a step's files takes: those of the highest number the definition can reach, and two
+ * at least, so that the names sort in the order the steps ran.
+ *
+ * @param {import('./agentrite-definition.mjs').Definition} definition
+ * @returns {number}
+ */
+function numberWidth(definition) {
+  const count = definition.steps.reduce(
+    (total, item) => total + ('repeat' in item ? item.repeat.times * item.repeat.steps.length : 1),
+    0,
+  );
+  return Math.max(2, String(count - 1).length);
+}
+
+/**
+ * Runs one step as `agentrite run` of this file, headless, and gives how its harness ended, its final response and
+ * its session. The harness's standard error reaches the terminal, and its standard output is read.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @param {boolean} skipPermissions
+ * @param {import('./agentrite-orchestrate.mjs').Planned} planned
+ * @returns {import('./agentrite-orchestrate.mjs').Result}
+ */
+function runStep(root, directory, skipPermissions, { step, round, session }) {
+  const headless = HEADLESS[step.harness];
+  const start = headless.arguments(session);
+  const request = outcomeRequest(round);
+  const prompt = step.prompt === undefined ? request : `${step.prompt}\n\n${request}`;
+  const args = [
+    fileURLToPath(import.meta.url),
+    'run',
+    step.role,
+    step.harness,
+    directory,
+    // Written onto their options, so that a value that opens with a dash is not taken for an option.
+    `--model=${step.model}`,
+    '--headless',
+    `--prompt=${prompt}`,
+    ...(skipPermissions ? ['--skip-permissions'] : []),
+    '--',
+    ...start.args,
+  ];
+  const began = performance.now();
+  // A long session of OpenCode prints far more than the default buffer of a megabyte.
+  const result = spawnSync(process.execPath, args, {
+    cwd: root,
+    stdio: ['ignore', 'pipe', 'inherit'],
+    encoding: 'utf-8',
+    maxBuffer: Infinity,
+  });
+  const milliseconds = performance.now() - began;
+  if (result.error !== undefined) throw result.error;
+  const read = headless.read(result.stdout);
+  return {
+    status: result.status,
+    signal: result.signal,
+    response: read.response,
+    session: read.session ?? start.session,
+    milliseconds,
+  };
+}
+
+/**
+ * Runs the definition on an approved unit, one step at a time, keeping the run in its directory under
+ * `.orchestrator/`, prints a line before and after each step and what the human needs at the end, and returns the
+ * exit status. Nothing is written before every refusal has been ruled out, and nothing outside `.orchestrator/`.
+ *
+ * @param {string} root
+ * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
+ * @returns {number}
+ */
+function orchestrateCommand(root, { unit, definition: given, skipPermissions }) {
+  const settings = readSettings(root);
+  const { path, text, definition } = readDefinition(root, given, settings);
+  const directory = resolveUnit(unit, changeDirectories(root));
+  checkApproved(root, directory);
+
+  const runDirectory = makeRunDirectory(root, directory);
+  const write = (/** @type {string} */ name, /** @type {string} */ content) =>
+    writeFileSync(resolve(root, runDirectory, name), content);
+  const width = numberWidth(definition);
+  const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
+    `${String(planned.number).padStart(width, '0')}-${planned.step.role}.${kind}`;
+  /** @type {{ role: string, harness: string, session: string }[]} */ const sessions = [];
+  /** @type {object | null} */ let at = null;
+  const writeState = (/** @type {object | null} */ ended) =>
+    write('state.json', `${JSON.stringify({ unit: directory, definition: path, at, sessions, ended }, null, 2)}\n`);
+
+  write('definition.json', text);
+  writeState(null);
+  /** @type {string | undefined} */ let responsePath;
+  const { ran, end } = orchestrate(definition, {
+    started(planned) {
+      const { number, item, round, index } = planned;
+      at = { number, item, round: round ?? null, index: index ?? null };
+      writeState(null);
+      console.log(stepLine(planned));
+    },
+    run: (planned) => runStep(root, directory, skipPermissions, planned),
+    ended(entry) {
+      const { planned, result, reading } = entry;
+      const { role, harness } = planned.step;
+      if (result.session !== undefined) {
+        const known = sessions.find((listed) => listed.role === role && listed.harness === harness);
+        if (known === undefined) sessions.push({ role, harness, session: result.session });
+        else known.session = result.session;
+      }
+      responsePath = undefined;
+      if (reading.kind === 'outcome') {
+        write(fileOf(planned, 'outcome.json'), `${reading.text}\n`);
+      } else if (result.response !== undefined) {
+        write(fileOf(planned, 'response.md'), result.response);
+        responsePath = join(runDirectory, fileOf(planned, 'response.md'));
+      }
+      writeState(null);
+      console.log(stepLine(planned, entry));
+    },
+  });
+  const status = exitStatus(end);
+  writeState({ status, line: endLine(end) });
+  process.stdout.write(`\n${endReport(ran, end, { runDirectory, unitDirectory: directory, responsePath })}`);
+  return status;
+}
+
 /**
  * A command: `form` is the one line that says how it is run, `parse` reads the arguments after the command's name,
  * and throws what to print for ones it does not take, and `run` takes the project root and what `parse` returned,
@@ -1124,6 +1327,7 @@ const COMMANDS = {
   },
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
   run: { form: RUN_FORM, parse: parseRunArgs, run },
+  orchestrate: { form: ORCHESTRATE_FORM, parse: parseOrchestrateArgs, run: orchestrateCommand },
 };
 
 /**
