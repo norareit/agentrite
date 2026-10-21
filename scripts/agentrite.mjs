@@ -1218,10 +1218,87 @@ function groupAlive(group) {
   }
 }
 
+/** How long a step that ran past its time limit is given to end after `SIGTERM`, before `SIGKILL` ends it. */
+const GRACE_MILLISECONDS = 10_000;
+
+/**
+ * Runs `args` with this Node.js from `root` in a process group of its own, and gives how it ended, what it printed on
+ * standard output, how long it took and whether it ran past `timeoutMinutes`. When it does, `SIGTERM` is sent to the
+ * group, and `SIGKILL` when the group still has a process after the grace. `grouped` is given the group when it
+ * starts, and `undefined` when the promise settles.
+ *
+ * @param {string} root
+ * @param {string[]} args
+ * @param {number | undefined} timeoutMinutes
+ * @param {(group: number | undefined) => void} grouped
+ * @returns {Promise<{
+ *   status: number | null,
+ *   signal: string | null,
+ *   stdout: string,
+ *   milliseconds: number,
+ *   timedOut: boolean,
+ * }>}
+ */
+function runGrouped(root, args, timeoutMinutes, grouped) {
+  return new Promise((settle, reject) => {
+    const began = performance.now();
+    let milliseconds = 0;
+    let stdout = '';
+    let timedOut = false;
+    let graceOver = false;
+    /** @type {{ status: number | null, signal: string | null } | undefined} */ let closed;
+    /** @type {NodeJS.Timeout | undefined} */ let limit;
+    /** @type {NodeJS.Timeout | undefined} */ let grace;
+    // A group of its own, so that the command can end the harness with it, which `agentrite run` does not pass a
+    // signal on to.
+    const child = spawn(process.execPath, args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
+    const group = /** @type {number} */ (child.pid);
+    grouped(group);
+    const settleWhenDone = () => {
+      if (closed === undefined) return;
+      // The output can close while a process of the group that does not hold it is left, which the grace still ends.
+      if (timedOut && !graceOver && groupAlive(group)) return;
+      clearTimeout(limit);
+      clearTimeout(grace);
+      grouped(undefined);
+      settle({ ...closed, stdout, milliseconds, timedOut });
+    };
+    if (timeoutMinutes !== undefined) {
+      limit = setTimeout(() => {
+        timedOut = true;
+        signalGroup(group, 'SIGTERM');
+        grace = setTimeout(() => {
+          graceOver = true;
+          if (groupAlive(group)) signalGroup(group, 'SIGKILL');
+          settleWhenDone();
+        }, GRACE_MILLISECONDS);
+      }, timeoutMinutes * 60_000);
+    }
+    child.stdout.setEncoding('utf-8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.on('error', (error) => {
+      clearTimeout(limit);
+      clearTimeout(grace);
+      grouped(undefined);
+      reject(error);
+    });
+    child.on('exit', () => {
+      milliseconds = performance.now() - began;
+    });
+    child.on('close', (status, signal) => {
+      closed = { status, signal };
+      settleWhenDone();
+    });
+  });
+}
+
 /**
  * Runs one step as `agentrite run` of this file, headless, in a process group of its own, and gives how its harness
- * ended, its final response and its session. The harness's standard error reaches the terminal, and its standard
- * output is read. `grouped` is given the group when the step starts, and `undefined` when it has ended.
+ * ended, its final response, its session and whether it ran past its time limit. The harness's standard error
+ * reaches the terminal, and its standard output is read. `grouped` is given the group when the step starts, and
+ * `undefined` when it has ended.
  *
  * @param {string} root
  * @param {string} directory
@@ -1230,7 +1307,7 @@ function groupAlive(group) {
  * @param {(group: number | undefined) => void} grouped
  * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
-function runStep(root, directory, skipPermissions, { step, round, session }, grouped) {
+async function runStep(root, directory, skipPermissions, { step, round, session }, grouped) {
   const headless = HEADLESS[step.harness];
   const start = headless.arguments(session);
   const request = outcomeRequest(round);
@@ -1249,31 +1326,9 @@ function runStep(root, directory, skipPermissions, { step, round, session }, gro
     '--',
     ...start.args,
   ];
-  return new Promise((settle, reject) => {
-    const began = performance.now();
-    let milliseconds = 0;
-    let stdout = '';
-    // A group of its own, so that the command can end the harness with it, which `agentrite run` does not pass a
-    // signal on to.
-    const child = spawn(process.execPath, args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
-    grouped(child.pid);
-    child.stdout.setEncoding('utf-8');
-    child.stdout.on('data', (chunk) => {
-      stdout += chunk;
-    });
-    child.on('error', (error) => {
-      grouped(undefined);
-      reject(error);
-    });
-    child.on('exit', () => {
-      milliseconds = performance.now() - began;
-    });
-    child.on('close', (status, signal) => {
-      grouped(undefined);
-      const read = headless.read(stdout);
-      settle({ status, signal, response: read.response, session: read.session ?? start.session, milliseconds });
-    });
-  });
+  const { stdout, ...ended } = await runGrouped(root, args, step.timeoutMinutes, grouped);
+  const read = headless.read(stdout);
+  return { ...ended, response: read.response, session: read.session ?? start.session };
 }
 
 /**

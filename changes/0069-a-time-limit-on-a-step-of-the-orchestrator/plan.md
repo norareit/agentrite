@@ -133,30 +133,30 @@ stopped as before, and the key is described where the definition is, in `README.
 
 ### 4. The time limit
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, give the results of `runWith` `timedOut: false` by default, and add
+- [x] In `tests/agentrite-orchestrate.test.mjs`, give the results of `runWith` `timedOut: false` by default, and add
   unit tests: `judgeStep` gives `'timeout'` for a result that ran out of time, before a status other than 0, a
   `SIGTERM`, and every case of an outcome; a run whose step runs out of time with a done outcome in its response
   stops there with `by: 'timeout'`, the reading `{ kind: 'none' }` and nothing run after it, in a repeat too; the
   line after it reads `ran out of time after <duration>`; `endReport` gives the line of the Approach, for `30`, `1`
   and `0.05` minutes, then the path of the response, or that the harness gave none, and no summary (R5, R6, R11)
-- [ ] In `scripts/agentrite-orchestrate.mjs`, add `timedOut: boolean` to `Result` and `'timeout'` to `Stop`. In
+- [x] In `scripts/agentrite-orchestrate.mjs`, add `timedOut: boolean` to `Result` and `'timeout'` to `Stop`. In
   `judgeStep`, return `'timeout'` first. In `orchestrate`'s inner `runStep`, read `{ kind: 'none' }` for a step that
   ran out of time, with a comment that says why. In `stepResult`, give `ran out of time` first. In `endLine`, add the
   case `timeout` with the limit of `end.ran.planned.step`, as the Approach words it. Update the doc comment of
   `judgeStep` (R5, R6, R8)
-- [ ] Add the end-to-end tests, each on a definition written into the project and given with `--definition`: a step
+- [x] Add the end-to-end tests, each on a definition written into the project and given with `--definition`: a step
   with `timeoutMinutes` of `0.02` whose fake prints a done outcome and waits 60 seconds ends by the time limit, exits
   3, its line after it says it ran out of time, the end report has the line of the case, the path of its
   `response.md`, which is written, and no summary, no `outcome.json` is written, `state.json` holds its session and
   `ended.status` 3, and no step after it ran; the same with `ignore-term-1` is ended by `SIGKILL`, taking at least
   10 seconds after the limit, and its harness is gone; a step with `timeoutMinutes` of `1` whose fake does not wait
   ends as it would without the key, and the run exits 0 (R3 to R8, R12)
-- [ ] In `runStep` of `scripts/agentrite.mjs`, for a step with `timeoutMinutes`, start a timer of that many minutes
+- [x] In `runStep` of `scripts/agentrite.mjs`, for a step with `timeoutMinutes`, start a timer of that many minutes
   when the step starts. When it fires, set `timedOut`, send `SIGTERM` to the group, and start the grace of 10
   seconds, after which `SIGKILL` is sent when `groupAlive` holds. Settle the promise as the Approach decides, clear
   both timers, and return `timedOut` in the `Result`, `false` for a step without the key. Keep the grace of 10
   seconds in a named constant (R3, R4, R7)
-- [ ] In "The orchestrator" of `README.md`: in the bullet of `timeoutMinutes`, that when the step's time, from the
+- [x] In "The orchestrator" of `README.md`: in the bullet of `timeoutMinutes`, that when the step's time, from the
   start of its `agentrite run` to its end, reaches the limit, the command sends `SIGTERM` to the step's process
   group, and `SIGKILL` when a process of it is left 10 seconds later, and stops the run; in "The run stops ... when",
   the case as the first item, that it is judged before the others and that nothing is taken from the step's outcome;
@@ -188,5 +188,5 @@ Each commit is made once `npm test` is green.
 - [x] After task group 1: `feature-0069 Run the steps of the orchestrator asynchronously`
 - [x] After task group 2: `feature-0069 Run each step in a process group of its own, and pass the signals on`
 - [x] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
-- [ ] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`
+- [x] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`
 - [ ] After the check by hand: `feature-0069 Log the check by hand of the time limit`

@@ -61,7 +61,8 @@ async function runWith(definition, results) {
     run: async (planned) => {
       calls.push(['run', planned]);
       assert.ok(queue.length > 0, `step ${planned.number} ran, and no result was listed for it`);
-      return { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 1000, ...queue.shift() };
+      const result = { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 1000 };
+      return { ...result, timedOut: false, ...queue.shift() };
     },
     ended: (ran) => calls.push(['ended', ran]),
   };
@@ -234,8 +235,8 @@ test('each case of requirement 18 stops at the step it holds for and runs nothin
 test('of two cases that hold, the first of the order is named', () => {
   const step = { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' };
   const reading = (outcome) => readOutcome(responseOf(outcome));
-  const ok = { status: 0, signal: null };
-  assert.equal(judgeStep(step, { status: 1, signal: null }, { kind: 'none' }), 'harness');
+  const ok = { status: 0, signal: null, timedOut: false };
+  assert.equal(judgeStep(step, { ...ok, status: 1 }, { kind: 'none' }), 'harness');
   assert.equal(judgeStep(step, ok, { kind: 'none' }), 'none');
   assert.equal(judgeStep(step, ok, { kind: 'several', count: 2 }), 'several');
   assert.equal(judgeStep(step, ok, { kind: 'malformed', fault: 'x' }), 'malformed');
@@ -319,8 +320,9 @@ const reviewer = {
 };
 
 function ended(planned, result) {
-  const full = { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 8000, ...result };
-  const reading = full.response === undefined ? { kind: 'none' } : readOutcome(full.response);
+  const defaults = { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 8000 };
+  const full = { ...defaults, timedOut: false, ...result };
+  const reading = full.response === undefined || full.timedOut ? { kind: 'none' } : readOutcome(full.response);
   return { planned, result: full, reading, stop: judgeStep(planned.step, full, reading) };
 }
 
@@ -509,6 +511,74 @@ test('the report of a harness that failed after it gave an outcome gives the out
     'Step 1 stopped the run: its harness exited with 1.',
     'Summary: Half done.',
   ]);
+});
+
+// R5, R6 and R11 of unit 0069: a step that ran out of time.
+
+const TIMED_OUT = { status: null, signal: 'SIGTERM', timedOut: true };
+
+test('a step that ran out of time is judged so before its status, its signal and every case of its outcome', () => {
+  const step = { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' };
+  const reading = (outcome) => readOutcome(responseOf(outcome));
+  for (const result of [TIMED_OUT, { ...TIMED_OUT, signal: 'SIGKILL' }, { ...TIMED_OUT, status: 1, signal: null }]) {
+    for (const read of [
+      { kind: 'none' },
+      { kind: 'several', count: 2 },
+      { kind: 'malformed', fault: 'x' },
+      reading(DONE),
+      reading({ ...DONE, outcome: 'needs-human' }),
+      reading({ ...DONE, outcome: 'failed' }),
+      reading({ ...DONE, declines: [{ finding: 'S1', reason: 'r' }] }),
+      reading({ ...DONE, findings: [BLOCKING] }),
+    ]) {
+      assert.equal(judgeStep(step, result, read), 'timeout', JSON.stringify([result, read]));
+    }
+  }
+  assert.equal(judgeStep(step, { status: 0, signal: null, timedOut: true }, reading(DONE)), 'timeout');
+});
+
+test('a step that ran out of time with a done outcome stops the run, read as no outcome, in a repeat too', async () => {
+  const outside = await runWith(DEFAULT, [{ ...TIMED_OUT, ...done() }]);
+  assert.equal(outside.planned.length, 1);
+  assert.equal(outside.end.kind, 'stopped');
+  assert.equal(outside.end.by, 'timeout');
+  assert.deepEqual(outside.ran[0].reading, { kind: 'none' });
+  assert.equal(outside.left, 0);
+
+  const inside = await runWith(DEFAULT, [done(), { ...TIMED_OUT, ...done() }]);
+  assert.equal(inside.planned.length, 2);
+  assert.equal(inside.end.by, 'timeout');
+  assert.equal(inside.end.ran.planned.number, 1);
+  assert.deepEqual(inside.ran[1].reading, { kind: 'none' });
+  assert.equal(exitStatus(inside.end), 3);
+});
+
+test('the line after a step that ran out of time says so, whatever it printed and however it ended', () => {
+  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+  for (const result of [{ ...TIMED_OUT, ...done() }, { ...TIMED_OUT, signal: 'SIGKILL' }]) {
+    assert.equal(stepLine(reviewer, ended(reviewer, result)), `${head}: ran out of time after 0m 08s`);
+  }
+});
+
+test('the report of a step out of time gives its limit, and where its response is, or that it has none', async () => {
+  const limited = (timeoutMinutes) => ({
+    steps: [{ role: 'implementer', harness: 'claude', model: 'm', timeoutMinutes }],
+  });
+  const where = { ...WHERE, responsePath: '.orchestrator/0029-x/2026-10-21T10:00:00Z/00-implementer.response.md' };
+  assert.deepEqual((await reportOf([{ ...TIMED_OUT, ...done() }], limited(30), where)).slice(2), [
+    'Step 0 stopped the run: it ran past its time limit of 30 minutes.',
+    `The final response of step 0 is at ${where.responsePath}.`,
+    ...WHERE_LINES,
+    '',
+  ]);
+  assert.deepEqual((await reportOf([TIMED_OUT], limited(1))).slice(2, 4), [
+    'Step 0 stopped the run: it ran past its time limit of 1 minute.',
+    'The harness gave step 0 no final response.',
+  ]);
+  assert.equal(
+    (await reportOf([TIMED_OUT], limited(0.05)))[2],
+    'Step 0 stopped the run: it ran past its time limit of 0.05 minutes.',
+  );
 });
 
 // R10
@@ -1207,4 +1277,82 @@ test('a signal to the command alone while a step runs ends the step, and the com
     assert.equal(result.signal, signal, `${signal}: ${result.stderr}`);
     assert.ok(await gone(harness), `${signal}: the harness ${harness} is left`);
   }
+});
+
+// R3 to R8 and R12 of unit 0069: a step that runs past its time limit.
+
+// A definition of a step of the implementer with `timeoutMinutes`, and a review after it.
+function limitedTo(timeoutMinutes) {
+  return {
+    steps: [
+      { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5', timeoutMinutes },
+      { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
+    ],
+  };
+}
+
+const LIMIT_LINE = 'Step 0 stopped the run: it ran past its time limit of 0.02 minutes.';
+
+test('a step past its limit is ended by SIGTERM, and the run stops by the case, its response kept', async (t) => {
+  const { base, write, read, started, answer, waits, pidOf, calls } = project(t);
+  write('limited.json', JSON.stringify(limitedTo(0.02)));
+  answer(1, claudePrinted(responseOf({ ...DONE, summary: 'Not finished.' })));
+  waits(1, 60);
+
+  const { ended } = started('orchestrate', '0029', '--definition', 'limited.json');
+  const harness = await pidOf(1);
+  const result = await ended;
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.equal(calls().length, 1);
+  const lines = stepLines(result.stdout);
+  assert.equal(lines.length, 2);
+  assert.match(lines[1], /^step 0, implementer, claude, claude-sonnet-5-5: ran out of time after 0m 0[12]s$/);
+  const run = runDirectoryOf(base);
+  const path = `${run.name}/00-implementer.response.md`;
+  assert.ok(result.stdout.includes(`\n${LIMIT_LINE}\nThe final response of step 0 is at ${path}.\n\n`), result.stdout);
+  assert.ok(!result.stdout.includes('Not finished.'), result.stdout);
+  assert.ok(read(path).includes('"summary": "Not finished."'));
+  assert.deepEqual(readdirSync(run.path).sort(), ['00-implementer.response.md', 'definition.json', 'state.json']);
+  const state = JSON.parse(read(`${run.name}/state.json`));
+  assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[8] }]);
+  assert.match(state.sessions[0].session, UUID);
+  assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
+  assert.ok(await gone(harness), `the harness ${harness} is left`);
+});
+
+test('a step that ignores SIGTERM past its limit is ended by SIGKILL 10 seconds later', async (t) => {
+  const { write, started, answer, waits, pidOf, calls } = project(t);
+  write('limited.json', JSON.stringify(limitedTo(0.02)));
+  answer(1, claudePrinted(responseOf(DONE)));
+  waits(1, 60, true);
+
+  const began = performance.now();
+  const { ended } = started('orchestrate', '0029', '--definition', 'limited.json');
+  const harness = await pidOf(1);
+  const result = await ended;
+  const seconds = (performance.now() - began) / 1000;
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.ok(seconds >= 0.02 * 60 + 10, `the run ended after ${seconds} seconds`);
+  assert.ok(seconds < 30, `the run ended after ${seconds} seconds`);
+  assert.equal(calls().length, 1);
+  // The step's time ends with its agentrite run, which SIGTERM ends at once, and not with the harness.
+  assert.match(stepLines(result.stdout)[1], /: ran out of time after 0m 0[12]s$/);
+  assert.ok(result.stdout.includes(`\n${LIMIT_LINE}\n`), result.stdout);
+  assert.ok(await gone(harness), `the harness ${harness} is left`);
+});
+
+test('a step with a limit that ends in time ends as it would without the limit', (t) => {
+  const { write, agentrite, answer, calls } = project(t);
+  write('limited.json', JSON.stringify(limitedTo(1)));
+  answer(1, claudePrinted(responseOf(DONE)));
+  answer(2, opencodePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'limited.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(calls().length, 2);
+  assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
+  assert.ok(result.stdout.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
 });

@@ -22,8 +22,18 @@ import { optionError } from './agentrite-run.mjs';
  *   response: string | undefined,
  *   session: string | undefined,
  *   milliseconds: number,
- * }} Result How the harness of a step ended, its final response, and the id of its session
- * @typedef {'harness' | 'none' | 'several' | 'malformed' | 'needs-human' | 'failed' | 'declines' | 'stopWhen'} Stop
+ *   timedOut: boolean,
+ * }} Result How the harness of a step ended, its final response, the id of its session, and whether the command ended
+ *   it for running past its time limit
+ * @typedef {'timeout'
+ *   | 'harness'
+ *   | 'none'
+ *   | 'several'
+ *   | 'malformed'
+ *   | 'needs-human'
+ *   | 'failed'
+ *   | 'declines'
+ *   | 'stopWhen'} Stop
  * @typedef {{ planned: Planned, result: Result, reading: Reading, stop: Stop | undefined }} Ran
  * @typedef {{ kind: 'complete' }
  *   | { kind: 'stopped', by: Stop, ran: Ran }
@@ -44,16 +54,18 @@ function blocks(outcome) {
 }
 
 /**
- * The first case of requirement 18 of unit 0065 that holds for a step that ran, or `undefined` when none does and
- * the run may go on. The outcome is read whatever the harness's status, so that the human sees what a step that
- * failed after it gave one said.
+ * The first case that holds for a step that ran, or `undefined` when none does and the run may go on: that it ran out
+ * of time, by unit 0069, and then those of requirement 18 of unit 0065. Running out of time is judged first, since
+ * the status of a harness the command ended says nothing of the step. The outcome is read whatever the harness's
+ * status, so that the human sees what a step that failed after it gave one said.
  *
  * @param {Step} step
- * @param {{ status: number | null, signal: string | null }} result
+ * @param {{ status: number | null, signal: string | null, timedOut: boolean }} result
  * @param {Reading} reading
  * @returns {Stop | undefined}
  */
-export function judgeStep(step, { status, signal }, reading) {
+export function judgeStep(step, { status, signal, timedOut }, reading) {
+  if (timedOut) return 'timeout';
   if (status !== 0 || signal !== null) return 'harness';
   if (reading.kind !== 'outcome') return reading.kind;
   const { outcome } = reading;
@@ -89,8 +101,9 @@ export async function orchestrate(definition, effects) {
     effects.started(planned);
     const result = await effects.run(planned);
     if (result.session !== undefined) sessions.set(key, result.session);
+    // A step the command ended did not finish, so what it printed is not its outcome, and is kept as its response.
     /** @type {Reading} */ const reading =
-      result.response === undefined ? { kind: 'none' } : readOutcome(result.response);
+      result.response === undefined || result.timedOut ? { kind: 'none' } : readOutcome(result.response);
     /** @type {Ran} */ const entry = { planned, result, reading, stop: judgeStep(step, result, reading) };
     ran.push(entry);
     effects.ended(entry);
@@ -166,13 +179,14 @@ export function duration(milliseconds) {
 }
 
 /**
- * What became of a step, in the line after it: how its harness ended when it did not end well, and otherwise its
- * outcome or what is wrong with it.
+ * What became of a step, in the line after it: that it ran out of time, how its harness ended when it did not end
+ * well, and otherwise its outcome or what is wrong with it.
  *
  * @param {Ran} ran
  * @returns {string}
  */
 function stepResult({ result, reading }) {
+  if (result.timedOut) return 'ran out of time';
   if (result.signal !== null) return `the harness was ended by ${result.signal}`;
   if (result.status !== 0) return `the harness exited with ${result.status}`;
   if (reading.kind === 'outcome') return reading.outcome.outcome;
@@ -229,8 +243,10 @@ export function endLine(end) {
   if (end.kind === 'ran-out') {
     return `${opening}the repeat ran its ${end.rounds} rounds, and its until did not hold after the last.`;
   }
-  const { result, reading } = end.ran;
+  const { planned, result, reading } = end.ran;
+  const limit = planned.step.timeoutMinutes;
   /** @type {Record<Stop, () => string>} */ const cases = {
+    timeout: () => `it ran past its time limit of ${limit} ${limit === 1 ? 'minute' : 'minutes'}.`,
     harness: () =>
       result.signal === null
         ? `its harness exited with ${result.status}.`

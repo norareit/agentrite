@@ -644,7 +644,9 @@ with no blocking finding ends the repeat, and a third review with one stops the 
   is blocking. Any step may hold it, in a repeat or not
 * `timeoutMinutes` is the step's time limit in minutes, a number greater than 0 and at most 1440, the minutes of a
   day. A fraction is taken, as `0.5` for 30 seconds. Any step may hold it, in a repeat or not, and a step without it
-  has no time limit
+  has no time limit. When the step's time, from the start of its `agentrite run` to its end, reaches the limit, the
+  command sends `SIGTERM` to the step's process group, which holds its `agentrite run` and the harness, and `SIGKILL`
+  when a process of the group is left 10 seconds later. It then stops the run
 * A step in a repeat is told its round, and how many rounds the repeat has at most, so that its `prompt` can say from
   which round something holds, as the default's implementer's does
 * Within one run, a step of a role and a harness that already ran continues that step's session of the harness, so
@@ -723,8 +725,8 @@ The outcome of a review with one blocking finding, as it stands in the final res
 ### How a run ends
 
 Before and after each step the command prints a line with the step's number, counted from 0 in the order the steps
-run, its round in a repeat, its role, its harness and its model. The line after it adds the outcome and how long the
-step took:
+run, its round in a repeat, its role, its harness and its model. The line after it adds the outcome, or that the step
+ran out of time, and how long the step took:
 
 ```
 step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started
@@ -736,6 +738,8 @@ session is in the harness's own logs.
 
 The run stops, and runs nothing after the step, when:
 
+* the step ran past its `timeoutMinutes`. This is judged before the cases below, and nothing is taken from what the
+  step printed as an outcome: its final response is kept as that of a step without an outcome
 * the harness exits with a status other than 0, or a signal ends it. A step whose `agentrite run` refuses, as for a
   wrapper that `refresh` would rewrite, is such a step
 * the final response holds no block marked `json`, more than one, or one that is not an outcome of the form above
@@ -750,7 +754,8 @@ not of the form; then from the outcome of the step that ran last, when it is of 
 findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
 and last the run's directory, and that the reviewer's findings are under `.reviews/<unit-directory>/`. For a last step
 without an outcome of the form, it gives the path of its final response in the run's directory instead, or says that
-the harness gave none. Nothing is taken from an earlier step.
+the harness gave none. For a step that ran past its time limit, it gives the limit, and the path of its final response
+or that the harness gave none. Nothing is taken from an earlier step.
 
 ```
 0  planner      claude    claude-opus-5-5     12m 04s
