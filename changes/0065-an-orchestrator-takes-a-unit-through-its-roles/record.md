@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-20T23:55:38Z
 ---
 
@@ -232,3 +232,13 @@ timestamp: 2026-10-20T23:55:38Z
   in a code block indented four spaces counts, and that another form may stop the run; added to `plan.md` with its task
   and commit point. `npm test` passes: 920 tests, none skipped. Every task of `plan.md` is ticked. The status
   stays `in-progress`: the review is done elsewhere
+- 2026-10-21T13:00:48Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta implementation review of unit
+  0065 at `d2d153365c4d1a3f27b8fb18f456bc01e43951e6`, from the previous review's commit
+  `252051b256e3a6c186932e5a74002c8a6e0b0020`, against the approved correction of requirement 15. Returned no
+  findings, saved in
+  `.reviews/0065-an-orchestrator-takes-a-unit-through-its-roles/delta-20261021T125951Z-gpt-6.1-sol.md`.
+  Independently ran the full host suite, the change check and focused comparisons of S2's response between the
+  previous and current readers, including the run transition and two related blockquote boundary cases
+- 2026-10-21T13:02:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the delta review at
+  `d2d1533` returned no findings: the blocking findings S1, C1 and S2 were applied at the human's decision, P1 was
+  accepted with no change, and every task of `plan.md` is ticked. The status is `implemented`
