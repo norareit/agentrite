@@ -1250,22 +1250,31 @@ function snapshot(base, relative = '') {
 
 // R9, R12 of unit 0069: a step in a process group of its own, and the signals the command passes on to it.
 
-// True once the process `pid` is gone: there is none, or it is a zombie not yet reaped by whatever adopted it. Polls
-// for up to 5 seconds, since the reaping is not instant.
+// True once the process `pid` is gone: there is none, or on Linux it is a zombie not yet reaped by whatever adopted
+// it. Polls for up to 5 seconds, since the reaping is not instant.
 async function gone(pid) {
   for (let tries = 0; tries < 250; tries += 1) {
     try {
       process.kill(pid, 0);
-      const stat = readFileSync(`/proc/${pid}/stat`, 'utf-8');
-      if (stat.slice(stat.lastIndexOf(')') + 2).startsWith('Z')) return true;
+      if (process.platform === 'linux' && zombie(pid)) return true;
     } catch (error) {
-      // Gone between the two looks, when /proc no longer has it.
-      if (error.code === 'ESRCH' || error.code === 'ENOENT') return true;
+      if (error.code === 'ESRCH') return true;
       throw error;
     }
     await delay(20);
   }
   return false;
+}
+
+// True when /proc gives the process `pid` the state Z, or no longer has it, as when it went after the look before.
+function zombie(pid) {
+  try {
+    const stat = readFileSync(`/proc/${pid}/stat`, 'utf-8');
+    return stat.slice(stat.lastIndexOf(')') + 2).startsWith('Z');
+  } catch (error) {
+    if (error.code === 'ENOENT') return true;
+    throw error;
+  }
 }
 
 const ONE_STEP = { steps: [{ role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' }] };
