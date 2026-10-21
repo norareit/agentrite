@@ -60,5 +60,21 @@ timestamp: 2026-10-21T14:18:50Z
   seconds into the step ended the run by `SIGINT` with each harness, and `pgrep -f` found no process of the harness
   after it. `npm test` on the tree of this entry, with its own code that of `852d9b2`, reports 931 tests, all of
   which pass and none skipped
+- 2026-10-21T19:40:43Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, performed a full review of unit 0069 at
+  `06f80571363b719dabd418b9624fddf03d1b48f6`, against merge base `4d703688b1ec7c3da5bf1335f6372291daa31f51` with
+  `master`, and returned S1 and C1. Saved the complete findings in
+  `.reviews/0069-a-time-limit-on-a-step-of-the-orchestrator/2026-10-21T19-39-38Z-opencode.md`. Ran `npm test`: 931
+  tests passed, none skipped; `npm run check-changes` and `git diff --check master...HEAD` passed. An in-memory
+  process-lifecycle probe reproduced S1. Did not replay or independently verify the historical real-harness
+  pseudo-terminal observations, and did not run the suite on macOS
+- 2026-10-21T19:45:37Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied both findings of the
+  review, and added them to `plan.md` as task group 6. S1: the timer of the limit kept running after the step's
+  `agentrite run` exited, while a process it left held its output open, so that a step that ended in time could be
+  taken as one that ran out of time, against requirement 3. The new end-to-end test, a step with a limit of `0.02`
+  minutes whose fake exits at once and leaves a sleep of 3 seconds holding its output, failed with `ran out of time
+  after 0m 00s`; `runGrouped` now clears the timer at `exit` and keeps a grace already started, and the test passes,
+  in `315716d`. C1: `gone` took a missing `/proc` entry as a process gone, which on macOS holds for every process;
+  it now reads `/proc` on Linux only, in `1455dc4`. Not run on macOS. `npm test` on the tree of `1455dc4` reports
+  932 tests, all of which pass and none skipped. The human decides S1, which blocks
 
 ## Amendments
