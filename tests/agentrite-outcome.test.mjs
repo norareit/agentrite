@@ -17,6 +17,11 @@ const REQUEST_LIST = [
     'id of the finding, and "reason", a string. It is empty for a step that proposed no decline',
 ];
 
+const REQUEST_RECORD =
+  'Record a finding that the prompt of this step accepts in record.md as accepted by the definition of the ' +
+  'orchestrator, and not as a decision of the human. Set the status of the unit to no status later than ' +
+  'in-progress, since the human sets implemented after the run.';
+
 function request(round) {
   return [
     `AgentRite's orchestrator runs this step${round}, and reads its outcome from your final response. Give the ` +
@@ -25,6 +30,8 @@ function request(round) {
       'file for it. The object holds these keys, and no other:',
     '',
     ...REQUEST_LIST,
+    '',
+    REQUEST_RECORD,
   ].join('\n');
 }
 
@@ -35,6 +42,13 @@ test('the request of the outcome, outside a repeat, is the text of the plan', ()
 test('the request of the outcome, in a repeat, says the round and how many rounds the repeat has at most', () => {
   assert.equal(outcomeRequest({ at: 2, of: 3 }), request(', in round 2 of a repeat of at most 3 rounds'));
   assert.equal(outcomeRequest({ at: 1, of: 1 }), request(', in round 1 of a repeat of at most 1 rounds'));
+});
+
+// R2 of unit 0068
+
+test('the request of the outcome, in a repeat and outside one, ends with how to record an accepted finding', () => {
+  assert.ok(outcomeRequest(undefined).endsWith(`\n\n${REQUEST_RECORD}`));
+  assert.ok(outcomeRequest({ at: 2, of: 3 }).endsWith(`\n\n${REQUEST_RECORD}`));
 });
 
 test('each line of the source of the outcome fits the line limit', () => {

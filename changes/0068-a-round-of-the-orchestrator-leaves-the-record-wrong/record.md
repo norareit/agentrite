@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-10-21T14:10:24Z
 ---
 
@@ -27,5 +27,16 @@ timestamp: 2026-10-21T14:10:24Z
   tests, the README, the reviewer's role file, and a check by hand. The reviewer's new description also changes the
   two reviewer fixtures under `tests/fixtures/`, which the suite compares with the role file's description, while
   the wrappers at the root stay as the installed release writes them. The status is `approved`
+- 2026-10-21T14:30:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `bugfix-0068-a-round-of-the-orchestrator-leaves-the-record-wrong` at `3e3c638`, began the work. The status is
+  `in-progress`
+- 2026-10-21T14:33:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the first five tasks. The three
+  tests that pin the default implementer prompt failed on the old prompt, and the new test of the request, with the
+  request's expected text, failed on the old `outcomeRequest` of `3e3c638`; all of them pass after the change.
+  `npm test` passes on the tree of this commit, 921 tests. One run before it, on a tree between tasks, failed once in
+  `tests/sandbox-variant.test.mjs` (`a unit run and its variants run at once`) on a container still running from
+  another test, and passed on the next run; it touches nothing of this unit. "A run neither sets the unit's status nor
+  commits" in "How a run ends" still holds beside the new paragraph, since the request asks the step and the command
+  itself sets nothing
 
 ## Amendments

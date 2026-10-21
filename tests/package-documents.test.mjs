@@ -105,7 +105,7 @@ const DEFAULT_DEFINITION = `{
             "role": "implementer",
             "harness": "claude",
             "model": "claude-sonnet-5-5",
-            "prompt": "From round 2, the human accepts the review's findings you agree with. Propose declining others."
+            "prompt": "From round 2, this definition accepts review findings you agree with. Propose declining others."
           },
           {
             "role": "reviewer",

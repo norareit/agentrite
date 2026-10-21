@@ -44,7 +44,7 @@ test('the default definition is taken with the roles and harnesses of the defaul
               harness: 'claude',
               model: 'claude-sonnet-5-5',
               prompt:
-                "From round 2, the human accepts the review's findings you agree with. Propose declining others.",
+                "From round 2, this definition accepts review findings you agree with. Propose declining others.",
             },
             { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
           ],

@@ -610,7 +610,7 @@ with no blocking finding ends the repeat, and a third review with one stops the 
             "role": "implementer",
             "harness": "claude",
             "model": "claude-sonnet-5-5",
-            "prompt": "From round 2, the human accepts the review's findings you agree with. Propose declining others."
+            "prompt": "From round 2, this definition accepts review findings you agree with. Propose declining others."
           },
           {
             "role": "reviewer",
@@ -690,6 +690,11 @@ these keys, and no other:
   `summary`, a string. It is empty for a step that reviewed nothing
 * `declines`: a list of objects, each with `finding`, the `id` of a finding, and `reason`, a string. It is empty for a
   step that proposed no decline
+
+The request also says that a finding the step's prompt accepts is recorded in `record.md` as accepted by the
+orchestrator's definition, and not as a decision of the human, and that the step sets the unit's status to no status
+later than `in-progress`. The human sets `implemented` after the run, once the findings of its last review are
+decided.
 
 The outcome of a review with one blocking finding, as it stands in the final response:
 

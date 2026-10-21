@@ -18,7 +18,8 @@ import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
 
 /**
  * What the command adds to the prompt of every step, after the step's own, so that the step gives its outcome in a
- * form the command reads. A step in a repeat is told its round, and how many rounds the repeat has at most.
+ * form the command reads. A step in a repeat is told its round, and how many rounds the repeat has at most. The request
+ * also says how the step records a finding its prompt accepts, and the latest status it may set.
  *
  * @param {{ at: number, of: number } | undefined} round
  * @returns {string}
@@ -43,6 +44,11 @@ export function outcomeRequest(round) {
     '- "declines": a list of objects, one for each finding whose decline the step proposes, ' +
       'each with "finding", the id of the finding, and "reason", a string. ' +
       'It is empty for a step that proposed no decline',
+    '',
+    'Record a finding that the prompt of this step accepts in record.md as accepted by the definition of the ' +
+      'orchestrator, and not as a decision of the human. ' +
+      'Set the status of the unit to no status later than in-progress, ' +
+      'since the human sets implemented after the run.',
   ].join('\n');
 }
 

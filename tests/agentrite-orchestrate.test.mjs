@@ -660,7 +660,7 @@ function stepLines(stdout) {
 
 const REQUEST_LINE = "AgentRite's orchestrator runs this step";
 const IMPLEMENTER_PROMPT =
-  "From round 2, the human accepts the review's findings you agree with. Propose declining others.";
+  "From round 2, this definition accepts review findings you agree with. Propose declining others.";
 
 test('a run whose every item ends runs the default definition and exits 0', (t) => {
   const { base, agentrite, answer, calls, read } = project(t);

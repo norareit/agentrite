@@ -55,19 +55,19 @@ the installed release's `refresh` and are left as they are, as "Working on the k
 
 ## Tasks
 
-- [ ] In `tests/agentrite-definition.test.mjs`, `tests/package-documents.test.mjs` and
+- [x] In `tests/agentrite-definition.test.mjs`, `tests/package-documents.test.mjs` and
   `tests/agentrite-orchestrate.test.mjs`, replace the old implementer prompt by the prompt of requirement 1, wrapped
   at 120 characters. Run `npm test` and see the three fail on the old prompt (R1, R6)
-- [ ] In `tests/agentrite-outcome.test.mjs`, add the closing paragraph of "Approach" to `request`, after
+- [x] In `tests/agentrite-outcome.test.mjs`, add the closing paragraph of "Approach" to `request`, after
   `...REQUEST_LIST` and an empty line, and add a test, under a comment `// R2 of unit 0068`, that
   `outcomeRequest(undefined)` and `outcomeRequest({ at: 2, of: 3 })` each end with the paragraph. Run `npm test` and
   see them fail (R2, R6)
-- [ ] Set the implementer's `prompt` of `orchestrator.json`, and of the example in "The definition" of `README.md`, to
+- [x] Set the implementer's `prompt` of `orchestrator.json`, and of the example in "The definition" of `README.md`, to
   the prompt of requirement 1. Run `npm test` and see the tests of the first task pass (R1)
-- [ ] Add the closing paragraph to `outcomeRequest`, as `''` and the paragraph after the list, its source lines within
+- [x] Add the closing paragraph to `outcomeRequest`, as `''` and the paragraph after the list, its source lines within
   120 characters, and say in its doc comment that the request also says how a step records an accepted finding and
   which status it sets at the latest. Run `npm test` and see the tests of the second task pass (R2)
-- [ ] In "The outcome of a step" of `README.md`, after the list of the outcome's keys and before the example, add a
+- [x] In "The outcome of a step" of `README.md`, after the list of the outcome's keys and before the example, add a
   paragraph: the request also says that a finding the step's prompt accepts is recorded in `record.md` as accepted by
   the orchestrator's definition, and not as a decision of the human, and that the step sets the unit's status to no
   status later than `in-progress`; the human sets `implemented` after the run, once the last review's findings are
@@ -108,8 +108,8 @@ the installed release's `refresh` and are left as they are, as "Working on the k
 
 ## Commit Points
 
-- [ ] `bugfix-0068 Plan the fix`: `plan.md` and the planner's entry in `record.md`
-- [ ] `bugfix-0068 Record accepted findings as the definition's, and keep the status in progress`: the first five
+- [x] `bugfix-0068 Plan the fix`: `plan.md` and the planner's entry in `record.md`
+- [x] `bugfix-0068 Record accepted findings as the definition's, and keep the status in progress`: the first five
   tasks
 - [ ] `bugfix-0068 Have the reviewer commit its record entry`: the reviewer's role file and the fixtures
 - [ ] `bugfix-0068 Record the check by hand of a second round`: the check by hand's entry in `record.md`
