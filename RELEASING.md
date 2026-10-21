@@ -166,15 +166,11 @@ one of these does not hold:
 When the devDependency `agentrite` in `package.json` already names `<version>`, there is nothing to move. Say so,
 change nothing, and go on to the end of this step.
 
-Run these five, in this order, and nothing else that changes a file, but for the release's own instructions
-that come after them:
+Run the five commands below, in the order given, and nothing else that changes a file, but for the release's own
+instructions, which are settled right after the install. First the install:
 
 ```sh
 npm install --save-dev --save-exact agentrite@<version>
-npm run kit -- refresh
-npm test
-npm run check-changes
-./sandbox.sh --in-place --rebuild true
 ```
 
 * `npm install` fetches the version `npm publish` published and fails when the registry does not have it. When the
@@ -183,18 +179,6 @@ npm run check-changes
   and name the release before as `latest`, for a minute or more while it catches up. That is no failed publish: the
   line `npm publish` printed settles it. Before `npm install`, wait until
   `npm view agentrite@<version> version --prefer-online` prints the version
-* `npm run kit -- refresh` runs the `refresh` of the release just installed. It brings the role wrappers and
-  `sandbox.sh` to what the release writes, and prints each file as written, refreshed or up to date. In this
-  repository `npx agentrite refresh` would run the working tree's `refresh`, as "Commands" of `CONTRIBUTING.md`
-  explains
-* `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
-  it shows that the installed check starts, and no more
-* `./sandbox.sh --in-place --rebuild true` starts the sandbox of the release just installed, through this
-  repository's own shim, and runs a command in it that does nothing. It needs Docker on the host. `--rebuild`
-  builds the image every time, which can take minutes, so that the container holds the files of this release and
-  not those of an image an earlier release left. It exits 0 when the container passed its own start-up checks,
-  the firewall's among them. It shows nothing of a harness, a login, a prompt or a unit run. When the session may
-  not run it, ask the human to, and go on from its result
 
 Then read "Worth knowing when you update" in the section of `<version>` in `CHANGELOG.md`, as a project that
 updates does. Take each instruction in it that asks a project to do something, in the order the section gives
@@ -202,8 +186,8 @@ them, and settle it by the first of these four that applies. A block of several 
 time:
 
 1. **Done by this step.** It installs the kit, runs `refresh`, starts the sandbox, or asks for the update to be
-   committed. The five commands and the commit below do that, and it is not carried out again. Run again as
-   written, the install would move the devDependency from the exact version to a range
+   committed. The five commands of this step and its commit do that, each at its place, and it is not carried out
+   again. Run again as written, the install would move the devDependency from the exact version to a range
 2. **Asks nothing here.** It holds only for some projects, as one that opens with "a unit that", "an `AGENTS.md`
    that" or "with `opencode`" does, and its condition does not hold in this repository. The condition is settled by
    `agentrite.json`, or by what the tracked files on `master` hold, such as the status in each `record.md` under
@@ -221,6 +205,28 @@ time:
 
 Keep, for the commit, each instruction carried out and what came of it, each taken as done by this step, and each
 whose condition does not hold here, with why.
+
+Then run the other four, in this order:
+
+```sh
+npm run kit -- refresh
+npm test
+npm run check-changes
+./sandbox.sh --in-place --rebuild true
+```
+
+* `npm run kit -- refresh` runs the `refresh` of the release just installed. It brings the role wrappers and
+  `sandbox.sh` to what the release writes, and prints each file as written, refreshed or up to date. In this
+  repository `npx agentrite refresh` would run the working tree's `refresh`, as "Commands" of `CONTRIBUTING.md`
+  explains
+* `npm run check-changes` runs the check of the release just installed. On `master` it has nothing to compare, so
+  it shows that the installed check starts, and no more
+* `./sandbox.sh --in-place --rebuild true` starts the sandbox of the release just installed, through this
+  repository's own shim, and runs a command in it that does nothing. It needs Docker on the host. `--rebuild`
+  builds the image every time, which can take minutes, so that the container holds the files of this release and
+  not those of an image an earlier release left. It exits 0 when the container passed its own start-up checks,
+  the firewall's among them. It shows nothing of a harness, a login, a prompt or a unit run. When the session may
+  not run it, ask the human to, and go on from its result
 
 Then read `git status --short` and `git diff package.json`. The tree holds changes to `package.json`,
 `package-lock.json`, the files `refresh` printed as written or refreshed, the files an instruction carried out
