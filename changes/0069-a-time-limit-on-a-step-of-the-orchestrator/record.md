@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-21T14:18:50Z
 ---
 
@@ -19,5 +19,6 @@ timestamp: 2026-10-21T14:18:50Z
 - 2026-10-21T15:03:35Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decisions that
   `timeoutMinutes` is bounded and that both items of "Beyond the request" stay out of the unit: bounded the key at
   1440 minutes, a day, in requirements 1 and 2, and recorded why under "Decisions". The status is `draft`
+- 2026-10-21T17:33:22Z [human] approved the spec. The status is `approved`
 
 ## Amendments
