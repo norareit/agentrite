@@ -52,5 +52,11 @@ timestamp: 2026-10-21T20:47:18Z
   `git diff package.json` showed the one version, `7.3.0` to `8.0.0`. Committed them in the clone as
   `Depend on AgentRite 8.0.0` with the body the step asks for, but for the line on the sandbox, which says it was
   left out, pushed nothing, and removed the clone
+- 2026-10-21T23:26:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, committed the record of the
+  dry run as `af0b518`, together with the ticks of `plan.md`, which the plan's commit points left out. On
+  `af0b518`, `npm run check-changes` exited 0 and `npm test` exited 0 with 934 tests passed and 0 failed. The change
+  check reads committed content, so its result needed a commit after that one, which the plan did not list; added
+  it to the commit points of `plan.md` as `bugfix-0073 Record the final checks`. Every task of `plan.md` is ticked.
+  The unit is handed over for review at `in-progress`
 
 ## Amendments

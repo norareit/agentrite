@@ -89,7 +89,7 @@ The dry run, after the fix:
 ## Verification
 
 - [x] `npm test` passes in this repository after the commit of `RELEASING.md`
-- [ ] `npm run check-changes` exits 0 on the unit's branch, after the last commit
+- [x] `npm run check-changes` exits 0 on the unit's branch, after the last commit
 - [x] In the dry run, `refresh`, `npm test` and `npm run check-changes` exit 0, and `agentrite.json` holds the line
   of `orchestrator` after `standards`
 - [x] `git diff master -- RELEASING.md` changes nothing outside step 6
@@ -97,4 +97,5 @@ The dry run, after the fix:
 ## Commit Points
 
 - [x] `bugfix-0073 Settle the release's instructions before refresh in step 6`: `RELEASING.md`
-- [x] `bugfix-0073 Record the dry run of step 6`: `record.md`
+- [x] `bugfix-0073 Record the dry run of step 6`: `record.md` and the ticks of `plan.md`
+- [x] `bugfix-0073 Record the final checks`: `record.md` and `plan.md`
