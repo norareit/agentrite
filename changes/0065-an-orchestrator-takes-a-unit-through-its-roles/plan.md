@@ -447,7 +447,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 - [x] Make `optionError` of `scripts/agentrite-run.mjs` take the options of its command and what each takes, and
   export it, so that `parseOrchestrateArgs` judges its options by the same rule as `parseRunArgs`. A refactoring, in
   a commit of its own; `node --test tests/agentrite-run.test.mjs` passes before and after it (R10)
-- [ ] In a new `tests/agentrite-orchestrate.test.mjs`, unit tests of `orchestrate` with `effects` whose `run` gives
+- [x] In a new `tests/agentrite-orchestrate.test.mjs`, unit tests of `orchestrate` with `effects` whose `run` gives
   the results a test lists in turn and records each planned step (R12, R13, R18, R19, R20, R29):
     * the default definition with no blocking finding at the first review runs steps 0 to 2, numbered in order,
       with the rounds `undefined`, 1 of 3 and 1 of 3, and ends `complete` with exit status 0
@@ -464,14 +464,14 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
     * the session: the second step of one role and harness gets the session the first returned, a step of the same
       role in another harness gets none, and a step whose run returned no session leaves the one there was
     * `effects.started` and `effects.ended` are called once each per step, in order
-- [ ] In the same file, test `stepLine` before and after a step, inside a repeat and outside, for each outcome of
+- [x] In the same file, test `stepLine` before and after a step, inside a repeat and outside, for each outcome of
   the approach; `duration` for 0, 999, 8000, 724000 and 3723000 milliseconds; `ranTable` for the spec's example,
   whose lines it gives exactly; `endReport` for each end of the approach, with the lines of the last step's outcome,
   the response's path or that there is none, and nothing of a malformed outcome or of an earlier step;
   `parseOrchestrateArgs` for the unit alone, `--definition <file>`, `--definition=<file>`, `--skip-permissions`,
   the options before and after the unit, and each refusal of the approach, the usage alone for no argument. See them
   fail (R10, R14, R20, R21)
-- [ ] Add `scripts/agentrite-orchestrate.mjs` (R10, R12 to R14, R18 to R21)
+- [x] Add `scripts/agentrite-orchestrate.mjs` (R10, R12 to R14, R18 to R21)
 
 ### 5. The command
 
@@ -608,7 +608,7 @@ Each commit is made once `npm test` is green.
 - [x] After task group 2: `feature-0065 Judge a definition of the orchestrator`
 - [ ] After task group 3: `feature-0065 Ask a step for its outcome, and read it from what the harness printed`
 - [x] Before task group 4's other tasks: `feature-0065 Let the judging of an option serve another command`
-- [ ] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
+- [x] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
 - [ ] After task group 5: `feature-0065 Add agentrite orchestrate`
 - [ ] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
 - [ ] After task group 7: `feature-0065 Mount .orchestrator in every unit run`

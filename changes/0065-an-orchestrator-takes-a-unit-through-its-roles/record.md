@@ -115,3 +115,9 @@ timestamp: 2026-10-20T23:55:38Z
   of `orchestrate` are judged by the rule of `run` and the rule is not written twice; added to `plan.md` with its
   task and commit point, as a refactoring in a commit of its own. `node --test tests/agentrite-run.test.mjs` passes,
   63 tests, as before it
+- 2026-10-21T12:02:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 4:
+  `orchestrate`, `judgeStep`, `exitStatus`, `stepLine`, `duration`, `ranTable`, `endReport` and
+  `parseOrchestrateArgs` in the new `scripts/agentrite-orchestrate.mjs`, its tests written before the module. Outside
+  a repeat a planned step's `round` and `index` are both `undefined`. A stop by `none` uses the plan's line, that the
+  final response holds no block marked json, also when there was no final response; the line after it then says that
+  the harness gave none. `npm test` passes: 899 tests, none skipped
