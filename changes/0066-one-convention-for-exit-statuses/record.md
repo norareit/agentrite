@@ -20,3 +20,10 @@ timestamp: 2026-10-21T09:50:41Z
   usage and exit status 2, renumbered the requirements after it, added its test to requirement 9 and recorded why under
   "Decisions". "Beyond the request" holds nothing now. The status is `draft`
 - 2026-10-21T10:23:12Z [human] approved the spec. The status is `approved`
+- 2026-10-21T10:27:26Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0066-one-convention-for-exit-statuses` from `master` at `2f0d501` and wrote `plan.md`. Requirement 5
+  keeps an option `./sandbox.sh` does not take at 2, and requirement 9 asks for a test of it, but the wrapper has no
+  such refusal today: it takes an unknown option for the unit, which requirement 4 refuses with 1, or after
+  `--in-place` for the command. The plan reads the requirement as it must be read, and has the option loop refuse,
+  with 2, a word that opens with `-` where an option stands, which is what the `--` row of "Commands" of `README.md`
+  already says. The status is `approved`
