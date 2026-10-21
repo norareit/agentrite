@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-21T09:50:41Z
 ---
 
@@ -19,3 +19,4 @@ timestamp: 2026-10-21T09:50:41Z
   of "Beyond the request" into the unit: added requirement 7, that the change check refuses a second argument with its
   usage and exit status 2, renumbered the requirements after it, added its test to requirement 9 and recorded why under
   "Decisions". "Beyond the request" holds nothing now. The status is `draft`
+- 2026-10-21T10:23:12Z [human] approved the spec. The status is `approved`
