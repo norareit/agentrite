@@ -51,6 +51,6 @@
     "kit": "node node_modules/agentrite/scripts/agentrite.mjs"
   },
   "devDependencies": {
-    "agentrite": "7.3.0"
+    "agentrite": "8.0.0"
   }
 }

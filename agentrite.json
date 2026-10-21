@@ -4,6 +4,7 @@
   "sandbox": true,
   "bell": true,
   "standards": "node_modules/agentrite/standards.md",
+  "orchestrator": "node_modules/agentrite/orchestrator.json",
   "roles": {
     "specifier": "node_modules/agentrite/roles/specifier.md",
     "planner": "node_modules/agentrite/roles/planner.md",
