@@ -1,6 +1,6 @@
 {
   "name": "agentrite",
-  "version": "7.3.0",
+  "version": "8.0.0",
   "description": "A kit for running coding agents by a fixed process",
   "keywords": [
     "agents",
