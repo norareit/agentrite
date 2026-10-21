@@ -255,8 +255,14 @@ export function run(root = process.cwd()) {
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  const [root, ...rest] = process.argv.slice(2);
+  if (rest.length > 0) {
+    console.error('check-changes takes one argument, the repository root.');
+    console.error('usage: node check-changes.mjs [<repository root>]');
+    process.exit(2);
+  }
   try {
-    run(process.argv[2]);
+    run(root);
   } catch (error) {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);

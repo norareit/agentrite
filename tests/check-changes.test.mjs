@@ -461,3 +461,15 @@ test('check-changes reads a default branch as a branch, and not as a tag or an o
     assert.ok(result.stderr.startsWith(`No common ancestor with ${name} or origin/${name} `), result.stderr);
   }
 });
+
+test('check-changes given two arguments says it takes one, prints its usage, checks nothing and exits 2', (t) => {
+  // No git repository, so a check that ran would fail with 1.
+  const directory = temporaryDirectory(t, 'check-changes-');
+
+  const result = spawnSync(process.execPath, [checker, directory, directory], { encoding: 'utf8' });
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.match(result.stderr, /takes one argument, the repository root/);
+  assert.match(result.stderr, /^usage: node check-changes\.mjs \[<repository root>\]$/m);
+});

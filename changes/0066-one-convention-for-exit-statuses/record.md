@@ -32,3 +32,7 @@ timestamp: 2026-10-21T09:50:41Z
   loop of `container/sandbox.sh`; the last sentence of the comment above it, on the forms ending with `--connect`,
   went with it, and the rest of the comment stayed with the check that follows it. The sandbox suites,
   `node --test tests/sandbox*.test.mjs`, pass: 269 tests. The status is `in-progress`
+- 2026-10-21T10:30:15Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the test of the change check given two
+  arguments, which failed with status 1 before the refusal, then made the entry point of `scripts/check-changes.mjs`
+  refuse more than one argument with its usage and status 2. `node --test tests/check-changes.test.mjs` passes: 37
+  tests

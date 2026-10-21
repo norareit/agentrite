@@ -92,11 +92,11 @@ The refactoring:
 
 The change check:
 
-- [ ] Add to `tests/check-changes.test.mjs` a test that runs the change check with two arguments in a directory that
+- [x] Add to `tests/check-changes.test.mjs` a test that runs the change check with two arguments in a directory that
   is no git repository, so that a check that ran would fail with 1, and asserts status 2, nothing on standard output,
   and standard error that says it takes one argument, the repository root, and holds its usage line. It fails
   before the next task (R7, R9)
-- [ ] In the entry point of `scripts/check-changes.mjs`, refuse more than one argument before `run` is called: print
+- [x] In the entry point of `scripts/check-changes.mjs`, refuse more than one argument before `run` is called: print
   the line and the usage on standard error and exit 2. Leave `run` and the statuses 0 and 1 as they are (R7)
 
 `./sandbox.sh`:
@@ -195,7 +195,7 @@ The documents:
 
 - [x] `feature-0066 Plan the unit`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0066 Define mount_forms before the option loop`: the refactoring task, which changes no behavior
-- [ ] `feature-0066 Refuse a second argument to the change check`: the two tasks of the change check
+- [x] `feature-0066 Refuse a second argument to the change check`: the two tasks of the change check
 - [ ] `feature-0066 Exit 1 for every refusal of the sandbox but its arguments`: the tasks of `./sandbox.sh`,
   `sandbox-dev.sh`'s test among them
 - [ ] `feature-0066 Define the exit statuses once`: the tasks of the documents
