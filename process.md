@@ -58,6 +58,8 @@ Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`.
 
 * `spec.md` states what should be true: context, requirements, decisions with rationale, non-goals, and what was left
   out as beyond the request. It has no file paths or task order
+    * The human may refer to item *n* of a spec's "Beyond the request" as `BTR<n>`, such as `BTR2`. It names that
+      item of the spec of the unit under discussion, and never an item of a message's `**Needed from you**` list
 * `plan.md` states how the work will be done: approach, files, ordered tasks, tests first, and commit points
 * `record.md` states what happened: frontmatter, timestamped status transitions, and amendments
 

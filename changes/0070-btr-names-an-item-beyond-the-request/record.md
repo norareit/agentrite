@@ -35,3 +35,13 @@ Not part of this task:
   writes a spec, and chose the kind `task`. Numbered 0070: the highest number in `changes/` is 0069. Wrote this
   record. The status is `draft`
 - 2026-10-21T15:04:25Z [human] approved the record. The status is `approved`
+- 2026-10-21T15:04:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work directly on
+  `master` at `ef2cc5d` and not on a branch `task-0070-btr-names-an-item-beyond-the-request`, on the human's
+  instruction to implement it on `master`. This is an exception to the rule of `process.md` that work after the
+  approval is done on the unit's branch, so the change check's freeze check does not see this unit. Added the
+  definition of `BTR<n>` to `process.md` as a nested bullet under its bullet on what `spec.md` states. No other file
+  defines or repeats it. The status is `in-progress`
+- 2026-10-21T15:04:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm test` on the tree with
+  the change: 921 tests, all pass. The end-to-end suite is the same `npm test`. Lines of `process.md` are within 120
+  characters. `npm run check-changes` exits 0, but on `master` it compares `master` with itself and so checked
+  nothing of this unit
