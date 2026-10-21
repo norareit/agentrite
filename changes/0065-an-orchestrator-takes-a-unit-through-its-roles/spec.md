@@ -54,7 +54,7 @@ The definition:
    Opus, and then at most three rounds of the implementer in Claude Code on Sonnet followed by a review in OpenCode on
    GPT Sol. The implementer of the first round builds the unit, and that of a later round applies the findings of the
    review before it. A review with no blocking finding ends the repeat, and a third review with one stops the run, as
-   requirements 18 and 19 say
+   requirement 19 says
 
 ```json
 {
@@ -104,11 +104,11 @@ The command:
 11. It refuses, starting nothing and exiting 1, when `agentrite.json` is missing or not valid, when `orchestrator` is
     `false`, saying that the project opted out and which key to change, also when `--definition` is given, when the path
     of `--definition` names no file, naming the path, when the definition is refused by requirement 9, when `changes/`
-    holds no directory for the unit, or more than one for its digits, and when the unit's status is `draft` or
-    `implemented`, naming the status and why it is refused
+    holds no directory for the unit, or more than one for its digits, and when the unit's status is not `approved`,
+    naming the status and saying that a run starts the work of an approved unit
 12. It runs each step as `agentrite run` with the step's role, harness and model, `--headless`, the step's `prompt`
     when there is one, `--skip-permissions` when the command was given it, and the arguments the harness needs for
-    requirements 15 and 18. The steps run in the order of the definition, one at a time, and a repeat runs its steps
+    requirements 13 and 15. The steps run in the order of the definition, one at a time, and a repeat runs its steps
     in order, round after round
 13. Within one run, a step of a role and a harness that already ran in that run continues that step's session of the
     harness, so that the implementer of a later round has the context of the earlier ones. That holds for both
@@ -120,10 +120,12 @@ The command:
 
 The outcome of a step:
 
-15. Every step is asked, in the prompt the command adds after the step's own, to end its final response with its
-    outcome, one JSON object in a fenced block marked `json`, of the form of requirement 16. The command reads it from
-    the step's final response, for both harnesses. The agent writes no file for it. For a step in a repeat, the
-    added prompt also says which round it is and how many rounds the repeat has at most
+15. Every step is asked, in the prompt the command adds after the step's own, to give its outcome in its final
+    response, as one JSON object of the form of requirement 16 in a fenced block marked `json`, which is the only
+    such block of the response, and which stands before the line `**Needed from you**` when the response has one.
+    The command reads it from the step's final response, wherever in the response it stands, for both harnesses. The
+    agent writes no file for it. For a step in a repeat, the added prompt also says which round it is and how many
+    rounds the repeat has at most
 16. An outcome is a JSON object with the keys:
     * `outcome`: `"done"`, `"needs-human"` or `"failed"`
     * `summary`: a string, what the step did
@@ -133,7 +135,7 @@ The outcome of a step:
     * `declines`: a list of objects, each with `finding`, the `id` of a finding, and `reason`, a string. It is empty
       for a step that proposed no decline
 
-    and no other. The outcome of a review with one blocking finding, as the final response ends with it:
+    and no other. The outcome of a review with one blocking finding, as it stands in the final response:
 
 ````markdown
 ```json
@@ -154,22 +156,27 @@ The outcome of a step:
 
 How a run ends:
 
-18. A run stops after a step, and runs nothing after it, when:
+18. After a step, the command first judges the step itself. The run stops, and runs nothing after it, when:
     * the harness exits with a status other than 0
-    * the final response holds no outcome, or one that is not of the form of requirement 16. The command writes the
-      final response into the run's directory in its place
+    * the final response holds no fenced block marked `json`, more than one, or one that is not of the form of
+      requirement 16. The command writes the final response, when there is one, into the run's directory in the
+      place of the outcome
     * the outcome is `needs-human` or `failed`
     * `declines` is not empty
     * the step holds `stopWhen` and its condition holds. `"blocking-findings"` holds when a finding of the step's
       outcome has `blocking` `true`
-    * the step is the last of the last round of a repeat whose `until` does not hold
-19. A repeat's `until` is judged on the outcome of the last step of each round, once that step has not stopped the
-    run. When it holds, the repeat ends and the run goes on with the item after the repeat. When it does not hold in
-    a round before the last, the next round starts. `"no-blocking-findings"` holds when no finding of that outcome
-    has `blocking` `true`. A repeat without `until` runs all its rounds
-20. A run that ran every item to its end ends with exit status 0. A run that stopped by requirement 18 ends with
-    exit status 3, a refusal of requirement 11 with 1, and arguments the command does not take, or none, with its
-    usage and 2, as the kit's other commands do
+19. Only when requirement 18 did not stop the run, and the step is the last of its round in a repeat that holds
+    `until`, the command then judges `until` on that step's outcome. `"no-blocking-findings"` holds when no finding
+    of the outcome has `blocking` `true`:
+    * when it holds, the repeat ends and the run goes on with the item after the repeat
+    * when it does not hold and rounds are left, the next round starts
+    * when it does not hold after the last round, the repeat ran out, and the run stops and runs nothing after it
+
+    A repeat without `until` runs all its rounds, and the run then goes on with the item after it. It never stops the
+    run by itself
+20. The command's exit statuses follow "Exit statuses" of `README.md`. A run that ran every item to its end exits
+    with status 0, and a run that stopped by requirement 18 or 19 with 3, the command's own status. A refusal of
+    requirement 11 exits with 1, and arguments the command does not take, or none, with its usage and 2
 21. When a run ends, the command prints what the human needs, last:
     * a list of every step that ran, in the order they ran, one line each, with the step's number of requirement 14,
       its role, its harness, its model and how long it took. For the default definition, run to its second review:
@@ -182,11 +189,17 @@ How a run ends:
       4  reviewer     opencode  openai/gpt-6.1-sol   6m 03s
       ```
 
-    * how the run ended: every item ran, or which step stopped it and by which case of requirement 18
-    * the `summary` of the last step that ran
-    * after a stop by `stopWhen`, or by a repeat whose `until` did not hold, each blocking finding still open, with
-      its `id` and `summary`, and after the latter that the repeat ran out and how many rounds it ran
-    * each question of the last step's outcome, and each proposed decline with its finding and reason
+    * how the run ended: every item ran, or which step stopped it and by which case of requirement 18 or 19. For an
+      outcome that is not of the form of requirement 16, it says what is wrong with it, as requirement 9 does for a
+      definition
+    * when the step that ran last has an outcome of the form of requirement 16:
+        * its `summary`
+        * after a stop by `stopWhen`, or by a repeat that ran out, each blocking finding still open, with its `id`
+          and `summary`, and after the latter how many rounds the repeat ran
+        * each question of its outcome, and each proposed decline with its finding and reason
+    * when it has none: the path of its final response in the run's directory, or that the harness gave no final
+      response. Nothing is taken from an object that is not of the form of requirement 16, nor from the outcome of
+      an earlier step
     * the path of the run's directory, and that the reviewer's findings are under `.reviews/<unit-directory>/`
 22. A run neither sets the unit's status nor commits. What the roles do to the unit is theirs
 
@@ -194,28 +207,41 @@ The directory:
 
 23. The command keeps each run in `.orchestrator/<unit-directory>/<run>/` of the project root, where `<run>` is the
     instant the run started, in the UTC form of `process.md`. It holds the state of the run, which step and round it
-    is at and each harness session's id, and the outcome of every step that ran, in files whose names give the order
-    the steps ran in. Nothing but the command writes in `.orchestrator/`
-24. At the start of each run, the command writes a file `.orchestrator/.gitignore` holding `*` when that file is
-    missing, and leaves one that is there as it is. The directory is then ignored by git in every project, without a
-    line in the project's own `.gitignore`, also after the sandbox made it empty or the developer removed it
+    is at and each harness session's id, a copy of the definition the run runs, written at its start as it was read,
+    and the outcome of every step that ran, in files whose names give the order the steps ran in. Nothing but the
+    command writes in `.orchestrator/`
+24. At the start of each run, the command makes sure that the file `.orchestrator/.gitignore` holds `*` and nothing
+    else, writing it when it is missing or holds anything else, and leaving it as it is when it holds that. The
+    directory is then ignored by git in every project, without a line in the project's own `.gitignore`, also after
+    the sandbox made it empty or the developer removed it
 25. Every unit run of `./sandbox.sh`, whichever `orchestrator` holds, mounts the host's `.orchestrator` read-write at
     `/work/.orchestrator`, and makes the directory on the host, and its mount point in the clone, as the developer
     before the container starts. With `--in-place` it is there as part of the project root
 
 The documents:
 
-26. `README.md` has a section on the orchestrator that says what a run does, the form of a definition with the
-    default as its example, how a project uses a definition of its own by copying the kit's and naming the copy in
-    `orchestrator`, how to try a definition with `--definition` without changing `orchestrator`, the outcome of a
-    step, how a run ends with its exit statuses, what `.orchestrator/` holds and
-    that nothing else writes there, how to run it on the host and in the sandbox, and that `--skip-permissions`
-    belongs in the sandbox while on the host a step gets only what the project's harness settings allow
-27. `README.md` describes `agentrite orchestrate` in "Commands", `--no-orchestrator` in "agentrite init", the key in
+26. `README.md` has a section on the orchestrator that says:
+    * what a run does, and that it starts the work of an `approved` unit
+    * the form of a definition, with the default as its example, and the order in which a step and a repeat's
+      `until` are judged, with the consequence that a `stopWhen` on the last step of a repeat with `until` stops the
+      run before `until` is judged
+    * how a project uses a definition of its own, by copying the kit's and naming the copy in `orchestrator`, and how
+      to try one with `--definition` without changing `orchestrator`
+    * the outcome of a step, and how a run ends, with its exit statuses
+    * what `.orchestrator/` holds, and that nothing else writes there
+    * how to run it on the host and in the sandbox
+    * that `--skip-permissions` is passed to the `agentrite run` of every step, with a link to "Running a role" for
+      what it does, and that a headless step without it gets only what the harness's settings allow
+27. `README.md` describes `agentrite orchestrate` in "Commands", with its exit statuses and a link to "Exit
+    statuses", `--no-orchestrator` in "agentrite init", the key in
     "The project's settings", the default definition in "What is here", and in "Updating a project to a newer kit"
     the line a project whose `agentrite.json` lacks `orchestrator` adds
-28. `SANDBOX.md` names the mount of `.orchestrator` in "Running a unit", beside that of `.reviews`, and says how the
-    orchestrator is run in a unit run
+28. The mount of `.orchestrator` is named wherever the mount of `.reviews` is:
+    * in "Running a unit" of `SANDBOX.md`, which also says how the orchestrator is run in a unit run
+    * in the table of what of the host is reachable besides `/work`, of `README.md`
+    * in "What the sandbox defends against" of `SANDBOX.md`, among what reaches the host's repository. Among what it
+      does not defend against, that section names what a file under `.orchestrator` says, to a human or a program
+      that reads it on the host
 
 Tests:
 
@@ -223,9 +249,10 @@ Tests:
     and 16, and the order of steps and the ends of a run by requirements 12, 13, 18, 19 and 20
 30. End-to-end tests run `agentrite orchestrate` against fake harnesses on the `PATH`, as the tests of
     `agentrite run` do, for: a run whose every item ends, a run whose repeat ends at its first round, one whose
-    repeat runs out, one stopped by `stopWhen` outside a repeat and one inside it, by `needs-human`, by a decline, by
-    a missing outcome and by a harness that fails, a run of a definition given with `--definition`, and the
-    refusals of requirement 11
+    repeat runs out, one whose repeat has no `until` and runs all its rounds, one stopped by `stopWhen` outside a
+    repeat and one inside it, by `needs-human`, by a decline, by a missing outcome, by two outcomes, by a malformed
+    outcome and by a harness that fails, a run of a definition given with `--definition`, and the refusals of
+    requirement 11
 31. A test with Docker shows that a unit run mounts `.orchestrator`, made as the developer, and is skipped where
     Docker is not available, as the suite's other tests that need Docker are
 
@@ -249,16 +276,22 @@ Tests:
   holds its findings, and both harnesses hand it to a caller of their headless mode. It also leaves `.orchestrator/`
   written by the command alone. Rejected: an outcome file written by the agent, which breaks the reviewer's role;
   and a line in the reviewer's role file that allows it, which changes a role
+* **The outcome may stand anywhere in the final response, as its only `json` block.** The standards end a message
+  that needs the human with the line `**Needed from you**` and a list, with nothing after it, and a step that stops
+  for the human gives such a message. An outcome required to end the response would break that rule exactly where a
+  run stops for the human. Being the only block keeps the reading unambiguous. Rejected: keeping the outcome last
+  and recording an exception to the standards, which a step following its standards would still break; and reading
+  the list instead of `questions`, which reads prose
 * **The request for the outcome is in the command, not in the definition or the role files.** The command that
   asks for the form is the command that reads it, so the two cannot drift, every project on one release asks the
   same, and a step of a role that a project replaced, or added, is asked as well. The human agreed to this
 * **The outcome has one form for every role.** The human wants it structured, so that a later decision on it, by a
   program too, is easy. One form means one reader, whichever role ran. Rejected: a form per role, which makes a
   definition's step depend on which role it names
-* **A stop for the human has an exit status of its own, 3.** The kit's commands already end with 1 when they refuse
-  or fail and with 2 when their arguments are wrong, the way many command-line tools do, so 3 is the first status
-  free. A script, or the later unit that picks a stopped run up, can then tell a run that waits for the human from a
-  run that never started, without reading what the command printed
+* **A stop for the human has an exit status of its own, 3.** "Exit statuses" of `README.md`, which unit 0066 wrote,
+  gives 1 to a refusal or a failure, 2 to wrong arguments, and 3 and above to a command's own meanings, so 3 is the
+  first status free. A script, or the later unit that picks a stopped run up, can then tell a run that waits for the
+  human from a run that never started, without reading what the command printed
 * **A run stops on anything it cannot read as done.** Exit status 0 says that a harness's turn ended, not that the
   unit is done, so the command trusts the outcome and stops when there is none. A stop costs the human a look, and a
   run that goes on after a step it misread costs the steps after it
@@ -273,6 +306,10 @@ Tests:
   directions, so one key for both would mean one thing in a repeat and the other outside it. `until` is on the
   repeat, where a reader looks for when the loop ends, and is judged on the round's last step, which in the default
   is the review
+* **The step is judged before the repeat.** A step that must stop the run, by its outcome or its `stopWhen`, stops
+  it whatever the repeat would do next, so its checks come first, and `until` is judged only on a step that let the
+  run go on. The ran-out stop is the repeat's, and so is only for a repeat that holds `until`. A reviewing step with
+  both `stopWhen` and a repeat's `until` therefore stops the run at its first blocking finding, which the README says
 * **The command tells a step in a repeat its round.** The implementer of the first round builds the unit and has no
   review of this run to apply, and the `.reviews/` of the unit may hold reviews of earlier work. With its round
   given, the definition's prompt can say from which round the findings are accepted. Rejected: a prompt per round
@@ -295,6 +332,16 @@ Tests:
 * **A step continues its role's session within a run.** The human agreed that the implementer keeps its context
   through the loop. The same rule for every role keeps the definition free of a key for it. A run does not continue
   sessions of an earlier run, which is the later unit's
+* **That OpenCode sends the prompt of a resumed session when headless is verified first.** A review of this spec
+  found, in the source of OpenCode 1.18.33 and 1.19.3 and not in a run, that `opencode run --session <id>` sends the
+  new prompt, which requirement 13 depends on. "Running a role" of `README.md` says that a resumed session of
+  OpenCode does not send the new prompt, which reads as if it held for a headless run as well. The plan verifies the
+  behavior with a real headless run before anything is built on it. An error found in `README.md` is a unit of its
+  own, and not corrected by this one
+* **A run keeps a copy of the definition it ran.** The later unit that picks a stopped run up needs to know which
+  step a stop was at, and the definition named in `agentrite.json`, or given with `--definition`, may have changed
+  since. The human took this in for that unit, though nothing in this unit reads the copy, since a run made before
+  the copy existed could not be picked up
 * **`--skip-permissions` is an option of the command, given when the run is started.** The human decided this.
   Whether to skip depends on where the run is, not on what the orchestrator is, and the kit does not judge whether
   it is in the sandbox, as unit 0032 decided
@@ -305,13 +352,24 @@ Tests:
   it holds the key, which "Updating a project to a newer kit" says
 * **`.orchestrator/` is its own directory, ignored by a file in it.** The human chose a directory named for the
   orchestrator over `.reviews/`. The kit writes no `.gitignore` of a project, and a `.gitignore` inside the directory
-  keeps it so. Rejected: a line that `init` adds to the project's `.gitignore`, which is a file the kit does not
-  write today
+  keeps it so. The file is the command's, as everything in the directory is, so the command writes it anew when it
+  holds anything but `*`, which keeps the promise that the directory is ignored. Rejected: a line that `init` adds
+  to the project's `.gitignore`, which is a file the kit does not write today; leaving a file that holds something
+  else as it is, which breaks the promise; and refusing to run, which leaves the fix of a file of the command's to
+  the developer
 * **The sandbox always mounts it.** The human decided this, as cheaper than following the setting. The cost: a
   project that opted out gets an empty directory, which git does not show
-* **The run refuses a `draft` and an `implemented` unit.** Nothing is built of a draft, and an implemented unit is
-  frozen, so a run of either spends a harness's work on nothing it may do. The roles judge the rest, as the planner
-  judges whether a unit has a plan
+* **The mount is a way from the container to the host, and is documented as one.** Every text that names what of the
+  host a unit run reaches names `.orchestrator` beside `.reviews`. "Where things are kept on the host" does not name
+  it, since it lists what the sandbox keeps outside the project, and `.orchestrator`, as `.reviews`, is a directory of
+  the project, written on the host as well when the orchestrator runs there. Nothing in this unit reads a file of
+  `.orchestrator` back, and the unit that will is the one to weigh what an agent in the sandbox may have written
+* **A run takes an `approved` unit only.** A run starts the work of a unit, and the planner, the first step of the
+  default, takes an `approved` unit. An `in-progress` unit is being worked on by hand, or was left by a run that
+  stopped, and picking that up is the later unit's, which adds a form of the command for it with a status rule of
+  its own. Rejected: refusing only `draft` and `implemented`, which hands the default's planner a unit outside its
+  role's input; and refusing `in-progress` only when the definition starts with the planner, which has the command
+  reason about the names of roles
 * **The kit's models are the human's.** The default names the ids the human gave, as the README already writes them.
   A release that moves to newer models changes the default, and a project that wants others copies it
 

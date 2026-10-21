@@ -47,3 +47,25 @@ timestamp: 2026-10-20T23:55:38Z
   of "Beyond the request" into the unit and leave item 2 out: added `--definition <file>` to requirement 10, its refusal
   to requirement 11, its documentation to requirement 26 and its test to requirement 30, recorded why under "Decisions",
   and left live output of a step as the one item of "Beyond the request". The status is `draft`
+- 2026-10-21T10:13:24Z [OpenCode, openai/gpt-6.1-sol] reviewed `spec.md` and `record.md` of the unit as they stood at
+  `9d3c1b5`, on the human's request and in no role, and saved its findings in
+  `.reviews/0065-an-orchestrator-takes-a-unit-through-its-roles/spec-review-gpt-6.1-sol.md`. The human ran the review by
+  hand, and this entry was written for it by the specifier. The status is `draft`
+- 2026-10-21T11:22:11Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, went through the review of the spec
+  that GPT Sol made in OpenCode on the human's request, saved as
+  `.reviews/0065-an-orchestrator-takes-a-unit-through-its-roles/spec-review-gpt-6.1-sol.md`, finding by finding with the
+  human, and changed the spec as the human decided. Finding 1, accepted: the outcome may stand anywhere in the final
+  response as its only `json` block, before a `**Needed from you**` list, so that the standards hold. Finding 2,
+  accepted: a run takes an `approved` unit only, and on the human's decision a run keeps a copy of its definition for
+  the later unit that picks a stopped run up. Finding 3, accepted: the step is judged before the repeat's `until`, the
+  ran-out stop is only for a repeat that holds `until`, and a test covers a repeat without one. Finding 4, accepted: the
+  end of a run without an accepted outcome says why and where the response is, and takes nothing from a rejected or
+  earlier outcome. Finding 5, accepted: the command writes `.orchestrator/.gitignore` anew when it holds anything but
+  `*`. Finding 6, accepted, with the human's change that the README points to "Running a role" for what
+  `--skip-permissions` does. Finding 7, accepted in part: the README's table of what of the host is reachable and "What
+  the sandbox defends against" name the mount, and the latter names what a file under `.orchestrator` says among what it
+  does not defend against; "Where things are kept on the host" does not name the directory, which is the project's, on
+  the human's decision. Finding 8, accepted: requirement 12 refers to requirements 13 and 15. On the human's decision,
+  the plan verifies with a real run that a headless resume of OpenCode sends its prompt, as the review found in
+  OpenCode's source. Also had requirements 20 and 27 follow "Exit statuses" of `README.md`, which unit 0066 wrote
+  meanwhile. The status is `draft`
