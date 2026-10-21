@@ -211,17 +211,17 @@ timestamp: 2026-10-20T23:55:38Z
   the delta's parsing regression. JSDoc type narrowing was checked by source inspection; no compiler result could
   be verified through the repository's configured commands, which have no type-check command
 - 2026-10-21T12:54:58Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, S2 of the delta review, accepted by
-the human and applied: a block in a blockquote that is left without its closing fence ends where its blockquote ends, at
-a line with fewer blockquote markers, which is then read as a line outside any block. Added to `plan.md` with its tasks
-and commit point, and the approach's rule changed to say so. The new tests, of a top-level and a quoted `json` block
-after a quoted block left open, of a `json` block left open in a blockquote, and of a run whose steps give such
-responses, failed before the change, two tests, and pass after it. `npm test` passes: 920 tests, none skipped; a first
-run had the variant test that runs a unit and its variants at once fail, which passed alone and in a second whole run.
-On the human's decision, the supported forms of a final response are bounded in the spec by the specifier, in the entry
-after this one
-- 2026-10-21T12:55:33Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision to bound the forms of a
-  final response that the command reads, after the delta review's S2: requirement 15 now names them, the block at
-  the top level, in a blockquote, nested or not, and in a list item at any indentation, ended by its closing fence,
-  its blockquote or the response, and says that another form may stop the run by requirement 18. A decision records
-  why, what was accepted with it and what was rejected. The correction is made on the unit's branch and awaits the
-  human's approval. The status stays `in-progress`
+  the human and applied: a block in a blockquote that is left without its closing fence ends where its blockquote ends,
+  at a line with fewer blockquote markers, which is then read as a line outside any block. Added to `plan.md` with its
+  tasks and commit point, and the approach's rule changed to say so. The new tests, of a top-level and a quoted `json`
+  block after a quoted block left open, of a `json` block left open in a blockquote, and of a run whose steps give such
+  responses, failed before the change, two tests, and pass after it. `npm test` passes: 920 tests, none skipped; a first
+  run had the variant test that runs a unit and its variants at once fail, which passed alone and in a second whole run.
+  On the human's decision, the supported forms of a final response are bounded in the spec by the specifier, in the
+  entry after this one
+- 2026-10-21T12:55:33Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision to bound the
+  forms of a final response that the command reads, after the delta review's S2: requirement 15 now names them, the
+  block at the top level, in a blockquote, nested or not, and in a list item at any indentation, ended by its closing
+  fence, its blockquote or the response, and says that another form may stop the run by requirement 18. A decision
+  records why, what was accepted with it and what was rejected. The correction is made on the unit's branch and awaits
+  the human's approval. The status stays `in-progress`
