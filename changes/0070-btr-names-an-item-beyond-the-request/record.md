@@ -1,7 +1,7 @@
 ---
 kind: task
-status: draft
-timestamp: 2026-10-21T15:03:05Z
+status: implemented
+timestamp: 2026-10-21T17:30:23Z
 ---
 
 # 0070 BTR names an item beyond the request
@@ -45,3 +45,6 @@ Not part of this task:
   the change: 921 tests, all pass. The end-to-end suite is the same `npm test`. Lines of `process.md` are within 120
   characters. `npm run check-changes` exits 0, but on `master` it compares `master` with itself and so checked
   nothing of this unit
+- 2026-10-21T17:30:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that they
+  reviewed the unit themselves, so that no reviewer ran and no finding is open. The task has no `plan.md`. The status
+  is `implemented`
