@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-21T09:50:41Z
 ---
 
@@ -90,3 +90,14 @@ timestamp: 2026-10-21T09:50:41Z
   pass on `9413ea2`, whose tree differs from this commit's only in `README.md` and the unit's documents. No line the
   unit adds is over 120 characters. Both findings are decided and every task of `plan.md` is ticked. The status stays
   `in-progress`: the review of the corrections is done elsewhere
+- 2026-10-21T10:50:40Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a delta review of unit 0066 at
+  `ca3f98323f01bfb5d5afcbd4631c1079c9ae357f`, from the previous review's commit
+  `653cfbb6cde3938790f4b1d199262f7ef78239c0`. Returned no findings. Saved the complete review in
+  `.reviews/0066-one-convention-for-exit-statuses/20261021T105040Z-opencode-delta-ca3f983.md`.
+  Independently ran `npm test`: 819 passed, none failed or skipped; `npm run check-changes` and
+  `node scripts/check-changes.mjs` passed. Shell syntax and delta whitespace checks passed, all 132 added delta
+  lines fit 120 characters, and nine direct argument-refusal probes passed. Could not independently verify the
+  historical red/green test order, or production sandbox firewall and live-harness behavior beyond the suite
+- 2026-10-21T10:54:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the delta
+  review returned no findings: the review's one blocking finding, S1, was applied at the human's request, S2 was applied
+  too, and every task of `plan.md` is ticked. The status is `implemented`
