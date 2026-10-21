@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-10-21T20:46:38Z
 ---
 
@@ -49,5 +49,6 @@ Not part of this task: moving any other project to 8.0.0, and the order of step 
   of 8.0.0; its `refresh` exited 0, refreshed `.claude/agents/reviewer.md` and `.opencode/agents/reviewer.md`, printed
   `up to date` for every other file, and changed nothing else. Not run there: `npm test` and the sandbox. The status is
   `draft`
+- 2026-10-21T21:09:47Z [human] approved the record. The status is `approved`
 
 ## Amendments
