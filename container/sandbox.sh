@@ -133,6 +133,21 @@ export AGENTRITE_CONTAINER="${here#"$root"/}"
 
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 
+# The forms of what to mount at /work. They end with the one that mounts nothing,
+# --connect, for whoever wanted a second shell.
+mount_forms() {
+  echo "Say what to mount at /work, as one of:" >&2
+  echo "  sandbox.sh UNIT [--variant NAME] [COMMAND...]" >&2
+  echo "                                       a clone of the unit's branch, named by its ID or its branch." >&2
+  echo "                                       An ID with no branch gets one, cut from the default branch" >&2
+  echo "                                       With --variant, a clone of the branch of that variant of the unit," >&2
+  echo "                                       cut from the unit's branch when it does not exist" >&2
+  echo "  sandbox.sh --in-place [COMMAND...]     the project root as it is" >&2
+  echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
+  echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
+  echo "  sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]" >&2
+}
+
 # The directories of --workdir and --mount are kept as they were given while the options
 # are read, and are resolved after the loop: what refuses a combination of options
 # comes first, and does not depend on a directory being there.
@@ -284,20 +299,7 @@ done
 
 # What to mount at /work has no default. Without --in-place and --workdir the first
 # argument left is the unit, and with nothing left there is nothing to run on. Refused
-# here, before the host's harnesses, Docker or npm are asked anything. The forms end
-# with the one that mounts nothing, --connect, for whoever wanted a second shell.
-mount_forms() {
-  echo "Say what to mount at /work, as one of:" >&2
-  echo "  sandbox.sh UNIT [--variant NAME] [COMMAND...]" >&2
-  echo "                                       a clone of the unit's branch, named by its ID or its branch." >&2
-  echo "                                       An ID with no branch gets one, cut from the default branch" >&2
-  echo "                                       With --variant, a clone of the branch of that variant of the unit," >&2
-  echo "                                       cut from the unit's branch when it does not exist" >&2
-  echo "  sandbox.sh --in-place [COMMAND...]     the project root as it is" >&2
-  echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
-  echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
-  echo "  sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]" >&2
-}
+# here, before the host's harnesses, Docker or npm are asked anything.
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   echo "sandbox.sh: nothing to mount at /work was given." >&2
   mount_forms

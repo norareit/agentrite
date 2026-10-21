@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-21T09:50:41Z
 ---
 
@@ -27,3 +27,8 @@ timestamp: 2026-10-21T09:50:41Z
   `--in-place` for the command. The plan reads the requirement as it must be read, and has the option loop refuse,
   with 2, a word that opens with `-` where an option stands, which is what the `--` row of "Commands" of `README.md`
   already says. The status is `approved`
+- 2026-10-21T10:29:53Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0066-one-convention-for-exit-statuses` at `bba6338`, began the work. Moved `mount_forms` above the option
+  loop of `container/sandbox.sh`; the last sentence of the comment above it, on the forms ending with `--connect`,
+  went with it, and the rest of the comment stayed with the check that follows it. The sandbox suites,
+  `node --test tests/sandbox*.test.mjs`, pass: 269 tests. The status is `in-progress`

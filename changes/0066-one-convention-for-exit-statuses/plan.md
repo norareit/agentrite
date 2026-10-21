@@ -86,7 +86,7 @@ and a link to `#exit-statuses`.
 
 The refactoring:
 
-- [ ] Move the definition of `mount_forms` in `container/sandbox.sh`, with its comment, to just above the option
+- [x] Move the definition of `mount_forms` in `container/sandbox.sh`, with its comment, to just above the option
   loop, unchanged, and leave the comment on what to mount at `/work` with the check that follows it. Run the sandbox
   suites, which pass unchanged (R5)
 
@@ -194,7 +194,7 @@ The documents:
 ## Commit Points
 
 - [x] `feature-0066 Plan the unit`: `plan.md` and the planner's entry in `record.md`
-- [ ] `feature-0066 Define mount_forms before the option loop`: the refactoring task, which changes no behavior
+- [x] `feature-0066 Define mount_forms before the option loop`: the refactoring task, which changes no behavior
 - [ ] `feature-0066 Refuse a second argument to the change check`: the two tasks of the change check
 - [ ] `feature-0066 Exit 1 for every refusal of the sandbox but its arguments`: the tasks of `./sandbox.sh`,
   `sandbox-dev.sh`'s test among them
