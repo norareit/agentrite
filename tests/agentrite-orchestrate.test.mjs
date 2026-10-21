@@ -638,7 +638,8 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
 
 // Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n> and exits with the status
 // in status-<n>, or 0. With wait-<n>, it writes its process id to pid-<n> and becomes a sleep of that many seconds,
-// ignoring SIGTERM with ignore-term-<n>. Nothing but the builtins of sh and the sleep linked into the PATH, since it
+// ignoring SIGTERM with ignore-term-<n>. With linger-<n>, it leaves a sleep of that many seconds in the background,
+// holding its standard output, and exits. Nothing but the builtins of sh and the sleep linked into the PATH, since it
 // holds no other command. The sleep is exec'd, so that the harness stays one process whose id the test knows: a job
 // started in the background would ignore SIGINT, where the harness would not.
 const FAKE_HARNESS = `#!/bin/sh
@@ -649,6 +650,10 @@ printf '%s\\n' "$count" > "$FAKE_DIR/count"
 printf '%s\\n' "\${0##*/}" "$@" > "$FAKE_DIR/call-$count"
 if [ -f "$FAKE_DIR/out-$count" ]; then
   while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line"; done < "$FAKE_DIR/out-$count"
+fi
+if [ -f "$FAKE_DIR/linger-$count" ]; then
+  read -r seconds < "$FAKE_DIR/linger-$count"
+  sleep "$seconds" &
 fi
 if [ -f "$FAKE_DIR/wait-$count" ]; then
   read -r seconds < "$FAKE_DIR/wait-$count"
@@ -711,6 +716,8 @@ function project(t) {
     writeFileSync(join(fakes, `wait-${number}`), `${seconds}\n`);
     if (ignoreTerm) writeFileSync(join(fakes, `ignore-term-${number}`), '');
   };
+  // That the fake leaves a sleep of `seconds` holding its output at its call `number`, and exits.
+  const lingers = (number, seconds) => writeFileSync(join(fakes, `linger-${number}`), `${seconds}\n`);
   // The process id of the fake at its call `number`, once it wrote it.
   const pidOf = async (number) => {
     const path = join(fakes, `pid-${number}`);
@@ -722,7 +729,7 @@ function project(t) {
       .filter((name) => name.startsWith('call-'))
       .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
-  return { base, write, read, agentrite, started, answer, waits, pidOf, calls };
+  return { base, write, read, agentrite, started, answer, waits, lingers, pidOf, calls };
 }
 
 // A call of the fake: its name, the arguments before the prompt, and the prompt, which is the last argument and may
@@ -1355,4 +1362,19 @@ test('a step with a limit that ends in time ends as it would without the limit',
   assert.equal(calls().length, 2);
   assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
   assert.ok(result.stdout.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
+});
+
+// The review's finding S1: the limit ends with the step's agentrite run, and not with its output.
+test('a step that ends in time and leaves a process holding its output past the limit keeps its outcome', (t) => {
+  const { write, agentrite, answer, lingers, calls } = project(t);
+  write('limited.json', JSON.stringify(limitedTo(0.02)));
+  answer(1, claudePrinted(responseOf(DONE)));
+  lingers(1, 3);
+  answer(2, opencodePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'limited.json');
+
+  assert.equal(result.status, 0, result.stdout);
+  assert.equal(calls().length, 2);
+  assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
 });

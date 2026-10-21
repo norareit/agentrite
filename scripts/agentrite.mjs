@@ -1223,9 +1223,9 @@ const GRACE_MILLISECONDS = 10_000;
 
 /**
  * Runs `args` with this Node.js from `root` in a process group of its own, and gives how it ended, what it printed on
- * standard output, how long it took and whether it ran past `timeoutMinutes`. When it does, `SIGTERM` is sent to the
- * group, and `SIGKILL` when the group still has a process after the grace. `grouped` is given the group when it
- * starts, and `undefined` when the promise settles.
+ * standard output, how long it ran until it exited and whether that reached `timeoutMinutes`. When it does, `SIGTERM`
+ * is sent to the group, and `SIGKILL` when the group still has a process after the grace. `grouped` is given the
+ * group when it starts, and `undefined` when the promise settles.
  *
  * @param {string} root
  * @param {string[]} args
@@ -1286,6 +1286,9 @@ function runGrouped(root, args, timeoutMinutes, grouped) {
     });
     child.on('exit', () => {
       milliseconds = performance.now() - began;
+      // The step's time ends here, though a process it left may hold its output open longer. A grace already
+      // started is kept, so that a harness that ignores SIGTERM is still ended.
+      clearTimeout(limit);
     });
     child.on('close', (status, signal) => {
       closed = { status, signal };

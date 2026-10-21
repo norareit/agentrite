@@ -174,6 +174,16 @@ stopped as before, and the key is described where the definition is, in `README.
   written to the terminal ends the run and `pgrep -f` finds no process of the harness after it. Log what was seen in
   `record.md` (R9)
 
+### 6. The findings of the review
+
+- [x] S1: in `tests/agentrite-orchestrate.test.mjs`, give the fake `linger-<n>`, a sleep of that many seconds left in
+  the background holding its standard output, and add the end-to-end test that a step with `timeoutMinutes` of
+  `0.02` whose fake exits at once and lingers 3 seconds keeps its outcome, and the run goes on and exits 0. In
+  `runGrouped` of `scripts/agentrite.mjs`, clear the timer of the limit at `exit`, and keep a grace already started
+  (R3, R4)
+- [ ] C1: in `gone` of `tests/agentrite-orchestrate.test.mjs`, read `/proc` for the state `Z` on Linux only, and
+  take the process as gone elsewhere only when `process.kill(pid, 0)` throws `ESRCH` (R12)
+
 ## Verification
 
 - [x] `npm test` passes, with the tests of the unit among them, and none skipped on the host
@@ -191,3 +201,5 @@ Each commit is made once `npm test` is green.
 - [x] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
 - [x] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`
 - [x] After the check by hand: `feature-0069 Log the check by hand of the time limit`
+- [x] After S1: `feature-0069 End the time limit of a step when its agentrite run exits`
+- [ ] After C1: `feature-0069 Take a process as gone by /proc on Linux only`
