@@ -25,6 +25,17 @@ timestamp: 2026-10-21T10:08:24Z
   file with the roles of this repository's own added after the four
 - 2026-10-21T20:02:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
   `feature-0067-a-spec-reviewer-of-this-repository` at `490ee98`, began the work. The status is `in-progress`
-- 2026-10-21T20:03:45Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added a task to the documents of `plan.md`:
-  "The kit's own tests" of `CONTRIBUTING.md` says that two tests need the installed release and fail without
-  `npm ci`, and the test of the listing of `roles` that the plan adds is a third, so the statement now says three
+- 2026-10-21T20:03:45Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added a task to the documents of
+  `plan.md`: "The kit's own tests" of `CONTRIBUTING.md` says that two tests need the installed release and fail
+  without `npm ci`, and the test of the listing of `roles` that the plan adds is a third, so the statement now says
+  three
+- 2026-10-21T20:04:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the tasks of `plan.md` in two commits,
+  up to `a22631a`. The test of the root `agentrite.json` and the test of the listing of `roles` failed before the
+  role was added, and pass after. `npm run kit -- refresh` wrote `.claude/agents/spec-reviewer.md` and
+  `.opencode/agents/spec-reviewer.md`, neither of which names a model, refreshed `.agentrite/instructions.md`, and
+  found every other file up to date; `npm run kit -- roles` lists `spec-reviewer` after the four with the
+  description of the role file. On the tree of `a22631a`, `npm test` reports 934 tests, all of which pass and none
+  skipped, `npm run check-changes` passes, and `npm run kit -- refresh` prints `up to date` for every file and
+  changes nothing. Requirements 4 to 16 were checked by reading `extra-roles/spec-reviewer.md` against each, and its
+  link to `process.md` resolves from `extra-roles/`. The role has not been run on a unit: no spec was reviewed with
+  it in this session. Every line of the files the unit adds or changes is within 120 characters

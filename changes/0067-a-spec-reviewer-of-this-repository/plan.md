@@ -121,12 +121,12 @@ The documents:
 
 ## Verification
 
-- [ ] `npm test` passes on the committed tree
-- [ ] `npm run check-changes` passes on the committed tree
-- [ ] `npm run kit -- refresh` at the root prints `up to date` for every file and changes nothing
-- [ ] Each of requirements 4 to 16 is checked against the text of `extra-roles/spec-reviewer.md`, and each of its
+- [x] `npm test` passes on the committed tree
+- [x] `npm run check-changes` passes on the committed tree
+- [x] `npm run kit -- refresh` at the root prints `up to date` for every file and changes nothing
+- [x] Each of requirements 4 to 16 is checked against the text of `extra-roles/spec-reviewer.md`, and each of its
   links resolves from `extra-roles/`
-- [ ] Every line of the changed and new files is within 120 characters
+- [x] Every line of the changed and new files is within 120 characters
 
 ## Commit Points
 
@@ -134,5 +134,5 @@ The documents:
 - [x] `feature-0067 Add the spec reviewer as a role of this repository`: the tasks of the tests and of the role,
   which only pass together
 - [x] `feature-0067 Name extra-roles in the documents`: the tasks of the documents
-- [ ] `feature-0067 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
+- [x] `feature-0067 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
   what was run on the committed work
