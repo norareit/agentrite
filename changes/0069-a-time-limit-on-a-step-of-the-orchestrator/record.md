@@ -30,5 +30,19 @@ timestamp: 2026-10-21T14:18:50Z
 - 2026-10-21T17:40:21Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
   `feature-0069-a-time-limit-on-a-step-of-the-orchestrator` at `d48b0e5`, began the work. The status is
   `in-progress`
+- 2026-10-21T17:58:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built task groups 1 to 4 of the
+  plan, a commit each, up to `fe0beca`. The end-to-end test of the signals failed before a step had a group of its
+  own, with the harness left running, and the two of the time limit failed before the clock, with the step running
+  its full 60 seconds; all pass after. `runStep` hands the process to a function of its own, `runGrouped`, which
+  keeps the clock and the grace, so that `runStep` stays at one level. `detached: true`, which the plan chose, makes
+  the step's `agentrite run` the leader of a session of its own on Linux, and so of a group of its own, and leaves
+  the harness with no controlling terminal; the check by hand covers whether a harness works so. The time of a step
+  that ran out ends when its `agentrite run` ends, which `SIGTERM` ends at once, so the line of a harness that ignores
+  `SIGTERM` gives about the limit and not the grace, as requirement 3 says. "How a run ends" of `README.md` also says
+  that the line after a step gives that it ran out of time. `npm test` on the tree of `fe0beca` reports 931 tests, all
+  of which pass and none skipped, and `npm run check-changes` passes on it. In two of the runs of the whole suite
+  before it, `a unit run and its variants run at once` of `tests/sandbox-variant.test.mjs` failed once, and once in
+  three runs of that file alone on this branch; it passed in six more runs of that file alone, on this branch and on
+  `master` each. It loads no file this unit changes, and was not looked into further
 
 ## Amendments

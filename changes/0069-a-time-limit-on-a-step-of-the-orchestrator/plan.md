@@ -177,7 +177,7 @@ stopped as before, and the key is described where the definition is, in `README.
 
 - [ ] `npm test` passes, with the tests of the unit among them, and none skipped on the host
 - [ ] `npm run check-changes` passes after the last commit
-- [ ] Every requirement 1 to 12 is traced by a task above, and the README sections of task groups 2 to 4 read as
+- [x] Every requirement 1 to 12 is traced by a task above, and the README sections of task groups 2 to 4 read as
   "The documents" of `AGENTS.md` asks: complete for the command, nothing of why, lines within 120 characters
 
 ## Commit Points
