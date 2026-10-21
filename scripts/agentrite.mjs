@@ -1189,16 +1189,48 @@ function numberWidth(definition) {
 }
 
 /**
- * Runs one step as `agentrite run` of this file, headless, and gives how its harness ended, its final response and
- * its session. The harness's standard error reaches the terminal, and its standard output is read.
+ * Sends `signal` to every process of the process group `group`, when it still has one.
+ *
+ * @param {number} group
+ * @param {NodeJS.Signals} signal
+ */
+function signalGroup(group, signal) {
+  try {
+    process.kill(-group, signal);
+  } catch (error) {
+    if (!(error instanceof Error && 'code' in error && error.code === 'ESRCH')) throw error;
+  }
+}
+
+/**
+ * True while the process group `group` has a process.
+ *
+ * @param {number} group
+ * @returns {boolean}
+ */
+function groupAlive(group) {
+  try {
+    process.kill(-group, 0);
+    return true;
+  } catch (error) {
+    if (error instanceof Error && 'code' in error && error.code === 'ESRCH') return false;
+    throw error;
+  }
+}
+
+/**
+ * Runs one step as `agentrite run` of this file, headless, in a process group of its own, and gives how its harness
+ * ended, its final response and its session. The harness's standard error reaches the terminal, and its standard
+ * output is read. `grouped` is given the group when the step starts, and `undefined` when it has ended.
  *
  * @param {string} root
  * @param {string} directory
  * @param {boolean} skipPermissions
  * @param {import('./agentrite-orchestrate.mjs').Planned} planned
+ * @param {(group: number | undefined) => void} grouped
  * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
-function runStep(root, directory, skipPermissions, { step, round, session }) {
+function runStep(root, directory, skipPermissions, { step, round, session }, grouped) {
   const headless = HEADLESS[step.harness];
   const start = headless.arguments(session);
   const request = outcomeRequest(round);
@@ -1221,20 +1253,44 @@ function runStep(root, directory, skipPermissions, { step, round, session }) {
     const began = performance.now();
     let milliseconds = 0;
     let stdout = '';
-    const child = spawn(process.execPath, args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'] });
+    // A group of its own, so that the command can end the harness with it, which `agentrite run` does not pass a
+    // signal on to.
+    const child = spawn(process.execPath, args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
+    grouped(child.pid);
     child.stdout.setEncoding('utf-8');
     child.stdout.on('data', (chunk) => {
       stdout += chunk;
     });
-    child.on('error', reject);
+    child.on('error', (error) => {
+      grouped(undefined);
+      reject(error);
+    });
     child.on('exit', () => {
       milliseconds = performance.now() - began;
     });
     child.on('close', (status, signal) => {
+      grouped(undefined);
       const read = headless.read(stdout);
       settle({ status, signal, response: read.response, session: read.session ?? start.session, milliseconds });
     });
   });
+}
+
+/**
+ * Passes `SIGINT`, `SIGTERM` and `SIGHUP` on to the process group of the step that runs, which a step in a group of
+ * its own no longer gets from the terminal, and then ends the command by the same signal, as it ended before steps
+ * had a group of their own. With its listener gone, the signal sent to the command itself takes its default action.
+ *
+ * @param {() => number | undefined} running the group of the step that runs, or `undefined` between steps
+ */
+function passSignalsOn(running) {
+  for (const signal of /** @type {const} */ (['SIGINT', 'SIGTERM', 'SIGHUP'])) {
+    process.once(signal, () => {
+      const group = running();
+      if (group !== undefined) signalGroup(group, signal);
+      process.kill(process.pid, signal);
+    });
+  }
 }
 
 /**
@@ -1265,6 +1321,8 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
 
   write('definition.json', text);
   writeState(null);
+  /** @type {number | undefined} */ let group;
+  passSignalsOn(() => group);
   /** @type {string | undefined} */ let responsePath;
   const { ran, end } = await orchestrate(definition, {
     started(planned) {
@@ -1273,7 +1331,10 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
       writeState(null);
       console.log(stepLine(planned));
     },
-    run: (planned) => runStep(root, directory, skipPermissions, planned),
+    run: (planned) =>
+      runStep(root, directory, skipPermissions, planned, (running) => {
+        group = running;
+      }),
     ended(entry) {
       const { planned, result, reading } = entry;
       const { role, harness } = planned.step;

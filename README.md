@@ -359,6 +359,10 @@ It refuses, starts nothing, writes nothing and exits 1 when:
 
 It takes no `--`: a step's harness gets the arguments the definition and the command give it, and no other.
 
+Every step runs in a process group of its own. `SIGINT`, `SIGTERM` and `SIGHUP` sent to the command, as Ctrl-C on
+the terminal and `kill <pid>` send them, are sent on to the step that runs, and the command then ends by the same
+signal.
+
 It exits with `0` for a run that ran every item of the definition to its end, `1` when it refuses or fails, `2` for
 wrong arguments or none, which it refuses with its usage, and `3`, its own status, for a run that a step or a
 repeat stopped, which waits for the human. See [Exit statuses](#exit-statuses).

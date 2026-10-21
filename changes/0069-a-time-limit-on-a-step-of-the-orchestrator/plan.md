@@ -99,20 +99,20 @@ stopped as before, and the key is described where the definition is, in `README.
 
 ### 2. A group of its own, and the signals passed on
 
-- [ ] Add the end-to-end test first: for each of `SIGINT`, `SIGTERM` and `SIGHUP`, start `agentrite orchestrate`
+- [x] Add the end-to-end test first: for each of `SIGINT`, `SIGTERM` and `SIGHUP`, start `agentrite orchestrate`
   with `spawn` on a definition of one step whose fake waits 60 seconds, wait until `pid-1` exists, send the signal to
   the command's process alone, and assert that the command ended by that signal and that the harness's process is
   gone, as "When a process is gone" above says. This needs the fake that waits, and the `bin/sleep` link in
   `project()`, as the Approach decides (R9, R12)
-- [ ] In `runStep`, start the step with `detached: true`, so that its `agentrite run` and the harness are a group of
+- [x] In `runStep`, start the step with `detached: true`, so that its `agentrite run` and the harness are a group of
   their own, for every step (R9)
-- [ ] In `scripts/agentrite.mjs`, add `signalGroup(group, signal)`, which sends `signal` to `-group` and ignores
+- [x] In `scripts/agentrite.mjs`, add `signalGroup(group, signal)`, which sends `signal` to `-group` and ignores
   `ESRCH`, and `groupAlive(group)`, true while `process.kill(-group, 0)` does not throw `ESRCH` (R4, R9)
-- [ ] In `orchestrateCommand`, keep the group of the step that runs, which `runStep` sets when it starts the step and
+- [x] In `orchestrateCommand`, keep the group of the step that runs, which `runStep` sets when it starts the step and
   clears when its promise settles, and add, for `SIGINT`, `SIGTERM` and `SIGHUP`, a listener with `process.once`
   that sends the signal on to that group, when there is one, and then to the command itself, as the Approach decides
   (R9)
-- [ ] In "agentrite orchestrate" of `README.md`, say that every step runs in a process group of its own, and that
+- [x] In "agentrite orchestrate" of `README.md`, say that every step runs in a process group of its own, and that
   `SIGINT`, `SIGTERM` and `SIGHUP` sent to the command, as Ctrl-C on the terminal and `kill <pid>` do, are sent on to
   the step that runs, after which the command ends by the same signal (R10)
 
@@ -186,7 +186,7 @@ Each commit is made once `npm test` is green.
 
 - [x] Before the work: `feature-0069 Plan the unit`
 - [x] After task group 1: `feature-0069 Run the steps of the orchestrator asynchronously`
-- [ ] After task group 2: `feature-0069 Run each step in a process group of its own, and pass the signals on`
+- [x] After task group 2: `feature-0069 Run each step in a process group of its own, and pass the signals on`
 - [ ] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
 - [ ] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`
 - [ ] After the check by hand: `feature-0069 Log the check by hand of the time limit`

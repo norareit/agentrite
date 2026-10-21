@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import {
   chmodSync,
   existsSync,
@@ -8,11 +8,13 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { setTimeout as delay } from 'node:timers/promises';
 import { parseDefinition } from '../scripts/agentrite-definition.mjs';
 import {
   duration,
@@ -565,7 +567,10 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
 // writes, an approved unit, and a PATH that holds nothing but one fake that stands for both harnesses.
 
 // Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n> and exits with the status
-// in status-<n>, or 0. Nothing but the builtins of sh, since the PATH holds no other command.
+// in status-<n>, or 0. With wait-<n>, it writes its process id to pid-<n> and becomes a sleep of that many seconds,
+// ignoring SIGTERM with ignore-term-<n>. Nothing but the builtins of sh and the sleep linked into the PATH, since it
+// holds no other command. The sleep is exec'd, so that the harness stays one process whose id the test knows: a job
+// started in the background would ignore SIGINT, where the harness would not.
 const FAKE_HARNESS = `#!/bin/sh
 count=0
 if [ -f "$FAKE_DIR/count" ]; then read -r count < "$FAKE_DIR/count"; fi
@@ -575,12 +580,19 @@ printf '%s\\n' "\${0##*/}" "$@" > "$FAKE_DIR/call-$count"
 if [ -f "$FAKE_DIR/out-$count" ]; then
   while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line"; done < "$FAKE_DIR/out-$count"
 fi
+if [ -f "$FAKE_DIR/wait-$count" ]; then
+  read -r seconds < "$FAKE_DIR/wait-$count"
+  if [ -f "$FAKE_DIR/ignore-term-$count" ]; then trap '' TERM; fi
+  printf '%s\\n' "$$" > "$FAKE_DIR/pid-$count"
+  exec sleep "$seconds"
+fi
 status=0
 if [ -f "$FAKE_DIR/status-$count" ]; then read -r status < "$FAKE_DIR/status-$count"; fi
 exit "$status"
 `;
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
+const SLEEP = spawnSync('sh', ['-c', 'command -v sleep'], { encoding: 'utf-8' }).stdout.trim();
 const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const UNIT = '0029-try-the-orchestrator';
 const APPROVED = '---\nkind: feature\nstatus: approved\ntimestamp: 2026-10-21T10:00:00Z\n---\n\n# 0029\n';
@@ -599,12 +611,23 @@ function project(t) {
     write(`bin/${harness}`, FAKE_HARNESS);
     chmodSync(join(base, 'bin', harness), 0o755);
   }
-  const agentrite = (...args) =>
-    spawnSync(process.execPath, [script, ...args], {
-      cwd: base,
-      encoding: 'utf-8',
-      env: { PATH: join(base, 'bin'), FAKE_DIR: fakes },
-    });
+  symlinkSync(SLEEP, join(base, 'bin', 'sleep'));
+  const options = { cwd: base, env: { PATH: join(base, 'bin'), FAKE_DIR: fakes } };
+  const agentrite = (...args) => spawnSync(process.execPath, [script, ...args], { ...options, encoding: 'utf-8' });
+  // The command started and not waited on, with a promise of how it ended and what it printed, and one of how it
+  // exited, which does not wait for whatever process it left holding its output.
+  const started = (...args) => {
+    const child = spawn(process.execPath, [script, ...args], { ...options, stdio: ['ignore', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.on('data', (chunk) => (stdout += chunk));
+    child.stderr.on('data', (chunk) => (stderr += chunk));
+    const ended = new Promise((settle) =>
+      child.on('close', (status, signal) => settle({ status, signal, stdout, stderr })),
+    );
+    const exited = new Promise((settle) => child.on('exit', (status, signal) => settle({ status, signal, stderr })));
+    return { child, ended, exited };
+  };
   write('agentrite.json', SETTINGS);
   assert.equal(agentrite('refresh').status, 0);
   write(`changes/${UNIT}/record.md`, APPROVED);
@@ -613,12 +636,23 @@ function project(t) {
     writeFileSync(join(fakes, `out-${number}`), printed);
     if (status !== undefined) writeFileSync(join(fakes, `status-${number}`), `${status}\n`);
   };
+  // That the fake waits `seconds` at its call `number`, after it printed, and ignores SIGTERM with `ignoreTerm`.
+  const waits = (number, seconds, ignoreTerm = false) => {
+    writeFileSync(join(fakes, `wait-${number}`), `${seconds}\n`);
+    if (ignoreTerm) writeFileSync(join(fakes, `ignore-term-${number}`), '');
+  };
+  // The process id of the fake at its call `number`, once it wrote it.
+  const pidOf = async (number) => {
+    const path = join(fakes, `pid-${number}`);
+    for (let tries = 0; tries < 500 && !existsSync(path); tries += 1) await delay(20);
+    return Number(readFileSync(path, 'utf-8'));
+  };
   const calls = () =>
     readdirSync(fakes)
       .filter((name) => name.startsWith('call-'))
       .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
-  return { base, write, read, agentrite, answer, calls };
+  return { base, write, read, agentrite, started, answer, waits, pidOf, calls };
 }
 
 // A call of the fake: its name, the arguments before the prompt, and the prompt, which is the last argument and may
@@ -1136,3 +1170,41 @@ function snapshot(base, relative = '') {
       return [[path, readFileSync(join(base, path), 'utf-8')]];
     });
 }
+
+// R9, R12 of unit 0069: a step in a process group of its own, and the signals the command passes on to it.
+
+// True once the process `pid` is gone: there is none, or it is a zombie not yet reaped by whatever adopted it. Polls
+// for up to 5 seconds, since the reaping is not instant.
+async function gone(pid) {
+  for (let tries = 0; tries < 250; tries += 1) {
+    try {
+      process.kill(pid, 0);
+      const stat = readFileSync(`/proc/${pid}/stat`, 'utf-8');
+      if (stat.slice(stat.lastIndexOf(')') + 2).startsWith('Z')) return true;
+    } catch (error) {
+      // Gone between the two looks, when /proc no longer has it.
+      if (error.code === 'ESRCH' || error.code === 'ENOENT') return true;
+      throw error;
+    }
+    await delay(20);
+  }
+  return false;
+}
+
+const ONE_STEP = { steps: [{ role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' }] };
+
+test('a signal to the command alone while a step runs ends the step, and the command by that signal', async (t) => {
+  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+    const { write, started, waits, pidOf } = project(t);
+    write('one.json', JSON.stringify(ONE_STEP));
+    waits(1, 60);
+    const { child, exited } = started('orchestrate', '0029', '--definition', 'one.json');
+    const harness = await pidOf(1);
+
+    process.kill(child.pid, signal);
+
+    const result = await exited;
+    assert.equal(result.signal, signal, `${signal}: ${result.stderr}`);
+    assert.ok(await gone(harness), `${signal}: the harness ${harness} is left`);
+  }
+});
