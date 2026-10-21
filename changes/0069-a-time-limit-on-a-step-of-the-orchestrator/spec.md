@@ -95,8 +95,7 @@ Tests:
 ## Non-goals
 
 * A time limit on a repeat, or a default limit for every step of a definition
-* A time limit on a whole run. The human declined it and the limit on a repeat or a definition, both offered as
-  beyond the request, until using the limit on a step shows them to be needed
+* A time limit on a whole run
 * A grace period other than 10 seconds, or one a definition sets
 * A warning before a step's time runs out
 * Picking up a stopped run, which is a later unit, as 0065 says
@@ -104,4 +103,9 @@ Tests:
 
 ## Beyond the request
 
-None
+1. `timeoutMinutes` on a repeat, or at the top of a definition, as the limit of every step that names none. Cost: a
+   second place to judge the key and a rule of which one counts. Without it, each step that needs a limit names one,
+   which the default definition does in three places at most
+2. A time limit on the whole run, as a key of the definition or an option of the command. Cost: a second clock and a
+   case of the end report of its own. Without it, a run is bounded by its steps' limits times its rounds, which a
+   human can work out from the definition
