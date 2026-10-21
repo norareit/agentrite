@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-21T14:10:24Z
 ---
 
@@ -73,5 +73,8 @@ timestamp: 2026-10-21T14:10:24Z
   failure; the isolated tests and the subsequent full run passed, all 921 tests with none skipped. The historical
   model-backed check of R7 could not be independently verified because the record gives no retained project or
   run-artifact path. The entry remains uncommitted under the installed reviewer's no-commit rule
+- 2026-10-21T15:00:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word after the
+  review of `70e85b8` returned no findings, with every task of `plan.md` ticked, set the status. The status is
+  `implemented`
 
 ## Amendments
