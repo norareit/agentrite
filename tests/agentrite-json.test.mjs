@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { formattedLike, jsonFault, jsonPath } from '../scripts/agentrite-json.mjs';
+import { formattedLike, jsonFault, jsonKeyFault, jsonPath } from '../scripts/agentrite-json.mjs';
 
 // R4, R10
 
@@ -52,4 +52,14 @@ test('jsonFault says what the place holds, or that it is missing, and what it mu
   assert.equal(jsonFault('steps[0].model', '', 'a string'), 'steps[0].model is "". It must hold a string');
   assert.equal(jsonFault('times', null, 'a number'), 'times is null. It must hold a number');
   assert.equal(jsonFault('a', { b: [1] }, 'c'), 'a is {"b":[1]}. It must hold c');
+});
+
+test('jsonKeyFault names the first key in the order of the object that the place does not take', () => {
+  const place = { name: 'a finding', keys: ['id', 'blocking', 'summary'], holds: 'A finding holds id' };
+  assert.equal(jsonKeyFault({ id: 'S1', blocking: true }, 'findings[0]', place), undefined);
+  assert.equal(
+    jsonKeyFault({ why: 1, id: 'S1', severity: 2 }, 'findings[0]', place),
+    'findings[0].why is no key of a finding. A finding holds id',
+  );
+  assert.equal(jsonKeyFault({ x: 1 }, '', place), 'x is no key of a finding. A finding holds id');
 });

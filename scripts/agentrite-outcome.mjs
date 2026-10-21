@@ -1,0 +1,248 @@
+import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
+
+/**
+ * @typedef {{ id: string, blocking: boolean, summary: string }} Finding
+ * @typedef {{ finding: string, reason: string }} Decline
+ * @typedef {{
+ *   outcome: 'done' | 'needs-human' | 'failed',
+ *   summary: string,
+ *   questions: string[],
+ *   findings: Finding[],
+ *   declines: Decline[],
+ * }} Outcome
+ * @typedef {{ kind: 'outcome', outcome: Outcome, text: string }
+ *   | { kind: 'none' }
+ *   | { kind: 'several', count: number }
+ *   | { kind: 'malformed', fault: string }} Reading
+ */
+
+/**
+ * What the command adds to the prompt of every step, after the step's own, so that the step gives its outcome in a
+ * form the command reads. A step in a repeat is told its round, and how many rounds the repeat has at most.
+ *
+ * @param {{ at: number, of: number } | undefined} round
+ * @returns {string}
+ */
+export function outcomeRequest(round) {
+  const where = round === undefined ? '' : `, in round ${round.at} of a repeat of at most ${round.of} rounds`;
+  return [
+    `AgentRite's orchestrator runs this step${where}, and reads its outcome from your final response. ` +
+      'Give the outcome there as one JSON object, in a fenced code block marked json. ' +
+      'It is the only block marked json in your final response, ' +
+      'and it stands before the line **Needed from you** when the response has one. ' +
+      'Write no file for it. The object holds these keys, and no other:',
+    '',
+    '- "outcome": "done" when the step did its work, "needs-human" when it cannot go on without the human, ' +
+      'or "failed" when it could not do its work',
+    '- "summary": a string that says what the step did',
+    '- "questions": a list of strings, each a thing the step needs from the human. ' +
+      'It is empty when it needs nothing',
+    '- "findings": a list of objects, one for each finding the step made, ' +
+      'each with "id", a string such as "S1", "blocking", true or false, and "summary", a string. ' +
+      'It is empty for a step that reviewed nothing',
+    '- "declines": a list of objects, one for each finding whose decline the step proposes, ' +
+      'each with "finding", the id of the finding, and "reason", a string. ' +
+      'It is empty for a step that proposed no decline',
+  ].join('\n');
+}
+
+// A line that opens a fenced code block, as CommonMark has it: at most three spaces, three or more of one fence
+// character, and the info string. A backtick fence's info string holds no backtick.
+const OPENING = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+
+/**
+ * The fenced code blocks of `text`, in order, each with its info string and the text between its fences. A block
+ * that is never closed runs to the end of the text.
+ *
+ * @param {string} text
+ * @returns {{ info: string, content: string }[]}
+ */
+function fencedBlocks(text) {
+  const lines = text.split(/\r?\n/);
+  // The line break that ends the text opens no line.
+  if (lines.at(-1) === '') lines.pop();
+  /** @type {{ info: string, content: string }[]} */ const blocks = [];
+  /** @type {{ fence: string, info: string, lines: string[] } | undefined} */ let open;
+  for (const line of lines) {
+    if (open === undefined) {
+      const match = OPENING.exec(line);
+      if (match === null || (match[1].startsWith('`') && match[2].includes('`'))) continue;
+      open = { fence: match[1], info: match[2].trim(), lines: [] };
+    } else if (closes(line, open.fence)) {
+      blocks.push({ info: open.info, content: open.lines.join('\n') });
+      open = undefined;
+    } else {
+      open.lines.push(line);
+    }
+  }
+  if (open !== undefined) blocks.push({ info: open.info, content: open.lines.join('\n') });
+  return blocks;
+}
+
+/**
+ * True for a line that closes a block opened by `fence`: at most three spaces, at least as many of its character,
+ * and nothing after them but spaces.
+ *
+ * @param {string} line
+ * @param {string} fence
+ * @returns {boolean}
+ */
+function closes(line, fence) {
+  const match = /^ {0,3}(`{3,}|~{3,}) *$/.exec(line);
+  return match !== null && match[1][0] === fence[0] && match[1].length >= fence.length;
+}
+
+/**
+ * How the outcome of a step reads from its final response: the one block whose info string opens with the word
+ * `json`, wherever it stands, judged by requirement 16 of unit 0065. Several such blocks, or none, are said so, and
+ * so is a block that is not of the form, with its fault.
+ *
+ * @param {string} response
+ * @returns {Reading}
+ */
+export function readOutcome(response) {
+  const marked = fencedBlocks(response).filter((block) => block.info.split(/\s/)[0] === 'json');
+  if (marked.length === 0) return { kind: 'none' };
+  if (marked.length > 1) return { kind: 'several', count: marked.length };
+  const text = marked[0].content;
+  /** @type {unknown} */ let value;
+  try {
+    value = JSON.parse(text);
+  } catch (error) {
+    return { kind: 'malformed', fault: `the block is not JSON: ${error instanceof Error ? error.message : error}` };
+  }
+  const fault = outcomeFault(value);
+  if (fault !== undefined) return { kind: 'malformed', fault };
+  return { kind: 'outcome', outcome: /** @type {Outcome} */ (value), text };
+}
+
+const PLACES = {
+  outcome: {
+    name: 'an outcome',
+    keys: ['outcome', 'summary', 'questions', 'findings', 'declines'],
+    holds: 'An outcome holds outcome, summary, questions, findings and declines',
+  },
+  finding: {
+    name: 'a finding',
+    keys: ['id', 'blocking', 'summary'],
+    holds: 'A finding holds id, blocking and summary',
+  },
+  decline: { name: 'a decline', keys: ['finding', 'reason'], holds: 'A decline holds finding and reason' },
+};
+
+/** @type {(value: unknown) => boolean} */
+const isString = (value) => typeof value === 'string';
+
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
+function isObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * The first fault of the object at `path` against `checks`: a key its place does not take, then each key of
+ * `checks` in order, a list item by item.
+ *
+ * @param {Record<string, unknown>} object
+ * @param {string} path
+ * @param {{ name: string, keys: string[], holds: string }} place
+ * @param {[string, (value: unknown, path: string) => string | undefined][]} checks
+ * @returns {string | undefined}
+ */
+function objectFault(object, path, place, checks) {
+  const extra = jsonKeyFault(object, path, place);
+  if (extra !== undefined) return extra;
+  for (const [key, check] of checks) {
+    const fault = check(Object.hasOwn(object, key) ? object[key] : undefined, jsonPath(path, key));
+    if (fault !== undefined) return fault;
+  }
+  return undefined;
+}
+
+/**
+ * A check of a value that holds or gives its fault.
+ *
+ * @param {(value: unknown) => boolean} holds
+ * @param {string} must
+ * @returns {(value: unknown, path: string) => string | undefined}
+ */
+function plain(holds, must) {
+  return (value, path) => (holds(value) ? undefined : jsonFault(path, value, must));
+}
+
+/**
+ * A check of a list, and of each of its items by `item`.
+ *
+ * @param {string} must
+ * @param {(value: unknown, path: string) => string | undefined} item
+ * @returns {(value: unknown, path: string) => string | undefined}
+ */
+function list(must, item) {
+  return (value, path) => {
+    if (!Array.isArray(value)) return jsonFault(path, value, must);
+    for (const [index, entry] of value.entries()) {
+      const fault = item(entry, jsonPath(path, index));
+      if (fault !== undefined) return fault;
+    }
+    return undefined;
+  };
+}
+
+/**
+ * A check of an object at a place, by `checks`.
+ *
+ * @param {string} must
+ * @param {{ name: string, keys: string[], holds: string }} place
+ * @param {[string, (value: unknown, path: string) => string | undefined][]} checks
+ * @returns {(value: unknown, path: string) => string | undefined}
+ */
+function object(must, place, checks) {
+  return (value, path) => (isObject(value) ? objectFault(value, path, place, checks) : jsonFault(path, value, must));
+}
+
+const STRING_MUST = 'a string';
+
+/** @type {unknown[]} */
+const OUTCOMES = ['done', 'needs-human', 'failed'];
+
+/** @type {[string, (value: unknown, path: string) => string | undefined][]} */
+const OUTCOME_CHECKS = [
+  ['outcome', plain((value) => isString(value) && OUTCOMES.includes(value), '"done", "needs-human" or "failed"')],
+  ['summary', plain(isString, STRING_MUST)],
+  ['questions', list('a list of strings', plain(isString, STRING_MUST))],
+  [
+    'findings',
+    list(
+      'a list of objects, each with id, blocking and summary',
+      object('a finding, as an object with id, blocking and summary', PLACES.finding, [
+        ['id', plain(isString, STRING_MUST)],
+        ['blocking', plain((value) => typeof value === 'boolean', 'true or false')],
+        ['summary', plain(isString, STRING_MUST)],
+      ]),
+    ),
+  ],
+  [
+    'declines',
+    list(
+      'a list of objects, each with finding and reason',
+      object('a decline, as an object with finding and reason', PLACES.decline, [
+        ['finding', plain(isString, 'the id of a finding, as a string')],
+        ['reason', plain(isString, STRING_MUST)],
+      ]),
+    ),
+  ],
+];
+
+/**
+ * The first fault of `value` as an outcome, or `undefined` when it is one. The finding a decline names is not looked
+ * up among the findings, since an implementer declines the findings of an earlier review.
+ *
+ * @param {unknown} value
+ * @returns {string | undefined}
+ */
+function outcomeFault(value) {
+  if (!isObject(value)) return `the block holds ${JSON.stringify(value)}, which is no JSON object`;
+  return objectFault(value, '', PLACES.outcome, OUTCOME_CHECKS);
+}

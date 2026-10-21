@@ -89,6 +89,9 @@ whose fault is named by where it is, so the wording is one decision, kept in `sc
 * `jsonPath(parent, key)`: `steps`, `steps[1]`, `steps[1].repeat`, from a parent path that is `''` at the root and
   a key that is a string or an index
 * `jsonFault(path, value, must)`: `<path> is <missing | JSON.stringify(value)>. It must hold <must>`
+* `jsonKeyFault(object, path, place)`: `<jsonPath> is no key of <place>. <what the place holds>`, for the first key of
+  the object that its place does not take, which a definition and an outcome both name so. Added while implementing,
+  when the outcome needed the wording the definition had
 
 The settings keep their own wording, which this unit does not touch.
 
@@ -335,7 +338,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 - `package.json`: `files` lists `orchestrator.json` and the four new scripts
 - `templates/project/agentrite.json`: `"orchestrator"`
 - `scripts/agentrite-settings.mjs`: the key, its path checked, `settingsText`
-- `scripts/agentrite-json.mjs`: `jsonPath`, `jsonFault`
+- `scripts/agentrite-json.mjs`: `jsonPath`, `jsonFault`, `jsonKeyFault`
 - `scripts/agentrite-definition.mjs`: new, `parseDefinition`
 - `scripts/agentrite-outcome.mjs`: new, `outcomeRequest`, `readOutcome`
 - `scripts/agentrite-headless.mjs`: new, the arguments and the reading of each harness headless
@@ -412,7 +415,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 3. The outcome
 
-- [ ] In a new `tests/agentrite-outcome.test.mjs`, test (R15, R16, R29):
+- [x] In a new `tests/agentrite-outcome.test.mjs`, test (R15, R16, R29):
     * `outcomeRequest` without a round is the text of the approach, and with `{ at: 2, of: 3 }` says round 2 of a
       repeat of at most 3 rounds; each line of the source that writes it fits the line limit
     * `readOutcome` takes the spec's example of requirement 16; a block at the start, in the middle and at the end
@@ -423,7 +426,8 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
     * it finds `malformed` for a block that is not JSON, for one that is no object, for each key missing, for a key
       of another name at the root, in a finding and in a decline, for each other value of `outcome`, and for
       values of the wrong type in each key, each with its whole fault
-- [ ] Add `scripts/agentrite-outcome.mjs` (R15, R16)
+- [x] Add `jsonKeyFault` to `scripts/agentrite-json.mjs`, with its test, and have `parseDefinition` use it (R9, R16)
+- [x] Add `scripts/agentrite-outcome.mjs` (R15, R16)
 - [ ] In the same test file, test the readers of `scripts/agentrite-headless.mjs` (R13, R15):
     * `claude`: the arguments of a first step hold `--session-id` and a UUID, which it gives as the session, and
       those of a later one `--resume` and the session given; `read` gives `result` and `session_id`, and no final
@@ -436,7 +440,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
       parts of one message are joined by an empty line; a part given twice counts once, as its last event; a line
       that is not JSON is skipped; with no `step_finish`, or none with text in its message, there is no final
       response
-- [ ] Add `scripts/agentrite-headless.mjs` (R13, R15)
+- [x] Add `scripts/agentrite-headless.mjs` (R13, R15)
 
 ### 4. The run
 

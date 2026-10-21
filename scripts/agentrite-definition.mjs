@@ -1,5 +1,5 @@
 import { SETTINGS_FILE } from './agentrite-settings.mjs';
-import { jsonFault, jsonPath } from './agentrite-json.mjs';
+import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
 
 /**
  * @typedef {{ role: string, harness: string, model: string, prompt?: string, stopWhen?: 'blocking-findings' }} Step
@@ -73,9 +73,8 @@ function inWords(names) {
  * @param {(typeof PLACES)[keyof typeof PLACES]} place
  */
 function checkKeys(object, path, place) {
-  const extra = Object.keys(object).find((key) => !place.keys.includes(key));
-  if (extra === undefined) return;
-  throw new Error(`${jsonPath(path, extra)} is no key of ${place.name}. ${place.holds}`);
+  const fault = jsonKeyFault(object, path, place);
+  if (fault !== undefined) throw new Error(fault);
 }
 
 /**

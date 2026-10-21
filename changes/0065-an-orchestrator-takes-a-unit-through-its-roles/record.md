@@ -101,3 +101,12 @@ timestamp: 2026-10-20T23:55:38Z
   that is not JSON, and JSON that is no object, are refused as `<path> is not JSON: ...` and `<path> holds ...`,
   without a colon after the path, as `agentrite.json` is refused for the same faults; every other fault opens with
   `<path>: ` and where in the definition it is, as the plan gives. `npm test` passes: 848 tests, none skipped
+- 2026-10-21T11:58:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 3:
+  `outcomeRequest` and `readOutcome` in the new `scripts/agentrite-outcome.mjs`, and the readers of both harnesses in
+  the new `scripts/agentrite-headless.mjs`, each tested before its module existed. The outcome names a key of another
+  name in the words a definition uses, so that wording moved into `jsonKeyFault` of `scripts/agentrite-json.mjs`,
+  which both use; added to `plan.md` with its task. A JSON value of a block that is no object is named as
+  `the block holds <JSON>, which is no JSON object`, which the plan left open. The end-to-end part of the task of the
+  readers, a resumed Claude Code session that prints another id, is written with the end-to-end tests of task group
+  5, and its box stays open until then. `npm test` passes: 875 tests, none skipped; a first run had the variant test
+  that runs a unit and its variants at once fail, which passed alone and in a second whole run

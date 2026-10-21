@@ -36,3 +36,17 @@ export function jsonFault(path, value, must) {
   const found = value === undefined ? 'missing' : JSON.stringify(value);
   return `${path} is ${found}. It must hold ${must}`;
 }
+
+/**
+ * The words of a fault for the first key of `object`, in the order of the object, that its place does not take, or
+ * `undefined` when it takes them all. The place is named, with the sentence that says which keys it holds.
+ *
+ * @param {Record<string, unknown>} object
+ * @param {string} path
+ * @param {{ name: string, keys: string[], holds: string }} place
+ * @returns {string | undefined}
+ */
+export function jsonKeyFault(object, path, place) {
+  const extra = Object.keys(object).find((key) => !place.keys.includes(key));
+  return extra === undefined ? undefined : `${jsonPath(path, extra)} is no key of ${place.name}. ${place.holds}`;
+}
