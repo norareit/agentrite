@@ -387,9 +387,11 @@ forms printed. A unit or a command that opens with `-` goes after `--`. A comman
 after `--in-place COMMAND`, are the command's, and are passed on as they are.
 
 Before the command in the container starts, or the one of `--connect`, it exits with `2` for wrong arguments and with
-`1` for every other refusal or failure: among them an `agentrite.json` at fault, a unit that names no branch, a run
-under way for the branch or none to connect to, a clone not yet brought back, and Docker or npm that cannot be
-asked. Once the command started, it passes on the command's status, as [Exit statuses](#exit-statuses) says.
+`1` for every other refusal or failure of its own: among them an `agentrite.json` at fault, a unit that names no
+branch, a run under way for the branch or none to connect to, a clone not yet brought back, and Docker or npm that
+cannot be asked. A Docker command it runs before that which fails, as Compose reading the configuration or the build
+of the image, ends it with Docker's status, which it passes on. Once the command started, it passes on the command's
+status, as [Exit statuses](#exit-statuses) says.
 
 With a project's `sandbox/Dockerfile`, `--rebuild` builds that file anew on the image too. See "Adding software to
 the sandbox" in [`SANDBOX.md`](SANDBOX.md).
@@ -428,7 +430,8 @@ a caller cannot tell it from the command's own. Before that program started, the
 * `npx agentrite run`, once the harness started. A harness that a signal ended has no status to pass on, and the
   command exits `1`
 * `./sandbox.sh` with a unit, `--in-place` or `--workdir`, once the command, or the shell, in the container started.
-  A unit run whose command exited `0` and whose work was not brought back exits `1`
+  A unit run whose command exited `0` and whose work was not brought back exits `1`. Before that, a Docker command
+  it runs which fails, as Compose reading the configuration or the build of the image, passes on Docker's status
 * `./sandbox.sh --connect`, once the connected command started
 
 ## Running a role

@@ -195,7 +195,7 @@ The review's findings S1 and S2:
   `refuse_arguments`, which prints the lines it is given, `The forms it takes:` and the forms, and exits 2. Every
   refusal with 2 uses it, but the one of nothing to mount, which keeps `mount_forms`. Run the sandbox suites, which
   pass (S1, R1, R5)
-- [ ] In "Exit statuses" of `README.md`, and in the section `sandbox.sh` of "Commands", say that a Docker command the
+- [x] In "Exit statuses" of `README.md`, and in the section `sandbox.sh` of "Commands", say that a Docker command the
   wrapper runs before the command starts, as Compose reading the configuration or the build, that fails ends it with
   Docker's status, which it passes on (S2, R1, R2)
 
@@ -218,5 +218,5 @@ The review's findings S1 and S2:
   what was run on the committed work
 - [x] `feature-0066 Print the forms with every refusal of the sandbox's arguments`: the first two tasks of the
   review's findings, with the outcome of S1 in `record.md`
-- [ ] `feature-0066 Say that the sandbox passes on a status of Docker before the start`: the last task of the
+- [x] `feature-0066 Say that the sandbox passes on a status of Docker before the start`: the last task of the
   review's findings, with the outcome of S2 in `record.md`

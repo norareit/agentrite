@@ -82,3 +82,11 @@ timestamp: 2026-10-21T09:50:41Z
   arguments. The test of `--connect` with no unit expected the one form that refusal printed, which lacked `--variant
   NAME`, and now expects the form of `--connect` from the list. After it, `node --test tests/sandbox*.test.mjs
   tests/settings-update.test.mjs` passes: 279 tests, none skipped
+- 2026-10-21T10:47:58Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, S2, accepted and applied: the
+  section `sandbox.sh` of "Commands" and "Exit statuses" of `README.md` say that a Docker command `./sandbox.sh` runs
+  before the command starts which fails, as Compose reading the configuration or the build of the image, ends it with
+  Docker's status, which it passes on. No behavior changed, as the non-goal on Docker's statuses has it. On the tree of
+  this commit, `npm test` passes: 819 tests, none skipped. `npm run check-changes` and `node scripts/check-changes.mjs`
+  pass on `9413ea2`, whose tree differs from this commit's only in `README.md` and the unit's documents. No line the
+  unit adds is over 120 characters. Both findings are decided and every task of `plan.md` is ticked. The status stays
+  `in-progress`: the review of the corrections is done elsewhere
