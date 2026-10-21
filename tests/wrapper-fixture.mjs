@@ -1,5 +1,6 @@
 // The host the two wrapper tests run the wrapper on: a `bin` directory that is the whole PATH, so that no test
 // depends on which harnesses the host that runs the suite has, or at which version.
+import assert from 'node:assert/strict';
 import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, delimiter, join } from 'node:path';
@@ -15,6 +16,14 @@ export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
 // The two directories the wrapper mounts from the host, as they lie in a home: Claude Code's sessions and OpenCode's
 // data. In the project's log directory they have these places, and in the container the same under /home/agent.
 export const logDirectories = ['.claude/projects', '.local/share/opencode'];
+
+// Asserts that `stderr` lists the four forms of the wrapper, as it does with every refusal of its arguments.
+export function assertFormsListed(stderr) {
+  assert.match(stderr, /sandbox\.sh UNIT /);
+  assert.match(stderr, /sandbox\.sh --in-place /);
+  assert.match(stderr, /sandbox\.sh --workdir DIR /);
+  assert.match(stderr, /sandbox\.sh --connect UNIT /);
+}
 
 // The log directory of the project at `root` on a host whose data directory is `data`.
 export function logDirectory(data, root) {

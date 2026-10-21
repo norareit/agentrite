@@ -62,3 +62,23 @@ timestamp: 2026-10-21T09:50:41Z
   requirement, 1 to 9, has a task that names it. Not checked: the sandbox against a real Docker beyond what the suite
   runs, which includes `tests/sandbox-variant.test.mjs` with none of its tests skipped. Every task of `plan.md` is
   ticked. The review is to be done elsewhere, so the status stays `in-progress`
+- 2026-10-21T10:42:05Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, completed a full review of unit 0066 at
+  `653cfbb6cde3938790f4b1d199262f7ef78239c0`, against merge base `2f0d5013baff09a8a8772afac949c9136c8a7bb8`.
+  Returned S1 and S2. Saved the complete findings in
+  `.reviews/0066-one-convention-for-exit-statuses/20261021T104104Z-opencode-full-653cfbb.md`.
+  Independently ran `npm test`: 817 passed, none failed or skipped; `npm run check-changes` and
+  `node scripts/check-changes.mjs` passed. Shell syntax and diff whitespace checks passed, and all 463 added lines
+  fit 120 characters. Ran direct argument-refusal probes and a controlled pre-start Docker-status probe. Could not
+  independently verify the historical red/green test order, or the production sandbox's full firewall and live-harness
+  behavior beyond what the suite exercises
+- 2026-10-21T10:47:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took up the review's findings at the
+  human's request to handle them, and added their tasks and two commit points to `plan.md`. S1, accepted and applied:
+  every refusal of `./sandbox.sh` with 2 now prints, after its own lines, `The forms it takes:` and the forms, through
+  `refuse_arguments` in `container/sandbox.sh`, but the one of nothing to mount, which keeps its `Say what to mount at
+  /work` and the same forms. The lines of the forms moved from `mount_forms` into `list_forms`, which both use.
+  `assertFormsListed` in `tests/wrapper-fixture.mjs` checks the forms, in `assertVariantRefused`, in `assertNothingRan`
+  given 2, and in the tests of an option the wrapper does not take; a new test covers `--workdir` and `--mount` with no
+  value. Before the wrapper changed, `node --test tests/sandbox*.test.mjs` failed 39 tests, each a refusal of the
+  arguments. The test of `--connect` with no unit expected the one form that refusal printed, which lacked `--variant
+  NAME`, and now expects the form of `--connect` from the list. After it, `node --test tests/sandbox*.test.mjs
+  tests/settings-update.test.mjs` passes: 279 tests, none skipped

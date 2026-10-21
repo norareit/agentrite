@@ -15,6 +15,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
+  assertFormsListed,
   fakeHost,
   hostVersions,
   latestVersions,
@@ -642,10 +643,7 @@ for (const [what, args] of [
     rmSync(join(bin, 'claude'));
     const result = run(root, ...args(base));
     assert.equal(result.status, 2);
-    assert.match(result.stderr, /sandbox\.sh UNIT /);
-    assert.match(result.stderr, /sandbox\.sh --in-place /);
-    assert.match(result.stderr, /sandbox\.sh --workdir DIR /);
-    assert.match(result.stderr, /sandbox\.sh --connect UNIT /);
+    assertFormsListed(result.stderr);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
   });
@@ -666,10 +664,23 @@ for (const [where, args] of [
     assert.equal(result.status, 2);
     assert.match(result.stderr, /^sandbox\.sh: there is no option --frobnicate\.$/m);
     assert.match(result.stderr, /goes after --\.$/m);
-    assert.match(result.stderr, /sandbox\.sh UNIT /);
-    assert.match(result.stderr, /sandbox\.sh --in-place /);
-    assert.match(result.stderr, /sandbox\.sh --workdir DIR /);
-    assert.match(result.stderr, /sandbox\.sh --connect UNIT /);
+    assertFormsListed(result.stderr);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+for (const [option, what] of [
+  ['--workdir', 'a directory'],
+  ['--mount', 'a path'],
+]) {
+  test(`the wrapper refuses ${option} with no value, lists the forms, and asks Docker and npm nothing`, (t) => {
+    const { root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+    rmSync(join(bin, 'claude'));
+    const result = run(root, option);
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, new RegExp(`^sandbox\\.sh: ${option} needs ${what}$`, 'm'));
+    assertFormsListed(result.stderr);
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);
   });

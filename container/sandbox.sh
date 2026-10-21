@@ -133,10 +133,9 @@ export AGENTRITE_CONTAINER="${here#"$root"/}"
 
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 
-# The forms of what to mount at /work. They end with the one that mounts nothing,
-# --connect, for whoever wanted a second shell.
-mount_forms() {
-  echo "Say what to mount at /work, as one of:" >&2
+# The forms the wrapper takes, by what each mounts at /work. They end with the one that
+# mounts nothing, --connect, for whoever wanted a second shell.
+list_forms() {
   echo "  sandbox.sh UNIT [--variant NAME] [COMMAND...]" >&2
   echo "                                       a clone of the unit's branch, named by its ID or its branch." >&2
   echo "                                       An ID with no branch gets one, cut from the default branch" >&2
@@ -146,6 +145,22 @@ mount_forms() {
   echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
   echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
   echo "  sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]" >&2
+}
+
+mount_forms() {
+  echo "Say what to mount at /work, as one of:" >&2
+  list_forms
+}
+
+# Refuses arguments at fault: prints each line given, then the forms, and exits 2.
+refuse_arguments() {
+  local line
+  for line in "$@"; do
+    echo "$line" >&2
+  done
+  echo "The forms it takes:" >&2
+  list_forms
+  exit 2
 }
 
 # The directories of --workdir and --mount are kept as they were given while the options
@@ -174,7 +189,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --workdir)
-      [ $# -ge 2 ] || { echo "sandbox.sh: --workdir needs a directory" >&2; exit 2; }
+      [ $# -ge 2 ] || refuse_arguments "sandbox.sh: --workdir needs a directory"
       workdir="$2"
       workdir_given=1
       shift 2
@@ -187,7 +202,7 @@ while [ $# -gt 0 ]; do
       if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
       variant_given=1
       if [ "$1" = --variant ]; then
-        [ $# -ge 2 ] || { echo "sandbox.sh: --variant needs a name" >&2; exit 2; }
+        [ $# -ge 2 ] || refuse_arguments "sandbox.sh: --variant needs a name"
         variant="$2"
         shift 2
       else
@@ -196,7 +211,7 @@ while [ $# -gt 0 ]; do
       fi
       ;;
     --mount)
-      [ $# -ge 2 ] || { echo "sandbox.sh: --mount needs a path" >&2; exit 2; }
+      [ $# -ge 2 ] || refuse_arguments "sandbox.sh: --mount needs a path"
       mount_specs+=("$2")
       shift 2
       ;;
@@ -205,10 +220,8 @@ while [ $# -gt 0 ]; do
       break
       ;;
     -*)
-      echo "sandbox.sh: there is no option $1." >&2
-      echo "A unit or a command that opens with - goes after --." >&2
-      mount_forms
-      exit 2
+      refuse_arguments "sandbox.sh: there is no option $1." \
+        "A unit or a command that opens with - goes after --."
       ;;
     *)
       break
@@ -225,17 +238,13 @@ if [ "$connect" -eq 1 ]; then
   [ "${#mount_specs[@]}" -eq 0 ] || run_options+=(--mount)
   [ "$rebuild" -eq 0 ] || run_options+=(--rebuild)
   if [ "${#run_options[@]}" -gt 0 ]; then
+    refusal=()
     for run_option in "${run_options[@]}"; do
-      echo "sandbox.sh: --connect cannot be given together with $run_option." >&2
+      refusal+=("sandbox.sh: --connect cannot be given together with $run_option.")
     done
-    echo "That is an option of a run, and --connect starts none." >&2
-    exit 2
+    refuse_arguments "${refusal[@]}" "That is an option of a run, and --connect starts none."
   fi
-  if [ $# -eq 0 ]; then
-    echo "sandbox.sh: --connect needs a unit." >&2
-    echo "  sandbox.sh --connect UNIT [COMMAND...]" >&2
-    exit 2
-  fi
+  [ $# -gt 0 ] || refuse_arguments "sandbox.sh: --connect needs a unit."
 fi
 
 # A variant is of a unit, so --variant is refused where there is no unit. It is also given
@@ -254,7 +263,7 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -ge 1 ]; then
     --variant)
       if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
       variant_given=1
-      [ $# -ge 3 ] || { echo "sandbox.sh: --variant needs a name" >&2; exit 2; }
+      [ $# -ge 3 ] || refuse_arguments "sandbox.sh: --variant needs a name"
       variant="$3"
       set -- "$1" "${@:4}"
       ;;
@@ -270,24 +279,20 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -ge 1 ]; then
   esac
 fi
 if [ "$variant_twice" -eq 1 ]; then
-  echo "sandbox.sh: --variant is given more than once." >&2
-  echo "A run is of one variant." >&2
-  exit 2
+  refuse_arguments "sandbox.sh: --variant is given more than once." "A run is of one variant."
 fi
 if [ "$variant_given" -eq 1 ]; then
   for no_unit_option in --in-place --workdir; do
     if { [ "$no_unit_option" = --in-place ] && [ "$in_place" -eq 1 ]; } \
       || { [ "$no_unit_option" = --workdir ] && [ "$workdir_given" -eq 1 ]; }; then
-      echo "sandbox.sh: --variant cannot be given together with $no_unit_option." >&2
-      echo "A variant is a run of a unit's branch, and $no_unit_option has no unit." >&2
-      exit 2
+      refuse_arguments "sandbox.sh: --variant cannot be given together with $no_unit_option." \
+        "A variant is a run of a unit's branch, and $no_unit_option has no unit."
     fi
   done
   if ! is_variant_name "$variant"; then
-    echo "sandbox.sh: '$variant' is not a name a variant can have." >&2
-    echo "A name is one or more words of the lowercase letters a to z and the digits 0 to 9," >&2
-    echo "joined by single hyphens, as 'opus' or 'gpt-6-1'." >&2
-    exit 2
+    refuse_arguments "sandbox.sh: '$variant' is not a name a variant can have." \
+      "A name is one or more words of the lowercase letters a to z and the digits 0 to 9," \
+      "joined by single hyphens, as 'opus' or 'gpt-6-1'."
   fi
 fi
 
@@ -359,9 +364,8 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   unit_given="$unit"
   if [ "$variant_given" -eq 1 ]; then
     if is_variant_branch "$branch"; then
-      echo "sandbox.sh: $branch is the branch of a variant, so --variant cannot be given with it." >&2
-      echo "Run it by its name without --variant, or give the unit's branch or its number." >&2
-      exit 2
+      refuse_arguments "sandbox.sh: $branch is the branch of a variant, so --variant cannot be given with it." \
+        "Run it by its name without --variant, or give the unit's branch or its number."
     fi
     unit_given="$unit --variant $variant"
     if [ "$connect" -eq 1 ]; then

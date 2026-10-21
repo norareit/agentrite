@@ -17,7 +17,14 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { skipReason } from './skip-reason.mjs';
-import { fakeHost, logDirectories, logDirectory, logMounts, writeCommand } from './wrapper-fixture.mjs';
+import {
+  assertFormsListed,
+  fakeHost,
+  logDirectories,
+  logDirectory,
+  logMounts,
+  writeCommand,
+} from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const kitContainer = fileURLToPath(new URL('../container/', import.meta.url));
@@ -1169,9 +1176,11 @@ test('a unit run to which commands were connected lands its work and removes the
 });
 
 // What `--connect` refuses. Each on a host where a build would be due, so that a refusal that came too late
-// would show in the calls of Docker and of npm. `status` is 2 for arguments at fault and 1 for every other refusal.
+// would show in the calls of Docker and of npm. `status` is 2 for arguments at fault, which lists the forms too, and
+// 1 for every other refusal.
 function assertNothingRan(host, result, status) {
   assert.equal(result.status, status, result.stderr);
+  if (status === 2) assertFormsListed(result.stderr);
   assert.deepEqual(host.dockerCalls(), []);
   assert.deepEqual(host.npmCalls(), []);
   assert.equal(existsSync(host.state), false);
@@ -1183,7 +1192,7 @@ test('--connect with no unit is refused, and names --connect and its form', (t) 
   const result = host.run(['--connect']);
   assertNothingRan(host, result, 2);
   assert.ok(result.stderr.includes('sandbox.sh: --connect needs a unit.\n'), result.stderr);
-  assert.ok(result.stderr.includes('sandbox.sh --connect UNIT [COMMAND...]\n'), result.stderr);
+  assert.ok(result.stderr.includes('sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]\n'), result.stderr);
 });
 
 for (const unit of ['claude', '0031']) {
@@ -1326,6 +1335,7 @@ const variantRun = (host, variant, clone) =>
 // A refusal of the option: status 2, nothing called, nothing made, and no branch cut.
 function assertVariantRefused(host, result, refs) {
   assert.equal(result.status, 2, result.stderr);
+  assertFormsListed(result.stderr);
   assert.deepEqual(host.dockerCalls(), []);
   assert.deepEqual(host.npmCalls(), []);
   assert.equal(existsSync(host.state), false);

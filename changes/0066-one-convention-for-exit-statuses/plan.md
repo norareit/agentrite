@@ -184,6 +184,21 @@ The documents:
 - [x] Search `README.md`, `SANDBOX.md` and `CONTRIBUTING.md` for "non-zero", "other than 0", "exits 2", "exits with
   2" and "status 2", and confirm that each that is left is a status that the convention gives as it is said (R3)
 
+The review's findings S1 and S2:
+
+- [x] Add to `tests/wrapper-fixture.mjs` `assertFormsListed`, which asserts that standard error lists the four forms
+  of the wrapper, and use it for the forms in `tests/sandbox-wrapper.test.mjs`. Have `assertVariantRefused`, and
+  `assertNothingRan` given 2, of `tests/sandbox-unit-run.test.mjs` assert it too, and add to
+  `tests/sandbox-wrapper.test.mjs` a test that `--workdir` and `--mount` given with no value are refused with 2 and
+  the forms, asking Docker and npm nothing. They fail before the next task (S1, R1, R5, R9)
+- [x] In `container/sandbox.sh`, split the lines of the forms out of `mount_forms` into `list_forms`, and add
+  `refuse_arguments`, which prints the lines it is given, `The forms it takes:` and the forms, and exits 2. Every
+  refusal with 2 uses it, but the one of nothing to mount, which keeps `mount_forms`. Run the sandbox suites, which
+  pass (S1, R1, R5)
+- [ ] In "Exit statuses" of `README.md`, and in the section `sandbox.sh` of "Commands", say that a Docker command the
+  wrapper runs before the command starts, as Compose reading the configuration or the build, that fails ends it with
+  Docker's status, which it passes on (S2, R1, R2)
+
 ## Verification
 
 - [x] `npm test` passes
@@ -201,3 +216,7 @@ The documents:
 - [x] `feature-0066 Define the exit statuses once`: the tasks of the documents
 - [x] `feature-0066 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
   what was run on the committed work
+- [x] `feature-0066 Print the forms with every refusal of the sandbox's arguments`: the first two tasks of the
+  review's findings, with the outcome of S1 in `record.md`
+- [ ] `feature-0066 Say that the sandbox passes on a status of Docker before the start`: the last task of the
+  review's findings, with the outcome of S2 in `record.md`
