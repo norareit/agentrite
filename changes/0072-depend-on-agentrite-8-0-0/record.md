@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-10-21T20:46:38Z
 ---
 
@@ -73,5 +73,6 @@ Not part of this task: moving any other project to 8.0.0, and the order of step 
   they change how a unit is run and ask nothing of the files here. The limits of the checks by hand: noted, and ask
   nothing. The reviewer's wrappers: refreshed and committed as above. No rebuild needed: the rebuild was run all the
   same, as the task asks
+- 2026-10-21T23:16:13Z [human] decided that the task is done. The status is `implemented`
 
 ## Amendments
