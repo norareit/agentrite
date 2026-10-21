@@ -242,3 +242,20 @@ timestamp: 2026-10-20T23:55:38Z
 - 2026-10-21T13:02:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word that the delta
   review at `d2d1533` returned no findings: the blocking findings S1, C1 and S2 were applied at the human's decision, P1
   was accepted with no change, and every task of `plan.md` is ticked. The status is `implemented`
+
+## Amendments
+
+- 2026-10-21T14:08:01Z [Claude Code, anthropic/claude-opus-5-5] on the human's request, in no role, ran a check by
+  hand of a second round with the kit's own roles, which the checks of the implementation had not reached: the second
+  check by hand ended after its first round. A project under the scratch directory, with the kit of `c54f92b`
+  installed from the tarball of `npm pack`, a feature `0001-greet` of two requirements, approved and committed on
+  `master`, and the default definition given with `--definition`, changed only in that the implementer's prompt also
+  told it to break the second requirement in round 1. Run by `./sandbox-dev.sh --workdir <project> npx agentrite
+  orchestrate 0001 --definition trial.json --skip-permissions`, with Claude Code 2.1.306 and OpenCode 1.19.3 in the
+  sandbox. It exited 0 after five steps: the review of round 1 returned the blocking finding `S1` and `P1`, the
+  implementer of round 2 continued its session, found the review in `.reviews/0001-greet/` and applied both, and the
+  review of round 2, a delta review in the continued OpenCode session, returned none. Every step's outcome was read.
+  Two faults of the roles, not of the command, were seen. The implementer of round 2 took the default prompt's
+  acceptance by the human as a decision of the human, wrote that the human accepted `S1` and `P1`, and set the status
+  `implemented` before the review of round 2, whose entry then went under `## Amendments`. The reviewer's entry of the
+  last round was left uncommitted. Both are taken up in unit 0068
