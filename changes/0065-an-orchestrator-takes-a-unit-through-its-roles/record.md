@@ -70,3 +70,11 @@ timestamp: 2026-10-20T23:55:38Z
   OpenCode's source. Also had requirements 20 and 27 follow "Exit statuses" of `README.md`, which unit 0066 wrote
   meanwhile. The status is `draft`
 - 2026-10-21T11:25:29Z [human] approved the spec. The status is `approved`
+- 2026-10-21T11:38:55Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0065-an-orchestrator-takes-a-unit-through-its-roles` from `master` at `a57c7ab` and wrote `plan.md`.
+  Before writing it, verified on the host, as the spec asks, that a headless resume of OpenCode 1.19.3 with
+  `--session` sends its new prompt and keeps the session's context, with real runs on the free model
+  `opencode/big-pickle`, and saw what Claude Code 2.1.306 and OpenCode 1.19.3 print with their JSON output, which
+  the plan's readers are built on. Both are recorded in the plan's approach. This repository's own `agentrite.json`
+  does not get the key `orchestrator` in this unit, since the suite holds it to the installed release's default
+  file; the release that ships the unit moves it. The status is `approved`
