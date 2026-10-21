@@ -161,6 +161,19 @@ test('a block in a blockquote, a nested one or an indented list item is read, it
   }
 });
 
+// The delta review's finding S2: a block left open in a blockquote ends with the blockquote.
+test('a block left open in a blockquote ends with it, and the json block after it is read', () => {
+  const text = JSON.stringify(DONE);
+  for (const response of [
+    `> ${FENCE}bash\n> npm test\n\n${FENCE}json\n${text}\n${FENCE}\n`,
+    `> ${FENCE}bash\n> npm test\nNot quoted.\n\n${FENCE}json\n${text}\n${FENCE}`,
+    `> > ${FENCE}bash\n> > npm test\n>\n> ${FENCE}json\n> ${text}\n> ${FENCE}`,
+  ]) {
+    assert.deepEqual(readOutcome(response), { kind: 'outcome', outcome: DONE, text }, response);
+  }
+  assert.deepEqual(readOutcome(`> ${FENCE}json\n> ${text}\n\nThat is all.`), { kind: 'outcome', outcome: DONE, text });
+});
+
 test('a block in a blockquote is closed by a fence in the blockquote, and two in containers are several', () => {
   const text = JSON.stringify(DONE);
   assert.deepEqual(readOutcome(`> ${FENCE}json\n> ${text}\n> ${FENCE}\n\nAfter.`), {

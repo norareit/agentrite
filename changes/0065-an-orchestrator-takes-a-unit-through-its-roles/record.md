@@ -203,3 +203,19 @@ timestamp: 2026-10-20T23:55:38Z
   No type checker runs in this repository, so that nothing is `any` any more was checked by reading the module, not
   by a compiler. `npm test` passes: 918 tests, none skipped. S1 and C1 are applied, P1 needed no change, and every
   task of `plan.md` is ticked. The status stays `in-progress`: the review of the corrections is done elsewhere
+- 2026-10-21T12:48:48Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta implementation review of unit
+  0065 at `252051b256e3a6c186932e5a74002c8a6e0b0020`, from the previous review's commit
+  `1aa0ee19f49a39db9c2d87ec5df26fa3b7a51dc7`. Returned S2, saved in
+  `.reviews/0065-an-orchestrator-takes-a-unit-through-its-roles/delta-20261021T124727Z-gpt-6.1-sol.md`.
+  Independently ran the full host suite, the change check and focused reproductions of the accepted findings and
+  the delta's parsing regression. JSDoc type narrowing was checked by source inspection; no compiler result could
+  be verified through the repository's configured commands, which have no type-check command
+- 2026-10-21T12:54:58Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, S2 of the delta review, accepted by the human and
+  applied: a block in a blockquote that is left without its closing fence ends where its blockquote ends, at a line
+  with fewer blockquote markers, which is then read as a line outside any block. Added to `plan.md` with its tasks
+  and commit point, and the approach's rule changed to say so. The new tests, of a top-level and a quoted `json`
+  block after a quoted block left open, of a `json` block left open in a blockquote, and of a run whose steps give
+  such responses, failed before the change, two tests, and pass after it. `npm test` passes: 920 tests, none
+  skipped; a first run had the variant test that runs a unit and its variants at once fail, which passed alone and
+  in a second whole run. On the human's decision, the supported forms of a final response are bounded in the spec by
+  the specifier, in the entry after this one

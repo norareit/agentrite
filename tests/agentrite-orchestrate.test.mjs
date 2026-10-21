@@ -155,6 +155,14 @@ test('a step that gives its outcome in a blockquote does not stop the run', () =
   assert.deepEqual(run.end, { kind: 'complete' });
 });
 
+// The delta review's finding S2: a quoted block left open does not hide the outcome after it.
+test('a step whose quoted block is left open before its outcome does not stop the run', () => {
+  const after = (outcome) => ({ response: `> ${FENCE}bash\n> npm test\n\n${responseOf(outcome)}` });
+  const run = runWith(DEFAULT, [after(DONE), after(DONE), after({ ...DONE, findings: [MINOR] })]);
+  assert.equal(run.planned.length, 3);
+  assert.deepEqual(run.end, { kind: 'complete' });
+});
+
 // R18, R19: stopWhen, and the step judged before the repeat.
 
 test('stopWhen on a step outside a repeat stops after it at a blocking finding, and not without one', () => {

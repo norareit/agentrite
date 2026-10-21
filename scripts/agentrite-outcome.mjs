@@ -74,7 +74,7 @@ function unquoted(line, most) {
 /**
  * The fenced code blocks of `text`, in order, each with its info string and the text between its fences, also in a
  * blockquote or a list item. A content line loses the blockquote markers of the opening line and up to as many
- * spaces of indentation. A block that is never closed runs to the end of the text.
+ * spaces of indentation. A block that is never closed runs to the end of its blockquote, or of the text.
  *
  * @param {string} text
  * @returns {{ info: string, content: string }[]}
@@ -86,21 +86,26 @@ function fencedBlocks(text) {
   /** @type {{ info: string, content: string }[]} */ const blocks = [];
   /** @type {{ fence: string, info: string, depth: number, indent: RegExp, lines: string[] } | undefined} */ let open;
   for (const line of lines) {
-    if (open === undefined) {
-      const { depth, rest } = unquoted(line, Infinity);
-      const match = OPENING.exec(rest);
-      if (match === null || (match[2].startsWith('`') && match[3].includes('`'))) continue;
-      const indent = new RegExp(`^ {0,${match[1].length}}`);
-      open = { fence: match[2], info: match[3].trim(), depth, indent, lines: [] };
-      continue;
+    if (open !== undefined) {
+      const { depth, rest } = unquoted(line, open.depth);
+      if (depth < open.depth) {
+        // The blockquote ended, and the block with it, so the line is one outside any block.
+        blocks.push({ info: open.info, content: open.lines.join('\n') });
+        open = undefined;
+      } else if (closes(rest, open.fence)) {
+        blocks.push({ info: open.info, content: open.lines.join('\n') });
+        open = undefined;
+        continue;
+      } else {
+        open.lines.push(rest.replace(open.indent, ''));
+        continue;
+      }
     }
-    const { rest } = unquoted(line, open.depth);
-    if (closes(rest, open.fence)) {
-      blocks.push({ info: open.info, content: open.lines.join('\n') });
-      open = undefined;
-    } else {
-      open.lines.push(rest.replace(open.indent, ''));
-    }
+    const { depth, rest } = unquoted(line, Infinity);
+    const match = OPENING.exec(rest);
+    if (match === null || (match[2].startsWith('`') && match[3].includes('`'))) continue;
+    const indent = new RegExp(`^ {0,${match[1].length}}`);
+    open = { fence: match[2], info: match[3].trim(), depth, indent, lines: [] };
   }
   if (open !== undefined) blocks.push({ info: open.info, content: open.lines.join('\n') });
   return blocks;

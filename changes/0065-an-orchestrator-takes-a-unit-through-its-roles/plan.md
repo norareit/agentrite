@@ -164,16 +164,17 @@ compared with the list, as `checkRoleNamed` does, so that `toString` is refused.
   The lines of the list are written as one line each in the prompt; the wrapping above is the plan's
 * `readOutcome(response)` returns one of `{ kind: 'outcome', outcome, text }`, `{ kind: 'none' }`,
   `{ kind: 'several', count }` and `{ kind: 'malformed', fault }`, where `text` is the block's text as it stood
-* The blocks are found line by line, as fenced code blocks, in a blockquote or a list item as well: outside a block,
-  a line that, after any blockquote markers (`>` and an optional space, after at most three spaces, any number of
-  times) and any indentation, holds three or more backticks or tildes opens one, and the rest of the line, trimmed,
-  is its info string. Inside, a line that, after as many blockquote markers as the opening line had and any
-  indentation, holds at least as many of the same character and nothing but spaces closes it, and a block that is
-  never closed runs to the end of the response. A content line loses those markers and up to as many spaces of
+* The blocks are found line by line, as fenced code blocks, in a blockquote or a list item as well: outside a block, a
+  line that, after any blockquote markers (`>` and an optional space, after at most three spaces, any number of times)
+  and any indentation, holds three or more backticks or tildes opens one, and the rest of the line, trimmed, is its info
+  string. Inside, a line that, after as many blockquote markers as the opening line had and any indentation, holds at
+  least as many of the same character and nothing but spaces closes it, and a block that is never closed runs to the end
+  of the response, or of its blockquote: a line with fewer blockquote markers than the opening line had ends the block,
+  and is then read as a line outside any block. A content line loses those markers and up to as many spaces of
   indentation as the opening line had. A block counts when the first word of its info string is exactly `json`. So a
   `json` fence shown inside another fence is not counted, and a block marked `bash` is not. A fence in a code block
-  indented by four spaces counts too, which CommonMark would not count. Changed on the review's finding S1, from a
-  rule that took a fence at most three spaces in and in no blockquote
+  indented by four spaces counts too, which CommonMark would not count. Changed on the review's finding S1, and on the
+  delta review's S2, from a rule that took a fence at most three spaces in and in no blockquote
 * The one block's text is parsed with `JSON.parse`. A text that is not JSON gives the fault `the block is not JSON:
   <error>`. A JSON value is judged by requirement 16, with `jsonFault` and `jsonPath` from the root `''`, so that a
   fault reads as `findings[0].blocking is "yes". It must hold true or false`. A key of another name is named as in a
@@ -577,6 +578,13 @@ The human accepted S1 and C1 of the review saved as `review-20261021T122857Z-gpt
   of the five fields used, `type`, `sessionID`, `part.messageID`, `part.id` and `part.text`, each a string or absent.
   The tests of the readers pass before and after (C1)
 
+- [x] In `tests/agentrite-outcome.test.mjs`, test that a block in a blockquote left without its closing fence ends
+  with the blockquote, so that a `json` block after it, at the top level or in a shallower blockquote, is read, and
+  that a `json` block so left is read with its text up to the end of the blockquote. In
+  `tests/agentrite-orchestrate.test.mjs`, test that a run whose step gives such a response goes on. See them fail
+  (S2 of the delta review, R15)
+- [x] End a block in a blockquote where its blockquote ends, in `scripts/agentrite-outcome.mjs` (S2, R15)
+
 ## Verification
 
 - [x] `npm test` on the host with Docker: all green, the Docker test of the mount among them (R29 to R31)
@@ -636,3 +644,4 @@ Each commit is made once `npm test` is green.
 - [x] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`
 - [x] After the tasks of S1: `feature-0065 Read an outcome in a blockquote or an indented list item`
 - [x] After the task of C1: `feature-0065 Narrow the events of OpenCode from unknown`
+- [x] After the tasks of S2: `feature-0065 End a block in a blockquote where the blockquote ends`
