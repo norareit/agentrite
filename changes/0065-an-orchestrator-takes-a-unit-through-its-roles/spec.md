@@ -123,7 +123,11 @@ The outcome of a step:
 15. Every step is asked, in the prompt the command adds after the step's own, to give its outcome in its final
     response, as one JSON object of the form of requirement 16 in a fenced block marked `json`, which is the only
     such block of the response, and which stands before the line `**Needed from you**` when the response has one.
-    The command reads it from the step's final response, wherever in the response it stands, for both harnesses. The
+    The command reads it from the step's final response, for both harnesses, wherever in the response the block
+    stands in one of these forms: at the top level, in a blockquote, nested or not, or in a list item, at any
+    indentation. A block ends at its closing fence, at the end of its blockquote, or at the end of the response. A
+    response in which the block stands in another form, or in which Markdown that these forms do not cover hides it,
+    may be read as having no outcome, or as having more than one, and the run then stops by requirement 18. The
     agent writes no file for it. For a step in a repeat, the added prompt also says which round it is and how many
     rounds the repeat has at most
 16. An outcome is a JSON object with the keys:
@@ -282,6 +286,17 @@ Tests:
   run stops for the human. Being the only block keeps the reading unambiguous. Rejected: keeping the outcome last
   and recording an exception to the standards, which a step following its standards would still break; and reading
   the list instead of `questions`, which reads prose
+* **The forms of a final response that are read are named.** The human decided this after a review had found an outcome
+  in a blockquote read as none, and the fix of that had made a block left open in a blockquote hide the outcome after
+  it. Read wherever Markdown allows, each form a reviewer can think of is a new case that fails, and so a new blocking
+  finding, with no end. The reader is not a full Markdown parser, and the kit takes no dependency for one. The named
+  forms are those a model writes: the block at the top level, in a blockquote and in a list item. A form outside them is
+  not a fault of the unit, since a misread of it costs little: in most cases the run stops for the human, who finds the
+  final response in the run's directory and takes over. Accepted with it: a fence shown in a code block indented by four
+  spaces counts as a block, which Markdown would not count, since the reader takes a fence at any indentation so that a
+  list item's is found. Rejected: reading every form Markdown allows, which takes a parser of the kit's own or a
+  dependency; and the top level alone, which stops a run whose model nests the block, and undoes the reading of
+  blockquotes and list items that the human had already accepted
 * **The request for the outcome is in the command, not in the definition or the role files.** The command that
   asks for the form is the command that reads it, so the two cannot drift, every project on one release asks the
   same, and a step of a role that a project replaced, or added, is asked as well. The human agreed to this
