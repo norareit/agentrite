@@ -38,5 +38,12 @@ timestamp: 2026-10-21T14:10:24Z
   another test, and passed on the next run; it touches nothing of this unit. "A run neither sets the unit's status nor
   commits" in "How a run ends" still holds beside the new paragraph, since the request asks the step and the command
   itself sets nothing
+- 2026-10-21T14:36:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the reviewer's tasks: the
+  description, "Output", "You change nothing under review", "Saving them is where your writing stops" and "Record
+  that you reviewed" of `roles/reviewer.md`, and the description of both reviewer fixtures. The example of a prefix in
+  the role file is `feature-0012`, as `process.md` gives it, and not this unit's, since the file serves every project.
+  The description is folded as `plannedFiles` folds it, filling each line to 120 characters, which
+  `plannedFiles of both harnesses, from the kit role files, is the eight fixtures byte for byte` checks besides the
+  test the plan names. `npm test` passes on the tree of this commit, 921 tests
 
 ## Amendments

@@ -73,19 +73,19 @@ the installed release's `refresh` and are left as they are, as "Working on the k
   status later than `in-progress`; the human sets `implemented` after the run, once the last review's findings are
   decided. Check that "A run neither sets the unit's status nor commits" in "How a run ends" still holds beside it
   (R3)
-- [ ] In `roles/reviewer.md`, change the description to say that the reviewer appends one entry to the unit's
+- [x] In `roles/reviewer.md`, change the description to say that the reviewer appends one entry to the unit's
   `record.md` saying that it reviewed and commits it alone, and changes nothing else under review; change "Output" to
   name the commit of the entry; change "No edit, no fix, no commit" in "You change nothing under review" so that the
   commit of the entry is the one commit it makes; and keep the folded description within 120 characters a line (R4)
-- [ ] In "Record that you reviewed" of `roles/reviewer.md`, say that the entry and its commit are the last act: before
+- [x] In "Record that you reviewed" of `roles/reviewer.md`, say that the entry and its commit are the last act: before
   appending, check with `git status --porcelain -- <record.md>` that `record.md` holds no uncommitted change; when it
   holds none, append the entry and commit it with `git commit --only <record.md>`, on the branch reviewed, with the
   message `<prefix> Record the review of <commit>` and the prefix of the unit's commits, so that the commit holds the
   entry and nothing else; the findings file is under the ignored `.reviews/` and is not committed (R4)
-- [ ] In the same section, say that when `record.md` holds an uncommitted change before the entry is appended, the
+- [x] In the same section, say that when `record.md` holds an uncommitted change before the entry is appended, the
   reviewer appends its entry, commits nothing, and says in its response that its entry is left uncommitted because
   `record.md` holds changes of another, which committing would put under its commit (R5)
-- [ ] Change the description of `tests/fixtures/claude-agents/reviewer.md` and
+- [x] Change the description of `tests/fixtures/claude-agents/reviewer.md` and
   `tests/fixtures/opencode-agents/reviewer.md` to the new folded description of `roles/reviewer.md`, line for line.
   Run `npm test` and see `each kit role file opens with its description in the folded form` pass (R4)
 - [ ] Run the check by hand of requirement 7, on the host, as the amendment of 0065 records the run it repeats: a
@@ -111,5 +111,5 @@ the installed release's `refresh` and are left as they are, as "Working on the k
 - [x] `bugfix-0068 Plan the fix`: `plan.md` and the planner's entry in `record.md`
 - [x] `bugfix-0068 Record accepted findings as the definition's, and keep the status in progress`: the first five
   tasks
-- [ ] `bugfix-0068 Have the reviewer commit its record entry`: the reviewer's role file and the fixtures
+- [x] `bugfix-0068 Have the reviewer commit its record entry`: the reviewer's role file and the fixtures
 - [ ] `bugfix-0068 Record the check by hand of a second round`: the check by hand's entry in `record.md`
