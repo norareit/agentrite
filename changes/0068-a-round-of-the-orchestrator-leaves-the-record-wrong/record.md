@@ -44,6 +44,25 @@ timestamp: 2026-10-21T14:10:24Z
   the role file is `feature-0012`, as `process.md` gives it, and not this unit's, since the file serves every project.
   The description is folded as `plannedFiles` folds it, filling each line to 120 characters, which
   `plannedFiles of both harnesses, from the kit role files, is the eight fixtures byte for byte` checks besides the
-  test the plan names. `npm test` passes on the tree of this commit, 921 tests
+  test the plan names. `npm test` passes on the tree of `d1243e0`, 921 tests
+- 2026-10-21T14:46:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the check by hand of requirement
+  7 on the host, with Claude Code 2.1.306 and OpenCode 1.19.3. Each run was on a fresh project under the scratch
+  directory, with the kit of `d1243e0` installed from the tarball of `npm pack` and its wrappers refreshed, the feature
+  `0001-greet` of two requirements approved and committed on `master`, and a `trial.json` that is the new default
+  definition with the implementer's prompt also telling it to break the second requirement in round 1, run by
+  `./sandbox-dev.sh --workdir <project> npx agentrite orchestrate 0001 --definition trial.json --skip-permissions`. Run
+  1 exited 3 after four steps: the implementer of round 1 put a `Co-Authored-By` trailer on its four commits, the review
+  of round 1 returned it as `C1` beside `S1` and `P1`, and the implementer of round 2 applied `S1` and `P1`, recorded
+  all three as accepted by the definition of the orchestrator, kept the status `in-progress`, and returned `needs-human`
+  on `C1`, since only a rewrite of the history removes the trailers. The reviewer of round 1 committed its entry alone
+  in a commit of its own. Run 2 exited 3 after two steps: the implementer of round 1 returned `needs-human` on the
+  broken requirement, so no review ran. Run 3 exited 0 after five steps, the review of round 1 returning `S1` and `P1`
+  and the delta review of round 2 none, and ends as requirement 7 says: the status is `in-progress`; the implementer of
+  round 2 recorded `S1` and `P1` as accepted by the definition of the orchestrator, and no entry says that the human
+  accepted a finding; both reviewers' entries are under `## Log`, each in a commit of its own that changes `record.md`
+  alone, `4d55121` and `e7e72a2`; and `git status` shows no change. Seen besides, and not taken up: in all three runs
+  the implementer wrote timestamps that are not the clock's, as the non-goals say of the earlier run, and the reviewer
+  saved its findings under `.reviews/changes/0001-greet/` while the command's last lines name `.reviews/0001-greet/`.
+  `npm test` passes on the tree of this commit, 921 tests
 
 ## Amendments

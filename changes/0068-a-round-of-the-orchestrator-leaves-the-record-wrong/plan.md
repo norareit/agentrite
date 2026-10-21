@@ -88,7 +88,7 @@ the installed release's `refresh` and are left as they are, as "Working on the k
 - [x] Change the description of `tests/fixtures/claude-agents/reviewer.md` and
   `tests/fixtures/opencode-agents/reviewer.md` to the new folded description of `roles/reviewer.md`, line for line.
   Run `npm test` and see `each kit role file opens with its description in the folded form` pass (R4)
-- [ ] Run the check by hand of requirement 7, on the host, as the amendment of 0065 records the run it repeats: a
+- [x] Run the check by hand of requirement 7, on the host, as the amendment of 0065 records the run it repeats: a
   project under the scratch directory, with the kit of this unit's last commit installed from the tarball of
   `npm pack`, a feature `0001-greet` of two requirements, approved and committed on `master`, and a `trial.json` that
   is the new default definition changed only in that the implementer's prompt also tells it to break the second
@@ -100,11 +100,11 @@ the installed release's `refresh` and are left as they are, as "Working on the k
 
 ## Verification
 
-- [ ] `npm test` passes on the final tree
-- [ ] Every line the unit changes in `orchestrator.json`, `README.md`, `scripts/agentrite-outcome.mjs`,
+- [x] `npm test` passes on the final tree
+- [x] Every line the unit changes in `orchestrator.json`, `README.md`, `scripts/agentrite-outcome.mjs`,
   `roles/reviewer.md`, the fixtures and the tests fits 120 characters
-- [ ] `npm run check-changes` passes after the last commit
-- [ ] The check by hand of the last task ends as requirement 7 says
+- [x] `npm run check-changes` passes after the last commit
+- [x] The check by hand of the last task ends as requirement 7 says
 
 ## Commit Points
 
@@ -112,4 +112,4 @@ the installed release's `refresh` and are left as they are, as "Working on the k
 - [x] `bugfix-0068 Record accepted findings as the definition's, and keep the status in progress`: the first five
   tasks
 - [x] `bugfix-0068 Have the reviewer commit its record entry`: the reviewer's role file and the fixtures
-- [ ] `bugfix-0068 Record the check by hand of a second round`: the check by hand's entry in `record.md`
+- [x] `bugfix-0068 Record the check by hand of a second round`: the check by hand's entry in `record.md`
