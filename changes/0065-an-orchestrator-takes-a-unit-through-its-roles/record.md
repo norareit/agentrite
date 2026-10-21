@@ -196,3 +196,10 @@ timestamp: 2026-10-20T23:55:38Z
   whose steps give their outcomes in a blockquote, failed before the change, three tests, and pass after it. The
   test that a fence indented four spaces at the top level is none now finds it read, as the accepted fix has it.
   `npm test` passes: 918 tests, none skipped
+- 2026-10-21T12:39:14Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, C1, applied:
+  `scripts/agentrite-headless.mjs` parses each line of OpenCode's output as `unknown` and narrows it, in
+  `opencodeEvent`, to an `OpencodeEvent` of the five fields the reader uses, each a string or absent, and the reader
+  works on that type alone. No behavior changed: the tests of the readers, and the suite, pass before and after it.
+  No type checker runs in this repository, so that nothing is `any` any more was checked by reading the module, not
+  by a compiler. `npm test` passes: 918 tests, none skipped. S1 and C1 are applied, P1 needed no change, and every
+  task of `plan.md` is ticked. The status stays `in-progress`: the review of the corrections is done elsewhere

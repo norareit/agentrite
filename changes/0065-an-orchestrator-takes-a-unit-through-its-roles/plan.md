@@ -573,7 +573,7 @@ The human accepted S1 and C1 of the review saved as `review-20261021T122857Z-gpt
   ends complete. See them fail (S1, R15)
 - [x] Find fences in blockquotes and at any indentation in `scripts/agentrite-outcome.mjs`, as the approach gives
   (S1, R15)
-- [ ] Parse each line of OpenCode's output as `unknown` in `scripts/agentrite-headless.mjs`, and narrow it to an event
+- [x] Parse each line of OpenCode's output as `unknown` in `scripts/agentrite-headless.mjs`, and narrow it to an event
   of the five fields used, `type`, `sessionID`, `part.messageID`, `part.id` and `part.text`, each a string or absent.
   The tests of the readers pass before and after (C1)
 
@@ -635,4 +635,4 @@ Each commit is made once `npm test` is green.
 - [x] After task group 8: `feature-0065 Describe the orchestrator`
 - [x] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`
 - [x] After the tasks of S1: `feature-0065 Read an outcome in a blockquote or an indented list item`
-- [ ] After the task of C1: `feature-0065 Narrow the events of OpenCode from unknown`
+- [x] After the task of C1: `feature-0065 Narrow the events of OpenCode from unknown`

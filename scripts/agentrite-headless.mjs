@@ -43,6 +43,60 @@ export const HEADLESS = {
 };
 
 /**
+ * The fields of one event of OpenCode's that the reader uses, each a string or absent: its type, its session, and of
+ * its part the message, the part's own id and its text.
+ *
+ * @typedef {{
+ *   type: string | undefined,
+ *   sessionID: string | undefined,
+ *   messageID: string | undefined,
+ *   id: string | undefined,
+ *   text: string | undefined,
+ * }} OpencodeEvent
+ */
+
+/**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
+function isRecord(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
+ * @param {unknown} value
+ * @returns {string | undefined}
+ */
+function stringOrNone(value) {
+  return typeof value === 'string' ? value : undefined;
+}
+
+/**
+ * The event that one line of OpenCode's output holds, narrowed to the fields the reader uses, or `undefined` for a
+ * line that is no JSON object.
+ *
+ * @param {string} line
+ * @returns {OpencodeEvent | undefined}
+ */
+function opencodeEvent(line) {
+  /** @type {unknown} */ let parsed;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    return undefined;
+  }
+  if (!isRecord(parsed)) return undefined;
+  const part = isRecord(parsed.part) ? parsed.part : {};
+  return {
+    type: stringOrNone(parsed.type),
+    sessionID: stringOrNone(parsed.sessionID),
+    messageID: stringOrNone(part.messageID),
+    id: stringOrNone(part.id),
+    text: stringOrNone(part.text),
+  };
+}
+
+/**
  * What OpenCode printed: one JSON event per line. Every call of the model is a message of its own, ended by a
  * `step_finish`, so a step that called a tool before it answered printed more than one, and the final response is
  * the text of the message that the last `step_finish` closes.
@@ -52,23 +106,17 @@ export const HEADLESS = {
  */
 function readOpencode(stdout) {
   const events = stdout.split('\n').flatMap((line) => {
-    if (line.trim() === '') return [];
-    try {
-      const event = JSON.parse(line);
-      return typeof event === 'object' && event !== null ? [event] : [];
-    } catch {
-      return [];
-    }
+    const event = line.trim() === '' ? undefined : opencodeEvent(line);
+    return event === undefined ? [] : [event];
   });
-  const session = events.map((event) => event.sessionID).find((id) => typeof id === 'string');
-  const last = events.findLast((event) => event.type === 'step_finish');
-  const message = last?.part?.messageID;
+  const session = events.map((event) => event.sessionID).find((id) => id !== undefined);
+  const message = events.findLast((event) => event.type === 'step_finish')?.messageID;
   if (message === undefined) return { response: undefined, session };
   // One text per part: the last event of a part counts, in the place the part first took.
-  /** @type {Map<unknown, string>} */ const parts = new Map();
+  /** @type {Map<string | undefined, string>} */ const parts = new Map();
   for (const event of events) {
-    if (event.type !== 'text' || event.part?.messageID !== message || typeof event.part.text !== 'string') continue;
-    parts.set(event.part.id, event.part.text);
+    if (event.type !== 'text' || event.messageID !== message || event.text === undefined) continue;
+    parts.set(event.id, event.text);
   }
   return { response: parts.size === 0 ? undefined : [...parts.values()].join('\n\n'), session };
 }
