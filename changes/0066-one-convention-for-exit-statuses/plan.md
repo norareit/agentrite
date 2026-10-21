@@ -186,10 +186,10 @@ The documents:
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes, on the committed work
-- [ ] No line that the unit adds or changes is longer than 120 characters
-- [ ] Every requirement, 1 to 9, has a task, and every task names the requirements it delivers
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes, on the committed work
+- [x] No line that the unit adds or changes is longer than 120 characters
+- [x] Every requirement, 1 to 9, has a task, and every task names the requirements it delivers
 
 ## Commit Points
 
@@ -199,5 +199,5 @@ The documents:
 - [x] `feature-0066 Exit 1 for every refusal of the sandbox but its arguments`: the tasks of `./sandbox.sh`,
   `sandbox-dev.sh`'s test among them
 - [x] `feature-0066 Define the exit statuses once`: the tasks of the documents
-- [ ] `feature-0066 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
+- [x] `feature-0066 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
   what was run on the committed work

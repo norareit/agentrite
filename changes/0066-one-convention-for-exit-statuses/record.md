@@ -45,15 +45,20 @@ timestamp: 2026-10-21T09:50:41Z
   tests/settings-update.test.mjs` failed 56 tests, each one a test changed to 1. Then changed to 1 the 17 `exit 2` the
   plan's table marks 1, which left 12 `exit 2`, each a refusal of the arguments. The same suites pass: 276 tests, none
   skipped. The test of `./sandbox-dev.sh` with an `agentrite.json` of `{}` was written after the change, as the plan
-  orders it, and passed when first run. The record's previous entry was rewrapped to the line limit, which it broke
-- 2026-10-21T10:35:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the documents: the section "Exit statuses"
-  of `README.md` after "Commands", the statuses in each section of "Commands" with a link to it, 1 in place of
-  "non-zero", "a status other than 0" and the 2 of a start of `./sandbox.sh` with a file at fault, the statuses of
-  the entry on `--connect` in "When something goes wrong" of `SANDBOX.md`, the status of `sandbox-dev.sh` in
-  `CONTRIBUTING.md`, and the section "Exit statuses" of `AGENTS.md`. The row of `--` in the table of `sandbox.sh`
-  says that what follows it may open with `-`. A search of the three documents for "non-zero", "other than 0",
-  "exits 2", "exits with 2" and "status 2" leaves four statements of 2, each for wrong arguments of
-  `npx agentrite init`, `config` or `refresh`, and the heading of the entry on `--connect`, which names both. The
-  record had a line over 120 characters in the previous entry, which was rewrapped. `npm test` passes on this tree:
-  817 tests, none skipped. Added to `plan.md` a commit point for the verification, since the change check reads
-  committed work and its result is recorded after the documents are committed
+  orders it, and passed when first run
+- 2026-10-21T10:35:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the documents: the section
+  "Exit statuses" of `README.md` after "Commands", the statuses in each section of "Commands" with a link to it, 1 in
+  place of "non-zero", "a status other than 0" and the 2 of a start of `./sandbox.sh` with a file at fault, the statuses
+  of the entry on `--connect` in "When something goes wrong" of `SANDBOX.md`, the status of `sandbox-dev.sh` in
+  `CONTRIBUTING.md`, and the section "Exit statuses" of `AGENTS.md`. The row of `--` in the table of `sandbox.sh` says
+  that what follows it may open with `-`. A search of the three documents for "non-zero", "other than 0", "exits 2",
+  "exits with 2" and "status 2" leaves four statements of 2, each for wrong arguments of `npx agentrite init`, `config`
+  or `refresh`, and the heading of the entry on `--connect`, which names both. `npm test` passes on this tree: 817
+  tests, none skipped. Added to `plan.md` a commit point for the verification, since the change check reads committed
+  work and its result is recorded after the documents are committed
+- 2026-10-21T10:35:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, verified the committed work on
+  `cebf9e1`: `npm test` passes, 817 tests, none skipped, on its tree but for the unit's documents; `npm run
+  check-changes` and `node scripts/check-changes.mjs` pass; every line the unit adds is within 120 characters; and every
+  requirement, 1 to 9, has a task that names it. Not checked: the sandbox against a real Docker beyond what the suite
+  runs, which includes `tests/sandbox-variant.test.mjs` with none of its tests skipped. Every task of `plan.md` is
+  ticked. The review is to be done elsewhere, so the status stays `in-progress`
