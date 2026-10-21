@@ -5,6 +5,93 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 8.0.0
+
+### What changed
+
+* The new command `npx agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]` takes an approved
+  unit through its roles without the human starting each one. It runs the steps of a definition one at a time, each
+  as `agentrite run --headless`, continues a step's session when the same role and harness run again in the run, and
+  reads each step's outcome from a fenced `json` block in its final response, which the command asks every step for.
+  It prints a line before and after each step and, at the end, every step that ran with its time, how the run ended,
+  and the last step's summary, open blocking findings, questions and proposed declines. It exits `0` for a run that
+  ran every step, `3` for one that stopped for the human, and `1` for a refusal, such as a unit that is not
+  `approved`. "The orchestrator" of the README describes it (0065)
+* A definition is a JSON file of steps, each a role, a harness and a model with an optional `prompt` and `stopWhen`,
+  and of repeats, which run their steps for up to `times` rounds, `until` a round's last step has no blocking
+  finding. The kit ships a default, `orchestrator.json`: the planner in Claude Code on Opus, then up to three rounds
+  of the implementer in Claude Code on Sonnet and a review in OpenCode on GPT Sol. A run stops for a harness that
+  fails, an outcome that is missing, doubled or malformed, an outcome of `needs-human` or `failed`, a proposed
+  decline, a `stopWhen` that holds, and a repeat that ran out (0065)
+* `agentrite.json` has a new required key, `orchestrator`: the path of the project's definition, or `false` for a
+  project that does not use the orchestrator. `config` and `init` write the kit's default, and
+  `init --no-orchestrator` writes `false` (0065)
+* A run is kept in `.orchestrator/<unit-directory>/<run>/` of the project root, with its state, a copy of its
+  definition, each step's outcome and the final response of a step without one. The command writes
+  `.orchestrator/.gitignore` holding `*`, so the directory is ignored without a line in the project's `.gitignore`.
+  Every unit run of `./sandbox.sh` mounts the host's `.orchestrator` at `/work/.orchestrator`, as it mounts
+  `.reviews` (0065)
+* A step of a definition may hold `timeoutMinutes`, a number greater than 0 and at most 1440. When a step's time runs
+  out, the command sends `SIGTERM` to the step's process group, and `SIGKILL` 10 seconds later to what is left, and
+  stops the run by a case of its own. Every step runs in a process group of its own, and the command passes
+  `SIGINT`, `SIGTERM` and `SIGHUP` on to it, so Ctrl-C and a `kill` of the command end the harness too (0069)
+* The request the command adds to every step says that a finding the step's prompt accepts is recorded as accepted
+  by the orchestrator's definition, not by the human, and that a step sets no status later than `in-progress`. The
+  default implementer's prompt says that the definition accepts the review findings it agrees with (0068)
+* The reviewer commits its record entry, alone, as `<prefix> Record the review of <commit>`, on the branch it
+  reviewed, where it left it uncommitted before. When `record.md` already holds an uncommitted change of another, it
+  appends its entry, commits nothing and says so (0068)
+* `./sandbox.sh` takes `--variant <name>` with a unit: a variant is a run of the unit on a branch of its own,
+  `<unit's branch>--<name>`, cut from the unit's branch, in a container and clone of its own, which runs beside the
+  unit's run and the other variants'. Its commits come back to the variant's branch alone. `--connect` takes
+  `--variant` too, and a variant's branch may be given by its full name. A unit's number names the unit's branch
+  alone, never a branch whose name holds `--` (0047)
+* `process.md`, the reviewer and the implementer keep the reviews of the runs of a unit apart: a review of a variant
+  is saved in a file whose name ends in `--<name>.md`, one of the unit's branch in a file whose name holds no `--`,
+  and a role takes findings only from the files of its own run. An entry made on a variant's branch names the
+  variant (0047)
+* The README defines the exit statuses of every command of the kit in "Exit statuses": `0` success, `1` a refusal or
+  a failure, `2` wrong arguments, with the usage, and `3` and up a command's own. Each command's section names its
+  statuses (0066)
+* `./sandbox.sh` exits `2` only for wrong arguments, and prints its forms with each such refusal. Every other
+  refusal before the container starts exits `1`, where it exited `2`: an `agentrite.json` at fault, a unit that names
+  no branch, a run already under way, a clone not brought back, Docker that cannot be reached, and the like. A
+  failing Docker command before the start passes on Docker's status (0066)
+* The change check refuses a second argument, prints its usage and exits `2` (0066)
+* `process.md` says that the human may name item *n* of a spec's "Beyond the request" as `BTR<n>` (0070)
+* Not in the package: this repository has a spec reviewer of its own, a role that reviews a draft spec before the
+  human approves it (0067); its `AGENTS.md` holds its ways of working (0071)
+
+### Worth knowing when you update
+
+* Every command that reads `agentrite.json` refuses a file without `orchestrator`, and so does a start of
+  `./sandbox.sh` that cuts a branch. Add this line after `standards`, with `false` for a project that does not use
+  the orchestrator:
+
+  ```json
+    "orchestrator": "node_modules/agentrite/orchestrator.json",
+  ```
+
+* A script that told the refusals of `./sandbox.sh` apart by status `2` now gets `1` for every refusal but wrong
+  arguments
+* A unit run now makes an `.orchestrator` directory in the project root, empty until the orchestrator runs, and
+  mounts it read-write into the container
+* The reviewer now makes a commit of its own on the unit's branch. A project that committed the reviewer's entry
+  with the implementer's next commit finds it committed already
+* A branch whose name holds `--` is now a variant's: a unit's number no longer names it, and a role on it keeps its
+  reviews apart by the variant's name
+* The orchestrator was checked by hand on a Linux host and in the sandbox, with Claude Code 2.1.306 and OpenCode
+  1.19.3, through a second round of the default definition and with a step that ran out of time. It was not checked
+  on macOS, nor with other versions of the harnesses, whose headless JSON output it reads
+* The reviewer's description changed, so its wrappers differ from what this release writes, and `agentrite run`,
+  and so the orchestrator, refuses the reviewer until they are rewritten. Run `refresh` and commit what it wrote:
+
+  ```sh
+  npx agentrite refresh
+  ```
+
+* No rebuild of the sandbox image is needed: the files the image is built from did not change
+
 ## 7.3.0
 
 ### What changed
