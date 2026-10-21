@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-21T14:18:50Z
 ---
 
@@ -76,5 +76,15 @@ timestamp: 2026-10-21T14:18:50Z
   in `315716d`. C1: `gone` took a missing `/proc` entry as a process gone, which on macOS holds for every process;
   it now reads `/proc` on Linux only, in `1455dc4`. Not run on macOS. `npm test` on the tree of `1455dc4` reports
   932 tests, all of which pass and none skipped. The human decides S1, which blocks
+- 2026-10-21T19:50:38Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, performed a delta review of unit 0069 at
+  `e47b7e42f1cc7d251164367711ed2161d66a76b9`, from the previous review's commit
+  `06f80571363b719dabd418b9624fddf03d1b48f6`, covering the corrections for S1 and C1 and the intervening diff.
+  Returned no new findings. Saved the complete review in
+  `.reviews/0069-a-time-limit-on-a-step-of-the-orchestrator/2026-10-21T19-50-08Z-opencode.md`. Ran `npm test`: 932
+  tests passed, none skipped; `npm run check-changes` and `git diff --check 06f8057..HEAD` passed. Did not run on
+  macOS or replay the historical real-harness terminal checks
+- 2026-10-21T19:53:17Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision after the
+  re-review that S1 is fixed by `315716d` and the unit is implemented, with every task of `plan.md` ticked. The
+  status is `implemented`
 
 ## Amendments
