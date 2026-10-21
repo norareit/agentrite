@@ -110,3 +110,8 @@ timestamp: 2026-10-20T23:55:38Z
   readers, a resumed Claude Code session that prints another id, is written with the end-to-end tests of task group
   5, and its box stays open until then. `npm test` passes: 875 tests, none skipped; a first run had the variant test
   that runs a unit and its variants at once fail, which passed alone and in a second whole run
+- 2026-10-21T11:59:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, before task group 4 made
+  `optionError` of `scripts/agentrite-run.mjs` take the options of its command, and exported it, so that the options
+  of `orchestrate` are judged by the rule of `run` and the rule is not written twice; added to `plan.md` with its
+  task and commit point, as a refactoring in a commit of its own. `node --test tests/agentrite-run.test.mjs` passes,
+  63 tests, as before it

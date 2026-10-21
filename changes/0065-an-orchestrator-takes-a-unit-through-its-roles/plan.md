@@ -444,6 +444,9 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 4. The run
 
+- [x] Make `optionError` of `scripts/agentrite-run.mjs` take the options of its command and what each takes, and
+  export it, so that `parseOrchestrateArgs` judges its options by the same rule as `parseRunArgs`. A refactoring, in
+  a commit of its own; `node --test tests/agentrite-run.test.mjs` passes before and after it (R10)
 - [ ] In a new `tests/agentrite-orchestrate.test.mjs`, unit tests of `orchestrate` with `effects` whose `run` gives
   the results a test lists in turn and records each planned step (R12, R13, R18, R19, R20, R29):
     * the default definition with no blocking finding at the first review runs steps 0 to 2, numbered in order,
@@ -604,6 +607,7 @@ Each commit is made once `npm test` is green.
   definition`
 - [x] After task group 2: `feature-0065 Judge a definition of the orchestrator`
 - [ ] After task group 3: `feature-0065 Ask a step for its outcome, and read it from what the harness printed`
+- [x] Before task group 4's other tasks: `feature-0065 Let the judging of an option serve another command`
 - [ ] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
 - [ ] After task group 5: `feature-0065 Add agentrite orchestrate`
 - [ ] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`

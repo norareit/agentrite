@@ -68,18 +68,21 @@ const RUN_OPTIONS = /** @type {const} */ ({
 const OPTION_VALUES = { prompt: 'a text', model: 'an id' };
 
 /**
- * What is wrong with an option as it was given, or `undefined` when `run` takes it.
+ * What is wrong with an option as it was given to a command that takes `options`, or `undefined` when the command
+ * takes it. `values` says what each option that takes a value takes, as the line that says none was given names it.
  *
+ * @param {Record<string, { type: 'string' | 'boolean' }>} options
+ * @param {Record<string, string>} values
  * @param {{ name: string, rawName: string, value: string | undefined, inlineValue: boolean | undefined }} option
  * @returns {string | undefined}
  */
-function optionError({ name, rawName, value, inlineValue }) {
-  if (!Object.hasOwn(RUN_OPTIONS, name)) return `unknown option: ${rawName}`;
-  if (RUN_OPTIONS[name].type === 'boolean') return value === undefined ? undefined : `${rawName} takes no value`;
+export function optionError(options, values, { name, rawName, value, inlineValue }) {
+  if (!Object.hasOwn(options, name)) return `unknown option: ${rawName}`;
+  if (options[name].type === 'boolean') return value === undefined ? undefined : `${rawName} takes no value`;
   // What stands apart after the option and opens with a dash is taken for the next option, and the value for left
   // out. A value that does open with a dash is written onto the option, as `--prompt=<text>`.
   const missing = value === undefined || value === '' || (inlineValue === false && value.startsWith('-'));
-  return missing ? `${rawName} takes ${OPTION_VALUES[name]}, and none was given` : undefined;
+  return missing ? `${rawName} takes ${values[name]}, and none was given` : undefined;
 }
 
 /**
@@ -133,7 +136,9 @@ export function parseRunArgs(args) {
     tokens: true,
   });
   const error =
-    tokens.flatMap((token) => (token.kind === 'option' ? [optionError(token)] : [])).find(Boolean) ??
+    tokens
+      .flatMap((token) => (token.kind === 'option' ? [optionError(RUN_OPTIONS, OPTION_VALUES, token)] : []))
+      .find(Boolean) ??
     positionError(positionals);
   if (error !== undefined) throw new Error(`${error}\n${runUsage()}`);
 
