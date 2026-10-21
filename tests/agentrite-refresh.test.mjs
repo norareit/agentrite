@@ -1151,3 +1151,35 @@ test('refresh refuses a file that lacks bell, or whose bell is a string, and wri
     assert.equal(read('agentrite.json'), text);
   }
 });
+
+// Unit 0065, R3
+test('refresh refuses a file that lacks orchestrator, or whose orchestrator names no file, and writes nothing', (t) => {
+  const line = '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
+  for (const [replacement, message] of [
+    ['', `orchestrator is missing. ${ORCHESTRATOR_MUST}`],
+    [
+      '  "orchestrator": "rules/missing.json",\n',
+      'orchestrator is "rules/missing.json", and there is no file at it. ' +
+        "It must name a file in the project's working tree",
+    ],
+  ]) {
+    const { run, read, write } = staleProject(t);
+    const valid = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true });
+    const text = valid.replace(line, replacement);
+    assert.notEqual(text, valid);
+    write('agentrite.json', text);
+    const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
+
+    const result = run('refresh');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `agentrite: agentrite.json: ${message}\n`);
+    for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
+    assert.equal(read('agentrite.json'), text);
+  }
+});
+
+const ORCHESTRATOR_MUST =
+  'It must hold false, for a project that does not use the orchestrator, or the path of a file, relative to the ' +
+  'project root, that does not lead outside the project';

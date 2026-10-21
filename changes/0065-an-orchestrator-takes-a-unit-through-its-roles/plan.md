@@ -364,29 +364,29 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 1. The key
 
-- [ ] In `tests/agentrite-settings.test.mjs`, with `VALID` given `orchestrator`: `parseSettings` returns `false` and
+- [x] In `tests/agentrite-settings.test.mjs`, with `VALID` given `orchestrator`: `parseSettings` returns `false` and
   a path; refuses absent, `true`, `null`, `0`, `""`, `"/x.json"`, `"../x.json"`, `[]` and `{}`, each with
   `agentrite.json: orchestrator is <missing | JSON>. It must hold <the must of the approach>`; the missing keys are
   seven and judged in the order of `KEYS`; `settingsText` writes the key after `standards`, `false` and a path alike;
   the template is `settingsText` of its own settings byte for byte; `checkSettingsFiles` refuses a path that names
   no file, naming `orchestrator`, after `standards` and before the roles, and does not look for a file for `false`;
   `parseBell` takes a file that lacks `orchestrator`. See them fail (R1, R3)
-- [ ] Add the key to `KEYS`, the type, `parseSettings`, `checkSettingsFiles` and `settingsText` (R1, R3)
-- [ ] In `tests/package-documents.test.mjs`, test that `orchestrator.json` is the JSON of requirement 4 byte for byte,
+- [x] Add the key to `KEYS`, the type, `parseSettings`, `checkSettingsFiles` and `settingsText` (R1, R3)
+- [x] In `tests/package-documents.test.mjs`, test that `orchestrator.json` is the JSON of requirement 4 byte for byte,
   with a line break at the end, and that `files` lists it. See it fail, then add the file and the entry (R4)
-- [ ] Add `"orchestrator": "node_modules/agentrite/orchestrator.json",` to the template after `standards`, and
+- [x] Add `"orchestrator": "node_modules/agentrite/orchestrator.json",` to the template after `standards`, and
   `orchestrator.json` to `copyKitInstructions` and `orchestrator` to `KIT_SETTINGS` in `tests/installed-kit.mjs` (R2)
-- [ ] In `tests/agentrite-init.test.mjs` and `tests/agentrite-config.test.mjs`: `config` writes the key with the
+- [x] In `tests/agentrite-init.test.mjs` and `tests/agentrite-config.test.mjs`: `config` writes the key with the
   kit's path; `init` with arguments writes it, with and without `--no-sandbox`, and writes `false` with
   `--no-orchestrator`, which is taken at any place among the harnesses and counts once given twice;
   `--no-orchestrator=1` is refused as an unknown harness with exit 2; `init` with an `agentrite.json` and
   `--no-orchestrator` refuses with exit 1 and `INIT_WITH_SETTINGS`, writing nothing; the usage holds
   `[--no-orchestrator]`; `init`, `config` and `refresh` leave a file that lacks the key byte for byte as it was,
   `init` and `refresh` refusing it naming `orchestrator` and `config` skipping it. See them fail (R2, R3)
-- [ ] Take `--no-orchestrator` in `parseInit`, `INIT_FORM` and `settingsToWrite` (R2)
-- [ ] In `tests/agentrite-run.test.mjs`, test that `agentrite roles` refuses a file that lacks the key and one whose
+- [x] Take `--no-orchestrator` in `parseInit`, `INIT_FORM` and `settingsToWrite` (R2)
+- [x] In `tests/agentrite-run.test.mjs`, test that `agentrite roles` refuses a file that lacks the key and one whose
   key names no file, naming the key, and exits 1 (R3)
-- [ ] Add the key to every `agentrite.json` the suite writes for a command that judges the whole file, in the files
+- [x] Add the key to every `agentrite.json` the suite writes for a command that judges the whole file, in the files
   the "Files" section names, until `npm test` is green (R1, R3)
 
 ### 2. The definition
@@ -596,7 +596,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 Each commit is made once `npm test` is green.
 
-- [ ] After task group 1: `feature-0065 Make orchestrator a required key of agentrite.json, and ship the default
+- [x] After task group 1: `feature-0065 Make orchestrator a required key of agentrite.json, and ship the default
   definition`
 - [ ] After task group 2: `feature-0065 Judge a definition of the orchestrator`
 - [ ] After task group 3: `feature-0065 Ask a step for its outcome, and read it from what the harness printed`

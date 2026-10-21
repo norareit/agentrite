@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-20T23:55:38Z
 ---
 
@@ -84,3 +84,14 @@ timestamp: 2026-10-20T23:55:38Z
   command reads is known before the unit is implemented; and the reader of Claude Code's output takes the session's
   id from its `session_id`, falling back to the id the command gave, so that a resume that hands out a new id is
   still followed. The status is `approved`
+- 2026-10-21T11:48:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0065-an-orchestrator-takes-a-unit-through-its-roles` at `fe9920c`, began the work. The status is
+  `in-progress`
+- 2026-10-21T11:52:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 1:
+  `orchestrator` is a required key of `agentrite.json`, `false` or a path judged as `standards` is and checked for a
+  file after it, written by `config` and `init`, which takes `--no-orchestrator`, and the kit ships `orchestrator.json`.
+  The tests of `parseSettings`, `readSettings`, `settingsText`, the template, `init`, `config` and the package were
+  seen to fail before the code; those of `refresh` and `roles` refusing a file without the key were written after the
+  settings code and passed at once, since the key is judged where every key is. No other fixture of the suite needed
+  the key: the projects that judge the whole file take it from the template through `tests/installed-kit.mjs`.
+  `npm test` passes: 829 tests, none skipped

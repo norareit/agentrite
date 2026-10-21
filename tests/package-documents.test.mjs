@@ -50,6 +50,7 @@ test('package.json keeps the one command and the files the package holds', () =>
   assert.deepEqual(packageJson.files, [
     'process.md',
     'standards.md',
+    'orchestrator.json',
     'CHANGELOG.md',
     'SANDBOX.md',
     'roles',
@@ -85,6 +86,38 @@ test('every file that a listed script imports by a relative path is itself liste
 test('the package ships the default agentrite.json, as a template', () => {
   assert.ok(packageJson.files.includes('templates'), `files holds ${packageJson.files.join(', ')}`);
   assert.ok(existsSync(new URL('../templates/project/agentrite.json', import.meta.url)));
+});
+
+// R4 of unit 0065: the default definition, as the spec writes it.
+const DEFAULT_DEFINITION = `{
+  "steps": [
+    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5" },
+    {
+      "repeat": {
+        "times": 3,
+        "until": "no-blocking-findings",
+        "steps": [
+          {
+            "role": "implementer",
+            "harness": "claude",
+            "model": "claude-sonnet-5-5",
+            "prompt": "From round 2, the human accepts the review's findings you agree with. Propose declining others."
+          },
+          {
+            "role": "reviewer",
+            "harness": "opencode",
+            "model": "openai/gpt-6.1-sol"
+          }
+        ]
+      }
+    }
+  ]
+}
+`;
+
+test('the package ships the default definition of the orchestrator, as the spec writes it', () => {
+  assert.ok(packageJson.files.includes('orchestrator.json'), `files holds ${packageJson.files.join(', ')}`);
+  assert.equal(readDocument('orchestrator.json'), DEFAULT_DEFINITION);
 });
 
 test('LICENSE is the MIT License at the root, with the copyright holder', () => {

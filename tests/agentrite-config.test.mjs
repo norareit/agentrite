@@ -120,3 +120,29 @@ test('config skips an agentrite.json that lacks bell, and leaves it byte for byt
   assert.equal(result.stdout, 'skipped agentrite.json, which exists\n');
   assert.equal(readFileSync(path, 'utf-8'), text);
 });
+
+// Unit 0065, R2
+test('config writes the kit default definition as orchestrator, after standards', (t) => {
+  const { base, run } = directory(t);
+
+  assert.equal(run('config').status, 0);
+
+  const lines = '  "standards": "node_modules/agentrite/standards.md",\n' +
+    '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
+  assert.ok(readFileSync(join(base, 'agentrite.json'), 'utf-8').includes(lines));
+});
+
+// Unit 0065, R3
+test('config skips an agentrite.json that lacks orchestrator, and leaves it byte for byte', (t) => {
+  const { base, run } = directory(t);
+  const path = join(base, 'agentrite.json');
+  const text = TEMPLATE.replace('  "orchestrator": "node_modules/agentrite/orchestrator.json",\n', '');
+  assert.notEqual(text, TEMPLATE);
+  writeFileSync(path, text);
+
+  const result = run('config');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, 'skipped agentrite.json, which exists\n');
+  assert.equal(readFileSync(path, 'utf-8'), text);
+});

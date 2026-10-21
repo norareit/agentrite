@@ -16,7 +16,8 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const OBJECT_SENTENCE =
-  'The file must hold a JSON object with the keys defaultBranch, harnesses, sandbox, bell, standards and roles';
+  'The file must hold a JSON object with the keys defaultBranch, harnesses, sandbox, bell, standards, ' +
+  'orchestrator and roles';
 const NO_FILE = 'the project has no agentrite.json. Run: npx agentrite config, which writes one';
 
 const VALID = {
@@ -25,6 +26,7 @@ const VALID = {
   sandbox: false,
   bell: true,
   standards: 'rules/house.md',
+  orchestrator: 'rules/orchestrator.json',
   roles: {
     specifier: 'rules/specifier.md',
     planner: 'rules/planner.md',
@@ -51,7 +53,8 @@ function withRole(role, value) {
 
 // Writes a file at each path `settings` name, under `root`.
 function writePathsOf(root, settings) {
-  for (const path of [settings.standards, ...Object.values(settings.roles)]) {
+  const orchestrator = typeof settings.orchestrator === 'string' ? [settings.orchestrator] : [];
+  for (const path of [settings.standards, ...orchestrator, ...Object.values(settings.roles)]) {
     mkdirSync(dirname(join(root, path)), { recursive: true });
     writeFileSync(join(root, path), `# ${path}\n`);
   }
@@ -63,10 +66,17 @@ test('the file is named agentrite.json', () => {
 
 // R1, R3
 
-test('a valid file gives the six settings', () => {
+test('a valid file gives the seven settings', () => {
   assert.deepEqual(parseSettings(textOf(VALID)), VALID);
   const both = { ...VALID, defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: true };
   assert.deepEqual(parseSettings(textOf(both)), both);
+});
+
+test('orchestrator gives false, for a project that opted out, and a path, as they are written', () => {
+  assert.equal(parseSettings(textOf(withKey('orchestrator', false))).orchestrator, false);
+  for (const path of ['rules/orchestrator.json', 'node_modules/agentrite/orchestrator.json', 'a/../b.json']) {
+    assert.equal(parseSettings(textOf(withKey('orchestrator', path))).orchestrator, path);
+  }
 });
 
 test('roles are given in the order specifier, planner, implementer, reviewer, whatever the order of the text', () => {
@@ -90,7 +100,7 @@ test('a harness named more than once is there once, and the list keeps the order
   assert.deepEqual(settings.harnesses, ['opencode', 'claude']);
 });
 
-test('a key the kit does not know is ignored, beside the six', () => {
+test('a key the kit does not know is ignored, beside the seven', () => {
   assert.deepEqual(parseSettings(textOf({ ...VALID, baseBranch: 'develop', $schema: 5 })), VALID);
 });
 
@@ -135,6 +145,9 @@ const SANDBOX_MUST = 'It must hold true or false';
 
 const PATH_MUST =
   'It must hold the path of a file, relative to the project root, that does not lead outside the project';
+const ORCHESTRATOR_MUST =
+  'It must hold false, for a project that does not use the orchestrator, or the path of a file, relative to the ' +
+  'project root, that does not lead outside the project';
 const ROLES_OBJECT_MUST =
   'It must hold an object from each of the roles specifier, planner, implementer and reviewer, ' +
   "and from any role of the project's own, to the path of its file";
@@ -145,13 +158,14 @@ const NAME_FORM =
   "A role's name is one or more words of the lowercase letters a to z, joined by single hyphens, as security-reviewer";
 const OWN_AGENT_REFUSAL = 'A role cannot have the name of an agent of a harness the kit writes wrappers for';
 
-test('each of the six keys, when missing, is named as missing, with what it must hold', () => {
+test('each of the seven keys, when missing, is named as missing, with what it must hold', () => {
   for (const [key, must] of [
     ['defaultBranch', BRANCH_MUST],
     ['harnesses', HARNESSES_MUST],
     ['sandbox', SANDBOX_MUST],
     ['bell', SANDBOX_MUST],
     ['standards', PATH_MUST],
+    ['orchestrator', ORCHESTRATOR_MUST],
     ['roles', ROLES_OBJECT_MUST],
   ]) {
     assert.throws(() => parseSettings(textOf(withKey(key, undefined))), {
@@ -177,6 +191,14 @@ test('a key that holds anything else is named with what it holds and what it mus
     ['bell', 'true', SANDBOX_MUST],
     ['bell', [], SANDBOX_MUST],
     ['bell', {}, SANDBOX_MUST],
+    ['orchestrator', true, ORCHESTRATOR_MUST],
+    ['orchestrator', null, ORCHESTRATOR_MUST],
+    ['orchestrator', 0, ORCHESTRATOR_MUST],
+    ['orchestrator', '', ORCHESTRATOR_MUST],
+    ['orchestrator', '/x.json', ORCHESTRATOR_MUST],
+    ['orchestrator', '../x.json', ORCHESTRATOR_MUST],
+    ['orchestrator', [], ORCHESTRATOR_MUST],
+    ['orchestrator', {}, ORCHESTRATOR_MUST],
   ]) {
     assert.throws(
       () => parseSettings(textOf(withKey(key, value))),
@@ -186,7 +208,7 @@ test('a key that holds anything else is named with what it holds and what it mus
   }
 });
 
-test('the first key at fault, in the order defaultBranch, harnesses, sandbox, bell, standards, roles, is named', () => {
+test('the first key at fault, in the order of the keys as the file is written, is named', () => {
   assert.throws(() => parseSettings('{}'), { message: `agentrite.json: defaultBranch is missing. ${BRANCH_MUST}` });
   assert.throws(() => parseSettings('{"sandbox": 1, "harnesses": [], "defaultBranch": "main"}'), {
     message: `agentrite.json: harnesses is []. ${HARNESSES_MUST}`,
@@ -198,6 +220,12 @@ test('the first key at fault, in the order defaultBranch, harnesses, sandbox, be
   const { bell: _bell, ...noBell } = VALID;
   assert.throws(() => parseSettings(textOf({ ...noBell, standards: 5 })), {
     message: `agentrite.json: bell is missing. ${SANDBOX_MUST}`,
+  });
+  assert.throws(() => parseSettings(textOf({ ...withKey('orchestrator', undefined), roles: 5 })), {
+    message: `agentrite.json: orchestrator is missing. ${ORCHESTRATOR_MUST}`,
+  });
+  assert.throws(() => parseSettings(textOf({ ...withKey('orchestrator', 5), standards: '' })), {
+    message: `agentrite.json: standards is "". ${PATH_MUST}`,
   });
 });
 
@@ -366,11 +394,12 @@ const ROLES_TEXT = [
   '  }',
 ];
 
-test('settingsText writes the six keys in order, indented by two spaces, the list on one line', () => {
+test('settingsText writes the seven keys in order, indented by two spaces, the list on one line', () => {
   const { roles, standards } = VALID;
   assert.equal(
     settingsText({
       roles,
+      orchestrator: false,
       standards,
       bell: false,
       sandbox: false,
@@ -384,6 +413,7 @@ test('settingsText writes the six keys in order, indented by two spaces, the lis
       '  "sandbox": false,',
       '  "bell": false,',
       '  "standards": "rules/house.md",',
+      '  "orchestrator": false,',
       ...ROLES_TEXT,
       '}',
       '',
@@ -398,6 +428,7 @@ test('settingsText writes the six keys in order, indented by two spaces, the lis
       '  "sandbox": true,',
       '  "bell": true,',
       '  "standards": "rules/house.md",',
+      '  "orchestrator": "rules/orchestrator.json",',
       ...ROLES_TEXT,
       '}',
       '',
@@ -416,6 +447,8 @@ test('what settingsText writes is read back as the settings it was given', () =>
   const settings = { ...VALID, defaultBranch: 'release/"1"', harnesses: ['opencode', 'claude'], sandbox: false };
   assert.deepEqual(parseSettings(settingsText(settings)), settings);
   assert.deepEqual(parseSettings(settingsText({ ...settings, bell: false })), { ...settings, bell: false });
+  const optedOut = { ...settings, orchestrator: false };
+  assert.deepEqual(parseSettings(settingsText(optedOut)), optedOut);
 });
 
 test('the template is the default file, and settingsText of its own values is the template byte for byte', () => {
@@ -428,6 +461,7 @@ test('the template is the default file, and settingsText of its own values is th
       '  "sandbox": true,',
       '  "bell": true,',
       '  "standards": "node_modules/agentrite/standards.md",',
+      '  "orchestrator": "node_modules/agentrite/orchestrator.json",',
       '  "roles": {',
       '    "specifier": "node_modules/agentrite/roles/specifier.md",',
       '    "planner": "node_modules/agentrite/roles/planner.md",',
@@ -457,9 +491,10 @@ test('readSettings reads the agentrite.json of the root it is given', (t) => {
 
 const NO_FILE_MUST = "It must name a file in the project's working tree";
 
-test('readSettings refuses a standards or a role that names no file, a directory or a dangling link', (t) => {
+test('readSettings refuses a path of a key that names no file, a directory or a dangling link', (t) => {
   for (const [key, settingsOf] of [
     ['standards', (path) => withKey('standards', path)],
+    ['orchestrator', (path) => withKey('orchestrator', path)],
     ['roles.reviewer', (path) => withRole('reviewer', path)],
   ]) {
     for (const make of [
@@ -479,11 +514,16 @@ test('readSettings refuses a standards or a role that names no file, a directory
   }
 });
 
-test('readSettings judges standards before the roles, and the roles in their order', (t) => {
+test('readSettings judges standards, then orchestrator, then the roles in their order', (t) => {
   const base = directory(t);
   writeFileSync(join(base, 'agentrite.json'), textOf({ ...VALID, roles: { ...VALID.roles, planner: 'p.md' } }));
   assert.throws(() => readSettings(base), {
     message: `agentrite.json: standards is "rules/house.md", and there is no file at it. ${NO_FILE_MUST}`,
+  });
+  mkdirSync(join(base, 'rules'));
+  writeFileSync(join(base, VALID.standards), '# standards\n');
+  assert.throws(() => readSettings(base), {
+    message: `agentrite.json: orchestrator is "rules/orchestrator.json", and there is no file at it. ${NO_FILE_MUST}`,
   });
   writePathsOf(base, VALID);
   assert.throws(() => readSettings(base), {
@@ -515,6 +555,14 @@ test('readSettings refuses an extra role that names no file, with roles.<name> a
   assert.throws(() => readSettings(base), {
     message: `agentrite.json: roles.test-writer is "rules/tests.md", and there is no file at it. ${NO_FILE_MUST}`,
   });
+});
+
+test('readSettings looks for no file for an orchestrator that is false', (t) => {
+  const base = directory(t);
+  const optedOut = withKey('orchestrator', false);
+  writePathsOf(base, optedOut);
+  writeFileSync(join(base, 'agentrite.json'), textOf(optedOut));
+  assert.deepEqual(readSettings(base), optedOut);
 });
 
 test('readSettings takes two roles that name one file', (t) => {
@@ -608,6 +656,7 @@ test('parseBell gives true and false, from a file of bell alone and from a whole
   assert.equal(parseBell('{"bell": false}'), false);
   assert.equal(parseBell(settingsText(VALID)), true);
   assert.equal(parseBell(settingsText({ ...VALID, bell: false })), false);
+  assert.equal(parseBell(textOf(withKey('orchestrator', undefined))), true);
 });
 
 test('parseBell judges no other key: a file whose other keys are all wrong gives its bell', () => {

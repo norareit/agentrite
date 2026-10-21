@@ -882,7 +882,7 @@ test('a file beside the unit whose name opens with the same digits does not make
 test('agentrite alone and with a command it does not know print the usage of every command and exit 2', (t) => {
   const { agentrite } = project(t);
   const usage =
-    'usage: agentrite init [--no-sandbox] [--default-branch <name>] claude | opencode\n' +
+    'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
     '       agentrite init\n' +
     '       agentrite config\n' +
     '       agentrite refresh\n' +
@@ -1086,5 +1086,25 @@ test('agentrite roles refuses a file that lacks bell, or whose bell is a string,
     assert.notEqual(result.status, 0);
     assert.equal(result.stdout, '');
     assert.match(result.stderr, new RegExp(`agentrite\\.json: bell is ${found}\\. It must hold true or false`));
+  }
+});
+
+// Unit 0065, R3
+test('agentrite roles refuses a file that lacks orchestrator, or whose orchestrator names no file, exiting 1', (t) => {
+  const line = '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
+  for (const [replacement, message] of [
+    ['', /agentrite\.json: orchestrator is missing\. It must hold false, for a project that does not use the/],
+    ['  "orchestrator": "rules/missing.json",\n', /agentrite\.json: orchestrator is "rules\/missing\.json", and there/],
+  ]) {
+    const { agentrite, write } = project(t);
+    const text = SETTINGS.replace(line, replacement);
+    assert.notEqual(text, SETTINGS);
+    write('agentrite.json', text);
+
+    const result = agentrite(['roles']);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.match(result.stderr, message);
   }
 });

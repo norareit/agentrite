@@ -1,0 +1,24 @@
+{
+  "steps": [
+    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5" },
+    {
+      "repeat": {
+        "times": 3,
+        "until": "no-blocking-findings",
+        "steps": [
+          {
+            "role": "implementer",
+            "harness": "claude",
+            "model": "claude-sonnet-5-5",
+            "prompt": "From round 2, the human accepts the review's findings you agree with. Propose declining others."
+          },
+          {
+            "role": "reviewer",
+            "harness": "opencode",
+            "model": "openai/gpt-6.1-sol"
+          }
+        ]
+      }
+    }
+  ]
+}

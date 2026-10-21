@@ -85,12 +85,22 @@ function fileAt(list, path) {
 
 const OPTION = '--no-sandbox';
 
+const NO_ORCHESTRATOR = '--no-orchestrator';
 const BRANCH = '--default-branch';
 const INIT_USAGE =
-  'usage: agentrite init [--no-sandbox] [--default-branch <name>] claude | opencode\n       agentrite init';
+  'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
+  '       agentrite init';
 
 function parsedInit(overrides) {
-  return { command: 'init', harnesses: [], sandbox: true, defaultBranch: undefined, given: true, ...overrides };
+  return {
+    command: 'init',
+    harnesses: [],
+    sandbox: true,
+    orchestrator: true,
+    defaultBranch: undefined,
+    given: true,
+    ...overrides,
+  };
 }
 
 test('parseArgs takes the harnesses of init in the order given, each once, and the sandbox is wanted', () => {
@@ -119,6 +129,27 @@ test('parseArgs takes --no-sandbox before, between and after the harnesses, and 
       rest.join(' '),
     );
   }
+});
+
+// R2 of unit 0065
+test('parseArgs takes --no-orchestrator before, between and after the harnesses, and more than once as once', () => {
+  assert.deepEqual(parseArgs(['init', NO_ORCHESTRATOR]), parsedInit({ orchestrator: false }));
+  for (const rest of [
+    [NO_ORCHESTRATOR, 'claude', 'opencode'],
+    ['claude', NO_ORCHESTRATOR, 'opencode'],
+    ['claude', 'opencode', NO_ORCHESTRATOR],
+    [NO_ORCHESTRATOR, 'claude', NO_ORCHESTRATOR, 'opencode', NO_ORCHESTRATOR],
+  ]) {
+    assert.deepEqual(
+      parseArgs(['init', ...rest]),
+      parsedInit({ harnesses: ['claude', 'opencode'], orchestrator: false }),
+      rest.join(' '),
+    );
+  }
+  assert.deepEqual(
+    parseArgs(['init', OPTION, 'claude', NO_ORCHESTRATOR]),
+    parsedInit({ harnesses: ['claude'], sandbox: false, orchestrator: false }),
+  );
 });
 
 // R10
@@ -160,7 +191,13 @@ test('parseArgs says why and gives the usage of init for --default-branch with n
 });
 
 test('parseArgs gives the usage of init alone for an unknown harness', () => {
-  for (const rest of [['codex'], ['claude', 'toString'], [OPTION, 'codex'], ['claude', `${OPTION}=1`]]) {
+  for (const rest of [
+    ['codex'],
+    ['claude', 'toString'],
+    [OPTION, 'codex'],
+    ['claude', `${OPTION}=1`],
+    ['claude', `${NO_ORCHESTRATOR}=1`],
+  ]) {
     assert.throws(() => parseArgs(['init', ...rest]), (error) => {
       assert.ok(error.message.endsWith(`\n${INIT_USAGE}`), error.message);
       assert.doesNotMatch(error.message, /agentrite (refresh|config|roles|run)/);
@@ -169,6 +206,7 @@ test('parseArgs gives the usage of init alone for an unknown harness', () => {
   }
   assert.throws(() => parseArgs(['init', 'codex']), /unknown harness: codex/);
   assert.throws(() => parseArgs(['init', 'claude', `${OPTION}=1`]), /unknown harness: --no-sandbox=1/);
+  assert.throws(() => parseArgs(['init', 'claude', `${NO_ORCHESTRATOR}=1`]), /unknown harness: --no-orchestrator=1/);
   assert.throws(() => parseArgs(['init', `${BRANCH}=main`]), /unknown harness: --default-branch=main/);
 });
 
@@ -196,7 +234,7 @@ test('parseArgs gives roles and run what they print for an argument they do not 
 
 test('parseArgs gives the usage of every command for no command and for one that is none of them', () => {
   const usage =
-    'usage: agentrite init [--no-sandbox] [--default-branch <name>] claude | opencode\n' +
+    'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
     '       agentrite init\n' +
     '       agentrite config\n' +
     '       agentrite refresh\n' +
@@ -927,28 +965,32 @@ function snapshot(base, directory = '') {
   });
 }
 
-// R8, R9
-test('init writes the file for every combination of harnesses, --no-sandbox and --default-branch', (t) => {
+// R8, R9, and R2 of unit 0065
+test('init writes the file for every combination of harnesses and options', (t) => {
   for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode'], ['opencode', 'claude']]) {
     for (const sandbox of [true, false]) {
-      for (const defaultBranch of [undefined, 'main']) {
-        const { run, read } = project(t);
-        const args = [
-          ...harnesses,
-          ...(sandbox ? [] : [OPTION]),
-          ...(defaultBranch === undefined ? [] : [BRANCH, defaultBranch]),
-        ];
+      for (const orchestrator of [true, false]) {
+        for (const defaultBranch of [undefined, 'main']) {
+          const { run, read } = project(t);
+          const args = [
+            ...harnesses,
+            ...(sandbox ? [] : [OPTION]),
+            ...(orchestrator ? [] : [NO_ORCHESTRATOR]),
+            ...(defaultBranch === undefined ? [] : [BRANCH, defaultBranch]),
+          ];
 
-        const result = run('init', ...args);
+          const result = run('init', ...args);
 
-        assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
-        const expected = kitSettingsText({
-          defaultBranch: defaultBranch ?? 'master',
-          harnesses: KIT_ORDER.filter((harness) => harnesses.includes(harness)),
-          sandbox,
-        });
-        assert.equal(read('agentrite.json'), expected, args.join(' '));
-        assert.equal(result.stdout.split('\n')[0], 'wrote agentrite.json');
+          assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+          const expected = kitSettingsText({
+            defaultBranch: defaultBranch ?? 'master',
+            harnesses: KIT_ORDER.filter((harness) => harnesses.includes(harness)),
+            sandbox,
+            ...(orchestrator ? {} : { orchestrator: false }),
+          });
+          assert.equal(read('agentrite.json'), expected, args.join(' '));
+          assert.equal(result.stdout.split('\n')[0], 'wrote agentrite.json');
+        }
       }
     }
   }
@@ -1146,7 +1188,15 @@ test('init with no argument and sandbox false asks for no name and reads no lock
 test('init given an argument in a project with an agentrite.json refuses, and writes nothing', (t) => {
   const valid = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
   for (const settings of [valid, 'not json']) {
-    for (const args of [['claude'], [OPTION], [BRANCH, 'main'], ['claude', OPTION, BRANCH, 'main'], ['opencode']]) {
+    for (const args of [
+      ['claude'],
+      [OPTION],
+      [NO_ORCHESTRATOR],
+      [BRANCH, 'main'],
+      ['claude', OPTION, BRANCH, 'main'],
+      ['claude', NO_ORCHESTRATOR],
+      ['opencode'],
+    ]) {
       const { base, run } = project(t);
       writeFileSync(join(base, 'agentrite.json'), settings);
       const before = snapshot(base);
@@ -1663,5 +1713,48 @@ test('init with no argument in a project whose agentrite.json lacks bell, or hol
     assert.equal(result.stderr, `agentrite: agentrite.json: bell is ${found}. It must hold true or false\n`);
     assert.deepEqual(snapshot(base), before);
     assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), text);
+  }
+});
+
+// Unit 0065, R2
+test('init given harnesses writes the kit default definition as orchestrator, false with --no-orchestrator', (t) => {
+  for (const [args, value] of [
+    [['claude'], '"node_modules/agentrite/orchestrator.json"'],
+    [['opencode', OPTION], '"node_modules/agentrite/orchestrator.json"'],
+    [['claude', NO_ORCHESTRATOR], 'false'],
+    [[NO_ORCHESTRATOR, OPTION, 'opencode', NO_ORCHESTRATOR], 'false'],
+  ]) {
+    const { run, read } = project(t);
+
+    const result = run('init', ...args);
+
+    assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+    const standards = /^ {2}"standards": "node_modules\/agentrite\/standards\.md",\n/.source;
+    assert.match(read('agentrite.json'), new RegExp(`${standards} {2}"orchestrator": ${value},\n`, 'm'));
+  }
+});
+
+// Unit 0065, R3
+test('init with no argument in a project whose agentrite.json lacks orchestrator refuses it, naming the key', (t) => {
+  const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
+  for (const [orchestrator, found] of [
+    [undefined, 'missing'],
+    [true, 'true'],
+  ]) {
+    const { base, run } = project(t);
+    const text = `${JSON.stringify({ ...settings, orchestrator }, null, 2)}\n`;
+    writeFileSync(join(base, 'agentrite.json'), text);
+    const before = snapshot(base);
+
+    const result = run('init');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      `agentrite: agentrite.json: orchestrator is ${found}. It must hold false, for a project that does not use the ` +
+        'orchestrator, or the path of a file, relative to the project root, that does not lead outside the project\n',
+    );
+    assert.deepEqual(snapshot(base), before);
   }
 });

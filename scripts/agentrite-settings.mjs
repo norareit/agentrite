@@ -10,7 +10,13 @@ export const SETTINGS_FILE = 'agentrite.json';
  * @typedef {Record<string, string>} RoleFiles The path of each role's file: the four roles in the order of
  *   `ROLE_NAMES` and then any roles of the project's own, in the order of the file.
  * @typedef {{
- *   defaultBranch: string, harnesses: string[], sandbox: boolean, bell: boolean, standards: string, roles: RoleFiles
+ *   defaultBranch: string,
+ *   harnesses: string[],
+ *   sandbox: boolean,
+ *   bell: boolean,
+ *   standards: string,
+ *   orchestrator: string | false,
+ *   roles: RoleFiles,
  * }} Settings
  */
 
@@ -52,6 +58,11 @@ const KEYS = [
   { name: 'sandbox', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'bell', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'standards', holds: isProjectPath, must: PATH_MUST },
+  {
+    name: 'orchestrator',
+    holds: (value) => value === false || isProjectPath(value),
+    must: `false, for a project that does not use the orchestrator, or ${PATH_MUST}`,
+  },
   {
     name: 'roles',
     holds: (value) => typeof value === 'object' && value !== null && !Array.isArray(value),
@@ -101,9 +112,9 @@ export function parseSettings(text) {
   const values = /** @type {Record<string, unknown>} */ (parsed);
   for (const key of KEYS) checkKey(values, key);
 
-  const { defaultBranch, harnesses, sandbox, bell, standards } = /** @type {Settings} */ (parsed);
+  const { defaultBranch, harnesses, sandbox, bell, standards, orchestrator } = /** @type {Settings} */ (parsed);
   const roles = parseRoles(/** @type {Record<string, unknown>} */ (values.roles));
-  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox, bell, standards, roles };
+  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox, bell, standards, orchestrator, roles };
 }
 
 /**
@@ -194,8 +205,8 @@ function checkRoleName(name) {
 
 /**
  * Throws, naming the key and the path, for the first path of `settings` that names no regular file under `root`,
- * `standards` first and then each role in its order. Symbolic links are followed, so that a kit linked into
- * `node_modules` is taken.
+ * `standards` first, then `orchestrator` when it is a path, and then each role in its order. Symbolic links are
+ * followed, so that a kit linked into `node_modules` is taken.
  *
  * @param {string} root
  * @param {Settings} settings
@@ -203,6 +214,7 @@ function checkRoleName(name) {
 export function checkSettingsFiles(root, settings) {
   const paths = [
     ['standards', settings.standards],
+    ...(settings.orchestrator === false ? [] : [['orchestrator', settings.orchestrator]]),
     ...Object.entries(settings.roles).map(([name, path]) => [`roles.${name}`, path]),
   ];
   for (const [key, path] of paths) {
@@ -233,7 +245,7 @@ function isRegularFile(path) {
  * @param {Settings} settings
  * @returns {string}
  */
-export function settingsText({ defaultBranch, harnesses, sandbox, bell, standards, roles }) {
+export function settingsText({ defaultBranch, harnesses, sandbox, bell, standards, orchestrator, roles }) {
   const list = harnesses.map((harness) => JSON.stringify(harness)).join(', ');
   const roleLines = Object.entries(roles).map(([name, path]) => `    ${JSON.stringify(name)}: ${JSON.stringify(path)}`);
   return [
@@ -243,6 +255,7 @@ export function settingsText({ defaultBranch, harnesses, sandbox, bell, standard
     `  "sandbox": ${JSON.stringify(sandbox)},`,
     `  "bell": ${JSON.stringify(bell)},`,
     `  "standards": ${JSON.stringify(standards)},`,
+    `  "orchestrator": ${JSON.stringify(orchestrator)},`,
     '  "roles": {',
     roleLines.join(',\n'),
     '  }',

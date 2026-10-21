@@ -102,31 +102,38 @@ function usage() {
 }
 
 const NO_SANDBOX = '--no-sandbox';
+const NO_ORCHESTRATOR = '--no-orchestrator';
 const DEFAULT_BRANCH = '--default-branch';
 
 // Its two forms: the one a project with no settings file is set up with, and the one that reads the file.
 const INIT_FORM =
-  `usage: agentrite init [${NO_SANDBOX}] [${DEFAULT_BRANCH} <name>] ${HARNESS_NAMES.join(' | ')}\n` +
+  `usage: agentrite init [${NO_SANDBOX}] [${NO_ORCHESTRATOR}] [${DEFAULT_BRANCH} <name>] ` +
+  `${HARNESS_NAMES.join(' | ')}\n` +
   '       agentrite init';
 
 /**
- * What `init` is given: the harnesses, each once, in the order they were given, whether the sandbox is wanted, the
- * default branch when one was named, and whether any argument was given at all. The options stand at any place among
- * the harnesses and are told apart from one by an exact match, so `--no-sandbox=1` is an unknown harness. The word
- * after `--default-branch` is the name whatever it is, and the last name given counts.
+ * What `init` is given: the harnesses, each once, in the order they were given, whether the sandbox and the
+ * orchestrator are wanted, the default branch when one was named, and whether any argument was given at all. The
+ * options stand at any place among the harnesses and are told apart from one by an exact match, so `--no-sandbox=1`
+ * is an unknown harness. The word after `--default-branch` is the name whatever it is, and the last name given counts.
  *
  * @param {string[]} args
- * @returns {{ harnesses: string[], sandbox: boolean, defaultBranch: string | undefined, given: boolean }}
+ * @returns {{
+ *   harnesses: string[], sandbox: boolean, orchestrator: boolean, defaultBranch: string | undefined, given: boolean
+ * }}
  */
 function parseInit(args) {
   /** @type {string[]} */ const harnesses = [];
   let sandbox = true;
+  let orchestrator = true;
   /** @type {string | undefined} */ let defaultBranch;
 
   for (let index = 0; index < args.length; index += 1) {
     const word = args[index];
     if (word === NO_SANDBOX) {
       sandbox = false;
+    } else if (word === NO_ORCHESTRATOR) {
+      orchestrator = false;
     } else if (word === DEFAULT_BRANCH) {
       index += 1;
       defaultBranch = args[index];
@@ -143,7 +150,7 @@ function parseInit(args) {
     throw new Error(`${unknown.map((name) => `unknown harness: ${name}`).join(', ')}\n${INIT_FORM}`);
   }
 
-  return { harnesses: [...new Set(harnesses)], sandbox, defaultBranch, given: args.length > 0 };
+  return { harnesses: [...new Set(harnesses)], sandbox, orchestrator, defaultBranch, given: args.length > 0 };
 }
 
 /**
@@ -751,19 +758,21 @@ const INIT_WITH_SETTINGS =
 /**
  * The settings `init` writes into a project that has none: the harnesses in the kit's order, so that one set of
  * harnesses gives one file however it was typed, the template's own branch when none was named, and the template's
- * bell, standards and roles, which name the kit's own files and ring in the sandbox.
+ * bell, standards, orchestrator and roles, which name the kit's own files and ring in the sandbox. Without the
+ * orchestrator, `orchestrator` is false.
  *
- * @param {{ harnesses: string[], sandbox: boolean, defaultBranch: string | undefined }} given
+ * @param {{ harnesses: string[], sandbox: boolean, orchestrator: boolean, defaultBranch: string | undefined }} given
  * @param {import('./agentrite-settings.mjs').Settings} template
  * @returns {import('./agentrite-settings.mjs').Settings}
  */
-function settingsToWrite({ harnesses, sandbox, defaultBranch }, template) {
+function settingsToWrite({ harnesses, sandbox, orchestrator, defaultBranch }, template) {
   return {
     defaultBranch: defaultBranch ?? template.defaultBranch,
     harnesses: HARNESS_NAMES.filter((name) => harnesses.includes(name)),
     sandbox,
     bell: template.bell,
     standards: template.standards,
+    orchestrator: orchestrator ? template.orchestrator : false,
     roles: template.roles,
   };
 }

@@ -23,6 +23,7 @@
   "files": [
     "process.md",
     "standards.md",
+    "orchestrator.json",
     "CHANGELOG.md",
     "SANDBOX.md",
     "roles",
