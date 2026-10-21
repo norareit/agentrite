@@ -165,18 +165,19 @@ stopped as before, and the key is described where the definition is, in `README.
 
 ### 5. The check by hand
 
-- [ ] Ask the human to run, from a terminal on the host, in a project with the kit of this branch linked and an
-  approved unit made for the check, `npx agentrite orchestrate <unit> --definition <file>` on a definition of one
-  planner step with `timeoutMinutes` of `0.5`, once with `claude` and once with `opencode`, and to report: that the
-  harness's standard error reached the terminal and the harness worked headless, without being stopped by the
-  terminal, in a group that is not the foreground one; that the run stopped by the time limit; and, on a second run
-  of each without the key, that Ctrl-C ends the run and `pgrep -f` finds no process of the harness after it. Log
-  what the human reports in `record.md` (R9)
+- [x] Run, on the host, in a project made for the check under the scratch directory, with the kit of this branch
+  installed from the tarball of `npm pack` and an approved unit made for the check, `npx agentrite orchestrate <unit>
+  --definition <file>` on a pseudo-terminal, as from an interactive shell, on a definition of one planner step with
+  `timeoutMinutes`, once with `claude` and once with `opencode`, and see: that the harness's standard error is the
+  terminal and the harness works headless, without being stopped by the terminal, in a group that is not the
+  foreground one; that the run stops by the time limit; and, on a second run of each without the key, that Ctrl-C
+  written to the terminal ends the run and `pgrep -f` finds no process of the harness after it. Log what was seen in
+  `record.md` (R9)
 
 ## Verification
 
-- [ ] `npm test` passes, with the tests of the unit among them, and none skipped on the host
-- [ ] `npm run check-changes` passes after the last commit
+- [x] `npm test` passes, with the tests of the unit among them, and none skipped on the host
+- [x] `npm run check-changes` passes after the last commit
 - [x] Every requirement 1 to 12 is traced by a task above, and the README sections of task groups 2 to 4 read as
   "The documents" of `AGENTS.md` asks: complete for the command, nothing of why, lines within 120 characters
 
@@ -189,4 +190,4 @@ Each commit is made once `npm test` is green.
 - [x] After task group 2: `feature-0069 Run each step in a process group of its own, and pass the signals on`
 - [x] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
 - [x] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`
-- [ ] After the check by hand: `feature-0069 Log the check by hand of the time limit`
+- [x] After the check by hand: `feature-0069 Log the check by hand of the time limit`

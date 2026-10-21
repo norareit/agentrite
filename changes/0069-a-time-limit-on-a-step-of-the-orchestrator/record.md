@@ -44,5 +44,21 @@ timestamp: 2026-10-21T14:18:50Z
   before it, `a unit run and its variants run at once` of `tests/sandbox-variant.test.mjs` failed once, and once in
   three runs of that file alone on this branch; it passed in six more runs of that file alone, on this branch and on
   `master` each. It loads no file this unit changes, and was not looked into further
+- 2026-10-21T19:33:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision that the
+  check by hand is the implementer's, as that of 0065 was, and not the human's, made it so in task 5 of `plan.md` and
+  ran it. A project under the scratch directory held the kit of `852d9b2` from the tarball of `npm pack`, the
+  harnesses of `init --no-sandbox claude opencode` and the approved unit `0001-check`. Each run was
+  `npx agentrite orchestrate 0001 --definition <file>`, started by a script on a pseudo-terminal of its own, as an
+  interactive shell starts it, with Claude Code 2.1.306 and OpenCode 1.19.3. With a planner step of `timeoutMinutes`
+  of `0.25`, on `claude-opus-5-5` and on `openai/gpt-6.1-sol`, each run exited 3 after 15 seconds, the line after the
+  step and the end report saying that it ran out of time and past its limit of 0.25 minutes, that the harness gave
+  no final response, and `pgrep -f` found no process of the harness after it. Three seconds into each step, the
+  harness was in state `S` in the session and group of its `agentrite run`, with no controlling terminal, and its
+  standard error was the pseudo-terminal, which the command held as its controlling terminal. The Claude Code
+  session of the run that ran out of time is in `state.json` and in the harness's own logs, with 11 tool uses, and
+  OpenCode lists sessions of its runs, titled from the unit. Without the key, Ctrl-C written to the terminal 12
+  seconds into the step ended the run by `SIGINT` with each harness, and `pgrep -f` found no process of the harness
+  after it. `npm test` on the tree of this entry, with its own code that of `852d9b2`, reports 931 tests, all of
+  which pass and none skipped
 
 ## Amendments
