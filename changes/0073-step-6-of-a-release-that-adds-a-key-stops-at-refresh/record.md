@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-21T20:47:18Z
 ---
 
@@ -15,5 +15,6 @@ timestamp: 2026-10-21T20:47:18Z
   instructions, the record of task 0062, and "Updating a project to a newer kit" of `README.md`. The observed run is the
   one task 0072 records. Did not run the new order, which requirement 5 asks of the implementer. Wrote `spec.md`. The
   status is `draft`
+- 2026-10-21T23:11:52Z [human] approved the spec. The status is `approved`
 
 ## Amendments
