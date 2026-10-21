@@ -51,19 +51,19 @@ const blocked = () => done({ findings: [BLOCKING, MINOR] });
 const clean = () => done({ findings: [MINOR] });
 
 // Runs `definition` with effects whose `run` gives the results listed, in turn, and records what it is given.
-function runWith(definition, results) {
+async function runWith(definition, results) {
   const calls = [];
   const queue = [...results];
   const effects = {
     started: (planned) => calls.push(['started', planned]),
-    run: (planned) => {
+    run: async (planned) => {
       calls.push(['run', planned]);
       assert.ok(queue.length > 0, `step ${planned.number} ran, and no result was listed for it`);
       return { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 1000, ...queue.shift() };
     },
     ended: (ran) => calls.push(['ended', ran]),
   };
-  const outcome = orchestrate(definition, effects);
+  const outcome = await orchestrate(definition, effects);
   const planned = calls.filter(([kind]) => kind === 'run').map(([, step]) => step);
   return { ...outcome, calls, planned, left: queue.length };
 }
@@ -73,8 +73,8 @@ const summary = (planned) =>
 
 // R12, R19, R20
 
-test('the default with no blocking finding at the first review runs steps 0 to 2 and ends complete', () => {
-  const run = runWith(DEFAULT, [done(), done(), clean()]);
+test('the default with no blocking finding at the first review runs steps 0 to 2 and ends complete', async () => {
+  const run = await runWith(DEFAULT, [done(), done(), clean()]);
   assert.deepEqual(summary(run.planned), [
     [0, 'planner', '-'],
     [1, 'implementer', '1/3'],
@@ -93,31 +93,34 @@ test('the default with no blocking finding at the first review runs steps 0 to 2
   assert.equal(run.ran.length, 3);
 });
 
-test('the default with blocking findings at the first two reviews runs seven steps, and at all three runs out', () => {
-  const seven = runWith(DEFAULT, [done(), done(), blocked(), done(), blocked(), done(), clean()]);
-  assert.equal(seven.planned.length, 7);
-  assert.deepEqual(seven.end, { kind: 'complete' });
-  assert.deepEqual(summary(seven.planned).slice(5), [
-    [5, 'implementer', '3/3'],
-    [6, 'reviewer', '3/3'],
-  ]);
+test(
+  'the default with blocking findings at the first two reviews runs seven steps, and at all three runs out',
+  async () => {
+    const seven = await runWith(DEFAULT, [done(), done(), blocked(), done(), blocked(), done(), clean()]);
+    assert.equal(seven.planned.length, 7);
+    assert.deepEqual(seven.end, { kind: 'complete' });
+    assert.deepEqual(summary(seven.planned).slice(5), [
+      [5, 'implementer', '3/3'],
+      [6, 'reviewer', '3/3'],
+    ]);
 
-  const out = runWith(DEFAULT, [done(), done(), blocked(), done(), blocked(), done(), blocked()]);
-  assert.equal(out.planned.length, 7);
-  assert.equal(out.end.kind, 'ran-out');
-  assert.equal(out.end.rounds, 3);
-  assert.equal(out.end.ran.planned.number, 6);
-  assert.equal(exitStatus(out.end), 3);
-});
+    const out = await runWith(DEFAULT, [done(), done(), blocked(), done(), blocked(), done(), blocked()]);
+    assert.equal(out.planned.length, 7);
+    assert.equal(out.end.kind, 'ran-out');
+    assert.equal(out.end.rounds, 3);
+    assert.equal(out.end.ran.planned.number, 6);
+    assert.equal(exitStatus(out.end), 3);
+  },
+);
 
-test('a repeat without until runs all its rounds, whatever the findings, and then the step after it', () => {
+test('a repeat without until runs all its rounds, whatever the findings, and then the step after it', async () => {
   const definition = {
     steps: [
       { repeat: { times: 2, steps: [{ role: 'reviewer', harness: 'opencode', model: 'm' }] } },
       { role: 'planner', harness: 'claude', model: 'm' },
     ],
   };
-  const run = runWith(definition, [blocked(), blocked(), done()]);
+  const run = await runWith(definition, [blocked(), blocked(), done()]);
   assert.deepEqual(summary(run.planned), [
     [0, 'reviewer', '1/2'],
     [1, 'reviewer', '2/2'],
@@ -126,7 +129,7 @@ test('a repeat without until runs all its rounds, whatever the findings, and the
   assert.deepEqual(run.end, { kind: 'complete' });
 });
 
-test('a repeat with until that holds at once goes on with the item after it', () => {
+test('a repeat with until that holds at once goes on with the item after it', async () => {
   const definition = {
     steps: [
       {
@@ -139,7 +142,7 @@ test('a repeat with until that holds at once goes on with the item after it', ()
       { role: 'planner', harness: 'claude', model: 'm' },
     ],
   };
-  const run = runWith(definition, [clean(), done()]);
+  const run = await runWith(definition, [clean(), done()]);
   assert.deepEqual(summary(run.planned), [
     [0, 'reviewer', '1/3'],
     [1, 'planner', '-'],
@@ -148,42 +151,42 @@ test('a repeat with until that holds at once goes on with the item after it', ()
 });
 
 // The review's finding S1: an outcome in a blockquote lets the run go on.
-test('a step that gives its outcome in a blockquote does not stop the run', () => {
+test('a step that gives its outcome in a blockquote does not stop the run', async () => {
   const quoted = (outcome) => ({ response: responseOf(outcome).replace(/^/gm, '> ') });
-  const run = runWith(DEFAULT, [quoted(DONE), quoted(DONE), quoted({ ...DONE, findings: [MINOR] })]);
+  const run = await runWith(DEFAULT, [quoted(DONE), quoted(DONE), quoted({ ...DONE, findings: [MINOR] })]);
   assert.equal(run.planned.length, 3);
   assert.deepEqual(run.end, { kind: 'complete' });
 });
 
 // The delta review's finding S2: a quoted block left open does not hide the outcome after it.
-test('a step whose quoted block is left open before its outcome does not stop the run', () => {
+test('a step whose quoted block is left open before its outcome does not stop the run', async () => {
   const after = (outcome) => ({ response: `> ${FENCE}bash\n> npm test\n\n${responseOf(outcome)}` });
-  const run = runWith(DEFAULT, [after(DONE), after(DONE), after({ ...DONE, findings: [MINOR] })]);
+  const run = await runWith(DEFAULT, [after(DONE), after(DONE), after({ ...DONE, findings: [MINOR] })]);
   assert.equal(run.planned.length, 3);
   assert.deepEqual(run.end, { kind: 'complete' });
 });
 
 // R18, R19: stopWhen, and the step judged before the repeat.
 
-test('stopWhen on a step outside a repeat stops after it at a blocking finding, and not without one', () => {
+test('stopWhen on a step outside a repeat stops after it at a blocking finding, and not without one', async () => {
   const definition = {
     steps: [
       { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' },
       { role: 'planner', harness: 'claude', model: 'm' },
     ],
   };
-  const stopped = runWith(definition, [blocked()]);
+  const stopped = await runWith(definition, [blocked()]);
   assert.equal(stopped.planned.length, 1);
   assert.equal(stopped.end.kind, 'stopped');
   assert.equal(stopped.end.by, 'stopWhen');
   assert.equal(exitStatus(stopped.end), 3);
 
-  const going = runWith(definition, [clean(), done()]);
+  const going = await runWith(definition, [clean(), done()]);
   assert.equal(going.planned.length, 2);
   assert.deepEqual(going.end, { kind: 'complete' });
 });
 
-test('stopWhen on the last step of a repeat with until stops at its first blocking finding, before until', () => {
+test('stopWhen on the last step of a repeat with until stops at its first blocking finding, before until', async () => {
   const reviewer = { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' };
   const definition = {
     steps: [
@@ -196,7 +199,7 @@ test('stopWhen on the last step of a repeat with until stops at its first blocki
       },
     ],
   };
-  const run = runWith(definition, [done(), blocked()]);
+  const run = await runWith(definition, [done(), blocked()]);
   assert.equal(run.planned.length, 2);
   assert.equal(run.end.kind, 'stopped');
   assert.equal(run.end.by, 'stopWhen');
@@ -205,7 +208,7 @@ test('stopWhen on the last step of a repeat with until stops at its first blocki
 
 // R18: each case stops at the step it holds for.
 
-test('each case of requirement 18 stops at the step it holds for and runs nothing after it', () => {
+test('each case of requirement 18 stops at the step it holds for and runs nothing after it', async () => {
   for (const [result, by] of [
     [{ status: 1, ...done() }, 'harness'],
     [{ status: null, signal: 'SIGTERM', ...done() }, 'harness'],
@@ -217,7 +220,7 @@ test('each case of requirement 18 stops at the step it holds for and runs nothin
     [done({ outcome: 'failed' }), 'failed'],
     [done({ declines: [{ finding: 'S1', reason: 'It holds.' }] }), 'declines'],
   ]) {
-    const run = runWith(DEFAULT, [done(), done(), result]);
+    const run = await runWith(DEFAULT, [done(), done(), result]);
     assert.equal(run.planned.length, 3, by);
     assert.equal(run.end.kind, 'stopped', by);
     assert.equal(run.end.by, by, by);
@@ -243,41 +246,44 @@ test('of two cases that hold, the first of the order is named', () => {
   assert.equal(judgeStep({ ...step, stopWhen: undefined }, ok, reading({ ...DONE, findings: [BLOCKING] })), undefined);
 });
 
-test('a harness that exits 1 with an outcome that is done stops by harness, and its outcome is read', () => {
-  const run = runWith(DEFAULT, [{ status: 1, ...done() }]);
+test('a harness that exits 1 with an outcome that is done stops by harness, and its outcome is read', async () => {
+  const run = await runWith(DEFAULT, [{ status: 1, ...done() }]);
   assert.equal(run.end.by, 'harness');
   assert.equal(run.ran[0].reading.kind, 'outcome');
 });
 
 // R13: the sessions.
 
-test('a later step of one role and harness gets the session the earlier one returned, and another harness none', () => {
-  const definition = {
-    steps: [
-      { role: 'implementer', harness: 'claude', model: 'm' },
-      { role: 'implementer', harness: 'opencode', model: 'm' },
-      { role: 'reviewer', harness: 'claude', model: 'm' },
-      { role: 'implementer', harness: 'claude', model: 'm' },
-      { role: 'implementer', harness: 'opencode', model: 'm' },
-      { role: 'implementer', harness: 'claude', model: 'm' },
-    ],
-  };
-  const run = runWith(definition, [
-    { ...done(), session: 'claude-1' },
-    { ...done(), session: 'ses_1' },
-    { ...done(), session: 'claude-review' },
-    { ...done(), session: 'claude-2' },
-    { ...done() },
-    { ...done() },
-  ]);
-  assert.deepEqual(
-    run.planned.map(({ session }) => session),
-    [undefined, undefined, undefined, 'claude-1', 'ses_1', 'claude-2'],
-  );
-});
+test(
+  'a later step of one role and harness gets the session the earlier one returned, and another harness none',
+  async () => {
+    const definition = {
+      steps: [
+        { role: 'implementer', harness: 'claude', model: 'm' },
+        { role: 'implementer', harness: 'opencode', model: 'm' },
+        { role: 'reviewer', harness: 'claude', model: 'm' },
+        { role: 'implementer', harness: 'claude', model: 'm' },
+        { role: 'implementer', harness: 'opencode', model: 'm' },
+        { role: 'implementer', harness: 'claude', model: 'm' },
+      ],
+    };
+    const run = await runWith(definition, [
+      { ...done(), session: 'claude-1' },
+      { ...done(), session: 'ses_1' },
+      { ...done(), session: 'claude-review' },
+      { ...done(), session: 'claude-2' },
+      { ...done() },
+      { ...done() },
+    ]);
+    assert.deepEqual(
+      run.planned.map(({ session }) => session),
+      [undefined, undefined, undefined, 'claude-1', 'ses_1', 'claude-2'],
+    );
+  },
+);
 
-test('started and ended are called once each per step, in order, ended with the reading and the stop', () => {
-  const run = runWith(DEFAULT, [done(), done(), clean()]);
+test('started and ended are called once each per step, in order, ended with the reading and the stop', async () => {
+  const run = await runWith(DEFAULT, [done(), done(), clean()]);
   assert.deepEqual(
     run.calls.map(([kind, value]) => [kind, kind === 'ended' ? value.planned.number : value.number]),
     [
@@ -386,27 +392,30 @@ const WHERE_LINES = [
   "The reviewer's findings are under .reviews/0029-x/.",
 ];
 
-function reportOf(results, definition = DEFAULT, where = WHERE) {
-  const run = runWith(definition, results);
+async function reportOf(results, definition = DEFAULT, where = WHERE) {
+  const run = await runWith(definition, results);
   return endReport(run.ran, run.end, where).split('\n');
 }
 
-test('the report of a run that ran every item gives the table, the line of the end, the summary and where', () => {
-  const lines = reportOf([done(), done(), done({ summary: 'Reviewed it.', findings: [MINOR] })]);
-  assert.deepEqual(lines.slice(3), [
-    '',
-    'The run ran every item of the definition to its end.',
-    'Summary: Reviewed it.',
-    ...WHERE_LINES,
-    '',
-  ]);
-  assert.match(lines[0], /^0 {2}planner {6}claude {4}claude-opus-5-5 {5}0m 01s$/);
-});
+test(
+  'the report of a run that ran every item gives the table, the line of the end, the summary and where',
+  async () => {
+    const lines = await reportOf([done(), done(), done({ summary: 'Reviewed it.', findings: [MINOR] })]);
+    assert.deepEqual(lines.slice(3), [
+      '',
+      'The run ran every item of the definition to its end.',
+      'Summary: Reviewed it.',
+      ...WHERE_LINES,
+      '',
+    ]);
+    assert.match(lines[0], /^0 {2}planner {6}claude {4}claude-opus-5-5 {5}0m 01s$/);
+  },
+);
 
-test('the report of a repeat that ran out gives the open blocking findings and the rounds', () => {
+test('the report of a repeat that ran out gives the open blocking findings and the rounds', async () => {
   const findings = [BLOCKING, MINOR, { ...BLOCKING, id: 'S2', summary: 'R2' }];
   const last = done({ summary: 'Reviewed again.', findings });
-  const lines = reportOf([done(), done(), blocked(), done(), blocked(), done(), last]);
+  const lines = await reportOf([done(), done(), blocked(), done(), blocked(), done(), last]);
   assert.deepEqual(lines.slice(8), [
     'Step 6 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.',
     'Summary: Reviewed again.',
@@ -418,9 +427,9 @@ test('the report of a repeat that ran out gives the open blocking findings and t
   ]);
 });
 
-test('the report of a stop by stopWhen gives the open blocking findings', () => {
+test('the report of a stop by stopWhen gives the open blocking findings', async () => {
   const definition = { steps: [{ role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' }] };
-  const lines = reportOf([blocked()], definition);
+  const lines = await reportOf([blocked()], definition);
   assert.deepEqual(lines.slice(2), [
     'Step 0 stopped the run: it holds stopWhen "blocking-findings", and a finding of its outcome blocks.',
     'Summary: Did it.',
@@ -431,14 +440,14 @@ test('the report of a stop by stopWhen gives the open blocking findings', () => 
   ]);
 });
 
-test('the report of a stop for the human gives the questions and the proposed declines', () => {
+test('the report of a stop for the human gives the questions and the proposed declines', async () => {
   const asks = done({
     outcome: 'needs-human',
     summary: 'Stopped.',
     questions: ['Which branch?', 'May I add a dependency?'],
     declines: [{ finding: 'S1', reason: 'The spec allows it.' }],
   });
-  assert.deepEqual(reportOf([done(), asks]).slice(3), [
+  assert.deepEqual((await reportOf([done(), asks])).slice(3), [
     'Step 1 stopped the run: its outcome is needs-human.',
     'Summary: Stopped.',
     'Questions:',
@@ -450,45 +459,51 @@ test('the report of a stop for the human gives the questions and the proposed de
     '',
   ]);
   const declines = done({ declines: [{ finding: 'S1', reason: 'The spec allows it.' }] });
-  assert.deepEqual(reportOf([done(), declines]).slice(3, 7), [
+  assert.deepEqual((await reportOf([done(), declines])).slice(3, 7), [
     'Step 1 stopped the run: it proposes declines of findings, which the human decides.',
     'Summary: Did it.',
     'Proposed declines:',
     '  S1: The spec allows it.',
   ]);
-  assert.equal(reportOf([done(), done({ outcome: 'failed' })])[3], 'Step 1 stopped the run: its outcome is failed.');
-});
-
-test('the report of a step with no outcome of the form gives the path of its response, or that there is none', () => {
-  const where = { ...WHERE, responsePath: '.orchestrator/0029-x/2026-10-21T10:00:00Z/01-implementer.response.md' };
-  const malformed = { response: `${FENCE}json\n{"outcome": "done", "summary": "Secret."}\n${FENCE}` };
-  assert.deepEqual(reportOf([done({ summary: 'Planned.' }), malformed], DEFAULT, where).slice(3), [
-    'Step 1 stopped the run: its outcome is not of the form asked for. questions is missing. ' +
-      'It must hold a list of strings.',
-    `The final response of step 1 is at ${where.responsePath}.`,
-    ...WHERE_LINES,
-    '',
-  ]);
-  assert.deepEqual(reportOf([done(), { response: 'No block.' }], DEFAULT, where).slice(3, 5), [
-    'Step 1 stopped the run: its final response holds no block marked json.',
-    `The final response of step 1 is at ${where.responsePath}.`,
-  ]);
   assert.equal(
-    reportOf([done(), { response: `${responseOf(DONE)}${responseOf(DONE)}` }], DEFAULT, where)[3],
-    'Step 1 stopped the run: its final response holds 2 blocks marked json, not one.',
-  );
-  assert.deepEqual(reportOf([done(), { status: 1 }]).slice(3, 5), [
-    'Step 1 stopped the run: its harness exited with 1.',
-    'The harness gave step 1 no final response.',
-  ]);
-  assert.equal(
-    reportOf([done(), { status: null, signal: 'SIGTERM' }])[3],
-    'Step 1 stopped the run: its harness was ended by SIGTERM.',
+    (await reportOf([done(), done({ outcome: 'failed' })]))[3],
+    'Step 1 stopped the run: its outcome is failed.',
   );
 });
 
-test('the report of a harness that failed after it gave an outcome gives the outcome', () => {
-  assert.deepEqual(reportOf([done(), { status: 1, ...done({ summary: 'Half done.' }) }]).slice(3, 5), [
+test(
+  'the report of a step with no outcome of the form gives the path of its response, or that there is none',
+  async () => {
+    const where = { ...WHERE, responsePath: '.orchestrator/0029-x/2026-10-21T10:00:00Z/01-implementer.response.md' };
+    const malformed = { response: `${FENCE}json\n{"outcome": "done", "summary": "Secret."}\n${FENCE}` };
+    assert.deepEqual((await reportOf([done({ summary: 'Planned.' }), malformed], DEFAULT, where)).slice(3), [
+      'Step 1 stopped the run: its outcome is not of the form asked for. questions is missing. ' +
+        'It must hold a list of strings.',
+      `The final response of step 1 is at ${where.responsePath}.`,
+      ...WHERE_LINES,
+      '',
+    ]);
+    assert.deepEqual((await reportOf([done(), { response: 'No block.' }], DEFAULT, where)).slice(3, 5), [
+      'Step 1 stopped the run: its final response holds no block marked json.',
+      `The final response of step 1 is at ${where.responsePath}.`,
+    ]);
+    assert.equal(
+      (await reportOf([done(), { response: `${responseOf(DONE)}${responseOf(DONE)}` }], DEFAULT, where))[3],
+      'Step 1 stopped the run: its final response holds 2 blocks marked json, not one.',
+    );
+    assert.deepEqual((await reportOf([done(), { status: 1 }])).slice(3, 5), [
+      'Step 1 stopped the run: its harness exited with 1.',
+      'The harness gave step 1 no final response.',
+    ]);
+    assert.equal(
+      (await reportOf([done(), { status: null, signal: 'SIGTERM' }]))[3],
+      'Step 1 stopped the run: its harness was ended by SIGTERM.',
+    );
+  },
+);
+
+test('the report of a harness that failed after it gave an outcome gives the outcome', async () => {
+  assert.deepEqual((await reportOf([done(), { status: 1, ...done({ summary: 'Half done.' }) }])).slice(3, 5), [
     'Step 1 stopped the run: its harness exited with 1.',
     'Summary: Half done.',
   ]);

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { spawnSync } from 'node:child_process';
+import { spawn, spawnSync } from 'node:child_process';
 import {
   chmodSync,
   lstatSync,
@@ -1196,7 +1196,7 @@ function numberWidth(definition) {
  * @param {string} directory
  * @param {boolean} skipPermissions
  * @param {import('./agentrite-orchestrate.mjs').Planned} planned
- * @returns {import('./agentrite-orchestrate.mjs').Result}
+ * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
 function runStep(root, directory, skipPermissions, { step, round, session }) {
   const headless = HEADLESS[step.harness];
@@ -1217,24 +1217,24 @@ function runStep(root, directory, skipPermissions, { step, round, session }) {
     '--',
     ...start.args,
   ];
-  const began = performance.now();
-  // A long session of OpenCode prints far more than the default buffer of a megabyte.
-  const result = spawnSync(process.execPath, args, {
-    cwd: root,
-    stdio: ['ignore', 'pipe', 'inherit'],
-    encoding: 'utf-8',
-    maxBuffer: Infinity,
+  return new Promise((settle, reject) => {
+    const began = performance.now();
+    let milliseconds = 0;
+    let stdout = '';
+    const child = spawn(process.execPath, args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'] });
+    child.stdout.setEncoding('utf-8');
+    child.stdout.on('data', (chunk) => {
+      stdout += chunk;
+    });
+    child.on('error', reject);
+    child.on('exit', () => {
+      milliseconds = performance.now() - began;
+    });
+    child.on('close', (status, signal) => {
+      const read = headless.read(stdout);
+      settle({ status, signal, response: read.response, session: read.session ?? start.session, milliseconds });
+    });
   });
-  const milliseconds = performance.now() - began;
-  if (result.error !== undefined) throw result.error;
-  const read = headless.read(result.stdout);
-  return {
-    status: result.status,
-    signal: result.signal,
-    response: read.response,
-    session: read.session ?? start.session,
-    milliseconds,
-  };
 }
 
 /**
@@ -1244,9 +1244,9 @@ function runStep(root, directory, skipPermissions, { step, round, session }) {
  *
  * @param {string} root
  * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
- * @returns {number}
+ * @returns {Promise<number>}
  */
-function orchestrateCommand(root, { unit, definition: given, skipPermissions }) {
+async function orchestrateCommand(root, { unit, definition: given, skipPermissions }) {
   const settings = readSettings(root);
   const { path, text, definition } = readDefinition(root, given, settings);
   const directory = resolveUnit(unit, changeDirectories(root));
@@ -1266,7 +1266,7 @@ function orchestrateCommand(root, { unit, definition: given, skipPermissions }) 
   write('definition.json', text);
   writeState(null);
   /** @type {string | undefined} */ let responsePath;
-  const { ran, end } = orchestrate(definition, {
+  const { ran, end } = await orchestrate(definition, {
     started(planned) {
       const { number, item, round, index } = planned;
       at = { number, item, round: round ?? null, index: index ?? null };
@@ -1302,13 +1302,13 @@ function orchestrateCommand(root, { unit, definition: given, skipPermissions }) 
 /**
  * A command: `form` is the one line that says how it is run, `parse` reads the arguments after the command's name,
  * and throws what to print for ones it does not take, and `run` takes the project root and what `parse` returned,
- * and returns the exit status.
+ * and returns the exit status, or a promise of it.
  *
  * @template Parsed
  * @typedef {{
  *   form: string,
  *   parse: (args: string[]) => Parsed,
- *   run: (root: string, parsed: Parsed) => number,
+ *   run: (root: string, parsed: Parsed) => number | Promise<number>,
  * }} Command
  */
 
@@ -1353,7 +1353,7 @@ if (isMain()) {
     process.exit(2);
   }
   try {
-    process.exit(COMMANDS[parsed.command].run(process.cwd(), parsed));
+    process.exit(await COMMANDS[parsed.command].run(process.cwd(), parsed));
   } catch (error) {
     console.error(`agentrite: ${messageOf(error)}`);
     process.exit(1);

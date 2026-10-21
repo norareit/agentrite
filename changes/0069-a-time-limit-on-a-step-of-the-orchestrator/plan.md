@@ -85,12 +85,12 @@ stopped as before, and the key is described where the definition is, in `README.
 
 ### 1. Asynchronous steps
 
-- [ ] In `scripts/agentrite-orchestrate.mjs`, make `orchestrate` and `runRepeat` `async`, with `run` of `Effects`
+- [x] In `scripts/agentrite-orchestrate.mjs`, make `orchestrate` and `runRepeat` `async`, with `run` of `Effects`
   typed as `(planned: Planned) => Promise<Result>` and awaited in the inner `runStep`, and `orchestrate` returning
   `Promise<{ ran: Ran[], end: End }>`. Nothing else of the file changes (R9)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, make `runWith` `async`, its `run` return a promise, and every test
+- [x] In `tests/agentrite-orchestrate.test.mjs`, make `runWith` `async`, its `run` return a promise, and every test
   that calls it `async` and await it. The suite passes unchanged otherwise (R9)
-- [ ] In `scripts/agentrite.mjs`, rewrite `runStep` with `spawn` of `node:child_process`, with the same arguments,
+- [x] In `scripts/agentrite.mjs`, rewrite `runStep` with `spawn` of `node:child_process`, with the same arguments,
   `cwd` and `stdio: ['ignore', 'pipe', 'inherit']`, collecting standard output as UTF-8, and returning a promise of
   the same `Result`: `status` and `signal` from `close`, `milliseconds` taken at `exit`, and a rejection on `error`.
   `orchestrateCommand` becomes `async` and awaits `orchestrate`. The `Command` typedef's `run` returns
@@ -185,7 +185,7 @@ stopped as before, and the key is described where the definition is, in `README.
 Each commit is made once `npm test` is green.
 
 - [x] Before the work: `feature-0069 Plan the unit`
-- [ ] After task group 1: `feature-0069 Run the steps of the orchestrator asynchronously`
+- [x] After task group 1: `feature-0069 Run the steps of the orchestrator asynchronously`
 - [ ] After task group 2: `feature-0069 Run each step in a process group of its own, and pass the signals on`
 - [ ] After task group 3: `feature-0069 Take timeoutMinutes on a step of a definition`
 - [ ] After task group 4: `feature-0069 End a step that runs past its time limit, and stop the run`

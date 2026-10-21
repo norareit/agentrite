@@ -30,7 +30,7 @@ import { optionError } from './agentrite-run.mjs';
  *   | { kind: 'ran-out', rounds: number, ran: Ran }} End
  * @typedef {{
  *   started: (planned: Planned) => void,
- *   run: (planned: Planned) => Result,
+ *   run: (planned: Planned) => Promise<Result>,
  *   ended: (ran: Ran) => void,
  * }} Effects
  */
@@ -70,9 +70,9 @@ export function judgeStep(step, { status, signal }, reading) {
  *
  * @param {Definition} definition
  * @param {Effects} effects
- * @returns {{ ran: Ran[], end: End }}
+ * @returns {Promise<{ ran: Ran[], end: End }>}
  */
-export function orchestrate(definition, effects) {
+export async function orchestrate(definition, effects) {
   /** @type {Ran[]} */ const ran = [];
   /** @type {Map<string, string>} */ const sessions = new Map();
 
@@ -81,13 +81,13 @@ export function orchestrate(definition, effects) {
    * @param {number} item
    * @param {{ at: number, of: number } | undefined} round
    * @param {number | undefined} index
-   * @returns {Ran}
+   * @returns {Promise<Ran>}
    */
-  const runStep = (step, item, round, index) => {
+  const runStep = async (step, item, round, index) => {
     const key = JSON.stringify([step.role, step.harness]);
     /** @type {Planned} */ const planned = { number: ran.length, item, round, index, step, session: sessions.get(key) };
     effects.started(planned);
-    const result = effects.run(planned);
+    const result = await effects.run(planned);
     if (result.session !== undefined) sessions.set(key, result.session);
     /** @type {Reading} */ const reading =
       result.response === undefined ? { kind: 'none' } : readOutcome(result.response);
@@ -100,8 +100,8 @@ export function orchestrate(definition, effects) {
   for (const [item, entry] of definition.steps.entries()) {
     const end =
       'repeat' in entry
-        ? runRepeat(entry.repeat, item, runStep)
-        : stoppedBy(runStep(entry, item, undefined, undefined));
+        ? await runRepeat(entry.repeat, item, runStep)
+        : stoppedBy(await runStep(entry, item, undefined, undefined));
     if (end !== undefined) return { ran, end };
   }
   return { ran, end: { kind: 'complete' } };
@@ -121,14 +121,14 @@ function stoppedBy(ran) {
  *
  * @param {import('./agentrite-definition.mjs').Repeat} repeat
  * @param {number} item
- * @param {(step: Step, item: number, round: { at: number, of: number }, index: number) => Ran} runStep
- * @returns {End | undefined}
+ * @param {(step: Step, item: number, round: { at: number, of: number }, index: number) => Promise<Ran>} runStep
+ * @returns {Promise<End | undefined>}
  */
-function runRepeat({ times, until, steps }, item, runStep) {
+async function runRepeat({ times, until, steps }, item, runStep) {
   for (let at = 1; at <= times; at += 1) {
     /** @type {Ran | undefined} */ let last;
     for (const [index, step] of steps.entries()) {
-      last = runStep(step, item, { at, of: times }, index);
+      last = await runStep(step, item, { at, of: times }, index);
       const end = stoppedBy(last);
       if (end !== undefined) return end;
     }

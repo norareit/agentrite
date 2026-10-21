@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-21T14:18:50Z
 ---
 
@@ -27,5 +27,8 @@ timestamp: 2026-10-21T14:18:50Z
   survives `exec` in a group of its own and that a re-sent signal ends Node.js by that signal once its listener is
   gone, which the plan's approach records. The plan has the command end by the signal it passed on, as it did
   before the unit, and leaves `SANDBOX.md` as it is. The status is `approved`
+- 2026-10-21T17:40:21Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0069-a-time-limit-on-a-step-of-the-orchestrator` at `d48b0e5`, began the work. The status is
+  `in-progress`
 
 ## Amendments
