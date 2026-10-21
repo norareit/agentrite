@@ -559,11 +559,11 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ## Verification
 
-- [ ] `npm test` on the host with Docker: all green, the Docker test of the mount among them (R29 to R31)
-- [ ] `./sandbox.sh --in-place npm test`: all green but the tests that need Docker, which are skipped
-- [ ] `npm run check-changes` passes on the committed work, and `spec.md` is unchanged
-- [ ] `npm pack --dry-run` lists `orchestrator.json` and the four new scripts (R4)
-- [ ] The check by hand, on the host, in a project made for it in a temporary directory outside the repository:
+- [x] `npm test` on the host with Docker: all green, the Docker test of the mount among them (R29 to R31)
+- [x] `./sandbox.sh --in-place npm test`: all green but the tests that need Docker, which are skipped
+- [x] `npm run check-changes` passes on the committed work, and `spec.md` is unchanged
+- [x] `npm pack --dry-run` lists `orchestrator.json` and the four new scripts (R4)
+- [x] The check by hand, on the host, in a project made for it in a temporary directory outside the repository:
   `package.json` of `{ "name": "orchestrator-check", "private": true }`, the working tree's kit installed with
   `npm install --save-dev <the repository's path>`, `npx agentrite init --no-sandbox claude opencode`, a role of its
   own `smoke-check` in `roles`, whose file opens as a role file must and says to change nothing, to read the round
@@ -576,7 +576,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
   run's directory. Log in `record.md` what was seen, with `claude --version` and `opencode --version`. Should an
   outcome not be read from a real harness, stop and log it, and the plan goes back to the planner (R12, R13, R15,
   R17, R21)
-- [ ] The check by hand of the kit's own roles, which shows that the planner, the implementer and the reviewer, with
+- [x] The check by hand of the kit's own roles, which shows that the planner, the implementer and the reviewer, with
   their role files, their lists of what the human must do and the reviewer's limit of two files, each end with an
   outcome the command reads. The roles commit and write, so it runs in the working copy's sandbox, on the host:
     * A project in a temporary directory outside the repository, a git repository on `master`: `package.json` of
@@ -613,4 +613,4 @@ Each commit is made once `npm test` is green.
 - [x] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
 - [x] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
 - [x] After task group 8: `feature-0065 Describe the orchestrator`
-- [ ] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`
+- [x] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`

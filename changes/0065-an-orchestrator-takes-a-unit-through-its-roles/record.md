@@ -151,3 +151,27 @@ timestamp: 2026-10-20T23:55:38Z
   `SANDBOX.md` gives the variants. A comment line of `container/sandbox.sh` from task group 7 that ran past 120
   characters is rewrapped in this commit. No line the unit adds is over 120 characters, and none holds an em dash.
   `npm test` passes: 915 tests, none skipped
+- 2026-10-21T12:18:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, verified the work on `f6d1d03`.
+  `npm test` on the Linux host with Docker passes: 915 tests, none skipped, the Docker test of the mount among them.
+  `./sandbox.sh --in-place npm test` passes: 886 tests, 29 skipped, the tests that need Docker, the new
+  `tests/sandbox-orchestrator-mount.test.mjs` among them with the variant tests' reason. `npm run check-changes`
+  passes, and `spec.md` is as it was at `a57c7ab`. `npm pack --dry-run` lists `orchestrator.json` and the four new
+  scripts. The first check by hand ran on the host with Claude Code 2.1.306 and OpenCode 1.19.3, in a project under
+  the scratch directory with the working tree's kit linked by `npm install --save-dev`, a role `smoke-check` of its
+  own and the definition of the plan, given with `--definition`: the run exited 0 after five steps, steps 0 and 1 on
+  `claude-haiku-5-5` and step 2 on `opencode/big-pickle` in round 1, steps 3 and 4 in round 2, the review of round 1
+  giving the blocking finding `T1` and that of round 2 none. `state.json` named one Claude Code session and one
+  OpenCode session; the Claude Code session's log holds the three prompts of steps 0, 1 and 3, the last two with
+  their rounds, and `opencode export` of the OpenCode session holds the two prompts of steps 2 and 4, with rounds 1
+  and 2. Each step's outcome is in the run's directory as `00-smoke-check.outcome.json` to
+  `04-smoke-check.outcome.json`. The second check by hand ran the default definition, as `orchestrator` names it,
+  with the kit's own roles, in a project under the scratch directory with the working tree's kit installed from the
+  tarball of `npm pack`, by `./sandbox-dev.sh --workdir <project> npx agentrite orchestrate 0001 --skip-permissions`,
+  with Claude Code 2.1.306 and OpenCode 1.19.3 in the sandbox, on the feature `0001-greet`, approved and committed on
+  `master`. It exited 0 after three steps: the planner on `claude-opus-5-5` in 0m 25s, the implementer on
+  `claude-sonnet-5-5` in 0m 30s and the reviewer on `openai/gpt-6.1-sol` in 0m 55s, whose review had no finding, so
+  the repeat ended after its first round. No step stopped the run for a missing, a second or a malformed outcome.
+  The roles cut `feature-0001-greet` and committed the plan, the code and the record on it; the reviewer wrote its
+  review, `.reviews/0001-greet/review-20261021T121726Z.md`, and its entry in `record.md`, which it left uncommitted,
+  and no other file. Each step's outcome is in the run's directory. Every task of `plan.md` is ticked. The status
+  stays `in-progress`: the review is done elsewhere
