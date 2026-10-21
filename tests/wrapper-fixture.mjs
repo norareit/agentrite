@@ -1,9 +1,22 @@
 // The host the two wrapper tests run the wrapper on: a `bin` directory that is the whole PATH, so that no test
 // depends on which harnesses the host that runs the suite has, or at which version.
 import assert from 'node:assert/strict';
-import { chmodSync, existsSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import {
+  chmodSync,
+  copyFileSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  readFileSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import { homedir } from 'node:os';
 import { basename, delimiter, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
 
 // What the fake harnesses print, in the two forms the real commands use. The versions are ones no release of either
 // harness has, so that no test comes to depend on what the registry holds.
@@ -378,4 +391,57 @@ exec "${docker}" "$@"`,
   );
 
   return { ...host, projectBuildArgs, imageLabels, dockerCalls: linesOf(calls) };
+}
+
+const kitContainer = fileURLToPath(new URL('../container/', import.meta.url));
+const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
+const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.url), 'utf-8');
+const kitPath = 'node_modules/agentrite/container';
+
+// The branch of the unit of `containerProject`, one commit ahead of `master`.
+export const containerUnitBranch = 'task-0026-doc';
+
+// A project under a temporary directory named from `prefix`, whose unit runs start real containers: a git repository
+// on `master`, with `task-0026-doc` one commit ahead, the kit's wrapper installed under its ignored `node_modules`,
+// and the host of `containerHost`, whose containers are of the image the kit's Dockerfile builds on. Its Compose
+// project is `name`, which its containers are named after, and its clones are under `state`.
+export function containerProject(t, prefix, name) {
+  const base = temporaryDirectory(t, prefix);
+  const root = join(base, 'project');
+  const container = join(root, kitPath);
+  mkdirSync(container, { recursive: true });
+  for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
+  chmodSync(join(container, 'sandbox.sh'), 0o755);
+  cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
+  copyKitInstructions(join(container, '..'));
+  writeFileSync(
+    join(root, 'agentrite.json'),
+    kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true, bell: false }),
+  );
+  mkdirSync(join(root, 'sandbox'));
+  writeFileSync(join(root, 'sandbox', 'compose.project.yml'), `name: ${name}\n`);
+  writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\n');
+  const home = join(base, 'home');
+  mkdirSync(home);
+  writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
+  const image = /^FROM (\S+) AS base$/m.exec(dockerfile)?.[1];
+  assert.ok(image, 'the Dockerfile has a base stage');
+  const host = containerHost(base, [], image);
+
+  const git = (...args) =>
+    execFileSync('git', args, { cwd: root, encoding: 'utf-8', env: { HOME: home, PATH: process.env.PATH } }).trim();
+  git('init', '--quiet', '--initial-branch', 'master');
+  git('add', '.');
+  git('commit', '--quiet', '--message', 'the project');
+  git('checkout', '--quiet', '-b', containerUnitBranch);
+  writeFileSync(join(root, 'unit.md'), 'the unit\n');
+  git('add', '.');
+  git('commit', '--quiet', '--message', 'the unit');
+  git('checkout', '--quiet', 'master');
+
+  const state = join(home, '.local', 'state', 'agentrite', name);
+  const wrapper = join(container, 'sandbox.sh');
+  const environment = { HOME: home, PATH: host.bin };
+  const clone = (branch) => join(state, branch);
+  return { base, root, home, git, state, clone, wrapper, environment, host };
 }

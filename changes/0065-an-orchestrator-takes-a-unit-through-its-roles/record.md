@@ -129,3 +129,8 @@ timestamp: 2026-10-20T23:55:38Z
   end-to-end tests were written after the command's code, not before it as the plan has them; the end-to-end test of
   a Claude Code session that prints another id, left open in task group 3, is among them. `npm test` passes: 912
   tests, none skipped
+- 2026-10-21T12:08:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did task group 6, a refactoring
+  of the suite alone: the project of the variant tests moved to `containerProject(t, prefix, name)` of
+  `tests/wrapper-fixture.mjs`, with the unit's branch as `containerUnitBranch`. It takes the Compose project's name as
+  a third argument beside the plan's two, so that the variant tests keep the container names they had. The variant
+  tests pass on the host with Docker, 5 tests, none skipped, and `npm test` passes: 912 tests, none skipped

@@ -510,7 +510,7 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
 
 ### 6. A fixture for the Docker test
 
-- [ ] Move the project of `setUp` of `tests/sandbox-variant.test.mjs` to `containerProject` of
+- [x] Move the project of `setUp` of `tests/sandbox-variant.test.mjs` to `containerProject` of
   `tests/wrapper-fixture.mjs`, as the approach gives. On the host with Docker the variant tests pass as before (R31)
 
 ### 7. The mount
@@ -610,7 +610,7 @@ Each commit is made once `npm test` is green.
 - [x] Before task group 4's other tasks: `feature-0065 Let the judging of an option serve another command`
 - [x] After task group 4: `feature-0065 Run the steps of a definition in order, and judge how a run ends`
 - [x] After task group 5: `feature-0065 Add agentrite orchestrate`
-- [ ] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
+- [x] After task group 6: `feature-0065 Move the project of the variant tests to a fixture`
 - [ ] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
 - [ ] After task group 8: `feature-0065 Describe the orchestrator`
 - [ ] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`

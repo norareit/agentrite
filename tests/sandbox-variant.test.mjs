@@ -1,24 +1,15 @@
 import assert from 'node:assert/strict';
-import { execFileSync, spawn, spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { spawn, spawnSync } from 'node:child_process';
+import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { fileURLToPath } from 'node:url';
-import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
-import { containerHost } from './wrapper-fixture.mjs';
-import { temporaryDirectory } from './temporary-directory.mjs';
-
-const kitContainer = fileURLToPath(new URL('../container/', import.meta.url));
-const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
-const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.url), 'utf-8');
-const kitPath = 'node_modules/agentrite/container';
+import { containerProject, containerUnitBranch as unitBranch } from './wrapper-fixture.mjs';
 
 const dockerLacking = spawnSync('docker', ['info'], { stdio: 'ignore' }).status !== 0;
 const skip = dockerLacking
     ? 'needs Docker, which the host lacks. The sandbox holds no Docker, so run npm test on a host that has it'
     : false;
 
-const unitBranch = 'task-0026-doc';
 const variantNames = ['opus', 'gpt-6-1'];
 // Named after the process, because Docker's container names are shared by every suite that runs on the host.
 const project = `project-sandbox-${process.pid}`;
@@ -38,50 +29,13 @@ async function sleep(milliseconds) {
     await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
-// A project that is a git repository on `master`, with `task-0026-doc` one commit ahead, the kit's wrapper installed
-// under its ignored `node_modules`, and the host of `containerHost`, whose containers are of the image the kit's
-// Dockerfile builds on. `start` runs the wrapper for a run named `label` in the background, with `args` before the
-// command, and returns what it ends with; `wait` waits for the run to be in its container, and `release` lets it
-// end. Every container is removed when the test ends.
+// The project of `containerProject`, with a directory `gate` mounted in every run. `start` runs the wrapper for a
+// run named `label` in the background, with `args` before the command, and returns what it ends with; `wait` waits
+// for the run to be in its container, and `release` lets it end. Every container is removed when the test ends.
 function setUp(t) {
-    const base = temporaryDirectory(t, 'sandbox-variant-');
-    const root = join(base, 'project');
-    const container = join(root, kitPath);
-    mkdirSync(container, { recursive: true });
-    for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
-    chmodSync(join(container, 'sandbox.sh'), 0o755);
-    cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
-    copyKitInstructions(join(container, '..'));
-    writeFileSync(
-        join(root, 'agentrite.json'),
-        kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true, bell: false }),
-    );
-    mkdirSync(join(root, 'sandbox'));
-    writeFileSync(join(root, 'sandbox', 'compose.project.yml'), `name: ${project}\n`);
-    writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\n');
-    const home = join(base, 'home');
-    mkdirSync(home);
-    writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
+    const { base, root, git, state, clone, wrapper, environment } = containerProject(t, 'sandbox-variant-', project);
     const gate = join(base, 'gate');
     mkdirSync(gate);
-    const image = /^FROM (\S+) AS base$/m.exec(dockerfile)?.[1];
-    assert.ok(image, 'the Dockerfile has a base stage');
-    const host = containerHost(base, [], image);
-
-    const git = (...args) =>
-        execFileSync('git', args, { cwd: root, encoding: 'utf-8', env: { HOME: home, PATH: process.env.PATH } }).trim();
-    git('init', '--quiet', '--initial-branch', 'master');
-    git('add', '.');
-    git('commit', '--quiet', '--message', 'the project');
-    git('checkout', '--quiet', '-b', unitBranch);
-    writeFileSync(join(root, 'unit.md'), 'the unit\n');
-    git('add', '.');
-    git('commit', '--quiet', '--message', 'the unit');
-    git('checkout', '--quiet', 'master');
-
-    const state = join(home, '.local', 'state', 'agentrite', project);
-    const wrapper = join(container, 'sandbox.sh');
-    const environment = { HOME: home, PATH: host.bin };
     const running = [];
     const start = (args, label) => {
         const child = spawn(wrapper, [root, '--mount', gate, ...args, 'sh', '-c', runScript, 'sh', label], {
@@ -112,7 +66,6 @@ function setUp(t) {
             spawnSync('docker', ['rm', '-f', containerOf(branch)], { stdio: 'ignore' });
         }
     });
-    const clone = (branch) => join(state, branch);
     return { root, git, state, clone, gate, wrapper, environment, start, wait, release, runningNames, added };
 }
 
