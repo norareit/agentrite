@@ -103,7 +103,7 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 if [ $# -lt 1 ] || [ ! -d "$1" ]; then
   echo "sandbox.sh: the first argument must be the project root." >&2
   echo "A project's own sandbox.sh shim passes it; run that rather than this file." >&2
-  exit 2
+  exit 1
 fi
 root="$(cd "$1" && pwd)"
 shift
@@ -115,7 +115,7 @@ if [ ! -f "$project_compose" ]; then
   echo "project name, the image name, the egress allowlist, the resource limits and" >&2
   echo "the Playwright version, if it has one." >&2
   echo "See \"Installing it into a project\" in the kit's README.md." >&2
-  exit 2
+  exit 1
 fi
 
 # The image is built from the project root, so the build can reach the kit's files only
@@ -126,7 +126,7 @@ case "$here" in
   *)
     echo "sandbox.sh: the kit at $here is not inside the project root $root," >&2
     echo "so the image build cannot reach it. Install it as the project's dependency." >&2
-    exit 2
+    exit 1
     ;;
 esac
 export AGENTRITE_CONTAINER="${here#"$root"/}"
@@ -203,6 +203,12 @@ while [ $# -gt 0 ]; do
     --)
       shift
       break
+      ;;
+    -*)
+      echo "sandbox.sh: there is no option $1." >&2
+      echo "A unit or a command that opens with - goes after --." >&2
+      mount_forms
+      exit 2
       ;;
     *)
       break
@@ -314,7 +320,7 @@ fi
 # bell of the run it joins, whose mounts and environment docker exec inherits.
 bell=false
 if [ "$connect" -eq 0 ]; then
-  bell="$(node "$here/../scripts/agentrite-settings.mjs" "$root" bell)" || exit 2
+  bell="$(node "$here/../scripts/agentrite-settings.mjs" "$root" bell)" || exit 1
 fi
 
 # The unit's branch, found with git alone, or cut from the default branch for a unit
@@ -340,14 +346,14 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
       echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
       echo "So there is no run to connect to." >&2
     fi
-    [ "$resolved" -eq 0 ] || exit 2
+    [ "$resolved" -eq 0 ] || exit 1
   else
     branch="$(resolve_unit_branch "$root" "$unit" "$here/../scripts/agentrite-settings.mjs")" || resolved=$?
     if [ "$resolved" -ne 0 ]; then
       # A unit that names no branch, and no unit of the default branch to cut one for,
       # may be a command given without saying what to mount.
       [ "$resolved" -ne 1 ] || mount_forms
-      exit 2
+      exit 1
     fi
   fi
   unit_given="$unit"
@@ -367,7 +373,7 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
     else
       branch="$(resolve_variant_branch "$root" "$branch" "$variant")" || resolved=$?
     fi
-    [ "$resolved" -eq 0 ] || exit 2
+    [ "$resolved" -eq 0 ] || exit 1
   fi
   shift
 fi
@@ -415,7 +421,7 @@ if [ "$AGENT_UID" -eq 0 ] || [ "$AGENT_GID" -eq 0 ]; then
   echo "The sandbox's 'agent' user would then be root, defeating the sandbox." >&2
   echo "If Docker needs elevated permissions, add your user to the docker group" >&2
   echo "instead of running this with sudo." >&2
-  exit 2
+  exit 1
 fi
 
 # Whether a word has the shape of a version: three numbers separated by dots, optionally
@@ -551,7 +557,7 @@ read_merged_configuration() {
   if [ "$merged" = "refused" ]; then
     echo "sandbox.sh: $project_compose configures a service named agent." >&2
     echo "The service is named sandbox, so rename agent: under services: to sandbox: in that file." >&2
-    exit 2
+    exit 1
   fi
   {
     read -r outcome
@@ -578,7 +584,7 @@ recorded_project_dockerfile() {
   fi
 }
 
-# Refuses, with 2, an image that would start otherwise than the kit's image: one whose
+# Refuses, with 1, an image that would start otherwise than the kit's image: one whose
 # entrypoint, command, user or working directory the project's file changed. Each that
 # differs is named with both values, an empty one as none.
 refuse_changed_start() {
@@ -602,7 +608,7 @@ refuse_changed_start() {
   echo "The kit's entrypoint is what installs the firewall and drops to the agent, so nothing was started." >&2
   echo "Remove from sandbox/Dockerfile the instructions that set what differs: $named." \
     "Then start again, which builds the image anew." >&2
-  exit 2
+  exit 1
 }
 
 # A value of the image's configuration as the refusal writes it: none for one not set.
@@ -663,11 +669,11 @@ if [ "$connect" -eq 1 ]; then
   if [ "$running" -eq 1 ]; then
     echo "sandbox.sh: no run is under way for '$unit_given': the container $container_name is not running." >&2
     echo "Start one with 'sandbox.sh $unit_given'." >&2
-    exit 2
+    exit 1
   fi
   if [ "$running" -eq 2 ]; then
     echo "Nothing was run." >&2
-    exit 2
+    exit 1
   fi
   [ $# -gt 0 ] || set -- bash
   terminal=()
@@ -712,13 +718,13 @@ if [ -n "$branch" ]; then
     echo "sandbox.sh: the container $container_name is running, so a run for $branch is under way." >&2
     echo "Two runs never work on one branch. Wait for it, or stop it with 'docker stop $container_name'." >&2
     echo "To run a command beside it: 'sandbox.sh --connect $unit_given [COMMAND...]'." >&2
-    exit 2
+    exit 1
   fi
   if [ "$running" -eq 2 ]; then
     echo "Nothing was started." >&2
-    exit 2
+    exit 1
   fi
-  refuse_unlanded "$root" "$branch" "$clone" || exit 2
+  refuse_unlanded "$root" "$branch" "$clone" || exit 1
 fi
 
 # The project's own Dockerfile, when it has one, and the content it is built from. The
@@ -802,14 +808,14 @@ opencode_latest=""
 if [ -z "$claude_code_origin" ]; then
   claude_code_wanted="$claude_code_held"
   if [ "$build" -eq 1 ]; then
-    claude_code_latest="$(latest_published "Claude Code" @anthropic-ai/claude-code CLAUDE_CODE_VERSION)" || exit 2
+    claude_code_latest="$(latest_published "Claude Code" @anthropic-ai/claude-code CLAUDE_CODE_VERSION)" || exit 1
     claude_code_wanted="$claude_code_latest"
   fi
 fi
 if [ -z "$opencode_origin" ]; then
   opencode_wanted="$opencode_held"
   if [ "$build" -eq 1 ]; then
-    opencode_latest="$(latest_published "OpenCode" opencode-ai OPENCODE_VERSION)" || exit 2
+    opencode_latest="$(latest_published "OpenCode" opencode-ai OPENCODE_VERSION)" || exit 1
     opencode_wanted="$opencode_latest"
   fi
 fi

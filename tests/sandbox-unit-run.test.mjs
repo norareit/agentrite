@@ -121,7 +121,7 @@ for (const unit of [branch, '0026']) {
 test('the wrapper lists the branches an ID names when there are several, and starts nothing', (t) => {
   const { state, run, dockerCalls, npmCalls } = setUpWithBuildDue(t);
   const result = run(['0010', 'echo', 'hi']);
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.match(result.stderr, /^ {2}feature-0010-init$/m);
   assert.match(result.stderr, /^ {2}feature-0010-init2$/m);
   assert.deepEqual(dockerCalls(), []);
@@ -135,7 +135,7 @@ for (const unit of ['claude', 'feature-0031-cut-me']) {
     commitUnit({ root, git }, 'kind: feature');
     const refs = git('for-each-ref');
     const result = run([unit, 'echo', 'hi']);
-    assert.equal(result.status, 2);
+    assert.equal(result.status, 1);
     assert.ok(result.stderr.includes(`'${unit}'`), result.stderr);
     assert.ok(
       result.stderr.includes(
@@ -418,7 +418,7 @@ for (const { name, unit, arrange, says } of noCut) {
 
     const result = run([unit, 'echo', 'hi']);
 
-    assert.equal(result.status, 2, result.stderr);
+    assert.equal(result.status, 1, result.stderr);
     for (const said of says) assert.match(result.stderr, said);
     assert.doesNotMatch(result.stderr, /made on the host|sandbox\.sh: cut /);
     assert.equal(git('for-each-ref'), refs);
@@ -471,7 +471,7 @@ test('the wrapper names the default branch in what it says of a unit the branch 
 
   const result = host.run(['0099', 'echo', 'hi']);
 
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.match(result.stderr, /^main holds no unit of that number in changes\/, so there is no branch to cut\.$/m);
   assert.doesNotMatch(result.stderr, /master/);
   assert.deepEqual(host.dockerCalls(), []);
@@ -625,7 +625,7 @@ for (const unit of [branch, '0026']) {
     writeFileSync(runningContainer, '0123456789ab\n');
     const refs = git('for-each-ref');
     const result = run([unit, 'echo', 'hi']);
-    assert.equal(result.status, 2);
+    assert.equal(result.status, 1);
     assert.ok(result.stderr.includes(containerName), result.stderr);
     assert.match(result.stderr, /is running/);
     assert.ok(result.stderr.includes(`'docker stop ${containerName}'`), result.stderr);
@@ -719,7 +719,7 @@ test('the wrapper refuses a new clone while sandbox/<branch> holds commits the b
   const ahead = git('commit-tree', `${branch}^{tree}`, '-p', branch, '-m', 'an earlier run');
   git('update-ref', sandboxRef, ahead);
   const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.ok(result.stderr.includes(`sandbox/${branch}`), result.stderr);
   assert.match(result.stderr, /merge/);
   assert.deepEqual(dockerCalls(), []);
@@ -945,7 +945,7 @@ test('the wrapper starts nothing when Docker cannot say whether the container is
   const { state, run, psFails, dockerCalls, npmCalls } = setUpWithBuildDue(t);
   writeFileSync(psFails, '');
   const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
   assert.ok(result.stderr.includes(containerName), result.stderr);
   assert.deepEqual(dockerCalls(), []);
@@ -1169,9 +1169,9 @@ test('a unit run to which commands were connected lands its work and removes the
 });
 
 // What `--connect` refuses. Each on a host where a build would be due, so that a refusal that came too late
-// would show in the calls of Docker and of npm.
-function assertNothingRan(host, result) {
-  assert.equal(result.status, 2, result.stderr);
+// would show in the calls of Docker and of npm. `status` is 2 for arguments at fault and 1 for every other refusal.
+function assertNothingRan(host, result, status) {
+  assert.equal(result.status, status, result.stderr);
   assert.deepEqual(host.dockerCalls(), []);
   assert.deepEqual(host.npmCalls(), []);
   assert.equal(existsSync(host.state), false);
@@ -1181,7 +1181,7 @@ test('--connect with no unit is refused, and names --connect and its form', (t) 
   const host = setUpWithBuildDue(t);
   markRunning(host);
   const result = host.run(['--connect']);
-  assertNothingRan(host, result);
+  assertNothingRan(host, result, 2);
   assert.ok(result.stderr.includes('sandbox.sh: --connect needs a unit.\n'), result.stderr);
   assert.ok(result.stderr.includes('sandbox.sh --connect UNIT [COMMAND...]\n'), result.stderr);
 });
@@ -1193,7 +1193,7 @@ for (const unit of ['claude', '0031']) {
     commitUnit(host, 'kind: feature');
     const refs = host.git('for-each-ref');
     const result = host.run(['--connect', unit, 'echo', 'hi']);
-    assertNothingRan(host, result);
+    assertNothingRan(host, result, 1);
     assert.ok(result.stderr.includes(`sandbox.sh: '${unit}' names no local branch`), result.stderr);
     assert.ok(result.stderr.includes('So there is no run to connect to.\n'), result.stderr);
     assert.doesNotMatch(result.stderr, /cut/);
@@ -1206,7 +1206,7 @@ test('--connect 0010 is refused, and lists the branches the number names', (t) =
   const host = setUpWithBuildDue(t);
   markRunning(host);
   const result = host.run(['--connect', '0010', 'echo', 'hi']);
-  assertNothingRan(host, result);
+  assertNothingRan(host, result, 1);
   assert.match(result.stderr, /^ {2}feature-0010-init$/m);
   assert.match(result.stderr, /^ {2}feature-0010-init2$/m);
 });
@@ -1215,7 +1215,7 @@ for (const unit of [branch, '0026']) {
   test(`--connect ${unit} is refused while no container of the run is running, and names the command`, (t) => {
     const host = setUpWithBuildDue(t);
     const result = host.run(['--connect', unit, 'echo', 'hi']);
-    assertNothingRan(host, result);
+    assertNothingRan(host, result, 1);
     assert.ok(
       result.stderr.includes(
         `sandbox.sh: no run is under way for '${unit}': the container ${containerName} is not running.\n`,
@@ -1231,7 +1231,7 @@ test('--connect is refused when Docker cannot say whether the container is runni
   markRunning(host);
   writeFileSync(host.psFails, '');
   const result = host.run(['--connect', branch, 'echo', 'hi']);
-  assertNothingRan(host, result);
+  assertNothingRan(host, result, 1);
   assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
   assert.ok(result.stderr.includes('Nothing was run.\n'), result.stderr);
 });
@@ -1250,7 +1250,7 @@ for (const [option, value] of [
       const host = setUpWithBuildDue(t);
       markRunning(host);
       const result = host.run([...order([option, ...value(host.base)]), branch, 'echo', 'hi']);
-      assertNothingRan(host, result);
+      assertNothingRan(host, result, 2);
       assert.ok(
         result.stderr.includes(`sandbox.sh: --connect cannot be given together with ${option}.\n`),
         result.stderr,
@@ -1271,7 +1271,7 @@ for (const option of ['--workdir', '--mount']) {
       markRunning(host);
       const missing = join(host.base, 'not-there');
       const result = host.run([...order([option, missing]), branch, 'echo', 'hi']);
-      assertNothingRan(host, result);
+      assertNothingRan(host, result, 2);
       assert.ok(
         result.stderr.includes(`sandbox.sh: --connect cannot be given together with ${option}.\n`),
         result.stderr,
@@ -1288,7 +1288,7 @@ test('--connect is refused as root, like a run', (t) => {
   rmSync(join(host.bin, 'id'));
   writeCommand(host.bin, 'id', 'echo 0');
   const result = host.run(['--connect', branch, 'echo', 'hi']);
-  assert.equal(result.status, 2, result.stderr);
+  assert.equal(result.status, 1, result.stderr);
   assert.match(result.stderr, /sandbox\.sh: refusing to run as root/);
   assert.deepEqual(host.dockerCalls(), []);
 });
@@ -1303,7 +1303,7 @@ for (const [what, args] of [
     const { root, state, run, dockerCalls } = setUp(t);
     writeFileSync(join(root, 'sandbox', 'compose.project.yml'), 'services:\n  agent:\n    mem_limit: 8g\n');
     const result = run(args);
-    assert.equal(result.status, 2);
+    assert.equal(result.status, 1);
     assert.match(result.stderr, /^sandbox\.sh: /);
     assert.ok(result.stderr.includes(`${root}/sandbox/compose.project.yml`), result.stderr);
     assert.match(result.stderr, /service is named sandbox/);
@@ -1489,7 +1489,7 @@ test('a number that only a variant branch holds names no branch', (t) => {
   host.git('branch', 'task-0099-x--opus', 'master');
   const refs = host.git('for-each-ref');
   const result = host.run(['0099', 'echo', 'hi']);
-  assert.equal(result.status, 2, result.stderr);
+  assert.equal(result.status, 1, result.stderr);
   assert.ok(result.stderr.includes("sandbox.sh: '0099' names no local branch"), result.stderr);
   assert.equal(host.git('for-each-ref'), refs);
   assert.deepEqual(host.dockerCalls(), []);
@@ -1551,7 +1551,7 @@ test('--connect for a variant that has no branch is refused, cuts none, and name
   markRunning(host);
   const refs = host.git('for-each-ref');
   const result = host.run(['--connect', '0026', '--variant', 'nobranch', 'echo', 'hi']);
-  assertNothingRan(host, result);
+  assertNothingRan(host, result, 1);
   assert.ok(result.stderr.includes("'0026' has no variant 'nobranch'"), result.stderr);
   assert.ok(result.stderr.includes("Start one with 'sandbox.sh 0026 --variant nobranch'.\n"), result.stderr);
   assert.equal(host.git('for-each-ref'), refs);
@@ -1561,7 +1561,7 @@ test('--connect for a variant is refused while its container is not running, and
   const host = setUpWithBuildDue(t);
   host.git('branch', variantBranch, branch);
   const result = host.run(['--connect', '0026', '--variant', 'opus']);
-  assertNothingRan(host, result);
+  assertNothingRan(host, result, 1);
   assert.ok(
     result.stderr.includes(
       `sandbox.sh: no run is under way for '0026 --variant opus': the container ${variantContainer} is not running.\n`,
@@ -1574,7 +1574,7 @@ test('--connect for a variant is refused while its container is not running, and
 test('--connect with --variant and --in-place is refused', (t) => {
   const host = setUpWithBuildDue(t);
   const result = host.run(['--connect', '--in-place', '--variant', 'opus', '0026']);
-  assertNothingRan(host, result);
+  assertNothingRan(host, result, 2);
   assert.ok(result.stderr.includes('--connect cannot be given together with --in-place.'), result.stderr);
 });
 
@@ -1585,7 +1585,7 @@ test('a second run of a variant whose container is running is refused, and names
   git('branch', variantBranch, branch);
   const withVariant = git('for-each-ref');
   const result = run(['0026', '--variant', 'opus', 'echo', 'hi']);
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.ok(result.stderr.includes(variantContainer), result.stderr);
   assert.ok(result.stderr.includes(`'docker stop ${variantContainer}'`), result.stderr);
   assert.ok(result.stderr.includes("'sandbox.sh --connect 0026 --variant opus [COMMAND...]'"), result.stderr);

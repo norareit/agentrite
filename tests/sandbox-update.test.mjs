@@ -127,13 +127,13 @@ test('a project of the release before starts its sandbox after the four steps, a
   // 2. the old shim removed, the directory still named agent: the file of the new name is missing
   rmSync(join(root, 'agent.sh'));
   const missing = sandbox('--in-place', 'true');
-  assert.equal(missing.status, 2);
+  assert.equal(missing.status, 1);
   assert.ok(missing.stderr.includes(`${join(root, 'sandbox', 'compose.project.yml')} not found`), missing.stderr);
 
   // 3. the directory renamed, the service still agent: refused before anything is run
   renameSync(join(root, 'agent'), join(root, 'sandbox'));
   const refused = sandbox('--in-place', 'true');
-  assert.equal(refused.status, 2);
+  assert.equal(refused.status, 1);
   assert.match(refused.stderr, /rename agent: under services: to sandbox:/);
   assert.deepEqual(dockerCalls(), []);
 

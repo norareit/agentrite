@@ -208,7 +208,7 @@ test('a second run of a variant whose container is running is refused, and the f
         env: host.environment,
     });
 
-    assert.equal(second.status, 2, second.stderr);
+    assert.equal(second.status, 1, second.stderr);
     assert.ok(second.stderr.includes(`the container ${containerOf(`${unitBranch}--opus`)} is running`), second.stderr);
     assert.ok(host.runningNames().includes(containerOf(`${unitBranch}--opus`)), 'the first run is still running');
     host.release('opus');

@@ -98,7 +98,7 @@ function setUp(
 test('the wrapper refuses to run without a project root, naming the shim', (t) => {
   const { run, dockerCalls } = setUp(t, kitPath);
   const result = run();
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.match(result.stderr, /first argument must be the project root/);
   assert.match(result.stderr, /sandbox\.sh shim/);
   assert.deepEqual(dockerCalls(), []);
@@ -107,7 +107,7 @@ test('the wrapper refuses to run without a project root, naming the shim', (t) =
 test('the wrapper refuses a project root that is not a directory', (t) => {
   const { base, run, dockerCalls } = setUp(t, kitPath);
   const result = run(join(base, 'no-such-directory'), '--rebuild');
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.match(result.stderr, /first argument must be the project root/);
   assert.deepEqual(dockerCalls(), []);
 });
@@ -115,7 +115,7 @@ test('the wrapper refuses a project root that is not a directory', (t) => {
 test('the wrapper refuses a kit outside the project root, which the build cannot reach', (t) => {
   const { root, run, dockerCalls } = setUp(t, 'elsewhere/container');
   const result = run(root);
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.match(result.stderr, /is not inside the project root/);
   assert.match(result.stderr, /image build cannot reach it/);
   assert.deepEqual(dockerCalls(), []);
@@ -176,7 +176,7 @@ for (const options of [['--in-place'], ['--rebuild', '--in-place']]) {
     const { root, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
     writeFileSync(join(root, 'sandbox', 'compose.project.yml'), oldServiceFile);
     const result = run(root, ...options, 'true');
-    assert.equal(result.status, 2);
+    assert.equal(result.status, 1);
     assert.match(result.stderr, /^sandbox\.sh: /);
     assert.ok(result.stderr.includes(`${root}/sandbox/compose.project.yml`), result.stderr);
     assert.match(result.stderr, /service is named sandbox/);
@@ -531,7 +531,7 @@ for (const [what, arrange] of [
     rmSync(join(host.bin, 'opencode'));
     arrange(host);
     const result = host.run(host.root, '--in-place', '--rebuild', 'echo', 'hi');
-    assert.equal(result.status, 2);
+    assert.equal(result.status, 1);
     assert.equal(result.stderr, claudeNotFound);
     assert.deepEqual(host.dockerCalls(), []);
   });
@@ -548,7 +548,7 @@ test('the wrapper says nothing of the latest of one harness when that of the oth
 echo '${latestVersions.claude}'`,
   );
   const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 2);
+  assert.equal(result.status, 1);
   assert.equal(result.stderr, notFoundLines('OpenCode', 'opencode-ai', 'OPENCODE_VERSION'));
   assert.deepEqual(dockerCalls(), []);
 });
@@ -650,6 +650,40 @@ for (const [what, args] of [
     assert.deepEqual(npmCalls(), []);
   });
 }
+
+// A word that opens with - where an option stands is one the wrapper does not take. A unit or a command that opens
+// with - goes after --.
+for (const [where, args] of [
+  ['alone', []],
+  ['after --rebuild', ['--rebuild']],
+  ['after --in-place', ['--in-place']],
+  ['after --connect', ['--connect']],
+]) {
+  test(`the wrapper refuses an option it does not take ${where}, names it and --, and asks nothing`, (t) => {
+    const { root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+    rmSync(join(bin, 'claude'));
+    const result = run(root, ...args, '--frobnicate', 'echo', 'hi');
+    assert.equal(result.status, 2);
+    assert.match(result.stderr, /^sandbox\.sh: there is no option --frobnicate\.$/m);
+    assert.match(result.stderr, /goes after --\.$/m);
+    assert.match(result.stderr, /sandbox\.sh UNIT /);
+    assert.match(result.stderr, /sandbox\.sh --in-place /);
+    assert.match(result.stderr, /sandbox\.sh --workdir DIR /);
+    assert.match(result.stderr, /sandbox\.sh --connect UNIT /);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+test('the wrapper runs a command that opens with - when it follows --', (t) => {
+  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+  const result = run(root, '--in-place', '--', '--frobnicate');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(
+    dockerCalls(),
+    composeCalls(root, container, hostVersions, runCommand(root).replace(/echo hi$/, '--frobnicate')),
+  );
+});
 
 for (const option of ['--workdir', '--mount']) {
   test(`the wrapper starts nothing for a run whose ${option} names a directory that is not there`, (t) => {
@@ -888,7 +922,7 @@ for (const [form, formArgs] of startForms) {
 
       const result = run(root, ...formArgs(workdir), 'echo', 'hi');
 
-      assert.equal(result.status, 2, String(text));
+      assert.equal(result.status, 1, String(text));
       assert.equal(result.stdout, '', String(text));
       const printed = result.stderr.replace(/^agentrite: /, '').trimEnd();
       assert.ok(result.stderr.startsWith('agentrite: '), result.stderr);

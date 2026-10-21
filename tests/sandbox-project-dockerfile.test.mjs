@@ -273,7 +273,7 @@ for (const { instruction, line, differs } of [
       const { image } = project;
       project.writeProjectFile(adding(`${line}\n`));
       const assertRefused = (result) => {
-        assert.equal(result.status, 2, result.stderr);
+        assert.equal(result.status, 1, result.stderr);
         assert.deepEqual(project.runs(), []);
         for (const [what, value] of Object.entries(differs)) {
           assert.ok(
@@ -318,7 +318,7 @@ test(
     git('branch', 'task-0001-doc');
     project.writeProjectFile(adding('ENTRYPOINT ["/bin/sh"]\n'));
     const result = project.start('task-0001-doc', 'echo', 'hi');
-    assert.equal(result.status, 2, result.stderr);
+    assert.equal(result.status, 1, result.stderr);
     assert.match(result.stderr, /installs the firewall and drops to the agent/);
     assert.deepEqual(project.runs(), []);
     assert.ok(!existsSync(join(home, '.local', 'state')), 'no clone was made');

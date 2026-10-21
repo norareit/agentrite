@@ -95,7 +95,7 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   assert.equal(checkBefore.status, 1);
   assert.match(checkBefore.stderr, NAMES_CONFIG);
   const runBefore = unitRun();
-  assert.equal(runBefore.status, 2);
+  assert.equal(runBefore.status, 1);
   // Unit 0058: a start reads bell first, and says so.
   assert.match(
     runBefore.stderr,

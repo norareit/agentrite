@@ -147,6 +147,16 @@ test('the shim adds no --rebuild to a --connect that follows another option and 
   assert.deepEqual(host.dockerCalls(), []);
 });
 
+// Unit 0066, R6: the shim exits as the checkout's wrapper does, with 1 for a refusal that is not of its arguments.
+test("the shim exits 1 for a checkout whose agentrite.json is at fault, with the reader's message", (t) => {
+  const { root, run, dockerCalls } = setUp(t);
+  writeFileSync(join(root, 'agentrite.json'), '{}\n');
+  const result = run(['--in-place', 'echo', 'hi']);
+  assert.equal(result.status, 1, result.stderr);
+  assert.equal(result.stderr, 'agentrite: agentrite.json: bell is missing. It must hold true or false\n');
+  assert.deepEqual(dockerCalls(), []);
+});
+
 for (const [what, args, command] of [
   ['after --in-place', ['--in-place', 'echo', '--connect'], 'echo --connect'],
   ['after a --', ['--in-place', '--', '--connect'], '--connect'],

@@ -101,13 +101,13 @@ The change check:
 
 `./sandbox.sh`:
 
-- [ ] Add to `tests/sandbox-wrapper.test.mjs` a test that `--frobnicate` given where an option stands is refused
+- [x] Add to `tests/sandbox-wrapper.test.mjs` a test that `--frobnicate` given where an option stands is refused
   with status 2, naming `--frobnicate` and `--`, listing the forms, and asking Docker and npm nothing: given alone,
   after `--rebuild`, after `--in-place` and after `--connect`. Add one that `--in-place -- --frobnicate` runs
   `--frobnicate` as the command, as today. The first fails before the refusal is added (R5, R9)
-- [ ] In the option loop of `container/sandbox.sh`, refuse a word that opens with `-` and is none of the options,
+- [x] In the option loop of `container/sandbox.sh`, refuse a word that opens with `-` and is none of the options,
   where the loop reads it, with the message the approach gives, the forms from `mount_forms`, and exit 2 (R5)
-- [ ] Change to 1 the expected status of every test that expects 2 for a refusal the table marks 1. By file and test
+- [x] Change to 1 the expected status of every test that expects 2 for a refusal the table marks 1. By file and test
   as the tests are named today (R4, R9):
     - `tests/sandbox-wrapper.test.mjs`: "the wrapper refuses to run without a project root, naming the shim", "the
       wrapper refuses a project root that is not a directory", "the wrapper refuses a kit outside the project root,
@@ -139,17 +139,17 @@ The change check:
       its clone is made"
     - `tests/settings-update.test.mjs`: the unit run refused for a missing `agentrite.json` in "a project with the
       wrappers, the sandbox and no agentrite.json gets one in the four steps"
-- [ ] Leave at 2 the tests of the refusals the table marks 2, among them "the wrapper refuses ..., names the forms,
+- [x] Leave at 2 the tests of the refusals the table marks 2, among them "the wrapper refuses ..., names the forms,
   and asks Docker and npm nothing" of `tests/sandbox-wrapper.test.mjs`, "the forms the wrapper lists say the default
   branch, and are printed without reading the file", "the forms the wrapper lists when nothing to mount is given
   show --variant NAME", `assertVariantRefused` and its tests, among them "--variant given ... is refused", which is
   the test of `--variant` given twice, in `tests/sandbox-unit-run.test.mjs`, and "the shim adds no --rebuild to a
   --connect that follows another option and its directory" of `tests/sandbox-dev.test.mjs`. Run the sandbox suites,
   which fail now for every test changed to 1 (R5, R9)
-- [ ] In `container/sandbox.sh`, change to `exit 1` every `exit 2` the table marks 1, and the comment above
+- [x] In `container/sandbox.sh`, change to `exit 1` every `exit 2` the table marks 1, and the comment above
   `refuse_changed_start` to say it refuses with 1. Leave the return statuses of the functions as they are. Run the
   sandbox suites, which pass (R4)
-- [ ] Add to `tests/sandbox-dev.test.mjs` a test that `./sandbox-dev.sh --in-place echo hi` in a checkout whose
+- [x] Add to `tests/sandbox-dev.test.mjs` a test that `./sandbox-dev.sh --in-place echo hi` in a checkout whose
   `agentrite.json` is `{}` exits 1, with the reader's message, and calls Docker for nothing (R6)
 
 The documents:
@@ -196,6 +196,6 @@ The documents:
 - [x] `feature-0066 Plan the unit`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0066 Define mount_forms before the option loop`: the refactoring task, which changes no behavior
 - [x] `feature-0066 Refuse a second argument to the change check`: the two tasks of the change check
-- [ ] `feature-0066 Exit 1 for every refusal of the sandbox but its arguments`: the tasks of `./sandbox.sh`,
+- [x] `feature-0066 Exit 1 for every refusal of the sandbox but its arguments`: the tasks of `./sandbox.sh`,
   `sandbox-dev.sh`'s test among them
 - [ ] `feature-0066 Define the exit statuses once`: the tasks of the documents
