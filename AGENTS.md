@@ -60,6 +60,17 @@ rest is in "Commands" of [CONTRIBUTING.md](CONTRIBUTING.md#commands).
 Every command of the kit, and every command of this repository's own, follows "Exit statuses" of
 [README.md](README.md#exit-statuses). A unit that adds a command, or a status of one, does so by that section.
 
+## Ways of working
+
+* Rewrite no commit that exists, by an amend, a reset, a squash, a rebase or a replay, also when it is not pushed,
+  unless the human asked for that rewrite. The request permits that one rewrite only. Make a correction of your own
+  as a new commit, and then ask the human whether to fold it into the earlier one. Check files, as for the line
+  limit, before committing them rather than amending after
+* The review of a unit is made by another model in another harness. A session that implemented a unit hands it over
+  at `in-progress`, and neither offers the review nor starts it
+* Build a reading of a spec that is the only one that works, such as `package-lock.json` changing with
+  `package.json`, and log it in one line of `record.md`. Do not put it to the human as a decision
+
 ## Releasing
 
 `CHANGELOG.md` holds one section per release and ships in the package. A section is written when a release is made,
