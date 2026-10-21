@@ -58,5 +58,14 @@ timestamp: 2026-10-21T20:47:18Z
   check reads committed content, so its result needed a commit after that one, which the plan did not list; added
   it to the commit points of `plan.md` as `bugfix-0073 Record the final checks`. Every task of `plan.md` is ticked.
   The unit is handed over for review at `in-progress`
+- 2026-10-21T23:32:09Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of change 0073 at
+  `34ac28a31ae34eb9544b490f30743f7b846eca46`, against merge base `12f7195`. Returned no findings on any axis.
+  Saved the review in `.reviews/0073-step-6-of-a-release-that-adds-a-key-stops-at-refresh/`, in
+  `2026-10-21T233118Z-opencode-gpt-6.1-sol.md`. On the reviewed tree, `npm test` passed 934 of 934 and
+  `npm run check-changes` exited 0. Independently reproduced the old failure and the new order in an external
+  clone at `v8.0.0`: refresh and the change check exited 0, and the suite passed 934 of 934 on rerun after the
+  existing intermittent variant-test failure; that file alone passed 5 of 5. The sandbox rebuild/start was
+  omitted as R5 permits. The implementer's removed dry-run clone and its commit body could not be inspected;
+  the functional dry run and resulting file set were checked independently. Details and limits are in the review
 
 ## Amendments
