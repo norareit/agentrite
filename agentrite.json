@@ -8,6 +8,7 @@
     "specifier": "node_modules/agentrite/roles/specifier.md",
     "planner": "node_modules/agentrite/roles/planner.md",
     "implementer": "node_modules/agentrite/roles/implementer.md",
-    "reviewer": "node_modules/agentrite/roles/reviewer.md"
+    "reviewer": "node_modules/agentrite/roles/reviewer.md",
+    "spec-reviewer": "extra-roles/spec-reviewer.md"
   }
 }

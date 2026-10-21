@@ -15,3 +15,4 @@ edited by hand. To use another file, change `agentrite.json` and run `npx agentr
 * planner: [`node_modules/agentrite/roles/planner.md`](../node_modules/agentrite/roles/planner.md)
 * implementer: [`node_modules/agentrite/roles/implementer.md`](../node_modules/agentrite/roles/implementer.md)
 * reviewer: [`node_modules/agentrite/roles/reviewer.md`](../node_modules/agentrite/roles/reviewer.md)
+* spec-reviewer: [`extra-roles/spec-reviewer.md`](../extra-roles/spec-reviewer.md)

@@ -49,13 +49,13 @@ The description in the front matter, which the wrappers and `roles` show:
 
 The tests:
 
-- [ ] In `tests/repository-own-files.test.mjs`, change the test of unit 0054, requirement 24, to assert that the root
+- [x] In `tests/repository-own-files.test.mjs`, change the test of unit 0054, requirement 24, to assert that the root
   `agentrite.json` is the installed release's default file with the line
   `    "spec-reviewer": "extra-roles/spec-reviewer.md"` added after the line of `reviewer`, and a comma ending that
   line, and differs from it in nothing else, comparing the texts. Keep its assertion that `files` of `package.json`
   does not hold `agentrite.json`. Name the test for what it now checks and mark it with unit 0054, R24 and unit
   0067, R1. It fails before the tasks of the role (R1)
-- [ ] Add to the same file a test that no entry of `files` of `package.json` is `extra-roles` or a path under it,
+- [x] Add to the same file a test that no entry of `files` of `package.json` is `extra-roles` or a path under it,
   marked unit 0067, R2, and a test that `node_modules/agentrite/scripts/agentrite.mjs roles --json`, run at the
   root, lists the names `specifier`, `planner`, `implementer`, `reviewer`, `spec-reviewer` in that order, with the
   path `extra-roles/spec-reviewer.md` for the last, marked unit 0067, R1 and R3. The second fails before the tasks of
@@ -63,45 +63,45 @@ The tests:
 
 The role:
 
-- [ ] Write `extra-roles/spec-reviewer.md`, opening with the front matter of a role file in the folded form, holding
+- [x] Write `extra-roles/spec-reviewer.md`, opening with the front matter of a role file in the folded form, holding
   the description of "Approach" and nothing else, then a heading `# Spec reviewer` (R2, R4)
-- [ ] In it, the opening: that it reviews the documents of a unit before the human approves them and reports, and
+- [x] In it, the opening: that it reviews the documents of a unit before the human approves them and reports, and
   changes nothing under review; its input, the unit directory; its output, its findings in its response and in its
   findings file, and one entry in `record.md`; then the instruction to read `process.md`, linked as
   `../node_modules/agentrite/process.md`, and the project's standards, the file `.agentrite/instructions.md` names,
   first, worded as the kit's role files word it, and to read the specifier's role file that
   `.agentrite/instructions.md` names (R5, R7)
-- [ ] A section on when it runs: after the specifier and before the human approves, on a unit whose status in
+- [x] A section on when it runs: after the specifier and before the human approves, on a unit whose status in
   `record.md` is `draft`; on a unit of another status it says the status, does nothing else and stops, writing no
   findings file and no record entry; it sets no status, which stays with the four roles (R6)
-- [ ] A section on what it judges against: the specifier's role file for what a spec, and a task's record, must hold;
+- [x] A section on what it judges against: the specifier's role file for what a spec, and a task's record, must hold;
   `process.md` and the standards; and the repository as it is on the default branch for every statement of what
   exists today, as a command, an option, a file, a key of `agentrite.json` or how a harness behaves, which it checks
   by reading the files and running the commands that show it. Where it cannot check one, as a harness it cannot run,
   it says that it could not, and does not judge it (R8, R9)
-- [ ] A section on what it looks for, listing the seven kinds of finding of requirement 9 as the spec words them, and
+- [x] A section on what it looks for, listing the seven kinds of finding of requirement 9 as the spec words them, and
   saying that it does not grade a decision recorded with its rationale, only whether the rationale still fits; and
   that it proposes no feature, something it would add being a finding only where the request needs it (R9, R10)
-- [ ] A section on how it reports: each finding numbered `F1`, `F2` and on, with where it is in the documents, as
+- [x] A section on how it reports: each finding numbered `F1`, `F2` and on, with where it is in the documents, as
   the file and the number of the requirement or the decision, what is wrong, why it matters, and its kind among
   those it looks for, said plainly as none of them when it has none; the same findings in its response and in
   `.reviews/<unit-directory>/spec-review-<instant>.md`, the instant in UTC as `2026-10-21T195515Z`, the directory
   made when it is not there (R7, R11)
-- [ ] A section on where the findings go: to the human and to the specifier; the human decides each, the specifier
+- [x] A section on where the findings go: to the human and to the specifier; the human decides each, the specifier
   changes the spec, and the spec reviewer changes neither; the findings block nothing, neither the approval, which
   is the human's, nor `implemented`, for which what blocks is in `process.md` (R12)
-- [ ] A section on what it changes: nothing under review, no document of the unit and no other file, but its
+- [x] A section on what it changes: nothing under review, no document of the unit and no other file, but its
   findings file and its record entry, worded as firmly as the kit's reviewer words it (R13)
-- [ ] A section on a second review: when `record.md` holds an entry `as the spec-reviewer` already, the review is a
+- [x] A section on a second review: when `record.md` holds an entry `as the spec-reviewer` already, the review is a
   delta review; it takes the commit that the last such entry names, verifies each finding of that review that a
   later entry of the record says was accepted, reviews what changed in the unit's documents since that commit, by
   `git diff <commit> -- <unit directory>`, and names that commit in its findings and its entry (R14)
-- [ ] A section on its record entry and its commit: one entry, appended under `## Log` as `process.md` gives the
+- [x] A section on its record entry and its commit: one entry, appended under `## Log` as `process.md` gives the
   format, `as the spec-reviewer`, saying that it reviewed, whether fully or as a delta, which documents at which
   commit, and the labels of its findings, or that it had none, and nothing of their outcomes; committed on the
   default branch, in a commit that holds nothing but that unit's own documents, with the prefix of the unit's kind
   and number, as `process.md` says of what is written before the approval (R15, R16)
-- [ ] Add `"spec-reviewer": "extra-roles/spec-reviewer.md"` to `roles` of `agentrite.json`, after `reviewer`, by
+- [x] Add `"spec-reviewer": "extra-roles/spec-reviewer.md"` to `roles` of `agentrite.json`, after `reviewer`, by
   hand, keeping the formatting of the rest. Run `npm run kit -- refresh` and check that it wrote the two wrappers and
   refreshed `.agentrite/instructions.md`, found every other file up to date, and that neither wrapper pins a model.
   Run `npm run kit -- roles` and check that `spec-reviewer` follows the four with the description of "Approach".
@@ -127,8 +127,8 @@ The documents:
 
 ## Commit Points
 
-- [ ] `feature-0067 Plan the unit`: `plan.md` and the planner's entry in `record.md`
-- [ ] `feature-0067 Add the spec reviewer as a role of this repository`: the tasks of the tests and of the role,
+- [x] `feature-0067 Plan the unit`: `plan.md` and the planner's entry in `record.md`
+- [x] `feature-0067 Add the spec reviewer as a role of this repository`: the tasks of the tests and of the role,
   which only pass together
 - [ ] `feature-0067 Name extra-roles in the documents`: the tasks of the documents
 - [ ] `feature-0067 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says

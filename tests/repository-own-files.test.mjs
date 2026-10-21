@@ -40,12 +40,39 @@ function pathsUnder(base, directory = '') {
   });
 }
 
-// Unit 0054, R24
-test('the root agentrite.json is the default file of the installed release byte for byte, and is not shipped', () => {
+// Unit 0054, R24; unit 0067, R1
+test('the root agentrite.json is the default file of the release with its own roles added, and is not shipped', () => {
   const release = installedRelease();
   const template = readFileSync(join(release, 'templates', 'project', 'agentrite.json'), 'utf-8');
-  assert.equal(readFileSync(join(root, 'agentrite.json'), 'utf-8'), template);
+  const reviewerLine = '    "reviewer": "node_modules/agentrite/roles/reviewer.md"\n';
+  assert.ok(template.includes(reviewerLine), template);
+  const expected = template.replace(
+    reviewerLine,
+    `${reviewerLine.trimEnd()},\n    "spec-reviewer": "extra-roles/spec-reviewer.md"\n`,
+  );
+  assert.equal(readFileSync(join(root, 'agentrite.json'), 'utf-8'), expected);
   assert.ok(!packageJson.files.includes('agentrite.json'), `files holds ${packageJson.files.join(', ')}`);
+});
+
+// Unit 0067, R2
+test('the package leaves extra-roles out', () => {
+  const shipped = packageJson.files.filter((entry) => entry === 'extra-roles' || entry.startsWith('extra-roles/'));
+  assert.deepEqual(shipped, []);
+});
+
+// Unit 0067, R1 and R3
+test('the roles of the installed release lists the spec reviewer after the four', () => {
+  const release = installedRelease();
+  const output = execFileSync(process.execPath, [join(release, 'scripts', 'agentrite.mjs'), 'roles', '--json'], {
+    cwd: root,
+    encoding: 'utf-8',
+  });
+  const { roles } = JSON.parse(output);
+  assert.deepEqual(
+    roles.map((role) => role.name),
+    ['specifier', 'planner', 'implementer', 'reviewer', 'spec-reviewer'],
+  );
+  assert.equal(roles.at(-1).path, 'extra-roles/spec-reviewer.md');
 });
 
 // Unit 0054, R25

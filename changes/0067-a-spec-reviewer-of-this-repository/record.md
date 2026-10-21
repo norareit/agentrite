@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-21T10:08:24Z
 ---
 
@@ -23,3 +23,5 @@ timestamp: 2026-10-21T10:08:24Z
   differ from the installed release's default file, which unit 0054, requirement 24, has the suite and
   `CONTRIBUTING.md` hold it equal to byte for byte, so the plan changes that test and that statement to the default
   file with the roles of this repository's own added after the four
+- 2026-10-21T20:02:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0067-a-spec-reviewer-of-this-repository` at `490ee98`, began the work. The status is `in-progress`
