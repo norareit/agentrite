@@ -29,9 +29,9 @@ timestamp: 2026-10-21T10:08:24Z
   `plan.md`: "The kit's own tests" of `CONTRIBUTING.md` says that two tests need the installed release and fail
   without `npm ci`, and the test of the listing of `roles` that the plan adds is a third, so the statement now says
   three
-- 2026-10-21T20:04:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the tasks of `plan.md` in two commits,
-  up to `a22631a`. The test of the root `agentrite.json` and the test of the listing of `roles` failed before the
-  role was added, and pass after. `npm run kit -- refresh` wrote `.claude/agents/spec-reviewer.md` and
+- 2026-10-21T20:04:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the tasks of `plan.md` in two
+  commits, up to `a22631a`. The test of the root `agentrite.json` and the test of the listing of `roles` failed
+  before the role was added, and pass after. `npm run kit -- refresh` wrote `.claude/agents/spec-reviewer.md` and
   `.opencode/agents/spec-reviewer.md`, neither of which names a model, refreshed `.agentrite/instructions.md`, and
   found every other file up to date; `npm run kit -- roles` lists `spec-reviewer` after the four with the
   description of the role file. On the tree of `a22631a`, `npm test` reports 934 tests, all of which pass and none
