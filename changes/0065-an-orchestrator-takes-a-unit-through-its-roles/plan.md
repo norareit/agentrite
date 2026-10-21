@@ -164,12 +164,16 @@ compared with the list, as `checkRoleNamed` does, so that `toString` is refused.
   The lines of the list are written as one line each in the prompt; the wrapping above is the plan's
 * `readOutcome(response)` returns one of `{ kind: 'outcome', outcome, text }`, `{ kind: 'none' }`,
   `{ kind: 'several', count }` and `{ kind: 'malformed', fault }`, where `text` is the block's text as it stood
-* The blocks are found as CommonMark finds fenced code blocks, line by line: outside a block, a line of at most three
-  spaces and then three or more backticks or tildes opens one, and the rest of the line, trimmed, is its info
-  string. Inside, a line of at most three spaces, then at least as many of the same character and nothing but
-  spaces, closes it, and a block that is never closed runs to the end of the response. A block counts when the first
-  word of its info string is exactly `json`. So a `json` fence shown inside another fence is not counted, and a
-  block marked `bash` is not
+* The blocks are found line by line, as fenced code blocks, in a blockquote or a list item as well: outside a block,
+  a line that, after any blockquote markers (`>` and an optional space, after at most three spaces, any number of
+  times) and any indentation, holds three or more backticks or tildes opens one, and the rest of the line, trimmed,
+  is its info string. Inside, a line that, after as many blockquote markers as the opening line had and any
+  indentation, holds at least as many of the same character and nothing but spaces closes it, and a block that is
+  never closed runs to the end of the response. A content line loses those markers and up to as many spaces of
+  indentation as the opening line had. A block counts when the first word of its info string is exactly `json`. So a
+  `json` fence shown inside another fence is not counted, and a block marked `bash` is not. A fence in a code block
+  indented by four spaces counts too, which CommonMark would not count. Changed on the review's finding S1, from a
+  rule that took a fence at most three spaces in and in no blockquote
 * The one block's text is parsed with `JSON.parse`. A text that is not JSON gives the fault `the block is not JSON:
   <error>`. A JSON value is judged by requirement 16, with `jsonFault` and `jsonPath` from the root `''`, so that a
   fault reads as `findings[0].blocking is "yes". It must hold true or false`. A key of another name is named as in a
@@ -557,6 +561,22 @@ the JSON object of Claude Code with the response in `result`, or OpenCode's even
   marked `json`. See it pass with the section (R26)
 - [x] Check every line changed against the limit of 120 characters, and that no em dash was written (R26 to R28)
 
+### 9. The review's findings
+
+The human accepted S1 and C1 of the review saved as `review-20261021T122857Z-gpt-6.1-sol.md`, and P1 with no change.
+
+- [x] In `tests/agentrite-outcome.test.mjs`, test that an outcome is read in a blockquote, in a nested blockquote and
+  in a list item whose content is indented four spaces, with the block's text as it stands without the markers and
+  the indentation; that a block marked `bash` in a blockquote is not counted, nor a `json` fence shown in a fence of
+  four backticks in a blockquote; and that a fence indented four spaces at the top level is now read. In
+  `tests/agentrite-orchestrate.test.mjs`, test that a run whose step gives its outcome in a blockquote goes on and
+  ends complete. See them fail (S1, R15)
+- [x] Find fences in blockquotes and at any indentation in `scripts/agentrite-outcome.mjs`, as the approach gives
+  (S1, R15)
+- [ ] Parse each line of OpenCode's output as `unknown` in `scripts/agentrite-headless.mjs`, and narrow it to an event
+  of the five fields used, `type`, `sessionID`, `part.messageID`, `part.id` and `part.text`, each a string or absent.
+  The tests of the readers pass before and after (C1)
+
 ## Verification
 
 - [x] `npm test` on the host with Docker: all green, the Docker test of the mount among them (R29 to R31)
@@ -614,3 +634,5 @@ Each commit is made once `npm test` is green.
 - [x] After task group 7: `feature-0065 Mount .orchestrator in every unit run`
 - [x] After task group 8: `feature-0065 Describe the orchestrator`
 - [x] After the checks by hand: `feature-0065 Log the checks by hand of the orchestrator`
+- [x] After the tasks of S1: `feature-0065 Read an outcome in a blockquote or an indented list item`
+- [ ] After the task of C1: `feature-0065 Narrow the events of OpenCode from unknown`

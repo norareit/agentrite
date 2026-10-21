@@ -175,3 +175,24 @@ timestamp: 2026-10-20T23:55:38Z
   review, `.reviews/0001-greet/review-20261021T121726Z.md`, and its entry in `record.md`, which it left uncommitted,
   and no other file. Each step's outcome is in the run's directory. Every task of `plan.md` is ticked. The status
   stays `in-progress`: the review is done elsewhere
+- 2026-10-21T12:30:09Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full implementation review of unit 0065
+  at `1aa0ee19f49a39db9c2d87ec5df26fa3b7a51dc7`, against merge base
+  `a57c7aba3aaf6356cb6598fdb062cc388117156e`. Returned S1, P1 and C1, saved in
+  `.reviews/0065-an-orchestrator-takes-a-unit-through-its-roles/review-20261021T122857Z-gpt-6.1-sol.md`.
+  Independently ran the host and sandbox suites, the change check and the package dry run. The historical
+  model-backed manual checks, including the planning-time resume experiment, could not be independently verified
+  from retained project or session locations, which the record does not give
+- 2026-10-21T12:37:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took up the review's findings
+  with the human. S1, accepted: an outcome in a blockquote or in a list item indented four spaces was read as none,
+  reproduced with `readOutcome`; the reader will find fences after blockquote markers and at any indentation, at the
+  cost that a fence in a code block indented four spaces counts too. C1, accepted: the reader of OpenCode's output
+  will parse each line as `unknown` and narrow it. P1, accepted with no change: the record already says which tests
+  were written after the code. Added task group 9 and two commit points to `plan.md`, and changed the approach's
+  rule of how blocks are found to the one of S1
+- 2026-10-21T12:38:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, S1, applied:
+  `scripts/agentrite-outcome.mjs` finds a fence after any blockquote markers and at any indentation, and takes the
+  markers and the opening line's indentation off the block's text. The new tests, of an outcome in a blockquote, a
+  nested one and list items indented four and six spaces, of blocks in a blockquote that do not count, and of a run
+  whose steps give their outcomes in a blockquote, failed before the change, three tests, and pass after it. The
+  test that a fence indented four spaces at the top level is none now finds it read, as the accepted fix has it.
+  `npm test` passes: 918 tests, none skipped

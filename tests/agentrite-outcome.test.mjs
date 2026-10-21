@@ -139,10 +139,39 @@ test('no block is found in a response without one, with one marked JSON or jsonc
     block(text, `${FENCE}bash`),
     `${FENCE}${FENCE.slice(1)}markdown\n${block(text)}\n${FENCE}${FENCE.slice(1)}`,
     `${FENCE}\n${block(text)}`,
-    `    ${FENCE}json\n    ${text}\n    ${FENCE}`,
+    `> ${FENCE}bash\n> ${text}\n> ${FENCE}`,
+    `> ${FENCE}${FENCE.slice(1)}markdown\n> ${FENCE}json\n> ${text}\n> ${FENCE}\n> ${FENCE}${FENCE.slice(1)}`,
   ]) {
     assert.deepEqual(readOutcome(response), { kind: 'none' }, response);
   }
+});
+
+// The review's finding S1: a block is read wherever it stands, in a Markdown container as well.
+test('a block in a blockquote, a nested one or an indented list item is read, its text without markers', () => {
+  const text = JSON.stringify(DONE, null, 2);
+  const lines = [`${FENCE}json`, ...text.split('\n'), FENCE];
+  for (const response of [
+    lines.map((line) => `> ${line}`).join('\n'),
+    `> Done.\n>\n${lines.map((line) => `> > ${line}`).join('\n')}`,
+    `1.  Outcome:\n\n${lines.map((line) => `    ${line}`).join('\n')}\n`,
+    `* Outcome:\n\n${lines.map((line) => `      ${line}`).join('\n')}\n\nThat is all.`,
+    lines.map((line) => `    ${line}`).join('\n'),
+  ]) {
+    assert.deepEqual(readOutcome(response), { kind: 'outcome', outcome: DONE, text }, response);
+  }
+});
+
+test('a block in a blockquote is closed by a fence in the blockquote, and two in containers are several', () => {
+  const text = JSON.stringify(DONE);
+  assert.deepEqual(readOutcome(`> ${FENCE}json\n> ${text}\n> ${FENCE}\n\nAfter.`), {
+    kind: 'outcome',
+    outcome: DONE,
+    text,
+  });
+  assert.deepEqual(readOutcome(`> ${FENCE}json\n> ${text}\n> ${FENCE}\n\n    ${FENCE}json\n    {}\n    ${FENCE}`), {
+    kind: 'several',
+    count: 2,
+  });
 });
 
 test('two or three blocks marked json are several, with their count', () => {

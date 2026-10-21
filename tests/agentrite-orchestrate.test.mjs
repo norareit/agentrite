@@ -147,6 +147,14 @@ test('a repeat with until that holds at once goes on with the item after it', ()
   assert.deepEqual(run.end, { kind: 'complete' });
 });
 
+// The review's finding S1: an outcome in a blockquote lets the run go on.
+test('a step that gives its outcome in a blockquote does not stop the run', () => {
+  const quoted = (outcome) => ({ response: responseOf(outcome).replace(/^/gm, '> ') });
+  const run = runWith(DEFAULT, [quoted(DONE), quoted(DONE), quoted({ ...DONE, findings: [MINOR] })]);
+  assert.equal(run.planned.length, 3);
+  assert.deepEqual(run.end, { kind: 'complete' });
+});
+
 // R18, R19: stopWhen, and the step judged before the repeat.
 
 test('stopWhen on a step outside a repeat stops after it at a blocking finding, and not without one', () => {

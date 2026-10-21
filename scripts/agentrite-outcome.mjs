@@ -46,13 +46,35 @@ export function outcomeRequest(round) {
   ].join('\n');
 }
 
-// A line that opens a fenced code block, as CommonMark has it: at most three spaces, three or more of one fence
-// character, and the info string. A backtick fence's info string holds no backtick.
-const OPENING = /^ {0,3}(`{3,}|~{3,})(.*)$/;
+// A line that opens a fenced code block, once its blockquote markers are taken off: any indentation, three or more of
+// one fence character, and the info string. A backtick fence's info string holds no backtick. Any indentation, and
+// not CommonMark's three spaces at most, so that a fence in a list item indented four spaces is found.
+const OPENING = /^([ \t]*)(`{3,}|~{3,})(.*)$/;
+
+// One blockquote marker, as CommonMark has it: at most three spaces, `>` and an optional space.
+const QUOTE_MARKER = /^ {0,3}> ?/;
 
 /**
- * The fenced code blocks of `text`, in order, each with its info string and the text between its fences. A block
- * that is never closed runs to the end of the text.
+ * `line` without up to `most` blockquote markers at its start, and how many it had.
+ *
+ * @param {string} line
+ * @param {number} most
+ * @returns {{ depth: number, rest: string }}
+ */
+function unquoted(line, most) {
+  let depth = 0;
+  let rest = line;
+  for (let match = QUOTE_MARKER.exec(rest); match !== null && depth < most; match = QUOTE_MARKER.exec(rest)) {
+    depth += 1;
+    rest = rest.slice(match[0].length);
+  }
+  return { depth, rest };
+}
+
+/**
+ * The fenced code blocks of `text`, in order, each with its info string and the text between its fences, also in a
+ * blockquote or a list item. A content line loses the blockquote markers of the opening line and up to as many
+ * spaces of indentation. A block that is never closed runs to the end of the text.
  *
  * @param {string} text
  * @returns {{ info: string, content: string }[]}
@@ -62,17 +84,22 @@ function fencedBlocks(text) {
   // The line break that ends the text opens no line.
   if (lines.at(-1) === '') lines.pop();
   /** @type {{ info: string, content: string }[]} */ const blocks = [];
-  /** @type {{ fence: string, info: string, lines: string[] } | undefined} */ let open;
+  /** @type {{ fence: string, info: string, depth: number, indent: RegExp, lines: string[] } | undefined} */ let open;
   for (const line of lines) {
     if (open === undefined) {
-      const match = OPENING.exec(line);
-      if (match === null || (match[1].startsWith('`') && match[2].includes('`'))) continue;
-      open = { fence: match[1], info: match[2].trim(), lines: [] };
-    } else if (closes(line, open.fence)) {
+      const { depth, rest } = unquoted(line, Infinity);
+      const match = OPENING.exec(rest);
+      if (match === null || (match[2].startsWith('`') && match[3].includes('`'))) continue;
+      const indent = new RegExp(`^ {0,${match[1].length}}`);
+      open = { fence: match[2], info: match[3].trim(), depth, indent, lines: [] };
+      continue;
+    }
+    const { rest } = unquoted(line, open.depth);
+    if (closes(rest, open.fence)) {
       blocks.push({ info: open.info, content: open.lines.join('\n') });
       open = undefined;
     } else {
-      open.lines.push(line);
+      open.lines.push(rest.replace(open.indent, ''));
     }
   }
   if (open !== undefined) blocks.push({ info: open.info, content: open.lines.join('\n') });
@@ -80,15 +107,15 @@ function fencedBlocks(text) {
 }
 
 /**
- * True for a line that closes a block opened by `fence`: at most three spaces, at least as many of its character,
- * and nothing after them but spaces.
+ * True for a line, without its blockquote markers, that closes a block opened by `fence`: any indentation, at least
+ * as many of its character, and nothing after them but spaces.
  *
  * @param {string} line
  * @param {string} fence
  * @returns {boolean}
  */
 function closes(line, fence) {
-  const match = /^ {0,3}(`{3,}|~{3,}) *$/.exec(line);
+  const match = /^[ \t]*(`{3,}|~{3,}) *$/.exec(line);
   return match !== null && match[1][0] === fence[0] && match[1].length >= fence.length;
 }
 
