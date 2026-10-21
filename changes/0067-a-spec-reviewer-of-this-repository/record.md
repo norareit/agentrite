@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-21T10:08:24Z
 ---
 
@@ -15,3 +15,4 @@ timestamp: 2026-10-21T10:08:24Z
   in `.claude/agents/`, `agentrite.json`, the `files` of `package.json`, "What the repository holds besides the
   package" of `CONTRIBUTING.md`, and the 7.3.0 section of `CHANGELOG.md`, which holds the extra roles of unit 0056.
   Wrote `spec.md`. The status is `draft`
+- 2026-10-21T19:55:15Z [human] approved the spec. The status is `approved`
