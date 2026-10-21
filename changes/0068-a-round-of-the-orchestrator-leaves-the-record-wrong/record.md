@@ -21,5 +21,11 @@ timestamp: 2026-10-21T14:10:24Z
   `record.md` holds uncommitted changes besides its entry, renumbered the requirements after it, recorded why under
   "Decisions", and left "Beyond the request" with none. The status is `draft`
 - 2026-10-21T14:23:43Z [human] approved the spec. The status is `approved`
+- 2026-10-21T14:27:48Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `bugfix-0068-a-round-of-the-orchestrator-leaves-the-record-wrong` from `master` at `5178eab` and wrote `plan.md`
+  against it. The fix takes more than a couple of steps: three tests that pin the old prompt, the request and its
+  tests, the README, the reviewer's role file, and a check by hand. The reviewer's new description also changes the
+  two reviewer fixtures under `tests/fixtures/`, which the suite compares with the role file's description, while
+  the wrappers at the root stay as the installed release writes them. The status is `approved`
 
 ## Amendments
