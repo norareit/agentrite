@@ -301,6 +301,73 @@ output and exits 1.
 It exits with `0`, `1` when it refuses or fails, and `2` for an argument other than `--json`, as
 [Exit statuses](#exit-statuses) says.
 
+### agentrite units
+
+```sh
+npx agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]
+```
+
+Lists the units of `changes/` in the directory it runs in. It reads that `changes/` as it stands in the working tree
+and nothing else: no other branch, no other revision and no `agentrite.json`, so it runs in a project that has none.
+A unit is a directory of `changes/` whose name is four digits, a hyphen and at least one character more. No other
+directory is listed or found by its number. The units come in the order of their number, the highest first, and units
+with the same number in the order of their directory names. The options may stand at any place among the arguments.
+
+Each unit is one line: its number, its status, its kind and its title, the first three padded to the widest value of
+their column among the lines listed, the columns separated by two spaces. The status and the kind are the values of
+the `status` and `kind` fields of the unit's `record.md`, as written there. The title is the first `#` heading of the
+record, without the unit's number and the space after it when the heading begins with them.
+
+```text
+0077  in-progress  feature  The units of a project can be listed
+0076  implemented  bug      A bug
+```
+
+Without a filter every unit is listed. `--open` leaves out the units whose status is `implemented` or `cancelled`.
+`--status <status>` lists the units of that status, one of `draft`, `approved`, `in-progress`, `implemented` and
+`cancelled`. `--kind <kind>` lists the units of that kind, one of `feature`, `bug` and `task`, and goes with `--open`
+and with `--status`: a unit is listed when it passes each filter given. `--open` and `--status` are not given together.
+
+`<number>` is exactly four digits. With it the command shows the unit or units whose directory opens with those
+digits and a hyphen, which are several when units share a number, and the filters apply to them as to a listing.
+Without it at most 50 units are listed. `--limit <count>` sets another maximum and `--limit 0` lists every unit. The
+limit counts the units that remain after the filters, so that `--open` lists up to that many open units. When the
+limit leaves units out, the listing ends with the line
+
+```text
+showing <shown> of <total> units, --limit 0 shows them all
+```
+
+When there is nothing to show, because `changes/` holds no unit or the filters left out every unit, or the unit that
+`<number>` names, the listing is the one line `no units`, or `no units with` and what was given, joined by a comma and a
+space, in the order the number, `--open`, `--status <status>`, `--kind <kind>`, as in `no units with 0077, --open`. The
+command exits `0`.
+
+With `--json` the command prints one JSON document instead: an object with the key `units`, an array of the units
+listed in the same order, and the key `total`, the number of units there are after the filters and before the limit.
+Each unit is an object with its `number`, a string of the four digits, its `directory`, its `status`, its `kind` and
+its `title`. When there is nothing to show, `units` is an empty array and no line of text is printed.
+
+It refuses a unit whose `record.md` is missing, or has no `status` field, no `kind` field or no `#` heading, naming
+the file and what is missing in it, a `<number>` that opens no directory of `changes/`, and a directory with no
+`changes/`, naming it. Each prints nothing on standard output and exits 1. It prints what is wrong, then its usage, and
+exits 2 for a `<number>` that is not four digits, a second `<number>`, `--status`, `--kind` or `--limit` without a
+value or given twice, a `<status>` or a `<kind>` that is none of the values, a `<count>` that is not a whole number of
+zero or more, `--open` together with `--status`, `--limit` together with `<number>`, and an option the command does
+not take.
+
+| Argument or option  | What it is                                                                                  |
+|---------------------|---------------------------------------------------------------------------------------------|
+| `<number>`          | Four digits. Shows the unit or units whose directory opens with them                        |
+| `--open`            | Leaves out the units whose status is `implemented` or `cancelled`                           |
+| `--status <status>` | Lists the units of that status only. Not given with `--open`                                |
+| `--kind <kind>`     | Lists the units of that kind only                                                           |
+| `--limit <count>`   | Lists at most that many units, 50 without it, and every unit for 0. Not given with a number |
+| `--json`            | Prints one JSON document in place of the text                                               |
+
+It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
+says.
+
 ### agentrite run
 
 ```sh

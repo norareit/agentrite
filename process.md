@@ -53,6 +53,9 @@ existing change directory, regardless of its kind, plus one. A project that adop
 historical directories under its older naming, which are left as they are so that existing references to them remain
 findable.
 
+`npx agentrite units` lists the units of a project, and `npx agentrite units --open` those still open. An agent asked
+which units are open, or in what status a unit is, runs it rather than reading the records.
+
 Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`. Start from the kit's
 `templates/changes/`.
 

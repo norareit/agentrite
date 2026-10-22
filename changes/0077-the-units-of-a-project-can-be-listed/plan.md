@@ -147,7 +147,7 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 
 ### The documents
 
-- [ ] In `README.md`, write `### agentrite units` after `### agentrite roles`: the form in a `sh` block; that it
+- [x] In `README.md`, write `### agentrite units` after `### agentrite roles`: the form in a `sh` block; that it
   lists the units of `changes/` in the directory it runs in, from the working tree only, and reads no
   `agentrite.json`; which directories are units; the order; the line of a unit and where its status, kind and title
   come from; each filter, that `--kind` goes with `--open` and with `--status`, and that the limit counts after the
@@ -155,7 +155,7 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
   document with its keys; the refusals that exit 1 and the wrong arguments that exit 2; a table of `<number>`,
   `--open`, `--status <status>`, `--kind <kind>`, `--limit <count>` and `--json`; and its exit statuses `0`, `1` and
   `2` with a link to "Exit statuses". Every line within 120 characters. (R19)
-- [ ] In `process.md`, in "Changes", add a paragraph after the one that names how a unit's directory is named and
+- [x] In `process.md`, in "Changes", add a paragraph after the one that names how a unit's directory is named and
   numbered: `npx agentrite units` lists the units of a project and `npx agentrite units --open` those still open, and
   an agent asked which units are open, or in what status a unit is, runs it rather than reading the records. (R21)
 
@@ -175,4 +175,4 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 - [x] `feature-0077 Read, select and render the units of a project`: `scripts/agentrite-units.mjs` and its unit tests
 - [x] `feature-0077 Add the units command`: the entry point, the command tests, the usage, `package.json` and the
   package test
-- [ ] `feature-0077 Document the units command`: `README.md` and `process.md`
+- [x] `feature-0077 Document the units command`: `README.md` and `process.md`
