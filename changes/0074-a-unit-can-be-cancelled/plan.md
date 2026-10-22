@@ -78,18 +78,18 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 ### The sandbox
 
-- [ ] In `tests/sandbox-unit-run.test.mjs`, add to `noCut` a case named "a unit cancelled on master", unit `0031`,
+- [x] In `tests/sandbox-unit-run.test.mjs`, add to `noCut` a case named "a unit cancelled on master", unit `0031`,
   arranged with `commitUnit(host, 'kind: feature\nstatus: cancelled\ntimestamp: 2026-10-05T13:45:27Z')`, that says
   `/^sandbox\.sh: changes\/0031-cut-me is cancelled on master, so no branch is cut for it\.$/m` and
   `/^Taking its idea up again is a new unit that names 0031-cut-me in supersedes\.$/m`. The loop over `noCut` already
   asserts the exit status 1, that the refs are unchanged, so that no branch exists after it, and that Docker and npm
   were not called (R12, R13, R17)
-- [ ] Beside the loop that cuts a branch for each kind, add a loop over the statuses `draft`, `approved`,
+- [x] Beside the loop that cuts a branch for each kind, add a loop over the statuses `draft`, `approved`,
   `in-progress` and `implemented`, which commits a feature at that status and expects the run to exit 0, say
   `sandbox.sh: cut feature-0031-cut-me from master at <commit>, for changes/0031-cut-me.` and leave
   `refs/heads/feature-0031-cut-me` at the head of `master`. Run the file and see the cancelled case fail and the
   loop pass (R17)
-- [ ] In `container/unit-clone.sh`, make the loop of `cut_unit_branch` that reads the record read `status` beside
+- [x] In `container/unit-clone.sh`, make the loop of `cut_unit_branch` that reads the record read `status` beside
   `kind`, the first line of each that matches `^status:[[:space:]]*([^[:space:]]+)[[:space:]]*$` and its `kind`
   counterpart, and break once both are read. After the loop and before the `case` of the kind, when the status is
   `cancelled`, print the two lines of the message the approach gives and return 3. Add to the function's comment
@@ -162,6 +162,6 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 - [x] `feature-0074 Plan the cancellation of a unit`: this plan and its log entry in `record.md`
 - [x] `feature-0074 Freeze a cancelled unit in the change check`: the tasks of "The change check"
-- [ ] `feature-0074 Cut no branch for a cancelled unit`: the tasks of "The sandbox"
+- [x] `feature-0074 Cut no branch for a cancelled unit`: the tasks of "The sandbox"
 - [ ] `feature-0074 Test that orchestrate refuses a cancelled unit`: the task of "The orchestrator"
 - [ ] `feature-0074 Give the status cancelled in the process`: the tasks of "The documents"

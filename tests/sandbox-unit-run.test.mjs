@@ -207,6 +207,24 @@ for (const [kind, prefix] of [
   });
 }
 
+for (const status of ['draft', 'approved', 'in-progress', 'implemented']) {
+  test(`the wrapper cuts feature-${cutDirectory} from master for a unit that is ${status} there`, (t) => {
+    const host = setUp(t);
+    const { run, git } = host;
+    const commit = commitUnit(host, `kind: feature\nstatus: ${status}\ntimestamp: 2026-10-05T13:45:27Z`);
+
+    const result = run(['0031', 'echo', 'hi']);
+
+    assert.equal(result.status, 0, result.stderr);
+    const cut = `feature-${cutDirectory}`;
+    assert.ok(
+      result.stderr.includes(`sandbox.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
+      result.stderr,
+    );
+    assert.equal(git('rev-parse', `refs/heads/${cut}`), git('rev-parse', 'refs/heads/master'));
+  });
+}
+
 test('the wrapper cuts the branch before it builds: a build that fails leaves the branch cut', (t) => {
   const host = setUp(t, { imageExists: false });
   const { run, git, buildFails, dockerCalls } = host;
@@ -327,6 +345,15 @@ const noCut = [
     unit: '0031',
     arrange: (host) => commitUnit(host, 'kind: chore'),
     says: [/changes\/0031-cut-me\/record\.md/, /names no kind/],
+  },
+  {
+    name: 'a unit cancelled on master',
+    unit: '0031',
+    arrange: (host) => commitUnit(host, 'kind: feature\nstatus: cancelled\ntimestamp: 2026-10-05T13:45:27Z'),
+    says: [
+      /^sandbox\.sh: changes\/0031-cut-me is cancelled on master, so no branch is cut for it\.$/m,
+      /^Taking its idea up again is a new unit that names 0031-cut-me in supersedes\.$/m,
+    ],
   },
   {
     name: 'a repository with no branch master',

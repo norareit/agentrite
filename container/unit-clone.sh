@@ -20,9 +20,10 @@
 # it has not committed do not matter and are left as they are. Says on standard error
 # what it cut, because standard output is the branch's name. Says why and fails
 # otherwise, with 1 when the default branch holds no such unit and 3 when it holds one
-# that no branch can be cut for.
+# that no branch can be cut for. A unit that is cancelled on the default branch is one of
+# those, and gets no branch.
 cut_unit_branch() {
-  local root="$1" unit="$2" default_branch="$3" directories directory record line kind="" prefix name
+  local root="$1" unit="$2" default_branch="$3" directories directory record line kind="" status="" prefix name
   local base="refs/heads/$default_branch"
   if ! git -C "$root" show-ref --verify --quiet "$base"; then
     echo "sandbox.sh: '$unit' names no local branch, and there is no local branch $default_branch to cut one from." >&2
@@ -49,11 +50,20 @@ cut_unit_branch() {
     return 3
   fi
   while IFS= read -r line; do
-    if [[ "$line" =~ ^kind:[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
+    if [ -z "$kind" ] && [[ "$line" =~ ^kind:[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
       kind="${BASH_REMATCH[1]}"
+    elif [ -z "$status" ] && [[ "$line" =~ ^status:[[:space:]]*([^[:space:]]+)[[:space:]]*$ ]]; then
+      status="${BASH_REMATCH[1]}"
+    fi
+    if [ -n "$kind" ] && [ -n "$status" ]; then
       break
     fi
   done < <(git -C "$root" show "$base:$record")
+  if [ "$status" = "cancelled" ]; then
+    echo "sandbox.sh: changes/$directory is cancelled on $default_branch, so no branch is cut for it." >&2
+    echo "Taking its idea up again is a new unit that names $directory in supersedes." >&2
+    return 3
+  fi
   case "$kind" in
     feature) prefix="feature" ;;
     bug) prefix="bugfix" ;;
