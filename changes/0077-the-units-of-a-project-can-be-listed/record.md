@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-22T18:58:24Z
+status: implemented
+timestamp: 2026-10-22T22:07:49Z
 ---
 
 # 0077 The units of a project can be listed
@@ -64,3 +64,6 @@ timestamp: 2026-10-22T18:58:24Z
   separating refactoring from behavior does not allow, and the human chose to record it as a one-time exception for that
   commit and not to rewrite history. The code is unchanged, and the commit stays as it is. The status stays
   `in-progress`
+- 2026-10-22T22:07:49Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on the human's request, set the
+  status to `implemented`: every task in `plan.md` is ticked, and the human decided C3, the only finding that was open,
+  as a recorded exception. The status is `implemented`
