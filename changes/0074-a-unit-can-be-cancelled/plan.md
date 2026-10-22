@@ -152,11 +152,11 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 ## Verification
 
-- [ ] `npm test` passes, with only the skips the host is known for
-- [ ] `node scripts/check-changes.mjs` passes on the branch, after the commits; `npm run check-changes`, which runs the
+- [x] `npm test` passes, with only the skips the host is known for
+- [x] `node scripts/check-changes.mjs` passes on the branch, after the commits; `npm run check-changes`, which runs the
   installed release's check, passes too
-- [ ] Every requirement 1 to 17 has a task above that names it, and every task names one
-- [ ] `git diff master -- SANDBOX.md CHANGELOG.md` is empty
+- [x] Every requirement 1 to 17 has a task above that names it, and every task names one
+- [x] `git diff master -- SANDBOX.md CHANGELOG.md` is empty
 
 ## Commit Points
 

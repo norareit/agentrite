@@ -37,3 +37,12 @@ timestamp: 2026-10-22T12:22:44Z
   The status is `approved`
 - 2026-10-22T18:31:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   began the work on `feature-0074-a-unit-can-be-cancelled` at `a118e5d`. The status is `in-progress`
+- 2026-10-22T18:35:58Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the unit by its plan in
+  four commits, `61ca495`, `d07d73d`, `4137a27` and `0075b00`. Each new test of the change check, the sandbox and the
+  record template was seen to fail before its code, except the loop over the statuses that are cut and the
+  orchestrator's refusal of `cancelled`, which pass with no change to the code, as the plan says. The search of
+  `roles/` and `extra-roles/` for `implemented`, `frozen`, `freeze` and `Amendments` found no sentence besides the two
+  of `roles/reviewer.md` that ties the freeze or the end of a unit to `implemented` alone. On `0075b00`, `npm test`
+  passed, 973 tests with none failed or skipped; `node scripts/check-changes.mjs` and `npm run check-changes` exited
+  0; `git diff master -- SANDBOX.md CHANGELOG.md` is empty; no line of the files changed exceeds 120 characters and
+  none adds an em dash. Handed over for review. The status is `in-progress`
