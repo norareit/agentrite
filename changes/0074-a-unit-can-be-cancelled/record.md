@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-22T12:22:44Z
 ---
 
@@ -23,3 +23,4 @@ timestamp: 2026-10-22T12:22:44Z
   `AGENTS.md` on refusals `SANDBOX.md` does not describe it; recorded items 1 and 3 as declined; added the human's
   confirmation of the cancellation commit for an `approved` unit with a branch to its decision; and renumbered the
   requirements after them. The status is `draft`
+- 2026-10-22T12:33:10Z [human] approved the spec. The status is `approved`
