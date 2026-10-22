@@ -80,3 +80,15 @@ timestamp: 2026-10-22T13:15:49Z
   real event samples from Claude Code 2.1.308 and OpenCode 1.19.3, including concurrent calls that complete out of
   order, and reproduced a multiline label through both adapters and the printer. Not checked: a complete
   orchestrator workflow with real role agents, or the historical red-before-green sequence claimed in the log
+- 2026-10-22T17:31:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took the findings of
+  `.reviews/0075-a-run-of-the-orchestrator-can-be-followed/2026-10-22T17-13-06Z-opencode.md`. S2 accepted: a line
+  feed in a description, a path or a pattern split one call over two lines, against R6. Added its task to `plan.md`,
+  saw the two new tests fail, and made `callLabel` write a line feed as `\n` and a carriage return as `\r`, the only
+  reading that keeps the label's text and the call on one line; documented in "How a run ends". `npm test` passes,
+  961 tests
+- 2026-10-22T17:31:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, found S1 true, and not to be
+  fixed without the spec: OpenCode makes a call known only when it ends, so of two calls run at once the later can be
+  made known first, before anything shows the earlier exists. R4 asks for the order the agent made the calls and for
+  each to be printed once the harness has made it known, and for such calls the two cannot both hold. Keeping the
+  order means holding a call that ended early until the calls of its model message have ended. S1 is open, and put
+  to the human as a decision on the spec. The status stays `in-progress`

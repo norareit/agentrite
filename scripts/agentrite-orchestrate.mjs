@@ -361,14 +361,16 @@ const COMMAND_LENGTH = 100;
 
 /**
  * What a tool call is labelled by: the first of its description, the path it acts on, the pattern it searches for and
- * the first line of its command, cut to `COMMAND_LENGTH` code points, that is not empty, or `undefined` for none.
+ * the first line of its command, cut to `COMMAND_LENGTH` code points, that is not empty, or `undefined` for none. A
+ * line feed or a carriage return in it is written as `\n` or `\r`, so that the call stays on one line.
  *
  * @param {Extract<Followed, { kind: 'call' }>} call
  * @returns {string | undefined}
  */
 export function callLabel({ description, path, pattern, command }) {
   const firstLine = command === undefined ? undefined : Array.from(command.split('\n')[0]).slice(0, COMMAND_LENGTH);
-  return [description, path, pattern, firstLine?.join('')].find((label) => label !== undefined && label !== '');
+  const label = [description, path, pattern, firstLine?.join('')].find((text) => text !== undefined && text !== '');
+  return label?.replaceAll('\n', '\\n').replaceAll('\r', '\\r');
 }
 
 /**

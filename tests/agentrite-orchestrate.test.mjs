@@ -31,6 +31,7 @@ import {
   ranTable,
   stepLine,
 } from '../scripts/agentrite-orchestrate.mjs';
+import { HEADLESS } from '../scripts/agentrite-headless.mjs';
 import { readOutcome } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -671,6 +672,7 @@ test('the report of a step out of time gives its limit, and where its response i
 
 // Unit 0075, R5 to R7: what is printed of a step that is followed.
 
+const dim = (text) => `\x1b[2m${text}\x1b[22m`;
 const NO_LABEL = { description: undefined, path: undefined, pattern: undefined, command: undefined };
 const call = (fields, time = Date.UTC(2026, 9, 22, 14, 3, 31)) => ({
   kind: 'call',
@@ -694,6 +696,35 @@ test('callLabel takes the description, then the path, the pattern and the first 
   assert.equal(callLabel(call({ command: 'cd /work\nnpm test' })), 'cd /work');
   assert.equal(callLabel(call({ description: '', path: '/work/a.mjs' })), '/work/a.mjs');
   assert.equal(callLabel(call({})), undefined);
+});
+
+test('callLabel writes a line feed or a carriage return of a description, a path or a pattern as \\n or \\r', () => {
+  assert.equal(callLabel(call({ description: 'Run\nthe tests', path: '/work/a.mjs' })), 'Run\\nthe tests');
+  assert.equal(callLabel(call({ path: '/work/a\r.mjs', pattern: 'follow' })), '/work/a\\r.mjs');
+  assert.equal(callLabel(call({ pattern: 'first\r\nsecond', command: 'grep' })), 'first\\r\\nsecond');
+  assert.equal(callLabel(call({ command: 'cd /work\r\nnpm test' })), 'cd /work\\r');
+});
+
+test('a call with a pattern of two lines is printed on one line, in each harness', () => {
+  const claude = JSON.stringify({
+    type: 'assistant',
+    message: { content: [{ type: 'tool_use', name: 'Grep', input: { pattern: 'first\nsecond', multiline: true } }] },
+    parent_tool_use_id: null,
+    timestamp: '2026-10-22T14:03:27.000Z',
+  });
+  const opencode = JSON.stringify({
+    type: 'tool_use',
+    timestamp: Date.UTC(2026, 9, 22, 14, 3, 27),
+    part: { type: 'tool', tool: 'grep', state: { status: 'completed', input: { pattern: 'first\nsecond' } } },
+  });
+  for (const [harness, line, tool] of [
+    ['claude', claude, 'Grep'],
+    ['opencode', opencode, 'grep'],
+  ]) {
+    /** @type {string[]} */ const written = [];
+    followPrinter((text) => written.push(text), Date.now)(HEADLESS[harness].follow(line));
+    assert.equal(written.join(''), `${dim(`14:03:27 → ${tool} first\\nsecond`)}\n`, harness);
+  }
 });
 
 test('callLabel cuts a command to its first 100 code points, splitting no character', () => {
@@ -1648,7 +1679,6 @@ const FOLLOWED = {
 const IMPLEMENTER_HEAD = 'step 0, implementer, claude, claude-sonnet-5-5';
 const REVIEWER_HEAD = 'step 1, reviewer, opencode, openai/gpt-6.1-sol';
 const HIDDEN = ['TOOL RESULT', 'REASONING'];
-const dim = (text) => `\x1b[2m${text}\x1b[22m`;
 
 // What Claude Code prints with `stream-json` for a step that says what it will do, makes a call with a label and one
 // with none, thinks, is given a tool's result, and answers with `response`.

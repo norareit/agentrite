@@ -759,7 +759,8 @@ OpenCode makes a tool call known once the call has ended:
 * a tool call is printed dimmed, on one line: its time, `→`, the name of the tool as the harness gives it, and a
   label. The label is the first of these that the call has: the description the agent gave a call of the shell tool,
   the path of the file the call acts on, the pattern the call searches for, and the first line of the command the
-  call runs, cut to its first 100 characters. A call that has none of them has no label
+  call runs, cut to its first 100 characters. A line break in the label is written as `\n`, and a carriage return
+  as `\r`, so that the call stays on one line. A call that has none of them has no label
 
 The time is the instant the harness gives for the message or the call, or, where it gives none, the instant the
 command learns of it, as `HH:MM:SS` in UTC. No result of a tool call, no reasoning of the agent and no other event of

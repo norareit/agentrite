@@ -232,6 +232,13 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] In `SANDBOX.md`, where it gives the orchestrator in a unit run, say that `--follow` is given to the command
   there as on the host, with `./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions
   --follow'` (R13)
+- [x] By S2 of the review of `d10ffd4`: in `tests/agentrite-orchestrate.test.mjs`, add to the tests of `callLabel`
+  that a line feed or a carriage return in a description, a path or a pattern is written as `\n` or `\r`, so that the
+  label stays on one line, its order of precedence kept, and a test that `HEADLESS.claude.follow` and
+  `HEADLESS.opencode.follow` of a `Grep` and a `grep` call with the pattern `first\nsecond`, given to `followPrinter`,
+  write one line. Run `npm test` and see them fail. In `scripts/agentrite-orchestrate.mjs`, make `callLabel` write
+  each line feed and carriage return of the label it gives in that form, after the command is cut. In `README.md`,
+  "How a run ends", say so of the label. Run `npm test`: it passes (R6, R9)
 
 ## Verification
 
@@ -253,4 +260,5 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
 - [x] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
 - [x] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
-- [x] `feature-0075 Document --follow`: the last four tasks
+- [x] `feature-0075 Document --follow`: the four tasks of the documents
+- [x] `feature-0075 Keep a call's label on one line`: the task of S2 of the review
