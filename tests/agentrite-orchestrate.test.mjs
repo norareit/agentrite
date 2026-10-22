@@ -17,8 +17,12 @@ import { test } from 'node:test';
 import { setTimeout as delay } from 'node:timers/promises';
 import { parseDefinition } from '../scripts/agentrite-definition.mjs';
 import {
+  callLabel,
+  clockTime,
   duration,
   endReport,
+  followedText,
+  followPrinter,
   exitStatus,
   judgeStep,
   orchestrate,
@@ -662,6 +666,79 @@ test('the report of a step out of time gives its limit, and where its response i
   assert.equal(
     (await reportOf([TIMED_OUT], limited(0.05)))[2],
     'Step 0 stopped the run: it ran past its time limit of 0.05 minutes.',
+  );
+});
+
+// Unit 0075, R5 to R7: what is printed of a step that is followed.
+
+const NO_LABEL = { description: undefined, path: undefined, pattern: undefined, command: undefined };
+const call = (fields, time = Date.UTC(2026, 9, 22, 14, 3, 31)) => ({
+  kind: 'call',
+  time,
+  tool: 'Bash',
+  ...NO_LABEL,
+  ...fields,
+});
+
+test('clockTime gives the time in UTC as HH:MM:SS', () => {
+  assert.equal(clockTime(Date.UTC(2026, 9, 22, 14, 3, 27, 900)), '14:03:27');
+  assert.equal(clockTime(Date.UTC(2026, 9, 22, 0, 0, 5)), '00:00:05');
+});
+
+test('callLabel takes the description, then the path, the pattern and the first line of the command', () => {
+  const all = { description: 'Run the tests', path: '/work/a.mjs', pattern: 'follow', command: 'npm test' };
+  assert.equal(callLabel(call(all)), 'Run the tests');
+  assert.equal(callLabel(call({ ...all, description: undefined })), '/work/a.mjs');
+  assert.equal(callLabel(call({ ...all, description: undefined, path: undefined })), 'follow');
+  assert.equal(callLabel(call({ command: 'npm test' })), 'npm test');
+  assert.equal(callLabel(call({ command: 'cd /work\nnpm test' })), 'cd /work');
+  assert.equal(callLabel(call({ description: '', path: '/work/a.mjs' })), '/work/a.mjs');
+  assert.equal(callLabel(call({})), undefined);
+});
+
+test('callLabel cuts a command to its first 100 code points, splitting no character', () => {
+  const hundred = 'a'.repeat(100);
+  assert.equal(callLabel(call({ command: hundred })), hundred);
+  assert.equal(callLabel(call({ command: `${hundred}b` })), hundred);
+  assert.equal(callLabel(call({ command: '😀'.repeat(101) })), '😀'.repeat(100));
+});
+
+test('followedText gives a call as one dimmed line, and a text as its time and its full text', () => {
+  const time = '14:03:31';
+  assert.equal(
+    followedText(call({ description: 'Run the tests' }), time),
+    '\x1b[2m14:03:31 → Bash Run the tests\x1b[22m',
+  );
+  assert.equal(followedText(call({}), time), '\x1b[2m14:03:31 → Bash\x1b[22m');
+  assert.equal(
+    followedText({ kind: 'text', time: undefined, text: 'First line.\n\nSecond line.\n\n' }, time),
+    '14:03:31 First line.\n\nSecond line.',
+  );
+});
+
+test('followPrinter sets each text apart by one blank line, and the calls on lines of their own', () => {
+  /** @type {string[]} */ const written = [];
+  const now = () => Date.UTC(2026, 9, 22, 9, 0, 0);
+  const print = followPrinter((text) => written.push(text), now);
+  const text = (words, time) => ({ kind: 'text', time, text: words });
+  print([text('First.', undefined)]);
+  print([call({ command: 'ls' }), call({ path: '/work/a.mjs' }, Date.UTC(2026, 9, 22, 9, 0, 2))]);
+  print([text('Second.', Date.UTC(2026, 9, 22, 9, 0, 3)), text('Third.', undefined)]);
+  assert.equal(
+    written.join(''),
+    [
+      '',
+      '09:00:00 First.',
+      '',
+      '\x1b[2m14:03:31 → Bash ls\x1b[22m',
+      '\x1b[2m09:00:02 → Bash /work/a.mjs\x1b[22m',
+      '',
+      '09:00:03 Second.',
+      '',
+      '09:00:00 Third.',
+      '',
+      '',
+    ].join('\n'),
   );
 });
 

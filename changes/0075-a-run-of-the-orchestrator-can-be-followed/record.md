@@ -55,3 +55,6 @@ timestamp: 2026-10-22T13:15:49Z
   Saw the six new tests of `follow` fail, then pass once `followClaude` and `followOpencode` were added beside the
   `Followed` typedef. A text block or part that is not a string is taken as absent, as a field is. `npm test` passes,
   950 tests
+- 2026-10-22T17:31:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the eighth and ninth tasks.
+  Saw the tests of the printing fail on the missing exports, then pass with `clockTime`, `callLabel`, `followedText`
+  and `followPrinter`. `npm test` passes, 955 tests

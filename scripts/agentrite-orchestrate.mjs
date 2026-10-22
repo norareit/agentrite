@@ -5,6 +5,7 @@ import { optionError } from './agentrite-run.mjs';
 /**
  * @typedef {import('./agentrite-definition.mjs').Definition} Definition
  * @typedef {import('./agentrite-definition.mjs').Step} Step
+ * @typedef {import('./agentrite-headless.mjs').Followed} Followed
  * @typedef {import('./agentrite-outcome.mjs').Outcome} Outcome
  * @typedef {import('./agentrite-outcome.mjs').Reading} Reading
  * @typedef {{
@@ -343,6 +344,66 @@ export function endReport(ran, end, { runDirectory, unitDirectory, responsePath 
     `The reviewer's findings are under .reviews/${unitDirectory}/.`,
     '',
   ].join('\n');
+}
+
+/**
+ * The time of a followed item, in UTC, as `14:03:27`.
+ *
+ * @param {number} time milliseconds since the epoch
+ * @returns {string}
+ */
+export function clockTime(time) {
+  return new Date(time).toISOString().slice(11, 19);
+}
+
+/** The most of a command's first line a call's label holds, in code points. */
+const COMMAND_LENGTH = 100;
+
+/**
+ * What a tool call is labelled by: the first of its description, the path it acts on, the pattern it searches for and
+ * the first line of its command, cut to `COMMAND_LENGTH` code points, that is not empty, or `undefined` for none.
+ *
+ * @param {Extract<Followed, { kind: 'call' }>} call
+ * @returns {string | undefined}
+ */
+export function callLabel({ description, path, pattern, command }) {
+  const firstLine = command === undefined ? undefined : Array.from(command.split('\n')[0]).slice(0, COMMAND_LENGTH);
+  return [description, path, pattern, firstLine?.join('')].find((label) => label !== undefined && label !== '');
+}
+
+/**
+ * A followed item as it is printed, with no line break after it: a text message in full after its time, and a tool
+ * call as one dimmed line, so that the messages stand out.
+ *
+ * @param {Followed} item
+ * @param {string} time the item's time, as `clockTime` gives it
+ * @returns {string}
+ */
+export function followedText(item, time) {
+  if (item.kind === 'text') return `${time} ${item.text.replace(/[\r\n]+$/, '')}`;
+  const label = callLabel(item);
+  return `\x1b[2m${time} → ${item.tool}${label === undefined ? '' : ` ${label}`}\x1b[22m`;
+}
+
+/**
+ * The printer of one step: it writes the items followed of the step as they are made known, each text message
+ * between blank lines, one blank line between two of them, and the calls on consecutive lines. An item with no time
+ * takes the instant it is printed.
+ *
+ * @param {(text: string) => void} write
+ * @param {() => number} now
+ * @returns {(items: Followed[]) => void}
+ */
+export function followPrinter(write, now) {
+  let afterText = false;
+  return (items) => {
+    for (const item of items) {
+      const text = followedText(item, clockTime(item.time ?? now()));
+      if (item.kind === 'call') write(`${text}\n`);
+      else write(`${afterText ? '' : '\n'}${text}\n\n`);
+      afterText = item.kind === 'text';
+    }
+  };
 }
 
 /** How `orchestrate` is run. */

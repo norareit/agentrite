@@ -172,7 +172,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   of `HEADLESS` and to both entries, by the readings of the approach, reusing `isRecord` and `stringOrNone`. A line
   is parsed once per harness and narrowed to what is followed, as `opencodeEvent` narrows it for `read`. Run `npm
   test`: the tests of the previous task pass (R4, R8, R9)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add tests of the printing: `clockTime(Date.UTC(2026, 9, 22, 14, 3, 27,
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add tests of the printing: `clockTime(Date.UTC(2026, 9, 22, 14, 3, 27,
   900))` gives `14:03:27`, and `clockTime(Date.UTC(2026, 9, 22, 0, 0, 5))` gives `00:00:05`; `callLabel` gives
   `description` over `path`, `path` over `pattern`, `pattern` over `command`, the first line of a command of several
   lines, a first line of 100 code points whole, one of 101 cut to 100, a line of emoji cut without splitting one, an
@@ -183,7 +183,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   calls, the two calls on consecutive lines, one blank line between the calls and the next text, one between the two
   texts, and one after the last, and uses `now` for an item with no `time` and its own `time` otherwise. Run `npm test`
   and see them fail (R5, R6, R7, R14)
-- [ ] In `scripts/agentrite-orchestrate.mjs`, add the pure functions `clockTime(time)`, `callLabel(call)` and
+- [x] In `scripts/agentrite-orchestrate.mjs`, add the pure functions `clockTime(time)`, `callLabel(call)` and
   `followedText(item, time)`, and `followPrinter(write, now)`, which returns a function taking a list of `Followed`
   and writing each by the rules of the approach. Export them for the tests. Run `npm test`: the tests of the previous
   task pass (R5, R6, R7)
@@ -251,6 +251,6 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] `feature-0075 Read Claude Code's output as a stream of events`: the third to fifth tasks, which change how
   Claude Code is run and read with no change in what the command prints
 - [x] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
-- [ ] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
+- [x] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
 - [ ] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
 - [ ] `feature-0075 Document --follow`: the last four tasks
