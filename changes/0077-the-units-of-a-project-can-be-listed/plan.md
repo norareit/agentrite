@@ -117,32 +117,32 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 
 ### The command
 
-- [ ] In `tests/agentrite-units.test.mjs`, write a helper that makes a project in a `temporaryDirectory` with a
+- [x] In `tests/agentrite-units.test.mjs`, write a helper that makes a project in a `temporaryDirectory` with a
   `changes/` of 53 units, among them each of the five statuses and each of the three kinds, two units that share a
   number, an implemented unit that is the highest of its number, and a directory of an older naming, and runs
   `scripts/agentrite.mjs` there with `spawnSync`. The project has no `agentrite.json` and is no git repository. (R3,
   R23)
-- [ ] Test the command on that project, each with its exit status 0, its standard output and an empty standard error:
+- [x] Test the command on that project, each with its exit status 0, its standard output and an empty standard error:
   `units`, which lists 50 units and ends with the closing line; `units --open`; `units --status in-progress`; `units
   --kind bug`; `units <number>` of a unit; `units <number>` of the two units that share it; `units <number> --open` of
   the implemented unit, which prints the line of requirement 15; `units --limit 0 --json`, which parses and lists every
   unit with `total` 53, and `units --json --status cancelled --kind task` where none match, which gives an empty array.
   Check that the directory of an older naming is listed by none of them. (R2, R3, R7, R8, R9, R10, R12, R13, R14, R15,
   R16, R23)
-- [ ] Test the refusals of the command, each with exit status 1, nothing on standard output and the message on
+- [x] Test the refusals of the command, each with exit status 1, nothing on standard output and the message on
   standard error: a directory with no `changes/`, naming the directory; a `<number>` that opens no directory; a unit
   with no `record.md`; a unit whose `record.md` lacks `status`, `kind` or the heading. And that a wrong argument exits
   2, with the usage on standard error and nothing on standard output. (R6, R17, R18, R23)
-- [ ] In `scripts/agentrite.mjs`, write `units(root, parsed)`: refuse when `root` holds no `changes/` directory; take
+- [x] In `scripts/agentrite.mjs`, write `units(root, parsed)`: refuse when `root` holds no `changes/` directory; take
   the unit directories of `changeDirectories(root)` by `isUnitDirectory`; with `<number>`, refuse when none opens with
   it, and keep those that do; read the `record.md` of each unit kept, refusing one that does not exist, and make each
   a unit with `unitFrom`; select with `selectUnits`; then print `unitsJson` or `unitsListing` and return 0. Add `units:
   { form: UNITS_FORM, parse: parseUnitsArgs, run: units }` to `COMMANDS`, after `roles`. Read nothing else: no git
   and no `agentrite.json`. (R1, R2, R3, R6, R12, R18)
-- [ ] In `tests/agentrite-init.test.mjs`, add the line `       agentrite units [<number>] [--open | --status <status>]
+- [x] In `tests/agentrite-init.test.mjs`, add the line `       agentrite units [<number>] [--open | --status <status>]
   [--kind <kind>] [--limit <count>] [--json]` to the usage of every command, after the line of `roles`, and see it
   pass. (R20)
-- [ ] Add `scripts/agentrite-units.mjs` to `files` of `package.json` and to the list in
+- [x] Add `scripts/agentrite-units.mjs` to `files` of `package.json` and to the list in
   `tests/package-documents.test.mjs`, after `scripts/agentrite-roles.mjs`. (R1)
 
 ### The documents
@@ -173,6 +173,6 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 - [x] `feature-0077 Plan the units command`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0077 Extract the reading of a field of a record`: `fieldFrom` and its test, with no change in behavior
 - [x] `feature-0077 Read, select and render the units of a project`: `scripts/agentrite-units.mjs` and its unit tests
-- [ ] `feature-0077 Add the units command`: the entry point, the command tests, the usage, `package.json` and the
+- [x] `feature-0077 Add the units command`: the entry point, the command tests, the usage, `package.json` and the
   package test
 - [ ] `feature-0077 Document the units command`: `README.md` and `process.md`

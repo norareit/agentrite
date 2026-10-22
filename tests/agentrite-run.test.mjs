@@ -887,6 +887,7 @@ test('agentrite alone and with a command it does not know print the usage of eve
     '       agentrite config\n' +
     '       agentrite refresh\n' +
     '       agentrite roles [--json]\n' +
+    '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
     '                     [-- <harness arguments...>]\n' +

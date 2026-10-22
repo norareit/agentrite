@@ -64,6 +64,15 @@ import {
   SETTINGS_FILE,
   settingsText,
 } from './agentrite-settings.mjs';
+import {
+  isUnitDirectory,
+  parseUnitsArgs,
+  selectUnits,
+  unitFrom,
+  unitsJson,
+  unitsListing,
+  UNITS_FORM,
+} from './agentrite-units.mjs';
 import { statusFrom } from './check-changes.mjs';
 
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
@@ -1051,6 +1060,39 @@ function changeDirectories(root) {
 }
 
 /**
+ * The unit the `record.md` of a directory of `changes/` describes, refused when the record is missing.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {import('./agentrite-units.mjs').Unit}
+ */
+function readUnit(root, directory) {
+  const recordFile = join(root, 'changes', directory, 'record.md');
+  if (!exists(recordFile)) throw new Error(`changes/${directory}/record.md does not exist`);
+  return unitFrom(directory, readFileSync(recordFile, 'utf-8'));
+}
+
+/**
+ * Prints the units of the project, for a reader or as JSON, and returns the exit status. It reads the working
+ * tree's `changes/` and nothing else, and prints nothing until every record it needs has been read.
+ *
+ * @param {string} root
+ * @param {import('./agentrite-units.mjs').UnitsArguments} parsed
+ * @returns {number}
+ */
+function units(root, parsed) {
+  if (!exists(resolve(root, 'changes'))) throw new Error(`${root} holds no changes/ directory`);
+  const directories = changeDirectories(root).filter(isUnitDirectory);
+  const named =
+    parsed.number === undefined ? directories : directories.filter((name) => name.startsWith(`${parsed.number}-`));
+  if (parsed.number !== undefined && named.length === 0) throw new Error(`changes/ holds no unit ${parsed.number}`);
+
+  const selection = selectUnits(named.map((directory) => readUnit(root, directory)), parsed);
+  process.stdout.write(parsed.json ? unitsJson(selection) : unitsListing(selection, parsed));
+  return 0;
+}
+
+/**
  * Throws unless the wrapper of `role` for `harness` is in the project at `root` as refresh would leave it, given
  * the project's `roles`. A harness that is given another wrapper may go on as its default agent, which never reads
  * the role's file, and say so in one line that is easy to miss.
@@ -1469,6 +1511,7 @@ const COMMANDS = {
     run: refresh,
   },
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
+  units: { form: UNITS_FORM, parse: parseUnitsArgs, run: units },
   run: { form: RUN_FORM, parse: parseRunArgs, run },
   orchestrate: { form: ORCHESTRATE_FORM, parse: parseOrchestrateArgs, run: orchestrateCommand },
 };

@@ -239,6 +239,7 @@ test('parseArgs gives the usage of every command for no command and for one that
     '       agentrite config\n' +
     '       agentrite refresh\n' +
     '       agentrite roles [--json]\n' +
+    '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
     '                     [-- <harness arguments...>]\n' +
