@@ -28,3 +28,7 @@ timestamp: 2026-10-22T12:22:44Z
   `feature-0074-a-unit-can-be-cancelled` from `master` at `737cb52` and wrote `plan.md` against it. Read requirement
   16 as a test of `agentrite orchestrate`, the only reading that works: `checkApproved` of that command is the one
   refusal by status, and `agentrite run` refuses none. The status is `approved`
+- 2026-10-22T18:20:00Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's request, corrected
+  `spec.md` on the unit's branch to take `agentrite run` out of it: the context, requirement 16 and the decision that
+  no command needs a change now name `agentrite orchestrate` alone, which is the one command that refuses a unit by
+  its status. Nothing else of the spec changed. The status is `approved`

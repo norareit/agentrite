@@ -14,8 +14,8 @@ was considered.
 
 Today `process.md` lists four statuses that every kind of unit goes through in order. Only `implemented` freezes a
 unit, in the process and in the change check, and the record template lists the four statuses in its `status` field.
-`agentrite run` and `agentrite orchestrate` start work only on an `approved` unit, so they already refuse every other
-status, a cancelled one included. `sandbox.sh`, given the number of a unit that has no branch, cuts one from the
+`agentrite orchestrate` starts work only on an `approved` unit, so it already refuses every other status, a
+cancelled one included. `sandbox.sh`, given the number of a unit that has no branch, cuts one from the
 default branch whatever the unit's status, and starts the sandbox on it.
 
 ## Requirements
@@ -81,8 +81,8 @@ Tests:
     rejected, as is a change to its `plan.md` and its deletion; a unit that is `cancelled` at the head, and was not
     at the merge base, may change its documents in the same branch; a `cancelled` unit with unticked tasks in its
     `plan.md` is not rejected
-16. A test shows that `agentrite run` refuses a unit whose status is `cancelled`, as it refuses every status but
-    `approved`
+16. A test shows that `agentrite orchestrate` refuses a unit whose status is `cancelled`, as it refuses every
+    status but `approved`
 17. Tests of `sandbox.sh` show that a unit given by its number, whose status on the default branch is `cancelled`,
     is refused by requirements 12 and 13 and that no branch exists after it, and that a unit at any other status
     still has its branch cut
@@ -116,8 +116,8 @@ Tests:
   cancelled one in `supersedes`, which keeps both histories readable
 * **The plan of a cancelled unit may have unticked tasks.** A unit given up part way through has tasks that were never
   done, and ticking them, or removing them, would misstate what happened
-* **`agentrite run` and `agentrite orchestrate` need no change.** They start work only on an `approved` unit, and
-  their refusal names the status the unit has, which then reads `cancelled`
+* **`agentrite orchestrate` needs no change.** It starts work only on an `approved` unit, and its refusal names
+  the status the unit has, which then reads `cancelled`
 
 * **`sandbox.sh` refuses to cut a branch for a cancelled unit.** The human took this into the unit from "Beyond the
   request". A branch cut for a cancelled unit holds nothing anyone will build, and the roles in the sandbox would
