@@ -58,3 +58,9 @@ timestamp: 2026-10-22T18:58:24Z
   `.reviews/0077-the-units-of-a-project-can-be-listed/review-2026-10-22T203505Z.md`.
   Ran `npm test`: 1036 passed, none failed or skipped; `npm run check-changes` and the correction probes passed.
   Could not independently verify the historical test-first sequence. The status stays `in-progress`
+- 2026-10-22T21:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, recorded the human's decision on
+  C3 of `.reviews/0077-the-units-of-a-project-can-be-listed/review-2026-10-22T203505Z.md`: commit `d0de06a` changes
+  behavior for S1 and S2 and refactors names and an annotation for C1 and C2, which the rule of the standards on
+  separating refactoring from behavior does not allow, and the human chose to record it as a one-time exception for that
+  commit and not to rewrite history. The code is unchanged, and the commit stays as it is. The status stays
+  `in-progress`
