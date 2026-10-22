@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-22T13:26:21Z
 ---
 
@@ -25,3 +25,4 @@ timestamp: 2026-10-22T13:26:21Z
   outcome and unit 0065 put the request in the command; `SANDBOX.md` does not change, since it says nothing of an
   outcome or the end report; the default definition does not change, since nothing in it names `questions`. Wrote
   `spec.md`. The status is `draft`
+- 2026-10-22T14:15:03Z [human] approved the spec. The status is `approved`
