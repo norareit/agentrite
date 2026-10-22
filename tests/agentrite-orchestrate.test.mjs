@@ -22,6 +22,7 @@ import {
   exitStatus,
   judgeStep,
   orchestrate,
+  orchestrateUsage,
   parseOrchestrateArgs,
   ranTable,
   stepLine,
@@ -666,10 +667,15 @@ test('the report of a step out of time gives its limit, and where its response i
 
 // R10
 
-const USAGE_FORM = 'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]';
+const USAGE_FORM = 'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
 
-test('parseOrchestrateArgs takes the unit, --definition in both forms and --skip-permissions, at any place', () => {
-  assert.deepEqual(parseOrchestrateArgs(['0029']), { unit: '0029', definition: undefined, skipPermissions: false });
+test('parseOrchestrateArgs takes the unit, --definition, --skip-permissions and --follow, at any place', () => {
+  assert.deepEqual(parseOrchestrateArgs(['0029']), {
+    unit: '0029',
+    definition: undefined,
+    skipPermissions: false,
+    follow: false,
+  });
   for (const args of [
     ['0029', '--definition', 'other.json', '--skip-permissions'],
     ['--definition=other.json', '0029', '--skip-permissions'],
@@ -677,11 +683,33 @@ test('parseOrchestrateArgs takes the unit, --definition in both forms and --skip
   ]) {
     assert.deepEqual(
       parseOrchestrateArgs(args),
-      { unit: '0029', definition: 'other.json', skipPermissions: true },
+      { unit: '0029', definition: 'other.json', skipPermissions: true, follow: false },
       args.join(' '),
     );
   }
   assert.equal(parseOrchestrateArgs(['0029', '--definition=-odd.json']).definition, '-odd.json');
+  for (const [args, expected] of [
+    [['--follow', '0029'], { unit: '0029', definition: undefined, skipPermissions: false, follow: true }],
+    [
+      ['0029', '--follow', '--skip-permissions'],
+      { unit: '0029', definition: undefined, skipPermissions: true, follow: true },
+    ],
+    [
+      ['0029', '--definition', 'other.json', '--follow'],
+      { unit: '0029', definition: 'other.json', skipPermissions: false, follow: true },
+    ],
+  ]) {
+    assert.deepEqual(parseOrchestrateArgs(args), expected, args.join(' '));
+  }
+});
+
+test('orchestrateUsage says what --follow does', () => {
+  assert.ok(
+    orchestrateUsage()
+      .split('\n')
+      .includes("  --follow             print each step's messages and tool calls while it runs"),
+    orchestrateUsage(),
+  );
 });
 
 test('parseOrchestrateArgs gives the usage alone for no argument', () => {
@@ -702,6 +730,8 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
     [['0029', '--definition', '--skip-permissions'], '--definition takes a file, and none was given'],
     [['0029', '--skip-permissions=yes'], '--skip-permissions takes no value'],
     [['--skip-permissions'], 'no unit given'],
+    [['0029', '--follow=yes'], '--follow takes no value'],
+    [['--follow'], 'no unit given'],
     [['0029', '0030'], 'unexpected argument: 0030'],
     [['0029', '--'], 'unexpected argument: --'],
     [['0029', '--', '--model'], 'unexpected argument: --'],
@@ -1306,7 +1336,8 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
   }
 });
 
-const ORCHESTRATE_USAGE_FORM = 'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]';
+const ORCHESTRATE_USAGE_FORM =
+  'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
 
 test('no argument, or one it does not take, prints the usage on standard error and exits 2, starting nothing', (t) => {
   for (const [args, first] of [

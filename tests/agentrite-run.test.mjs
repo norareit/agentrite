@@ -890,7 +890,7 @@ test('agentrite alone and with a command it does not know print the usage of eve
     '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
     '[--skip-permissions]\n' +
     '                     [-- <harness arguments...>]\n' +
-    '       agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]\n';
+    '       agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]\n';
 
   const alone = agentrite([]);
   const unknown = agentrite(['list-roles']);

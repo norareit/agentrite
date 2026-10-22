@@ -128,13 +128,13 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 
 ## Tasks
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, set `USAGE_FORM` to the new form of the approach. Extend
+- [x] In `tests/agentrite-orchestrate.test.mjs`, set `USAGE_FORM` to the new form of the approach. Extend
   `parseOrchestrateArgs takes the unit` so that every expected result holds `follow`, `false` without the option,
   and add the arguments `['--follow', '0029']`, `['0029', '--follow', '--skip-permissions']` and `['0029',
   '--definition', 'other.json', '--follow']`, each giving `follow: true`. Add to `names what it does not take` the
   rows `[['0029', '--follow=yes'], '--follow takes no value']` and `[['--follow'], 'no unit given']`. Add a test that
   `orchestrateUsage()` holds the line of `--follow` of the approach. Run `npm test` and see them fail (R1, R2, R14)
-- [ ] In `scripts/agentrite-orchestrate.mjs`, add `follow: { type: 'boolean' }` to `ORCHESTRATE_OPTIONS`, `follow:
+- [x] In `scripts/agentrite-orchestrate.mjs`, add `follow: { type: 'boolean' }` to `ORCHESTRATE_OPTIONS`, `follow:
   values.follow === true` to what `parseOrchestrateArgs` returns and to its `@returns`, and the form and the usage
   line of the approach. Run `npm test`: the tests of the previous task pass (R1, R2)
 - [ ] In `tests/agentrite-outcome.test.mjs`, change the test of Claude Code's arguments to expect `['--output-format',
@@ -247,7 +247,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 
 ## Commit Points
 
-- [ ] `feature-0075 Take --follow among the arguments of orchestrate`: the first two tasks
+- [x] `feature-0075 Take --follow among the arguments of orchestrate`: the first two tasks
 - [ ] `feature-0075 Read Claude Code's output as a stream of events`: the third to fifth tasks, which change how
   Claude Code is run and read with no change in what the command prints
 - [ ] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks

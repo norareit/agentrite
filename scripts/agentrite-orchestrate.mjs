@@ -346,7 +346,8 @@ export function endReport(ran, end, { runDirectory, unitDirectory, responsePath 
 }
 
 /** How `orchestrate` is run. */
-export const ORCHESTRATE_FORM = 'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]';
+export const ORCHESTRATE_FORM =
+  'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
 
 /**
  * @returns {string}
@@ -361,12 +362,14 @@ export function orchestrateUsage() {
     '                       a path relative to the project root, or absolute',
     '  --skip-permissions   given to the agentrite run of every step, so that no harness asks permission.',
     '                       Meant for the sandbox',
+    "  --follow             print each step's messages and tool calls while it runs",
   ].join('\n');
 }
 
 const ORCHESTRATE_OPTIONS = /** @type {const} */ ({
   definition: { type: 'string' },
   'skip-permissions': { type: 'boolean' },
+  follow: { type: 'boolean' },
 });
 
 const ORCHESTRATE_VALUES = { definition: 'a file' };
@@ -377,7 +380,7 @@ const ORCHESTRATE_VALUES = { definition: 'a file' };
  * nothing on to a harness.
  *
  * @param {string[]} args
- * @returns {{ unit: string, definition: string | undefined, skipPermissions: boolean }}
+ * @returns {{ unit: string, definition: string | undefined, skipPermissions: boolean, follow: boolean }}
  */
 export function parseOrchestrateArgs(args) {
   if (args.length === 0) throw new Error(orchestrateUsage());
@@ -395,6 +398,7 @@ export function parseOrchestrateArgs(args) {
     unit: positionals[0],
     definition: /** @type {string | undefined} */ (values.definition),
     skipPermissions: values['skip-permissions'] === true,
+    follow: values.follow === true,
   };
 }
 

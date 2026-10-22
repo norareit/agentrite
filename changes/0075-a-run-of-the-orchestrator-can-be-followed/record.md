@@ -41,3 +41,8 @@ timestamp: 2026-10-22T13:15:49Z
   read that they carry no time. Requirement 7 takes the harness's instant where it gives one, so the only reading that
   holds is to take it. Amended the approach and the sixth task of `plan.md` so that `time` of a Claude Code item is
   its event's `timestamp` by `Date.parse`, and `undefined` when it has none or it does not parse
+- 2026-10-22T16:52:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the first two tasks. Besides
+  `USAGE_FORM`, the form of `orchestrate` is also expected in `ORCHESTRATE_USAGE_FORM` of the command's tests, and in
+  the usage of every command in `tests/agentrite-run.test.mjs` and `tests/agentrite-init.test.mjs`, so those three
+  took `[--follow]` too, the only reading that keeps them true. Saw the new tests fail before the change and
+  `npm test` pass, 943 tests, after it
