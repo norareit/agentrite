@@ -853,10 +853,17 @@ function callOf(text) {
   return { harness: lines[0], options: lines.slice(1, end), prompt: lines.slice(end + 1).join('\n') };
 }
 
-// What Claude Code prints headless for a final response, with the session's id when one is given.
+// What Claude Code prints headless with `stream-json` for a final response, an event a line, with the session's id
+// when one is given.
 function claudePrinted(response, session) {
-  const printed = { type: 'result', subtype: 'success', is_error: false, result: response };
-  return `${JSON.stringify(session === undefined ? printed : { ...printed, session_id: session })}\n`;
+  const id = session === undefined ? {} : { session_id: session };
+  return [
+    { type: 'system', subtype: 'init', ...id },
+    { type: 'assistant', message: { content: [{ type: 'text', text: response }] }, parent_tool_use_id: null, ...id },
+    { type: 'result', subtype: 'success', is_error: false, result: response, ...id },
+  ]
+    .map((event) => `${JSON.stringify(event)}\n`)
+    .join('');
 }
 
 // What OpenCode prints headless for a final response: its text event and the step_finish of its message.
@@ -928,17 +935,18 @@ test('a run whose every item ends runs the default definition and exits 0', (t) 
   const [planner, implementer, reviewer] = calls();
   assert.equal(calls().length, 3);
   assert.equal(planner.harness, 'claude');
-  assert.deepEqual(planner.options.slice(0, 7), [
+  assert.deepEqual(planner.options.slice(0, 8), [
     '--print',
     '--agent',
     'planner',
     '--model',
     'claude-opus-5-5',
     '--output-format',
-    'json',
+    'stream-json',
+    '--verbose',
   ]);
-  assert.equal(planner.options[7], '--session-id');
-  assert.match(planner.options[8], UUID);
+  assert.equal(planner.options[8], '--session-id');
+  assert.match(planner.options[9], UUID);
   assert.ok(planner.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${REQUEST_LINE}, and reads`), planner.prompt);
   assert.ok(implementer.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${IMPLEMENTER_PROMPT}\n\n`));
   assert.ok(implementer.prompt.includes(`${REQUEST_LINE}, in round 1 of a repeat of at most 3 rounds, and reads`));
@@ -968,8 +976,8 @@ test('a run whose every item ends runs the default definition and exits 0', (t) 
   assert.equal(state.definition, 'node_modules/agentrite/orchestrator.json');
   assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1 });
   assert.deepEqual(state.sessions, [
-    { role: 'planner', harness: 'claude', session: planner.options[8] },
-    { role: 'implementer', harness: 'claude', session: implementer.options[8] },
+    { role: 'planner', harness: 'claude', session: planner.options[9] },
+    { role: 'implementer', harness: 'claude', session: implementer.options[9] },
     { role: 'reviewer', harness: 'opencode', session: 'ses_test' },
   ]);
   assert.deepEqual(state.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
@@ -1488,7 +1496,7 @@ test('a step past its limit is ended by SIGTERM, and the run stops by the case, 
   assert.ok(read(path).includes('"summary": "Not finished."'));
   assert.deepEqual(readdirSync(run.path).sort(), ['00-implementer.response.md', 'definition.json', 'state.json']);
   const state = JSON.parse(read(`${run.name}/state.json`));
-  assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[8] }]);
+  assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[9] }]);
   assert.match(state.sessions[0].session, UUID);
   assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
   assert.ok(await gone(harness), `the harness ${harness} is left`);

@@ -331,15 +331,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 test('claude: the first step is given a new session id, and a later one resumes the session given', () => {
   const first = HEADLESS.claude.arguments(undefined);
-  assert.equal(first.args.length, 4);
-  assert.deepEqual(first.args.slice(0, 3), ['--output-format', 'json', '--session-id']);
-  assert.match(first.args[3], UUID);
-  assert.equal(first.session, first.args[3]);
+  assert.equal(first.args.length, 5);
+  assert.deepEqual(first.args.slice(0, 4), ['--output-format', 'stream-json', '--verbose', '--session-id']);
+  assert.match(first.args[4], UUID);
+  assert.equal(first.session, first.args[4]);
   assert.notEqual(HEADLESS.claude.arguments(undefined).session, first.session);
 
   const later = HEADLESS.claude.arguments('4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a');
   assert.deepEqual(later, {
-    args: ['--output-format', 'json', '--resume', '4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a'],
+    args: ['--output-format', 'stream-json', '--verbose', '--resume', '4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a'],
     session: '4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a',
   });
 });
@@ -353,6 +353,22 @@ test('claude: the result and the session_id of the one object printed are read',
     session_id: 'abc',
   });
   assert.deepEqual(HEADLESS.claude.read(`${printed}\n`), { response: 'Done.\n\n```json\n{}\n```', session: 'abc' });
+});
+
+test('claude: of the events printed one per line, the result and the session_id of the result are read', () => {
+  const printed = [
+    JSON.stringify({ type: 'system', subtype: 'init', session_id: 'abc' }),
+    'a warning',
+    JSON.stringify({
+      type: 'assistant',
+      message: { content: [{ type: 'text', text: 'Not this.' }] },
+      parent_tool_use_id: null,
+      session_id: 'abc',
+    }),
+    JSON.stringify({ type: 'result', subtype: 'success', result: 'Done.', session_id: 'abc' }),
+    '',
+  ].join('\n');
+  assert.deepEqual(HEADLESS.claude.read(printed), { response: 'Done.', session: 'abc' });
 });
 
 test('claude: no final response for output that is no JSON, without a string result, or empty', () => {

@@ -1,10 +1,10 @@
 import { randomUUID } from 'node:crypto';
 
 /**
- * How each harness runs a step headless for the orchestrator: the arguments that make it print JSON and that start
- * or continue a session, with the session's id where the command chooses it, and how its final response and its
- * session's id are read from what it printed. Keyed by the harness's name, so that the code that uses it names no
- * harness.
+ * How each harness runs a step headless for the orchestrator: the arguments that make it print JSON events, one per
+ * line, and that start or continue a session, with the session's id where the command chooses it, and how its final
+ * response and its session's id are read from what it printed. Keyed by the harness's name, so that the code that
+ * uses it names no harness.
  *
  * @type {Record<string, {
  *   arguments: (session: string | undefined) => { args: string[], session: string | undefined },
@@ -14,24 +14,19 @@ import { randomUUID } from 'node:crypto';
 export const HEADLESS = {
   claude: {
     arguments(session) {
-      if (session !== undefined) return { args: ['--output-format', 'json', '--resume', session], session };
+      // Claude Code takes `stream-json` in `--print` only beside `--verbose`.
+      const stream = ['--output-format', 'stream-json', '--verbose'];
+      if (session !== undefined) return { args: [...stream, '--resume', session], session };
       const id = randomUUID();
-      return { args: ['--output-format', 'json', '--session-id', id], session: id };
+      return { args: [...stream, '--session-id', id], session: id };
     },
-    // One JSON object, whose `result` is the final response.
+    // One JSON event per line, the last of them of type `result`, whose `result` is the final response.
     read(stdout) {
-      /** @type {unknown} */ let printed;
-      try {
-        printed = JSON.parse(stdout);
-      } catch {
-        return { response: undefined, session: undefined };
-      }
-      if (typeof printed !== 'object' || printed === null) return { response: undefined, session: undefined };
-      const { result, session_id: session } = /** @type {Record<string, unknown>} */ (printed);
-      return {
-        response: typeof result === 'string' ? result : undefined,
-        session: typeof session === 'string' ? session : undefined,
-      };
+      const printed = stdout
+        .split('\n')
+        .map(jsonRecord)
+        .findLast((event) => event?.type === 'result');
+      return { response: stringOrNone(printed?.result), session: stringOrNone(printed?.session_id) };
     },
   },
   opencode: {
@@ -72,6 +67,23 @@ function stringOrNone(value) {
 }
 
 /**
+ * The JSON object that one line holds, or `undefined` for a line that is no JSON object.
+ *
+ * @param {string} line
+ * @returns {Record<string, unknown> | undefined}
+ */
+function jsonRecord(line) {
+  if (line.trim() === '') return undefined;
+  /** @type {unknown} */ let parsed;
+  try {
+    parsed = JSON.parse(line);
+  } catch {
+    return undefined;
+  }
+  return isRecord(parsed) ? parsed : undefined;
+}
+
+/**
  * The event that one line of OpenCode's output holds, narrowed to the fields the reader uses, or `undefined` for a
  * line that is no JSON object.
  *
@@ -79,13 +91,8 @@ function stringOrNone(value) {
  * @returns {OpencodeEvent | undefined}
  */
 function opencodeEvent(line) {
-  /** @type {unknown} */ let parsed;
-  try {
-    parsed = JSON.parse(line);
-  } catch {
-    return undefined;
-  }
-  if (!isRecord(parsed)) return undefined;
+  const parsed = jsonRecord(line);
+  if (parsed === undefined) return undefined;
   const part = isRecord(parsed.part) ? parsed.part : {};
   return {
     type: stringOrNone(parsed.type),

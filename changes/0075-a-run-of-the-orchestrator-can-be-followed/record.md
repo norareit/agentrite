@@ -46,3 +46,8 @@ timestamp: 2026-10-22T13:15:49Z
   the usage of every command in `tests/agentrite-run.test.mjs` and `tests/agentrite-init.test.mjs`, so those three
   took `[--follow]` too, the only reading that keeps them true. Saw the new tests fail before the change and
   `npm test` pass, 943 tests, after it
+- 2026-10-22T17:02:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the third to fifth tasks.
+  Claude Code's `read` takes the last line that is a JSON object of type `result`, by a `jsonRecord` of one line that
+  OpenCode's `opencodeEvent` now uses too. After the change of the harness, the command's tests failed on the
+  planner's arguments, as the plan said, and also `a step past its limit is ended by SIGTERM`, which reads the
+  session's id at the index the new `--verbose` moved; both took the new index. `npm test` passes, 944 tests

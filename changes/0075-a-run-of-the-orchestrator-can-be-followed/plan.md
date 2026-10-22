@@ -137,19 +137,19 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] In `scripts/agentrite-orchestrate.mjs`, add `follow: { type: 'boolean' }` to `ORCHESTRATE_OPTIONS`, `follow:
   values.follow === true` to what `parseOrchestrateArgs` returns and to its `@returns`, and the form and the usage
   line of the approach. Run `npm test`: the tests of the previous task pass (R1, R2)
-- [ ] In `tests/agentrite-outcome.test.mjs`, change the test of Claude Code's arguments to expect `['--output-format',
+- [x] In `tests/agentrite-outcome.test.mjs`, change the test of Claude Code's arguments to expect `['--output-format',
   'stream-json', '--verbose', '--session-id', <uuid>]` and `['--output-format', 'stream-json', '--verbose',
   '--resume', <id>]`. Add a test that `HEADLESS.claude.read` of several lines, a `system` event, an `assistant`
   event and a `result` event, gives the `result` and `session_id` of the `result` event, and that a line that is no
   JSON among them is skipped. Keep the tests of the one object and of output with no final response, which hold for
   one line as for many. Run `npm test` and see them fail (R10)
-- [ ] In `scripts/agentrite-headless.mjs`, give Claude Code's `arguments` `--output-format stream-json --verbose`,
+- [x] In `scripts/agentrite-headless.mjs`, give Claude Code's `arguments` `--output-format stream-json --verbose`,
   and make its `read` split the output into lines, parse each as JSON, skipping a line that is not, and read
   `result` and `session_id` from the last object whose `type` is `result`, as it now reads them from the one object.
   Change the doc comments that say Claude Code prints one JSON object. Run `npm test` and see the command's tests
   that check the planner's arguments, `a run whose every item ends runs the default definition`, fail on `json`
   (R10)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, change the expected arguments of the planner to `'--output-format',
+- [x] In `tests/agentrite-orchestrate.test.mjs`, change the expected arguments of the planner to `'--output-format',
   'stream-json', '--verbose'`, with the session's id at the indexes after them, and `claudePrinted` to print what
   Claude Code prints with `stream-json`: a `system` event of subtype `init` with the session's id, an `assistant`
   event whose content is one `text` block of the response, and the `result` event it prints now, each on a line of
@@ -248,7 +248,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 ## Commit Points
 
 - [x] `feature-0075 Take --follow among the arguments of orchestrate`: the first two tasks
-- [ ] `feature-0075 Read Claude Code's output as a stream of events`: the third to fifth tasks, which change how
+- [x] `feature-0075 Read Claude Code's output as a stream of events`: the third to fifth tasks, which change how
   Claude Code is run and read with no change in what the command prints
 - [ ] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
 - [ ] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
