@@ -44,14 +44,13 @@ timestamp: 2026-10-22T18:58:24Z
   Ran `npm test`: 1032 passed, none failed or skipped; `npm run check-changes` and the command smoke checks passed.
   Could not independently verify the historical test-first sequence. The status stays `in-progress`
 - 2026-10-22T20:55:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, took the findings of
-  `.reviews/0077-the-units-of-a-project-can-be-listed/review-2026-10-22T195240Z.md` and applied all four in `d0de06a`, with
-  the tasks added to `plan.md` before the work. S1 (CRLF records): fixed, `unitFrom` takes the front matter and splits
-  lines on CRLF as well as LF, with a regression test that includes a front matter comment. S2 (values with spaces):
-  fixed, `fieldFrom` returns the whole value of a field, tested with `needs human` and `small task`, and `statusFrom`
-  still refuses a status of more than one word, so that the change check behaves as before. `fieldFrom` now also
-  refuses a field with an empty value, where it used to read the first word of the next line; no test of the change
-  check covers that case. C1 (one-character names): fixed in the comparator of `selectUnits` and the command tests,
-  and the `_` of two `Array.from` callbacks is gone too. C2 (annotation of the tokens): fixed with a `Token` type
-  that `argumentError` takes. Ran `npm test` on `d0de06a`: 1036 tests pass and none fail. The status stays
-  `in-progress`
+  `.reviews/0077-the-units-of-a-project-can-be-listed/review-2026-10-22T195240Z.md` and applied all four in `d0de06a`,
+  with the tasks added to `plan.md` before the work. S1 (CRLF records): fixed, `unitFrom` takes the front matter and
+  splits lines on CRLF as well as LF, with a regression test that includes a front matter comment. S2 (values with
+  spaces): fixed, `fieldFrom` returns the whole value of a field, tested with `needs human` and `small task`, and
+  `statusFrom` still refuses a status of more than one word, so that the change check behaves as before. `fieldFrom` now
+  also refuses a field with an empty value, where it used to read the first word of the next line; no test of the change
+  check covers that case. C1 (one-character names): fixed in the comparator of `selectUnits` and the command tests, and
+  the `_` of two `Array.from` callbacks is gone too. C2 (annotation of the tokens): fixed with a `Token` type that
+  `argumentError` takes. Ran `npm test` on `d0de06a`: 1036 tests pass and none fail. The status stays `in-progress`
 
