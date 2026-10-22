@@ -22,3 +22,8 @@ timestamp: 2026-10-22T18:58:24Z
   statuses, rewrote `spec.md`: requirements 9 to 11 and 21 are new, with `--open` and `--status` refused together, the
   values of the filters checked, and the line with nothing to show naming the filters. The status is `draft`
 - 2026-10-22T19:27:35Z [human] approved the spec. The status is `approved`
+- 2026-10-22T19:41:12Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0077-the-units-of-a-project-can-be-listed` from `master` at `9c624b6` and wrote `plan.md`. Read
+  requirement 6 as applying to the units the command reads to answer, so with `<number>` only the records of the
+  units that open with it are read. Planned `fieldFrom` as extracted from `statusFrom` in a commit of its own, since
+  the command reads `kind` as the change check reads `status`. The status is `approved`
