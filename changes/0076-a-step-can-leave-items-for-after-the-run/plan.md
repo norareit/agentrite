@@ -127,6 +127,9 @@ the other's.
   response; a run with no item, which holds no line `After the run:`, as the present report tests already show once
   `DONE` holds `afterwards: []`; and a stop by a `done` outcome with questions, which gives the end line of the
   approach, `Summary:`, `Questions:` and its items. Run `npm test` and see them fail (R8, R10, R11, R12, R13, R16)
+- [x] In `scripts/agentrite-orchestrate.mjs`, extract from `stepLine` the text of a step's round, `, round <at> of
+  <of>` or nothing outside a repeat, into a function `inRound(round)`, with no change in what the command prints, since
+  `afterwardsLines` names a step's round the same way. Run `npm test`: it passes as before
 - [ ] In `scripts/agentrite-orchestrate.mjs`, add `afterwardsLines(ran)`, which gives `[]` when no entry of `ran`
   with an outcome of the form holds an item, and otherwise `After the run:` and, for each such entry in order whose
   `afterwards` is not empty, `  step <number>[, round <at> of <of>], <role>:` and its items as `    - <item>`. Spread
@@ -170,5 +173,7 @@ the other's.
 
 - [x] `feature-0076 Read afterwards in an outcome and ask for it`: the first three tasks, after which the suite passes
 - [x] `feature-0076 Stop a run for a done outcome with questions`: the fourth and fifth tasks
+- [x] `feature-0076 Name the round of a step by one function`: the extraction of `inRound`, a refactoring kept apart
+  from the change of behavior
 - [ ] `feature-0076 Give the items for after the run in the end report`: the sixth to eighth tasks
 - [ ] `feature-0076 Document afterwards in README.md`: the last three tasks

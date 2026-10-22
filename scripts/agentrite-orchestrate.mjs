@@ -199,6 +199,16 @@ function stepResult({ result, reading }) {
 }
 
 /**
+ * The round of a step in a repeat, as it follows the step's number, or nothing for a step outside one.
+ *
+ * @param {{ at: number, of: number } | undefined} round
+ * @returns {string}
+ */
+function inRound(round) {
+  return round === undefined ? '' : `, round ${round.at} of ${round.of}`;
+}
+
+/**
  * The line before a step, and with `ended` the line after it.
  *
  * @param {Planned} planned
@@ -206,8 +216,7 @@ function stepResult({ result, reading }) {
  * @returns {string}
  */
 export function stepLine({ number, round, step }, ended) {
-  const inRound = round === undefined ? '' : `, round ${round.at} of ${round.of}`;
-  const head = `step ${number}${inRound}, ${step.role}, ${step.harness}, ${step.model}`;
+  const head = `step ${number}${inRound(round)}, ${step.role}, ${step.harness}, ${step.model}`;
   if (ended === undefined) return `${head}: started`;
   return `${head}: ${stepResult(ended)} after ${duration(ended.result.milliseconds)}`;
 }

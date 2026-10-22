@@ -36,3 +36,7 @@ timestamp: 2026-10-22T13:26:21Z
   `endReport`. The status stays `approved`
 - 2026-10-22T14:24:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   began the work on `feature-0076-a-step-can-leave-items-for-after-the-run` at `f5a37bf`. The status is `in-progress`
+- 2026-10-22T14:32:17Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to `plan.md` a task and a
+  commit point for extracting `inRound` from `stepLine`, before the task of `afterwardsLines`: the end report names a
+  step's round as the line of a step does, and the standards extract the second encoding of one decision. It is a
+  commit of its own, since the standards keep refactoring apart from a change of behavior
