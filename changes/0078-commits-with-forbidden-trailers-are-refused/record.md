@@ -18,3 +18,7 @@ timestamp: 2026-10-22T22:02:19Z
   `SANDBOX.md` for why the clone's own hooks are not trusted, and the Dockerfile for what the image build copies.
   Wrote `spec.md`. The attribution setting of the harness, a check of the branch's commits and the pull request
   description are beyond the request. The status is `draft`
+- 2026-10-22T22:18:10Z [Claude Code, anthropic/claude-opus-5-5] as the spec-reviewer, in a session on the Linux host,
+  reviewed `spec.md` and `record.md` fully, at `a9920c2`. Findings F1 to F6, saved in
+  `.reviews/0078-commits-with-forbidden-trailers-are-refused/spec-review-2026-10-22T221810Z.md`. Not checked: that
+  Claude Code injects `Claude-Session` as a trailer, and the name of its attribution setting
