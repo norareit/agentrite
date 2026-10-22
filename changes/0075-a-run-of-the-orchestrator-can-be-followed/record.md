@@ -92,3 +92,8 @@ timestamp: 2026-10-22T13:15:49Z
   each to be printed once the harness has made it known, and for such calls the two cannot both hold. Keeping the
   order means holding a call that ended early until the calls of its model message have ended. S1 is open, and put
   to the human as a decision on the spec. The status stays `in-progress`
+- 2026-10-22T17:44:02Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, corrected `spec.md` on the
+  unit's branch by the human's decision of S1 of the review of `d10ffd4`: requirement 4 prints the messages and calls
+  in the order the harness makes them known, so that OpenCode's calls run at the same time are printed in the order
+  they ended; requirement 14 tests that order; and the decision "OpenCode's calls in the order they end" gives why.
+  The status stays `in-progress`

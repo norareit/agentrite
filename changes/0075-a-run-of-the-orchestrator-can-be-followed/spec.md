@@ -34,10 +34,12 @@ Without the option:
 With the option:
 
 4. A run with `--follow` prints, on the command's standard output and while each step runs, the text messages the
-   step's agent writes and the tool calls it makes, in the order the agent made them. Each is printed while the step
-   is still running, once the harness has made it known, and not held until the step ends. Everything printed for a
-   step stands after that step's `started` line and before its line after it, and the end report stands after all of
-   it, last, as without the option
+   step's agent writes and the tool calls it makes, in the order the harness makes them known. Each is printed while
+   the step is still running, once the harness has made it known, and not held until the step ends. A harness that
+   makes each known as the agent makes it, as Claude Code does, gives them in the order the agent made them. Of tool
+   calls that OpenCode runs at the same time, which it makes known each once it has ended, the one that ended first
+   is printed first. Everything printed for a step stands after that step's `started` line and before its line after
+   it, and the end report stands after all of it, last, as without the option
 5. Each text message is printed in full, with no part of its text cut, after its time and set apart from what is
    printed before and after it by one blank line on each side. A final response that holds the block of the outcome
    is printed as any other text message
@@ -73,7 +75,8 @@ Tests:
 14. Unit tests cover the reading of `--follow` among the arguments, and the printing of text messages and tool calls
     from what each harness reports: the full text and the blank lines around a message, the time in UTC, the dimmed
     line of a tool call, each kind of label in its order of precedence, the cut at 100 characters, a call with no
-    label, and that tool results and reasoning are not printed
+    label, that tool results and reasoning are not printed, and that two calls of OpenCode made known in the reverse
+    of the order the agent made them are printed in the order they were made known, each at its own time
 15. Tests of the command show, for a step in each harness, that a run with `--follow` prints the step's messages and
     calls between its two lines and the end report last, that a run without it prints none of them, and that the
     outcome, the run's directory and the exit status are the same with the option and without it
@@ -100,6 +103,13 @@ Tests:
   run is followed as it happens
 * **Both harnesses.** The kit's default definition runs the reviewer in OpenCode, and a run whose review cannot be
   followed would leave the human in the same place for that step
+* **OpenCode's calls in the order they end.** OpenCode makes a tool call known only once it has ended, so of two
+  calls it runs at the same time, the later one can be made known first, before anything shows that the earlier one
+  exists. The review of `d10ffd4` found this, against the order the agent made the calls in, which requirement 4
+  first asked for. Printing them in the order made would mean holding a call that ended early until the other calls
+  of its model message have ended, and printing it later than it was known. The human chose the order they are made
+  known instead: nothing is held back, and the times printed only go forward. The order of calls that run side by
+  side matters little to the human who watches them
 * **Chosen when the run starts.** A run started without `--follow` cannot be switched to following it, and a run
   started with it cannot be switched off. The human accepted this limitation: the option is for a human who is about
   to watch the run
