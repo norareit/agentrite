@@ -46,3 +46,9 @@ timestamp: 2026-10-22T12:22:44Z
   passed, 973 tests with none failed or skipped; `node scripts/check-changes.mjs` and `npm run check-changes` exited
   0; `git diff master -- SANDBOX.md CHANGELOG.md` is empty; no line of the files changed exceeds 120 characters and
   none adds an em dash. Handed over for review. The status is `in-progress`
+- 2026-10-22T18:40:12Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0074 at
+  `f9b5e6a`, against the merge base `737cb52`. Returned C1, saved in
+  `.reviews/0074-a-unit-can-be-cancelled/2026-10-22T18-38-37Z-opencode.md`. Ran `npm test`: 973 tests passed, none
+  failed or skipped. Both `node scripts/check-changes.mjs` and `npm run check-changes` exited 0; the diff checks and
+  the line-limit and em-dash checks passed. The prior session's claimed fail-first test executions could not be
+  independently verified from the committed history.
