@@ -182,13 +182,23 @@ function readAtRevision(root, revision, file) {
 
 /**
  * @param {string} record
+ * @param {string} field
+ * @param {string} recordFile
+ * @returns {string}
+ */
+export function fieldFrom(record, field, recordFile) {
+  const match = record.match(new RegExp(`^${field}:\\s*(\\S+)\\s*$`, 'm'));
+  if (!match) throw new Error(`${recordFile} is missing a ${field} field`);
+  return match[1];
+}
+
+/**
+ * @param {string} record
  * @param {string} recordFile
  * @returns {string}
  */
 export function statusFrom(record, recordFile) {
-  const match = record.match(/^status:\s*(\S+)\s*$/m);
-  if (!match) throw new Error(`${recordFile} is missing a status field`);
-  return match[1];
+  return fieldFrom(record, 'status', recordFile);
 }
 
 /**

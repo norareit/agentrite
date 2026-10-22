@@ -62,9 +62,9 @@ and a space, they are taken off.
 
 ### The reading of a field
 
-- [ ] In `tests/check-changes.test.mjs`, test that `fieldFrom` returns the value of a field of the front matter, as
+- [x] In `tests/check-changes.test.mjs`, test that `fieldFrom` returns the value of a field of the front matter, as
   `kind` and `status`, and throws `<recordFile> is missing a <field> field` when the record has none. (R6)
-- [ ] In `scripts/check-changes.mjs`, extract `fieldFrom(record, field, recordFile)` from `statusFrom`, with the same
+- [x] In `scripts/check-changes.mjs`, extract `fieldFrom(record, field, recordFile)` from `statusFrom`, with the same
   regular expression for the given field name, and make `statusFrom` return `fieldFrom(record, 'status',
   recordFile)`. Run `npm test`: the tests of the change check and of `orchestrate` pass unchanged. (R6)
 
@@ -170,8 +170,8 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 
 ## Commit Points
 
-- [ ] `feature-0077 Plan the units command`: `plan.md` and the planner's entry in `record.md`
-- [ ] `feature-0077 Extract the reading of a field of a record`: `fieldFrom` and its test, with no change in behavior
+- [x] `feature-0077 Plan the units command`: `plan.md` and the planner's entry in `record.md`
+- [x] `feature-0077 Extract the reading of a field of a record`: `fieldFrom` and its test, with no change in behavior
 - [ ] `feature-0077 Read, select and render the units of a project`: `scripts/agentrite-units.mjs` and its unit tests
 - [ ] `feature-0077 Add the units command`: the entry point, the command tests, the usage, `package.json` and the
   package test

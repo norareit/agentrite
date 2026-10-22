@@ -3,7 +3,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { findFrozenViolations, findIncompletePlans, findSplitEntries } from '../scripts/check-changes.mjs';
+import { fieldFrom, findFrozenViolations, findIncompletePlans, findSplitEntries } from '../scripts/check-changes.mjs';
 import { installKit, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -537,4 +537,17 @@ test('check-changes given two arguments says it takes one, prints its usage, che
   assert.equal(result.stdout, '');
   assert.match(result.stderr, /takes one argument, the repository root/);
   assert.match(result.stderr, /^usage: node check-changes\.mjs \[<repository root>\]$/m);
+});
+
+test('fieldFrom returns the value of a field of the front matter', () => {
+  const record = '---\nkind: feature\nstatus: in-progress\ntimestamp: 2026-10-22T18:58:24Z\n---\n\n# 0001 A\n';
+
+  assert.equal(fieldFrom(record, 'kind', 'changes/0001-a/record.md'), 'feature');
+  assert.equal(fieldFrom(record, 'status', 'changes/0001-a/record.md'), 'in-progress');
+});
+
+test('fieldFrom throws when the record has no such field', () => {
+  assert.throws(() => fieldFrom('---\nstatus: draft\n---\n', 'kind', 'changes/0001-a/record.md'), {
+    message: 'changes/0001-a/record.md is missing a kind field',
+  });
 });

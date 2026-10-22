@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-22T18:58:24Z
 ---
 
@@ -27,3 +27,5 @@ timestamp: 2026-10-22T18:58:24Z
   requirement 6 as applying to the units the command reads to answer, so with `<number>` only the records of the
   units that open with it are read. Planned `fieldFrom` as extracted from `statusFrom` in a commit of its own, since
   the command reads `kind` as the change check reads `status`. The status is `approved`
+- 2026-10-22T19:55:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0077-the-units-of-a-project-can-be-listed`, began the work. The status is `in-progress`
