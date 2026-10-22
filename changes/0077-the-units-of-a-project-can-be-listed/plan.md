@@ -159,6 +159,20 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
   numbered: `npx agentrite units` lists the units of a project and `npx agentrite units --open` those still open, and
   an agent asked which units are open, or in what status a unit is, runs it rather than reading the records. (R21)
 
+### The review's findings
+
+Added after the review of `66ae731`, which the record's log tells.
+
+- [x] Test `unitFrom` on a record with CRLF line endings, with and without a `# ` comment in the front matter, and on a
+  `status` and a `kind` whose values hold spaces, as `needs human` and `small task`; test that `fieldFrom` returns a
+  value with spaces and that `statusFrom` still throws for one, as before. (S1, S2, R5)
+- [x] Make `unitFrom` take the front matter and split the lines on CRLF as well as LF, and make `fieldFrom` return the
+  whole value of a field, without the space around it. Keep `statusFrom` refusing a status of more than one word, so
+  that the change check behaves as it did. (S1, S2)
+- [x] Name the units of the comparator of `selectUnits` and the test context of the command tests in full, and drop the
+  `_` of the two `Array.from` callbacks. (C1)
+- [x] Annotate the tokens of `argumentError` with the shape of a token that `parseArgs` returns. (C2)
+
 ## Verification
 
 - [x] `npm test` passes

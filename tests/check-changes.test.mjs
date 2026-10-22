@@ -3,7 +3,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { fieldFrom, findFrozenViolations, findIncompletePlans, findSplitEntries } from '../scripts/check-changes.mjs';
+import {
+  fieldFrom,
+  findFrozenViolations,
+  findIncompletePlans,
+  findSplitEntries,
+  statusFrom,
+} from '../scripts/check-changes.mjs';
 import { installKit, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -549,5 +555,15 @@ test('fieldFrom returns the value of a field of the front matter', () => {
 test('fieldFrom throws when the record has no such field', () => {
   assert.throws(() => fieldFrom('---\nstatus: draft\n---\n', 'kind', 'changes/0001-a/record.md'), {
     message: 'changes/0001-a/record.md is missing a kind field',
+  });
+});
+
+test('fieldFrom returns a value of more than one word whole', () => {
+  assert.equal(fieldFrom('---\nkind: small task\n---\n', 'kind', 'changes/0001-a/record.md'), 'small task');
+});
+
+test('statusFrom still refuses a status of more than one word, as before', () => {
+  assert.throws(() => statusFrom('---\nstatus: needs human\n---\n', 'changes/0001-a/record.md'), {
+    message: 'changes/0001-a/record.md is missing a status field',
   });
 });

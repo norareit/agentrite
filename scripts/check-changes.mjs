@@ -187,18 +187,22 @@ function readAtRevision(root, revision, file) {
  * @returns {string}
  */
 export function fieldFrom(record, field, recordFile) {
-  const match = record.match(new RegExp(`^${field}:\\s*(\\S+)\\s*$`, 'm'));
+  const match = record.match(new RegExp(`^${field}:[ \\t]*(\\S.*?)\\s*$`, 'm'));
   if (!match) throw new Error(`${recordFile} is missing a ${field} field`);
   return match[1];
 }
 
 /**
+ * The change check takes a status of one word only, so a status of more than one is as good as missing to it.
+ *
  * @param {string} record
  * @param {string} recordFile
  * @returns {string}
  */
 export function statusFrom(record, recordFile) {
-  return fieldFrom(record, 'status', recordFile);
+  const status = fieldFrom(record, 'status', recordFile);
+  if (/\s/.test(status)) throw new Error(`${recordFile} is missing a status field`);
+  return status;
 }
 
 /**

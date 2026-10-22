@@ -47,15 +47,27 @@ const OPTION_VALUES = { status: 'a status', kind: 'a kind', limit: 'a count' };
  */
 
 /**
+ * A token of the arguments, as `parseArgs` returns them: an option with what it was given, or another kind of word.
+ *
+ * @typedef {{
+ *   kind: 'option',
+ *   name: string,
+ *   rawName: string,
+ *   value: string | undefined,
+ *   inlineValue: boolean | undefined,
+ * } | { kind: 'positional' | 'option-terminator' }} Token
+ */
+
+/**
  * What is wrong with the options and the number as they were given, or `undefined` when nothing is.
  *
- * @param {import('node:util').ParseArgsConfig['tokens']} tokens
+ * @param {Token[]} tokens
  * @param {{ status?: unknown, kind?: unknown, limit?: unknown, open?: unknown }} values
  * @param {string[]} positionals
  * @returns {string | undefined}
  */
 function argumentError(tokens, values, positionals) {
-  const options = (tokens ?? []).filter((token) => token.kind === 'option');
+  const options = tokens.filter((token) => token.kind === 'option');
   const optionProblem = options.map((token) => optionError(UNITS_OPTIONS, OPTION_VALUES, token)).find(Boolean);
   if (optionProblem !== undefined) return optionProblem;
 
@@ -140,8 +152,8 @@ export function unitFrom(directory, record) {
   const kind = fieldFrom(record, 'kind', recordFile);
   const number = directory.slice(0, 4);
 
-  const body = record.replace(/^---\n[\s\S]*?\n---\n/, '');
-  const heading = body.split('\n').find((line) => line.startsWith('# '));
+  const body = record.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+  const heading = body.split(/\r?\n/).find((line) => line.startsWith('# '));
   if (heading === undefined) throw new Error(`${recordFile} is missing a # heading`);
   const title = heading.slice(2).replace(new RegExp(`^${number} `), '');
 
@@ -162,7 +174,10 @@ export function selectUnits(units, { number, open, status, kind, limit }) {
     .filter((unit) => !open || !END_STATUSES.includes(unit.status))
     .filter((unit) => status === undefined || unit.status === status)
     .filter((unit) => kind === undefined || unit.kind === kind)
-    .sort((a, b) => b.number.localeCompare(a.number) || a.directory.localeCompare(b.directory));
+    .sort(
+      (earlier, later) =>
+        later.number.localeCompare(earlier.number) || earlier.directory.localeCompare(later.directory),
+    );
   const unlimited = number !== undefined || limit === 0;
   return { units: unlimited ? passing : passing.slice(0, limit), total: passing.length };
 }

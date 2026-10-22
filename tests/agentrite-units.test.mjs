@@ -143,6 +143,24 @@ test('unitFrom does not take a comment of the front matter for the heading', () 
   assert.equal(unitFrom('0077-a', record).title, 'The units');
 });
 
+test('unitFrom reads a record with CRLF line endings, a front matter comment included', () => {
+  const crlf = (text) => text.replaceAll('\n', '\r\n');
+
+  assert.deepEqual(unitFrom('0077-the-units', crlf(RECORD)), unitFrom('0077-the-units', RECORD));
+  assert.equal(
+    unitFrom('0077-the-units', crlf(RECORD.replace('timestamp:', '# a comment\ntimestamp:'))).title,
+    'The units',
+  );
+});
+
+test('unitFrom shows a status and a kind of more than one word as written', () => {
+  const record = RECORD.replace('kind: feature', 'kind: small task').replace('in-progress', 'needs human');
+
+  const { kind, status } = unitFrom('0077-the-units', record);
+
+  assert.deepEqual([kind, status], ['small task', 'needs human']);
+});
+
 test('unitFrom refuses a record without a status, a kind or a heading, naming the file', () => {
   assert.throws(() => unitFrom('0077-a', RECORD.replace('status: in-progress\n', '')), {
     message: 'changes/0077-a/record.md is missing a status field',
@@ -203,7 +221,7 @@ test('selectUnits with --kind goes with --open and with --status', () => {
 });
 
 test('selectUnits limits to 50 by default, to a count, and not at all with 0', () => {
-  const units = Array.from({ length: 53 }, (_, index) => unit(index + 1));
+  const units = [...Array(53).keys()].map((index) => unit(index + 1));
 
   assert.equal(selectUnits(units, NO_FILTER).units.length, 50);
   assert.equal(selectUnits(units, NO_FILTER).total, 53);
@@ -227,7 +245,7 @@ test('selectUnits with a number keeps the units that open with it, filters them 
 
   assert.deepEqual(directories({}, units), ['0077-a', '0077-b']);
   assert.deepEqual(directories({ open: true }, units), ['0077-a']);
-  const many = Array.from({ length: 60 }, (_, index) => {
+  const many = [...Array(60).keys()].map((index) => {
     return unit(77, { directory: `0077-${String(index).padStart(2, '0')}` });
   });
   assert.equal(directories({}, many).length, 60);
@@ -306,8 +324,8 @@ function writeUnit(root, directory, fields) {
 // A project of 53 units, numbered 0001 to 0053, with each status and each kind among them. Two share the number
 // 0040, and 0053 is implemented, so that it is the highest of its number and has ended. A directory of an older
 // naming sits beside them. The project has no agentrite.json and is no git repository.
-function projectWithUnits(t) {
-  const root = temporaryDirectory(t, 'agentrite units');
+function projectWithUnits(testContext) {
+  const root = temporaryDirectory(testContext, 'agentrite units');
   for (let number = 1; number <= 53; number += 1) {
     const digits = String(number).padStart(4, '0');
     writeUnit(root, `${digits}-unit-${digits}`, {
@@ -329,8 +347,8 @@ function numbersOf(result) {
   return result.stdout.split('\n').filter((line) => /^\d{4} /.test(line)).map((line) => line.slice(0, 4));
 }
 
-test('agentrite units lists 50 units, the highest first, and ends with the closing line', (t) => {
-  const result = units(projectWithUnits(t));
+test('agentrite units lists 50 units, the highest first, and ends with the closing line', (testContext) => {
+  const result = units(projectWithUnits(testContext));
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -340,8 +358,8 @@ test('agentrite units lists 50 units, the highest first, and ends with the closi
   assert.ok(!result.stdout.includes('Old'));
 });
 
-test('agentrite units --open leaves out the units that have ended', (t) => {
-  const result = units(projectWithUnits(t), '--open', '--limit', '0');
+test('agentrite units --open leaves out the units that have ended', (testContext) => {
+  const result = units(projectWithUnits(testContext), '--open', '--limit', '0');
 
   assert.equal(result.status, 0, result.stderr);
   assert.ok(!result.stdout.includes('implemented') && !result.stdout.includes('cancelled'), result.stdout);
@@ -349,8 +367,8 @@ test('agentrite units --open leaves out the units that have ended', (t) => {
   assert.ok(numbersOf(result).includes('0001'));
 });
 
-test('agentrite units --status and --kind list the units of that status and that kind', (t) => {
-  const root = projectWithUnits(t);
+test('agentrite units --status and --kind list the units of that status and that kind', (testContext) => {
+  const root = projectWithUnits(testContext);
   const byStatus = units(root, '--status', 'in-progress', '--limit', '0');
   const byKind = units(root, '--kind', 'bug', '--limit', '0');
 
@@ -361,8 +379,8 @@ test('agentrite units --status and --kind list the units of that status and that
   assert.ok(numbersOf(byKind).includes('0040'));
 });
 
-test('agentrite units <number> shows that unit, and both of two that share the number', (t) => {
-  const root = projectWithUnits(t);
+test('agentrite units <number> shows that unit, and both of two that share the number', (testContext) => {
+  const root = projectWithUnits(testContext);
   const one = units(root, '0007');
   const twins = units(root, '0040');
 
@@ -374,16 +392,16 @@ test('agentrite units <number> shows that unit, and both of two that share the n
   assert.ok(twins.stdout.indexOf('Twin') < twins.stdout.indexOf('Unit 0040'), 'ordered by directory name');
 });
 
-test('agentrite units <number> --open for a unit that has ended says there are no units', (t) => {
-  const result = units(projectWithUnits(t), '0053', '--open');
+test('agentrite units <number> --open for a unit that has ended says there are no units', (testContext) => {
+  const result = units(projectWithUnits(testContext), '0053', '--open');
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout, 'no units with 0053, --open\n');
   assert.equal(result.stderr, '');
 });
 
-test('agentrite units --json lists every unit with the total', (t) => {
-  const result = units(projectWithUnits(t), '--limit', '0', '--json');
+test('agentrite units --json lists every unit with the total', (testContext) => {
+  const result = units(projectWithUnits(testContext), '--limit', '0', '--json');
   const document = JSON.parse(result.stdout);
 
   assert.equal(result.status, 0, result.stderr);
@@ -393,17 +411,17 @@ test('agentrite units --json lists every unit with the total', (t) => {
   assert.ok(document.units.every((listed) => !listed.directory.startsWith('history-')));
 });
 
-test('agentrite units --json gives an empty array when no unit matches', (t) => {
-  const result = units(projectWithUnits(t), '--json', '--status', 'cancelled', '--kind', 'task');
+test('agentrite units --json gives an empty array when no unit matches', (testContext) => {
+  const result = units(projectWithUnits(testContext), '--json', '--status', 'cancelled', '--kind', 'task');
 
   assert.equal(result.status, 0, result.stderr);
   assert.ok(JSON.parse(result.stdout).total >= 0);
-  const none = units(projectWithUnits(t), '--json', '--status', 'draft', '--kind', 'bug', '0053');
+  const none = units(projectWithUnits(testContext), '--json', '--status', 'draft', '--kind', 'bug', '0053');
   assert.deepEqual(JSON.parse(none.stdout), { units: [], total: 0 });
 });
 
-test('agentrite units refuses a directory with no changes/, naming it', (t) => {
-  const root = temporaryDirectory(t, 'agentrite units');
+test('agentrite units refuses a directory with no changes/, naming it', (testContext) => {
+  const root = temporaryDirectory(testContext, 'agentrite units');
   const result = units(root);
 
   assert.equal(result.status, 1);
@@ -411,15 +429,15 @@ test('agentrite units refuses a directory with no changes/, naming it', (t) => {
   assert.equal(result.stderr, `agentrite: ${root} holds no changes/ directory\n`);
 });
 
-test('agentrite units refuses a number that opens no directory', (t) => {
-  const result = units(projectWithUnits(t), '0099');
+test('agentrite units refuses a number that opens no directory', (testContext) => {
+  const result = units(projectWithUnits(testContext), '0099');
 
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
   assert.equal(result.stderr, 'agentrite: changes/ holds no unit 0099\n');
 });
 
-test('agentrite units refuses a unit with no record, or a record with a field or the heading missing', (t) => {
+test('agentrite units refuses a unit with no record, or a record lacking a field or the heading', (testContext) => {
   const cases = [
     [() => {}, 'changes/0100-broken/record.md does not exist'],
     [(root) => writeFileSync(join(root, 'changes', '0100-broken', 'record.md'), '---\nkind: bug\n---\n# A\n'),
@@ -430,7 +448,7 @@ test('agentrite units refuses a unit with no record, or a record with a field or
       'changes/0100-broken/record.md is missing a # heading'],
   ];
   for (const [prepare, message] of cases) {
-    const root = projectWithUnits(t);
+    const root = projectWithUnits(testContext);
     mkdirSync(join(root, 'changes', '0100-broken'));
     prepare(root);
 
@@ -442,8 +460,8 @@ test('agentrite units refuses a unit with no record, or a record with a field or
   }
 });
 
-test('agentrite units with a wrong argument prints the usage on standard error and exits 2', (t) => {
-  const result = units(projectWithUnits(t), '--status', 'done');
+test('agentrite units with a wrong argument prints the usage on standard error and exits 2', (testContext) => {
+  const result = units(projectWithUnits(testContext), '--status', 'done');
 
   assert.equal(result.status, 2);
   assert.equal(result.stdout, '');
