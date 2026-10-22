@@ -48,3 +48,10 @@ timestamp: 2026-10-22T13:26:21Z
   planner is timestamped `14:27:40Z`, after this unit's begin at `14:24:46Z` by the clock of the host, so the log is
   not in the order of its timestamps; the entries are left as they were written. The status stays `in-progress`, for
   the review by another model in another harness
+- 2026-10-22T14:41:17Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0076 at
+  `8797342d4fd62da64cc488edea0de91179373158` against merge base `98c7963bf2c232a70747b5caea08d5144d99494b`.
+  Returned no findings on spec conformance, plan fidelity or code quality. Saved the complete review in
+  `.reviews/0076-a-step-can-leave-items-for-after-the-run/review-2026-10-22T144009Z-opencode.md`.
+  Independently ran `npm test`: 942 tests passed, none skipped; `npm run check-changes` and `git diff --check`
+  passed, and line-length searches found no line over 120 characters in the changed files. Live-model classification
+  of human-action items and historical red test runs were not verified
