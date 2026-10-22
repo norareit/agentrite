@@ -218,9 +218,9 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   `followPrinter((text) => process.stdout.write(text), Date.now)` for each step when it is `true`. Update the doc
   comments of `runGrouped`, `runStep` and `orchestrateCommand` to say what is printed with `--follow`. Run `npm
   test`: the tests of the previous task pass (R3, R4, R10, R11)
-- [ ] In `README.md`, "agentrite orchestrate" of "Commands": add `[--follow]` to the usage, and a row of `--follow` to
+- [x] In `README.md`, "agentrite orchestrate" of "Commands": add `[--follow]` to the usage, and a row of `--follow` to
   the table: prints each step's messages and tool calls while it runs, see "How a run ends" (R12)
-- [ ] In `README.md`, "How a run ends": say that without `--follow` what the harness prints on standard output is
+- [x] In `README.md`, "How a run ends": say that without `--follow` what the harness prints on standard output is
   read and not shown, and that with it the command prints, between the step's two lines and while the step runs,
   each text message of the step's agent in full after its time, between blank lines, and each of its tool calls as
   one dimmed line of its time, `→`, the tool's name and a label, with the label's order of precedence and the cut
@@ -228,8 +228,8 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   no tool result, reasoning or other event is printed, in Claude Code and in OpenCode alike; that the end report
   stands last, as without it; and that the option is chosen when the run starts. Add an example of a followed step
   between its two lines, built from the forms of the approach (R12)
-- [ ] In `README.md`, "On the host and in the sandbox": add the command with `--follow` on the host (R12)
-- [ ] In `SANDBOX.md`, where it gives the orchestrator in a unit run, say that `--follow` is given to the command
+- [x] In `README.md`, "On the host and in the sandbox": add the command with `--follow` on the host (R12)
+- [x] In `SANDBOX.md`, where it gives the orchestrator in a unit run, say that `--follow` is given to the command
   there as on the host, with `./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions
   --follow'` (R13)
 
@@ -253,4 +253,4 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
 - [x] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
 - [x] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
-- [ ] `feature-0075 Document --follow`: the last four tasks
+- [x] `feature-0075 Document --follow`: the last four tasks

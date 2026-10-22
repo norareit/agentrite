@@ -98,6 +98,13 @@ the clone, and passes `--skip-permissions` to every step. See "The orchestrator"
 
 From the shell of a unit run, it is `npx agentrite orchestrate 0029 --skip-permissions` after `npm ci`.
 
+`--follow` is given to the command in a unit run as on the host, to print each step's messages and tool calls while
+it runs:
+
+```sh
+./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions --follow'
+```
+
 For a unit run that starts nothing, see "When something goes wrong".
 
 ## Getting the work back

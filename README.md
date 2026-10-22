@@ -333,7 +333,7 @@ See "Running a role".
 ### agentrite orchestrate
 
 ```sh
-npx agentrite orchestrate <unit> [--definition <file>] [--skip-permissions]
+npx agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]
 ```
 
 Takes an approved unit through its roles, from the project root, by the definition that `orchestrator` in
@@ -345,6 +345,7 @@ item of the definition has run or a step stops the run. Run with no argument, it
 | `<unit>`              | A directory of `changes/`, by its name or by the four digits its name opens with           |
 | `--definition <file>` | Runs this definition, relative to the project root or absolute. Also `--definition=<file>` |
 | `--skip-permissions`  | Passed to the `agentrite run` of every step. The option belongs in the sandbox             |
+| `--follow`            | Prints each step's messages and tool calls while it runs. See "How a run ends"             |
 
 It refuses, starts nothing, writes nothing and exits 1 when:
 
@@ -745,8 +746,39 @@ step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started
 step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: done after 8m 12s
 ```
 
-The harness's standard error reaches the terminal, and what it prints on standard output is read and not shown. Its
-session is in the harness's own logs.
+The harness's standard error reaches the terminal. Without `--follow`, what it prints on standard output is read and
+not shown, and the command prints nothing of a step but its two lines. The step's session is in the harness's own
+logs.
+
+With `--follow`, the command prints between a step's two lines, while the step runs, the text messages the step's
+agent writes and the tool calls it makes, in the order the agent made them, each once the harness has made it known.
+OpenCode makes a tool call known once the call has ended:
+
+* a text message is printed in full after its time, with one blank line before and after it. The final response is
+  printed as any other text message, the block of its outcome among it
+* a tool call is printed dimmed, on one line: its time, `→`, the name of the tool as the harness gives it, and a
+  label. The label is the first of these that the call has: the description the agent gave a call of the shell tool,
+  the path of the file the call acts on, the pattern the call searches for, and the first line of the command the
+  call runs, cut to its first 100 characters. A call that has none of them has no label
+
+The time is the instant the harness gives for the message or the call, or, where it gives none, the instant the
+command learns of it, as `HH:MM:SS` in UTC. No result of a tool call, no reasoning of the agent and no other event of
+the harness is printed, in Claude Code and in OpenCode alike. The end report stands last, as without the option. The
+option is chosen when the run starts: a run started without it cannot be followed, and one started with it cannot be
+stopped from printing. A step followed, its two tool calls dimmed on the terminal:
+
+```
+step 1, implementer, claude, claude-sonnet-5-5: started
+
+14:03:27 I will read the spec first, and then the tests of the command.
+
+14:03:31 → Bash Run the unit tests of the command
+14:03:40 → Read /work/scripts/agentrite.mjs
+
+14:12:05 The tests pass, and the plan is ticked.
+
+step 1, implementer, claude, claude-sonnet-5-5: done after 8m 41s
+```
 
 The run stops, and runs nothing after the step, when:
 
@@ -829,6 +861,13 @@ checkout:
 
 ```sh
 npx agentrite orchestrate 0029
+```
+
+To watch each step's messages and tool calls while it runs, as "How a run ends" gives them, the command is run with
+`--follow`:
+
+```sh
+npx agentrite orchestrate 0029 --follow
 ```
 
 `--skip-permissions` is passed to the `agentrite run` of every step. What it does in each harness is in

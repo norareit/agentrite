@@ -64,3 +64,7 @@ timestamp: 2026-10-22T13:15:49Z
   that a message is printed while the step runs checks that the fake's process is still alive once the message is
   in `output()`. `runGrouped` hands on what is left after the last line break when the output ends. `npm test`
   passes, 959 tests
+- 2026-10-22T18:01:37Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the last four tasks:
+  `--follow` in the usage and the table of "agentrite orchestrate", what a followed run prints in "How a run ends"
+  with an example, the command with `--follow` on the host, and in `SANDBOX.md` the command with `--follow` in a unit
+  run
