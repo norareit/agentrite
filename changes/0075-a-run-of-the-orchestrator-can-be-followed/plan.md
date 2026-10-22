@@ -42,8 +42,9 @@ What each harness gives, by the readings below:
   "parent_tool_use_id": null, ... }` holds blocks of the agent's message. A block `{ "type": "text", "text" }` is a
   text message, a block `{ "type": "tool_use", "name", "input" }` a call, and a block of `thinking` or
   `redacted_thinking` is nothing. An event whose `parent_tool_use_id` is a string is a subagent's, not the step's
-  agent's, and gives nothing. Events of `system`, `user`, which holds tool results, and `result` give nothing. The
-  events carry no time, so `time` is `undefined`. The shell tool is `Bash`. Of `input`: `description` of a `Bash`
+  agent's, and gives nothing. Events of `system`, `user`, which holds tool results, and `result` give nothing. `time`
+  is the event's `timestamp`, an ISO 8601 instant, by `Date.parse`, and `undefined` when the event has none or it
+  does not parse. The shell tool is `Bash`. Of `input`: `description` of a `Bash`
   call, the path from `file_path` or else `notebook_path`, `pattern`, and `command`
 * OpenCode, from `--format json`: an event `{ "type": "text", "timestamp", "part": { "text" } }` is a text message,
   an event `{ "type": "tool_use", "timestamp", "part": { "tool", "state": { "input" } } }` a call, and every other
@@ -155,12 +156,13 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   its own. Run `npm test`: it passes, and every run of the command's tests reads its outcome from the stream (R10)
 - [ ] In `tests/agentrite-outcome.test.mjs`, add tests of `HEADLESS.claude.follow`: an `assistant` event with a
   `text` block, a `thinking` block, a `redacted_thinking` block and a `tool_use` block of `Bash` with `command` and
-  `description` gives a text and a call, in that order, with `time` `undefined`, the call's `description` and
-  `command` set; a `tool_use` of `Read` with `file_path`, of `NotebookEdit` with `notebook_path`, of `Grep` with
-  `pattern` and `path`, and of `Agent` with `description` and `prompt` give the path, the path, the pattern with no
-  path, and nothing but the tool; an `assistant` event with a string `parent_tool_use_id`, and events of `system`,
-  `user` with a `tool_result` block, and `result`, give nothing; a text block of `''` or `'\n\n'` gives nothing;
-  `'not json'`, `'[1]'` and `''` give nothing; a field that is a number is taken as absent. Add tests of
+  `description`, with a `timestamp`, gives a text and a call, in that order, each at that instant, the call's
+  `description` and `command` set; a `tool_use` of `Read` with `file_path`, of `NotebookEdit` with `notebook_path`,
+  of `Grep` with `pattern` and `path`, and of `Agent` with `description` and `prompt` give the path, the path, the
+  pattern with no path, and nothing but the tool; an `assistant` event with a string `parent_tool_use_id`, and
+  events of `system`, `user` with a `tool_result` block, and `result`, give nothing; a text block of `''` or
+  `'\n\n'` gives nothing; `'not json'`, `'[1]'` and `''` give nothing; a field that is a number is taken as absent;
+  an event with no `timestamp`, or one that does not parse, gives `time` `undefined`. Add tests of
   `HEADLESS.opencode.follow`: a `text` event gives its text at its `timestamp`; a `tool_use` event of `bash` with
   `command` and `description` gives both at its `timestamp`; of `read` with `filePath`, the path; of `grep` with
   `pattern` and `path`, the pattern and no path; of `task` with `description`, nothing but the tool; events of
@@ -236,7 +238,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [ ] `npm test` passes
 - [ ] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
 - [ ] `npm run check-changes` passes on the committed branch
-- [ ] The installed Claude Code and OpenCode print events of the shapes the approach reads: one short headless call
+- [x] The installed Claude Code and OpenCode print events of the shapes the approach reads: one short headless call
   of each, `claude --print --output-format stream-json --verbose 'Run ls, then say done'` and `opencode run --format
   json 'Run ls, then say done'`, shows an `assistant` event with `text` and `tool_use` blocks and a `result` event
   with `result` and `session_id`, and `text` and `tool_use` events with `timestamp` and `part.state.input`. Log the

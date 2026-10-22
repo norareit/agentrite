@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-22T13:15:49Z
 ---
 
@@ -27,3 +27,17 @@ timestamp: 2026-10-22T13:15:49Z
   are read one way in both. Readings: the path of the file a call acts on is that of a field naming one file, so a
   search is labelled by its pattern; a subagent's messages and calls are not the step's agent's and are not printed;
   the time of an OpenCode call is the `timestamp` of the event that makes it known. The status stays `approved`
+- 2026-10-22T16:40:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0075-a-run-of-the-orchestrator-can-be-followed` at `ac83540`, began the work. The status is
+  `in-progress`
+- 2026-10-22T16:40:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the check of the plan's
+  verification first. Claude Code 2.1.308, `claude --print --output-format stream-json --verbose 'Run ls, then say
+  done'`, printed a `system` event of subtype `init`, `assistant` events with a `tool_use` block of `Bash` with
+  `command` and `description`, a `thinking` block of empty text and a `text` block, a `user` event with a
+  `tool_result` block, `rate_limit_event` events, and a `result` event with `result` and `session_id`. OpenCode
+  1.19.3, `opencode run --format json 'Run ls, then say done'`, printed `step_start`, a `tool_use` event of `bash` with
+  `timestamp` and `part.state.input.command`, `step_finish`, and a `text` event with `timestamp` and `part.text`. One
+  difference from the plan: Claude Code's `assistant` events carry `timestamp`, an ISO 8601 instant, where the plan
+  read that they carry no time. Requirement 7 takes the harness's instant where it gives one, so the only reading that
+  holds is to take it. Amended the approach and the sixth task of `plan.md` so that `time` of a Claude Code item is
+  its event's `timestamp` by `Date.parse`, and `undefined` when it has none or it does not parse
