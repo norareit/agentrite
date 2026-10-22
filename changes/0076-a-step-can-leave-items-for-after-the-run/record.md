@@ -40,3 +40,11 @@ timestamp: 2026-10-22T13:26:21Z
   commit point for extracting `inRound` from `stepLine`, before the task of `afterwardsLines`: the end report names a
   step's round as the line of a step does, and the standards extract the second encoding of one decision. It is a
   commit of its own, since the standards keep refactoring apart from a change of behavior
+- 2026-10-22T14:35:14Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built every task of `plan.md` in four
+  commits and the extra one of `inRound`, and ticked the plan. On `1877bc4`, `npm test` passed, 942 tests, and
+  `npm run check-changes` exited 0; `awk 'length > 120'` found no line in the files the branch changes. Concerns: the
+  test of `sandbox-variant.test.mjs` that runs a unit run and its variants at once failed in 2 of 8 runs of the whole
+  suite during the work and passed in 6 runs of it alone, and this unit changes nothing it runs. The entry of the
+  planner is timestamped `14:27:40Z`, after this unit's begin at `14:24:46Z` by the clock of the host, so the log is
+  not in the order of its timestamps; the entries are left as they were written. The status stays `in-progress`, for
+  the review by another model in another harness

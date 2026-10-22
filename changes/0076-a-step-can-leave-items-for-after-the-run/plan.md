@@ -164,10 +164,10 @@ the other's.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Each requirement of the spec, R1 to R17, is delivered by a ticked task above
+- [x] `npm test` passes
+- [x] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Each requirement of the spec, R1 to R17, is delivered by a ticked task above
 
 ## Commit Points
 
