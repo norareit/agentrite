@@ -727,6 +727,19 @@ test('a call with a pattern of two lines is printed on one line, in each harness
   }
 });
 
+test('calls OpenCode makes known in the reverse of the order made are printed as made known, each at its time', () => {
+  const ended = (second, command) =>
+    JSON.stringify({
+      type: 'tool_use',
+      timestamp: Date.UTC(2026, 9, 22, 17, 12, second),
+      part: { type: 'tool', tool: 'bash', state: { status: 'completed', input: { command } } },
+    });
+  /** @type {string[]} */ const written = [];
+  const print = followPrinter((text) => written.push(text), Date.now);
+  for (const line of [ended(7, 'true'), ended(9, 'sleep 2')]) print(HEADLESS.opencode.follow(line));
+  assert.equal(written.join(''), `${dim('17:12:07 → bash true')}\n${dim('17:12:09 → bash sleep 2')}\n`);
+});
+
 test('callLabel cuts a command to its first 100 code points, splitting no character', () => {
   const hundred = 'a'.repeat(100);
   assert.equal(callLabel(call({ command: hundred })), hundred);

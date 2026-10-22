@@ -97,3 +97,9 @@ timestamp: 2026-10-22T13:15:49Z
   in the order the harness makes them known, so that OpenCode's calls run at the same time are printed in the order
   they ended; requirement 14 tests that order; and the decision "OpenCode's calls in the order they end" gives why.
   The status stays `in-progress`
+- 2026-10-22T17:49:15Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied the human's decision of
+  S1: added its task to `plan.md`, a test that two calls OpenCode makes known in the reverse of the order made are
+  printed in the order made known, each at its event's `timestamp`, and the order to "How a run ends" of
+  `README.md`. The test passed when first run, since the code already printed calls in that order; it records the
+  order the corrected requirement asks for rather than drives a change. S1 is closed by that decision, and S2 by its
+  fix in `bac01af`. `npm test` passes, 962 tests. Every task of `plan.md` is ticked. The status stays `in-progress`

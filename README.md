@@ -751,8 +751,9 @@ not shown, and the command prints nothing of a step but its two lines. The step'
 logs.
 
 With `--follow`, the command prints between a step's two lines, while the step runs, the text messages the step's
-agent writes and the tool calls it makes, in the order the agent made them, each once the harness has made it known.
-OpenCode makes a tool call known once the call has ended:
+agent writes and the tool calls it makes, each once the harness has made it known, in that order. Claude Code makes
+each known as the agent makes it. OpenCode makes a tool call known once the call has ended, so of calls it runs at
+the same time, the one that ended first is printed first:
 
 * a text message is printed in full after its time, with one blank line before and after it. The final response is
   printed as any other text message, the block of its outcome among it

@@ -239,6 +239,12 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   write one line. Run `npm test` and see them fail. In `scripts/agentrite-orchestrate.mjs`, make `callLabel` write
   each line feed and carriage return of the label it gives in that form, after the command is cut. In `README.md`,
   "How a run ends", say so of the label. Run `npm test`: it passes (R6, R9)
+- [x] By the human's decision of S1 of the review of `d10ffd4`, and requirement 4 and 14 as corrected: in
+  `tests/agentrite-orchestrate.test.mjs`, add a test that two `tool_use` events of OpenCode, the one of the call made
+  second first, given through `HEADLESS.opencode.follow` to `followPrinter`, are printed in the order of the events,
+  each at its event's `timestamp`. The code already prints them so, which the test shows rather than changes. In
+  `README.md`, "How a run ends", say that of calls OpenCode runs at the same time the one that ended first is printed
+  first. Run `npm test`: it passes (R4, R14)
 
 ## Verification
 
@@ -262,3 +268,4 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
 - [x] `feature-0075 Document --follow`: the four tasks of the documents
 - [x] `feature-0075 Keep a call's label on one line`: the task of S2 of the review
+- [x] `feature-0075 Show OpenCode's calls in the order they end`: the task of S1 of the review
