@@ -694,11 +694,22 @@ these keys, and no other:
 
 * `outcome`: `"done"`, `"needs-human"` or `"failed"`
 * `summary`: a string, what the step did
-* `questions`: a list of strings, what the step needs from the human, which may be empty
+* `questions`: a list of strings, what the step needs from the human for the run to go on, which may be empty
+* `afterwards`: a list of strings, what the human needs to do, check or decide after the run, which the run can go on
+  without, which may be empty
 * `findings`: a list of objects, each with `id`, a string such as `S1`, `blocking`, `true` or `false`, and
   `summary`, a string. It is empty for a step that reviewed nothing
 * `declines`: a list of objects, each with `finding`, the `id` of a finding, and `reason`, a string. It is empty for a
   step that proposed no decline
+
+The request says that `needs-human` is for a step that cannot go on without the human, and that a step that did its
+work and leaves items only in `afterwards` gives `done`. It says that an item belongs in `afterwards` when it is a
+check only the human can make, as in a running application or on another operating system, an action only the human
+can take that the rest of the run does not need, or a decision for which the step built the answer it recommends. An
+item belongs in `questions`, with `needs-human`, when the step's work, or the steps after it, cannot do without it, as
+a spec that can be read in two ways, or a decision that the rest of the work depends on and that the step could not
+make. Every item of the list under `**Needed from you**` of the final response is also an item of exactly one of
+`questions` and `afterwards`, and every item of these two is an item of that list.
 
 The request also says that a finding the step's prompt accepts is recorded in `record.md` as accepted by the
 orchestrator's definition, and not as a decision of the human, and that the step sets the unit's status to no status
@@ -713,6 +724,7 @@ The outcome of a review with one blocking finding, as it stands in the final res
   "outcome": "done",
   "summary": "Reviewed the unit against its spec and plan, and ran both suites.",
   "questions": [],
+  "afterwards": [],
   "findings": [
     { "id": "S1", "blocking": true, "summary": "R25 is not met: a unit run does not mount .orchestrator" },
     { "id": "C1", "blocking": false, "summary": "The usage of orchestrate does not name its exit statuses" }
@@ -744,24 +756,45 @@ The run stops, and runs nothing after the step, when:
   wrapper that `refresh` would rewrite, is such a step
 * the final response holds no block marked `json`, more than one, or one that is not an outcome of the form above
 * the outcome is `needs-human` or `failed`
+* the outcome is `done` and `questions` is not empty, since the step cannot go on without the human's answers
 * `declines` is not empty, since only the human decides a proposed decline
 * the step holds `stopWhen`, and a finding of its outcome is blocking
 * a repeat with `until` ran out
+
+`afterwards` stops no run. A run that ran every item to its end exits 0 also when a step left items in it.
 
 When the run ends, the command prints last: a list of every step that ran, with its number, role, harness, model and
 how long it took; how the run ended, and for a stop which step stopped it and why, with what is wrong with an outcome
 not of the form; then from the outcome of the step that ran last, when it is of the form, its summary, the blocking
 findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
-and last the run's directory, and that the reviewer's findings are under `.reviews/<unit-directory>/`. For a last step
-without an outcome of the form, it gives the path of its final response in the run's directory instead, or says that
-the harness gave none. For a step that ran past its time limit, it gives the limit, and the path of its final response
-or that the harness gave none. Nothing is taken from an earlier step.
+then the items of `afterwards` of every step that gave an outcome of the form; and last the run's directory, and that
+the reviewer's findings are under `.reviews/<unit-directory>/`. For a last step without an outcome of the form, it
+gives the path of its final response in the run's directory instead, or says that the harness gave none. For a step
+that ran past its time limit, it gives the limit, and the path of its final response or that the harness gave none.
+Nothing else is taken from an earlier step.
 
 ```
 0  planner      claude    claude-opus-5-5     12m 04s
 1  implementer  claude    claude-sonnet-5-5   41m 37s
 2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s
 ```
+
+The items of `afterwards` are given whatever ended the run, under the line `After the run:`, grouped by step in the
+order the steps ran. Each step is named by its number, its round in a repeat and its role, and its items follow in the
+order the step gave them, each as the step gave it, also when two steps give the same. A step that left no item is
+left out, and when no step left one, so is the line `After the run:`. For an implementer in round 1 that left two
+items and a reviewer in round 1 that left one:
+
+```
+After the run:
+  step 1, round 1 of 3, implementer:
+    - Check the new action in a running IDE
+    - Decide the label of the button; the step built "Export"
+  step 2, round 1 of 3, reviewer:
+    - Check the dialog on macOS
+```
+
+A step outside a repeat is named as `  step 0, planner:`.
 
 A run that ran every item to its end exits 0, and a run that stopped exits 3, which is the command's own status. A
 run that the command refused, and that started nothing, exits 1. See "agentrite orchestrate" in "Commands".
@@ -782,7 +815,8 @@ run's directory holds:
 * `<number>-<role>.outcome.json` for each step that gave an outcome of the form, as it stood in its block, and
   `<number>-<role>.response.md` for a step that did not, holding its final response when there was one. The numbers
   have as many digits as the definition's highest step number needs, two at least, so that the names sort in the
-  order the steps ran
+  order the steps ran. An outcome file holds the step's items of `afterwards`, so the run's directory holds those of
+  every step that gave an outcome of the form
 
 At the start of each run the command makes sure that `.orchestrator/.gitignore` holds `*` and nothing else, and
 writes it when it is missing or holds anything else. So git ignores the directory in every project, without a line in

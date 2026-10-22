@@ -147,11 +147,11 @@ the other's.
   branch?`, which expects `Step 1 stopped the run: its outcome is done, but holds questions, which the human
   answers.`, `Summary: Did it.`, `Questions:`, `  - Which branch?`, and the file `outcome.json`. Run `npm test`: both
   pass (R7, R8, R10, R11, R14, R17)
-- [ ] In `README.md`, "The outcome of a step": give `questions` as what the step needs from the human for the run to
+- [x] In `README.md`, "The outcome of a step": give `questions` as what the step needs from the human for the run to
   go on, and add after it `afterwards`, a list of strings, what the human needs to do, check or decide after the run,
   which the run can go on without, which may be empty; say what the request says of which list an item belongs in, of
   `needs-human` and of `**Needed from you**`; add `"afterwards": []` to the example after `"questions": []` (R15)
-- [ ] In `README.md`, "How a run ends": add to the list of what stops a run, after the case of `needs-human` or
+- [x] In `README.md`, "How a run ends": add to the list of what stops a run, after the case of `needs-human` or
   `failed` and before `declines`, that the outcome is `done` and `questions` is not empty, since the step cannot go
   on without the human's answers; say after the list that `afterwards` stops no run, and that a run that ran every
   item exits 0 when a step left items in it; add to the paragraph of what the command prints last, before the run's
@@ -159,7 +159,7 @@ the other's.
   the steps ran, with the step's number, round and role, a step without items left out, each item as the step gave
   it, also when two steps give the same, and no part when no step left an item; change `Nothing is taken from an
   earlier step` to say that nothing else is; add the example of the approach (R15)
-- [ ] In `README.md`, "What .orchestrator holds": say that each `<number>-<role>.outcome.json` holds the step's items
+- [x] In `README.md`, "What .orchestrator holds": say that each `<number>-<role>.outcome.json` holds the step's items
   of `afterwards`, so that the run's directory holds those of every step that gave an outcome of the form (R15)
 
 ## Verification
@@ -176,4 +176,4 @@ the other's.
 - [x] `feature-0076 Name the round of a step by one function`: the extraction of `inRound`, a refactoring kept apart
   from the change of behavior
 - [x] `feature-0076 Give the items for after the run in the end report`: the sixth to eighth tasks
-- [ ] `feature-0076 Document afterwards in README.md`: the last three tasks
+- [x] `feature-0076 Document afterwards in README.md`: the last three tasks
