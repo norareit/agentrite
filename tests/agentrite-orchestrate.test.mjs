@@ -221,6 +221,7 @@ test('each case of requirement 18 stops at the step it holds for and runs nothin
     [{ response: `${FENCE}json\n{"outcome": "done"}\n${FENCE}` }, 'malformed'],
     [done({ outcome: 'needs-human', questions: ['Which?'] }), 'needs-human'],
     [done({ outcome: 'failed' }), 'failed'],
+    [done({ questions: ['Which?'] }), 'questions'],
     [done({ declines: [{ finding: 'S1', reason: 'It holds.' }] }), 'declines'],
   ]) {
     const run = await runWith(DEFAULT, [done(), done(), result]);
@@ -244,9 +245,24 @@ test('of two cases that hold, the first of the order is named', () => {
   assert.equal(judgeStep(step, ok, reading(all)), 'needs-human');
   assert.equal(judgeStep(step, ok, reading({ ...all, outcome: 'failed' })), 'failed');
   assert.equal(judgeStep(step, ok, reading({ ...all, outcome: 'done' })), 'declines');
+  const asked = { ...all, questions: ['Which?'] };
+  assert.equal(judgeStep(step, ok, reading(asked)), 'needs-human');
+  assert.equal(judgeStep(step, ok, reading({ ...asked, outcome: 'failed' })), 'failed');
+  assert.equal(judgeStep(step, ok, reading({ ...asked, outcome: 'done' })), 'questions');
   assert.equal(judgeStep(step, ok, reading({ ...all, outcome: 'done', declines: [] })), 'stopWhen');
   assert.equal(judgeStep(step, ok, reading({ ...DONE, findings: [MINOR] })), undefined);
   assert.equal(judgeStep({ ...step, stopWhen: undefined }, ok, reading({ ...DONE, findings: [BLOCKING] })), undefined);
+});
+
+// R7 to R9 of unit 0076: items for after the run stop no run, and questions of a done outcome do.
+
+test('a run whose steps give done with items in afterwards and no question runs to its end', async () => {
+  const later = (...afterwards) => done({ afterwards, findings: [MINOR] });
+  const run = await runWith(DEFAULT, [later('Read the plan.'), later('Check it in the IDE.'), later('Try macOS.')]);
+  assert.equal(run.planned.length, 3);
+  assert.deepEqual(run.end, { kind: 'complete' });
+  assert.equal(exitStatus(run.end), 0);
+  assert.ok(run.ran.every((entry) => entry.stop === undefined));
 });
 
 test('a harness that exits 1 with an outcome that is done stops by harness, and its outcome is read', async () => {

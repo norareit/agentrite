@@ -32,6 +32,7 @@ import { optionError } from './agentrite-run.mjs';
  *   | 'malformed'
  *   | 'needs-human'
  *   | 'failed'
+ *   | 'questions'
  *   | 'declines'
  *   | 'stopWhen'} Stop
  * @typedef {{ planned: Planned, result: Result, reading: Reading, stop: Stop | undefined }} Ran
@@ -55,9 +56,10 @@ function blocks(outcome) {
 
 /**
  * The first case that holds for a step that ran, or `undefined` when none does and the run may go on: that it ran out
- * of time, by unit 0069, and then those of requirement 18 of unit 0065. Running out of time is judged first, since
- * the status of a harness the command ended says nothing of the step. The outcome is read whatever the harness's
- * status, so that the human sees what a step that failed after it gave one said.
+ * of time, by unit 0069, and then those of requirement 18 of unit 0065, with a done outcome that holds questions
+ * after the outcome, by unit 0076. Running out of time is judged first, since the status of a harness the command
+ * ended says nothing of the step. The outcome is read whatever the harness's status, so that the human sees what a
+ * step that failed after it gave one said.
  *
  * @param {Step} step
  * @param {{ status: number | null, signal: string | null, timedOut: boolean }} result
@@ -70,6 +72,7 @@ export function judgeStep(step, { status, signal, timedOut }, reading) {
   if (reading.kind !== 'outcome') return reading.kind;
   const { outcome } = reading;
   if (outcome.outcome !== 'done') return outcome.outcome;
+  if (outcome.questions.length > 0) return 'questions';
   if (outcome.declines.length > 0) return 'declines';
   if (step.stopWhen === 'blocking-findings' && blocks(outcome)) return 'stopWhen';
   return undefined;
@@ -257,6 +260,7 @@ export function endLine(end) {
     malformed: () => `its outcome is not of the form asked for. ${reading.kind === 'malformed' ? reading.fault : ''}.`,
     'needs-human': () => 'its outcome is needs-human.',
     failed: () => 'its outcome is failed.',
+    questions: () => 'its outcome is done, but holds questions, which the human answers.',
     declines: () => 'it proposes declines of findings, which the human decides.',
     stopWhen: () => 'it holds stopWhen "blocking-findings", and a finding of its outcome blocks.',
   };

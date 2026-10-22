@@ -106,14 +106,14 @@ the other's.
   `['afterwards', list('a list of strings', plain(isString, STRING_MUST))]` to `OUTCOME_CHECKS` after `questions`.
   Change the request in `outcomeRequest` to the two lines and the paragraph of the approach. Run `npm test`: the
   outcome tests pass, and so do the orchestrate tests that ran before (R1, R2, R3, R4, R5, R6)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add to `each case of requirement 18 stops at the step it holds for`
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add to `each case of requirement 18 stops at the step it holds for`
   the row `[done({ questions: ['Which?'] }), 'questions']`, after the row of `failed`. Add to `of two cases that hold,
   the first of the order is named` that an outcome `done` with a question, a decline and a blocking finding is judged
   `questions`, and that `needs-human` and `failed` with a question are judged by their outcome. Add a test that a run
   of the default definition whose implementer and reviewer give `done` with items in `afterwards` and no question
   runs to its end, with `end.kind` `'complete'` and `exitStatus` 0. Run `npm test` and see the new rows fail (R7, R8,
   R9, R16)
-- [ ] In `scripts/agentrite-orchestrate.mjs`, add `'questions'` to the `Stop` typedef after `'failed'`, and to
+- [x] In `scripts/agentrite-orchestrate.mjs`, add `'questions'` to the `Stop` typedef after `'failed'`, and to
   `judgeStep`, after `if (outcome.outcome !== 'done') return outcome.outcome;`, the line `if
   (outcome.questions.length > 0) return 'questions';`. Name unit 0076 in the comment of `judgeStep` beside
   requirement 18 of unit 0065. Add the `questions` case to `endLine`, with the sentence of the approach after
@@ -169,6 +169,6 @@ the other's.
 ## Commit Points
 
 - [x] `feature-0076 Read afterwards in an outcome and ask for it`: the first three tasks, after which the suite passes
-- [ ] `feature-0076 Stop a run for a done outcome with questions`: the fourth and fifth tasks
+- [x] `feature-0076 Stop a run for a done outcome with questions`: the fourth and fifth tasks
 - [ ] `feature-0076 Give the items for after the run in the end report`: the sixth to eighth tasks
 - [ ] `feature-0076 Document afterwards in README.md`: the last three tasks
