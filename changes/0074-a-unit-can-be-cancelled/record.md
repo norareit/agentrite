@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-22T12:22:44Z
 ---
 
@@ -52,3 +52,9 @@ timestamp: 2026-10-22T12:22:44Z
   failed or skipped. Both `node scripts/check-changes.mjs` and `npm run check-changes` exited 0; the diff checks and
   the line-limit and em-dash checks passed. The prior session's claimed fail-first test executions could not be
   independently verified from the committed history.
+- 2026-10-22T18:45:33Z [human] accepted C1 of the review of `f9b5e6a`, which is not blocking
+- 2026-10-22T18:45:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1 in `4e29972`:
+  "check-changes" of `README.md` now says that the units it protects are those `implemented` or `cancelled` on the
+  merge base with the default branch, as the checker reads them. The review returned no blocking finding, and every
+  task of `plan.md` is ticked. On `4e29972`, `npm test` passed, 973 tests with none failed or skipped, and no line of
+  `README.md` exceeds 120 characters. The status is `implemented`
