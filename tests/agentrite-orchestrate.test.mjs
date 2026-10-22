@@ -826,12 +826,13 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
 // R10 to R24, R30: `agentrite orchestrate` as a command, in a project with the kit installed, the wrappers refresh
 // writes, an approved unit, and a PATH that holds nothing but one fake that stands for both harnesses.
 
-// Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n> and exits with the status
-// in status-<n>, or 0. With wait-<n>, it writes its process id to pid-<n> and becomes a sleep of that many seconds,
-// ignoring SIGTERM with ignore-term-<n>. With linger-<n>, it leaves a sleep of that many seconds in the background,
-// holding its standard output, and exits. Nothing but the builtins of sh and the sleep linked into the PATH, since it
-// holds no other command. The sleep is exec'd, so that the harness stays one process whose id the test knows: a job
-// started in the background would ignore SIGINT, where the harness would not.
+// Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n>, then the lines of err-<n>
+// on standard error, and exits with the status in status-<n>, or 0. With wait-<n>, it writes its process id to
+// pid-<n> and becomes a sleep of that many seconds, ignoring SIGTERM with ignore-term-<n>. With linger-<n>, it leaves
+// a sleep of that many seconds in the background, holding its standard output, and exits. Nothing but the builtins of
+// sh and the sleep linked into the PATH, since it holds no other command. The sleep is exec'd, so that the harness
+// stays one process whose id the test knows: a job started in the background would ignore SIGINT, where the harness
+// would not.
 const FAKE_HARNESS = `#!/bin/sh
 count=0
 if [ -f "$FAKE_DIR/count" ]; then read -r count < "$FAKE_DIR/count"; fi
@@ -840,6 +841,9 @@ printf '%s\\n' "$count" > "$FAKE_DIR/count"
 printf '%s\\n' "\${0##*/}" "$@" > "$FAKE_DIR/call-$count"
 if [ -f "$FAKE_DIR/out-$count" ]; then
   while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line"; done < "$FAKE_DIR/out-$count"
+fi
+if [ -f "$FAKE_DIR/err-$count" ]; then
+  while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line" >&2; done < "$FAKE_DIR/err-$count"
 fi
 if [ -f "$FAKE_DIR/linger-$count" ]; then
   read -r seconds < "$FAKE_DIR/linger-$count"
@@ -879,8 +883,9 @@ function project(t) {
   symlinkSync(SLEEP, join(base, 'bin', 'sleep'));
   const options = { cwd: base, env: { PATH: join(base, 'bin'), FAKE_DIR: fakes } };
   const agentrite = (...args) => spawnSync(process.execPath, [script, ...args], { ...options, encoding: 'utf-8' });
-  // The command started and not waited on, with a promise of how it ended and what it printed, and one of how it
-  // exited, which does not wait for whatever process it left holding its output.
+  // The command started and not waited on, with a promise of how it ended and what it printed, one of how it exited,
+  // which does not wait for whatever process it left holding its output, and what it printed on standard output so
+  // far.
   const started = (...args) => {
     const child = spawn(process.execPath, [script, ...args], { ...options, stdio: ['ignore', 'pipe', 'pipe'] });
     let stdout = '';
@@ -891,7 +896,7 @@ function project(t) {
       child.on('close', (status, signal) => settle({ status, signal, stdout, stderr })),
     );
     const exited = new Promise((settle) => child.on('exit', (status, signal) => settle({ status, signal, stderr })));
-    return { child, ended, exited };
+    return { child, ended, exited, output: () => stdout };
   };
   write('agentrite.json', SETTINGS);
   assert.equal(agentrite('refresh').status, 0);
@@ -901,6 +906,8 @@ function project(t) {
     writeFileSync(join(fakes, `out-${number}`), printed);
     if (status !== undefined) writeFileSync(join(fakes, `status-${number}`), `${status}\n`);
   };
+  // What the fake prints on standard error at its call `number`, after what it prints on standard output.
+  const complains = (number, printed) => writeFileSync(join(fakes, `err-${number}`), printed);
   // That the fake waits `seconds` at its call `number`, after it printed, and ignores SIGTERM with `ignoreTerm`.
   const waits = (number, seconds, ignoreTerm = false) => {
     writeFileSync(join(fakes, `wait-${number}`), `${seconds}\n`);
@@ -919,7 +926,7 @@ function project(t) {
       .filter((name) => name.startsWith('call-'))
       .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
-  return { base, write, read, agentrite, started, answer, waits, lingers, pidOf, calls };
+  return { base, write, read, agentrite, started, answer, complains, waits, lingers, pidOf, calls };
 }
 
 // A call of the fake: its name, the arguments before the prompt, and the prompt, which is the last argument and may
@@ -1628,4 +1635,207 @@ test('a step that ends in time and leaves a process holding its output past the 
   assert.equal(result.status, 0, result.stdout);
   assert.equal(calls().length, 2);
   assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
+});
+
+// Unit 0075, R3, R4, R9 to R11, R15: a run followed with --follow, and one without it, of a step in each harness.
+
+const FOLLOWED = {
+  steps: [
+    { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
+    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
+  ],
+};
+const IMPLEMENTER_HEAD = 'step 0, implementer, claude, claude-sonnet-5-5';
+const REVIEWER_HEAD = 'step 1, reviewer, opencode, openai/gpt-6.1-sol';
+const HIDDEN = ['TOOL RESULT', 'REASONING'];
+const dim = (text) => `\x1b[2m${text}\x1b[22m`;
+
+// What Claude Code prints with `stream-json` for a step that says what it will do, makes a call with a label and one
+// with none, thinks, is given a tool's result, and answers with `response`.
+function claudeFollowed(response) {
+  const assistant = (second, content) => ({
+    type: 'assistant',
+    message: { content },
+    parent_tool_use_id: null,
+    session_id: 'claude-session',
+    timestamp: `2026-10-22T14:03:${second}.500Z`,
+  });
+  return [
+    { type: 'system', subtype: 'init', session_id: 'claude-session' },
+    assistant(27, [
+      { type: 'thinking', thinking: 'REASONING', signature: 'x' },
+      { type: 'text', text: 'I will run the tests.' },
+    ]),
+    assistant(28, [
+      { type: 'tool_use', id: 'toolu_1', name: 'Bash', input: { command: 'npm test', description: 'Run the tests' } },
+    ]),
+    {
+      type: 'user',
+      message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_1', content: 'TOOL RESULT' }] },
+      parent_tool_use_id: null,
+    },
+    assistant(29, [{ type: 'tool_use', id: 'toolu_2', name: 'TodoWrite', input: { todos: [] } }]),
+    assistant(30, [{ type: 'text', text: response }]),
+    { type: 'result', subtype: 'success', is_error: false, result: response, session_id: 'claude-session' },
+  ]
+    .map((event) => `${JSON.stringify(event)}\n`)
+    .join('');
+}
+
+// What OpenCode prints for the same step, in two messages, the second of them its final response.
+function opencodeFollowed(response) {
+  const event = (type, second, message, part) => ({
+    type,
+    timestamp: Date.UTC(2026, 9, 22, 15, 0, second),
+    sessionID: 'ses_follow',
+    part: { id: `prt_${second}`, messageID: message, sessionID: 'ses_follow', ...part },
+  });
+  const call = (tool, input) => ({ type: 'tool', tool, state: { status: 'completed', input, output: 'TOOL RESULT' } });
+  return [
+    event('step_start', 1, 'msg_1', { type: 'step-start' }),
+    event('reasoning', 2, 'msg_1', { type: 'reasoning', text: 'REASONING' }),
+    event('text', 3, 'msg_1', { type: 'text', text: 'I will read the diff.' }),
+    event('tool_use', 4, 'msg_1', call('bash', { command: 'git diff', description: 'Show the diff' })),
+    event('tool_use', 5, 'msg_1', call('todowrite', { todos: [] })),
+    event('step_finish', 6, 'msg_1', { type: 'step-finish', reason: 'tool-calls' }),
+    event('step_start', 7, 'msg_2', { type: 'step-start' }),
+    event('text', 8, 'msg_2', { type: 'text', text: response }),
+    event('step_finish', 9, 'msg_2', { type: 'step-finish', reason: 'stop' }),
+  ]
+    .map((line) => `${JSON.stringify(line)}\n`)
+    .join('');
+}
+
+const IMPLEMENTED = responseOf({ ...DONE, summary: 'Implemented.' });
+const REVIEWED = responseOf({ ...DONE, summary: 'Reviewed.' });
+
+// What was printed between the line before the step of `head` and the line after it.
+function between(stdout, head) {
+  const start = stdout.indexOf(`${head}: started\n`) + `${head}: started\n`.length;
+  return stdout.slice(start, stdout.indexOf(`${head}: `, start));
+}
+
+// A run of `FOLLOWED`, each step answered as its harness prints it and with a line on standard error.
+async function followedRun(t, ...options) {
+  const { base, write, read, started, answer, complains } = project(t);
+  write('followed.json', JSON.stringify(FOLLOWED));
+  answer(1, claudeFollowed(IMPLEMENTED));
+  complains(1, 'claude complains\n');
+  answer(2, opencodeFollowed(REVIEWED));
+  complains(2, 'opencode complains\n');
+  const result = await started('orchestrate', '0029', '--definition', 'followed.json', ...options).ended;
+  const run = runDirectoryOf(base);
+  const files = readdirSync(run.path).sort();
+  return { result, run, files, contents: files.map((name) => read(`${run.name}/${name}`)) };
+}
+
+test('a run with --follow prints the messages and calls of each step between its lines, the report last', async (t) => {
+  const { result } = await followedRun(t, '--follow');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    between(result.stdout, IMPLEMENTER_HEAD),
+    [
+      '',
+      '14:03:27 I will run the tests.',
+      '',
+      dim('14:03:28 → Bash Run the tests'),
+      dim('14:03:29 → TodoWrite'),
+      '',
+      `14:03:30 ${IMPLEMENTED.replace(/\n+$/, '')}`,
+      '',
+      '',
+    ].join('\n'),
+  );
+  assert.equal(
+    between(result.stdout, REVIEWER_HEAD),
+    [
+      '',
+      '15:00:03 I will read the diff.',
+      '',
+      dim('15:00:04 → bash Show the diff'),
+      dim('15:00:05 → todowrite'),
+      '',
+      `15:00:08 ${REVIEWED.replace(/\n+$/, '')}`,
+      '',
+      '',
+    ].join('\n'),
+  );
+  for (const hidden of HIDDEN) assert.ok(!result.stdout.includes(hidden), result.stdout);
+  assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
+  const report = endReportOf(result.stdout);
+  assert.ok(report.startsWith('0  implementer'), result.stdout);
+  assert.ok(report.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
+  assert.ok(!report.includes('→') && !report.includes('I will'), result.stdout);
+  assert.ok(result.stderr.includes('claude complains\n'), result.stderr);
+  assert.ok(result.stderr.includes('opencode complains\n'), result.stderr);
+});
+
+// What the command printed after the line after the last step and the blank line below it: the end report.
+function endReportOf(stdout) {
+  const last = stepLines(stdout).at(-1);
+  return stdout.slice(stdout.lastIndexOf(`${last}\n`) + `${last}\n\n`.length);
+}
+
+test('a run without --follow prints the lines of its steps and the end report, and nothing of the steps', async (t) => {
+  const { result } = await followedRun(t);
+
+  assert.equal(result.status, 0, result.stderr);
+  const lines = result.stdout.split('\n');
+  const report = endReportOf(result.stdout).split('\n');
+  assert.deepEqual(lines.slice(0, 4).map((line) => line.replace(/ after .*$/, '')), [
+    `${IMPLEMENTER_HEAD}: started`,
+    `${IMPLEMENTER_HEAD}: done`,
+    `${REVIEWER_HEAD}: started`,
+    `${REVIEWER_HEAD}: done`,
+  ]);
+  assert.deepEqual(lines.slice(4), ['', ...report]);
+  assert.ok(report[0].startsWith('0  implementer'), result.stdout);
+  for (const shown of ['I will run the tests.', 'I will read the diff.', '→', ...HIDDEN]) {
+    assert.ok(!result.stdout.includes(shown), result.stdout);
+  }
+  assert.ok(result.stderr.includes('claude complains\n'), result.stderr);
+  assert.ok(result.stderr.includes('opencode complains\n'), result.stderr);
+});
+
+test('a run with --follow ends, writes its directory and exits as the same run without it', async (t) => {
+  const followed = await followedRun(t, '--follow');
+  const plain = await followedRun(t);
+
+  assert.equal(followed.result.status, plain.result.status);
+  const steps = (stdout) => stepLines(stdout).map((line) => line.replace(/ after .*$/, ''));
+  assert.deepEqual(steps(followed.result.stdout), steps(plain.result.stdout));
+  assert.equal(
+    endReportOf(followed.result.stdout).replaceAll(followed.run.name, 'RUN'),
+    endReportOf(plain.result.stdout).replaceAll(plain.run.name, 'RUN'),
+  );
+  assert.deepEqual(followed.files, plain.files);
+  assert.deepEqual(followed.files, [
+    '00-implementer.outcome.json',
+    '01-reviewer.outcome.json',
+    'definition.json',
+    'state.json',
+  ]);
+  assert.deepEqual(followed.contents, plain.contents);
+  assert.deepEqual(JSON.parse(followed.contents.at(-1)).sessions, [
+    { role: 'implementer', harness: 'claude', session: 'claude-session' },
+    { role: 'reviewer', harness: 'opencode', session: 'ses_follow' },
+  ]);
+});
+
+test('with --follow a message of a step is printed while the step still runs', async (t) => {
+  const { write, started, answer, waits, pidOf } = project(t);
+  write('one.json', JSON.stringify(ONE_STEP));
+  answer(1, claudeFollowed(IMPLEMENTED).split('\n').slice(0, 2).join('\n'));
+  waits(1, 60);
+  const { child, exited, output } = started('orchestrate', '0029', '--definition', 'one.json', '--follow');
+  const harness = await pidOf(1);
+
+  for (let tries = 0; tries < 250 && !output().includes('I will run the tests.'); tries += 1) await delay(20);
+  assert.ok(output().includes('\n14:03:27 I will run the tests.\n'), output());
+  assert.doesNotThrow(() => process.kill(harness, 0), 'the harness ended before the message was printed');
+
+  process.kill(child.pid, 'SIGTERM');
+  assert.equal((await exited).signal, 'SIGTERM');
+  assert.ok(await gone(harness), `the harness ${harness} is left`);
 });

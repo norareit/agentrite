@@ -58,3 +58,9 @@ timestamp: 2026-10-22T13:15:49Z
 - 2026-10-22T17:31:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the eighth and ninth tasks.
   Saw the tests of the printing fail on the missing exports, then pass with `clockTime`, `callLabel`, `followedText`
   and `followPrinter`. `npm test` passes, 955 tests
+- 2026-10-22T17:52:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the tenth to twelfth tasks.
+  Of the four new tests of the command, the two of a run with `--follow` failed before `runGrouped` handed on lines;
+  the run without it and the comparison of the two runs passed already, as they test what did not change. The test
+  that a message is printed while the step runs checks that the fake's process is still alive once the message is
+  in `output()`. `runGrouped` hands on what is left after the last line break when the output ends. `npm test`
+  passes, 959 tests

@@ -187,11 +187,11 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   `followedText(item, time)`, and `followPrinter(write, now)`, which returns a function taking a list of `Followed`
   and writing each by the rules of the approach. Export them for the tests. Run `npm test`: the tests of the previous
   task pass (R5, R6, R7)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, make `started` of the test project also return `output()`, which
+- [x] In `tests/agentrite-orchestrate.test.mjs`, make `started` of the test project also return `output()`, which
   gives what the command printed on standard output so far, and add `err-<n>` to `FAKE_HARNESS` and its comment, a
   file whose lines the fake prints on standard error after it printed `out-<n>`, with a helper `complains(number,
   printed)` beside `answer`. Run `npm test`: it passes as before
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add the command's tests of requirement 15, with a definition of a
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add the command's tests of requirement 15, with a definition of a
   step in Claude Code followed by a step in OpenCode, each answered by output that holds, before its final
   response, a text message, a call with a label, a call with none, a reasoning or thinking block and a tool result,
   and with a line on standard error from each:
@@ -210,7 +210,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
     the fake's process is still alive, after which the command is ended by `SIGTERM` as in `a signal to the command
     alone while a step runs`
   Run `npm test` and see them fail (R3, R4, R9, R10, R11, R15)
-- [ ] In `scripts/agentrite.mjs`, give `runGrouped` a parameter `line`, a function called with each complete line of
+- [x] In `scripts/agentrite.mjs`, give `runGrouped` a parameter `line`, a function called with each complete line of
   standard output as it arrives and with what is left when the output closes, before the promise settles, or
   `undefined` to hand on none. Give `runStep` a parameter `follow`, the printer of the step or `undefined`, and pass
   `runGrouped` a function that gives each line to `HEADLESS[step.harness].follow` and its items to the printer, when
@@ -252,5 +252,5 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   Claude Code is run and read with no change in what the command prints
 - [x] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
 - [x] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
-- [ ] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
+- [x] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
 - [ ] `feature-0075 Document --follow`: the last four tasks
