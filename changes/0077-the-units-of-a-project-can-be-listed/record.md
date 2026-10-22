@@ -29,11 +29,12 @@ timestamp: 2026-10-22T18:58:24Z
   the command reads `kind` as the change check reads `status`. The status is `approved`
 - 2026-10-22T19:55:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a session on the Linux host,
   on `feature-0077-the-units-of-a-project-can-be-listed`, began the work. The status is `in-progress`
-- 2026-10-22T20:20:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, finished the tasks of `plan.md`
-  in the commits it names. Ran `npm test` on `7bed8d8`: 1032 tests pass and none fail, and again on `9363cfe` after the commits were rebased to take out their trailers. An earlier run of the same tree
-  failed `a unit run and its variants run at once` of `tests/sandbox-variant.test.mjs` twice, and that file passed on
-  three runs after and in the full run above; not investigated, and the test reads running containers of the host, one
-  of which belonged to another project. `npm run check-changes` passes on `7bed8d8`. `npx agentrite units` of the
-  working tree lists the units of this repository and none of its `history-` directories, which the tests cover on a
-  project of 54 units. Read `unitFrom` as taking the status and the kind with `fieldFrom` over the whole record, as
-  `statusFrom` does, and not only over the front matter. The status stays `in-progress` for the review
+- 2026-10-22T20:20:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, finished the tasks of `plan.md` in
+  the commits it names. Ran `npm test` on `7bed8d8`: 1032 tests pass and none fail, and again on `9363cfe` after the
+  commits were rebased to take out their trailers. An earlier run of the same tree failed `a unit run and its variants
+  run at once` of `tests/sandbox-variant.test.mjs` twice, and that file passed on three runs after and in the full run
+  above; not investigated, and the test reads running containers of the host, one of which belonged to another project.
+  `npm run check-changes` passes on `7bed8d8`. `npx agentrite units` of the working tree lists the units of this
+  repository and none of its `history-` directories, which the tests cover on a project of 54 units. Read `unitFrom` as
+  taking the status and the kind with `fieldFrom` over the whole record, as `statusFrom` does, and not only over the
+  front matter. The status stays `in-progress` for the review
