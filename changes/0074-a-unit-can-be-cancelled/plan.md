@@ -60,18 +60,18 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 ### The change check
 
-- [ ] In `tests/check-changes.test.mjs`, beside the tests of `findFrozenViolations`, add unit tests that give a base
+- [x] In `tests/check-changes.test.mjs`, beside the tests of `findFrozenViolations`, add unit tests that give a base
   unit with `status: 'cancelled'` and expect: a changed `spec` is reported as `<unit>: spec.md`; a changed `plan` as
   `<unit>: plan.md`; a unit absent from the head as `<unit>: unit deleted`. Add one that gives a base unit `approved`
   and the head unit `cancelled` with a changed `spec` and `plan`, and expects no violation. Run them and see the
   first three fail (R8, R15)
-- [ ] Beside the tests of `findIncompletePlans`, add one that gives a `cancelled` unit whose `plan` holds `- [x]` and
+- [x] Beside the tests of `findIncompletePlans`, add one that gives a `cancelled` unit whose `plan` holds `- [x]` and
   `- [ ]` tasks and expects no violation (R9, R15)
-- [ ] Beside "check-changes rejects a changed frozen spec in another repository", add a test of the command that
+- [x] Beside "check-changes rejects a changed frozen spec in another repository", add a test of the command that
   commits on the default branch a second unit whose record holds `status: cancelled` and which has a `spec.md`,
   changes that `spec.md` on a branch `change`, runs the checker and expects a status other than 0 and the line
   `- <unit>: spec.md` (R8, R15)
-- [ ] In `scripts/check-changes.mjs`, add a constant for the frozen statuses, a `Set` of `implemented` and
+- [x] In `scripts/check-changes.mjs`, add a constant for the frozen statuses, a `Set` of `implemented` and
   `cancelled`, with a comment that says that both end statuses freeze a unit and that only an implemented one must
   have a complete plan, and make `findFrozenViolations` skip a base unit whose status the set does not hold. Leave
   `findIncompletePlans` as it is. Run `node --test tests/check-changes.test.mjs` and see every test pass (R8, R9)
@@ -160,8 +160,8 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 ## Commit Points
 
-- [ ] `feature-0074 Plan the cancellation of a unit`: this plan and its log entry in `record.md`
-- [ ] `feature-0074 Freeze a cancelled unit in the change check`: the tasks of "The change check"
+- [x] `feature-0074 Plan the cancellation of a unit`: this plan and its log entry in `record.md`
+- [x] `feature-0074 Freeze a cancelled unit in the change check`: the tasks of "The change check"
 - [ ] `feature-0074 Cut no branch for a cancelled unit`: the tasks of "The sandbox"
 - [ ] `feature-0074 Test that orchestrate refuses a cancelled unit`: the task of "The orchestrator"
 - [ ] `feature-0074 Give the status cancelled in the process`: the tasks of "The documents"

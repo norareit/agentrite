@@ -12,6 +12,12 @@ import { readSettings, SETTINGS_FILE } from './agentrite-settings.mjs';
  */
 
 /**
+ * Both end statuses freeze a unit. Only an implemented one must also have a complete plan: a cancelled unit may have
+ * been given up part way through.
+ */
+const FROZEN_STATUSES = new Set(['implemented', 'cancelled']);
+
+/**
  * @param {Record<string, ChangeDocuments>} base
  * @param {Record<string, ChangeDocuments>} head
  * @returns {string[]}
@@ -20,7 +26,7 @@ export function findFrozenViolations(base, head) {
   const violations = [];
 
   for (const [unit, baseDocuments] of Object.entries(base)) {
-    if (baseDocuments.status !== 'implemented') continue;
+    if (!FROZEN_STATUSES.has(baseDocuments.status)) continue;
 
     const headDocuments = head[unit];
     if (headDocuments === undefined) {

@@ -77,6 +77,46 @@ test('findFrozenViolations reports a deleted frozen unit once, not per document'
   );
 });
 
+test('findFrozenViolations reports a changed spec of a cancelled unit', () => {
+  assert.deepEqual(
+    findFrozenViolations(
+      { dropped: { status: 'cancelled', spec: 'original spec', plan: 'original plan' } },
+      { dropped: { status: 'cancelled', spec: 'changed spec', plan: 'original plan' } },
+    ),
+    ['dropped: spec.md'],
+  );
+});
+
+test('findFrozenViolations reports a changed plan of a cancelled unit', () => {
+  assert.deepEqual(
+    findFrozenViolations(
+      { dropped: { status: 'cancelled', spec: 'original spec', plan: 'original plan' } },
+      { dropped: { status: 'cancelled', spec: 'original spec', plan: 'changed plan' } },
+    ),
+    ['dropped: plan.md'],
+  );
+});
+
+test('findFrozenViolations reports a deleted cancelled unit', () => {
+  assert.deepEqual(
+    findFrozenViolations(
+      { dropped: { status: 'cancelled', spec: 'original spec' } },
+      {},
+    ),
+    ['dropped: unit deleted'],
+  );
+});
+
+test('findFrozenViolations allows a unit that reaches cancelled on the branch', () => {
+  assert.deepEqual(
+    findFrozenViolations(
+      { pending: { status: 'approved', spec: 'original spec', plan: 'original plan' } },
+      { pending: { status: 'cancelled', spec: 'changed spec', plan: 'changed plan' } },
+    ),
+    [],
+  );
+});
+
 test('findIncompletePlans reports an implemented unit with an unticked task', () => {
   assert.deepEqual(
     findIncompletePlans({ done: { status: 'implemented', plan: '- [x] first\n- [ ] second\n' } }),
@@ -105,6 +145,13 @@ test('findIncompletePlans ignores a plan that uses no checkboxes', () => {
 test('findIncompletePlans ignores a unit that is not implemented', () => {
   assert.deepEqual(
     findIncompletePlans({ ongoing: { status: 'in-progress', plan: '- [ ] not done yet\n' } }),
+    [],
+  );
+});
+
+test('findIncompletePlans ignores a cancelled unit with an unticked task', () => {
+  assert.deepEqual(
+    findIncompletePlans({ dropped: { status: 'cancelled', plan: '- [x] first\n- [ ] second\n' } }),
     [],
   );
 });
@@ -262,6 +309,24 @@ test('check-changes rejects a changed frozen spec in another repository', (t) =>
 
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /^- 0001-example: spec\.md$/m);
+});
+
+test('check-changes rejects a changed spec of a unit cancelled on the default branch', (t) => {
+  const repository = repositoryWithFrozenUnit(t);
+  const directory = join(repository, 'changes', '0002-dropped');
+  mkdirSync(directory, { recursive: true });
+  writeFileSync(join(directory, 'record.md'), '---\nstatus: cancelled\n---\n');
+  writeFileSync(join(directory, 'spec.md'), 'original spec\n');
+  git(repository, 'add', '.');
+  git(repository, 'commit', '-m', 'cancel a unit');
+  git(repository, 'checkout', '-b', 'change');
+  writeFileSync(join(directory, 'spec.md'), 'changed spec\n');
+  git(repository, 'commit', '-am', 'change the cancelled spec');
+
+  const result = runChecker(repository);
+
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /^- 0002-dropped: spec\.md$/m);
 });
 
 test('check-changes passes on a branch that changed no frozen document', (t) => {

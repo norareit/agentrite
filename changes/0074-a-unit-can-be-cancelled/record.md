@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-22T12:22:44Z
 ---
 
@@ -35,3 +35,5 @@ timestamp: 2026-10-22T12:22:44Z
 - 2026-10-22T18:24:43Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the human's request, cut the
   paragraph of `plan.md` on requirement 16 to the one sentence it needs since the spec's correction. No task changed.
   The status is `approved`
+- 2026-10-22T18:31:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  began the work on `feature-0074-a-unit-can-be-cancelled` at `a118e5d`. The status is `in-progress`
