@@ -51,3 +51,7 @@ timestamp: 2026-10-22T13:15:49Z
   OpenCode's `opencodeEvent` now uses too. After the change of the harness, the command's tests failed on the
   planner's arguments, as the plan said, and also `a step past its limit is ended by SIGTERM`, which reads the
   session's id at the index the new `--verbose` moved; both took the new index. `npm test` passes, 944 tests
+- 2026-10-22T17:20:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did the sixth and seventh tasks.
+  Saw the six new tests of `follow` fail, then pass once `followClaude` and `followOpencode` were added beside the
+  `Followed` typedef. A text block or part that is not a string is taken as absent, as a field is. `npm test` passes,
+  950 tests

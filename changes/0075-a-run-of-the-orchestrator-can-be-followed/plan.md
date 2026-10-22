@@ -154,7 +154,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   Claude Code prints with `stream-json`: a `system` event of subtype `init` with the session's id, an `assistant`
   event whose content is one `text` block of the response, and the `result` event it prints now, each on a line of
   its own. Run `npm test`: it passes, and every run of the command's tests reads its outcome from the stream (R10)
-- [ ] In `tests/agentrite-outcome.test.mjs`, add tests of `HEADLESS.claude.follow`: an `assistant` event with a
+- [x] In `tests/agentrite-outcome.test.mjs`, add tests of `HEADLESS.claude.follow`: an `assistant` event with a
   `text` block, a `thinking` block, a `redacted_thinking` block and a `tool_use` block of `Bash` with `command` and
   `description`, with a `timestamp`, gives a text and a call, in that order, each at that instant, the call's
   `description` and `command` set; a `tool_use` of `Read` with `file_path`, of `NotebookEdit` with `notebook_path`,
@@ -168,7 +168,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   `pattern` and `path`, the pattern and no path; of `task` with `description`, nothing but the tool; events of
   `reasoning`, `step_start` and `step_finish` give nothing; a `text` event with no text, or a line that is no JSON,
   gives nothing. Run `npm test` and see them fail (R4, R8, R9, R14)
-- [ ] In `scripts/agentrite-headless.mjs`, add the `Followed` typedef of the approach, and `follow(line)` to the type
+- [x] In `scripts/agentrite-headless.mjs`, add the `Followed` typedef of the approach, and `follow(line)` to the type
   of `HEADLESS` and to both entries, by the readings of the approach, reusing `isRecord` and `stringOrNone`. A line
   is parsed once per harness and narrowed to what is followed, as `opencodeEvent` narrows it for `read`. Run `npm
   test`: the tests of the previous task pass (R4, R8, R9)
@@ -250,7 +250,7 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 - [x] `feature-0075 Take --follow among the arguments of orchestrate`: the first two tasks
 - [x] `feature-0075 Read Claude Code's output as a stream of events`: the third to fifth tasks, which change how
   Claude Code is run and read with no change in what the command prints
-- [ ] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
+- [x] `feature-0075 Read what each harness makes known of a step`: the sixth and seventh tasks
 - [ ] `feature-0075 Print what is followed of a step`: the eighth and ninth tasks
 - [ ] `feature-0075 Follow a run's steps with --follow`: the tenth to twelfth tasks
 - [ ] `feature-0075 Document --follow`: the last four tasks

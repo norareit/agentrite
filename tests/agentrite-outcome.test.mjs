@@ -439,3 +439,112 @@ test('opencode: no final response without a step_finish, or with none of its mes
   assert.equal(HEADLESS.opencode.read(otherMessage).response, undefined);
   assert.deepEqual(HEADLESS.opencode.read(''), { response: undefined, session: undefined });
 });
+
+// Unit 0075, R4, R8, R9: what each harness makes known of a step as it runs, one line of its output at a time.
+
+const NO_CALL = { description: undefined, path: undefined, pattern: undefined, command: undefined };
+const AT = '2026-10-22T14:03:27.900Z';
+
+const assistant = (content, extra = {}) =>
+  JSON.stringify({ type: 'assistant', message: { content }, parent_tool_use_id: null, timestamp: AT, ...extra });
+const toolUse = (name, input) => ({ type: 'tool_use', id: 'toolu_1', name, input });
+
+test('claude: an assistant event gives its text and its tool calls, in order, at its timestamp', () => {
+  const line = assistant([
+    { type: 'text', text: 'I will run the tests.\n' },
+    { type: 'thinking', thinking: '', signature: 'x' },
+    { type: 'redacted_thinking', data: 'x' },
+    toolUse('Bash', { command: 'npm test', description: 'Run the tests' }),
+  ]);
+  assert.deepEqual(HEADLESS.claude.follow(line), [
+    { kind: 'text', time: Date.parse(AT), text: 'I will run the tests.\n' },
+    {
+      kind: 'call',
+      time: Date.parse(AT),
+      tool: 'Bash',
+      ...NO_CALL,
+      description: 'Run the tests',
+      command: 'npm test',
+    },
+  ]);
+});
+
+test('claude: a call gives the path of the file it acts on and the pattern it searches for', () => {
+  const calls = (block) => HEADLESS.claude.follow(assistant([block]));
+  const call = (tool, fields) => [{ kind: 'call', time: Date.parse(AT), tool, ...NO_CALL, ...fields }];
+  assert.deepEqual(calls(toolUse('Read', { file_path: '/work/a.mjs' })), call('Read', { path: '/work/a.mjs' }));
+  assert.deepEqual(
+    calls(toolUse('NotebookEdit', { notebook_path: '/work/a.ipynb' })),
+    call('NotebookEdit', { path: '/work/a.ipynb' }),
+  );
+  assert.deepEqual(calls(toolUse('Grep', { pattern: 'follow', path: '/work' })), call('Grep', { pattern: 'follow' }));
+  assert.deepEqual(calls(toolUse('Agent', { description: 'Look around', prompt: 'Look.' })), call('Agent', {}));
+  assert.deepEqual(calls(toolUse('Read', { file_path: 5, command: 7 })), call('Read', {}));
+});
+
+test('claude: a subagent, system, user and result events, empty text and lines of no JSON object give nothing', () => {
+  for (const line of [
+    assistant([{ type: 'text', text: 'From a subagent.' }], { parent_tool_use_id: 'toolu_1' }),
+    JSON.stringify({ type: 'system', subtype: 'init', session_id: 'abc' }),
+    JSON.stringify({
+      type: 'user',
+      message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_1', content: 'passed' }] },
+      parent_tool_use_id: null,
+    }),
+    JSON.stringify({ type: 'result', subtype: 'success', result: 'Done.', session_id: 'abc' }),
+    assistant([{ type: 'text', text: '' }]),
+    assistant([{ type: 'text', text: '\n\n' }]),
+    assistant([{ type: 'text', text: 5 }]),
+    'not json',
+    '[1]',
+    '',
+  ]) {
+    assert.deepEqual(HEADLESS.claude.follow(line), [], line);
+  }
+});
+
+test('claude: an event with no timestamp, or one that does not parse, gives no time', () => {
+  for (const timestamp of [undefined, 'yesterday', 5]) {
+    const [text] = HEADLESS.claude.follow(assistant([{ type: 'text', text: 'Hello.' }], { timestamp }));
+    assert.equal(text.time, undefined, String(timestamp));
+  }
+});
+
+const opencodeLine = (type, part, timestamp = 1792687180271) =>
+  JSON.stringify({ type, timestamp, sessionID: 'ses_abc', part: { id: 'prt_1', messageID: 'msg_1', ...part } });
+const opencodeCall = (tool, input) =>
+  opencodeLine('tool_use', { type: 'tool', tool, state: { status: 'completed', input } });
+
+test('opencode: a text event gives its text, and a tool_use event its call, at the event timestamp', () => {
+  assert.deepEqual(HEADLESS.opencode.follow(opencodeLine('text', { type: 'text', text: 'Done.' })), [
+    { kind: 'text', time: 1792687180271, text: 'Done.' },
+  ]);
+  const call = (tool, fields) => [{ kind: 'call', time: 1792687180271, tool, ...NO_CALL, ...fields }];
+  assert.deepEqual(
+    HEADLESS.opencode.follow(opencodeCall('bash', { command: 'npm test', description: 'Run the tests' })),
+    call('bash', { description: 'Run the tests', command: 'npm test' }),
+  );
+  assert.deepEqual(
+    HEADLESS.opencode.follow(opencodeCall('read', { filePath: '/work/a.mjs' })),
+    call('read', { path: '/work/a.mjs' }),
+  );
+  assert.deepEqual(
+    HEADLESS.opencode.follow(opencodeCall('grep', { pattern: 'follow', path: '/work' })),
+    call('grep', { pattern: 'follow' }),
+  );
+  assert.deepEqual(HEADLESS.opencode.follow(opencodeCall('task', { description: 'Look around' })), call('task', {}));
+});
+
+test('opencode: reasoning, step events, a text event with no text and a line of no JSON object give nothing', () => {
+  for (const line of [
+    opencodeLine('reasoning', { type: 'reasoning', text: 'Thinking.' }),
+    opencodeLine('step_start', { type: 'step-start' }),
+    opencodeLine('step_finish', { type: 'step-finish', reason: 'stop' }),
+    opencodeLine('text', { type: 'text' }),
+    opencodeLine('text', { type: 'text', text: '\n' }),
+    'not json',
+    '',
+  ]) {
+    assert.deepEqual(HEADLESS.opencode.follow(line), [], line);
+  }
+});
