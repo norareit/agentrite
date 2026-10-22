@@ -51,6 +51,7 @@ const MINOR = { id: 'C1', blocking: false, summary: 'A name could be clearer' };
 const done = (overrides = {}) => ({ response: responseOf({ ...DONE, ...overrides }) });
 const blocked = () => done({ findings: [BLOCKING, MINOR] });
 const clean = () => done({ findings: [MINOR] });
+const later = (...afterwards) => done({ afterwards });
 
 // Runs `definition` with effects whose `run` gives the results listed, in turn, and records what it is given.
 async function runWith(definition, results) {
@@ -257,7 +258,6 @@ test('of two cases that hold, the first of the order is named', () => {
 // R7 to R9 of unit 0076: items for after the run stop no run, and questions of a done outcome do.
 
 test('a run whose steps give done with items in afterwards and no question runs to its end', async () => {
-  const later = (...afterwards) => done({ afterwards, findings: [MINOR] });
   const run = await runWith(DEFAULT, [later('Read the plan.'), later('Check it in the IDE.'), later('Try macOS.')]);
   assert.equal(run.planned.length, 3);
   assert.deepEqual(run.end, { kind: 'complete' });
@@ -526,6 +526,73 @@ test('the report of a harness that failed after it gave an outcome gives the out
   assert.deepEqual((await reportOf([done(), { status: 1, ...done({ summary: 'Half done.' }) }])).slice(3, 5), [
     'Step 1 stopped the run: its harness exited with 1.',
     'Summary: Half done.',
+  ]);
+});
+
+// R8, R10 to R13 of unit 0076: the items for after the run, from every step, in the end report.
+
+test('the report gives the items for after the run of every step, grouped by step, after the last step', async () => {
+  const implementer = later(
+    'Check the new action in a running IDE',
+    'Decide the label of the button; the step built "Export"',
+  );
+  const lines = await reportOf([done(), implementer, later('Check the dialog on macOS')]);
+  assert.deepEqual(lines.slice(4), [
+    'The run ran every item of the definition to its end.',
+    'Summary: Did it.',
+    'After the run:',
+    '  step 1, round 1 of 3, implementer:',
+    '    - Check the new action in a running IDE',
+    '    - Decide the label of the button; the step built "Export"',
+    '  step 2, round 1 of 3, reviewer:',
+    '    - Check the dialog on macOS',
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('a step outside a repeat is named without a round, an empty list is left out, and a repeat is kept', async () => {
+  const lines = await reportOf([later('Check it on macOS.'), later(), later('Check it on macOS.')]);
+  assert.deepEqual(lines.slice(6, -WHERE_LINES.length - 1), [
+    'After the run:',
+    '  step 0, planner:',
+    '    - Check it on macOS.',
+    '  step 2, round 1 of 3, reviewer:',
+    '    - Check it on macOS.',
+  ]);
+});
+
+test('the items of the steps before a last step without an outcome of the form are given', async () => {
+  const where = { ...WHERE, responsePath: '.orchestrator/0029-x/2026-10-21T10:00:00Z/02-reviewer.response.md' };
+  const lines = await reportOf([done(), later('Check it in the IDE.'), { response: 'No block.' }], DEFAULT, where);
+  assert.deepEqual(lines.slice(4), [
+    'Step 2 stopped the run: its final response holds no block marked json.',
+    `The final response of step 2 is at ${where.responsePath}.`,
+    'After the run:',
+    '  step 1, round 1 of 3, implementer:',
+    '    - Check it in the IDE.',
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('a run in which no step left an item has no part for after the run', async () => {
+  const lines = await reportOf([done(), done(), done({ outcome: 'needs-human', questions: ['Which?'] })]);
+  assert.ok(!lines.some((line) => line.startsWith('After the run')), lines.join('\n'));
+});
+
+test('the report of a stop by a done outcome with questions gives its end line, questions and items', async () => {
+  const asks = done({ summary: 'Built it.', questions: ['Which branch?'], afterwards: ['Check it in the IDE.'] });
+  assert.deepEqual((await reportOf([done(), asks])).slice(3), [
+    'Step 1 stopped the run: its outcome is done, but holds questions, which the human answers.',
+    'Summary: Built it.',
+    'Questions:',
+    '  - Which branch?',
+    'After the run:',
+    '  step 1, round 1 of 3, implementer:',
+    '    - Check it in the IDE.',
+    ...WHERE_LINES,
+    '',
   ]);
 });
 
@@ -878,6 +945,38 @@ test('a run whose every item ends runs the default definition and exits 0', (t) 
   assert.deepEqual(state.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
 });
 
+// R7, R10, R11, R14, R17 of unit 0076
+
+test('a run whose steps leave items for after the run exits 0, and gives them grouped by step', (t) => {
+  const { base, agentrite, answer, calls, read } = project(t);
+  const built = ['Check the new action in a running IDE', 'Check it on Windows'];
+  answerDefault(answer, [{}, { afterwards: built }, { findings: [MINOR], afterwards: ['Check the dialog on macOS'] }]);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(calls().length, 3);
+  const run = runDirectoryOf(base);
+  assert.ok(
+    result.stdout.endsWith(
+      '\nThe run ran every item of the definition to its end.\nSummary: Did it.\nAfter the run:\n' +
+        '  step 1, round 1 of 3, implementer:\n    - Check the new action in a running IDE\n' +
+        '    - Check it on Windows\n  step 2, round 1 of 3, reviewer:\n    - Check the dialog on macOS\n\n' +
+        `The run's directory: ${run.name}/\nThe reviewer's findings are under .reviews/${UNIT}/.\n`,
+    ),
+    result.stdout,
+  );
+  assert.deepEqual(JSON.parse(read(`${run.name}/01-implementer.outcome.json`)).afterwards, built);
+  assert.deepEqual(JSON.parse(read(`${run.name}/02-reviewer.outcome.json`)).afterwards, ['Check the dialog on macOS']);
+  assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-planner.outcome.json',
+    '01-implementer.outcome.json',
+    '02-reviewer.outcome.json',
+    'definition.json',
+    'state.json',
+  ]);
+});
+
 test('a run whose repeat ends at its first round goes on with the item after the repeat', (t) => {
   const { base, write, agentrite, answer, calls } = project(t);
   write(
@@ -1020,6 +1119,17 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
       claudePrinted(responseOf({ ...DONE, outcome: 'needs-human', questions: ['Which branch?'] })),
       undefined,
       ['Step 1 stopped the run: its outcome is needs-human.', 'Summary: Did it.', 'Questions:', '  - Which branch?'],
+      'outcome.json',
+    ],
+    [
+      claudePrinted(responseOf({ ...DONE, questions: ['Which branch?'] })),
+      undefined,
+      [
+        'Step 1 stopped the run: its outcome is done, but holds questions, which the human answers.',
+        'Summary: Did it.',
+        'Questions:',
+        '  - Which branch?',
+      ],
       'outcome.json',
     ],
     [

@@ -118,7 +118,7 @@ the other's.
   (outcome.questions.length > 0) return 'questions';`. Name unit 0076 in the comment of `judgeStep` beside
   requirement 18 of unit 0065. Add the `questions` case to `endLine`, with the sentence of the approach after
   `Step <number> stopped the run: `. Run `npm test`: the tests of the previous task pass (R7, R8, R9)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add tests of the end report, by `reportOf`, for requirements 10 to
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add tests of the end report, by `reportOf`, for requirements 10 to
   13: a run of the default definition whose implementer leaves two items and whose reviewer leaves one, which gives
   the lines of the approach's example after `Summary:` and before `WHERE_LINES`; a definition with a step outside a
   repeat that leaves an item, which gives `  step 0, <role>:`; a step whose `afterwards` is empty between two that
@@ -130,13 +130,13 @@ the other's.
 - [x] In `scripts/agentrite-orchestrate.mjs`, extract from `stepLine` the text of a step's round, `, round <at> of
   <of>` or nothing outside a repeat, into a function `inRound(round)`, with no change in what the command prints, since
   `afterwardsLines` names a step's round the same way. Run `npm test`: it passes as before
-- [ ] In `scripts/agentrite-orchestrate.mjs`, add `afterwardsLines(ran)`, which gives `[]` when no entry of `ran`
+- [x] In `scripts/agentrite-orchestrate.mjs`, add `afterwardsLines(ran)`, which gives `[]` when no entry of `ran`
   with an outcome of the form holds an item, and otherwise `After the run:` and, for each such entry in order whose
   `afterwards` is not empty, `  step <number>[, round <at> of <of>], <role>:` and its items as `    - <item>`. Spread
   it in `endReport` after `lastStepLines` and before the `''` that precedes the run's directory. Change the comments
   of `lastStepLines` and `endReport` to say that the items for after the run are taken from every step, and nothing
   else from an earlier step. Run `npm test`: the tests of the previous task pass (R10, R11, R12, R13)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, among the command's tests, add a test that answers the default
+- [x] In `tests/agentrite-orchestrate.test.mjs`, among the command's tests, add a test that answers the default
   definition, by `answerDefault`, with a planner that gives `done`, an implementer that gives `done` with two items in
   `afterwards`, and a reviewer that gives `done` with no blocking finding and one item of its own, and checks: exit
   status 0; three steps ran; the standard output holds `After the run:`, `  step 1, round 1 of 3, implementer:` with
@@ -175,5 +175,5 @@ the other's.
 - [x] `feature-0076 Stop a run for a done outcome with questions`: the fourth and fifth tasks
 - [x] `feature-0076 Name the round of a step by one function`: the extraction of `inRound`, a refactoring kept apart
   from the change of behavior
-- [ ] `feature-0076 Give the items for after the run in the end report`: the sixth to eighth tasks
+- [x] `feature-0076 Give the items for after the run in the end report`: the sixth to eighth tasks
 - [ ] `feature-0076 Document afterwards in README.md`: the last three tasks

@@ -278,7 +278,8 @@ export function endLine(end) {
 
 /**
  * What the last step's outcome holds that the human needs, or where its final response is when it has none of the
- * form. Nothing is taken from an outcome not of the form, nor from an earlier step.
+ * form. Nothing is taken from an outcome not of the form, and nothing but the items for after the run, which
+ * `afterwardsLines` gives, from an earlier step.
  *
  * @param {Ran} last
  * @param {End} end
@@ -305,8 +306,25 @@ function lastStepLines(last, end, responsePath) {
 }
 
 /**
+ * The items for after the run of every step that gave an outcome of the form, grouped by step in the order the steps
+ * ran, each as the step gave it. A step that left none is left out, and so is the whole part when no step left one.
+ *
+ * @param {Ran[]} ran
+ * @returns {string[]}
+ */
+function afterwardsLines(ran) {
+  /** @type {string[]} */ const lines = [];
+  for (const { planned, reading } of ran) {
+    if (reading.kind !== 'outcome' || reading.outcome.afterwards.length === 0) continue;
+    lines.push(`  step ${planned.number}${inRound(planned.round)}, ${planned.step.role}:`);
+    lines.push(...reading.outcome.afterwards.map((item) => `    - ${item}`));
+  }
+  return lines.length === 0 ? [] : ['After the run:', ...lines];
+}
+
+/**
  * What the command prints last, when a run ends: the steps that ran, how the run ended, what the last step's outcome
- * holds, and where the run and the reviewer's findings are.
+ * holds, the items for after the run of every step, and where the run and the reviewer's findings are.
  *
  * @param {Ran[]} ran
  * @param {End} end
@@ -319,6 +337,7 @@ export function endReport(ran, end, { runDirectory, unitDirectory, responsePath 
     '',
     endLine(end),
     ...lastStepLines(/** @type {Ran} */ (ran.at(-1)), end, responsePath),
+    ...afterwardsLines(ran),
     '',
     `The run's directory: ${runDirectory}/`,
     `The reviewer's findings are under .reviews/${unitDirectory}/.`,
