@@ -17,3 +17,7 @@ timestamp: 2026-10-22T18:58:24Z
   Read "agentrite roles" and "Exit statuses" of `README.md`, the statuses in `process.md`, the record template, and
   how `agentrite-run.mjs` resolves a unit and `check-changes.mjs` reads a record's status. Wrote `spec.md`. The status
   is `draft`
+- 2026-10-22T19:24:30Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's choice to take items
+  1 and 3 of "Beyond the request" into the unit and to leave item 2 out, and to drop a command that lists the
+  statuses, rewrote `spec.md`: requirements 9 to 11 and 21 are new, with `--open` and `--status` refused together, the
+  values of the filters checked, and the line with nothing to show naming the filters. The status is `draft`
