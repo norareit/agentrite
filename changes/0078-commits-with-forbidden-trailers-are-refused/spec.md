@@ -13,12 +13,14 @@ the message is written and before the commit is made. A hook that exits with a n
 shows what it printed, so an agent learns of the mistake in the same step it makes it and can commit again.
 
 A hook has to be in force where agents commit, and there are two such places. A project's own repository is one, with
-the sessions of an agent on the host. The other is the sandbox, where a unit run mounts a clone at `/work`. The sandbox
-makes that clone without the host's hooks and configuration on purpose, since the clone is the agent's to write, so a
-hook installed in the project's repository never reaches it.
+the sessions of an agent on the host. The other is the sandbox, where a unit run mounts a clone at `/work`. A hook
+installed in the project's repository never reaches that clone: `git clone` copies neither the hooks nor
+`.git/config`, and the sandbox runs no git in the clone on the host, since the clone is the agent's to write.
 
 The sandbox sets git's configuration for every process in its container through the environment, which
-`container/compose.yml` already does for `safe.directory`.
+`container/compose.yml` already does for `safe.directory`. Compose reads that file from the installed kit at every
+start, while what the image holds stays as it was built. The wrapper builds the image again when a harness version
+changes, and not for a new kit.
 
 ## Requirements
 
@@ -29,7 +31,8 @@ The checker:
    written in it and nowhere else
 2. A message is refused when one of its lines starts with `Co-Authored-By` or with `Claude-Session`, with nothing
    before the name and a colon right after it. The name is read whatever its case, as git reads trailer names
-3. A line that starts with `#` is not read, since git removes it from the message. A line that holds a forbidden name
+3. A line that starts with `#` is not read: it is not a trailer, and git removes it from a message that is edited. A
+   line that holds a forbidden name
    anywhere but at its start, as in `Do not add Co-Authored-By: lines`, does not refuse the message
 4. For a message that is not refused, the checker prints nothing and exits 0
 5. For a refused message, the checker prints on standard error, for each offending line, its number in the file and the
@@ -42,54 +45,72 @@ On the host:
 
 7. `agentrite init` writes the `commit-msg` hook into the hooks directory that git uses for the project, so that
    `core.hooksPath` is honored where the project sets it. The hook is a file the owner can execute, and it calls the
-   checker of the installed kit with the path git gives it. It marks itself as the kit's with a line that `refresh`
-   recognizes
-8. A file already at the hook's path is left as it is by `init` and reported as skipped, as `init` treats any file that
+   checker of the installed kit, under `node_modules` at the top of the work tree git runs it in, with the path git
+   gives it. It marks itself as the kit's with a line that `refresh` recognizes
+8. When the hook cannot run the checker, because the checker's file is not under `node_modules` of the work tree or
+   `node` is not on the `PATH` git gives it, the hook refuses the commit. It prints on standard error which of the two
+   it is and what to do, to install the project's dependencies in that work tree or to make `node` reachable from
+   git, and exits 1. Git then makes no commit and shows that message
+9. A file already at the hook's path is left as it is by `init` and reported as skipped, as `init` treats any file that
    exists
-9. `agentrite refresh` rewrites a hook at that path that carries the kit's mark, so that a hook written by an older
-   kit is brought up to date, and writes the hook where there is none. A file there that does not carry the mark is
-   the project's own: `refresh` leaves it as it is and prints a notice that says the commit messages are then not
-   checked for the trailers, and where the README says how to call the checker from its own hook
-10. In a directory that is not inside a git repository, `init` and `refresh` write no hook and print a notice that
+10. `agentrite refresh` rewrites a hook at that path that carries the kit's mark, so that a hook written by an older
+    kit is brought up to date, and writes the hook where there is none. A file there that does not carry the mark is
+    the project's own: `refresh` leaves it as it is and prints a notice that says the commit messages are then not
+    checked for the trailers, and where the README says how to call the checker from its own hook
+11. In a directory that is not inside a git repository, `init` and `refresh` write no hook and print a notice that
     says why. The notice changes neither what else they write nor their exit status
-11. In a project set up by `init`, `git commit` with a message that holds a forbidden trailer fails, makes no commit,
+12. In a project set up by `init`, `git commit` with a message that holds a forbidden trailer fails, makes no commit,
     and shows the checker's message. The same commit with the trailer removed is made. This holds for `-m`, for a
     message from an editor and for `--amend`
 
 In the sandbox:
 
-12. Every process in the sandbox's container runs git with the hooks directory of the kit's hook, whichever way the
+13. Every process in the sandbox's container runs git with the hooks directory of the kit's hook, whichever way the
     container is started: a unit run, `--in-place`, `--workdir` and `--mount` included. The hook is taken from the
     image, and not from the clone or from a mount, which the agent can write
-13. In the container, `git commit` with a forbidden trailer fails and makes no commit, and the same commit without it
+14. In the container, `git commit` with a forbidden trailer fails and makes no commit, and the same commit without it
     is made. This holds in a unit run's clone before `npm ci`, as the image does not depend on the repository's files
     for the check
-14. The hook of the sandbox calls the same checker as the hook of the project, so that a change of the rule changes
+15. The hook of the sandbox calls the same checker as the hook of the project, so that a change of the rule changes
     both with no second edit
+16. The wrapper builds the kit's image again when the image records a version of the kit other than the installed
+    kit's, or records none, and says so on standard error before it builds, as it does for a harness version. The
+    image records the version of the kit it was built from, as it records the harness versions. So the first start
+    after an update builds the image, and the hook and the checker in the container are those of the installed kit
 
 The documents:
 
-15. `README.md` describes what `init` and `refresh` do about the hook where it describes the files they write, with the
-    notices of requirements 9 and 10. It describes the checker with its form, its arguments, the messages it prints and
-    its exit statuses by "Exit statuses", and says how a project that has a hook of its own calls it from that hook
-16. `SANDBOX.md` says what a reader sees when the hook refuses a commit in the container, that it is the same rule as
-    on the host, and that it is the image's hook and not the clone's. "What the sandbox defends against" is kept true
-17. The table "What is here" in `README.md` is kept true for any file the unit adds to the package, and so is "What the
+17. `README.md` describes what `init` and `refresh` do about the hook where it describes the files they write, with the
+    notices of requirements 10 and 11, and what the hook prints when it cannot run the checker (requirement 8). It
+    says that the wrapper builds the image again for a new kit, where it describes updating a project. It describes
+    the checker with its form, its arguments, the messages it prints and its exit statuses by "Exit statuses", and
+    says how a project that has a hook of its own calls it from that hook
+18. `SANDBOX.md` says what a reader sees when the hook refuses a commit in the container, that it is the same rule as
+    on the host, and that it is the image's hook and not the clone's. It says that git in the container runs the
+    image's hooks only, so that the hooks of the mounted repository and of a hooks directory its configuration names
+    are not run there, and that the image is built again for a new kit. "What the sandbox defends against" is kept
+    true
+19. The table "What is here" in `README.md` is kept true for any file the unit adds to the package, and so is "What the
     repository holds besides the package" in `CONTRIBUTING.md`
 
 Tests:
 
-18. Unit tests of the checker cover each of requirements 2 to 6: each forbidden name in several cases, a trailer at the
+20. Unit tests of the checker cover each of requirements 2 to 6: each forbidden name in several cases, a trailer at the
     start of a later line, a line that starts with `#`, a name inside a sentence, several offending lines in one
     message, an empty message, a file that does not exist, and no path and two paths
-19. Tests of `init` and `refresh` cover requirements 7 to 10: the hook written and executable, a project with
+21. Tests of `init` and `refresh` cover requirements 7 and 9 to 11: the hook written and executable, a project with
     `core.hooksPath`, a file already there, a hook with the mark rewritten, a file without it left as it is with the
     notice, no hook written outside a git repository with the notice, and that the exit statuses are as before
-20. An end-to-end test makes a git repository, sets it up with `init`, and shows that `git commit` is refused for a
-    message with each trailer and made for one without, with `--amend` among the commits (requirement 11)
-21. Tests show that the sandbox's configuration gives git the hooks directory in every run mode and that the image
-    holds the hook and the checker it calls. Where the suite already runs a container, a test shows a commit refused
-    and a commit made in it (requirements 12 to 14)
+22. An end-to-end test makes a git repository, sets it up with `init`, and shows that `git commit` is refused for a
+    message with each trailer and made for one without, with `--amend` among the commits (requirement 12). It shows
+    too that a commit is refused with the hook's message when the checker is not under `node_modules`, and when
+    `node` is not on the `PATH` (requirement 8)
+23. Tests show that the sandbox's configuration gives git the hooks directory in every run mode and that the image
+    holds the hook and the checker it calls. A test runs the container, as the suite's tests of the sandbox do and
+    with their skip on a host without Docker, and shows a commit refused and a commit made in it (requirements 13 to
+    15)
+24. Tests of the wrapper show that it builds the image when the image records another version of the kit or none,
+    with the line it prints, and does not build it for that reason when the versions are the same (requirement 16)
 
 ## Decisions
 
@@ -108,15 +129,34 @@ Tests:
   hook manager do, would never run a hook written to `.git/hooks`, which would look installed and do nothing. Writing
   where git looks avoids that. A committed hooks directory with `core.hooksPath` pointing to it was considered and
   dropped: the setting is per clone, so it needs a step on every clone, and it replaces the project's other hooks
-* **A file already there is the project's.** `init` never changes a file that exists, and `refresh` changes only what
-  it can tell is the kit's, by its mark, as it does for the wrappers of the roles. A project that has a hook of its own
-  keeps it, with a notice that tells it how to call the checker. Chaining several hooks is left out: git has no
-  mechanism for it, and each project already has its own way
+* **A file already there is the project's.** `init` never changes a file that exists. `refresh` rewrites the hook only
+  when it carries the kit's mark, which is new to `refresh`: the wrappers, the list and `sandbox.sh` it rewrites
+  whatever is in them, and it reads a wrapper's body only to decide whether to remove one. A hook is not a file the kit
+  owns by its path, since a project may already have its own there. A project that has a hook of its own keeps it,
+  with a notice that tells it how to call the checker. Chaining several hooks is left out: git has no mechanism for
+  it, and each project already has its own way
 * **The sandbox gets the hook from the image, through git's environment configuration.** The clone is the agent's to
   write, with its `.git` included, so a hook there can be removed, and the sandbox is built never to run what the clone
   holds. The developer's `/etc/gitconfig` is mounted as the developer wrote it, and the agent's `~/.gitconfig` lives in
   the home volume. The environment of the container, which the sandbox already uses for `safe.directory`, outranks
   both and belongs to the kit. The human chose to cover the host and the sandbox both, since agents commit in both
+* **A hook that cannot run the checker refuses the commit.** A worktree without its own `node_modules`, a removed
+  `node_modules` and a git client whose `PATH` has no `node` all run the hook without a checker. Letting the commit
+  through there, with a notice, was rejected: it checks nothing in exactly the case the hook is for, and an agent
+  does not stop for a notice of a command that succeeded. A refusal is seen at once and recovered from cheaply, by an
+  install or a `PATH`, and the hook's own message says which. The checker is looked for under the top of the work tree
+  git runs the hook in, so each worktree needs its dependencies installed, as the project's other commands already do
+* **The image is built again for a new kit.** The hooks directory reaches git through `container/compose.yml`, which
+  is read from the installed kit at every start, and the hook is in the image, which is not. Without a build, the
+  first start after an update would point git at a directory the old image does not hold, and git runs no hook it
+  cannot find, so the check would be off with nothing said. A line in the update instructions was rejected: it rests
+  on a developer reading it, and missing it fails silently. The image records the kit's version as it records the
+  harness versions, and is built again when they differ, which costs one build per update of the kit
+* **In the sandbox, the image's hooks are the only ones.** `core.hooksPath` replaces the hooks directory, so with
+  `--in-place` and `--workdir` the mounted repository's own hooks stop running in the container, and in a unit run's
+  clone so does a hooks directory that `npm ci` configures. Running them as well as the kit's hook is chaining, which
+  is left out on the host for the same reason: git has no mechanism for it. A project that wants its own checks in the
+  sandbox runs them as commands. `SANDBOX.md` says so, so that a developer does not find it out when a hook stops
 * **A guardrail against a mistake, not a defence.** The hook is there for an agent that follows a harness instruction
   over the standards, and for a developer who forgets. It does not defend against someone who means to bypass it. That
   is the same boundary the standards keep for every rule: they are read in good faith
@@ -142,7 +182,7 @@ The hook is built for an agent or a developer who makes commits with `git commit
 * Trailers other than `Co-Authored-By` and `Claude-Session`, and detecting a harness-injected trailer by its shape
 * Checking the commits that already exist, and rewriting any of them
 * Pull request descriptions, tag messages and any text that is not a commit message
-* Chaining the kit's hook with a hook of the project's own
+* Chaining the kit's hook with a hook of the project's own, on the host or in the sandbox
 * A hook other than `commit-msg`
 * Changing `standards.md` or `process.md`
 * Changing `CHANGELOG.md`, which is written when a release is made

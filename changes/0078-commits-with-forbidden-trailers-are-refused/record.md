@@ -22,3 +22,12 @@ timestamp: 2026-10-22T22:02:19Z
   reviewed `spec.md` and `record.md` fully, at `a9920c2`. Findings F1 to F6, saved in
   `.reviews/0078-commits-with-forbidden-trailers-are-refused/spec-review-2026-10-22T221810Z.md`. Not checked: that
   Claude Code injects `Claude-Session` as a trailer, and the name of its attribution setting
+- 2026-10-22T22:21:41Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in a session on the Linux host, on `master` at
+  `d0afd83`, on the human's request to apply every finding of the review of the spec. F1: the wrapper builds the
+  image again when it records another version of the kit or none (requirements 16 and 24). F2: in the sandbox only
+  the image's hooks run, recorded as a decision, in `SANDBOX.md` by requirement 18 and in the non-goal on chaining.
+  That finding offered no recommended option, and this is the one that keeps the non-goal on chaining. F3: a hook
+  that cannot run the checker refuses the commit, saying why (requirements 8 and 22). F4: the container test is
+  required (requirement 23). F5: the context and the decision on a file already there now say what `git clone` and
+  `refresh` do. F6: the reason of requirement 3 is narrowed. The host's requirements from 8 on are renumbered, and
+  every reference to them with them. The status is `draft`
