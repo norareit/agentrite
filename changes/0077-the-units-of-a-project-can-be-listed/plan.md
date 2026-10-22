@@ -161,12 +161,12 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npx agentrite units`, `npx agentrite units --open` and `npx agentrite units 0077` in this repository list the
+- [x] `npm test` passes
+- [x] `npx agentrite units`, `npx agentrite units --open` and `npx agentrite units 0077` in this repository list the
   units of `changes/` and leave out its `history-` directories
-- [ ] Every line the unit adds or changes is within 120 characters
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Each requirement from R1 to R23 is delivered by a ticked task above
+- [x] Every line the unit adds or changes is within 120 characters
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Each requirement from R1 to R23 is delivered by a ticked task above
 
 ## Commit Points
 
