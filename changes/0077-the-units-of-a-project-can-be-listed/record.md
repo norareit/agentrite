@@ -53,4 +53,8 @@ timestamp: 2026-10-22T18:58:24Z
   check covers that case. C1 (one-character names): fixed in the comparator of `selectUnits` and the command tests, and
   the `_` of two `Array.from` callbacks is gone too. C2 (annotation of the tokens): fixed with a `Token` type that
   `argumentError` takes. Ran `npm test` on `d0de06a`: 1036 tests pass and none fail. The status stays `in-progress`
-
+- 2026-10-22T20:36:01Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0077 at `7187dda`,
+  from `66ae731`. Returned C3 in
+  `.reviews/0077-the-units-of-a-project-can-be-listed/review-2026-10-22T203505Z.md`.
+  Ran `npm test`: 1036 passed, none failed or skipped; `npm run check-changes` and the correction probes passed.
+  Could not independently verify the historical test-first sequence. The status stays `in-progress`
