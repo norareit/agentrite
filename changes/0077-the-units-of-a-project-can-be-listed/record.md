@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-22T18:58:24Z
 ---
 
@@ -21,3 +21,4 @@ timestamp: 2026-10-22T18:58:24Z
   1 and 3 of "Beyond the request" into the unit and to leave item 2 out, and to drop a command that lists the
   statuses, rewrote `spec.md`: requirements 9 to 11 and 21 are new, with `--open` and `--status` refused together, the
   values of the filters checked, and the line with nothing to show naming the filters. The status is `draft`
+- 2026-10-22T19:27:35Z [human] approved the spec. The status is `approved`
