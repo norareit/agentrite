@@ -29,13 +29,8 @@ sandbox.sh: changes/<directory> is cancelled on <default>, so no branch is cut f
 Taking its idea up again is a new unit that names <directory> in supersedes.
 ```
 
-`agentrite run` refuses no unit by its status, and only `agentrite orchestrate` does: `checkApproved` in
-`scripts/agentrite.mjs` refuses every status but `approved`, with the message "a run starts the work of an approved
-unit". Requirement 16, which says "`agentrite run` refuses ... as it refuses every status but `approved`", holds only
-of that check, the run of the orchestrator, so its test is that of `agentrite orchestrate`. Giving `agentrite run` a
-refusal by status would contradict the spec's decision that the two commands need no change, and would stop a
-reviewer's run on an `in-progress` unit. The code is not changed; the test adds `cancelled` to the statuses the
-existing refusal test of `orchestrate` gives.
+The orchestrator's code is not changed: requirement 16 is met by adding `cancelled` to the statuses that the
+existing refusal test of `agentrite orchestrate` gives, which `checkApproved` in `scripts/agentrite.mjs` refuses.
 
 The documents. `process.md` at the root of the repository is the package's, and is the one edited, never the copy
 under `node_modules`. The paragraph of the statuses is rewritten for requirement 1, and a new paragraph after the one
