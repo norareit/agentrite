@@ -68,3 +68,8 @@ timestamp: 2026-10-22T13:15:49Z
   `--follow` in the usage and the table of "agentrite orchestrate", what a followed run prints in "How a run ends"
   with an example, the command with `--follow` on the host, and in `SANDBOX.md` the command with `--follow` in a unit
   run
+- 2026-10-22T18:04:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification on
+  `76e9559`: `npm test` passes, 959 tests; `awk 'length > 120'` shows nothing for any file the branch changes; `npm
+  run check-changes` exits 0. Each of R1 to R15 is named by a ticked task. Not checked: a followed run of the real
+  harnesses through the command, beyond the one headless call of each logged above. Every task of `plan.md` is
+  ticked. Handed the unit over for review. The status stays `in-progress`

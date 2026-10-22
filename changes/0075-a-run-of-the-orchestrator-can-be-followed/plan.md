@@ -235,15 +235,15 @@ Readings, each the only one that works with the spec, to be logged in `record.md
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
-- [ ] `npm run check-changes` passes on the committed branch
+- [x] `npm test` passes
+- [x] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
+- [x] `npm run check-changes` passes on the committed branch
 - [x] The installed Claude Code and OpenCode print events of the shapes the approach reads: one short headless call
   of each, `claude --print --output-format stream-json --verbose 'Run ls, then say done'` and `opencode run --format
   json 'Run ls, then say done'`, shows an `assistant` event with `text` and `tool_use` blocks and a `result` event
   with `result` and `session_id`, and `text` and `tool_use` events with `timestamp` and `part.state.input`. Log the
   versions and what was seen in `record.md`, and stop and log a difference rather than build around it
-- [ ] Each requirement of the spec, R1 to R15, is delivered by a ticked task above
+- [x] Each requirement of the spec, R1 to R15, is delivered by a ticked task above
 
 ## Commit Points
 
