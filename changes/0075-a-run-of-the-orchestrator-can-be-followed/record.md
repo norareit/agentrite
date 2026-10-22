@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-22T13:15:49Z
 ---
 
@@ -17,3 +17,4 @@ timestamp: 2026-10-22T13:15:49Z
   command's printing of its step lines and its parsing of options, and how `agentrite-headless.mjs` runs each harness.
   Left to the plan whether the output comes from the harness's standard output or from its session logs. Wrote
   `spec.md`. The status is `draft`
+- 2026-10-22T14:06:55Z [human] approved the spec. The status is `approved`
