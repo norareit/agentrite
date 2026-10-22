@@ -73,3 +73,10 @@ timestamp: 2026-10-22T13:15:49Z
   run check-changes` exits 0. Each of R1 to R15 is named by a ticked task. Not checked: a followed run of the real
   harnesses through the command, beyond the one headless call of each logged above. Every task of `plan.md` is
   ticked. Handed the unit over for review. The status stays `in-progress`
+- 2026-10-22T17:15:13Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of 0075 at `d10ffd4`,
+  against the merge base `6a089c9`, and returned S1 and S2. Saved the complete findings in
+  `.reviews/0075-a-run-of-the-orchestrator-can-be-followed/2026-10-22T17-13-06Z-opencode.md`. Independently ran
+  `npm test`: 959 passed, none failed or skipped; `npm run check-changes` and `git diff --check` exited 0. Checked
+  real event samples from Claude Code 2.1.308 and OpenCode 1.19.3, including concurrent calls that complete out of
+  order, and reproduced a multiline label through both adapters and the printer. Not checked: a complete
+  orchestrator workflow with real role agents, or the historical red-before-green sequence claimed in the log
