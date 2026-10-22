@@ -73,30 +73,30 @@ and a space, they are taken off.
 Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, and then made to pass by the code in
 `scripts/agentrite-units.mjs` that the next item names.
 
-- [ ] Test `parseUnitsArgs`: no argument gives no number, no filter, the limit 50 and no JSON; `0077`, `--open`,
+- [x] Test `parseUnitsArgs`: no argument gives no number, no filter, the limit 50 and no JSON; `0077`, `--open`,
   `--status draft`, `--status=draft`, `--kind bug`, `--limit 5`, `--limit 0` and `--json` are each read; the options
   read the same in any place among the arguments, before and after `<number>`; `--kind` is taken with `--open` and
   with `--status`. (R1, R9, R10, R11, R13, R22)
-- [ ] Test that each wrong argument of requirement 17 throws a message that names what is wrong and ends with
+- [x] Test that each wrong argument of requirement 17 throws a message that names what is wrong and ends with
   `UNITS_FORM`: `77`, `00777`, `abcd` and `0077-x` as `<number>`; a second `<number>`; `--status`, `--kind` and
   `--limit` each without a value and each given twice; `--status done` and `--kind chore`, with the messages that name
   the values; `--limit -1`, `--limit 1.5` and `--limit many`; `--open --status draft`; `--limit 5 0077`; `--all` and
   `--open=yes`. (R17, R22)
-- [ ] Write `UNITS_FORM`, `STATUSES` (`draft`, `approved`, `in-progress`, `implemented`, `cancelled`), `END_STATUSES`
+- [x] Write `UNITS_FORM`, `STATUSES` (`draft`, `approved`, `in-progress`, `implemented`, `cancelled`), `END_STATUSES`
   (`implemented`, `cancelled`), `KINDS` (`feature`, `bug`, `task`), `DEFAULT_LIMIT` (50) and `parseUnitsArgs(args)`,
   which returns `{ number, open, status, kind, limit, json }`, with `number`, `status` and `kind` `undefined` when not
   given and `limit` the number given or 50. Reuse `optionError` of `scripts/agentrite-run.mjs` for unknown options and
   missing values, and count the tokens of each option to refuse one given twice. (R1, R9, R10, R13, R17)
-- [ ] Test `isUnitDirectory`: `0077-the-units` and `0001-a` are units; `0077-`, `0077`, `077-a`, `00777-a`,
+- [x] Test `isUnitDirectory`: `0077-the-units` and `0001-a` are units; `0077-`, `0077`, `077-a`, `00777-a`,
   `history-0036-install-the-agent-kit` and `_template` are not. Write it as four digits, a hyphen and at least one
   character more. (R2, R22)
-- [ ] Test `unitFrom(directory, record)`: it gives `number`, `directory`, `status`, `kind` and `title`, with the
+- [x] Test `unitFrom(directory, record)`: it gives `number`, `directory`, `status`, `kind` and `title`, with the
   status and the kind as written, and the title of `# 0077 The units of a project can be listed` as `The units of a
   project can be listed` and of `# A title without a number` as written; a `#` comment in the front matter is not
   taken for the heading; a record without a `status` field, a `kind` field or a `#` heading throws the message the
   approach gives, naming `changes/<directory>/record.md`. Write `unitFrom` with `statusFrom` and `fieldFrom`. (R5, R6,
   R22)
-- [ ] Test `selectUnits(units, parsed)`, which returns `{ units, total }`: the units come highest number first, and
+- [x] Test `selectUnits(units, parsed)`, which returns `{ units, total }`: the units come highest number first, and
   two of the same number in the order of their directory names, whatever order they were given in, and the array
   given is not reordered; without a filter all are kept; `--open` leaves out `implemented` and `cancelled` and keeps
   the three other statuses; `--status` keeps that status only; `--kind` keeps that kind only; `--kind` with `--open`
@@ -105,12 +105,12 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
   highest have ended still gives two open units; `total` is the count after the filters and before the limit; with
   `<number>`, only the units whose directory opens with those digits and a hyphen are kept, the filters apply to them,
   and no limit cuts them. Write `selectUnits` on a sorted copy. (R4, R7, R8, R9, R10, R11, R12, R13, R22)
-- [ ] Test `unitsListing(selection, parsed)`: one line a unit, with columns that line up across units of different
+- [x] Test `unitsListing(selection, parsed)`: one line a unit, with columns that line up across units of different
   widths of status and kind; the closing line when `units` is shorter than `total`, and none when it is not; `no
   units` when nothing is shown and nothing was given; the line naming the number and each filter with its value, in
   the order the approach gives; no line over the width only because of the padding. Write `unitsListing`. (R5, R14,
   R15, R22)
-- [ ] Test `unitsJson(selection)`: an object with the keys `units` and `total`, in that order; each unit with the keys
+- [x] Test `unitsJson(selection)`: an object with the keys `units` and `total`, in that order; each unit with the keys
   `number`, `directory`, `status`, `kind` and `title`, in that order, and `number` a string; `units` an empty array
   and `total` 0 when nothing is shown; the text ends with one line break. Write `unitsJson`, formatted as `rolesJson`
   formats its document. (R16, R22)
@@ -172,7 +172,7 @@ Each test below is written in `tests/agentrite-units.test.mjs`, seen failing, an
 
 - [x] `feature-0077 Plan the units command`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0077 Extract the reading of a field of a record`: `fieldFrom` and its test, with no change in behavior
-- [ ] `feature-0077 Read, select and render the units of a project`: `scripts/agentrite-units.mjs` and its unit tests
+- [x] `feature-0077 Read, select and render the units of a project`: `scripts/agentrite-units.mjs` and its unit tests
 - [ ] `feature-0077 Add the units command`: the entry point, the command tests, the usage, `package.json` and the
   package test
 - [ ] `feature-0077 Document the units command`: `README.md` and `process.md`
