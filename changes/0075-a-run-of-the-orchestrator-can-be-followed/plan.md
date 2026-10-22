@@ -172,9 +172,9 @@ Readings, each the only one that works with the spec, to be logged in `record.md
   test`: the tests of the previous task pass (R4, R8, R9)
 - [ ] In `tests/agentrite-orchestrate.test.mjs`, add tests of the printing: `clockTime(Date.UTC(2026, 9, 22, 14, 3,
   27, 900))` gives `14:03:27`, and `clockTime(Date.UTC(2026, 9, 22, 0, 0, 5))` gives `00:00:05`; `callLabel` gives
-  `description` over `path`, `path` over `pattern`, `pattern` over `command`, the first line of a command of several lines, a first line of 100
-  code points whole, one of 101 cut to 100, a line of emoji cut without splitting one, an empty `description` passed
-  over, and `undefined` with none of them; `followedText` gives a call as the dimmed line of the approach, with and
+  `description` over `path`, `path` over `pattern`, `pattern` over `command`, the first line of a command of several
+  lines, a first line of 100 code points whole, one of 101 cut to 100, a line of emoji cut without splitting one, an
+  empty `description` passed over, and `undefined` with none of them; `followedText` gives a call as the dimmed line of the approach, with and
   without a label, and a text as its time, a space and its full text of several lines, its trailing line breaks
   dropped; `followPrinter` with a fixed `now` and a `write` that collects writes, given in turn a text, two calls, a
   text and a text, writes one blank line before the first text, one between the first text and the calls, the two
