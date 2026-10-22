@@ -89,10 +89,11 @@ The entries of a section follow one another with no blank line between them. A n
 last entry of its section, above the blank line before the next heading. The change check rejects an entry that the
 branch adds after a blank line.
 
-The statuses are `draft`, `approved`, `in-progress` and `implemented`, and every kind of unit goes through them in
-that order. `approved` says that the human approved the spec, or for a task its record. An approved unit may be
-built: a task always; a bug when it has a `plan.md`, or a log entry in its `record.md` that says it needs no plan; a
-feature when it has a `plan.md`. Nobody approves a plan.
+The statuses are `draft`, `approved`, `in-progress`, `implemented` and `cancelled`. A unit that is built goes through
+the first four in that order. `implemented` and `cancelled` are the two end statuses, and a unit leaves the order for
+`cancelled` only from `draft`, `approved` or `in-progress`. `approved` says that the human approved the spec, or for a
+task its record. An approved unit may be built: a task always; a bug when it has a `plan.md`, or a log entry in
+its `record.md` that says it needs no plan; a feature when it has a `plan.md`. Nobody approves a plan.
 
 Set `implemented` only after the human has decided every blocking finding the review returned and every task in
 `plan.md` is ticked. A finding of a review blocks in exactly two cases:
@@ -108,12 +109,20 @@ not be done, recording the reason in `record.md`, rather than leaving its box op
 and reason. For a correction that would make the original record misleading, create a new unit and set
 `supersedes:` to the old directory.
 
+Only the human cancels a unit. A unit that is `implemented` is never cancelled: undoing implemented work is a new
+unit that names the old one in `supersedes`, as for a correction that would make the original record misleading. The
+log entry that sets `cancelled` gives the reason in words, and when another unit did the work or made it moot, it
+names that unit's directory. A cancelled unit is frozen as an implemented one is: its `spec.md` and `plan.md` change
+no more, a later correction is an amendment in `record.md`, and outcomes recorded after the cancellation go under
+`## Amendments`. Taking a cancelled unit's idea up again is a new unit that names the cancelled one in `supersedes`,
+and a cancelled unit is never set back to an earlier status.
+
 Run the change check before submitting work. The kit ships it as `scripts/check-changes.mjs`, and each project wires
 it to a command of its own. It compares the committed work on the current branch with the default branch and rejects
-changes to the `spec.md` or `plan.md` of any unit implemented on the merge base, and the deletion of any such unit. It
-also rejects an implemented unit whose `plan.md` still has unticked tasks. It reads committed content, so commit
-before trusting it. The default branch is the one the project names as `defaultBranch` in `agentrite.json` at its
-root.
+changes to the `spec.md` or `plan.md` of any unit implemented or cancelled on the merge base, and the deletion of
+any such unit. It also rejects an implemented unit whose `plan.md` still has unticked tasks. It reads committed
+content, so commit before trusting it. The default branch is the one the project names as `defaultBranch` in
+`agentrite.json` at its root.
 
 A review's findings are saved in full in the ignored `.reviews/<unit-directory>/` directory. Record the outcome of
 each finding, not the full review, in `record.md`: as timestamped log entries while the unit is not frozen, and
@@ -135,12 +144,16 @@ at one time. The plan is written when the unit is next to be built and not befor
 What is written before the approval, and the approval itself, are committed on the default branch: the unit's
 `spec.md` and `record.md`. Such a commit holds nothing but that unit's own documents. Everything after the approval is
 done on the unit's branch and never on the default branch: the plan, the implementation, the record's further
-entries, and a correction of the spec. The branch is cut from the head of the default branch when work on the unit
-starts after its approval: the planning of a feature or a bug, and the work itself of a task, and not earlier. Its
-name is the prefix of the unit's commits and its directory name, as `feature-0012-export-to-csv`, with `bugfix` for
-a bug and `task` for a task. A unit run of the sandbox cuts it, and a session on the host cuts it itself. Commit the
-change documents first, then the implementation. Work committed straight to the default branch skips the freeze check
-entirely, and that holds for the commits of the spec too.
+entries, and a correction of the spec. The one exception is the cancellation. A unit with no branch is cancelled on
+the default branch, as its approval was. A unit that has a branch, which an `in-progress` unit always has and an
+`approved` one has once its planning began, is cancelled on the default branch too, and its branch is not merged.
+That commit holds the unit's documents as they stand at the head of its branch, `spec.md`, `plan.md` when there is
+one, and `record.md` with the entry that sets `cancelled`, and nothing of its implementation. The branch is cut from
+the head of the default branch when work on the unit starts after its approval: the planning of a feature or a bug,
+and the work itself of a task, and not earlier. Its name is the prefix of the unit's commits and its directory name,
+as `feature-0012-export-to-csv`, with `bugfix` for a bug and `task` for a task. A unit run of the sandbox cuts it,
+and a session on the host cuts it itself. Commit the change documents first, then the implementation. Work committed
+straight to the default branch skips the freeze check entirely, and that holds for the commits of the spec too.
 
 ### Features
 

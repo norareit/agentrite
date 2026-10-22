@@ -378,10 +378,11 @@ node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]
 ```
 
 The change check. It compares the committed work on the current branch with the default branch, and exits with 1
-and a list of the offending units when a frozen `spec.md` or `plan.md` changed, an implemented plan has unticked
-tasks, or an entry of `## Log` or `## Amendments` of a `record.md` stands after a blank line that separates it from
-an entry before it in the same section. Such an entry is named by its first line, and one that already stood after a
-blank line on the default branch is not rejected.
+and a list of the offending units when the `spec.md` or `plan.md` of a unit that is `implemented` or `cancelled` on
+the default branch changed, such a unit was deleted, an implemented plan has unticked tasks, or an entry of `## Log`
+or `## Amendments` of a `record.md` stands after a blank line that separates it from an entry before it in the same
+section. Such an entry is named by its first line, and one that already stood after a blank line on the default
+branch is not rejected. A cancelled unit's plan with unticked tasks is not rejected.
 
 The default branch is the one that `defaultBranch` names in the `agentrite.json` at the repository root, as that
 file is in the working tree. The check takes the local branch of that name, and `origin/<default branch>` when the
@@ -407,8 +408,8 @@ See "Installing it into a project" and "The project's settings".
 
 Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
 With `--connect` it starts nothing, and runs beside a unit run that is under way. A unit given by a number that no
-branch holds gets its branch first, cut from the default branch that `agentrite.json` names. With `--variant` the run
-is of a variant of the unit, on a branch of its own.
+branch holds gets its branch first, cut from the default branch that `agentrite.json` names, unless the unit is
+cancelled there, which gets none. With `--variant` the run is of a variant of the unit, on a branch of its own.
 
 Every form but `--connect` reads `bell` from the project's `agentrite.json` at each start, and with `true` has the
 harnesses ring the terminal's bell. It refuses a project with no `agentrite.json`, and a file that lacks `bell` or
@@ -437,10 +438,11 @@ after `--in-place COMMAND`, are the command's, and are passed on as they are.
 
 Before the command in the container starts, or the one of `--connect`, it exits with `2` for wrong arguments and with
 `1` for every other refusal or failure of its own: among them an `agentrite.json` at fault, a unit that names no
-branch, a run under way for the branch or none to connect to, a clone not yet brought back, and Docker or npm that
-cannot be asked. A Docker command it runs before that which fails, as Compose reading the configuration or the build
-of the image, ends it with Docker's status, which it passes on. Once the command started, it passes on the command's
-status, as [Exit statuses](#exit-statuses) says.
+branch, a unit given by a number that names no branch and that is cancelled on the default branch, a run under way
+for the branch or none to connect to, a clone not yet brought back, and Docker or npm that cannot be asked. A Docker
+command it runs before that which fails, as Compose reading the configuration or the build of the image, ends it with
+Docker's status, which it passes on. Once the command started, it passes on the command's status, as
+[Exit statuses](#exit-statuses) says.
 
 With a project's `sandbox/Dockerfile`, `--rebuild` builds that file anew on the image too. See "Adding software to
 the sandbox" in [`SANDBOX.md`](SANDBOX.md).
@@ -1241,7 +1243,7 @@ rule of the kit's does.
 ## Adding a role
 
 A project can add roles of its own to the kit's four. An extra role adds no stage and no status: the four stages of
-`process.md` and its four statuses stay as they are, and each of the four roles still covers one stage and moves the
+`process.md` and its five statuses stay as they are, and each of the four roles still covers one stage and moves the
 unit through the statuses. An extra role runs just before or just after one of the four, within that role's stage, and
 moves the unit through none. Some examples:
 

@@ -104,16 +104,16 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 ### The documents
 
-- [ ] In `tests/package-documents.test.mjs`, make the test of the record template expect the line
+- [x] In `tests/package-documents.test.mjs`, make the test of the record template expect the line
   `status: [draft | approved | in-progress | implemented | cancelled]`, and say in its name and comment that the
   template gives the five statuses, naming unit 0074, R10 beside unit 0052. Run it and see it fail (R10)
-- [ ] In `templates/changes/record.md`, make the `status` line give `cancelled` after `implemented`. Run the test
+- [x] In `templates/changes/record.md`, make the `status` line give `cancelled` after `implemented`. Run the test
   and see it pass (R10)
-- [ ] In `process.md`, rewrite the opening sentence of the paragraph of the statuses: the statuses are `draft`,
+- [x] In `process.md`, rewrite the opening sentence of the paragraph of the statuses: the statuses are `draft`,
   `approved`, `in-progress`, `implemented` and `cancelled`; a unit that is built goes through the first four in that
   order; `implemented` and `cancelled` are the two end statuses, and a unit leaves the order for `cancelled` only
   from `draft`, `approved` or `in-progress`. Leave the rest of the paragraph as it is (R1)
-- [ ] In `process.md`, after the paragraph that ends with `supersedes:` for a correction that would make the record
+- [x] In `process.md`, after the paragraph that ends with `supersedes:` for a correction that would make the record
   misleading, add a paragraph on cancelling. It says: only the human cancels a unit; an `implemented` unit is never
   cancelled, and undoing implemented work is a new unit that names the old one in `supersedes`, as the paragraph
   above says for a misleading correction; the log entry that sets `cancelled` gives the reason in words, and when
@@ -122,32 +122,32 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
   `record.md`, and outcomes recorded after the cancellation go under `## Amendments`; taking the idea up again is a
   new unit that names the cancelled one in `supersedes`, and a cancelled unit is never set back to an earlier status
   (R2, R3, R4, R5)
-- [ ] In `process.md`, in the paragraph of the change check, make "any unit implemented on the merge base" say "any
+- [x] In `process.md`, in the paragraph of the change check, make "any unit implemented on the merge base" say "any
   unit implemented or cancelled on the merge base". Leave the sentence on unticked tasks of an implemented unit as it
   is (R7)
-- [ ] In `process.md`, in the paragraph that says everything after the approval is done on the unit's branch, name
+- [x] In `process.md`, in the paragraph that says everything after the approval is done on the unit's branch, name
   the cancellation as the exception to that rule where the rule is stated, and say, in that paragraph: a unit with no
   branch is cancelled on the default branch, as its approval was; a unit that has a branch, which an `in-progress`
   unit always has and an `approved` one has once its planning began, is cancelled on the default branch too, and its
   branch is not merged; that commit holds the unit's documents as they stand at the head of its branch, `spec.md`,
   `plan.md` when there is one, and `record.md` with the entry that sets `cancelled`, and nothing of its
   implementation (R6)
-- [ ] In `roles/reviewer.md`, in "Where an outcome belongs", make "one that has not reached `implemented` is
+- [x] In `roles/reviewer.md`, in "Where an outcome belongs", make "one that has not reached `implemented` is
   corrected in place" say "one that is not frozen yet is corrected in place", and in "Record that you reviewed" make
   "while the unit is not `implemented`, and under `## Amendments` once it is" say "while the unit is not frozen, and
   under `## Amendments` once it is". Search `roles/` and `extra-roles/` for `implemented`, `frozen`, `freeze` and
   `Amendments` and confirm that no other sentence says or implies that `implemented` alone freezes a unit or ends
   one (R11)
-- [ ] In `README.md`, "check-changes" of "Commands": say that it rejects a changed `spec.md` or `plan.md` of a unit
+- [x] In `README.md`, "check-changes" of "Commands": say that it rejects a changed `spec.md` or `plan.md` of a unit
   that is `implemented` or `cancelled` on the default branch, and the deletion of such a unit, and that an
   implemented plan with unticked tasks is rejected while a cancelled one's is not (R14)
-- [ ] In `README.md`, "sandbox.sh" of "Commands": give a cancelled unit among the refusals of the paragraph on exit
+- [x] In `README.md`, "sandbox.sh" of "Commands": give a cancelled unit among the refusals of the paragraph on exit
   statuses, as "a unit given by a number that names no branch and that is cancelled on the default branch", and in
   the paragraph that says a number that no branch holds gets its branch cut, say that a unit cancelled there gets
   none (R12, R14)
-- [ ] In `README.md`, "Adding a role": make "its four statuses" say "its five statuses". Search `README.md` for every
+- [x] In `README.md`, "Adding a role": make "its four statuses" say "its five statuses". Search `README.md` for every
   other place that gives a number of statuses and make it five (R14)
-- [ ] Check that no line of the files changed is longer than 120 characters, and that no em dash was added (R1 to
+- [x] Check that no line of the files changed is longer than 120 characters, and that no em dash was added (R1 to
   R17)
 
 ## Verification
@@ -164,4 +164,4 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 - [x] `feature-0074 Freeze a cancelled unit in the change check`: the tasks of "The change check"
 - [x] `feature-0074 Cut no branch for a cancelled unit`: the tasks of "The sandbox"
 - [x] `feature-0074 Test that orchestrate refuses a cancelled unit`: the task of "The orchestrator"
-- [ ] `feature-0074 Give the status cancelled in the process`: the tasks of "The documents"
+- [x] `feature-0074 Give the status cancelled in the process`: the tasks of "The documents"

@@ -258,8 +258,9 @@ test('the section Roles of process.md names no role file and points to AGENTS.md
   assert.match(body, /this document, the project's standards and the\s+project's `AGENTS\.md` alone/);
 });
 
-// R10 and R13 of unit 0052: the kit's text names no status planned, and the template gives the four statuses.
-test('no text of the kit names the status planned, and the record template gives the four statuses', () => {
+// R10 and R13 of unit 0052, and R10 of unit 0074: the kit's text names no status planned, and the template gives the
+// five statuses.
+test('no text of the kit names the status planned, and the record template gives the five statuses', () => {
   const paths = [
     'process.md',
     'standards.md',
@@ -273,7 +274,10 @@ test('no text of the kit names the status planned, and the record template gives
     assert.ok(!text.includes('`planned`') && !text.includes('| planned'), `${path} names the status planned`);
   }
   const lines = readDocument('templates/changes/record.md').split('\n');
-  assert.ok(lines.includes('status: [draft | approved | in-progress | implemented]'), lines.slice(0, 6).join('\n'));
+  assert.ok(
+    lines.includes('status: [draft | approved | in-progress | implemented | cancelled]'),
+    lines.slice(0, 6).join('\n'),
+  );
 });
 
 // R14 of unit 0052: a bug that needs no plan is found by these words in its record.

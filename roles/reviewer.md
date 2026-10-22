@@ -125,7 +125,7 @@ found, say so and ask, rather than quietly falling back to a full re-review.
 ## Where an outcome belongs
 
 Say, for each accepted finding, where its correction belongs. `process.md` settles the common cases by whether the unit
-is frozen: one that has not reached `implemented` is corrected in place. The judgment left to you is the third case, a
+is frozen: one that is not frozen yet is corrected in place. The judgment left to you is the third case, a
 correction that would make a frozen record misleading, which takes a new unit that supersedes the old one rather than
 an amendment. Say when a finding is one of those, because it changes what the human is agreeing to.
 
@@ -149,7 +149,7 @@ you then commit:
 
 Append it. Do not edit an entry that is already there, and do not put your findings in it: they belong in the file
 you saved, and naming that file here is what lets a later reader find them. The entry belongs under `## Log` while
-the unit is not `implemented`, and under `## Amendments` once it is.
+the unit is not frozen, and under `## Amendments` once it is.
 
 Commit the entry, so that the review leaves the working tree as it found it. An entry left for whoever commits next
 is not committed after the last review of a unit, when nobody commits anything. Before you append the entry, check
