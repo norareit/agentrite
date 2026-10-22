@@ -24,3 +24,7 @@ timestamp: 2026-10-22T12:22:44Z
   confirmation of the cancellation commit for an `approved` unit with a branch to its decision; and renumbered the
   requirements after them. The status is `draft`
 - 2026-10-22T12:33:10Z [human] approved the spec. The status is `approved`
+- 2026-10-22T18:15:26Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0074-a-unit-can-be-cancelled` from `master` at `737cb52` and wrote `plan.md` against it. Read requirement
+  16 as a test of `agentrite orchestrate`, the only reading that works: `checkApproved` of that command is the one
+  refusal by status, and `agentrite run` refuses none. The status is `approved`
