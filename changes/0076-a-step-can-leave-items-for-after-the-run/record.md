@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-22T13:26:21Z
 ---
 
@@ -34,3 +34,5 @@ timestamp: 2026-10-22T13:26:21Z
   exact texts of the request, the end line and the end report's part are set in the plan's approach. Unit 0075 is
   approved and changes where the end report is printed, not what it holds, so the two meet only at the call of
   `endReport`. The status stays `approved`
+- 2026-10-22T14:24:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  began the work on `feature-0076-a-step-can-leave-items-for-after-the-run` at `f5a37bf`. The status is `in-progress`

@@ -10,12 +10,25 @@ const REQUEST_LIST = [
   '- "outcome": "done" when the step did its work, "needs-human" when it cannot go on without the human, or "failed" ' +
     'when it could not do its work',
   '- "summary": a string that says what the step did',
-  '- "questions": a list of strings, each a thing the step needs from the human. It is empty when it needs nothing',
+  '- "questions": a list of strings, each a thing the step needs from the human for the run to go on. It is empty ' +
+    'when the step needs nothing of the human for the run to go on',
+  '- "afterwards": a list of strings, each a thing the human needs to do, check or decide after the run, which the ' +
+    'run can go on without. It is empty when the step leaves nothing for after the run',
   '- "findings": a list of objects, one for each finding the step made, each with "id", a string such as "S1", ' +
     '"blocking", true or false, and "summary", a string. It is empty for a step that reviewed nothing',
   '- "declines": a list of objects, one for each finding whose decline the step proposes, each with "finding", the ' +
     'id of the finding, and "reason", a string. It is empty for a step that proposed no decline',
 ];
+
+const REQUEST_LISTS =
+  'Give "needs-human" only when the step cannot go on without the human. A step that did its work and leaves items ' +
+  'only in "afterwards" gives "done". An item belongs in "afterwards" when it is a check that only the human can ' +
+  'make, as in a running application or on another operating system, an action only the human can take that the ' +
+  'rest of the run does not need, or a decision for which the step built the answer it recommends. An item belongs ' +
+  'in "questions", with "needs-human", when the step\'s work, or the steps after it, cannot do without it, as a spec ' +
+  'that can be read in two ways, or a decision that the rest of the work depends on and that the step could not ' +
+  'make. Every item of the list under the line **Needed from you** of your final response is also an item of ' +
+  'exactly one of "questions" and "afterwards", and every item of these two is an item of that list.';
 
 const REQUEST_RECORD =
   'Record a finding that the prompt of this step accepts in record.md as accepted by the definition of the ' +
@@ -30,6 +43,8 @@ function request(round) {
       'file for it. The object holds these keys, and no other:',
     '',
     ...REQUEST_LIST,
+    '',
+    REQUEST_LISTS,
     '',
     REQUEST_RECORD,
   ].join('\n');
@@ -62,6 +77,7 @@ const EXAMPLE = {
   outcome: 'done',
   summary: 'Reviewed the unit against its spec and plan, and ran both suites.',
   questions: [],
+  afterwards: [],
   findings: [
     { id: 'S1', blocking: true, summary: 'R25 is not met: a unit run does not mount .orchestrator' },
     { id: 'C1', blocking: false, summary: 'The usage of orchestrate does not name its exit statuses' },
@@ -73,6 +89,7 @@ const EXAMPLE_BLOCK = `{
   "outcome": "done",
   "summary": "Reviewed the unit against its spec and plan, and ran both suites.",
   "questions": [],
+  "afterwards": [],
   "findings": [
     { "id": "S1", "blocking": true, "summary": "R25 is not met: a unit run does not mount .orchestrator" },
     { "id": "C1", "blocking": false, "summary": "The usage of orchestrate does not name its exit statuses" }
@@ -86,7 +103,7 @@ function block(text, open = `${FENCE}json`, close = FENCE) {
   return `${open}\n${text}\n${close}`;
 }
 
-const DONE = { outcome: 'done', summary: 'Did it.', questions: [], findings: [], declines: [] };
+const DONE = { outcome: 'done', summary: 'Did it.', questions: [], afterwards: [], findings: [], declines: [] };
 
 test('the spec example of an outcome is read, with the text of its block', () => {
   assert.deepEqual(readOutcome(block(EXAMPLE_BLOCK)), { kind: 'outcome', outcome: EXAMPLE, text: EXAMPLE_BLOCK });
@@ -231,13 +248,14 @@ test('a block that is no object is malformed', () => {
 });
 
 const OUTCOME_MUST = 'It must hold "done", "needs-human" or "failed"';
-const KEYS = 'An outcome holds outcome, summary, questions, findings and declines';
+const KEYS = 'An outcome holds outcome, summary, questions, afterwards, findings and declines';
 
 test('each key that is missing is named, in the order of the keys', () => {
   for (const [key, must] of [
     ['outcome', OUTCOME_MUST],
     ['summary', 'It must hold a string'],
     ['questions', 'It must hold a list of strings'],
+    ['afterwards', 'It must hold a list of strings'],
     ['findings', 'It must hold a list of objects, each with id, blocking and summary'],
     ['declines', 'It must hold a list of objects, each with finding and reason'],
   ]) {
@@ -273,6 +291,8 @@ test('a value of the wrong type in each key is malformed, with its whole fault',
     [{ summary: null }, 'summary is null. It must hold a string'],
     [{ questions: 'none' }, 'questions is "none". It must hold a list of strings'],
     [{ questions: ['a', 5] }, 'questions[1] is 5. It must hold a string'],
+    [{ afterwards: 'none' }, 'afterwards is "none". It must hold a list of strings'],
+    [{ afterwards: ['a', 5] }, 'afterwards[1] is 5. It must hold a string'],
     [{ findings: {} }, 'findings is {}. It must hold a list of objects, each with id, blocking and summary'],
     [{ findings: [5] }, 'findings[0] is 5. It must hold a finding, as an object with id, blocking and summary'],
     [{ findings: [{ ...finding, id: 1 }] }, 'findings[0].id is 1. It must hold a string'],
@@ -289,6 +309,14 @@ test('a value of the wrong type in each key is malformed, with its whole fault',
   ]) {
     malformed(JSON.stringify({ ...DONE, ...changed }), fault);
   }
+});
+
+// R1 of unit 0076
+
+test('the items of afterwards are read with the outcome', () => {
+  const outcome = { ...DONE, afterwards: ['Check it on macOS.'] };
+  const text = JSON.stringify(outcome);
+  assert.deepEqual(readOutcome(block(text)), { kind: 'outcome', outcome, text });
 });
 
 test('a decline of a finding that is not among the findings is read, since it may be of an earlier review', () => {

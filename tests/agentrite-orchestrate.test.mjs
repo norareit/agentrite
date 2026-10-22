@@ -44,7 +44,7 @@ function responseOf(outcome) {
   return `I did the work.\n\n${FENCE}json\n${JSON.stringify(outcome, null, 2)}\n${FENCE}\n`;
 }
 
-const DONE = { outcome: 'done', summary: 'Did it.', questions: [], findings: [], declines: [] };
+const DONE = { outcome: 'done', summary: 'Did it.', questions: [], afterwards: [], findings: [], declines: [] };
 const BLOCKING = { id: 'S1', blocking: true, summary: 'R1 is not met' };
 const MINOR = { id: 'C1', blocking: false, summary: 'A name could be clearer' };
 

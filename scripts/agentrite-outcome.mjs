@@ -7,6 +7,7 @@ import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
  *   outcome: 'done' | 'needs-human' | 'failed',
  *   summary: string,
  *   questions: string[],
+ *   afterwards: string[],
  *   findings: Finding[],
  *   declines: Decline[],
  * }} Outcome
@@ -19,7 +20,8 @@ import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
 /**
  * What the command adds to the prompt of every step, after the step's own, so that the step gives its outcome in a
  * form the command reads. A step in a repeat is told its round, and how many rounds the repeat has at most. The request
- * also says how the step records a finding its prompt accepts, and the latest status it may set.
+ * also says which of its lists an item for the human belongs in, how the step records a finding its prompt accepts,
+ * and the latest status it may set.
  *
  * @param {{ at: number, of: number } | undefined} round
  * @returns {string}
@@ -36,14 +38,29 @@ export function outcomeRequest(round) {
     '- "outcome": "done" when the step did its work, "needs-human" when it cannot go on without the human, ' +
       'or "failed" when it could not do its work',
     '- "summary": a string that says what the step did',
-    '- "questions": a list of strings, each a thing the step needs from the human. ' +
-      'It is empty when it needs nothing',
+    '- "questions": a list of strings, each a thing the step needs from the human for the run to go on. ' +
+      'It is empty when the step needs nothing of the human for the run to go on',
+    '- "afterwards": a list of strings, each a thing the human needs to do, check or decide after the run, ' +
+      'which the run can go on without. It is empty when the step leaves nothing for after the run',
     '- "findings": a list of objects, one for each finding the step made, ' +
       'each with "id", a string such as "S1", "blocking", true or false, and "summary", a string. ' +
       'It is empty for a step that reviewed nothing',
     '- "declines": a list of objects, one for each finding whose decline the step proposes, ' +
       'each with "finding", the id of the finding, and "reason", a string. ' +
       'It is empty for a step that proposed no decline',
+    '',
+    'Give "needs-human" only when the step cannot go on without the human. ' +
+      'A step that did its work and leaves items only in "afterwards" gives "done". ' +
+      'An item belongs in "afterwards" when it is a check that only the human can make, ' +
+      'as in a running application or on another operating system, ' +
+      'an action only the human can take that the rest of the run does not need, ' +
+      'or a decision for which the step built the answer it recommends. ' +
+      'An item belongs in "questions", with "needs-human", when the step\'s work, or the steps after it, ' +
+      'cannot do without it, as a spec that can be read in two ways, ' +
+      'or a decision that the rest of the work depends on and that the step could not make. ' +
+      'Every item of the list under the line **Needed from you** of your final response ' +
+      'is also an item of exactly one of "questions" and "afterwards", ' +
+      'and every item of these two is an item of that list.',
     '',
     'Record a finding that the prompt of this step accepts in record.md as accepted by the definition of the ' +
       'orchestrator, and not as a decision of the human. ' +
@@ -157,8 +174,8 @@ export function readOutcome(response) {
 const PLACES = {
   outcome: {
     name: 'an outcome',
-    keys: ['outcome', 'summary', 'questions', 'findings', 'declines'],
-    holds: 'An outcome holds outcome, summary, questions, findings and declines',
+    keys: ['outcome', 'summary', 'questions', 'afterwards', 'findings', 'declines'],
+    holds: 'An outcome holds outcome, summary, questions, afterwards, findings and declines',
   },
   finding: {
     name: 'a finding',
@@ -250,6 +267,7 @@ const OUTCOME_CHECKS = [
   ['outcome', plain((value) => isString(value) && OUTCOMES.includes(value), '"done", "needs-human" or "failed"')],
   ['summary', plain(isString, STRING_MUST)],
   ['questions', list('a list of strings', plain(isString, STRING_MUST))],
+  ['afterwards', list('a list of strings', plain(isString, STRING_MUST))],
   [
     'findings',
     list(

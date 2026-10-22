@@ -90,7 +90,7 @@ the other's.
 
 ## Tasks
 
-- [ ] In `tests/agentrite-outcome.test.mjs`, add `afterwards: []` to `DONE` and to the spec example of an outcome
+- [x] In `tests/agentrite-outcome.test.mjs`, add `afterwards: []` to `DONE` and to the spec example of an outcome
   (both its object and its block text), after `questions`. Change `KEYS` to the `holds` sentence of the approach.
   Add `['afterwards', 'It must hold a list of strings']` after the `questions` entry of the test that names each
   missing key, so that `afterwards is missing. It must hold a list of strings` is expected. Add to the test of a
@@ -100,8 +100,8 @@ the other's.
   of the approach in the place of the present `questions` line, and `request()` to hold the paragraph of the approach
   after the list, between blank lines, before `REQUEST_RECORD`. Run `npm test` and see these fail (R1, R2, R3, R4, R5,
   R6, R16)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add `afterwards: []` to `DONE`, after `questions` (R1)
-- [ ] In `scripts/agentrite-outcome.mjs`, add `afterwards: string[]` to the `Outcome` typedef after `questions`, add
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add `afterwards: []` to `DONE`, after `questions` (R1)
+- [x] In `scripts/agentrite-outcome.mjs`, add `afterwards: string[]` to the `Outcome` typedef after `questions`, add
   `'afterwards'` to `PLACES.outcome.keys` after `'questions'`, set its `holds` to the sentence of the approach, and add
   `['afterwards', list('a list of strings', plain(isString, STRING_MUST))]` to `OUTCOME_CHECKS` after `questions`.
   Change the request in `outcomeRequest` to the two lines and the paragraph of the approach. Run `npm test`: the
@@ -168,7 +168,7 @@ the other's.
 
 ## Commit Points
 
-- [ ] `feature-0076 Read afterwards in an outcome and ask for it`: the first three tasks, after which the suite passes
+- [x] `feature-0076 Read afterwards in an outcome and ask for it`: the first three tasks, after which the suite passes
 - [ ] `feature-0076 Stop a run for a done outcome with questions`: the fourth and fifth tasks
 - [ ] `feature-0076 Give the items for after the run in the end report`: the sixth to eighth tasks
 - [ ] `feature-0076 Document afterwards in README.md`: the last three tasks
