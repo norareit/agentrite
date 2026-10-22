@@ -38,3 +38,8 @@ timestamp: 2026-10-22T18:58:24Z
   repository and none of its `history-` directories, which the tests cover on a project of 54 units. Read `unitFrom` as
   taking the status and the kind with `fieldFrom` over the whole record, as `statusFrom` does, and not only over the
   front matter. The status stays `in-progress` for the review
+- 2026-10-22T19:54:12Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0077 at `66ae731`.
+  Returned S1, S2, C1 and C2 in
+  `.reviews/0077-the-units-of-a-project-can-be-listed/review-2026-10-22T195240Z.md`.
+  Ran `npm test`: 1032 passed, none failed or skipped; `npm run check-changes` and the command smoke checks passed.
+  Could not independently verify the historical test-first sequence. The status stays `in-progress`
