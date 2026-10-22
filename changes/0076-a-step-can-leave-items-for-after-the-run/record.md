@@ -26,3 +26,11 @@ timestamp: 2026-10-22T13:26:21Z
   outcome or the end report; the default definition does not change, since nothing in it names `questions`. Wrote
   `spec.md`. The status is `draft`
 - 2026-10-22T14:15:03Z [human] approved the spec. The status is `approved`
+- 2026-10-22T14:27:40Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host,
+  cut `feature-0076-a-step-can-leave-items-for-after-the-run` from `master` at `98c7963`, read
+  `agentrite-outcome.mjs`, `agentrite-orchestrate.mjs`, the orchestrate command of `agentrite.mjs`, their tests and
+  "The orchestrator" of `README.md`, and wrote `plan.md`. Readings: the outcome files need no new code, since the
+  command writes each step's block as it stood; the stop of requirement 8 is named `questions` among the stops; the
+  exact texts of the request, the end line and the end report's part are set in the plan's approach. Unit 0075 is
+  approved and changes where the end report is printed, not what it holds, so the two meet only at the call of
+  `endReport`. The status stays `approved`
