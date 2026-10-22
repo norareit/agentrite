@@ -1456,7 +1456,7 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
       'the digits 0029 open more than one directory of changes/, so give the unit by its name:\n' +
         `- changes/0029-another\n- changes/${UNIT}`,
     ],
-    ...['draft', 'in-progress', 'implemented'].map((name) => [
+    ...['draft', 'in-progress', 'implemented', 'cancelled'].map((name) => [
       status(APPROVED.replace('approved', name)),
       ['0029'],
       `the unit changes/${UNIT}/ is ${name}, and a run starts the work of an approved unit`,

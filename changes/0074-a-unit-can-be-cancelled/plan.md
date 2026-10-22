@@ -98,7 +98,7 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 
 ### The orchestrator
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add `cancelled` to the list `['draft', 'in-progress',
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add `cancelled` to the list `['draft', 'in-progress',
   'implemented']` of the refusal test, so that it expects "the unit changes/<unit>/ is cancelled, and a run starts
   the work of an approved unit". Run the file and see it pass with no change to the code (R16)
 
@@ -163,5 +163,5 @@ no other role file says or implies it, by a search of `roles/` and `extra-roles/
 - [x] `feature-0074 Plan the cancellation of a unit`: this plan and its log entry in `record.md`
 - [x] `feature-0074 Freeze a cancelled unit in the change check`: the tasks of "The change check"
 - [x] `feature-0074 Cut no branch for a cancelled unit`: the tasks of "The sandbox"
-- [ ] `feature-0074 Test that orchestrate refuses a cancelled unit`: the task of "The orchestrator"
+- [x] `feature-0074 Test that orchestrate refuses a cancelled unit`: the task of "The orchestrator"
 - [ ] `feature-0074 Give the status cancelled in the process`: the tasks of "The documents"
