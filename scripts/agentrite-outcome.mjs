@@ -1,4 +1,4 @@
-import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
+import { isObject, jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
 
 /**
  * @typedef {{ id: string, blocking: boolean, summary: string }} Finding
@@ -187,14 +187,6 @@ const PLACES = {
 
 /** @type {(value: unknown) => boolean} */
 const isString = (value) => typeof value === 'string';
-
-/**
- * @param {unknown} value
- * @returns {value is Record<string, unknown>}
- */
-function isObject(value) {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 /**
  * The first fault of the object at `path` against `checks`: a key its place does not take, then each key of

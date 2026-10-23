@@ -59,6 +59,32 @@ const OPTION_VALUES = { status: 'a status', kind: 'a kind', limit: 'a count' };
  */
 
 /**
+ * What is wrong with the words that are no options: a `<number>` that is not four digits, or a second word. The
+ * line, or `undefined` when nothing is.
+ *
+ * @param {string[]} positionals
+ * @returns {string | undefined}
+ */
+export function numberError([number, beyond]) {
+  if (number !== undefined && !/^\d{4}$/.test(number)) return `<number> is exactly four digits, not ${number}`;
+  if (beyond !== undefined) return `unexpected argument: ${beyond}`;
+  return undefined;
+}
+
+/**
+ * What is wrong with the value of `--limit`, when it was given: the line, or `undefined` when nothing is.
+ *
+ * @param {unknown} limit
+ * @returns {string | undefined}
+ */
+export function limitError(limit) {
+  if (limit !== undefined && !/^\d+$/.test(String(limit))) {
+    return `--limit takes a whole number of zero or more, not ${limit}`;
+  }
+  return undefined;
+}
+
+/**
  * What is wrong with the options and the number as they were given, or `undefined` when nothing is.
  *
  * @param {Token[]} tokens
@@ -75,18 +101,17 @@ function argumentError(tokens, values, positionals) {
   const twice = ['status', 'kind', 'limit'].find((name) => names.filter((given) => given === name).length > 1);
   if (twice !== undefined) return `--${twice} was given twice`;
 
-  const [number, beyond] = positionals;
-  if (number !== undefined && !/^\d{4}$/.test(number)) return `<number> is exactly four digits, not ${number}`;
-  if (beyond !== undefined) return `unexpected argument: ${beyond}`;
+  const [number] = positionals;
+  const numberProblem = numberError(positionals);
+  if (numberProblem !== undefined) return numberProblem;
   if (values.status !== undefined && !STATUSES.includes(String(values.status))) {
     return `unknown status: ${values.status}. --status takes ${listOf(STATUSES)}`;
   }
   if (values.kind !== undefined && !KINDS.includes(String(values.kind))) {
     return `unknown kind: ${values.kind}. --kind takes ${listOf(KINDS)}`;
   }
-  if (values.limit !== undefined && !/^\d+$/.test(String(values.limit))) {
-    return `--limit takes a whole number of zero or more, not ${values.limit}`;
-  }
+  const limitProblem = limitError(values.limit);
+  if (limitProblem !== undefined) return limitProblem;
   if (values.open === true && values.status !== undefined) return '--open and --status cannot be given together';
   if (values.limit !== undefined && number !== undefined) return '--limit cannot be given with a number';
   return undefined;

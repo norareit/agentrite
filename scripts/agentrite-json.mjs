@@ -1,4 +1,12 @@
 /**
+ * @param {unknown} value
+ * @returns {value is Record<string, unknown>}
+ */
+export function isObject(value) {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+/**
  * The text of `value` as JSON laid out as `original` is: with the indentation of its first indented line that opens
  * a key, two spaces when it has none, and ending in a line break when it does.
  *

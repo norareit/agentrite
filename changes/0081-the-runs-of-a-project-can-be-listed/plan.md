@@ -148,7 +148,7 @@ the directory named as before.
   for its step 100, and that `stepHead` gives `step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol` for the
   reviewer of the default and `step 0, planner, claude, claude-opus-5-5` for its planner. Every other test passes as
   before (R11, R12, R18)
-- [ ] Move `isObject` to `scripts/agentrite-json.mjs`, exported, and import it in `scripts/agentrite-definition.mjs`
+- [x] Move `isObject` to `scripts/agentrite-json.mjs`, exported, and import it in `scripts/agentrite-definition.mjs`
   and `scripts/agentrite-outcome.mjs`. Add `numberError` and `limitError` to `scripts/agentrite-units.mjs`, exported,
   and call them in `argumentError` where its checks of the number and of the limit stand. The tests of
   `tests/agentrite-units.test.mjs` pass unchanged (R19)
@@ -277,7 +277,7 @@ the directory named as before.
 
 - [x] `feature-0081 Name the files and the head of a step in the orchestrator's module`: the first task, which
   changes no behavior
-- [ ] `feature-0081 Share isObject and the checks of a number and a limit`: the second task, which changes no
+- [x] `feature-0081 Share isObject and the checks of a number and a limit`: the second task, which changes no
   behavior
 - [ ] `feature-0081 Keep the branch and the variant of a run`: the third to seventh tasks
 - [ ] `feature-0081 List the runs of a project`: the eighth to twentieth tasks

@@ -1,5 +1,5 @@
 import { SETTINGS_FILE } from './agentrite-settings.mjs';
-import { jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
+import { isObject, jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mjs';
 
 /**
  * @typedef {{
@@ -36,14 +36,6 @@ const PLACES = {
     holds: 'The object of repeat holds times and steps, and may hold until',
   },
 };
-
-/**
- * @param {unknown} value
- * @returns {value is Record<string, unknown>}
- */
-function isObject(value) {
-  return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
 
 /**
  * @param {unknown} value
