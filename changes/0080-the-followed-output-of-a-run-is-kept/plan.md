@@ -85,13 +85,13 @@ sandbox.
   null`; and `followedLine(item, instantOf(Date.UTC(2026, 9, 22, 14, 3, 27, 900)))` gives `time` as
   `2026-10-22T14:03:27Z`, the same second as `clockTime` of that instant, with its date (R4, R5, R12)
 - [x] Add `followedLine` to `scripts/agentrite-orchestrate.mjs` as the approach gives it, and export it (R4)
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `followedFile`, in a temporary directory: it
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `followedFile`, in a temporary directory: it
   makes the file empty before any line is added, and the lines added stand in it in their order, each whole; a making
   that throws does not throw, and a line added after it is written; an append that writes part of a line by the real
   `appendFileSync` and then throws does not throw, leaves the file holding only the lines before it, and the next line
   is added whole after them; an append and a truncation that both throw do not throw, and the next line is still
   attempted; and no other file is left in the directory (R6, R8, R12)
-- [ ] Add `followedFile` to `scripts/agentrite.mjs` as the approach gives it, with `appendFileSync` and
+- [x] Add `followedFile` to `scripts/agentrite.mjs` as the approach gives it, with `appendFileSync` and
   `truncateSync` imported from `node:fs`, and export it (R2, R6, R8)
 - [ ] Add to the fake harness of `tests/agentrite-orchestrate.test.mjs`, with its comment, that with `seen-<n>` it
   writes to `seen-<n>.out`, before it prints, a line for each file that `.orchestrator/*/*/*.followed.jsonl` matches

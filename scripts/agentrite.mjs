@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from 'node:child_process';
 import {
+  appendFileSync,
   chmodSync,
   lstatSync,
   mkdirSync,
@@ -9,6 +10,7 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  truncateSync,
   writeFileSync,
 } from 'node:fs';
 import { basename, dirname, join, posix, resolve } from 'node:path';
@@ -1313,6 +1315,38 @@ export function writeWhole(path, content, files) {
     }
     throw error;
   }
+}
+
+/**
+ * Makes the followed file of a step at `path`, empty, and returns the function that adds a line to its end. A line
+ * is added whole or not at all: when an append throws, the file is cut back to the lines added before it, since a
+ * part of the line may stand at its end. A failure of any of the three calls is dropped, since the file is for
+ * readers and not a part of the run, as the heartbeat is, and the lines after it are added as if it had not failed.
+ * `files` holds the functions of `node:fs` it calls, so that a test can make one of them fail.
+ *
+ * @param {string} path
+ * @param {Pick<typeof import('node:fs'), 'writeFileSync' | 'appendFileSync' | 'truncateSync'>} files
+ * @returns {(line: string) => void}
+ */
+export function followedFile(path, files) {
+  let length = 0;
+  try {
+    files.writeFileSync(path, '');
+  } catch {
+    // The file is for readers, and the run goes on without it.
+  }
+  return (line) => {
+    try {
+      files.appendFileSync(path, line);
+      length += Buffer.byteLength(line);
+    } catch {
+      try {
+        files.truncateSync(path, length);
+      } catch {
+        // The file is for readers, and what could not be written is lost.
+      }
+    }
+  };
 }
 
 /**

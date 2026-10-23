@@ -389,7 +389,7 @@ export function followedText(item, time) {
 
 /**
  * The line of the followed file for one item: a JSON object and a line break. The label is the one the terminal
- * prints, so that the two cannot drift apart, and `JSON.stringify` writes a line break of a text as `\\n`, so the line
+ * prints, so that the two cannot drift apart, and `JSON.stringify` writes a line break of a text as `\n`, so the line
  * holds none but its last.
  *
  * @param {Followed} item

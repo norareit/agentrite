@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import {
+  appendFileSync,
   chmodSync,
   existsSync,
   mkdirSync,
@@ -10,6 +11,7 @@ import {
   rmSync,
   statSync,
   symlinkSync,
+  truncateSync,
   utimesSync,
   writeFileSync,
 } from 'node:fs';
@@ -34,7 +36,7 @@ import {
   stepLine,
   timedItems,
 } from '../scripts/agentrite-orchestrate.mjs';
-import { heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
+import { followedFile, heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
 import { readOutcome } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
@@ -2130,4 +2132,73 @@ test('a run keeps a heartbeat that moves on while a step runs and is left at its
     'state.json',
   ]);
   assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.status, 0);
+});
+
+const FOLLOWED_FILES = { writeFileSync, appendFileSync, truncateSync };
+
+test('followedFile makes the file empty and adds each line whole, in order, leaving no other file', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const path = join(directory, '00-implementer.followed.jsonl');
+
+  const add = followedFile(path, FOLLOWED_FILES);
+  assert.equal(readFileSync(path, 'utf-8'), '');
+  add('{"a":1}\n');
+  add('{"b":2}\n');
+
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"b":2}\n');
+  assert.deepEqual(readdirSync(directory), ['00-implementer.followed.jsonl']);
+});
+
+test('followedFile whose making throws does not throw, and writes the lines added after it', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const path = join(directory, 'followed.jsonl');
+  const failing = () => {
+    throw new Error('read-only');
+  };
+
+  const add = followedFile(path, { ...FOLLOWED_FILES, writeFileSync: failing });
+  add('{"a":1}\n');
+
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n');
+});
+
+test('followedFile whose append wrote part of a line cuts the file back, and the next line is whole', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const path = join(directory, 'followed.jsonl');
+  let failNext = false;
+  const partial = (target, line) => {
+    if (!failNext) return appendFileSync(target, line);
+    failNext = false;
+    appendFileSync(target, line.slice(0, 3));
+    throw new Error('disk full');
+  };
+
+  const add = followedFile(path, { ...FOLLOWED_FILES, appendFileSync: partial });
+  add('{"a":1}\n');
+  failNext = true;
+  assert.doesNotThrow(() => add('{"é":2}\n'));
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n');
+  add('{"c":3}\n');
+
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"c":3}\n');
+});
+
+test('followedFile whose append and truncation both throw does not throw, and tries the next line', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const path = join(directory, 'followed.jsonl');
+  let broken = true;
+  const failing = () => {
+    throw new Error('gone');
+  };
+
+  const add = followedFile(path, {
+    ...FOLLOWED_FILES,
+    appendFileSync: (target, line) => (broken ? failing() : appendFileSync(target, line)),
+    truncateSync: failing,
+  });
+  assert.doesNotThrow(() => add('{"a":1}\n'));
+  broken = false;
+  add('{"b":2}\n');
+
+  assert.equal(readFileSync(path, 'utf-8'), '{"b":2}\n');
 });
