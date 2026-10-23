@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-22T22:02:19Z
 ---
 
@@ -52,3 +52,6 @@ timestamp: 2026-10-22T22:02:19Z
   requirement 17 asks for, and that the entry "Claude Code in the sandbox does not ring the bell, while OpenCode does"
   of "When something goes wrong" in `SANDBOX.md` is removed, since requirement 16 makes both false and the entry's case
   can no longer arise. The status is `approved`
+- 2026-10-23T11:34:42Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  began the work on `feature-0078-commits-with-forbidden-trailers-are-refused` at `543a76b`. The status is
+  `in-progress`
