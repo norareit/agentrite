@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-22T22:02:19Z
 ---
 
@@ -42,3 +42,4 @@ timestamp: 2026-10-22T22:02:19Z
   `master` at `c6a7c7e`, on the human's decision that `README.md` describes the hook in a section `## Git hooks` of its
   own, with the checker as an entry under `## Commands` and a linking line in the entries of `init` and `refresh`.
   Rewrote requirement 17 and added the decision. The status is `draft`
+- 2026-10-23T11:23:18Z [human] approved the spec. The status is `approved`
