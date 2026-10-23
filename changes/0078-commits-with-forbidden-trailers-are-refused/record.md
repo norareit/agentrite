@@ -97,3 +97,9 @@ timestamp: 2026-10-22T22:02:19Z
   `node` on its `PATH` other than the one the end-to-end test makes, and a start of the installed release's sandbox
   after an update, which needs a release of the kit. Every task of `plan.md` is ticked. The status stays `in-progress`,
   for the review by another model in another harness
+- 2026-10-23T12:27:12Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, fully reviewed unit 0078 at `35280f5`, against
+  merge base `6138747` with `master`. Findings C1 and P1, saved in
+  `.reviews/0078-commits-with-forbidden-trailers-are-refused/review-2026-10-23T122545Z.md`. Ran `npm test`:
+  1097 passed, none failed or skipped; `./sandbox.sh --in-place npm test`: 1067 passed, none failed, 30 skipped for
+  Docker; and the diff check, which passed. Not independently verified: a non-Linux host, a graphical git client's
+  PATH, historical test-first runs, the manual scratch-project and sandbox-dev session, or a published-release update
