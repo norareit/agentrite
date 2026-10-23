@@ -193,12 +193,16 @@ The hook is built for an agent or a developer who makes commits with `git commit
    instruction to add its attribution lines to commits and pull requests. `init` would write it, or amend that file,
    for `claude`. It would stop the mistake at its source, where the hook only catches it. It costs a new file the kit
    writes and keeps true, a check of its key names against the harness, and an equivalent for each other harness.
-   Without it, the harness still gives the instruction, the hook refuses the commit, and the agent commits again
+   OpenCode needs none, since it gives no such instruction. Codex, which the kit may support later, has no setting a
+   project can hold: it gives the instruction for `Co-authored-by: Codex <noreply@openai.com>` when the account's
+   setting on OpenAI's servers says so, and tells the model to ignore any earlier instruction against it. Without it,
+   the harness still gives the instruction, the hook refuses the commit, and the agent commits again
 2. **A check of the commits of a branch.** `check-changes` would also refuse a branch whose commits hold a forbidden
    trailer, which catches a commit made with `--no-verify`, on a machine without the hook, or by a commit git makes
    without the hook. It costs a pass over the branch's commits in a check that reads documents only now, and a rule
    written in a second place unless it calls the checker. Without it, those commits are found by the human when they
    read the history, and rewritten then
 3. **The pull request description.** The same instruction is given for pull request descriptions, where no hook runs.
+   Codex gives one too, for a line `Generated with [Codex](https://openai.com/codex/).` in the body.
    The kit has no step at which a description is written, so there is nothing to attach a check to. Without it, the
    human removes the line when they read the description

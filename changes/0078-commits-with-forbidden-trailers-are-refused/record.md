@@ -31,3 +31,10 @@ timestamp: 2026-10-22T22:02:19Z
   (requirement 23). F5: the context and the decision on a file already there now say what `git clone` and `refresh` do.
   F6: the reason of requirement 3 is narrowed. The host's requirements from 8 on are renumbered, and every reference to
   them with them. The status is `draft`
+- 2026-10-23T11:17:45Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in a session on the Linux host, on
+  `master` at `48d8fd3`, on the human's request to record in "Beyond the request" what Codex does about attribution, as
+  a harness the kit may support later and not today. Read the source of `openai/codex`, `codex-rs/ext/git-attribution`,
+  and the binary of OpenCode 1.19.3. Codex instructs `Co-authored-by: Codex <noreply@openai.com>` and a line in a pull
+  request body when the account's setting on OpenAI's servers enables it, and OpenCode instructs no trailer. Added both
+  to items 1 and 3. The trailer of Codex is caught by requirement 2, which reads the name whatever its case, so no
+  requirement changed. The status is `draft`
