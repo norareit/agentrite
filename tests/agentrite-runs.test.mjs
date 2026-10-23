@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import {
@@ -471,6 +471,17 @@ test('readRuns reads only the directories that are runs, and a run without state
     runs.map(({ directory, state }) => [directory, state]),
     [[`.orchestrator/0029-x/${INSTANT}`, 'running']],
   );
+});
+
+test('readRuns refuses a state.json that is a directory or cannot be examined, naming it', (testContext) => {
+  const root = temporaryDirectory(testContext, 'agentrite-runs-');
+  const state = (name) => join(root, '.orchestrator', '0029-x', name, 'state.json');
+  mkdirSync(state(INSTANT), { recursive: true });
+  assert.throws(() => readRuns(root, undefined, NOW), new RegExp(`${INSTANT}/state\\.json cannot be read`));
+  rmSync(state(INSTANT), { recursive: true });
+
+  symlinkSync('state.json', state(INSTANT));
+  assert.throws(() => readRuns(root, undefined, NOW), new RegExp(`${INSTANT}/state\\.json cannot be read: .*ELOOP`));
 });
 
 test('readRuns of a number reads the runs of that unit, of every variant, and of no other', (testContext) => {

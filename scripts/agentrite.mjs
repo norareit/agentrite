@@ -10,6 +10,7 @@ import {
   realpathSync,
   renameSync,
   rmSync,
+  statSync,
   truncateSync,
   writeFileSync,
 } from 'node:fs';
@@ -1743,6 +1744,26 @@ function readRunFile(root, path) {
 }
 
 /**
+ * Whether the run in `directory`, relative to `root`, has a `state.json`. A run without one is left out, and any other
+ * fault of the path, as a state.json that is a directory or a path that cannot be examined, is refused so that the run
+ * is not hidden from the listing.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {boolean}
+ */
+function hasRunState(root, directory) {
+  const path = join(directory, 'state.json');
+  try {
+    statSync(resolve(root, path));
+  } catch (error) {
+    if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') return false;
+    throw new Error(`${path} cannot be read: ${messageOf(error)}`);
+  }
+  return true;
+}
+
+/**
  * The runs of the orchestrator of the project at `root`, each judged at the instant `now`, only those of the unit
  * `number` names when one is given. It reads `.orchestrator/` and nothing else, and refuses a run whose files are not
  * of the form the orchestrator writes.
@@ -1763,7 +1784,7 @@ export function readRuns(root, number, now) {
     .filter((unit) => isUnitDirectory(unit) && (number === undefined || unit.startsWith(`${number}-`)))
     .flatMap((unit) =>
       directoriesOf(join(orchestrator, unit))
-        .filter((name) => isRunDirectory(name) && isRegularFile(join(orchestrator, unit, name, 'state.json')))
+        .filter((name) => isRunDirectory(name) && hasRunState(root, join(ORCHESTRATOR_DIRECTORY, unit, name)))
         .map((name) => {
           const directory = join(ORCHESTRATOR_DIRECTORY, unit, name);
           const heartbeat = resolve(root, directory, 'heartbeat');
