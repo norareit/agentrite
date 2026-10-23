@@ -43,3 +43,12 @@ timestamp: 2026-10-22T22:02:19Z
   own, with the checker as an entry under `## Commands` and a linking line in the entries of `init` and `refresh`.
   Rewrote requirement 17 and added the decision. The status is `draft`
 - 2026-10-23T11:23:18Z [human] approved the spec. The status is `approved`
+- 2026-10-23T11:31:13Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0078-commits-with-forbidden-trailers-are-refused` from `master` at `6138747` and wrote `plan.md`. The
+  checker is in `container/` because the `.dockerignore` that `init` writes admits only the kit's `container/` to the
+  image build, and `refresh` never writes it. A fresh clone gets the hook from `refresh`, which `README.md` says in
+  "On a fresh clone", as the only reading under which requirement 17 describes what a clone needs. The human decided
+  that the paragraph of "Updating a project to a newer kit" in `README.md` about the group `tty` is replaced by the line
+  requirement 17 asks for, and that the entry "Claude Code in the sandbox does not ring the bell, while OpenCode does"
+  of "When something goes wrong" in `SANDBOX.md` is removed, since requirement 16 makes both false and the entry's case
+  can no longer arise. The status is `approved`
