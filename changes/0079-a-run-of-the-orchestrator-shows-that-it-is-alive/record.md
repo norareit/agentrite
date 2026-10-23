@@ -16,3 +16,7 @@ timestamp: 2026-10-23T14:24:42Z
   `state.json` to the specifier. Made the unit as a feature. Numbered 0079: the highest number in `changes/` is 0078.
   Read "The orchestrator" of `README.md`, "Running a unit" and "What the sandbox defends against" of `SANDBOX.md`, and
   how `orchestrateCommand` writes the run's directory and passes signals on. Wrote `spec.md`. The status is `draft`
+- 2026-10-23T15:08:04Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's question how a
+  graphical interface would read the heartbeat, and the human's choice to name in this unit the one that adds the
+  command. Named unit 0081 in the decision on the reader judging the state and in the first non-goal. The status is
+  `draft`

@@ -89,7 +89,8 @@ Tests:
   and for a clock that is a few seconds behind, and a minute is soon enough for a human who looks at a list of runs.
   Both are fixed, and documented in `README.md` so that any reader judges the same way
 * **The reader judges, and the kit only documents the rule.** This unit gives no command that says whether a run is
-  alive. A command that lists the runs with their state is a unit of its own, built on this one
+  alive. A command that lists the runs with their state, which unit 0081 adds, is a unit of its own, built on this
+  one
 * **A failed beat does not stop the run.** The heartbeat is a sign for readers, not a part of the run. Stopping a run,
   with a step's harness still running, because a sign could not be written would do more harm than the missing sign
 * **Stale, not dead.** A run can be stale and alive, as on a machine that sleeps, so the documents give it as having
@@ -112,7 +113,7 @@ Tests:
 
 ## Non-goals
 
-* A command that tells or lists the state of runs
+* A command that tells or lists the state of runs, which unit 0081 adds
 * Writing the end of a run into `state.json` when a signal ends it
 * Detecting a step's harness that runs on after the command's process was killed
 * Recording in a run's directory which process, machine or container runs it
