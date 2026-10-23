@@ -20,6 +20,7 @@ import {
   hostVersions,
   imageLabelsText,
   installKitPackage,
+  kitVersion,
   latestVersions,
   logDirectories,
   logDirectory,
@@ -36,12 +37,13 @@ const kitPath = 'project/node_modules/agentrite/container';
 // the fake `npm` gives as the latest.
 const builtBefore = { claude: '0.1.0', opencode: '0.2.0' };
 
-// The calls the fake `docker` recorded for a wrapper that handed Compose `versions`: each of `commands` after
-// what every call opens with.
+// The calls the fake `docker` recorded for a wrapper that handed Compose `versions` and the installed kit's version:
+// each of `commands` after what every call opens with.
 function composeCalls(root, container, versions, ...commands) {
   const opening =
     'AGENTRITE_CONTAINER=node_modules/agentrite/container ' +
-    `SANDBOX_CLAUDE_CODE_VERSION=${versions.claude} SANDBOX_OPENCODE_VERSION=${versions.opencode} docker compose ` +
+    `SANDBOX_CLAUDE_CODE_VERSION=${versions.claude} SANDBOX_OPENCODE_VERSION=${versions.opencode} ` +
+    `SANDBOX_AGENTRITE_VERSION=${kitVersion} docker compose ` +
     `--project-directory ${root} -f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml`;
   return commands.map((command) => `${opening} ${command}`);
 }
@@ -86,7 +88,12 @@ function setUp(
   writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
   const home = join(base, 'home');
   mkdirSync(home);
-  const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'SANDBOX_CLAUDE_CODE_VERSION', 'SANDBOX_OPENCODE_VERSION']);
+  const host = fakeHost(base, [
+    'AGENTRITE_CONTAINER',
+    'SANDBOX_CLAUDE_CODE_VERSION',
+    'SANDBOX_OPENCODE_VERSION',
+    'SANDBOX_AGENTRITE_VERSION',
+  ]);
   writeFileSync(host.projectBuildArgs, buildArgs === null ? '' : JSON.stringify(buildArgs));
   if (!imageExists) rmSync(host.imageLabels);
   const runWith = ({ env = {}, cwd }, ...args) =>
@@ -972,3 +979,70 @@ test('a start reads bell again at each start, with no build in between', (t) => 
     ...startRun(root, container, '--in-place', root, bellMounts(container), bellEnvironment),
   ]);
 });
+
+// Unit 0078: the kit's version. The image records the kit it was built from, and is built again for another.
+const kitBuiltBefore = '96.0.0';
+const kitDiffersLine = (held) =>
+  `sandbox.sh: the image was built from the kit ${held} and ${kitVersion} is installed. Rebuilding.\n`;
+const kitRecordsNoneLine = `sandbox.sh: the image records no kit version and ${kitVersion} is installed. Rebuilding.\n`;
+
+// R16, R24
+test('the wrapper builds an image again that records another version of the kit, and says so first', (t) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+  writeFileSync(imageLabels, imageLabelsText({ ...hostVersions, kit: kitBuiltBefore }));
+  const result = run(root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, kitDiffersLine(kitBuiltBefore));
+  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+});
+
+// R16, R24
+test('the wrapper builds an image again that records no version of the kit, and says so first', (t) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+  writeFileSync(imageLabels, imageLabelsText({ ...hostVersions, kit: '' }));
+  const result = run(root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, kitRecordsNoneLine);
+  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+});
+
+// R16, R24
+test('the wrapper builds nothing for the kit when the image records the installed version', (t) => {
+  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+  const result = run(root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
+});
+
+// R16, R24
+test('the wrapper hands the build the installed kit version, and --rebuild builds without the line', (t) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+  writeFileSync(imageLabels, imageLabelsText({ ...hostVersions, kit: kitBuiltBefore }));
+  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  const [build] = dockerCalls();
+  assert.ok(build.includes(` SANDBOX_AGENTRITE_VERSION=${kitVersion} `), build);
+  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+});
+
+// R16, R24
+for (const [what, content] of [
+  ['is missing', null],
+  ['holds no version', '{"name": "agentrite"}\n'],
+  ['is not JSON', 'not json\n'],
+  ['holds a version of another shape', '{"name": "agentrite", "version": "8.0"}\n'],
+]) {
+  test(`the wrapper refuses a kit whose package.json ${what}, before anything is built`, (t) => {
+    const { root, container, run, dockerCalls } = setUp(t, kitPath);
+    const manifest = join(container, '..', 'package.json');
+    if (content === null) rmSync(manifest);
+    else writeFileSync(manifest, content);
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 1);
+    assert.ok(result.stderr.includes(manifest), result.stderr);
+    assert.match(result.stderr, /Install the project's dependencies again/);
+    assert.deepEqual(dockerCalls(), []);
+  });
+}

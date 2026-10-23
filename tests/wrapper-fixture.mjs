@@ -271,7 +271,7 @@ fi`,
 }
 
 // The Dockerfile of the stand-in for the kit's image that `dockerHost` builds: an image of one marker file, with the
-// two version labels the kit's image has, from the build arguments of the same names, and the working directory,
+// three version labels the kit's image has, from the build arguments of the same names, and the working directory,
 // the entrypoint and the command of the kit's. It runs nothing, so it builds without the network. The label
 // `standInLabel` marks it, and every image built on it, so that a test can remove the ones its builds left unnamed.
 export const standInLabel = 'com.ritenoar.agentrite.test-stand-in';
@@ -280,8 +280,10 @@ COPY kit-marker /kit-marker
 LABEL ${standInLabel}=true
 ARG CLAUDE_CODE_VERSION
 ARG OPENCODE_VERSION
+ARG AGENTRITE_VERSION
 LABEL com.ritenoar.agentrite.claude-code-version=$CLAUDE_CODE_VERSION
 LABEL com.ritenoar.agentrite.opencode-version=$OPENCODE_VERSION
+LABEL com.ritenoar.agentrite.kit-version=$AGENTRITE_VERSION
 WORKDIR /work
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]
@@ -294,7 +296,7 @@ CMD ["bash"]
 //
 // * `config --format json` it answers as `fakeHost`'s does, from `projectBuildArgs`, without recording it
 // * `compose ... build` it records, and then runs a real `docker build` of the stand-in for the kit's image under
-//   `base`, tagged with the image name of the merged configuration and given the two versions of the wrapper's
+//   `base`, tagged with the image name of the merged configuration and given the three versions of the wrapper's
 //   variables. It fails instead, without building, when the file `buildFails` is there
 // * `compose ... run` it records, and runs nothing
 // * every other call it passes to the real `docker`, recording a `build` and a `tag`. It gives the real one the
@@ -337,7 +339,8 @@ if [ "$1" = "compose" ]; then
   done < "$project_compose"
   exec "${docker}" build --quiet --tag "$image" \\
     --build-arg "CLAUDE_CODE_VERSION=$SANDBOX_CLAUDE_CODE_VERSION" \\
-    --build-arg "OPENCODE_VERSION=$SANDBOX_OPENCODE_VERSION" "${standIn}"
+    --build-arg "OPENCODE_VERSION=$SANDBOX_OPENCODE_VERSION" \\
+    --build-arg "AGENTRITE_VERSION=$SANDBOX_AGENTRITE_VERSION" "${standIn}"
 fi
 [ "$1" != "build" ] && [ "$1" != "tag" ] || echo "${record} docker $*" >> "${calls}"
 exec "${docker}" "$@"`,

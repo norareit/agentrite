@@ -40,6 +40,9 @@ services:
         # file, which replaces the value here.
         CLAUDE_CODE_VERSION: ${SANDBOX_CLAUDE_CODE_VERSION:?run the sandbox through the project's sandbox.sh}
         OPENCODE_VERSION: ${SANDBOX_OPENCODE_VERSION:?run the sandbox through the project's sandbox.sh}
+        # The version of the installed kit, which the image records, so that
+        # container/sandbox.sh builds it again for another.
+        AGENTRITE_VERSION: ${SANDBOX_AGENTRITE_VERSION:?run the sandbox through the project's sandbox.sh}
     working_dir: /work
     init: true
     stdin_open: true

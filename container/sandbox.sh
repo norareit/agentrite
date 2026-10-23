@@ -51,6 +51,9 @@
 # builds the image again before it runs, and says why. The kit names no version of its
 # own: a harness with neither keeps the version the image holds, and gets the latest
 # published one, which the wrapper asks npm for and names, whenever the image is built.
+# It builds the image again, too, when the image records a version of the kit other
+# than the installed kit's, or none, and says so: compose.yml, which is read from the
+# installed kit at every start, names files that the image holds.
 #
 # A project may add to the image with a sandbox/Dockerfile of its own, which the wrapper
 # builds on the kit's image. The image the sandbox runs keeps the name the compose files
@@ -706,6 +709,24 @@ if [ "$connect" -eq 1 ]; then
     "$container_name" /usr/local/bin/known-terminal.sh "$@"
 fi
 
+# The version of the installed kit, from the package.json beside this container/
+# directory: node_modules/agentrite/package.json in a project, and the repository's own
+# for sandbox-dev.sh. The image records the version it was built from, and is built
+# again for another, since compose.yml, which is read from the installed kit, names
+# files that the image holds. node reads it; the host has node for npm already.
+kit_manifest="$(cd "$here/.." && pwd)/package.json"
+kit_version="$(node -e '
+  try {
+    const { version } = JSON.parse(require("fs").readFileSync(process.argv[1], "utf-8"));
+    if (typeof version === "string") process.stdout.write(version);
+  } catch {}
+' "$kit_manifest")"
+if ! is_version "$kit_version"; then
+  echo "sandbox.sh: could not read the version of the kit from $kit_manifest." >&2
+  echo "Install the project's dependencies again, as with npm ci, and start the sandbox again." >&2
+  exit 1
+fi
+
 claude_code_host="$(installed_version claude "Claude Code")"
 opencode_host="$(installed_version opencode "OpenCode")"
 
@@ -761,23 +782,34 @@ if [ "$opencode_wanted" = "$unheld" ]; then
   opencode_origin="${opencode_host:+the host}"
 fi
 
-# Build the kit's image on --rebuild, when there is none, when a harness needs it, which
-# the two labels of the kit's image say, and, without a project's file, when the image
-# was built from one. A build that fails ends the wrapper: the image that exists holds
-# versions nobody asked for.
+# Build the kit's image on --rebuild, when there is none, when a harness needs it, or
+# when the image was built from another kit than the installed one or records none,
+# which the three labels of the kit's image say, and, without a project's file, when
+# the image was built from one. A build that fails ends the wrapper: the image that
+# exists holds versions nobody asked for.
 build="$rebuild"
 claude_code_held=""
 opencode_held=""
 if [ "$build" -eq 0 ]; then
   labels='{{ index .Config.Labels "com.ritenoar.agentrite.claude-code-version" }}'
   labels="$labels|"'{{ index .Config.Labels "com.ritenoar.agentrite.opencode-version" }}'
+  labels="$labels|"'{{ index .Config.Labels "com.ritenoar.agentrite.kit-version" }}'
   if held="$(docker image inspect --format "$labels" "$kit_image" 2>/dev/null)"; then
     claude_code_held="${held%%|*}"
-    opencode_held="${held#*|}"
+    held="${held#*|}"
+    opencode_held="${held%%|*}"
+    kit_held="${held#*|}"
     if needs_build "Claude Code" "$claude_code_held" "$claude_code_wanted" "$claude_code_origin"; then
       build=1
     fi
     if needs_build "OpenCode" "$opencode_held" "$opencode_wanted" "$opencode_origin"; then
+      build=1
+    fi
+    if [ -z "$kit_held" ]; then
+      echo "sandbox.sh: the image records no kit version and $kit_version is installed. Rebuilding." >&2
+      build=1
+    elif [ "$kit_held" != "$kit_version" ]; then
+      echo "sandbox.sh: the image was built from the kit $kit_held and $kit_version is installed. Rebuilding." >&2
       build=1
     fi
   else
@@ -834,14 +866,15 @@ if [ -n "$opencode_latest" ]; then
     "so the image is built with the latest published, $opencode_latest." >&2
 fi
 
-# The versions the image is built with, for the base compose file's two build arguments.
+# The versions the image is built with, for the base compose file's three build arguments.
 # Assigned whatever the caller's environment holds, so that nothing there is a source.
 # The names are the wrapper's own: Claude Code exports variables named CLAUDE_CODE_...
 # into the shells it starts, and agents run the wrapper from those. Where the project's
 # file gives the argument, Compose uses that and not the variable.
-export SANDBOX_CLAUDE_CODE_VERSION SANDBOX_OPENCODE_VERSION
+export SANDBOX_CLAUDE_CODE_VERSION SANDBOX_OPENCODE_VERSION SANDBOX_AGENTRITE_VERSION
 SANDBOX_CLAUDE_CODE_VERSION="$claude_code_wanted"
 SANDBOX_OPENCODE_VERSION="$opencode_wanted"
+SANDBOX_AGENTRITE_VERSION="$kit_version"
 
 # Compose tags the kit's image with the image's name, and the project's file then takes
 # that name over. The label is given here rather than in the file, so that one the file

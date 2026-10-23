@@ -165,5 +165,12 @@ COPY ${KIT_CONTAINER}/egress-proxy.mjs ${KIT_CONTAINER}/sni.mjs /usr/local/lib/e
 COPY ${KIT_CONTAINER}/check-commit-message.mjs /usr/local/lib/agentrite/
 COPY ${KIT_CONTAINER}/hooks/commit-msg /usr/local/lib/agentrite/hooks/
 RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/known-terminal.sh /usr/local/lib/agentrite/hooks/commit-msg
+
+# The version of the kit this image was built from. container/sandbox.sh reads it at
+# each start and builds again when another kit is installed, so that the image holds
+# the files of the kit whose compose.yml names them. Last, so that a new version changes
+# no layer before it.
+ARG AGENTRITE_VERSION
+LABEL com.ritenoar.agentrite.kit-version="${AGENTRITE_VERSION}"
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
 CMD ["bash"]

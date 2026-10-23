@@ -55,6 +55,28 @@ test("the base Compose file gives both build arguments from the wrapper's own va
   }
 });
 
+// Unit 0078, R16: the image records the kit it was built from, which the wrapper compares with the installed kit.
+test("the Dockerfile's last stage records the kit's version as a label from an argument with no default", () => {
+  const lastStage = dockerfile.slice(dockerfile.lastIndexOf('\nFROM ')).split('\n');
+  assert.deepEqual(
+    dockerfile.split('\n').filter((line) => line.trim().startsWith('ARG AGENTRITE_VERSION=')),
+    [],
+  );
+  const declared = lastStage.indexOf('ARG AGENTRITE_VERSION');
+  assert.notEqual(declared, -1, 'the last stage declares AGENTRITE_VERSION');
+  const label = lastStage.indexOf('LABEL com.ritenoar.agentrite.kit-version="${AGENTRITE_VERSION}"');
+  assert.ok(label > declared, 'the last stage sets com.ritenoar.agentrite.kit-version from it, after declaring it');
+  // Last, so that a new version of the kit changes no layer before it.
+  const lastCopy = lastStage.findLastIndex((line) => line.startsWith('COPY '));
+  assert.ok(declared > lastCopy, 'the argument is declared after the last COPY');
+});
+
+test("the base Compose file gives the kit's version from the wrapper's own variable", () => {
+  const lines = compose.split('\n').map((line) => line.trim());
+  const given = lines.filter((line) => line.startsWith('AGENTRITE_VERSION: ${SANDBOX_AGENTRITE_VERSION:?'));
+  assert.equal(given.length, 1, 'AGENTRITE_VERSION comes from SANDBOX_AGENTRITE_VERSION');
+});
+
 // The wrapper asks the registry for the latest version of a package by its name, which the tests of the wrapper
 // hold it to. These are the packages the Dockerfile installs.
 test('the Dockerfile installs the packages the wrapper asks the registry about, each at its build argument', () => {

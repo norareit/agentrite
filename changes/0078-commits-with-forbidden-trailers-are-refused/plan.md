@@ -196,7 +196,7 @@ before it records no kit version and is built again at the first start.
   `installKitPackage` in every set-up that installs `container/sandbox.sh`, and write every label the tests write with
   `imageLabelsText`. The wrapper does not read the third field yet, so the suite passes unchanged. Commit point 3,
   below
-- [ ] Add to `tests/sandbox-wrapper.test.mjs`, before the code: an image that records another kit version is built
+- [x] Add to `tests/sandbox-wrapper.test.mjs`, before the code: an image that records another kit version is built
   again, with the line `sandbox.sh: the image was built from the kit <held> and <installed> is installed. Rebuilding.`
   on standard error before the build; an image that records none is built again with
   `sandbox.sh: the image records no kit version and <installed> is installed. Rebuilding.`; an image with the same
@@ -206,20 +206,20 @@ before it records no kit version and is built again at the first start.
   dependencies again. Add to `tests/harness-versions.test.mjs` that the last stage declares `ARG AGENTRITE_VERSION`
   with no default and sets `com.ritenoar.agentrite.kit-version` from it, and that the base Compose file gives
   `AGENTRITE_VERSION` from `${SANDBOX_AGENTRITE_VERSION:?` (R16, R24)
-- [ ] In `container/Dockerfile`, at the end of the last stage, after the `COPY` lines, declare `ARG
+- [x] In `container/Dockerfile`, at the end of the last stage, after the `COPY` lines, declare `ARG
   AGENTRITE_VERSION` and `LABEL com.ritenoar.agentrite.kit-version="${AGENTRITE_VERSION}"`, with a comment that the
   wrapper reads it, placed last so that a new version changes no layer before it. In `container/compose.yml`, add
   `AGENTRITE_VERSION: ${SANDBOX_AGENTRITE_VERSION:?run the sandbox through the project's sandbox.sh}` to the build
   arguments, with a comment (R16)
-- [ ] In `container/sandbox.sh`, after `--connect` has ended and before the build is decided, read the installed
+- [x] In `container/sandbox.sh`, after `--connect` has ended and before the build is decided, read the installed
   kit's version from `$here/../package.json` with `node`, as the wrapper computes the Dockerfile's digest, and refuse
   as the test says when it is not a version by `is_version`. Read `com.ritenoar.agentrite.kit-version` in the same
   `docker image inspect` as the harness labels, and when it differs from the installed version print the line of
   the test and build. Export `SANDBOX_AGENTRITE_VERSION` beside the two harness variables. Update the comments at the
   head of the file and above the build decision, which name what makes a build (R16)
-- [ ] In `tests/wrapper-fixture.mjs`, give the stand-in image of `dockerHost` the build argument and the label of the
+- [x] In `tests/wrapper-fixture.mjs`, give the stand-in image of `dockerHost` the build argument and the label of the
   kit's version, so that the tests with real Docker see what the kit's image records. Run the whole suite (R16, R24)
-- [ ] Commit point 4, below
+- [x] Commit point 4, below
 
 ### The documents
 
@@ -281,5 +281,5 @@ before it records no kit version and is built again at the first start.
 - [x] `feature-0078 Run the commit-msg hook in the sandbox`: the image's hook, the Dockerfile's copies, the compose
   file's `core.hooksPath`, and their tests
 - [x] `feature-0078 Give the wrapper's fake hosts the kit's version label`: the fixture alone, behavior unchanged
-- [ ] `feature-0078 Build the image again for a new kit`: the label, the build argument, the wrapper, and their tests
+- [x] `feature-0078 Build the image again for a new kit`: the label, the build argument, the wrapper, and their tests
 - [ ] `feature-0078 Describe the commit-msg hook`: `README.md` and `SANDBOX.md`
