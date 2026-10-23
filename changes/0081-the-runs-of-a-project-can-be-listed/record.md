@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-23T14:24:42Z
 ---
 
@@ -54,3 +54,7 @@ timestamp: 2026-10-23T14:24:42Z
   whose stat fails otherwise, naming the path. Added a test for a directory and for a symbolic link loop (`ELOOP`).
   `npm test` reported 1136 passing, 0 failing and 30 skipped on `a6b6233`. Not checked: a real `EACCES`. The status is
   `in-progress`
+- 2026-10-23T18:05:00Z [human] decided that the fix of S1 settles it, so that no blocking finding is open.
+- 2026-10-23T18:05:30Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on that decision, set the status
+  to `implemented`: every task of `plan.md` is ticked and the suites were run on the final code, as logged above. The
+  status is `implemented`
