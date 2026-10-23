@@ -77,3 +77,23 @@ timestamp: 2026-10-22T22:02:19Z
   refuses a commit in the container. `CONTRIBUTING.md` needs no change: the unit adds nothing at the root of the
   repository, and "The kit's own tests" already says that a host without Docker skips the tests that need it, which the
   new container test does
+- 2026-10-23T12:11:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, found by hand that a start of the
+  sandbox failed with Compose's `required variable SANDBOX_AGENTRITE_VERSION is missing a value`: the wrapper asks
+  Compose for the merged configuration before it reads the kit's version, and hands that question a marker only for the
+  two harness versions. The fake hosts answer `config --format json` without reading the base Compose file, so the suite
+  had not seen it. Made the fake refuse, as Compose does, when a variable that `container/compose.yml` requires with
+  `:?` has no value, which failed 204 tests, then handed the question the marker for the kit's version too, after which
+  none failed. This is in `tests/wrapper-fixture.mjs` and `container/sandbox.sh`, beyond the plan's tasks, which named
+  the export of the variable and not this question
+- 2026-10-23T12:11:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on `275e0a6`, the
+  last commit of code. `npm test` on the Linux host, with Docker: 1097 tests, 1097 pass, none fail and none skipped, so
+  the container test of the hook and the wrapper's tests with real Docker ran. `./sandbox.sh --in-place npm test`: 1097
+  tests, 1067 pass, none fail, and 30 skipped, those that need Docker. By hand, in a scratch git repository with the
+  working tree's kit copied under `node_modules/agentrite`: `init claude` wrote an executable `.git/hooks/commit-msg`,
+  `git commit` with a `Co-Authored-By` trailer was refused with the checker's lines and made no commit, and the same
+  commit without it was made. In the sandbox started with `./sandbox-dev.sh --in-place`, git reported `core.hooksPath`
+  as `/usr/local/lib/agentrite/hooks`, the same pair of commits was refused and then made, and the image built records
+  `com.ritenoar.agentrite.kit-version` as `8.0.0`. Not checked: a host other than Linux, a git client started without
+  `node` on its `PATH` other than the one the end-to-end test makes, and a start of the installed release's sandbox
+  after an update, which needs a release of the kit. Every task of `plan.md` is ticked. The status stays `in-progress`,
+  for the review by another model in another harness

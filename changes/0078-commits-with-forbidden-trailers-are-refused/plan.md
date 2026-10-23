@@ -266,13 +266,13 @@ before it records no kit version and is built again at the first start.
 
 ## Verification
 
-- [ ] `npm test` passes, with the container test of the hook and the wrapper's tests with real Docker run on a host
+- [x] `npm test` passes, with the container test of the hook and the wrapper's tests with real Docker run on a host
   that has Docker
-- [ ] `./sandbox.sh --in-place npm test` passes, for the tests a host other than Linux skips
-- [ ] By hand, in a scratch project with the working tree's kit installed: `git commit` with a `Co-Authored-By`
+- [x] `./sandbox.sh --in-place npm test` passes, for the tests a host other than Linux skips
+- [x] By hand, in a scratch project with the working tree's kit installed: `git commit` with a `Co-Authored-By`
   trailer is refused on the host after `init`, and in the sandbox started with `sandbox-dev.sh`
-- [ ] `npm run check-changes` passes once everything is committed
-- [ ] Every requirement from 1 to 24 has a task above, and every task names the requirements it delivers
+- [x] `npm run check-changes` passes once everything is committed
+- [x] Every requirement from 1 to 24 has a task above, and every task names the requirements it delivers
 
 ## Commit Points
 
