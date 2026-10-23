@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-23T14:24:42Z
+status: implemented
+timestamp: 2026-10-23T17:04:37Z
 ---
 
 # 0080 The followed output of a run is kept
@@ -59,3 +59,5 @@ timestamp: 2026-10-23T14:24:42Z
   merge-base whitespace checks passed. Independently checked partial-append recovery with repeated truncation failure
   and a multibyte retained line using injected filesystem operations. Not verified: Docker-backed sandbox execution,
   real-provider harness sessions, or a filesystem-induced write failure in a complete command run
+- 2026-10-23T17:04:40Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, at the human's decision, set the status to
+  `implemented`: S1 was applied and the delta review returned no new findings. The status is `implemented`
