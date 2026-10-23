@@ -151,7 +151,7 @@ change, since the command is nothing a developer does with the sandbox.
   <unit>` among its forms, after that of `units` (R1 to R11, R13)
 - [x] Add `scripts/agentrite-approve.mjs` to `files` in `package.json` and to its list in
   `tests/package-documents.test.mjs`, after `scripts/agentrite-units.mjs`
-- [ ] Add `### agentrite approve` to "Commands" of `README.md`, after `### agentrite units`: its form `npx agentrite
+- [x] Add `### agentrite approve` to "Commands" of `README.md`, after `### agentrite units`: its form `npx agentrite
   approve <unit>`, that it runs from the project root and takes no option; what it writes in `record.md`, the status
   and the entry of each kind; what it commits, the message of each kind, that the commit holds the record alone and
   leaves the rest of the working tree and the index as they were, and that it runs the hooks with the developer's
@@ -159,7 +159,7 @@ change, since the command is nothing a developer does with the sandbox.
   prints, with an example; that it pushes nothing and makes no branch; each refusal of R10 with what it names; the
   wrong arguments of R11; a table of `<unit>`; and its exit statuses `0`, `1` and `2` by [Exit
   statuses](#exit-statuses) (R12)
-- [ ] Add to "Changes" of `process.md`, after the paragraph on `npx agentrite units`, a paragraph that says that `npx
+- [x] Add to "Changes" of `process.md`, after the paragraph on `npx agentrite units`, a paragraph that says that `npx
   agentrite approve <unit>` makes the approval of a unit: it sets its `status` to `approved`, adds the human's entry to
   `## Log`, and commits `record.md` alone on the default branch; and that an agent runs it only when the human has
   approved that unit and asked for the approval to be recorded, and never on its own judgement (R14)
@@ -176,4 +176,4 @@ change, since the command is nothing a developer does with the sandbox.
 
 - [x] `feature-0082 Add the pure parts of the approval`: the first three tasks
 - [x] `feature-0082 Approve a unit by a command`: the fourth to eleventh tasks
-- [ ] `feature-0082 Document the command approve`: the tasks of `README.md` and `process.md`
+- [x] `feature-0082 Document the command approve`: the tasks of `README.md` and `process.md`

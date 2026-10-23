@@ -372,6 +372,63 @@ not take.
 It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
 says.
 
+### agentrite approve
+
+```sh
+npx agentrite approve <unit>
+```
+
+Approves a unit, from the project root. It takes no option and exactly one `<unit>`.
+
+It writes in the unit's `record.md` and nowhere else. The `status` field of the front matter becomes `approved`, and
+nothing else of the front matter changes. An entry is added to `## Log`, directly after its last entry, with the
+instant the command runs, in UTC:
+
+```text
+- 2026-10-23T11:23:18Z [human] approved the spec. The status is `approved`
+```
+
+A task has `approved the record` in place of `approved the spec`. The entry names the human whoever runs the command.
+
+It then commits `record.md` alone, on the default branch that `defaultBranch` in `agentrite.json` names, with the
+message `feature-<number> Approve the spec`, `bugfix-<number> Approve the spec` or `task-<number> Approve the record`,
+by the kind of the unit and the four digits of its directory. Whatever else the working tree or the index holds is
+left as it was, and is not in the commit. The commit is made as any `git commit` of the developer is, with their
+identity and the repository's hooks, the `commit-msg` hook of the kit among them. When the commit fails, as when a
+hook refuses it, `record.md` and the index are as they were before the command, what git printed goes to standard
+error, and the command exits 1.
+
+On success it prints one line, the unit's directory, the new status and the commit by its short hash and its message,
+and exits 0. It pushes nothing and makes no branch.
+
+```text
+changes/0082-a-unit-can-be-approved-by-a-command/ is approved, in 1b191d2 feature-0082 Approve the spec
+```
+
+It prints nothing on standard output, writes nothing, commits nothing and exits 1 when:
+
+* `agentrite.json` is missing or is not valid
+* the project root is in no git repository, or the branch checked out is not the default branch. The line names the
+  branch checked out, or that none is, and the default branch
+* `changes/` holds no directory for the unit, or more than one for its digits
+* the unit's `record.md` is missing, or has no `status` field, no `kind` field or no `## Log` heading. The line names
+  the file and what is missing
+* the unit's status is not `draft`. The line names the status and says that an approval moves a unit from `draft`
+* the unit is a feature or a bug and has no `spec.md`. The line names the file and says that the approval of a
+  feature or a bug is that of its spec
+* a file of the unit's directory differs from what the commit checked out holds: changed, staged, or not tracked. The
+  line names each file with its state, and says that the human approves what is committed, so that the files are
+  committed first
+
+With no `<unit>`, a second one, or an option, it prints what is wrong, then its usage, and exits 2.
+
+| Argument | What it is                                                                                          |
+|----------|-----------------------------------------------------------------------------------------------------|
+| `<unit>` | A directory of `changes/`, by its name, with or without `changes/` before it, or by its four digits |
+
+It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
+says.
+
 ### agentrite run
 
 ```sh

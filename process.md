@@ -56,6 +56,10 @@ findable.
 `npx agentrite units` lists the units of a project, and `npx agentrite units --open` those still open. An agent asked
 which units are open, or in what status a unit is, runs it rather than reading the records.
 
+`npx agentrite approve <unit>` makes the approval of a unit: it sets its `status` to `approved`, adds the human's
+entry to `## Log`, and commits `record.md` alone on the default branch. An agent runs it only when the human has
+approved that unit and asked for the approval to be recorded, and never on its own judgement.
+
 Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`. Start from the kit's
 `templates/changes/`.
 
