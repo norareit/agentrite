@@ -36,3 +36,7 @@ timestamp: 2026-10-23T14:24:42Z
   tests of `followedFile` cover. The first commit carries a `Co-Authored-By` trailer that the standards forbid, added
   in error from the harness's attribution reminder, and is not rewritten, as `AGENTS.md` forbids that without the
   human's ask. The status stays `in-progress`, for the review
+- 2026-10-23T16:55:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, at the human's request, removed
+  the `Co-Authored-By` trailer from the first commit by rewriting the unit's six commits after `8a46637`, so the
+  hashes named in the entry above are now `9473473` to `b0a4139`, and the tree of the last is the one the suites ran
+  on. Not rerun after the rewrite, since no file changed
