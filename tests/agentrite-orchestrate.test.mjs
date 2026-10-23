@@ -910,8 +910,8 @@ const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', imp
 const UNIT = '0029-try-the-orchestrator';
 const APPROVED = '---\nkind: feature\nstatus: approved\ntimestamp: 2026-10-21T10:00:00Z\n---\n\n# 0029\n';
 
-function project(t) {
-  const base = temporaryDirectory(t, 'agentrite-orchestrate-');
+function project(testContext) {
+  const base = temporaryDirectory(testContext, 'agentrite-orchestrate-');
   installKit(base);
   const fakes = join(base, 'fakes');
   mkdirSync(fakes);
@@ -1036,8 +1036,8 @@ const REQUEST_LINE = "AgentRite's orchestrator runs this step";
 const IMPLEMENTER_PROMPT =
   "From round 2, this definition accepts review findings you agree with. Propose declining others.";
 
-test('a run whose every item ends runs the default definition and exits 0', (t) => {
-  const { base, agentrite, answer, calls, read } = project(t);
+test('a run whose every item ends runs the default definition and exits 0', (testContext) => {
+  const { base, agentrite, answer, calls, read } = project(testContext);
   answerDefault(answer, [{ summary: 'Planned.' }, { summary: 'Built.' }, { summary: 'Reviewed.', findings: [MINOR] }]);
 
   const result = agentrite('orchestrate', '0029');
@@ -1113,8 +1113,8 @@ test('a run whose every item ends runs the default definition and exits 0', (t) 
 
 // R7, R10, R11, R14, R17 of unit 0076
 
-test('a run whose steps leave items for after the run exits 0, and gives them grouped by step', (t) => {
-  const { base, agentrite, answer, calls, read } = project(t);
+test('a run whose steps leave items for after the run exits 0, and gives them grouped by step', (testContext) => {
+  const { base, agentrite, answer, calls, read } = project(testContext);
   const built = ['Check the new action in a running IDE', 'Check it on Windows'];
   answerDefault(answer, [{}, { afterwards: built }, { findings: [MINOR], afterwards: ['Check the dialog on macOS'] }]);
 
@@ -1143,8 +1143,8 @@ test('a run whose steps leave items for after the run exits 0, and gives them gr
   ]);
 });
 
-test('a run whose repeat ends at its first round goes on with the item after the repeat', (t) => {
-  const { base, write, agentrite, answer, calls } = project(t);
+test('a run whose repeat ends at its first round goes on with the item after the repeat', (testContext) => {
+  const { base, write, agentrite, answer, calls } = project(testContext);
   write(
     'definitions/after.json',
     JSON.stringify({
@@ -1177,35 +1177,38 @@ test('a run whose repeat ends at its first round goes on with the item after the
   assert.ok(readdirSync(runDirectoryOf(base).path).includes('01-planner.outcome.json'));
 });
 
-test('a run whose repeat runs out exits 3, with the open findings and the rounds, the sessions continued', (t) => {
-  const { agentrite, answer, calls } = project(t);
-  const blocking = { findings: [BLOCKING, MINOR] };
-  answerDefault(answer, [{}, {}, blocking, {}, blocking, {}, { ...blocking, summary: 'Still blocked.' }]);
+test(
+  'a run whose repeat runs out exits 3, with the open findings and the rounds, the sessions continued',
+  (testContext) => {
+    const { agentrite, answer, calls } = project(testContext);
+    const blocking = { findings: [BLOCKING, MINOR] };
+    answerDefault(answer, [{}, {}, blocking, {}, blocking, {}, { ...blocking, summary: 'Still blocked.' }]);
 
-  const result = agentrite('orchestrate', '0029');
+    const result = agentrite('orchestrate', '0029');
 
-  assert.equal(result.status, 3, result.stderr);
-  assert.equal(stepLines(result.stdout).length, 14);
-  assert.ok(
-    result.stdout.includes(
-      '\nStep 6 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.\n' +
-        'Summary: Still blocked.\nBlocking findings still open:\n  S1: R1 is not met\n\n',
-    ),
-    result.stdout,
-  );
-  const made = calls();
-  assert.equal(made.length, 7);
-  const session = made[1].options.at(-1);
-  assert.equal(made[1].options.at(-2), '--session-id');
-  for (const later of [made[3], made[5]]) assert.deepEqual(later.options.slice(-2), ['--resume', session]);
-  assert.deepEqual(made[2].options.slice(-2), ['--format', 'json']);
-  for (const later of [made[4], made[6]]) assert.deepEqual(later.options.slice(-2), ['--session', 'ses_test']);
-  assert.ok(made[3].prompt.includes('in round 2 of a repeat of at most 3 rounds'));
-  assert.ok(made[6].prompt.includes('in round 3 of a repeat of at most 3 rounds'));
-});
+    assert.equal(result.status, 3, result.stderr);
+    assert.equal(stepLines(result.stdout).length, 14);
+    assert.ok(
+      result.stdout.includes(
+        '\nStep 6 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.\n' +
+          'Summary: Still blocked.\nBlocking findings still open:\n  S1: R1 is not met\n\n',
+      ),
+      result.stdout,
+    );
+    const made = calls();
+    assert.equal(made.length, 7);
+    const session = made[1].options.at(-1);
+    assert.equal(made[1].options.at(-2), '--session-id');
+    for (const later of [made[3], made[5]]) assert.deepEqual(later.options.slice(-2), ['--resume', session]);
+    assert.deepEqual(made[2].options.slice(-2), ['--format', 'json']);
+    for (const later of [made[4], made[6]]) assert.deepEqual(later.options.slice(-2), ['--session', 'ses_test']);
+    assert.ok(made[3].prompt.includes('in round 2 of a repeat of at most 3 rounds'));
+    assert.ok(made[6].prompt.includes('in round 3 of a repeat of at most 3 rounds'));
+  },
+);
 
-test('a Claude Code session that prints another id is resumed by the id it printed', (t) => {
-  const { agentrite, answer, calls } = project(t);
+test('a Claude Code session that prints another id is resumed by the id it printed', (testContext) => {
+  const { agentrite, answer, calls } = project(testContext);
   const blocking = responseOf({ ...DONE, findings: [BLOCKING] });
   answer(1, claudePrinted(responseOf(DONE)));
   answer(2, claudePrinted(responseOf(DONE), 'printed-by-the-second'));
@@ -1223,8 +1226,8 @@ test('a Claude Code session that prints another id is resumed by the id it print
   assert.deepEqual(made[5].options.slice(-2), ['--resume', 'printed-by-the-fourth']);
 });
 
-test('a repeat without until runs all its rounds, and the run then ends', (t) => {
-  const { write, agentrite, answer, calls } = project(t);
+test('a repeat without until runs all its rounds, and the run then ends', (testContext) => {
+  const { write, agentrite, answer, calls } = project(testContext);
   write(
     'other.json',
     JSON.stringify({
@@ -1241,7 +1244,7 @@ test('a repeat without until runs all its rounds, and the run then ends', (t) =>
   assert.ok(result.stdout.includes('\nThe run ran every item of the definition to its end.\n'));
 });
 
-test('stopWhen stops a run outside a repeat, and inside it on the review, exiting 3', (t) => {
+test('stopWhen stops a run outside a repeat, and inside it on the review, exiting 3', (testContext) => {
   for (const definition of [
     {
       steps: [
@@ -1261,7 +1264,7 @@ test('stopWhen stops a run outside a repeat, and inside it on the review, exitin
       ],
     },
   ]) {
-    const { write, agentrite, answer, calls } = project(t);
+    const { write, agentrite, answer, calls } = project(testContext);
     write('stop.json', JSON.stringify(definition));
     answer(1, opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] })));
 
@@ -1279,7 +1282,7 @@ test('stopWhen stops a run outside a repeat, and inside it on the review, exitin
   }
 });
 
-test('each stop of a step exits 3, starts nothing after the step and says what the human needs', (t) => {
+test('each stop of a step exits 3, starts nothing after the step and says what the human needs', (testContext) => {
   for (const [printed, status, lines, file] of [
     [
       claudePrinted(responseOf({ ...DONE, outcome: 'needs-human', questions: ['Which branch?'] })),
@@ -1333,7 +1336,7 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
     ],
     ['', 1, ['Step 1 stopped the run: its harness exited with 1.', 'The harness gave step 1 no final response.'], null],
   ]) {
-    const { base, agentrite, answer, calls, read } = project(t);
+    const { base, agentrite, answer, calls, read } = project(testContext);
     answer(1, claudePrinted(responseOf(DONE)));
     answer(2, printed, status);
 
@@ -1363,8 +1366,8 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
   }
 });
 
-test('--skip-permissions gives every call the flag of its harness', (t) => {
-  const { agentrite, answer, calls } = project(t);
+test('--skip-permissions gives every call the flag of its harness', (testContext) => {
+  const { agentrite, answer, calls } = project(testContext);
   answerDefault(answer, [{}, {}, {}]);
 
   const result = agentrite('orchestrate', '--skip-permissions', '0029');
@@ -1376,31 +1379,34 @@ test('--skip-permissions gives every call the flag of its harness', (t) => {
   assert.ok(reviewer.options.includes('--auto'));
 });
 
-test('a definition given with --definition, relative or absolute, is run and copied into the run directory', (t) => {
-  for (const absolute of [false, true]) {
-    const { base, write, read, agentrite, answer, calls } = project(t);
-    const definition = { steps: [{ role: 'reviewer', harness: 'opencode', model: 'theirs' }] };
-    const text = `${JSON.stringify(definition, null, 2)}\n`;
-    write('trial/one.json', text);
-    answer(1, opencodePrinted(responseOf(DONE)));
-    const given = absolute ? join(base, 'trial/one.json') : 'trial/one.json';
+test(
+  'a definition given with --definition, relative or absolute, is run and copied into the run directory',
+  (testContext) => {
+    for (const absolute of [false, true]) {
+      const { base, write, read, agentrite, answer, calls } = project(testContext);
+      const definition = { steps: [{ role: 'reviewer', harness: 'opencode', model: 'theirs' }] };
+      const text = `${JSON.stringify(definition, null, 2)}\n`;
+      write('trial/one.json', text);
+      answer(1, opencodePrinted(responseOf(DONE)));
+      const given = absolute ? join(base, 'trial/one.json') : 'trial/one.json';
 
-    const result = agentrite('orchestrate', '0029', '--definition', given);
+      const result = agentrite('orchestrate', '0029', '--definition', given);
 
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(calls().length, 1);
-    assert.equal(calls()[0].options[4], 'theirs');
-    const run = runDirectoryOf(base);
-    assert.equal(read(`${run.name}/definition.json`), text);
-    assert.equal(JSON.parse(read(`${run.name}/state.json`)).definition, given);
-    assert.match(read('agentrite.json'), /"orchestrator": "node_modules\/agentrite\/orchestrator\.json"/);
-  }
-});
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(calls().length, 1);
+      assert.equal(calls()[0].options[4], 'theirs');
+      const run = runDirectoryOf(base);
+      assert.equal(read(`${run.name}/definition.json`), text);
+      assert.equal(JSON.parse(read(`${run.name}/state.json`)).definition, given);
+      assert.match(read('agentrite.json'), /"orchestrator": "node_modules\/agentrite\/orchestrator\.json"/);
+    }
+  },
+);
 
 // R11
 
-function refused(t, prepare, args, message) {
-  const { base, agentrite, calls, write } = project(t);
+function refused(testContext, prepare, args, message) {
+  const { base, agentrite, calls, write } = project(testContext);
   prepare({ base, write });
 
   const result = agentrite('orchestrate', ...args);
@@ -1416,7 +1422,7 @@ const OPTED_OUT =
   'the project opted out of the orchestrator: orchestrator in agentrite.json is false. ' +
   'To use it, set orchestrator to the path of a definition, as node_modules/agentrite/orchestrator.json';
 
-test('the refusals of requirement 11 exit 1, start nothing and make no .orchestrator', (t) => {
+test('the refusals of requirement 11 exit 1, start nothing and make no .orchestrator', (testContext) => {
   const settings = JSON.parse(SETTINGS);
   const optOut = ({ write }) => write('agentrite.json', JSON.stringify({ ...settings, orchestrator: false }));
   const status = (record) => ({ write }) => write(`changes/${UNIT}/record.md`, record);
@@ -1468,59 +1474,65 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
       `changes/${UNIT}/record.md is missing a status field`,
     ],
   ]) {
-    refused(t, prepare, args, message);
+    refused(testContext, prepare, args, message);
   }
 });
 
 const ORCHESTRATE_USAGE_FORM =
   'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
 
-test('no argument, or one it does not take, prints the usage on standard error and exits 2, starting nothing', (t) => {
-  for (const [args, first] of [
-    [[], ORCHESTRATE_USAGE_FORM],
-    [['0029', '--model', 'x'], 'unknown option: --model'],
-  ]) {
-    const { base, agentrite, calls } = project(t);
+test(
+  'no argument, or one it does not take, prints the usage on standard error and exits 2, starting nothing',
+  (testContext) => {
+    for (const [args, first] of [
+      [[], ORCHESTRATE_USAGE_FORM],
+      [['0029', '--model', 'x'], 'unknown option: --model'],
+    ]) {
+      const { base, agentrite, calls } = project(testContext);
 
-    const result = agentrite('orchestrate', ...args);
+      const result = agentrite('orchestrate', ...args);
 
-    assert.equal(result.status, 2);
-    assert.equal(result.stdout, '');
-    assert.equal(result.stderr.split('\n')[0], first);
-    assert.ok(result.stderr.includes(`${ORCHESTRATE_USAGE_FORM}\n\n  <unit>`), result.stderr);
-    assert.equal(calls().length, 0);
-    assert.ok(!existsSync(join(base, '.orchestrator')));
-  }
-});
+      assert.equal(result.status, 2);
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr.split('\n')[0], first);
+      assert.ok(result.stderr.includes(`${ORCHESTRATE_USAGE_FORM}\n\n  <unit>`), result.stderr);
+      assert.equal(calls().length, 0);
+      assert.ok(!existsSync(join(base, '.orchestrator')));
+    }
+  },
+);
 
 // R24
 
-test('.orchestrator/.gitignore is written when missing or holding anything else, and left when it holds *', (t) => {
-  for (const [before, kept] of [
-    [undefined, false],
-    ['node_modules\n', false],
-    ['*', false],
-    ['*\n', true],
-  ]) {
-    const { base, write, agentrite, answer } = project(t);
-    const path = join(base, '.orchestrator', '.gitignore');
-    if (before !== undefined) {
-      write('.orchestrator/.gitignore', before);
-      utimesSync(path, new Date(2020, 0, 1), new Date(2020, 0, 1));
+test(
+  '.orchestrator/.gitignore is written when missing or holding anything else, and left when it holds *',
+  (testContext) => {
+    for (const [before, kept] of [
+      [undefined, false],
+      ['node_modules\n', false],
+      ['*', false],
+      ['*\n', true],
+    ]) {
+      const { base, write, agentrite, answer } = project(testContext);
+      const path = join(base, '.orchestrator', '.gitignore');
+      if (before !== undefined) {
+        write('.orchestrator/.gitignore', before);
+        utimesSync(path, new Date(2020, 0, 1), new Date(2020, 0, 1));
+      }
+      answerDefault(answer, [{}, {}, {}]);
+
+      assert.equal(agentrite('orchestrate', '0029').status, 0);
+
+      assert.equal(readFileSync(path, 'utf-8'), '*\n');
+      assert.equal(statSync(path).mtime.getFullYear() === 2020, kept, JSON.stringify(before));
     }
-    answerDefault(answer, [{}, {}, {}]);
-
-    assert.equal(agentrite('orchestrate', '0029').status, 0);
-
-    assert.equal(readFileSync(path, 'utf-8'), '*\n');
-    assert.equal(statSync(path).mtime.getFullYear() === 2020, kept, JSON.stringify(before));
-  }
-});
+  },
+);
 
 // R22
 
-test('a run writes nothing outside .orchestrator, and leaves the record as it was', (t) => {
-  const { base, agentrite, answer } = project(t);
+test('a run writes nothing outside .orchestrator, and leaves the record as it was', (testContext) => {
+  const { base, agentrite, answer } = project(testContext);
   answerDefault(answer, [{}, { findings: [BLOCKING] }, { findings: [BLOCKING] }, {}, {}]);
   const before = snapshot(base);
 
@@ -1572,21 +1584,24 @@ function zombie(pid) {
 
 const ONE_STEP = { steps: [{ role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' }] };
 
-test('a signal to the command alone while a step runs ends the step, and the command by that signal', async (t) => {
-  for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
-    const { write, started, waits, pidOf } = project(t);
-    write('one.json', JSON.stringify(ONE_STEP));
-    waits(1, 60);
-    const { child, exited } = started('orchestrate', '0029', '--definition', 'one.json');
-    const harness = await pidOf(1);
+test(
+  'a signal to the command alone while a step runs ends the step, and the command by that signal',
+  async (testContext) => {
+    for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) {
+      const { write, started, waits, pidOf } = project(testContext);
+      write('one.json', JSON.stringify(ONE_STEP));
+      waits(1, 60);
+      const { child, exited } = started('orchestrate', '0029', '--definition', 'one.json');
+      const harness = await pidOf(1);
 
-    process.kill(child.pid, signal);
+      process.kill(child.pid, signal);
 
-    const result = await exited;
-    assert.equal(result.signal, signal, `${signal}: ${result.stderr}`);
-    assert.ok(await gone(harness), `${signal}: the harness ${harness} is left`);
-  }
-});
+      const result = await exited;
+      assert.equal(result.signal, signal, `${signal}: ${result.stderr}`);
+      assert.ok(await gone(harness), `${signal}: the harness ${harness} is left`);
+    }
+  },
+);
 
 // R3 to R8 and R12 of unit 0069: a step that runs past its time limit.
 
@@ -1602,36 +1617,42 @@ function limitedTo(timeoutMinutes) {
 
 const LIMIT_LINE = 'Step 0 stopped the run: it ran past its time limit of 0.02 minutes.';
 
-test('a step past its limit is ended by SIGTERM, and the run stops by the case, its response kept', async (t) => {
-  const { base, write, read, started, answer, waits, pidOf, calls } = project(t);
-  write('limited.json', JSON.stringify(limitedTo(0.02)));
-  answer(1, claudePrinted(responseOf({ ...DONE, summary: 'Not finished.' })));
-  waits(1, 60);
+test(
+  'a step past its limit is ended by SIGTERM, and the run stops by the case, its response kept',
+  async (testContext) => {
+    const { base, write, read, started, answer, waits, pidOf, calls } = project(testContext);
+    write('limited.json', JSON.stringify(limitedTo(0.02)));
+    answer(1, claudePrinted(responseOf({ ...DONE, summary: 'Not finished.' })));
+    waits(1, 60);
 
-  const { ended } = started('orchestrate', '0029', '--definition', 'limited.json');
-  const harness = await pidOf(1);
-  const result = await ended;
+    const { ended } = started('orchestrate', '0029', '--definition', 'limited.json');
+    const harness = await pidOf(1);
+    const result = await ended;
 
-  assert.equal(result.status, 3, result.stderr);
-  assert.equal(calls().length, 1);
-  const lines = stepLines(result.stdout);
-  assert.equal(lines.length, 2);
-  assert.match(lines[1], /^step 0, implementer, claude, claude-sonnet-5-5: ran out of time after 0m 0[12]s$/);
-  const run = runDirectoryOf(base);
-  const path = `${run.name}/00-implementer.response.md`;
-  assert.ok(result.stdout.includes(`\n${LIMIT_LINE}\nThe final response of step 0 is at ${path}.\n\n`), result.stdout);
-  assert.ok(!result.stdout.includes('Not finished.'), result.stdout);
-  assert.ok(read(path).includes('"summary": "Not finished."'));
-  assert.deepEqual(readdirSync(run.path).sort(), ['00-implementer.response.md', 'definition.json', 'state.json']);
-  const state = JSON.parse(read(`${run.name}/state.json`));
-  assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[9] }]);
-  assert.match(state.sessions[0].session, UUID);
-  assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
-  assert.ok(await gone(harness), `the harness ${harness} is left`);
-});
+    assert.equal(result.status, 3, result.stderr);
+    assert.equal(calls().length, 1);
+    const lines = stepLines(result.stdout);
+    assert.equal(lines.length, 2);
+    assert.match(lines[1], /^step 0, implementer, claude, claude-sonnet-5-5: ran out of time after 0m 0[12]s$/);
+    const run = runDirectoryOf(base);
+    const path = `${run.name}/00-implementer.response.md`;
+    assert.ok(
+      result.stdout.includes(`\n${LIMIT_LINE}\nThe final response of step 0 is at ${path}.\n\n`),
+      result.stdout,
+    );
+    assert.ok(!result.stdout.includes('Not finished.'), result.stdout);
+    assert.ok(read(path).includes('"summary": "Not finished."'));
+    assert.deepEqual(readdirSync(run.path).sort(), ['00-implementer.response.md', 'definition.json', 'state.json']);
+    const state = JSON.parse(read(`${run.name}/state.json`));
+    assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[9] }]);
+    assert.match(state.sessions[0].session, UUID);
+    assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
+    assert.ok(await gone(harness), `the harness ${harness} is left`);
+  },
+);
 
-test('a step that ignores SIGTERM past its limit is ended by SIGKILL 10 seconds later', async (t) => {
-  const { write, started, answer, waits, pidOf, calls } = project(t);
+test('a step that ignores SIGTERM past its limit is ended by SIGKILL 10 seconds later', async (testContext) => {
+  const { write, started, answer, waits, pidOf, calls } = project(testContext);
   write('limited.json', JSON.stringify(limitedTo(0.02)));
   answer(1, claudePrinted(responseOf(DONE)));
   waits(1, 60, true);
@@ -1652,8 +1673,8 @@ test('a step that ignores SIGTERM past its limit is ended by SIGKILL 10 seconds 
   assert.ok(await gone(harness), `the harness ${harness} is left`);
 });
 
-test('a step with a limit that ends in time ends as it would without the limit', (t) => {
-  const { write, agentrite, answer, calls } = project(t);
+test('a step with a limit that ends in time ends as it would without the limit', (testContext) => {
+  const { write, agentrite, answer, calls } = project(testContext);
   write('limited.json', JSON.stringify(limitedTo(1)));
   answer(1, claudePrinted(responseOf(DONE)));
   answer(2, opencodePrinted(responseOf(DONE)));
@@ -1667,19 +1688,22 @@ test('a step with a limit that ends in time ends as it would without the limit',
 });
 
 // The review's finding S1: the limit ends with the step's agentrite run, and not with its output.
-test('a step that ends in time and leaves a process holding its output past the limit keeps its outcome', (t) => {
-  const { write, agentrite, answer, lingers, calls } = project(t);
-  write('limited.json', JSON.stringify(limitedTo(0.02)));
-  answer(1, claudePrinted(responseOf(DONE)));
-  lingers(1, 3);
-  answer(2, opencodePrinted(responseOf(DONE)));
+test(
+  'a step that ends in time and leaves a process holding its output past the limit keeps its outcome',
+  (testContext) => {
+    const { write, agentrite, answer, lingers, calls } = project(testContext);
+    write('limited.json', JSON.stringify(limitedTo(0.02)));
+    answer(1, claudePrinted(responseOf(DONE)));
+    lingers(1, 3);
+    answer(2, opencodePrinted(responseOf(DONE)));
 
-  const result = agentrite('orchestrate', '0029', '--definition', 'limited.json');
+    const result = agentrite('orchestrate', '0029', '--definition', 'limited.json');
 
-  assert.equal(result.status, 0, result.stdout);
-  assert.equal(calls().length, 2);
-  assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
-});
+    assert.equal(result.status, 0, result.stdout);
+    assert.equal(calls().length, 2);
+    assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
+  },
+);
 
 // Unit 0075, R3, R4, R9 to R11, R15: a run followed with --follow, and one without it, of a step in each harness.
 
@@ -1759,8 +1783,8 @@ function between(stdout, head) {
 }
 
 // A run of `FOLLOWED`, each step answered as its harness prints it and with a line on standard error.
-async function followedRun(t, ...options) {
-  const { base, write, read, started, answer, complains } = project(t);
+async function followedRun(testContext, ...options) {
+  const { base, write, read, started, answer, complains } = project(testContext);
   write('followed.json', JSON.stringify(FOLLOWED));
   answer(1, claudeFollowed(IMPLEMENTED));
   complains(1, 'claude complains\n');
@@ -1772,47 +1796,50 @@ async function followedRun(t, ...options) {
   return { result, run, files, contents: files.map((name) => read(`${run.name}/${name}`)) };
 }
 
-test('a run with --follow prints the messages and calls of each step between its lines, the report last', async (t) => {
-  const { result } = await followedRun(t, '--follow');
+test(
+  'a run with --follow prints the messages and calls of each step between its lines, the report last',
+  async (testContext) => {
+    const { result } = await followedRun(testContext, '--follow');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    between(result.stdout, IMPLEMENTER_HEAD),
-    [
-      '',
-      '14:03:27 I will run the tests.',
-      '',
-      dim('14:03:28 → Bash Run the tests'),
-      dim('14:03:29 → TodoWrite'),
-      '',
-      `14:03:30 ${IMPLEMENTED.replace(/\n+$/, '')}`,
-      '',
-      '',
-    ].join('\n'),
-  );
-  assert.equal(
-    between(result.stdout, REVIEWER_HEAD),
-    [
-      '',
-      '15:00:03 I will read the diff.',
-      '',
-      dim('15:00:04 → bash Show the diff'),
-      dim('15:00:05 → todowrite'),
-      '',
-      `15:00:08 ${REVIEWED.replace(/\n+$/, '')}`,
-      '',
-      '',
-    ].join('\n'),
-  );
-  for (const hidden of HIDDEN) assert.ok(!result.stdout.includes(hidden), result.stdout);
-  assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
-  const report = endReportOf(result.stdout);
-  assert.ok(report.startsWith('0  implementer'), result.stdout);
-  assert.ok(report.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
-  assert.ok(!report.includes('→') && !report.includes('I will'), result.stdout);
-  assert.ok(result.stderr.includes('claude complains\n'), result.stderr);
-  assert.ok(result.stderr.includes('opencode complains\n'), result.stderr);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      between(result.stdout, IMPLEMENTER_HEAD),
+      [
+        '',
+        '14:03:27 I will run the tests.',
+        '',
+        dim('14:03:28 → Bash Run the tests'),
+        dim('14:03:29 → TodoWrite'),
+        '',
+        `14:03:30 ${IMPLEMENTED.replace(/\n+$/, '')}`,
+        '',
+        '',
+      ].join('\n'),
+    );
+    assert.equal(
+      between(result.stdout, REVIEWER_HEAD),
+      [
+        '',
+        '15:00:03 I will read the diff.',
+        '',
+        dim('15:00:04 → bash Show the diff'),
+        dim('15:00:05 → todowrite'),
+        '',
+        `15:00:08 ${REVIEWED.replace(/\n+$/, '')}`,
+        '',
+        '',
+      ].join('\n'),
+    );
+    for (const hidden of HIDDEN) assert.ok(!result.stdout.includes(hidden), result.stdout);
+    assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
+    const report = endReportOf(result.stdout);
+    assert.ok(report.startsWith('0  implementer'), result.stdout);
+    assert.ok(report.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
+    assert.ok(!report.includes('→') && !report.includes('I will'), result.stdout);
+    assert.ok(result.stderr.includes('claude complains\n'), result.stderr);
+    assert.ok(result.stderr.includes('opencode complains\n'), result.stderr);
+  },
+);
 
 // What the command printed after the line after the last step and the blank line below it: the end report.
 function endReportOf(stdout) {
@@ -1820,30 +1847,33 @@ function endReportOf(stdout) {
   return stdout.slice(stdout.lastIndexOf(`${last}\n`) + `${last}\n\n`.length);
 }
 
-test('a run without --follow prints the lines of its steps and the end report, and nothing of the steps', async (t) => {
-  const { result } = await followedRun(t);
+test(
+  'a run without --follow prints the lines of its steps and the end report, and nothing of the steps',
+  async (testContext) => {
+    const { result } = await followedRun(testContext);
 
-  assert.equal(result.status, 0, result.stderr);
-  const lines = result.stdout.split('\n');
-  const report = endReportOf(result.stdout).split('\n');
-  assert.deepEqual(lines.slice(0, 4).map((line) => line.replace(/ after .*$/, '')), [
-    `${IMPLEMENTER_HEAD}: started`,
-    `${IMPLEMENTER_HEAD}: done`,
-    `${REVIEWER_HEAD}: started`,
-    `${REVIEWER_HEAD}: done`,
-  ]);
-  assert.deepEqual(lines.slice(4), ['', ...report]);
-  assert.ok(report[0].startsWith('0  implementer'), result.stdout);
-  for (const shown of ['I will run the tests.', 'I will read the diff.', '→', ...HIDDEN]) {
-    assert.ok(!result.stdout.includes(shown), result.stdout);
-  }
-  assert.ok(result.stderr.includes('claude complains\n'), result.stderr);
-  assert.ok(result.stderr.includes('opencode complains\n'), result.stderr);
-});
+    assert.equal(result.status, 0, result.stderr);
+    const lines = result.stdout.split('\n');
+    const report = endReportOf(result.stdout).split('\n');
+    assert.deepEqual(lines.slice(0, 4).map((line) => line.replace(/ after .*$/, '')), [
+      `${IMPLEMENTER_HEAD}: started`,
+      `${IMPLEMENTER_HEAD}: done`,
+      `${REVIEWER_HEAD}: started`,
+      `${REVIEWER_HEAD}: done`,
+    ]);
+    assert.deepEqual(lines.slice(4), ['', ...report]);
+    assert.ok(report[0].startsWith('0  implementer'), result.stdout);
+    for (const shown of ['I will run the tests.', 'I will read the diff.', '→', ...HIDDEN]) {
+      assert.ok(!result.stdout.includes(shown), result.stdout);
+    }
+    assert.ok(result.stderr.includes('claude complains\n'), result.stderr);
+    assert.ok(result.stderr.includes('opencode complains\n'), result.stderr);
+  },
+);
 
-test('a run with --follow ends, writes its directory and exits as the same run without it', async (t) => {
-  const followed = await followedRun(t, '--follow');
-  const plain = await followedRun(t);
+test('a run with --follow ends, writes its directory and exits as the same run without it', async (testContext) => {
+  const followed = await followedRun(testContext, '--follow');
+  const plain = await followedRun(testContext);
 
   assert.equal(followed.result.status, plain.result.status);
   const steps = (stdout) => stepLines(stdout).map((line) => line.replace(/ after .*$/, ''));
@@ -1866,8 +1896,8 @@ test('a run with --follow ends, writes its directory and exits as the same run w
   ]);
 });
 
-test('with --follow a message of a step is printed while the step still runs', async (t) => {
-  const { write, started, answer, waits, pidOf } = project(t);
+test('with --follow a message of a step is printed while the step still runs', async (testContext) => {
+  const { write, started, answer, waits, pidOf } = project(testContext);
   write('one.json', JSON.stringify(ONE_STEP));
   answer(1, claudeFollowed(IMPLEMENTED).split('\n').slice(0, 2).join('\n'));
   waits(1, 60);

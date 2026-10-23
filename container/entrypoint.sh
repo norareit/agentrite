@@ -169,7 +169,7 @@ iptables -A OUTPUT -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 # and no-new-privileges keeps setuid binaries from making them so.
 iptables -A OUTPUT -p udp --dport 53 -m owner --uid-owner 0 -j ACCEPT
 iptables -A OUTPUT -p tcp --dport 53 -m owner --uid-owner 0 -j ACCEPT
-while read -r _ ns _; do
+while read -r keyword ns rest; do
   [ -n "${ns:-}" ] || continue
   iptables -A OUTPUT -p udp -d "$ns" --dport 53 -j ACCEPT
   iptables -A OUTPUT -p tcp -d "$ns" --dport 53 -j ACCEPT
@@ -242,7 +242,7 @@ setsid setpriv --reuid="$PROXY_USER" --regid="$PROXY_USER" --clear-groups -- \
 proxy_pid=$!
 # Checked through /proc rather than kill -0: what is asked is whether the process exists,
 # and that must not depend on which capabilities root holds towards another uid.
-for _ in $(seq 50); do
+for attempt in $(seq 50); do
   grep -q '\[egress-proxy\] listening' "$PROXY_LOG" && break
   [ -d "/proc/$proxy_pid" ] || die "the egress proxy exited at start-up: $(cat "$PROXY_LOG")"
   sleep 0.1

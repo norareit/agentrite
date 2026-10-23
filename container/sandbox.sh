@@ -449,7 +449,7 @@ is_version() {
 version_printed() {
   local word
   # read takes the first line only.
-  read -r word _ <<< "$1"
+  read -r word rest <<< "$1"
   is_version "$word" || return 1
   echo "$word"
 }

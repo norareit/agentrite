@@ -66,12 +66,12 @@ const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root), te
 // wrapper with that home alone, and `runWith` with the variables of `env` besides and in the working directory
 // `cwd`.
 function setUp(
-  t,
+  testContext,
   kitPath = 'node_modules/agentrite/container',
   buildArgs = { PLAYWRIGHT_VERSION: '1.59.1' },
   imageExists = true,
 ) {
-  const base = temporaryDirectory(t, 'sandbox-wrapper-');
+  const base = temporaryDirectory(testContext, 'sandbox-wrapper-');
   const root = join(base, 'project');
   mkdirSync(join(root, 'sandbox'), { recursive: true });
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
@@ -106,8 +106,8 @@ function setUp(
   return { base, root, container, home, run, runWith, ...host };
 }
 
-test('the wrapper refuses to run without a project root, naming the shim', (t) => {
-  const { run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper refuses to run without a project root, naming the shim', (testContext) => {
+  const { run, dockerCalls } = setUp(testContext, kitPath);
   const result = run();
   assert.equal(result.status, 1);
   assert.match(result.stderr, /first argument must be the project root/);
@@ -115,16 +115,16 @@ test('the wrapper refuses to run without a project root, naming the shim', (t) =
   assert.deepEqual(dockerCalls(), []);
 });
 
-test('the wrapper refuses a project root that is not a directory', (t) => {
-  const { base, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper refuses a project root that is not a directory', (testContext) => {
+  const { base, run, dockerCalls } = setUp(testContext, kitPath);
   const result = run(join(base, 'no-such-directory'), '--rebuild');
   assert.equal(result.status, 1);
   assert.match(result.stderr, /first argument must be the project root/);
   assert.deepEqual(dockerCalls(), []);
 });
 
-test('the wrapper refuses a kit outside the project root, which the build cannot reach', (t) => {
-  const { root, run, dockerCalls } = setUp(t, 'elsewhere/container');
+test('the wrapper refuses a kit outside the project root, which the build cannot reach', (testContext) => {
+  const { root, run, dockerCalls } = setUp(testContext, 'elsewhere/container');
   const result = run(root);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /is not inside the project root/);
@@ -132,8 +132,8 @@ test('the wrapper refuses a kit outside the project root, which the build cannot
   assert.deepEqual(dockerCalls(), []);
 });
 
-test('the wrapper runs Compose from the project root with the kit located relative to it', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper runs Compose from the project root with the kit located relative to it', (testContext) => {
+  const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
   const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(
@@ -146,8 +146,8 @@ for (const [what, buildArgs] of [
   ['no build arguments of the project', {}],
   ['an empty PLAYWRIGHT_VERSION', { PLAYWRIGHT_VERSION: '' }],
 ]) {
-  test(`the wrapper goes on to build and run with ${what}`, (t) => {
-    const { root, container, run, dockerCalls } = setUp(t, kitPath, buildArgs);
+  test(`the wrapper goes on to build and run with ${what}`, (testContext) => {
+    const { root, container, run, dockerCalls } = setUp(testContext, kitPath, buildArgs);
     const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(
@@ -156,8 +156,8 @@ for (const [what, buildArgs] of [
     );
   });
 
-  test(`the wrapper builds the missing image without --rebuild with ${what}`, (t) => {
-    const { root, container, run, dockerCalls } = setUp(t, kitPath, buildArgs, false);
+  test(`the wrapper builds the missing image without --rebuild with ${what}`, (testContext) => {
+    const { root, container, run, dockerCalls } = setUp(testContext, kitPath, buildArgs, false);
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
@@ -168,8 +168,8 @@ for (const [what, buildArgs] of [
   });
 }
 
-test("the wrapper stops with Compose's own error when Compose refuses the configuration", (t) => {
-  const { root, run, dockerCalls } = setUp(t, kitPath, null);
+test("the wrapper stops with Compose's own error when Compose refuses the configuration", (testContext) => {
+  const { root, run, dockerCalls } = setUp(testContext, kitPath, null);
   const result = run(root, '--in-place', '--rebuild');
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /validating compose\.project\.yml: invalid/);
@@ -183,8 +183,8 @@ test("the wrapper stops with Compose's own error when Compose refuses the config
 const oldServiceFile = 'services:\n  agent:\n    mem_limit: 8g\n';
 
 for (const options of [['--in-place'], ['--rebuild', '--in-place']]) {
-  test(`the wrapper refuses a project whose service is still agent, given ${options.join(' ')}`, (t) => {
-    const { root, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+  test(`the wrapper refuses a project whose service is still agent, given ${options.join(' ')}`, (testContext) => {
+    const { root, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {}, false);
     writeFileSync(join(root, 'sandbox', 'compose.project.yml'), oldServiceFile);
     const result = run(root, ...options, 'true');
     assert.equal(result.status, 1);
@@ -223,8 +223,8 @@ const notFoundLines = (harness, npmPackage, argument) =>
 const askedOf = (npmPackage) => `npm view ${npmPackage} version --fetch-retries=0`;
 const askedOfBoth = [askedOf('@anthropic-ai/claude-code'), askedOf('opencode-ai')];
 
-test("the wrapper hands Compose the host's versions, in every call, and asks npm nothing", (t) => {
-  const { root, container, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+test("the wrapper hands Compose the host's versions, in every call, and asks npm nothing", (testContext) => {
+  const { root, container, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
   const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -232,48 +232,57 @@ test("the wrapper hands Compose the host's versions, in every call, and asks npm
   assert.deepEqual(npmCalls(), []);
 });
 
-test('the wrapper keeps the versions the image records with neither harness on the PATH, and says nothing', (t) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, imageLabelsText(builtBefore));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), runOnly(root, container, builtBefore));
-  assert.deepEqual(npmCalls(), []);
-});
+test(
+  'the wrapper keeps the versions the image records with neither harness on the PATH, and says nothing',
+  (testContext) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    rmSync(join(bin, 'claude'));
+    rmSync(join(bin, 'opencode'));
+    writeFileSync(imageLabels, imageLabelsText(builtBefore));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), runOnly(root, container, builtBefore));
+    assert.deepEqual(npmCalls(), []);
+  },
+);
 
-test('the wrapper keeps a pre-release version the image records of a harness that is not on the PATH', (t) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-  rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' }));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  const versions = { claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' };
-  assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
-  assert.deepEqual(npmCalls(), []);
-});
+test(
+  'the wrapper keeps a pre-release version the image records of a harness that is not on the PATH',
+  (testContext) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    rmSync(join(bin, 'opencode'));
+    writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' }));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const versions = { claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' };
+    assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
+    assert.deepEqual(npmCalls(), []);
+  },
+);
 
 for (const [present, absent, versions] of [
   ['claude', 'opencode', { claude: hostVersions.claude, opencode: builtBefore.opencode }],
   ['opencode', 'claude', { claude: builtBefore.claude, opencode: hostVersions.opencode }],
 ]) {
-  test(`the wrapper takes the host's version of ${present} and the image's of ${absent}, which is absent`, (t) => {
-    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-    rmSync(join(bin, absent));
-    writeFileSync(imageLabels, imageLabelsText(versions));
-    const result = run(root, '--in-place', 'echo', 'hi');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, '');
-    assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
-    assert.deepEqual(npmCalls(), []);
-  });
+  test(
+    `the wrapper takes the host's version of ${present} and the image's of ${absent}, which is absent`,
+    (testContext) => {
+      const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+      rmSync(join(bin, absent));
+      writeFileSync(imageLabels, imageLabelsText(versions));
+      const result = run(root, '--in-place', 'echo', 'hi');
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stderr, '');
+      assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
+      assert.deepEqual(npmCalls(), []);
+    },
+  );
 }
 
-test('the wrapper passes a pre-release version of the host on', (t) => {
-  const { root, container, bin, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper passes a pre-release version of the host on', (testContext) => {
+  const { root, container, bin, run, dockerCalls } = setUp(testContext, kitPath);
   writeCommand(bin, 'opencode', 'echo 0.0.0-dev-202610030456');
   const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -291,8 +300,8 @@ for (const [what, script] of [
   ['prints a version on its second line only', "printf 'warning\\n9.9.9\\n'"],
   ['prints a version on standard error only', 'echo 9.9.9 >&2'],
 ]) {
-  test(`the wrapper counts a harness on the host that ${what} as not installed, and says so`, (t) => {
-    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+  test(`the wrapper counts a harness on the host that ${what} as not installed, and says so`, (testContext) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
     writeCommand(bin, 'claude', script);
     writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
     const result = run(root, '--in-place', 'echo', 'hi');
@@ -304,8 +313,8 @@ for (const [what, script] of [
   });
 }
 
-test("the wrapper names OpenCode's command when that is the one that prints no version", (t) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+test("the wrapper names OpenCode's command when that is the one that prints no version", (testContext) => {
+  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
   writeCommand(bin, 'opencode', 'exit 3');
   writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: builtBefore.opencode }));
   const result = run(root, '--in-place', 'echo', 'hi');
@@ -316,22 +325,25 @@ test("the wrapper names OpenCode's command when that is the one that prints no v
   assert.deepEqual(npmCalls(), []);
 });
 
-test('the wrapper builds with the latest published version of a harness on the host that prints no version', (t) => {
-  const { root, container, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-  writeCommand(bin, 'claude', 'exit 1');
-  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    result.stderr,
-    noVersionLine('claude', 'Claude Code') + latestLine('Claude Code', latestVersions.claude),
-  );
-  const versions = { claude: latestVersions.claude, opencode: hostVersions.opencode };
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
-  assert.deepEqual(npmCalls(), [askedOf('@anthropic-ai/claude-code')]);
-});
+test(
+  'the wrapper builds with the latest published version of a harness on the host that prints no version',
+  (testContext) => {
+    const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    writeCommand(bin, 'claude', 'exit 1');
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      result.stderr,
+      noVersionLine('claude', 'Claude Code') + latestLine('Claude Code', latestVersions.claude),
+    );
+    const versions = { claude: latestVersions.claude, opencode: hostVersions.opencode };
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
+    assert.deepEqual(npmCalls(), [askedOf('@anthropic-ai/claude-code')]);
+  },
+);
 
-test("the wrapper gives the host's command no input", (t) => {
-  const { root, container, home, bin, dockerCalls } = setUp(t, kitPath);
+test("the wrapper gives the host's command no input", (testContext) => {
+  const { root, container, home, bin, dockerCalls } = setUp(testContext, kitPath);
   writeCommand(bin, 'claude', `cat; echo ${hostVersions.claude}`);
   const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
     encoding: 'utf-8',
@@ -343,8 +355,8 @@ test("the wrapper gives the host's command no input", (t) => {
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
 });
 
-test("the wrapper does not use a version the caller's environment holds", (t) => {
-  const { root, container, home, bin, dockerCalls } = setUp(t, kitPath);
+test("the wrapper does not use a version the caller's environment holds", (testContext) => {
+  const { root, container, home, bin, dockerCalls } = setUp(testContext, kitPath);
   const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
     encoding: 'utf-8',
     env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
@@ -354,22 +366,25 @@ test("the wrapper does not use a version the caller's environment holds", (t) =>
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
 });
 
-test("the wrapper does not use a version the caller's environment holds for a harness with no other source", (t) => {
-  const { root, container, home, bin, imageLabels, dockerCalls } = setUp(t, kitPath);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, imageLabelsText(builtBefore));
-  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
-    encoding: 'utf-8',
-    env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), runOnly(root, container, builtBefore));
-});
+test(
+  "the wrapper does not use a version the caller's environment holds for a harness with no other source",
+  (testContext) => {
+    const { root, container, home, bin, imageLabels, dockerCalls } = setUp(testContext, kitPath);
+    rmSync(join(bin, 'claude'));
+    rmSync(join(bin, 'opencode'));
+    writeFileSync(imageLabels, imageLabelsText(builtBefore));
+    const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
+      encoding: 'utf-8',
+      env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), runOnly(root, container, builtBefore));
+  },
+);
 
-test('the wrapper builds nothing when the image holds the wanted versions', (t) => {
-  const { root, container, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+test('the wrapper builds nothing when the image holds the wanted versions', (testContext) => {
+  const { root, container, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -377,8 +392,8 @@ test('the wrapper builds nothing when the image holds the wanted versions', (t) 
   assert.deepEqual(npmCalls(), []);
 });
 
-test('the wrapper says which harness differs from the image, and builds before it runs', (t) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper says which harness differs from the image, and builds before it runs', (testContext) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -386,8 +401,8 @@ test('the wrapper says which harness differs from the image, and builds before i
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
-test('the wrapper says so for each harness when both differ from the image', (t) => {
-  const { root, container, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+test('the wrapper says so for each harness when both differ from the image', (testContext) => {
+  const { root, container, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -400,8 +415,8 @@ test('the wrapper says so for each harness when both differ from the image', (t)
   assert.deepEqual(npmCalls(), []);
 });
 
-test('the wrapper rebuilds an image that records no versions, which one built before the labels is', (t) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper rebuilds an image that records no versions, which one built before the labels is', (testContext) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText({ claude: '', opencode: '' }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -413,26 +428,36 @@ test('the wrapper rebuilds an image that records no versions, which one built be
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
-test("the wrapper builds nothing when the image holds the project's version and the host's of the other", (t) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath, { OPENCODE_VERSION: '1.18.20' });
-  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '1.18.20' }));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), runOnly(root, container, { claude: hostVersions.claude, opencode: '1.18.20' }));
-});
+test(
+  "the wrapper builds nothing when the image holds the project's version and the host's of the other",
+  (testContext) => {
+    const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath, {
+      OPENCODE_VERSION: '1.18.20',
+    });
+    writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '1.18.20' }));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), runOnly(root, container, { claude: hostVersions.claude, opencode: '1.18.20' }));
+  },
+);
 
-test("the wrapper rebuilds for the project's version, whatever the host has, and names the project's file", (t) => {
-  const { root, container, run, dockerCalls, npmCalls } = setUp(t, kitPath, { OPENCODE_VERSION: '1.18.20' });
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    result.stderr,
-    holdsLine('OpenCode', hostVersions.opencode, '1.18.20', "the project's compose file"),
-  );
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: hostVersions.claude, opencode: '1.18.20' }));
-  assert.deepEqual(npmCalls(), []);
-});
+test(
+  "the wrapper rebuilds for the project's version, whatever the host has, and names the project's file",
+  (testContext) => {
+    const { root, container, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {
+      OPENCODE_VERSION: '1.18.20',
+    });
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      result.stderr,
+      holdsLine('OpenCode', hostVersions.opencode, '1.18.20', "the project's compose file"),
+    );
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: hostVersions.claude, opencode: '1.18.20' }));
+    assert.deepEqual(npmCalls(), []);
+  },
+);
 
 // A project may hold the very version the host has. The value is the same and the source is not: the project's
 // file stands first.
@@ -450,60 +475,72 @@ for (const [harness, argument, held, labels] of [
     imageLabelsText({ claude: hostVersions.claude, opencode: builtBefore.opencode }),
   ],
 ]) {
-  test(`the wrapper names the project's file for a version of ${harness} it gives that equals the host's`, (t) => {
-    const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath, { [argument]: held });
-    writeFileSync(imageLabels, labels);
-    const result = run(root, '--in-place', 'echo', 'hi');
-    assert.equal(result.status, 0, result.stderr);
-    const inImage = harness === 'Claude Code' ? builtBefore.claude : builtBefore.opencode;
-    assert.equal(result.stderr, holdsLine(harness, inImage, held, "the project's compose file"));
-    assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
-  });
+  test(
+    `the wrapper names the project's file for a version of ${harness} it gives that equals the host's`,
+    (testContext) => {
+      const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath, { [argument]: held });
+      writeFileSync(imageLabels, labels);
+      const result = run(root, '--in-place', 'echo', 'hi');
+      assert.equal(result.status, 0, result.stderr);
+      const inImage = harness === 'Claude Code' ? builtBefore.claude : builtBefore.opencode;
+      assert.equal(result.stderr, holdsLine(harness, inImage, held, "the project's compose file"));
+      assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+    },
+  );
 }
 
-test("the wrapper asks npm nothing on --rebuild when the project gives both versions and the host has neither", (t) => {
-  const buildArgs = { CLAUDE_CODE_VERSION: '2.1.200', OPENCODE_VERSION: '1.18.20' };
-  const { root, container, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, buildArgs);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
-  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: '2.1.200', opencode: '1.18.20' }));
-  assert.deepEqual(npmCalls(), []);
-});
+test(
+  "the wrapper asks npm nothing on --rebuild when the project gives both versions and the host has neither",
+  (testContext) => {
+    const buildArgs = { CLAUDE_CODE_VERSION: '2.1.200', OPENCODE_VERSION: '1.18.20' };
+    const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, buildArgs);
+    rmSync(join(bin, 'claude'));
+    rmSync(join(bin, 'opencode'));
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: '2.1.200', opencode: '1.18.20' }));
+    assert.deepEqual(npmCalls(), []);
+  },
+);
 
-test('the wrapper builds a missing image with the latest published versions when the host has neither harness', (t) => {
-  const { root, container, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, undefined, false);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    result.stderr,
-    latestLine('Claude Code', latestVersions.claude) + latestLine('OpenCode', latestVersions.opencode),
-  );
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, latestVersions));
-  assert.deepEqual(npmCalls(), askedOfBoth);
-});
+test(
+  'the wrapper builds a missing image with the latest published versions when the host has neither harness',
+  (testContext) => {
+    const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, undefined, false);
+    rmSync(join(bin, 'claude'));
+    rmSync(join(bin, 'opencode'));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      result.stderr,
+      latestLine('Claude Code', latestVersions.claude) + latestLine('OpenCode', latestVersions.opencode),
+    );
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, latestVersions));
+    assert.deepEqual(npmCalls(), askedOfBoth);
+  },
+);
 
-test('the wrapper builds with the latest on --rebuild with neither harness, whatever the image records', (t) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, imageLabelsText(builtBefore));
-  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    result.stderr,
-    latestLine('Claude Code', latestVersions.claude) + latestLine('OpenCode', latestVersions.opencode),
-  );
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, latestVersions));
-  assert.deepEqual(npmCalls(), askedOfBoth);
-});
+test(
+  'the wrapper builds with the latest on --rebuild with neither harness, whatever the image records',
+  (testContext) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    rmSync(join(bin, 'claude'));
+    rmSync(join(bin, 'opencode'));
+    writeFileSync(imageLabels, imageLabelsText(builtBefore));
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      result.stderr,
+      latestLine('Claude Code', latestVersions.claude) + latestLine('OpenCode', latestVersions.opencode),
+    );
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, latestVersions));
+    assert.deepEqual(npmCalls(), askedOfBoth);
+  },
+);
 
-test('the wrapper takes the latest of an absent harness when the other differs from the image', (t) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+test('the wrapper takes the latest of an absent harness when the other differs from the image', (testContext) => {
+  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
   rmSync(join(bin, 'opencode'));
   writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
@@ -523,8 +560,8 @@ for (const [what, label] of [
   ['a tag', 'latest'],
   ['two numbers', '1.2'],
 ]) {
-  test(`the wrapper builds when the image records ${what} of a harness that has no other source`, (t) => {
-    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
+  test(`the wrapper builds when the image records ${what} of a harness that has no other source`, (testContext) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
     rmSync(join(bin, 'claude'));
     writeFileSync(imageLabels, imageLabelsText({ claude: label, opencode: hostVersions.opencode }));
     const result = run(root, '--in-place', 'echo', 'hi');
@@ -546,8 +583,8 @@ for (const [what, arrange] of [
   ['npm prints a version with a command after it', ({ npmPrints }) => writeFileSync(npmPrints, '1.2.3;id\n')],
   ['npm is not on the PATH', ({ bin }) => rmSync(join(bin, 'npm'))],
 ]) {
-  test(`the wrapper stops, and builds and runs nothing, when the latest is needed and ${what}`, (t) => {
-    const host = setUp(t, kitPath);
+  test(`the wrapper stops, and builds and runs nothing, when the latest is needed and ${what}`, (testContext) => {
+    const host = setUp(testContext, kitPath);
     rmSync(join(host.bin, 'claude'));
     rmSync(join(host.bin, 'opencode'));
     arrange(host);
@@ -558,8 +595,8 @@ for (const [what, arrange] of [
   });
 }
 
-test('the wrapper says nothing of the latest of one harness when that of the other cannot be found', (t) => {
-  const { root, bin, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper says nothing of the latest of one harness when that of the other cannot be found', (testContext) => {
+  const { root, bin, run, dockerCalls } = setUp(testContext, kitPath);
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
   writeCommand(
@@ -574,8 +611,8 @@ echo '${latestVersions.claude}'`,
   assert.deepEqual(dockerCalls(), []);
 });
 
-test('the wrapper asks npm nothing, and so needs none, when no build is due', (t) => {
-  const { root, container, bin, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper asks npm nothing, and so needs none, when no build is due', (testContext) => {
+  const { root, container, bin, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
   rmSync(join(bin, 'npm'));
@@ -586,16 +623,19 @@ test('the wrapper asks npm nothing, and so needs none, when no build is due', (t
   assert.deepEqual(dockerCalls(), runOnly(root, container, builtBefore));
 });
 
-test('the wrapper builds on --rebuild although the image holds the wanted versions, and says nothing', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, kitPath);
-  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
-});
+test(
+  'the wrapper builds on --rebuild although the image holds the wanted versions, and says nothing',
+  (testContext) => {
+    const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+  },
+);
 
-test("the wrapper stops with the build's own error when the build fails, and runs and makes nothing", (t) => {
-  const { root, container, imageLabels, buildFails, run, dockerCalls } = setUp(t, kitPath);
+test("the wrapper stops with the build's own error when the build fails, and runs and makes nothing", (testContext) => {
+  const { root, container, imageLabels, buildFails, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
   writeFileSync(buildFails, '');
   const result = run(root, '--in-place', 'echo', 'hi');
@@ -605,8 +645,8 @@ test("the wrapper stops with the build's own error when the build fails, and run
   assert.equal(existsSync(homeLogs(root)), false);
 });
 
-test('the wrapper runs with no Dockerfile beside it to read a version from', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper runs with no Dockerfile beside it to read a version from', (testContext) => {
+  const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
   assert.deepEqual(readdirSync(container), ['sandbox.sh']);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -622,8 +662,8 @@ function expectedRun(root, container, mounts = '') {
   return composeCalls(root, container, hostVersions, runCommand(root, root, mounts));
 }
 
-test("the wrapper mounts the host's status line script and the settings that run it, read-only", (t) => {
-  const { root, container, home, run, dockerCalls } = setUp(t, kitPath);
+test("the wrapper mounts the host's status line script and the settings that run it, read-only", (testContext) => {
+  const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
   mkdirSync(join(home, '.claude'));
   writeFileSync(statusLinePath(home), 'echo line\n');
   const result = run(root, '--in-place', 'echo', 'hi');
@@ -634,16 +674,19 @@ test("the wrapper mounts the host's status line script and the settings that run
   assert.deepEqual(dockerCalls(), expectedRun(root, container, mounts));
 });
 
-test('the wrapper mounts neither without a status line script on the host, and creates nothing there', (t) => {
-  const { root, container, home, run, dockerCalls } = setUp(t, kitPath);
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), expectedRun(root, container));
-  assert.equal(existsSync(join(home, '.claude')), false);
-});
+test(
+  'the wrapper mounts neither without a status line script on the host, and creates nothing there',
+  (testContext) => {
+    const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), expectedRun(root, container));
+    assert.equal(existsSync(join(home, '.claude')), false);
+  },
+);
 
-test('the wrapper mounts neither when a directory is where the status line script would be', (t) => {
-  const { root, container, home, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper mounts neither when a directory is where the status line script would be', (testContext) => {
+  const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
   mkdirSync(statusLinePath(home), { recursive: true });
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -658,8 +701,8 @@ for (const [what, args] of [
   ['--rebuild alone', () => ['--rebuild']],
   ['--mount alone', (base) => ['--mount', base]],
 ]) {
-  test(`the wrapper refuses ${what}, names the forms, and asks Docker and npm nothing`, (t) => {
-    const { base, root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+  test(`the wrapper refuses ${what}, names the forms, and asks Docker and npm nothing`, (testContext) => {
+    const { base, root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {}, false);
     rmSync(join(bin, 'claude'));
     const result = run(root, ...args(base));
     assert.equal(result.status, 2);
@@ -677,8 +720,8 @@ for (const [where, args] of [
   ['after --in-place', ['--in-place']],
   ['after --connect', ['--connect']],
 ]) {
-  test(`the wrapper refuses an option it does not take ${where}, names it and --, and asks nothing`, (t) => {
-    const { root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+  test(`the wrapper refuses an option it does not take ${where}, names it and --, and asks nothing`, (testContext) => {
+    const { root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {}, false);
     rmSync(join(bin, 'claude'));
     const result = run(root, ...args, '--frobnicate', 'echo', 'hi');
     assert.equal(result.status, 2);
@@ -694,20 +737,23 @@ for (const [option, what] of [
   ['--workdir', 'a directory'],
   ['--mount', 'a path'],
 ]) {
-  test(`the wrapper refuses ${option} with no value, lists the forms, and asks Docker and npm nothing`, (t) => {
-    const { root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
-    rmSync(join(bin, 'claude'));
-    const result = run(root, option);
-    assert.equal(result.status, 2);
-    assert.match(result.stderr, new RegExp(`^sandbox\\.sh: ${option} needs ${what}$`, 'm'));
-    assertFormsListed(result.stderr);
-    assert.deepEqual(dockerCalls(), []);
-    assert.deepEqual(npmCalls(), []);
-  });
+  test(
+    `the wrapper refuses ${option} with no value, lists the forms, and asks Docker and npm nothing`,
+    (testContext) => {
+      const { root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {}, false);
+      rmSync(join(bin, 'claude'));
+      const result = run(root, option);
+      assert.equal(result.status, 2);
+      assert.match(result.stderr, new RegExp(`^sandbox\\.sh: ${option} needs ${what}$`, 'm'));
+      assertFormsListed(result.stderr);
+      assert.deepEqual(dockerCalls(), []);
+      assert.deepEqual(npmCalls(), []);
+    },
+  );
 }
 
-test('the wrapper runs a command that opens with - when it follows --', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper runs a command that opens with - when it follows --', (testContext) => {
+  const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
   const result = run(root, '--in-place', '--', '--frobnicate');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(
@@ -717,8 +763,8 @@ test('the wrapper runs a command that opens with - when it follows --', (t) => {
 });
 
 for (const option of ['--workdir', '--mount']) {
-  test(`the wrapper starts nothing for a run whose ${option} names a directory that is not there`, (t) => {
-    const { base, root, bin, run, dockerCalls, npmCalls } = setUp(t, kitPath, {}, false);
+  test(`the wrapper starts nothing for a run whose ${option} names a directory that is not there`, (testContext) => {
+    const { base, root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {}, false);
     rmSync(join(bin, 'claude'));
     const result = run(root, '--in-place', option, join(base, 'not-there'), 'echo', 'hi');
     assert.equal(result.status, 1);
@@ -728,8 +774,8 @@ for (const option of ['--workdir', '--mount']) {
   });
 }
 
-test('the wrapper mounts the project root with --in-place, and makes no clone', (t) => {
-  const { root, container, home, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper mounts the project root with --in-place, and makes no clone', (testContext) => {
+  const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -737,8 +783,8 @@ test('the wrapper mounts the project root with --in-place, and makes no clone', 
   assert.equal(existsSync(join(home, '.local', 'state')), false);
 });
 
-test('the wrapper mounts the directory of --workdir, and makes no clone', (t) => {
-  const { base, root, container, home, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper mounts the directory of --workdir, and makes no clone', (testContext) => {
+  const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
   const workdir = join(base, 'elsewhere');
   mkdirSync(workdir);
   const result = run(root, '--workdir', workdir, 'echo', 'hi');
@@ -761,28 +807,31 @@ for (const [form, formArgs] of [
   ['--in-place', () => ['--in-place']],
   ['--workdir', (workdir) => ['--workdir', workdir]],
 ]) {
-  test(`the wrapper mounts the log directories of the home with ${form}, and makes them before Docker runs`, (t) => {
-    const { base, root, container, agentScript, run, dockerCalls } = setUp(t, kitPath);
-    const workdir = join(base, 'elsewhere');
-    mkdirSync(workdir);
-    const logs = homeLogs(root);
-    assert.equal(logs, join(base, 'home', '.local', 'share', 'agentrite', 'project'));
-    const seen = join(base, 'seen');
-    const both = logDirectories.map((directory) => `[ -d "${logs}/${directory}" ]`).join(' && ');
-    writeFileSync(agentScript, `${both} && echo both > "${seen}"\n`);
+  test(
+    `the wrapper mounts the log directories of the home with ${form}, and makes them before Docker runs`,
+    (testContext) => {
+      const { base, root, container, agentScript, run, dockerCalls } = setUp(testContext, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      const logs = homeLogs(root);
+      assert.equal(logs, join(base, 'home', '.local', 'share', 'agentrite', 'project'));
+      const seen = join(base, 'seen');
+      const both = logDirectories.map((directory) => `[ -d "${logs}/${directory}" ]`).join(' && ');
+      writeFileSync(agentScript, `${both} && echo both > "${seen}"\n`);
 
-    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
 
-    assert.equal(result.status, 0, result.stderr);
-    const mounted = form === '--workdir' ? workdir : root;
-    assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, mounted)));
-    assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
-    assert.deepEqual(everythingIn(logs), logDirectoryHolds);
-    for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).uid, process.getuid());
-  });
+      assert.equal(result.status, 0, result.stderr);
+      const mounted = form === '--workdir' ? workdir : root;
+      assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, mounted)));
+      assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
+      assert.deepEqual(everythingIn(logs), logDirectoryHolds);
+      for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).uid, process.getuid());
+    },
+  );
 
-  test(`the wrapper mounts the log directories under XDG_DATA_HOME with ${form}, when that is set`, (t) => {
-    const { base, root, container, home, runWith, dockerCalls } = setUp(t, kitPath);
+  test(`the wrapper mounts the log directories under XDG_DATA_HOME with ${form}, when that is set`, (testContext) => {
+    const { base, root, container, home, runWith, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
     const data = join(base, 'data');
@@ -798,26 +847,32 @@ for (const [form, formArgs] of [
   });
 }
 
-test('the wrapper names the log directory after the project root, not after the directory of --workdir', (t) => {
-  const { base, root, home, run, dockerCalls } = setUp(t, kitPath);
-  const workdir = join(base, 'another-name');
-  mkdirSync(workdir);
-  const result = run(root, '--workdir', workdir, 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  const [call] = dockerCalls();
-  assert.ok(call.includes(logMounts(join(home, '.local', 'share', 'agentrite', 'project'))), call);
-  assert.deepEqual(readdirSync(join(home, '.local', 'share', 'agentrite')), ['project']);
-});
+test(
+  'the wrapper names the log directory after the project root, not after the directory of --workdir',
+  (testContext) => {
+    const { base, root, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'another-name');
+    mkdirSync(workdir);
+    const result = run(root, '--workdir', workdir, 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const [call] = dockerCalls();
+    assert.ok(call.includes(logMounts(join(home, '.local', 'share', 'agentrite', 'project'))), call);
+    assert.deepEqual(readdirSync(join(home, '.local', 'share', 'agentrite')), ['project']);
+  },
+);
 
 // Docker reads a source that is not an absolute path as the name of a volume.
-test('the wrapper mounts a relative XDG_DATA_HOME as the absolute path it names from its working directory', (t) => {
-  const { base, root, container, runWith, dockerCalls } = setUp(t, kitPath);
-  const result = runWith({ env: { XDG_DATA_HOME: 'data' }, cwd: base }, root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  const logs = join(base, 'data', 'agentrite', 'project');
-  assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, root, '', logs)));
-  assert.deepEqual(everythingIn(logs), logDirectoryHolds);
-});
+test(
+  'the wrapper mounts a relative XDG_DATA_HOME as the absolute path it names from its working directory',
+  (testContext) => {
+    const { base, root, container, runWith, dockerCalls } = setUp(testContext, kitPath);
+    const result = runWith({ env: { XDG_DATA_HOME: 'data' }, cwd: base }, root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const logs = join(base, 'data', 'agentrite', 'project');
+    assert.deepEqual(dockerCalls(), composeCalls(root, container, hostVersions, runCommand(root, root, '', logs)));
+    assert.deepEqual(everythingIn(logs), logDirectoryHolds);
+  },
+);
 
 // The host's terminal. The wrapper passes its TERM and its COLORTERM to the command, each when it is set and not
 // empty, so that a program in the sandbox is told what the developer's terminal can show. Without them the command
@@ -826,8 +881,8 @@ for (const [form, formArgs] of [
   ['--in-place', () => ['--in-place']],
   ['--workdir', (workdir) => ['--workdir', workdir]],
 ]) {
-  test(`the wrapper passes the host's TERM and COLORTERM to the command with ${form}`, (t) => {
-    const { base, root, container, runWith, dockerCalls } = setUp(t, kitPath);
+  test(`the wrapper passes the host's TERM and COLORTERM to the command with ${form}`, (testContext) => {
+    const { base, root, container, runWith, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
     const env = { TERM: 'xterm-256color', COLORTERM: 'truecolor' };
@@ -848,8 +903,8 @@ for (const [host, env, terminal] of [
   ['with no TERM', { COLORTERM: 'truecolor' }, '--env COLORTERM=truecolor '],
   ['with an empty TERM', { TERM: '', COLORTERM: 'truecolor' }, '--env COLORTERM=truecolor '],
 ]) {
-  test(`the wrapper passes only what the host has of the two, on a host ${host}`, (t) => {
-    const { root, container, runWith, dockerCalls } = setUp(t, kitPath);
+  test(`the wrapper passes only what the host has of the two, on a host ${host}`, (testContext) => {
+    const { root, container, runWith, dockerCalls } = setUp(testContext, kitPath);
     const result = runWith({ env }, root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(
@@ -879,25 +934,28 @@ function startRun(root, container, form, workdir, mounts, environment) {
 }
 
 for (const [form, formArgs] of startForms) {
-  test(`a start with ${form} and "bell": true mounts the bell and names the plugin, with none of the host's`, (t) => {
-    const { base, root, container, home, run, dockerCalls } = setUp(t, kitPath);
-    const workdir = join(base, 'elsewhere');
-    mkdirSync(workdir);
-    writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+  test(
+    `a start with ${form} and "bell": true mounts the bell and names the plugin, with none of the host's`,
+    (testContext) => {
+      const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
 
-    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
 
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, '');
-    assert.deepEqual(
-      dockerCalls(),
-      startRun(root, container, form, workdir, bellMounts(container), bellEnvironment),
-    );
-    assert.equal(existsSync(join(home, '.claude')), false);
-  });
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stderr, '');
+      assert.deepEqual(
+        dockerCalls(),
+        startRun(root, container, form, workdir, bellMounts(container), bellEnvironment),
+      );
+      assert.equal(existsSync(join(home, '.claude')), false);
+    },
+  );
 
-  test(`a start with ${form} and "bell": true mounts the bell after the status line`, (t) => {
-    const { base, root, container, home, run, dockerCalls } = setUp(t, kitPath);
+  test(`a start with ${form} and "bell": true mounts the bell after the status line`, (testContext) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
     writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
@@ -916,8 +974,8 @@ for (const [form, formArgs] of startForms) {
     );
   });
 
-  test(`a start with ${form} and "bell": false is the run of a project that rings nothing`, (t) => {
-    const { base, root, container, run, dockerCalls } = setUp(t, kitPath);
+  test(`a start with ${form} and "bell": false is the run of a project that rings nothing`, (testContext) => {
+    const { base, root, container, run, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
     writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
@@ -928,45 +986,48 @@ for (const [form, formArgs] of startForms) {
     assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, '', ''));
   });
 
-  test(`a start with ${form} and a bell at fault is refused with the reader's message, asking nothing`, (t) => {
-    const BELL_MUST = 'It must hold true or false';
-    for (const [text, message] of [
-      ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
-      ['{"bell": null}', `agentrite.json: bell is null. ${BELL_MUST}`],
-      ['{"bell": 0}', `agentrite.json: bell is 0. ${BELL_MUST}`],
-      ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
-      ['{"bell": []}', `agentrite.json: bell is []. ${BELL_MUST}`],
-      ['{"bell": {}}', `agentrite.json: bell is {}. ${BELL_MUST}`],
-      ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
-      ['not json', /^agentrite\.json is not JSON: .*, so bell cannot be read\. It must hold true or false$/],
-      [
-        null,
-        'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
-          'Run: npx agentrite config, which writes one',
-      ],
-    ]) {
-      const { base, root, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-      const workdir = join(base, 'elsewhere');
-      mkdirSync(workdir);
-      if (text === null) rmSync(join(root, 'agentrite.json'));
-      else writeFileSync(join(root, 'agentrite.json'), text);
+  test(
+    `a start with ${form} and a bell at fault is refused with the reader's message, asking nothing`,
+    (testContext) => {
+      const BELL_MUST = 'It must hold true or false';
+      for (const [text, message] of [
+        ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
+        ['{"bell": null}', `agentrite.json: bell is null. ${BELL_MUST}`],
+        ['{"bell": 0}', `agentrite.json: bell is 0. ${BELL_MUST}`],
+        ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
+        ['{"bell": []}', `agentrite.json: bell is []. ${BELL_MUST}`],
+        ['{"bell": {}}', `agentrite.json: bell is {}. ${BELL_MUST}`],
+        ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
+        ['not json', /^agentrite\.json is not JSON: .*, so bell cannot be read\. It must hold true or false$/],
+        [
+          null,
+          'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
+            'Run: npx agentrite config, which writes one',
+        ],
+      ]) {
+        const { base, root, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+        const workdir = join(base, 'elsewhere');
+        mkdirSync(workdir);
+        if (text === null) rmSync(join(root, 'agentrite.json'));
+        else writeFileSync(join(root, 'agentrite.json'), text);
 
-      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+        const result = run(root, ...formArgs(workdir), 'echo', 'hi');
 
-      assert.equal(result.status, 1, String(text));
-      assert.equal(result.stdout, '', String(text));
-      const printed = result.stderr.replace(/^agentrite: /, '').trimEnd();
-      assert.ok(result.stderr.startsWith('agentrite: '), result.stderr);
-      if (typeof message === 'string') assert.equal(printed, message, String(text));
-      else assert.match(printed, message, String(text));
-      assert.deepEqual(dockerCalls(), [], String(text));
-      assert.deepEqual(npmCalls(), [], String(text));
-    }
-  });
+        assert.equal(result.status, 1, String(text));
+        assert.equal(result.stdout, '', String(text));
+        const printed = result.stderr.replace(/^agentrite: /, '').trimEnd();
+        assert.ok(result.stderr.startsWith('agentrite: '), result.stderr);
+        if (typeof message === 'string') assert.equal(printed, message, String(text));
+        else assert.match(printed, message, String(text));
+        assert.deepEqual(dockerCalls(), [], String(text));
+        assert.deepEqual(npmCalls(), [], String(text));
+      }
+    },
+  );
 }
 
-test('a start reads bell again at each start, with no build in between', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+test('a start reads bell again at each start, with no build in between', (testContext) => {
+  const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
   assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
   writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
@@ -987,8 +1048,8 @@ const kitDiffersLine = (held) =>
 const kitRecordsNoneLine = `sandbox.sh: the image records no kit version and ${kitVersion} is installed. Rebuilding.\n`;
 
 // R16, R24
-test('the wrapper builds an image again that records another version of the kit, and says so first', (t) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper builds an image again that records another version of the kit, and says so first', (testContext) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText({ ...hostVersions, kit: kitBuiltBefore }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -997,8 +1058,8 @@ test('the wrapper builds an image again that records another version of the kit,
 });
 
 // R16, R24
-test('the wrapper builds an image again that records no version of the kit, and says so first', (t) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper builds an image again that records no version of the kit, and says so first', (testContext) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText({ ...hostVersions, kit: '' }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -1007,8 +1068,8 @@ test('the wrapper builds an image again that records no version of the kit, and 
 });
 
 // R16, R24
-test('the wrapper builds nothing for the kit when the image records the installed version', (t) => {
-  const { root, container, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper builds nothing for the kit when the image records the installed version', (testContext) => {
+  const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -1016,8 +1077,8 @@ test('the wrapper builds nothing for the kit when the image records the installe
 });
 
 // R16, R24
-test('the wrapper hands the build the installed kit version, and --rebuild builds without the line', (t) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
+test('the wrapper hands the build the installed kit version, and --rebuild builds without the line', (testContext) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText({ ...hostVersions, kit: kitBuiltBefore }));
   const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
@@ -1034,8 +1095,8 @@ for (const [what, content] of [
   ['is not JSON', 'not json\n'],
   ['holds a version of another shape', '{"name": "agentrite", "version": "8.0"}\n'],
 ]) {
-  test(`the wrapper refuses a kit whose package.json ${what}, before anything is built`, (t) => {
-    const { root, container, run, dockerCalls } = setUp(t, kitPath);
+  test(`the wrapper refuses a kit whose package.json ${what}, before anything is built`, (testContext) => {
+    const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
     const manifest = join(container, '..', 'package.json');
     if (content === null) rmSync(manifest);
     else writeFileSync(manifest, content);

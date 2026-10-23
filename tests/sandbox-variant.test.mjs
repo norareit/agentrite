@@ -32,8 +32,12 @@ async function sleep(milliseconds) {
 // The project of `containerProject`, with a directory `gate` mounted in every run. `start` runs the wrapper for a
 // run named `label` in the background, with `args` before the command, and returns what it ends with; `wait` waits
 // for the run to be in its container, and `release` lets it end. Every container is removed when the test ends.
-function setUp(t) {
-    const { base, root, git, state, clone, wrapper, environment } = containerProject(t, 'sandbox-variant-', project);
+function setUp(testContext) {
+    const { base, root, git, state, clone, wrapper, environment } = containerProject(
+        testContext,
+        'sandbox-variant-',
+        project,
+    );
     const gate = join(base, 'gate');
     mkdirSync(gate);
     const running = [];
@@ -60,7 +64,7 @@ function setUp(t) {
     // What a branch holds that the unit's branch did at the start does not.
     const startCommit = git('rev-parse', unitBranch);
     const added = (branch) => git('diff', '--name-only', startCommit, branch).split('\n').filter(Boolean);
-    t.after(() => {
+    testContext.after(() => {
         for (const child of running) child.kill('SIGKILL');
         for (const branch of [unitBranch, ...variantNames.map((name) => `${unitBranch}--${name}`)]) {
             spawnSync('docker', ['rm', '-f', containerOf(branch)], { stdio: 'ignore' });
@@ -74,8 +78,8 @@ function setUp(t) {
 test(
     'a unit run and its variants run at once, each on its own clone, and land on their own branches',
     { skip },
-    async (t) => {
-        const host = setUp(t);
+    async (testContext) => {
+        const host = setUp(testContext);
         const variants = { opus: `${unitBranch}--opus`, 'gpt-6-1': `${unitBranch}--gpt-6-1` };
         const ended = {
             unit: host.start([unitBranch], 'unit'),
@@ -106,71 +110,86 @@ test(
     },
 );
 
-test('a variant started beside the unit run, and one started alone, both run and land', { skip }, async (t) => {
-    const host = setUp(t);
+test(
+    'a variant started beside the unit run, and one started alone, both run and land',
+    { skip },
+    async (testContext) => {
+        const host = setUp(testContext);
 
-    const alone = host.start([unitBranch, '--variant', 'opus'], 'opus');
-    await host.wait('opus');
-    host.release('opus');
-    assert.equal((await alone).status, 0);
+        const alone = host.start([unitBranch, '--variant', 'opus'], 'opus');
+        await host.wait('opus');
+        host.release('opus');
+        assert.equal((await alone).status, 0);
 
-    const unitRun = host.start([unitBranch], 'unit');
-    await host.wait('unit');
-    const beside = host.start([unitBranch, '--variant', 'gpt-6-1'], 'gpt-6-1');
-    await host.wait('gpt-6-1');
-    assert.ok(host.runningNames().includes(containerOf(unitBranch)));
-    host.release('gpt-6-1');
-    assert.equal((await beside).status, 0);
-    host.release('unit');
-    assert.equal((await unitRun).status, 0);
+        const unitRun = host.start([unitBranch], 'unit');
+        await host.wait('unit');
+        const beside = host.start([unitBranch, '--variant', 'gpt-6-1'], 'gpt-6-1');
+        await host.wait('gpt-6-1');
+        assert.ok(host.runningNames().includes(containerOf(unitBranch)));
+        host.release('gpt-6-1');
+        assert.equal((await beside).status, 0);
+        host.release('unit');
+        assert.equal((await unitRun).status, 0);
 
-    assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
-    assert.deepEqual(host.added(`${unitBranch}--gpt-6-1`), ['gpt-6-1.txt']);
-    assert.deepEqual(host.added(unitBranch), ['unit.txt']);
-});
+        assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
+        assert.deepEqual(host.added(`${unitBranch}--gpt-6-1`), ['gpt-6-1.txt']);
+        assert.deepEqual(host.added(unitBranch), ['unit.txt']);
+    },
+);
 
-test('a variant that ends while the unit run still runs leaves the unit run as it was', { skip }, async (t) => {
-    const host = setUp(t);
-    const unitRun = host.start([unitBranch], 'unit');
-    const variant = host.start([unitBranch, '--variant', 'opus'], 'opus');
-    await host.wait('unit');
-    await host.wait('opus');
-    const unitBefore = host.git('rev-parse', unitBranch);
+test(
+    'a variant that ends while the unit run still runs leaves the unit run as it was',
+    { skip },
+    async (testContext) => {
+        const host = setUp(testContext);
+        const unitRun = host.start([unitBranch], 'unit');
+        const variant = host.start([unitBranch, '--variant', 'opus'], 'opus');
+        await host.wait('unit');
+        await host.wait('opus');
+        const unitBefore = host.git('rev-parse', unitBranch);
 
-    host.release('opus');
-    assert.equal((await variant).status, 0);
+        host.release('opus');
+        assert.equal((await variant).status, 0);
 
-    assert.ok(host.runningNames().includes(containerOf(unitBranch)), 'the unit run is still running');
-    assert.ok(existsSync(host.clone(unitBranch)), 'its clone is still there');
-    assert.equal(host.git('rev-parse', unitBranch), unitBefore, 'its branch has not moved');
-    assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
+        assert.ok(host.runningNames().includes(containerOf(unitBranch)), 'the unit run is still running');
+        assert.ok(existsSync(host.clone(unitBranch)), 'its clone is still there');
+        assert.equal(host.git('rev-parse', unitBranch), unitBefore, 'its branch has not moved');
+        assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
 
-    host.release('unit');
-    assert.equal((await unitRun).status, 0);
-    assert.deepEqual(host.added(unitBranch), ['unit.txt']);
-    assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
-});
+        host.release('unit');
+        assert.equal((await unitRun).status, 0);
+        assert.deepEqual(host.added(unitBranch), ['unit.txt']);
+        assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
+    },
+);
 
-test('a second run of a variant whose container is running is refused, and the first runs on', { skip }, async (t) => {
-    const host = setUp(t);
-    const first = host.start([unitBranch, '--variant', 'opus'], 'opus');
-    await host.wait('opus');
+test(
+    'a second run of a variant whose container is running is refused, and the first runs on',
+    { skip },
+    async (testContext) => {
+        const host = setUp(testContext);
+        const first = host.start([unitBranch, '--variant', 'opus'], 'opus');
+        await host.wait('opus');
 
-    const second = spawnSync(host.wrapper, [host.root, unitBranch, '--variant', 'opus', 'echo', 'hi'], {
-        encoding: 'utf-8',
-        env: host.environment,
-    });
+        const second = spawnSync(host.wrapper, [host.root, unitBranch, '--variant', 'opus', 'echo', 'hi'], {
+            encoding: 'utf-8',
+            env: host.environment,
+        });
 
-    assert.equal(second.status, 1, second.stderr);
-    assert.ok(second.stderr.includes(`the container ${containerOf(`${unitBranch}--opus`)} is running`), second.stderr);
-    assert.ok(host.runningNames().includes(containerOf(`${unitBranch}--opus`)), 'the first run is still running');
-    host.release('opus');
-    assert.equal((await first).status, 0);
-    assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
-});
+        assert.equal(second.status, 1, second.stderr);
+        assert.ok(
+            second.stderr.includes(`the container ${containerOf(`${unitBranch}--opus`)} is running`),
+            second.stderr,
+        );
+        assert.ok(host.runningNames().includes(containerOf(`${unitBranch}--opus`)), 'the first run is still running');
+        host.release('opus');
+        assert.equal((await first).status, 0);
+        assert.deepEqual(host.added(`${unitBranch}--opus`), ['opus.txt']);
+    },
+);
 
-test("--connect with --variant runs its command in the variant's container alone", { skip }, async (t) => {
-    const host = setUp(t);
+test("--connect with --variant runs its command in the variant's container alone", { skip }, async (testContext) => {
+    const host = setUp(testContext);
     const unitRun = host.start([unitBranch], 'unit');
     const variant = host.start([unitBranch, '--variant', 'opus'], 'opus');
     await host.wait('unit');

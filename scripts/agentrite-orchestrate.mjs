@@ -237,7 +237,7 @@ export function ranTable(ran) {
     planned.step.model,
     duration(result.milliseconds),
   ]);
-  const widths = rows[0].map((_, column) => Math.max(...rows.map((row) => row[column].length)));
+  const widths = rows[0].map((_cell, column) => Math.max(...rows.map((row) => row[column].length)));
   const last = widths.length - 1;
   const aligned = (/** @type {string} */ cell, /** @type {number} */ column) =>
     column === last ? cell.padStart(widths[column]) : cell.padEnd(widths[column]);

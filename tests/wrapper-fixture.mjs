@@ -446,8 +446,8 @@ export const containerUnitBranch = 'task-0026-doc';
 // on `master`, with `task-0026-doc` one commit ahead, the kit's wrapper installed under its ignored `node_modules`,
 // and the host of `containerHost`, whose containers are of the image the kit's Dockerfile builds on. Its Compose
 // project is `name`, which its containers are named after, and its clones are under `state`.
-export function containerProject(t, prefix, name) {
-  const base = temporaryDirectory(t, prefix);
+export function containerProject(testContext, prefix, name) {
+  const base = temporaryDirectory(testContext, prefix);
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });

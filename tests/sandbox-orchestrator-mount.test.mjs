@@ -15,9 +15,9 @@ const project = `project-orchestrator-${process.pid}`;
 
 // Unit 0065, R25, R31: what the agent writes at /work/.orchestrator in a unit run reaches the host's .orchestrator,
 // which the wrapper made as the developer, and not Docker as root.
-test("a unit run mounts the host's .orchestrator, made as the developer", { skip }, (t) => {
-  const { root, wrapper, environment } = containerProject(t, 'sandbox-orchestrator-mount-', project);
-  t.after(() => spawnSync('docker', ['rm', '-f', `${project}-${containerUnitBranch}`], { stdio: 'ignore' }));
+test("a unit run mounts the host's .orchestrator, made as the developer", { skip }, (testContext) => {
+  const { root, wrapper, environment } = containerProject(testContext, 'sandbox-orchestrator-mount-', project);
+  testContext.after(() => spawnSync('docker', ['rm', '-f', `${project}-${containerUnitBranch}`], { stdio: 'ignore' }));
   rmSync(join(root, '.orchestrator'), { recursive: true, force: true });
 
   const result = spawnSync(

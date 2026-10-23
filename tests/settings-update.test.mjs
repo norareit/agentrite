@@ -34,8 +34,8 @@ function linesOf(result) {
 }
 
 // A project directory with the wrappers of `harnesses` as the kit writes them, and no agentrite.json.
-function project(t, harnesses) {
-  const base = temporaryDirectory(t, 'settings-update-');
+function project(testContext, harnesses) {
+  const base = temporaryDirectory(testContext, 'settings-update-');
   const root = join(base, 'project');
   const write = (path, content) => {
     mkdirSync(dirname(join(root, path)), { recursive: true });
@@ -51,8 +51,8 @@ function project(t, harnesses) {
   return { base, root, write, command, edit };
 }
 
-test('a project with the wrappers, the sandbox and no agentrite.json gets one in the four steps', (t) => {
-  const { base, root, write, command, edit } = project(t, ['claude', 'opencode']);
+test('a project with the wrappers, the sandbox and no agentrite.json gets one in the four steps', (testContext) => {
+  const { base, root, write, command, edit } = project(testContext, ['claude', 'opencode']);
   // The files of the sandbox, the kit as a project installs it, and a repository on main that holds a unit.
   write('sandbox.sh', SHIM);
   chmodSync(join(root, 'sandbox.sh'), 0o755);
@@ -150,20 +150,23 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   assert.equal(host.dockerCalls().filter((call) => / run /.test(call)).length, 1);
 });
 
-test('a project without the sandbox and with one harness edits both keys, and refresh has its four wrappers', (t) => {
-  const { root, command, edit } = project(t, ['opencode']);
-  installKit(root);
-  assert.equal(command('refresh').status, 1);
+test(
+  'a project without the sandbox and with one harness edits both keys, and refresh has its four wrappers',
+  (testContext) => {
+    const { root, command, edit } = project(testContext, ['opencode']);
+    installKit(root);
+    assert.equal(command('refresh').status, 1);
 
-  assert.equal(command('config').status, 0);
-  edit('["claude", "opencode"]', '["opencode"]');
-  edit('"sandbox": true', '"sandbox": false');
-  const refreshed = command('refresh');
+    assert.equal(command('config').status, 0);
+    edit('["claude", "opencode"]', '["opencode"]');
+    edit('"sandbox": true', '"sandbox": false');
+    const refreshed = command('refresh');
 
-  assert.equal(refreshed.status, 0, refreshed.stderr);
-  const wrappers = plannedFiles(['opencode'], KIT_ROLES).map((file) => file.path);
-  assert.equal(wrappers.length, 4);
-  assert.deepEqual(linesOf(refreshed), [...wrappers.map((path) => `up to date ${path}`), `wrote ${LIST}`]);
-  assert.equal(existsSync(join(root, 'sandbox.sh')), false);
-  assert.equal(existsSync(join(root, '.claude')), false);
-});
+    assert.equal(refreshed.status, 0, refreshed.stderr);
+    const wrappers = plannedFiles(['opencode'], KIT_ROLES).map((file) => file.path);
+    assert.equal(wrappers.length, 4);
+    assert.deepEqual(linesOf(refreshed), [...wrappers.map((path) => `up to date ${path}`), `wrote ${LIST}`]);
+    assert.equal(existsSync(join(root, 'sandbox.sh')), false);
+    assert.equal(existsSync(join(root, '.claude')), false);
+  },
+);

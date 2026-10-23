@@ -48,8 +48,8 @@ const sandboxRef = `refs/remotes/sandbox/${branch}`;
 // `node_modules`, `.reviews` and `.env`, and holds a file that is not committed, `draft.txt`. The home has a git
 // identity and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run`
 // runs the wrapper with the project root and `args`, and `git` runs the real git in the repository.
-function setUp(t, { imageExists = true } = {}) {
-  const base = temporaryDirectory(t, 'sandbox-unit-run-');
+function setUp(testContext, { imageExists = true } = {}) {
+  const base = temporaryDirectory(testContext, 'sandbox-unit-run-');
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });
@@ -113,23 +113,23 @@ function setUp(t, { imageExists = true } = {}) {
 
 // A host on which a build would be due and would need the registry, so that a refusal that comes too late shows
 // in the calls: no image, and no Claude Code on the host.
-function setUpWithBuildDue(t) {
-  const host = setUp(t, { imageExists: false });
+function setUpWithBuildDue(testContext) {
+  const host = setUp(testContext, { imageExists: false });
   rmSync(join(host.bin, 'claude'));
   return host;
 }
 
 for (const unit of [branch, '0026']) {
-  test(`the wrapper runs the branch ${branch} for the unit ${unit}`, (t) => {
-    const { clone, run, dockerCalls, unitRun } = setUp(t);
+  test(`the wrapper runs the branch ${branch} for the unit ${unit}`, (testContext) => {
+    const { clone, run, dockerCalls, unitRun } = setUp(testContext);
     const result = run([unit, 'echo', 'hi']);
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(dockerCalls(), unitRun(clone));
   });
 }
 
-test('the wrapper lists the branches an ID names when there are several, and starts nothing', (t) => {
-  const { state, run, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+test('the wrapper lists the branches an ID names when there are several, and starts nothing', (testContext) => {
+  const { state, run, dockerCalls, npmCalls } = setUpWithBuildDue(testContext);
   const result = run(['0010', 'echo', 'hi']);
   assert.equal(result.status, 1);
   assert.match(result.stderr, /^ {2}feature-0010-init$/m);
@@ -140,28 +140,31 @@ test('the wrapper lists the branches an ID names when there are several, and sta
 });
 
 for (const unit of ['claude', 'feature-0031-cut-me']) {
-  test(`the wrapper says that ${unit} names no branch and that a number gets one cut, and starts nothing`, (t) => {
-    const { root, state, run, git, dockerCalls, npmCalls } = setUpWithBuildDue(t);
-    commitUnit({ root, git }, 'kind: feature');
-    const refs = git('for-each-ref');
-    const result = run([unit, 'echo', 'hi']);
-    assert.equal(result.status, 1);
-    assert.ok(result.stderr.includes(`'${unit}'`), result.stderr);
-    assert.ok(
-      result.stderr.includes(
-        "A unit's branch is cut from the default branch when the unit is given by its number.\n",
-      ),
-      result.stderr,
-    );
-    assert.doesNotMatch(result.stderr, /master/);
-    assert.ok(result.stderr.includes('An ID with no branch gets one, cut from the default branch\n'), result.stderr);
-    assert.doesNotMatch(result.stderr, /made on the host/);
-    assert.match(result.stderr, /sandbox\.sh --in-place /);
-    assert.deepEqual(dockerCalls(), []);
-    assert.deepEqual(npmCalls(), []);
-    assert.equal(existsSync(state), false);
-    assert.equal(git('for-each-ref'), refs);
-  });
+  test(
+    `the wrapper says that ${unit} names no branch and that a number gets one cut, and starts nothing`,
+    (testContext) => {
+      const { root, state, run, git, dockerCalls, npmCalls } = setUpWithBuildDue(testContext);
+      commitUnit({ root, git }, 'kind: feature');
+      const refs = git('for-each-ref');
+      const result = run([unit, 'echo', 'hi']);
+      assert.equal(result.status, 1);
+      assert.ok(result.stderr.includes(`'${unit}'`), result.stderr);
+      assert.ok(
+        result.stderr.includes(
+          "A unit's branch is cut from the default branch when the unit is given by its number.\n",
+        ),
+        result.stderr,
+      );
+      assert.doesNotMatch(result.stderr, /master/);
+      assert.ok(result.stderr.includes('An ID with no branch gets one, cut from the default branch\n'), result.stderr);
+      assert.doesNotMatch(result.stderr, /made on the host/);
+      assert.match(result.stderr, /sandbox\.sh --in-place /);
+      assert.deepEqual(dockerCalls(), []);
+      assert.deepEqual(npmCalls(), []);
+      assert.equal(existsSync(state), false);
+      assert.equal(git('for-each-ref'), refs);
+    },
+  );
 }
 
 // The cutting of a unit's branch: the default branch holds the unit's directory and no branch holds its number.
@@ -186,32 +189,35 @@ for (const [kind, prefix] of [
   ['bug', 'bugfix'],
   ['task', 'task'],
 ]) {
-  test(`the wrapper cuts ${prefix}-${cutDirectory} from master for a ${kind} that has no branch, and runs it`, (t) => {
-    const host = setUp(t);
-    const { root, state, run, git, dockerCalls, unitRun } = host;
-    const commit = commitUnit(host, `kind: ${kind}\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z`);
-    const cut = `${prefix}-${cutDirectory}`;
+  test(
+    `the wrapper cuts ${prefix}-${cutDirectory} from master for a ${kind} that has no branch, and runs it`,
+    (testContext) => {
+      const host = setUp(testContext);
+      const { root, state, run, git, dockerCalls, unitRun } = host;
+      const commit = commitUnit(host, `kind: ${kind}\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z`);
+      const cut = `${prefix}-${cutDirectory}`;
 
-    const result = run(['0031', 'echo', 'hi']);
+      const result = run(['0031', 'echo', 'hi']);
 
-    assert.equal(result.status, 0, result.stderr);
-    assert.ok(
-      result.stderr.includes(`sandbox.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
-      result.stderr,
-    );
-    assert.equal(git('rev-parse', `refs/heads/${cut}`), git('rev-parse', 'refs/heads/master'));
-    const calls = unitRun(join(state, 'agentrite', 'project-sandbox', cut));
-    assert.deepEqual(
-      dockerCalls(),
-      calls.map((call) => call.replaceAll(containerName, `project-sandbox-${cut}`)),
-    );
-    assert.equal(existsSync(join(root, '.git', 'refs', 'remotes', 'sandbox')), false);
-  });
+      assert.equal(result.status, 0, result.stderr);
+      assert.ok(
+        result.stderr.includes(`sandbox.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
+        result.stderr,
+      );
+      assert.equal(git('rev-parse', `refs/heads/${cut}`), git('rev-parse', 'refs/heads/master'));
+      const calls = unitRun(join(state, 'agentrite', 'project-sandbox', cut));
+      assert.deepEqual(
+        dockerCalls(),
+        calls.map((call) => call.replaceAll(containerName, `project-sandbox-${cut}`)),
+      );
+      assert.equal(existsSync(join(root, '.git', 'refs', 'remotes', 'sandbox')), false);
+    },
+  );
 }
 
 for (const status of ['draft', 'approved', 'in-progress', 'implemented']) {
-  test(`the wrapper cuts feature-${cutDirectory} from master for a unit that is ${status} there`, (t) => {
-    const host = setUp(t);
+  test(`the wrapper cuts feature-${cutDirectory} from master for a unit that is ${status} there`, (testContext) => {
+    const host = setUp(testContext);
     const { run, git } = host;
     const commit = commitUnit(host, `kind: feature\nstatus: ${status}\ntimestamp: 2026-10-05T13:45:27Z`);
 
@@ -227,8 +233,8 @@ for (const status of ['draft', 'approved', 'in-progress', 'implemented']) {
   });
 }
 
-test('the wrapper cuts the branch before it builds: a build that fails leaves the branch cut', (t) => {
-  const host = setUp(t, { imageExists: false });
+test('the wrapper cuts the branch before it builds: a build that fails leaves the branch cut', (testContext) => {
+  const host = setUp(testContext, { imageExists: false });
   const { run, git, buildFails, dockerCalls } = host;
   commitUnit(host, 'kind: feature');
   writeFileSync(buildFails, '');
@@ -242,45 +248,48 @@ test('the wrapper cuts the branch before it builds: a build that fails leaves th
   assert.ok(result.stderr.indexOf('sandbox.sh: cut ') < result.stderr.indexOf('failed to solve'), result.stderr);
 });
 
-test('cutting a branch leaves the checked out branch, the tree, the index and every other branch as they were', (t) => {
-  const host = setUp(t);
-  const { root, run, git } = host;
-  commitUnit(host, 'kind: feature');
-  git('checkout', '--quiet', 'feature-0010-init');
-  writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\nchanged, not staged\n');
-  writeFileSync(join(root, 'staged.txt'), 'staged\n');
-  git('add', 'staged.txt');
-  const before = {
-    head: git('symbolic-ref', 'HEAD'),
-    status: git('status', '--porcelain', '--untracked-files=all'),
-    unstaged: git('diff'),
-    staged: git('diff', '--cached'),
-    refs: git('for-each-ref'),
-  };
-
-  const result = run(['0031', 'echo', 'hi']);
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stderr, /^sandbox\.sh: cut feature-0031-cut-me from master at /m);
-  const cutRef = `${git('rev-parse', 'master')} commit\trefs/heads/feature-0031-cut-me`;
-  assert.deepEqual(
-    {
+test(
+  'cutting a branch leaves the checked out branch, the tree, the index and every other branch as they were',
+  (testContext) => {
+    const host = setUp(testContext);
+    const { root, run, git } = host;
+    commitUnit(host, 'kind: feature');
+    git('checkout', '--quiet', 'feature-0010-init');
+    writeFileSync(join(root, '.gitignore'), 'node_modules\n.reviews\n.env\nchanged, not staged\n');
+    writeFileSync(join(root, 'staged.txt'), 'staged\n');
+    git('add', 'staged.txt');
+    const before = {
       head: git('symbolic-ref', 'HEAD'),
       status: git('status', '--porcelain', '--untracked-files=all'),
       unstaged: git('diff'),
       staged: git('diff', '--cached'),
-      refs: git('for-each-ref')
-        .split('\n')
-        .filter((ref) => ref !== cutRef)
-        .join('\n'),
-    },
-    before,
-  );
-  assert.ok(git('for-each-ref').split('\n').includes(cutRef));
-});
+      refs: git('for-each-ref'),
+    };
 
-test('a second run of a unit whose branch was cut runs that branch, and cuts nothing', (t) => {
-  const host = setUp(t);
+    const result = run(['0031', 'echo', 'hi']);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stderr, /^sandbox\.sh: cut feature-0031-cut-me from master at /m);
+    const cutRef = `${git('rev-parse', 'master')} commit\trefs/heads/feature-0031-cut-me`;
+    assert.deepEqual(
+      {
+        head: git('symbolic-ref', 'HEAD'),
+        status: git('status', '--porcelain', '--untracked-files=all'),
+        unstaged: git('diff'),
+        staged: git('diff', '--cached'),
+        refs: git('for-each-ref')
+          .split('\n')
+          .filter((ref) => ref !== cutRef)
+          .join('\n'),
+      },
+      before,
+    );
+    assert.ok(git('for-each-ref').split('\n').includes(cutRef));
+  },
+);
+
+test('a second run of a unit whose branch was cut runs that branch, and cuts nothing', (testContext) => {
+  const host = setUp(testContext);
   const { run, git } = host;
   commitUnit(host, 'kind: feature');
   assert.equal(run(['0031', 'echo', 'hi']).status, 0);
@@ -447,8 +456,8 @@ const noCut = [
 ];
 
 for (const { name, unit, arrange, says } of noCut) {
-  test(`the wrapper cuts no branch for ${name}, says why, and starts nothing`, (t) => {
-    const host = setUpWithBuildDue(t);
+  test(`the wrapper cuts no branch for ${name}, says why, and starts nothing`, (testContext) => {
+    const host = setUpWithBuildDue(testContext);
     const { state, run, git, dockerCalls, npmCalls } = host;
     arrange(host);
     const refs = git('for-each-ref');
@@ -475,8 +484,8 @@ function moveToMain({ root, git }) {
   git('add', 'agentrite.json');
 }
 
-test('the wrapper cuts from the default branch agentrite.json names, and not from a branch master', (t) => {
-  const host = setUp(t);
+test('the wrapper cuts from the default branch agentrite.json names, and not from a branch master', (testContext) => {
+  const host = setUp(testContext);
   const { state, run, git, dockerCalls, unitRun } = host;
   moveToMain(host);
   // A master that does not hold the unit: a cut from it would be refused.
@@ -500,8 +509,8 @@ test('the wrapper cuts from the default branch agentrite.json names, and not fro
   );
 });
 
-test('the wrapper names the default branch in what it says of a unit the branch does not hold', (t) => {
-  const host = setUpWithBuildDue(t);
+test('the wrapper names the default branch in what it says of a unit the branch does not hold', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   moveToMain(host);
   host.git('commit', '--quiet', '--message', 'the default branch is main');
   host.git('branch', 'master');
@@ -514,23 +523,26 @@ test('the wrapper names the default branch in what it says of a unit the branch 
   assert.deepEqual(host.dockerCalls(), []);
 });
 
-test('the wrapper reads the agentrite.json of the working tree, whatever is committed and checked out', (t) => {
-  const host = setUp(t);
-  const { root, run, git } = host;
-  // Committed, the file names master. The unit is on main alone, and the checkout is on a third branch.
-  git('checkout', '--quiet', '-b', 'main');
-  const commit = commitUnit(host, 'kind: feature');
-  git('checkout', '--quiet', 'feature-0010-init');
-  writeFileSync(join(root, 'agentrite.json'), settingsFor('main'));
+test(
+  'the wrapper reads the agentrite.json of the working tree, whatever is committed and checked out',
+  (testContext) => {
+    const host = setUp(testContext);
+    const { root, run, git } = host;
+    // Committed, the file names master. The unit is on main alone, and the checkout is on a third branch.
+    git('checkout', '--quiet', '-b', 'main');
+    const commit = commitUnit(host, 'kind: feature');
+    git('checkout', '--quiet', 'feature-0010-init');
+    writeFileSync(join(root, 'agentrite.json'), settingsFor('main'));
 
-  const result = run(['0031', 'echo', 'hi']);
+    const result = run(['0031', 'echo', 'hi']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.ok(result.stderr.includes(`sandbox.sh: cut feature-0031-cut-me from main at ${commit}, `), result.stderr);
-  assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/main'));
-  assert.equal(git('show', 'main:agentrite.json'), settingsFor('master').trim());
-  assert.equal(git('symbolic-ref', '--short', 'HEAD'), 'feature-0010-init');
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(result.stderr.includes(`sandbox.sh: cut feature-0031-cut-me from main at ${commit}, `), result.stderr);
+    assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/main'));
+    assert.equal(git('show', 'main:agentrite.json'), settingsFor('master').trim());
+    assert.equal(git('symbolic-ref', '--short', 'HEAD'), 'feature-0010-init');
+  },
+);
 
 // R7: the runs that cut no branch read nothing of the file but bell, which unit 0058 has every start read, and
 // --connect, which starts nothing, reads nothing of it.
@@ -539,9 +551,9 @@ for (const [what, settings, forms] of [
   ['no agentrite.json', null, ['connect']],
   ['an agentrite.json that is not valid', 'not json', ['connect']],
 ]) {
-  test(`a run that cuts no branch makes the calls it makes with a valid file, with ${what}`, (t) => {
-    const withFile = setUp(t);
-    const without = setUp(t);
+  test(`a run that cuts no branch makes the calls it makes with a valid file, with ${what}`, (testContext) => {
+    const withFile = setUp(testContext);
+    const without = setUp(testContext);
     if (settings === null) rmSync(join(without.root, 'agentrite.json'));
     else writeFileSync(join(without.root, 'agentrite.json'), settings);
 
@@ -577,8 +589,8 @@ for (const [what, settings, forms] of [
 }
 
 // Unit 0058, R1, R7: a unit run reads bell at its start, and rings as it says.
-test('a unit run with "bell": true mounts the bell and names the plugin to OpenCode', (t) => {
-  const { root, container, clone, run, dockerCalls, unitRun } = setUp(t);
+test('a unit run with "bell": true mounts the bell and names the plugin to OpenCode', (testContext) => {
+  const { root, container, clone, run, dockerCalls, unitRun } = setUp(testContext);
   writeFileSync(join(root, 'agentrite.json'), settingsFor('master').replace('"bell": false', '"bell": true'));
 
   const result = run([branch, 'echo', 'hi']);
@@ -593,8 +605,8 @@ test('a unit run with "bell": true mounts the bell and names the plugin to OpenC
 });
 
 // Unit 0058, R7: --connect starts nothing, so it reads no bell and connects whatever the file holds of it.
-test('--connect with an agentrite.json that lacks bell connects, reading nothing', (t) => {
-  const host = setUp(t);
+test('--connect with an agentrite.json that lacks bell connects, reading nothing', (testContext) => {
+  const host = setUp(testContext);
   writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('  "bell": false,\n', ''));
   markRunning(host);
 
@@ -605,8 +617,8 @@ test('--connect with an agentrite.json that lacks bell connects, reading nothing
   assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
 });
 
-test('the forms the wrapper lists say the default branch, and are printed without reading the file', (t) => {
-  const { root, run } = setUpWithBuildDue(t);
+test('the forms the wrapper lists say the default branch, and are printed without reading the file', (testContext) => {
+  const { root, run } = setUpWithBuildDue(testContext);
   rmSync(join(root, 'agentrite.json'));
 
   const result = run([]);
@@ -617,8 +629,8 @@ test('the forms the wrapper lists say the default branch, and are printed withou
 });
 
 // R30: inside the clone the change check reads the clone's own file and finds its base as origin/<default branch>.
-test('the change check inside the clone of a unit run compares with origin/<default branch>', (t) => {
-  const host = setUp(t);
+test('the change check inside the clone of a unit run compares with origin/<default branch>', (testContext) => {
+  const host = setUp(testContext);
   const { base, root, run, git, agent } = host;
   moveToMain(host);
   git('commit', '--quiet', '--message', 'the default branch is main');
@@ -657,25 +669,28 @@ test('the change check inside the clone of a unit run compares with origin/<defa
 });
 
 for (const unit of [branch, '0026']) {
-  test(`the wrapper refuses a second run of ${unit} while its container is running, and names --connect`, (t) => {
-    const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(t);
-    writeFileSync(runningContainer, '0123456789ab\n');
-    const refs = git('for-each-ref');
-    const result = run([unit, 'echo', 'hi']);
-    assert.equal(result.status, 1);
-    assert.ok(result.stderr.includes(containerName), result.stderr);
-    assert.match(result.stderr, /is running/);
-    assert.ok(result.stderr.includes(`'docker stop ${containerName}'`), result.stderr);
-    assert.ok(result.stderr.includes(`'sandbox.sh --connect ${unit} [COMMAND...]'`), result.stderr);
-    assert.deepEqual(dockerCalls(), []);
-    assert.deepEqual(npmCalls(), []);
-    assert.equal(existsSync(state), false);
-    assert.equal(git('for-each-ref'), refs);
-  });
+  test(
+    `the wrapper refuses a second run of ${unit} while its container is running, and names --connect`,
+    (testContext) => {
+      const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(testContext);
+      writeFileSync(runningContainer, '0123456789ab\n');
+      const refs = git('for-each-ref');
+      const result = run([unit, 'echo', 'hi']);
+      assert.equal(result.status, 1);
+      assert.ok(result.stderr.includes(containerName), result.stderr);
+      assert.match(result.stderr, /is running/);
+      assert.ok(result.stderr.includes(`'docker stop ${containerName}'`), result.stderr);
+      assert.ok(result.stderr.includes(`'sandbox.sh --connect ${unit} [COMMAND...]'`), result.stderr);
+      assert.deepEqual(dockerCalls(), []);
+      assert.deepEqual(npmCalls(), []);
+      assert.equal(existsSync(state), false);
+      assert.equal(git('for-each-ref'), refs);
+    },
+  );
 }
 
-test('the wrapper puts the clone under XDG_STATE_HOME when that is set', (t) => {
-  const { base, home, run, dockerCalls, unitRun } = setUp(t);
+test('the wrapper puts the clone under XDG_STATE_HOME when that is set', (testContext) => {
+  const { base, home, run, dockerCalls, unitRun } = setUp(testContext);
   const state = join(base, 'state');
   const result = run([branch, 'echo', 'hi'], { XDG_STATE_HOME: state });
   assert.equal(result.status, 0, result.stderr);
@@ -684,33 +699,39 @@ test('the wrapper puts the clone under XDG_STATE_HOME when that is set', (t) => 
 });
 
 // The logs of a unit run are those of the project, whatever branch is cloned and whatever Docker calls the project.
-test("a unit run mounts the log directories of the project root, which the wrapper made before Docker ran", (t) => {
-  const { base, home, clone, logs, run, agent, dockerCalls, unitRun } = setUp(t);
-  assert.equal(logs, join(home, '.local', 'share', 'agentrite', 'project'));
-  const seen = join(base, 'seen');
-  const both = logDirectories.map((directory) => `[ -d "${logs}/${directory}" ]`).join(' && ');
-  agent(`${both} && echo both > "${seen}"`);
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), unitRun(clone));
-  assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
-  assert.deepEqual(readdirSync(join(home, '.local', 'share', 'agentrite')), ['project']);
-  for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).uid, process.getuid());
-});
+test(
+  "a unit run mounts the log directories of the project root, which the wrapper made before Docker ran",
+  (testContext) => {
+    const { base, home, clone, logs, run, agent, dockerCalls, unitRun } = setUp(testContext);
+    assert.equal(logs, join(home, '.local', 'share', 'agentrite', 'project'));
+    const seen = join(base, 'seen');
+    const both = logDirectories.map((directory) => `[ -d "${logs}/${directory}" ]`).join(' && ');
+    agent(`${both} && echo both > "${seen}"`);
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), unitRun(clone));
+    assert.equal(readFileSync(seen, 'utf-8'), 'both\n');
+    assert.deepEqual(readdirSync(join(home, '.local', 'share', 'agentrite')), ['project']);
+    for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).uid, process.getuid());
+  },
+);
 
-test('a unit run mounts the log directories under XDG_DATA_HOME when that is set, and the clone stays put', (t) => {
-  const { base, home, clone, run, dockerCalls, unitRun } = setUp(t);
-  const data = join(base, 'data');
-  const result = run([branch, 'echo', 'hi'], { XDG_DATA_HOME: data });
-  assert.equal(result.status, 0, result.stderr);
-  const logs = join(data, 'agentrite', 'project');
-  assert.deepEqual(dockerCalls(), unitRun(clone, '', logs));
-  for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).isDirectory(), true);
-  assert.equal(existsSync(join(home, '.local', 'share')), false);
-});
+test(
+  'a unit run mounts the log directories under XDG_DATA_HOME when that is set, and the clone stays put',
+  (testContext) => {
+    const { base, home, clone, run, dockerCalls, unitRun } = setUp(testContext);
+    const data = join(base, 'data');
+    const result = run([branch, 'echo', 'hi'], { XDG_DATA_HOME: data });
+    assert.equal(result.status, 0, result.stderr);
+    const logs = join(data, 'agentrite', 'project');
+    assert.deepEqual(dockerCalls(), unitRun(clone, '', logs));
+    for (const directory of logDirectories) assert.equal(statSync(join(logs, directory)).isDirectory(), true);
+    assert.equal(existsSync(join(home, '.local', 'share')), false);
+  },
+);
 
-test('the wrapper leaves no clone behind when the build fails', (t) => {
-  const { clone, run, buildFails, dockerCalls, compose } = setUp(t, { imageExists: false });
+test('the wrapper leaves no clone behind when the build fails', (testContext) => {
+  const { clone, run, buildFails, dockerCalls, compose } = setUp(testContext, { imageExists: false });
   writeFileSync(buildFails, '');
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 17);
@@ -720,26 +741,29 @@ test('the wrapper leaves no clone behind when the build fails', (t) => {
 });
 
 // The agent leaves a file that is not committed, so that the clone is kept and can be looked at after the run.
-test("the wrapper mounts a new clone of the branch, at the host's commit, that shares no file with the host", (t) => {
-  const { root, clone, run, git, agent, dockerCalls, unitRun } = setUp(t);
-  agent('echo kept > kept.txt');
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), unitRun(clone));
-  const inClone = (...args) => git('-C', clone, ...args);
-  assert.equal(inClone('symbolic-ref', '--short', 'HEAD'), branch);
-  assert.equal(inClone('rev-parse', 'HEAD'), git('rev-parse', branch));
-  assert.equal(inClone('rev-parse', 'origin/master'), git('rev-parse', 'master'));
-  assert.equal(readFileSync(join(clone, 'unit.md'), 'utf-8'), 'the unit\n');
-  assert.equal(existsSync(join(clone, 'draft.txt')), false);
-  assert.equal(existsSync(join(clone, 'node_modules')), false);
-  const commit = git('rev-parse', branch);
-  const object = join('.git', 'objects', commit.slice(0, 2), commit.slice(2));
-  assert.notEqual(statSync(join(clone, object)).ino, statSync(join(root, object)).ino);
-});
+test(
+  "the wrapper mounts a new clone of the branch, at the host's commit, that shares no file with the host",
+  (testContext) => {
+    const { root, clone, run, git, agent, dockerCalls, unitRun } = setUp(testContext);
+    agent('echo kept > kept.txt');
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), unitRun(clone));
+    const inClone = (...args) => git('-C', clone, ...args);
+    assert.equal(inClone('symbolic-ref', '--short', 'HEAD'), branch);
+    assert.equal(inClone('rev-parse', 'HEAD'), git('rev-parse', branch));
+    assert.equal(inClone('rev-parse', 'origin/master'), git('rev-parse', 'master'));
+    assert.equal(readFileSync(join(clone, 'unit.md'), 'utf-8'), 'the unit\n');
+    assert.equal(existsSync(join(clone, 'draft.txt')), false);
+    assert.equal(existsSync(join(clone, 'node_modules')), false);
+    const commit = git('rev-parse', branch);
+    const object = join('.git', 'objects', commit.slice(0, 2), commit.slice(2));
+    assert.notEqual(statSync(join(clone, object)).ino, statSync(join(root, object)).ino);
+  },
+);
 
-test('the wrapper mounts a clone that is still there as it is, and says that it resumes it', (t) => {
-  const { clone, run, agent, dockerCalls, unitRun } = setUp(t);
+test('the wrapper mounts a clone that is still there as it is, and says that it resumes it', (testContext) => {
+  const { clone, run, agent, dockerCalls, unitRun } = setUp(testContext);
   agent('echo kept > kept.txt');
   assert.equal(run([branch, 'echo', 'hi']).status, 0);
   agent('cat kept.txt > seen.txt');
@@ -751,22 +775,25 @@ test('the wrapper mounts a clone that is still there as it is, and says that it 
   assert.equal(readFileSync(join(clone, 'seen.txt'), 'utf-8'), 'kept\n');
 });
 
-test('the wrapper refuses a new clone while sandbox/<branch> holds commits the branch lacks, before it builds', (t) => {
-  const { state, run, git, dockerCalls, npmCalls } = setUpWithBuildDue(t);
-  const ahead = git('commit-tree', `${branch}^{tree}`, '-p', branch, '-m', 'an earlier run');
-  git('update-ref', sandboxRef, ahead);
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 1);
-  assert.ok(result.stderr.includes(`sandbox/${branch}`), result.stderr);
-  assert.match(result.stderr, /merge/);
-  assert.deepEqual(dockerCalls(), []);
-  assert.deepEqual(npmCalls(), []);
-  assert.equal(existsSync(state), false);
-  assert.equal(git('rev-parse', sandboxRef), ahead);
-});
+test(
+  'the wrapper refuses a new clone while sandbox/<branch> holds commits the branch lacks, before it builds',
+  (testContext) => {
+    const { state, run, git, dockerCalls, npmCalls } = setUpWithBuildDue(testContext);
+    const ahead = git('commit-tree', `${branch}^{tree}`, '-p', branch, '-m', 'an earlier run');
+    git('update-ref', sandboxRef, ahead);
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 1);
+    assert.ok(result.stderr.includes(`sandbox/${branch}`), result.stderr);
+    assert.match(result.stderr, /merge/);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+    assert.equal(existsSync(state), false);
+    assert.equal(git('rev-parse', sandboxRef), ahead);
+  },
+);
 
-test('the wrapper takes --rebuild and --mount before the unit as its options', (t) => {
-  const { base, clone, run, dockerCalls, compose, unitRun } = setUp(t);
+test('the wrapper takes --rebuild and --mount before the unit as its options', (testContext) => {
+  const { base, clone, run, dockerCalls, compose, unitRun } = setUp(testContext);
   const mounted = join(base, 'mounted');
   mkdirSync(mounted);
   const result = run(['--rebuild', '--mount', `${mounted}:ro`, '0026', 'echo', 'hi']);
@@ -776,45 +803,57 @@ test('the wrapper takes --rebuild and --mount before the unit as its options', (
 
 // The stand-in mounts nothing, so that a file written at /work/.reviews or /work/.orchestrator reaches the host is
 // left to the checks on a host with Docker.
-test("the wrapper mounts the host's .reviews and .orchestrator in the clone, and makes the directories itself", (t) => {
-  const { base, root, clone, run, agent } = setUp(t);
-  const seen = join(base, 'seen');
-  agent(
-    `[ -d .reviews ] && [ -d "${root}/.reviews" ] && [ -d .orchestrator ] && [ -d "${root}/.orchestrator" ] && ` +
-      `echo all > "${seen}"\necho kept > kept.txt`,
-  );
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(readFileSync(seen, 'utf-8'), 'all\n');
-  for (const name of ['.reviews', '.orchestrator']) {
-    for (const directory of [join(root, name), join(clone, name)]) {
-      assert.equal(statSync(directory).uid, process.getuid(), directory);
-      assert.deepEqual(readdirSync(directory), [], directory);
+test(
+  "the wrapper mounts the host's .reviews and .orchestrator in the clone, and makes the directories itself",
+  (testContext) => {
+    const { base, root, clone, run, agent } = setUp(testContext);
+    const seen = join(base, 'seen');
+    agent(
+      `[ -d .reviews ] && [ -d "${root}/.reviews" ] && [ -d .orchestrator ] && [ -d "${root}/.orchestrator" ] && ` +
+        `echo all > "${seen}"\necho kept > kept.txt`,
+    );
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(readFileSync(seen, 'utf-8'), 'all\n');
+    for (const name of ['.reviews', '.orchestrator']) {
+      for (const directory of [join(root, name), join(clone, name)]) {
+        assert.equal(statSync(directory).uid, process.getuid(), directory);
+        assert.deepEqual(readdirSync(directory), [], directory);
+      }
     }
-  }
-});
+  },
+);
 
 // Unit 0065, R25: the wrapper reads nothing of orchestrator.
-test('a unit run that cuts a branch mounts .orchestrator also when agentrite.json holds orchestrator false', (t) => {
-  const host = setUp(t);
-  const { root, state, run, git, dockerCalls, unitRun } = host;
-  const settings = { defaultBranch: 'master', harnesses: ['claude'], sandbox: true, bell: false, orchestrator: false };
-  writeFileSync(join(root, 'agentrite.json'), kitSettingsText(settings));
-  git('add', 'agentrite.json');
-  git('commit', '--quiet', '--message', 'opt out of the orchestrator');
-  commitUnit(host, 'kind: task\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z');
-  const cut = `task-${cutDirectory}`;
+test(
+  'a unit run that cuts a branch mounts .orchestrator also when agentrite.json holds orchestrator false',
+  (testContext) => {
+    const host = setUp(testContext);
+    const { root, state, run, git, dockerCalls, unitRun } = host;
+    const settings = {
+      defaultBranch: 'master',
+      harnesses: ['claude'],
+      sandbox: true,
+      bell: false,
+      orchestrator: false,
+    };
+    writeFileSync(join(root, 'agentrite.json'), kitSettingsText(settings));
+    git('add', 'agentrite.json');
+    git('commit', '--quiet', '--message', 'opt out of the orchestrator');
+    commitUnit(host, 'kind: task\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z');
+    const cut = `task-${cutDirectory}`;
 
-  const result = run(['0031', 'echo', 'hi']);
+    const result = run(['0031', 'echo', 'hi']);
 
-  assert.equal(result.status, 0, result.stderr);
-  const calls = unitRun(join(state, 'agentrite', 'project-sandbox', cut));
-  assert.deepEqual(
-    dockerCalls(),
-    calls.map((call) => call.replaceAll(containerName, `project-sandbox-${cut}`)),
-  );
-  assert.ok(dockerCalls()[1].includes(`--volume ${root}/.orchestrator:/work/.orchestrator `));
-});
+    assert.equal(result.status, 0, result.stderr);
+    const calls = unitRun(join(state, 'agentrite', 'project-sandbox', cut));
+    assert.deepEqual(
+      dockerCalls(),
+      calls.map((call) => call.replaceAll(containerName, `project-sandbox-${cut}`)),
+    );
+    assert.ok(dockerCalls()[1].includes(`--volume ${root}/.orchestrator:/work/.orchestrator `));
+  },
+);
 
 // After the container. The script the stand-in runs is the agent, and what it leaves in the clone is what the
 // wrapper has to bring back or keep.
@@ -826,22 +865,25 @@ for (const [what, checkedOut] of [
   ['which is not checked out', false],
   ['which is checked out', true],
 ]) {
-  test(`the wrapper fast-forwards the host's branch, ${what}, to the agent's commit and removes the clone`, (t) => {
-    const { root, clone, run, git, agent } = setUp(t);
-    if (checkedOut) git('checkout', '--quiet', branch);
-    agent(commitWork);
-    const result = run([branch, 'echo', 'hi']);
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(subjectOf(git, branch), 'work');
-    assert.equal(hasRef(git, sandboxRef), false);
-    assert.equal(existsSync(clone), false);
-    assert.equal(existsSync(join(root, 'work.txt')), checkedOut);
-    assert.equal(git('symbolic-ref', '--short', 'HEAD'), checkedOut ? branch : 'master');
-  });
+  test(
+    `the wrapper fast-forwards the host's branch, ${what}, to the agent's commit and removes the clone`,
+    (testContext) => {
+      const { root, clone, run, git, agent } = setUp(testContext);
+      if (checkedOut) git('checkout', '--quiet', branch);
+      agent(commitWork);
+      const result = run([branch, 'echo', 'hi']);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(subjectOf(git, branch), 'work');
+      assert.equal(hasRef(git, sandboxRef), false);
+      assert.equal(existsSync(clone), false);
+      assert.equal(existsSync(join(root, 'work.txt')), checkedOut);
+      assert.equal(git('symbolic-ref', '--short', 'HEAD'), checkedOut ? branch : 'master');
+    },
+  );
 }
 
-test('the wrapper removes the clone of a run that left nothing, and says nothing of it', (t) => {
-  const { clone, run, git } = setUp(t);
+test('the wrapper removes the clone of a run that left nothing, and says nothing of it', (testContext) => {
+  const { clone, run, git } = setUp(testContext);
   const before = git('rev-parse', branch);
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 0, result.stderr);
@@ -852,8 +894,8 @@ test('the wrapper removes the clone of a run that left nothing, and says nothing
 });
 
 // The host's branch gains a commit of its own while the agent works.
-test("the wrapper leaves a host's branch that moved, keeps sandbox/<branch>, and names the merge", (t) => {
-  const { root, clone, run, git, agent } = setUp(t);
+test("the wrapper leaves a host's branch that moved, keeps sandbox/<branch>, and names the merge", (testContext) => {
+  const { root, clone, run, git, agent } = setUp(testContext);
   agent(
     `${commitWork}\n` +
       `moved="$(git -C "${root}" commit-tree "${branch}^{tree}" -p ${branch} -m moved)"\n` +
@@ -877,8 +919,8 @@ for (const [what, script, named] of [
   ],
   ['a stash', 'echo changed >> unit.md\ngit stash --quiet', 'refs/stash'],
 ]) {
-  test(`the wrapper keeps a clone that holds ${what}, and says where it is and what it holds`, (t) => {
-    const { clone, run, git, agent } = setUp(t);
+  test(`the wrapper keeps a clone that holds ${what}, and says where it is and what it holds`, (testContext) => {
+    const { clone, run, git, agent } = setUp(testContext);
     agent(script);
     const result = run([branch, 'echo', 'hi']);
     assert.equal(result.status, 0, result.stderr);
@@ -890,16 +932,16 @@ for (const [what, script, named] of [
   });
 }
 
-test('the wrapper removes a clone that holds only files the project ignores', (t) => {
-  const { clone, run, agent } = setUp(t);
+test('the wrapper removes a clone that holds only files the project ignores', (testContext) => {
+  const { clone, run, agent } = setUp(testContext);
   agent('mkdir node_modules\necho installed > node_modules/package.txt');
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 0, result.stderr);
   assert.equal(existsSync(clone), false);
 });
 
-test("the wrapper lands the commit and exits with the command's status when that is not 0", (t) => {
-  const { clone, run, git, agent } = setUp(t);
+test("the wrapper lands the commit and exits with the command's status when that is not 0", (testContext) => {
+  const { clone, run, git, agent } = setUp(testContext);
   agent(`${commitWork}\nexit 7`);
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 7);
@@ -907,8 +949,8 @@ test("the wrapper lands the commit and exits with the command's status when that
   assert.equal(existsSync(clone), false);
 });
 
-test('the wrapper fetches and removes nothing while the container is still running', (t) => {
-  const { clone, run, git, agent, runningContainer } = setUp(t);
+test('the wrapper fetches and removes nothing while the container is still running', (testContext) => {
+  const { clone, run, git, agent, runningContainer } = setUp(testContext);
   const before = git('rev-parse', branch);
   agent(`${commitWork}\necho 0123456789ab > "${runningContainer}"`);
   const result = run([branch, 'echo', 'hi']);
@@ -920,8 +962,8 @@ test('the wrapper fetches and removes nothing while the container is still runni
   assert.equal(existsSync(join(clone, 'work.txt')), true);
 });
 
-test('the wrapper says that the fetch failed, keeps the clone and exits non-zero', (t) => {
-  const { clone, run, git, agent } = setUp(t);
+test('the wrapper says that the fetch failed, keeps the clone and exits non-zero', (testContext) => {
+  const { clone, run, git, agent } = setUp(testContext);
   const before = git('rev-parse', branch);
   agent('rm -rf .git\necho orphan > orphan.txt');
   const result = run([branch, 'echo', 'hi']);
@@ -934,8 +976,8 @@ test('the wrapper says that the fetch failed, keeps the clone and exits non-zero
 
 // The signals a terminal sends reach the wrapper as they reach the container. The agent sends them itself: the
 // stand-in is the wrapper's child, as `docker compose run` is.
-test('the wrapper sees the container out and lands its work when it is interrupted meanwhile', (t) => {
-  const { clone, run, git, agent } = setUp(t);
+test('the wrapper sees the container out and lands its work when it is interrupted meanwhile', (testContext) => {
+  const { clone, run, git, agent } = setUp(testContext);
   agent(`${commitWork}\nkill -INT $PPID\nkill -TERM $PPID\nkill -HUP $PPID`);
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 0, result.stderr);
@@ -945,8 +987,8 @@ test('the wrapper sees the container out and lands its work when it is interrupt
 
 // A clone whose configuration and hooks each leave a marker when git runs them. The agent arms them after its own
 // last git command that would run one, and leaves a file so that the wrapper also compares the clone's tree.
-test("the wrapper runs nothing of the clone's configuration and hooks on the host", (t) => {
-  const { base, clone, run, git, agent } = setUp(t);
+test("the wrapper runs nothing of the clone's configuration and hooks on the host", (testContext) => {
+  const { base, clone, run, git, agent } = setUp(testContext);
   const markers = join(base, 'markers');
   mkdirSync(markers);
   agent(
@@ -968,8 +1010,8 @@ test("the wrapper runs nothing of the clone's configuration and hooks on the hos
   assert.deepEqual(readdirSync(markers), ['fsmonitor']);
 });
 
-test("the wrapper leaves the host's configuration, hooks and other branches as they were", (t) => {
-  const { root, run, git, agent } = setUp(t);
+test("the wrapper leaves the host's configuration, hooks and other branches as they were", (testContext) => {
+  const { root, run, git, agent } = setUp(testContext);
   const others = () => git('for-each-ref', 'refs').replaceAll(/^.*refs\/heads\/task-0026-doc\n?/gm, '');
   const read = () => [
     readFileSync(join(root, '.git', 'config'), 'utf-8'),
@@ -991,22 +1033,25 @@ test("the wrapper leaves the host's configuration, hooks and other branches as t
 // What the review of 4da86cd found.
 
 // Git overwrites an ignored file with a tracked one of a merge unless told not to.
-test("the wrapper leaves a checked-out branch whose fast-forward would overwrite the host's ignored file", (t) => {
-  const { root, run, git, agent } = setUp(t);
-  git('checkout', '--quiet', branch);
-  const before = git('rev-parse', branch);
-  writeFileSync(join(root, '.env'), 'local-secret\n');
-  agent('echo sandbox-copy > .env\ngit add --force .env\ngit commit --quiet --message work');
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(readFileSync(join(root, '.env'), 'utf-8'), 'local-secret\n');
-  assert.equal(git('rev-parse', branch), before);
-  assert.equal(subjectOf(git, sandboxRef), 'work');
-  assert.ok(result.stderr.includes(`git merge sandbox/${branch}`), result.stderr);
-});
+test(
+  "the wrapper leaves a checked-out branch whose fast-forward would overwrite the host's ignored file",
+  (testContext) => {
+    const { root, run, git, agent } = setUp(testContext);
+    git('checkout', '--quiet', branch);
+    const before = git('rev-parse', branch);
+    writeFileSync(join(root, '.env'), 'local-secret\n');
+    agent('echo sandbox-copy > .env\ngit add --force .env\ngit commit --quiet --message work');
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(readFileSync(join(root, '.env'), 'utf-8'), 'local-secret\n');
+    assert.equal(git('rev-parse', branch), before);
+    assert.equal(subjectOf(git, sandboxRef), 'work');
+    assert.ok(result.stderr.includes(`git merge sandbox/${branch}`), result.stderr);
+  },
+);
 
-test('the wrapper starts nothing when Docker cannot say whether the container is running', (t) => {
-  const { state, run, psFails, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+test('the wrapper starts nothing when Docker cannot say whether the container is running', (testContext) => {
+  const { state, run, psFails, dockerCalls, npmCalls } = setUpWithBuildDue(testContext);
   writeFileSync(psFails, '');
   const result = run([branch, 'echo', 'hi']);
   assert.equal(result.status, 1);
@@ -1017,43 +1062,49 @@ test('the wrapper starts nothing when Docker cannot say whether the container is
   assert.equal(existsSync(state), false);
 });
 
-test('the wrapper fetches and removes nothing when Docker cannot say whether the container has stopped', (t) => {
-  const { clone, run, git, agent, psFails } = setUp(t);
-  const before = git('rev-parse', branch);
-  agent(`${commitWork}\necho > "${psFails}"`);
-  const result = run([branch, 'echo', 'hi']);
-  assert.equal(result.status, 1);
-  assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
-  assert.ok(result.stderr.includes(clone), result.stderr);
-  assert.equal(git('rev-parse', branch), before);
-  assert.equal(hasRef(git, sandboxRef), false);
-  assert.equal(existsSync(join(clone, 'work.txt')), true);
-});
+test(
+  'the wrapper fetches and removes nothing when Docker cannot say whether the container has stopped',
+  (testContext) => {
+    const { clone, run, git, agent, psFails } = setUp(testContext);
+    const before = git('rev-parse', branch);
+    agent(`${commitWork}\necho > "${psFails}"`);
+    const result = run([branch, 'echo', 'hi']);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /sandbox\.sh: could not ask Docker whether/);
+    assert.ok(result.stderr.includes(clone), result.stderr);
+    assert.equal(git('rev-parse', branch), before);
+    assert.equal(hasRef(git, sandboxRef), false);
+    assert.equal(existsSync(join(clone, 'work.txt')), true);
+  },
+);
 
 // The agent leaves an ignored directory that cannot be emptied. What is left of a clone whose removal fails is
 // not a clone any more, so it must not be where the next run looks for one.
-test('the wrapper says that removing the clone failed, exits non-zero, and does not resume what is left', (t) => {
-  const { clone, run, agent } = setUp(t);
-  const left = join(clone, '..', `.discarded-${branch}`);
-  const locked = join(left, 'node_modules', 'locked');
-  agent('mkdir -p node_modules/locked\necho kept > node_modules/locked/file.txt\nchmod 555 node_modules/locked');
-  try {
-    const result = run([branch, 'echo', 'hi']);
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /sandbox\.sh: removing the clone failed/);
-    assert.ok(result.stderr.includes(join(left)), result.stderr);
-    assert.equal(existsSync(clone), false);
-    assert.equal(existsSync(locked), true);
+test(
+  'the wrapper says that removing the clone failed, exits non-zero, and does not resume what is left',
+  (testContext) => {
+    const { clone, run, agent } = setUp(testContext);
+    const left = join(clone, '..', `.discarded-${branch}`);
+    const locked = join(left, 'node_modules', 'locked');
+    agent('mkdir -p node_modules/locked\necho kept > node_modules/locked/file.txt\nchmod 555 node_modules/locked');
+    try {
+      const result = run([branch, 'echo', 'hi']);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, /sandbox\.sh: removing the clone failed/);
+      assert.ok(result.stderr.includes(join(left)), result.stderr);
+      assert.equal(existsSync(clone), false);
+      assert.equal(existsSync(locked), true);
 
-    agent('echo kept > kept.txt');
-    const next = run([branch, 'echo', 'hi']);
-    assert.doesNotMatch(next.stderr, /resuming the clone/);
-    assert.equal(readFileSync(join(clone, 'unit.md'), 'utf-8'), 'the unit\n');
-  } finally {
-    // So that the test's own directory can be removed.
-    if (existsSync(locked)) chmodSync(locked, 0o755);
-  }
-});
+      agent('echo kept > kept.txt');
+      const next = run([branch, 'echo', 'hi']);
+      assert.doesNotMatch(next.stderr, /resuming the clone/);
+      assert.equal(readFileSync(join(clone, 'unit.md'), 'utf-8'), 'the unit\n');
+    } finally {
+      // So that the test's own directory can be removed.
+      if (existsSync(locked)) chmodSync(locked, 0o755);
+    }
+  },
+);
 
 // Connecting: `--connect` runs a command in the container of the unit run that is under way, and starts nothing.
 
@@ -1090,17 +1141,20 @@ const connectCall = (command, { tty = false, term = tty ? 'xterm' : '', colorter
 const markRunning = ({ runningContainer }) => writeFileSync(runningContainer, '0123456789ab\n');
 
 for (const unit of [branch, '0026']) {
-  test(`--connect ${unit} runs the command in the container of the run of ${branch}, and nothing else`, (t) => {
-    const host = setUp(t);
-    markRunning(host);
-    const result = host.run(['--connect', unit, 'echo', 'hi']);
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, '');
-    assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
-  });
+  test(
+    `--connect ${unit} runs the command in the container of the run of ${branch}, and nothing else`,
+    (testContext) => {
+      const host = setUp(testContext);
+      markRunning(host);
+      const result = host.run(['--connect', unit, 'echo', 'hi']);
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stderr, '');
+      assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+    },
+  );
 
-  test(`--connect ${unit} with no command opens the shell a unit run opens`, (t) => {
-    const host = setUp(t);
+  test(`--connect ${unit} with no command opens the shell a unit run opens`, (testContext) => {
+    const host = setUp(testContext);
     markRunning(host);
     const result = host.run(['--connect', unit]);
     assert.equal(result.status, 0, result.stderr);
@@ -1108,8 +1162,8 @@ for (const unit of [branch, '0026']) {
   });
 }
 
-test('--connect exits with the status the connected command exited with', (t) => {
-  const host = setUp(t);
+test('--connect exits with the status the connected command exited with', (testContext) => {
+  const host = setUp(testContext);
   markRunning(host);
   writeFileSync(host.execStatus, '7\n');
   const result = host.run(['--connect', branch, 'echo', 'hi']);
@@ -1120,8 +1174,8 @@ test('--connect exits with the status the connected command exited with', (t) =>
 // The host's terminal: a unit run and a connected command are each given the TERM and the COLORTERM of the shell
 // the wrapper was started from. A run is given each when it is set and not empty there. A connected command is
 // given both in every call, empty for one the shell lacks, which the image's script removes.
-test("a unit run passes the host's TERM and COLORTERM to the command", (t) => {
-  const { clone, run, dockerCalls, unitRun, logs } = setUp(t);
+test("a unit run passes the host's TERM and COLORTERM to the command", (testContext) => {
+  const { clone, run, dockerCalls, unitRun, logs } = setUp(testContext);
   const result = run([branch, 'echo', 'hi'], { TERM: 'xterm-256color', COLORTERM: 'truecolor' });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(
@@ -1140,13 +1194,16 @@ for (const [shell, env, given] of [
   ['with TERM and an empty COLORTERM', { TERM: 'xterm-256color', COLORTERM: '' }, { term: 'xterm-256color' }],
   ['with neither', {}, {}],
 ]) {
-  test(`--connect gives the command what its own shell has of the two, the rest empty, from a shell ${shell}`, (t) => {
-    const host = setUp(t);
-    markRunning(host);
-    const result = host.run(['--connect', branch, 'echo', 'hi'], env);
-    assert.equal(result.status, 0, result.stderr);
-    assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', given)]);
-  });
+  test(
+    `--connect gives the command what its own shell has of the two, the rest empty, from a shell ${shell}`,
+    (testContext) => {
+      const host = setUp(testContext);
+      markRunning(host);
+      const result = host.run(['--connect', branch, 'echo', 'hi'], env);
+      assert.equal(result.status, 0, result.stderr);
+      assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', given)]);
+    },
+  );
 }
 
 // `script` of util-linux runs a command on a terminal of its own. It is the suite's, not the wrapper's, so it is
@@ -1163,13 +1220,15 @@ function utilLinuxScript() {
   return version.status === 0 && version.stdout.includes('util-linux') ? found : undefined;
 }
 
-test('--connect gives the command a terminal when the wrapper is run from one', (t) => {
+test('--connect gives the command a terminal when the wrapper is run from one', (testContext) => {
   const script = utilLinuxScript();
   if (script === undefined) {
-    t.skip(skipReason('script of util-linux, which runs the wrapper on a terminal, is not on the PATH of the suite'));
+    testContext.skip(
+      skipReason('script of util-linux, which runs the wrapper on a terminal, is not on the PATH of the suite'),
+    );
     return;
   }
-  const host = setUp(t);
+  const host = setUp(testContext);
   markRunning(host);
   const wrapper = `'${join(host.container, 'sandbox.sh')}' '${host.root}' --connect ${branch} echo hi`;
   const result = spawnSync(script, ['--quiet', '--return', '--command', wrapper, '/dev/null'], {
@@ -1180,23 +1239,26 @@ test('--connect gives the command a terminal when the wrapper is run from one', 
   assert.deepEqual(host.dockerCalls(), [connectCall('echo hi', { tty: true })]);
 });
 
-test('--connect gives the command what the entrypoint, the compose file and the image give the first', (t) => {
-  const gets = firstCommandGets();
-  const host = setUp(t);
-  markRunning(host);
-  const result = host.run(['--connect', branch]);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(gets.user, gets.becomes);
-  assert.deepEqual(host.dockerCalls(), [
-    `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive --user ${gets.becomes} ` +
-      `--workdir ${gets.workingDirectory} --env HOME=${gets.home} --env USER=${gets.user} ` +
-      `--env LOGNAME=${gets.logname} --env PATH=${gets.path} --env TERM= --env COLORTERM= ${containerName} ` +
-      `${gets.through} ${gets.defaultCommand}`,
-  ]);
-});
+test(
+  '--connect gives the command what the entrypoint, the compose file and the image give the first',
+  (testContext) => {
+    const gets = firstCommandGets();
+    const host = setUp(testContext);
+    markRunning(host);
+    const result = host.run(['--connect', branch]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(gets.user, gets.becomes);
+    assert.deepEqual(host.dockerCalls(), [
+      `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive --user ${gets.becomes} ` +
+        `--workdir ${gets.workingDirectory} --env HOME=${gets.home} --env USER=${gets.user} ` +
+        `--env LOGNAME=${gets.logname} --env PATH=${gets.path} --env TERM= --env COLORTERM= ${containerName} ` +
+        `${gets.through} ${gets.defaultCommand}`,
+    ]);
+  },
+);
 
-test('--connect builds, asks, clones, cuts and fetches nothing, and makes no directory on the host', (t) => {
-  const host = setUpWithBuildDue(t);
+test('--connect builds, asks, clones, cuts and fetches nothing, and makes no directory on the host', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   const { home, state, logs, run, git, dockerCalls, npmCalls } = host;
   markRunning(host);
   const before = { refs: git('for-each-ref'), status: git('status', '--porcelain') };
@@ -1214,23 +1276,26 @@ test('--connect builds, asks, clones, cuts and fetches nothing, and makes no dir
 
 // The agent of the unit run connects twice to its own run, as a developer does from two other terminals while
 // the first command is at work. The container is running while it does, and has stopped when the script ends.
-test('a unit run to which commands were connected lands its work and removes the clone as it does without', (t) => {
-  const host = setUp(t);
-  const { root, container, clone, run, git, agent, runningContainer, dockerCalls, unitRun } = host;
-  const connect = (word) => `"${join(container, 'sandbox.sh')}" "${root}" --connect ${branch} echo ${word}`;
-  agent(
-    `echo 0123456789ab > "${runningContainer}"\n${connect('one')}\n${connect('two')}\n` +
-      `rm "${runningContainer}"\n${commitWork}`,
-  );
+test(
+  'a unit run to which commands were connected lands its work and removes the clone as it does without',
+  (testContext) => {
+    const host = setUp(testContext);
+    const { root, container, clone, run, git, agent, runningContainer, dockerCalls, unitRun } = host;
+    const connect = (word) => `"${join(container, 'sandbox.sh')}" "${root}" --connect ${branch} echo ${word}`;
+    agent(
+      `echo 0123456789ab > "${runningContainer}"\n${connect('one')}\n${connect('two')}\n` +
+        `rm "${runningContainer}"\n${commitWork}`,
+    );
 
-  const result = run([branch, 'echo', 'hi']);
+    const result = run([branch, 'echo', 'hi']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), [...unitRun(clone), connectCall('echo one'), connectCall('echo two')]);
-  assert.equal(subjectOf(git, branch), 'work');
-  assert.equal(hasRef(git, sandboxRef), false);
-  assert.equal(existsSync(clone), false);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), [...unitRun(clone), connectCall('echo one'), connectCall('echo two')]);
+    assert.equal(subjectOf(git, branch), 'work');
+    assert.equal(hasRef(git, sandboxRef), false);
+    assert.equal(existsSync(clone), false);
+  },
+);
 
 // What `--connect` refuses. Each on a host where a build would be due, so that a refusal that came too late
 // would show in the calls of Docker and of npm. `status` is 2 for arguments at fault, which lists the forms too, and
@@ -1243,8 +1308,8 @@ function assertNothingRan(host, result, status) {
   assert.equal(existsSync(host.state), false);
 }
 
-test('--connect with no unit is refused, and names --connect and its form', (t) => {
-  const host = setUpWithBuildDue(t);
+test('--connect with no unit is refused, and names --connect and its form', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   markRunning(host);
   const result = host.run(['--connect']);
   assertNothingRan(host, result, 2);
@@ -1253,8 +1318,8 @@ test('--connect with no unit is refused, and names --connect and its form', (t) 
 });
 
 for (const unit of ['claude', '0031']) {
-  test(`--connect ${unit} is refused for a unit that names no branch, and cuts none`, (t) => {
-    const host = setUpWithBuildDue(t);
+  test(`--connect ${unit} is refused for a unit that names no branch, and cuts none`, (testContext) => {
+    const host = setUpWithBuildDue(testContext);
     markRunning(host);
     commitUnit(host, 'kind: feature');
     const refs = host.git('for-each-ref');
@@ -1268,8 +1333,8 @@ for (const unit of ['claude', '0031']) {
   });
 }
 
-test('--connect 0010 is refused, and lists the branches the number names', (t) => {
-  const host = setUpWithBuildDue(t);
+test('--connect 0010 is refused, and lists the branches the number names', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   markRunning(host);
   const result = host.run(['--connect', '0010', 'echo', 'hi']);
   assertNothingRan(host, result, 1);
@@ -1278,22 +1343,25 @@ test('--connect 0010 is refused, and lists the branches the number names', (t) =
 });
 
 for (const unit of [branch, '0026']) {
-  test(`--connect ${unit} is refused while no container of the run is running, and names the command`, (t) => {
-    const host = setUpWithBuildDue(t);
-    const result = host.run(['--connect', unit, 'echo', 'hi']);
-    assertNothingRan(host, result, 1);
-    assert.ok(
-      result.stderr.includes(
-        `sandbox.sh: no run is under way for '${unit}': the container ${containerName} is not running.\n`,
-      ),
-      result.stderr,
-    );
-    assert.ok(result.stderr.includes(`Start one with 'sandbox.sh ${unit}'.\n`), result.stderr);
-  });
+  test(
+    `--connect ${unit} is refused while no container of the run is running, and names the command`,
+    (testContext) => {
+      const host = setUpWithBuildDue(testContext);
+      const result = host.run(['--connect', unit, 'echo', 'hi']);
+      assertNothingRan(host, result, 1);
+      assert.ok(
+        result.stderr.includes(
+          `sandbox.sh: no run is under way for '${unit}': the container ${containerName} is not running.\n`,
+        ),
+        result.stderr,
+      );
+      assert.ok(result.stderr.includes(`Start one with 'sandbox.sh ${unit}'.\n`), result.stderr);
+    },
+  );
 }
 
-test('--connect is refused when Docker cannot say whether the container is running', (t) => {
-  const host = setUpWithBuildDue(t);
+test('--connect is refused when Docker cannot say whether the container is running', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   markRunning(host);
   writeFileSync(host.psFails, '');
   const result = host.run(['--connect', branch, 'echo', 'hi']);
@@ -1312,8 +1380,8 @@ for (const [option, value] of [
     ['before', (given) => [...given, '--connect']],
     ['after', (given) => ['--connect', ...given]],
   ]) {
-    test(`--connect is refused with ${option} ${where} it, and names the option`, (t) => {
-      const host = setUpWithBuildDue(t);
+    test(`--connect is refused with ${option} ${where} it, and names the option`, (testContext) => {
+      const host = setUpWithBuildDue(testContext);
       markRunning(host);
       const result = host.run([...order([option, ...value(host.base)]), branch, 'echo', 'hi']);
       assertNothingRan(host, result, 2);
@@ -1332,8 +1400,8 @@ for (const option of ['--workdir', '--mount']) {
     ['before', (given) => [...given, '--connect']],
     ['after', (given) => ['--connect', ...given]],
   ]) {
-    test(`--connect is refused with ${option} ${where} it and a directory that is not there`, (t) => {
-      const host = setUpWithBuildDue(t);
+    test(`--connect is refused with ${option} ${where} it and a directory that is not there`, (testContext) => {
+      const host = setUpWithBuildDue(testContext);
       markRunning(host);
       const missing = join(host.base, 'not-there');
       const result = host.run([...order([option, missing]), branch, 'echo', 'hi']);
@@ -1347,8 +1415,8 @@ for (const option of ['--workdir', '--mount']) {
   }
 }
 
-test('--connect is refused as root, like a run', (t) => {
-  const host = setUp(t);
+test('--connect is refused as root, like a run', (testContext) => {
+  const host = setUp(testContext);
   markRunning(host);
   // The stand-in's `id` is a link to the host's own, which writing through would reach.
   rmSync(join(host.bin, 'id'));
@@ -1365,8 +1433,8 @@ for (const [what, args] of [
   ['a unit run', [branch, 'echo', 'hi']],
   ['--connect', ['--connect', branch, 'echo', 'hi']],
 ]) {
-  test(`the wrapper refuses a project whose service is still agent, given ${what}`, (t) => {
-    const { root, state, run, dockerCalls } = setUp(t);
+  test(`the wrapper refuses a project whose service is still agent, given ${what}`, (testContext) => {
+    const { root, state, run, dockerCalls } = setUp(testContext);
     writeFileSync(join(root, 'sandbox', 'compose.project.yml'), 'services:\n  agent:\n    mem_limit: 8g\n');
     const result = run(args);
     assert.equal(result.status, 1);
@@ -1404,8 +1472,8 @@ for (const name of ['Opus', 'opus--x', '-opus', 'opus-', 'op_us', 'opus.1', ''])
     ['--variant NAME before the unit', ['--variant', name, '0026', 'echo', 'hi']],
     ['--variant=NAME after the unit', ['0026', `--variant=${name}`, 'echo', 'hi']],
   ]) {
-    test(`a variant named '${name}' is refused with ${form}, naming the name and the form`, (t) => {
-      const host = setUpWithBuildDue(t);
+    test(`a variant named '${name}' is refused with ${form}, naming the name and the form`, (testContext) => {
+      const host = setUpWithBuildDue(testContext);
       const refs = host.git('for-each-ref');
       const result = host.run(args);
       assertVariantRefused(host, result, refs);
@@ -1416,8 +1484,8 @@ for (const name of ['Opus', 'opus--x', '-opus', 'opus-', 'op_us', 'opus.1', ''])
 }
 
 for (const option of ['--in-place', '--workdir']) {
-  test(`--variant is refused together with ${option}, which has no unit`, (t) => {
-    const host = setUpWithBuildDue(t);
+  test(`--variant is refused together with ${option}, which has no unit`, (testContext) => {
+    const host = setUpWithBuildDue(testContext);
     const refs = host.git('for-each-ref');
     const args = option === '--workdir' ? [option, host.base] : [option];
     const result = host.run(['--variant', 'opus', ...args, 'echo', 'hi']);
@@ -1433,8 +1501,8 @@ for (const [what, args] of [
   ['after the unit twice', ['0026', '--variant', 'opus', '--variant', 'gpt', 'echo', 'hi']],
   ['after the unit in the other form twice', ['0026', '--variant=opus', '--variant=gpt', 'echo', 'hi']],
 ]) {
-  test(`--variant given ${what} is refused`, (t) => {
-    const host = setUpWithBuildDue(t);
+  test(`--variant given ${what} is refused`, (testContext) => {
+    const host = setUpWithBuildDue(testContext);
     const refs = host.git('for-each-ref');
     const result = host.run(args);
     assertVariantRefused(host, result, refs);
@@ -1443,8 +1511,8 @@ for (const [what, args] of [
 }
 
 for (const args of [['--variant'], ['0026', '--variant']]) {
-  test(`--variant with no name is refused, given as ${args.join(' ')}`, (t) => {
-    const host = setUpWithBuildDue(t);
+  test(`--variant with no name is refused, given as ${args.join(' ')}`, (testContext) => {
+    const host = setUpWithBuildDue(testContext);
     const refs = host.git('for-each-ref');
     const result = host.run(args);
     assertVariantRefused(host, result, refs);
@@ -1457,8 +1525,8 @@ for (const args of [
   ['0026', '--variant=opus', 'echo', 'hi'],
   ['--variant', 'opus', '0026', 'echo', 'hi'],
 ]) {
-  test(`${args.slice(0, -2).join(' ')} cuts ${variantBranch} and runs it, in a container of its own`, (t) => {
-    const host = setUp(t);
+  test(`${args.slice(0, -2).join(' ')} cuts ${variantBranch} and runs it, in a container of its own`, (testContext) => {
+    const host = setUp(testContext);
     const { state, run, git, dockerCalls } = host;
     const refs = git('for-each-ref');
     const checkedOut = git('symbolic-ref', 'HEAD');
@@ -1481,40 +1549,43 @@ for (const args of [
   });
 }
 
-test('a run without --variant makes the calls it made before, and cuts no variant', (t) => {
-  const { clone, run, git, dockerCalls, unitRun } = setUp(t);
+test('a run without --variant makes the calls it made before, and cuts no variant', (testContext) => {
+  const { clone, run, git, dockerCalls, unitRun } = setUp(testContext);
   const result = run([branch, 'echo', '--variant', 'opus']);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), unitRun(clone).map((call) => call.replace(/echo hi$/, 'echo --variant opus')));
   assert.equal(git('for-each-ref', `refs/heads/${variantBranch}`), '');
 });
 
-test('a variant whose branch exists is run as it is, apart from the unit that moved on, and cuts nothing', (t) => {
-  const host = setUp(t);
-  const { state, run, git } = host;
-  git('branch', variantBranch, 'master');
-  const variantCommit = git('rev-parse', variantBranch);
-  git('checkout', '--quiet', branch);
-  writeFileSync(join(host.root, 'later.md'), 'later\n');
-  git('add', 'later.md');
-  git('commit', '--quiet', '--message', 'the unit moves on');
-  git('checkout', '--quiet', 'master');
-  host.agent('git rev-parse HEAD > ../commit-seen');
-  const refs = git('for-each-ref');
+test(
+  'a variant whose branch exists is run as it is, apart from the unit that moved on, and cuts nothing',
+  (testContext) => {
+    const host = setUp(testContext);
+    const { state, run, git } = host;
+    git('branch', variantBranch, 'master');
+    const variantCommit = git('rev-parse', variantBranch);
+    git('checkout', '--quiet', branch);
+    writeFileSync(join(host.root, 'later.md'), 'later\n');
+    git('add', 'later.md');
+    git('commit', '--quiet', '--message', 'the unit moves on');
+    git('checkout', '--quiet', 'master');
+    host.agent('git rev-parse HEAD > ../commit-seen');
+    const refs = git('for-each-ref');
 
-  const result = run([branch, '--variant', 'opus', 'echo', 'hi']);
+    const result = run([branch, '--variant', 'opus', 'echo', 'hi']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.doesNotMatch(result.stderr, /cut /);
-  assert.equal(git('for-each-ref'), refs);
-  assert.equal(
-    readFileSync(join(state, 'agentrite', 'project-sandbox', 'commit-seen'), 'utf-8').trim(),
-    variantCommit,
-  );
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.doesNotMatch(result.stderr, /cut /);
+    assert.equal(git('for-each-ref'), refs);
+    assert.equal(
+      readFileSync(join(state, 'agentrite', 'project-sandbox', 'commit-seen'), 'utf-8').trim(),
+      variantCommit,
+    );
+  },
+);
 
-test('--variant for a unit with no branch cuts the unit and then the variant, and runs the variant', (t) => {
-  const host = setUp(t);
+test('--variant for a unit with no branch cuts the unit and then the variant, and runs the variant', (testContext) => {
+  const host = setUp(testContext);
   const { state, run, git } = host;
   commitUnit(host, 'kind: feature');
   const cut = 'feature-0031-cut-me';
@@ -1530,8 +1601,8 @@ test('--variant for a unit with no branch cuts the unit and then the variant, an
   );
 });
 
-test('a build that fails after a variant was cut leaves both branches cut', (t) => {
-  const host = setUp(t, { imageExists: false });
+test('a build that fails after a variant was cut leaves both branches cut', (testContext) => {
+  const host = setUp(testContext, { imageExists: false });
   commitUnit(host, 'kind: feature');
   writeFileSync(host.buildFails, '');
   const result = host.run(['0031', '--variant', 'opus', 'echo', 'hi']);
@@ -1542,8 +1613,8 @@ test('a build that fails after a variant was cut leaves both branches cut', (t) 
   assert.equal(host.dockerCalls().filter((call) => / run /.test(call)).length, 0);
 });
 
-test('a number names the unit, whatever variants the unit has', (t) => {
-  const host = setUp(t);
+test('a number names the unit, whatever variants the unit has', (testContext) => {
+  const host = setUp(testContext);
   host.git('branch', variantBranch, branch);
   host.git('branch', `${branch}--gpt-6-1`, branch);
   const result = host.run(['0026', 'echo', 'hi']);
@@ -1551,8 +1622,8 @@ test('a number names the unit, whatever variants the unit has', (t) => {
   assert.deepEqual(host.dockerCalls(), host.unitRun(host.clone));
 });
 
-test('a number that only a variant branch holds names no branch', (t) => {
-  const host = setUpWithBuildDue(t);
+test('a number that only a variant branch holds names no branch', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   host.git('branch', 'task-0099-x--opus', 'master');
   const refs = host.git('for-each-ref');
   const result = host.run(['0099', 'echo', 'hi']);
@@ -1562,8 +1633,8 @@ test('a number that only a variant branch holds names no branch', (t) => {
   assert.deepEqual(host.dockerCalls(), []);
 });
 
-test('a variant branch given by its full name is run as it is, and cuts nothing', (t) => {
-  const host = setUp(t);
+test('a variant branch given by its full name is run as it is, and cuts nothing', (testContext) => {
+  const host = setUp(testContext);
   host.git('branch', variantBranch, branch);
   const refs = host.git('for-each-ref');
   const result = host.run([variantBranch, 'echo', 'hi']);
@@ -1576,8 +1647,8 @@ test('a variant branch given by its full name is run as it is, and cuts nothing'
   );
 });
 
-test("--variant with a unit given by a variant's branch is refused, naming the branch", (t) => {
-  const host = setUpWithBuildDue(t);
+test("--variant with a unit given by a variant's branch is refused, naming the branch", (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   host.git('branch', variantBranch, branch);
   const refs = host.git('for-each-ref');
   const result = host.run([variantBranch, '--variant', 'gpt', 'echo', 'hi']);
@@ -1593,8 +1664,8 @@ for (const args of [
   ['--connect', '--variant', 'opus', '0026'],
   ['--connect', variantBranch],
 ]) {
-  test(`${args.join(' ')} runs the command in the container of the variant's run`, (t) => {
-    const host = setUp(t);
+  test(`${args.join(' ')} runs the command in the container of the variant's run`, (testContext) => {
+    const host = setUp(testContext);
     host.git('branch', variantBranch, branch);
     markRunning(host);
     const result = host.run([...args, 'echo', 'hi']);
@@ -1604,8 +1675,8 @@ for (const args of [
   });
 }
 
-test("--connect with a number connects to the unit's run alone, whatever variants there are", (t) => {
-  const host = setUp(t);
+test("--connect with a number connects to the unit's run alone, whatever variants there are", (testContext) => {
+  const host = setUp(testContext);
   host.git('branch', variantBranch, branch);
   markRunning(host);
   const result = host.run(['--connect', '0026', 'echo', 'hi']);
@@ -1613,19 +1684,22 @@ test("--connect with a number connects to the unit's run alone, whatever variant
   assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
 });
 
-test('--connect for a variant that has no branch is refused, cuts none, and names the command that starts one', (t) => {
-  const host = setUpWithBuildDue(t);
-  markRunning(host);
-  const refs = host.git('for-each-ref');
-  const result = host.run(['--connect', '0026', '--variant', 'nobranch', 'echo', 'hi']);
-  assertNothingRan(host, result, 1);
-  assert.ok(result.stderr.includes("'0026' has no variant 'nobranch'"), result.stderr);
-  assert.ok(result.stderr.includes("Start one with 'sandbox.sh 0026 --variant nobranch'.\n"), result.stderr);
-  assert.equal(host.git('for-each-ref'), refs);
-});
+test(
+  '--connect for a variant that has no branch is refused, cuts none, and names the command that starts one',
+  (testContext) => {
+    const host = setUpWithBuildDue(testContext);
+    markRunning(host);
+    const refs = host.git('for-each-ref');
+    const result = host.run(['--connect', '0026', '--variant', 'nobranch', 'echo', 'hi']);
+    assertNothingRan(host, result, 1);
+    assert.ok(result.stderr.includes("'0026' has no variant 'nobranch'"), result.stderr);
+    assert.ok(result.stderr.includes("Start one with 'sandbox.sh 0026 --variant nobranch'.\n"), result.stderr);
+    assert.equal(host.git('for-each-ref'), refs);
+  },
+);
 
-test('--connect for a variant is refused while its container is not running, and names the command', (t) => {
-  const host = setUpWithBuildDue(t);
+test('--connect for a variant is refused while its container is not running, and names the command', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   host.git('branch', variantBranch, branch);
   const result = host.run(['--connect', '0026', '--variant', 'opus']);
   assertNothingRan(host, result, 1);
@@ -1638,15 +1712,15 @@ test('--connect for a variant is refused while its container is not running, and
   assert.ok(result.stderr.includes("Start one with 'sandbox.sh 0026 --variant opus'.\n"), result.stderr);
 });
 
-test('--connect with --variant and --in-place is refused', (t) => {
-  const host = setUpWithBuildDue(t);
+test('--connect with --variant and --in-place is refused', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   const result = host.run(['--connect', '--in-place', '--variant', 'opus', '0026']);
   assertNothingRan(host, result, 2);
   assert.ok(result.stderr.includes('--connect cannot be given together with --in-place.'), result.stderr);
 });
 
-test('a second run of a variant whose container is running is refused, and names the variant', (t) => {
-  const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(t);
+test('a second run of a variant whose container is running is refused, and names the variant', (testContext) => {
+  const { state, run, git, runningContainer, dockerCalls, npmCalls } = setUpWithBuildDue(testContext);
   writeFileSync(runningContainer, '0123456789ab\n');
   const refs = git('for-each-ref');
   git('branch', variantBranch, branch);
@@ -1663,8 +1737,8 @@ test('a second run of a variant whose container is running is refused, and names
   assert.notEqual(refs, withVariant);
 });
 
-test('the forms the wrapper lists when nothing to mount is given show --variant NAME', (t) => {
-  const host = setUpWithBuildDue(t);
+test('the forms the wrapper lists when nothing to mount is given show --variant NAME', (testContext) => {
+  const host = setUpWithBuildDue(testContext);
   const result = host.run([]);
   assert.equal(result.status, 2);
   assert.ok(result.stderr.includes('sandbox.sh UNIT [--variant NAME] [COMMAND...]'), result.stderr);

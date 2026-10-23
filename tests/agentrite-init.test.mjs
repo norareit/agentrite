@@ -606,8 +606,8 @@ const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const LOCKFILE = JSON.stringify({ lockfileVersion: 3, packages: { 'node_modules/playwright': { version: '1.59.1' } } });
 
 // A lockfile of `null` leaves the project without one.
-function project(t, { lockfile = LOCKFILE } = {}) {
-  const base = temporaryDirectory(t, 'agentrite-init-');
+function project(testContext, { lockfile = LOCKFILE } = {}) {
+  const base = temporaryDirectory(testContext, 'agentrite-init-');
   writeFileSync(
     join(base, 'package.json'),
     '{\n  "name": "my-app",\n  "scripts": {\n    "test": "node --test"\n  }\n}\n',
@@ -628,8 +628,8 @@ function exists(path) {
   }
 }
 
-test('a fresh project gets every file, listed as written, and exits 0', (t) => {
-  const { base, run, read } = project(t);
+test('a fresh project gets every file, listed as written, and exits 0', (testContext) => {
+  const { base, run, read } = project(testContext);
   const result = run('init', 'claude', 'opencode');
   assert.equal(result.status, 0, result.stderr);
   const expected = files(['claude', 'opencode'], { packageName: 'my-app' });
@@ -648,8 +648,8 @@ test('a fresh project gets every file, listed as written, and exits 0', (t) => {
   assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o111, 0);
 });
 
-test('the written sandbox.sh execs the kit wrapper with the project root and every other argument', (t) => {
-  const { base, run } = project(t);
+test('the written sandbox.sh execs the kit wrapper with the project root and every other argument', (testContext) => {
+  const { base, run } = project(testContext);
   assert.equal(run('init', 'claude').status, 0);
   const kitContainer = join(base, 'node_modules', 'agentrite', 'container');
   mkdirSync(kitContainer, { recursive: true });
@@ -664,42 +664,45 @@ test('the written sandbox.sh execs the kit wrapper with the project root and eve
   assert.deepEqual(rest, ['--rebuild', 'echo hi']);
 });
 
-test('a project with some files present gets the rest; the present ones are skipped, unchanged, with notices', (t) => {
-  const { base, run, read } = project(t);
-  const present = {
-    'AGENTS.md': '# Our own instructions\n',
-    'CLAUDE.md': 'our own\n',
-    '.claude/agents/reviewer.md': 'our reviewer\n',
-    'sandbox.sh': '#!/bin/sh\necho ours\n',
-    '.dockerignore': `node_modules\n${EXCEPTION}\n`,
-  };
-  for (const [path, content] of Object.entries(present)) {
-    mkdirSync(join(base, path, '..'), { recursive: true });
-    writeFileSync(join(base, path), content);
-  }
-  const packageJson = `{\n  "name": "my-app",\n  "scripts": {\n    "check-changes": "ours"\n  }\n}\n`;
-  writeFileSync(join(base, 'package.json'), packageJson);
+test(
+  'a project with some files present gets the rest; the present ones are skipped, unchanged, with notices',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    const present = {
+      'AGENTS.md': '# Our own instructions\n',
+      'CLAUDE.md': 'our own\n',
+      '.claude/agents/reviewer.md': 'our reviewer\n',
+      'sandbox.sh': '#!/bin/sh\necho ours\n',
+      '.dockerignore': `node_modules\n${EXCEPTION}\n`,
+    };
+    for (const [path, content] of Object.entries(present)) {
+      mkdirSync(join(base, path, '..'), { recursive: true });
+      writeFileSync(join(base, path), content);
+    }
+    const packageJson = `{\n  "name": "my-app",\n  "scripts": {\n    "check-changes": "ours"\n  }\n}\n`;
+    writeFileSync(join(base, 'package.json'), packageJson);
 
-  const result = run('init', 'claude');
+    const result = run('init', 'claude');
 
-  assert.equal(result.status, 0, result.stderr);
-  for (const [path, content] of Object.entries(present)) {
-    assert.equal(read(path), content, path);
-    assert.match(result.stdout, new RegExp(`^skipped ${path.replaceAll('.', '\\.')}\\b`, 'm'));
-  }
-  assert.equal(read('package.json'), packageJson);
-  assert.match(result.stdout, /^skipped package\.json\b/m);
-  for (const path of ['.claude/agents/planner.md', '.claude/agents/implementer.md', 'sandbox/compose.project.yml']) {
-    assert.ok(exists(join(base, path)), path);
-    assert.match(result.stdout, new RegExp(`^wrote ${path.replaceAll('.', '\\.')}$`, 'm'));
-  }
-  const agents = fileAt(files(['claude']), 'AGENTS.md').content;
-  assert.ok(result.stdout.includes(agentsNotice(agents)));
-  assert.ok(result.stdout.includes(CLAUDE_NOTICE));
-});
+    assert.equal(result.status, 0, result.stderr);
+    for (const [path, content] of Object.entries(present)) {
+      assert.equal(read(path), content, path);
+      assert.match(result.stdout, new RegExp(`^skipped ${path.replaceAll('.', '\\.')}\\b`, 'm'));
+    }
+    assert.equal(read('package.json'), packageJson);
+    assert.match(result.stdout, /^skipped package\.json\b/m);
+    for (const path of ['.claude/agents/planner.md', '.claude/agents/implementer.md', 'sandbox/compose.project.yml']) {
+      assert.ok(exists(join(base, path)), path);
+      assert.match(result.stdout, new RegExp(`^wrote ${path.replaceAll('.', '\\.')}$`, 'm'));
+    }
+    const agents = fileAt(files(['claude']), 'AGENTS.md').content;
+    assert.ok(result.stdout.includes(agentsNotice(agents)));
+    assert.ok(result.stdout.includes(CLAUDE_NOTICE));
+  },
+);
 
-test('a dangling symlink where a file would go is skipped, not written through', (t) => {
-  const { base, run } = project(t);
+test('a dangling symlink where a file would go is skipped, not written through', (testContext) => {
+  const { base, run } = project(testContext);
   symlinkSync('/no/such/target', join(base, 'CLAUDE.md'));
   const result = run('init', 'claude');
   assert.equal(result.status, 0, result.stderr);
@@ -707,23 +710,26 @@ test('a dangling symlink where a file would go is skipped, not written through',
   assert.match(result.stdout, /^skipped CLAUDE\.md\b/m);
 });
 
-test('a project without playwright gets every file, the compose file without the build argument, and exits 0', (t) => {
-  for (const lockfile of [JSON.stringify({ lockfileVersion: 3, packages: {} }), null]) {
-    const { base, run, read } = project(t, { lockfile });
-    const result = run('init', 'claude');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, '');
-    assert.match(result.stdout, /^wrote sandbox\/compose\.project\.yml$/m);
-    assert.doesNotMatch(read('sandbox/compose.project.yml'), /PLAYWRIGHT_VERSION|build:/);
-    for (const path of ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', '.dockerignore', '.claude/agents/planner.md']) {
-      assert.ok(exists(join(base, path)), path);
+test(
+  'a project without playwright gets every file, the compose file without the build argument, and exits 0',
+  (testContext) => {
+    for (const lockfile of [JSON.stringify({ lockfileVersion: 3, packages: {} }), null]) {
+      const { base, run, read } = project(testContext, { lockfile });
+      const result = run('init', 'claude');
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stderr, '');
+      assert.match(result.stdout, /^wrote sandbox\/compose\.project\.yml$/m);
+      assert.doesNotMatch(read('sandbox/compose.project.yml'), /PLAYWRIGHT_VERSION|build:/);
+      for (const path of ['AGENTS.md', 'CLAUDE.md', 'sandbox.sh', '.dockerignore', '.claude/agents/planner.md']) {
+        assert.ok(exists(join(base, path)), path);
+      }
+      assert.match(result.stdout, /^changed package\.json$/m);
     }
-    assert.match(result.stdout, /^changed package\.json$/m);
-  }
-});
+  },
+);
 
-test('a project without playwright whose compose file exists keeps it, and exits 0', (t) => {
-  const { base, run, read } = project(t, { lockfile: null });
+test('a project without playwright whose compose file exists keeps it, and exits 0', (testContext) => {
+  const { base, run, read } = project(testContext, { lockfile: null });
   mkdirSync(join(base, 'sandbox'));
   writeFileSync(join(base, 'sandbox', 'compose.project.yml'), 'ours\n');
   const result = run('init', 'claude');
@@ -734,9 +740,9 @@ test('a project without playwright whose compose file exists keeps it, and exits
   assert.ok(exists(join(base, 'AGENTS.md')));
 });
 
-test('a usage error writes nothing and exits non-zero', (t) => {
+test('a usage error writes nothing and exits non-zero', (testContext) => {
   for (const args of [[], ['init'], ['init', 'codex'], ['setup', 'claude']]) {
-    const { base, run, read } = project(t);
+    const { base, run, read } = project(testContext);
     const result = run(...args);
     assert.notEqual(result.status, 0, args.join(' '));
     assert.match(result.stderr, /usage: agentrite init/);
@@ -747,8 +753,8 @@ test('a usage error writes nothing and exits non-zero', (t) => {
   }
 });
 
-test('a package.json without a name is refused before anything is written', (t) => {
-  const { base, run } = project(t);
+test('a package.json without a name is refused before anything is written', (testContext) => {
+  const { base, run } = project(testContext);
   writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n');
   const result = run('init', 'claude');
   assert.notEqual(result.status, 0);
@@ -757,8 +763,8 @@ test('a package.json without a name is refused before anything is written', (t) 
   assert.equal(exists(join(base, 'AGENTS.md')), false);
 });
 
-test('the command runs through a node_modules bin symlink the way npx does', (t) => {
-  const { base, read } = project(t);
+test('the command runs through a node_modules bin symlink the way npx does', (testContext) => {
+  const { base, read } = project(testContext);
   mkdirSync(join(base, 'node_modules', '.bin'), { recursive: true });
   const bin = join(base, 'node_modules', '.bin', 'agentrite');
   symlinkSync(script, bin);
@@ -795,57 +801,63 @@ function withSandboxFiles(base) {
   writeFileSync(join(base, '.dockerignore'), 'ours\n');
 }
 
-test('init --no-sandbox writes what init writes but the three files of the sandbox, in a project with none', (t) => {
-  const { base, run, read } = project(t);
-  const full = project(t);
-  const withSandbox = full.run('init', 'claude');
+test(
+  'init --no-sandbox writes what init writes but the three files of the sandbox, in a project with none',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    const full = project(testContext);
+    const withSandbox = full.run('init', 'claude');
 
-  const result = run('init', OPTION, 'claude');
+    const result = run('init', OPTION, 'claude');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  const expected = linesOf(withSandbox).filter((line) => !SANDBOX_FILES.some((path) => line.endsWith(` ${path}`)));
-  assert.deepEqual(linesOf(result), expected);
-  for (const path of PROCESS_PATHS) assert.equal(read(path), full.read(path), path);
-  assert.equal(read('package.json'), full.read('package.json'));
-  for (const path of SANDBOX_FILES) {
-    assert.equal(exists(join(base, path)), false, path);
-    assert.doesNotMatch(result.stdout, new RegExp(path.replaceAll('.', '\\.')));
-  }
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const expected = linesOf(withSandbox).filter((line) => !SANDBOX_FILES.some((path) => line.endsWith(` ${path}`)));
+    assert.deepEqual(linesOf(result), expected);
+    for (const path of PROCESS_PATHS) assert.equal(read(path), full.read(path), path);
+    assert.equal(read('package.json'), full.read('package.json'));
+    for (const path of SANDBOX_FILES) {
+      assert.equal(exists(join(base, path)), false, path);
+      assert.doesNotMatch(result.stdout, new RegExp(path.replaceAll('.', '\\.')));
+    }
+  },
+);
 
-test('init --no-sandbox prints the same lines and notices for what exists, and leaves the sandbox alone', (t) => {
-  const { base, run, read } = project(t);
-  const full = project(t);
-  for (const made of [{ base }, full]) {
-    writeFileSync(join(made.base, 'AGENTS.md'), '# Our own instructions\n');
-    writeFileSync(join(made.base, 'CLAUDE.md'), 'our own\n');
-  }
-  const withSandbox = full.run('init', 'claude');
-  withSandboxFiles(base);
-  const modes = Object.fromEntries(SANDBOX_FILES.map((path) => [path, statSync(join(base, path)).mode]));
+test(
+  'init --no-sandbox prints the same lines and notices for what exists, and leaves the sandbox alone',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    const full = project(testContext);
+    for (const made of [{ base }, full]) {
+      writeFileSync(join(made.base, 'AGENTS.md'), '# Our own instructions\n');
+      writeFileSync(join(made.base, 'CLAUDE.md'), 'our own\n');
+    }
+    const withSandbox = full.run('init', 'claude');
+    withSandboxFiles(base);
+    const modes = Object.fromEntries(SANDBOX_FILES.map((path) => [path, statSync(join(base, path)).mode]));
 
-  const result = run('init', 'claude', OPTION);
+    const result = run('init', 'claude', OPTION);
 
-  assert.equal(result.status, 0, result.stderr);
-  const expected = linesOf(withSandbox).filter((line) => !SANDBOX_FILES.some((path) => line.endsWith(` ${path}`)));
-  assert.deepEqual(linesOf(result), expected);
-  assert.match(result.stdout, /^skipped AGENTS\.md, which exists$/m);
-  assert.match(result.stdout, /^skipped CLAUDE\.md, which exists$/m);
-  assert.ok(result.stdout.includes(agentsNotice(fileAt(files(['claude']), 'AGENTS.md').content)));
-  assert.ok(result.stdout.includes(CLAUDE_NOTICE));
-  assert.equal(noticesOf(result), noticesOf(withSandbox).replace('"sandbox": true', '"sandbox": false'));
-  assert.equal(read('sandbox.sh'), '#!/bin/sh\necho ours\n');
-  assert.equal(read('sandbox/compose.project.yml'), 'ours\n');
-  assert.equal(read('.dockerignore'), 'ours\n');
-  for (const path of SANDBOX_FILES) {
-    assert.equal(statSync(join(base, path)).mode, modes[path], path);
-    assert.doesNotMatch(result.stdout, new RegExp(path.replaceAll('.', '\\.')));
-  }
-});
+    assert.equal(result.status, 0, result.stderr);
+    const expected = linesOf(withSandbox).filter((line) => !SANDBOX_FILES.some((path) => line.endsWith(` ${path}`)));
+    assert.deepEqual(linesOf(result), expected);
+    assert.match(result.stdout, /^skipped AGENTS\.md, which exists$/m);
+    assert.match(result.stdout, /^skipped CLAUDE\.md, which exists$/m);
+    assert.ok(result.stdout.includes(agentsNotice(fileAt(files(['claude']), 'AGENTS.md').content)));
+    assert.ok(result.stdout.includes(CLAUDE_NOTICE));
+    assert.equal(noticesOf(result), noticesOf(withSandbox).replace('"sandbox": true', '"sandbox": false'));
+    assert.equal(read('sandbox.sh'), '#!/bin/sh\necho ours\n');
+    assert.equal(read('sandbox/compose.project.yml'), 'ours\n');
+    assert.equal(read('.dockerignore'), 'ours\n');
+    for (const path of SANDBOX_FILES) {
+      assert.equal(statSync(join(base, path)).mode, modes[path], path);
+      assert.doesNotMatch(result.stdout, new RegExp(path.replaceAll('.', '\\.')));
+    }
+  },
+);
 
-test('init --no-sandbox runs with a package.json that has no name, and with no lockfile', (t) => {
-  const { base, run, read } = project(t, { lockfile: null });
+test('init --no-sandbox runs with a package.json that has no name, and with no lockfile', (testContext) => {
+  const { base, run, read } = project(testContext, { lockfile: null });
   writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n');
 
   const result = run('init', 'claude', OPTION);
@@ -857,53 +869,59 @@ test('init --no-sandbox runs with a package.json that has no name, and with no l
   assert.ok(exists(join(base, 'AGENTS.md')));
 });
 
-test('init --no-sandbox does not read the lockfile, so one that cannot be read does not stop it', (t) => {
-  const { base, run } = project(t, { lockfile: 'not json' });
+test('init --no-sandbox does not read the lockfile, so one that cannot be read does not stop it', (testContext) => {
+  const { base, run } = project(testContext, { lockfile: 'not json' });
 
   const withOption = run('init', OPTION, 'claude');
   assert.equal(withOption.status, 0, withOption.stderr);
   assert.equal(withOption.stderr, '');
   assert.ok(exists(join(base, 'CLAUDE.md')));
 
-  const other = project(t, { lockfile: 'not json' });
+  const other = project(testContext, { lockfile: 'not json' });
   const without = other.run('init', 'claude');
   assert.notEqual(without.status, 0);
   assert.match(without.stderr, /package-lock\.json/);
 });
 
-test('init --no-sandbox with no package.json, or one that is not JSON, is refused and writes nothing', (t) => {
-  for (const manifest of [null, 'not json']) {
-    const { base, run } = project(t);
-    rmSync(join(base, 'package.json'));
-    if (manifest !== null) writeFileSync(join(base, 'package.json'), manifest);
+test(
+  'init --no-sandbox with no package.json, or one that is not JSON, is refused and writes nothing',
+  (testContext) => {
+    for (const manifest of [null, 'not json']) {
+      const { base, run } = project(testContext);
+      rmSync(join(base, 'package.json'));
+      if (manifest !== null) writeFileSync(join(base, 'package.json'), manifest);
 
-    const result = run('init', 'claude', OPTION);
+      const result = run('init', 'claude', OPTION);
 
-    assert.notEqual(result.status, 0);
-    assert.match(result.stderr, /cannot read .*package\.json/);
-    assert.equal(result.stdout, '');
-    for (const path of [...PROCESS_PATHS, ...SANDBOX_FILES, '.claude']) {
-      assert.equal(exists(join(base, path)), false, path);
+      assert.notEqual(result.status, 0);
+      assert.match(result.stderr, /cannot read .*package\.json/);
+      assert.equal(result.stdout, '');
+      for (const path of [...PROCESS_PATHS, ...SANDBOX_FILES, '.claude']) {
+        assert.equal(exists(join(base, path)), false, path);
+      }
     }
-  }
-});
+  },
+);
 
 // R36: a project set up without the sandbox gets one by setting sandbox to true and running init.
-test('init with no argument, in a project whose file was set to sandbox true, writes the three files', (t) => {
-  const { base, run, read } = project(t);
-  assert.equal(run('init', 'claude', OPTION).status, 0);
-  const edited = read('agentrite.json').replace('"sandbox": false', '"sandbox": true');
-  writeFileSync(join(base, 'agentrite.json'), edited);
+test(
+  'init with no argument, in a project whose file was set to sandbox true, writes the three files',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    assert.equal(run('init', 'claude', OPTION).status, 0);
+    const edited = read('agentrite.json').replace('"sandbox": false', '"sandbox": true');
+    writeFileSync(join(base, 'agentrite.json'), edited);
 
-  const result = run('init');
+    const result = run('init');
 
-  assert.equal(result.status, 0, result.stderr);
-  for (const path of SANDBOX_FILES) assert.match(result.stdout, line('wrote', path, '$'));
-  for (const path of PROCESS_PATHS) assert.match(result.stdout, line('skipped', path, '\\b'));
-  assert.match(result.stdout, /^skipped package\.json\b/m);
-  assert.equal(read('sandbox/compose.project.yml'), fileAt(files(['claude']), 'sandbox/compose.project.yml').content);
-  assert.equal(read('agentrite.json'), edited);
-});
+    assert.equal(result.status, 0, result.stderr);
+    for (const path of SANDBOX_FILES) assert.match(result.stdout, line('wrote', path, '$'));
+    for (const path of PROCESS_PATHS) assert.match(result.stdout, line('skipped', path, '\\b'));
+    assert.match(result.stdout, /^skipped package\.json\b/m);
+    assert.equal(read('sandbox/compose.project.yml'), fileAt(files(['claude']), 'sandbox/compose.project.yml').content);
+    assert.equal(read('agentrite.json'), edited);
+  },
+);
 
 // R4: a project that holds the files of the release before is not read, changed or mentioned.
 
@@ -924,24 +942,27 @@ function assertOldSandboxFilesKept(base, result) {
   for (const output of result.stdout.split('\n')) assert.doesNotMatch(output, /agent\.sh|agent\//);
 }
 
-test('init writes the sandbox of this release beside the files of the release before, and leaves them', (t) => {
-  const { base, run, read } = project(t);
-  withOldSandboxFiles(base);
+test(
+  'init writes the sandbox of this release beside the files of the release before, and leaves them',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    withOldSandboxFiles(base);
 
-  const result = run('init', 'claude');
+    const result = run('init', 'claude');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /^wrote sandbox\.sh$/m);
-  assert.match(result.stdout, /^wrote sandbox\/compose\.project\.yml$/m);
-  const compose = read('sandbox/compose.project.yml');
-  assert.match(compose, /^ {2}sandbox:$/m);
-  assert.equal(compose.match(/my-app-sandbox/g).length, 2);
-  assert.ok(compose.includes('${SANDBOX_MEM_LIMIT:-8g}') && compose.includes('${SANDBOX_CPUS:-6}'));
-  assertOldSandboxFilesKept(base, result);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /^wrote sandbox\.sh$/m);
+    assert.match(result.stdout, /^wrote sandbox\/compose\.project\.yml$/m);
+    const compose = read('sandbox/compose.project.yml');
+    assert.match(compose, /^ {2}sandbox:$/m);
+    assert.equal(compose.match(/my-app-sandbox/g).length, 2);
+    assert.ok(compose.includes('${SANDBOX_MEM_LIMIT:-8g}') && compose.includes('${SANDBOX_CPUS:-6}'));
+    assertOldSandboxFilesKept(base, result);
+  },
+);
 
-test('init --no-sandbox writes neither file of this release beside the files of the release before', (t) => {
-  const { base, run } = project(t);
+test('init --no-sandbox writes neither file of this release beside the files of the release before', (testContext) => {
+  const { base, run } = project(testContext);
   withOldSandboxFiles(base);
 
   const result = run('init', OPTION, 'claude');
@@ -972,12 +993,12 @@ function snapshot(base, directory = '') {
 }
 
 // R8, R9, and R2 of unit 0065
-test('init writes the file for every combination of harnesses and options', (t) => {
+test('init writes the file for every combination of harnesses and options', (testContext) => {
   for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode'], ['opencode', 'claude']]) {
     for (const sandbox of [true, false]) {
       for (const orchestrator of [true, false]) {
         for (const defaultBranch of [undefined, 'main']) {
-          const { run, read } = project(t);
+          const { run, read } = project(testContext);
           const args = [
             ...harnesses,
             ...(sandbox ? [] : [OPTION]),
@@ -1003,26 +1024,26 @@ test('init writes the file for every combination of harnesses and options', (t) 
 });
 
 // R10
-test('init takes --default-branch before, between and after the harnesses, and the last one given', (t) => {
+test('init takes --default-branch before, between and after the harnesses, and the last one given', (testContext) => {
   for (const args of [
     [BRANCH, 'main', 'claude', 'opencode'],
     ['claude', BRANCH, 'main', 'opencode'],
     ['claude', 'opencode', BRANCH, 'main'],
     [BRANCH, 'develop', 'claude', BRANCH, 'main', 'opencode'],
   ]) {
-    const { run, read } = project(t);
+    const { run, read } = project(testContext);
     assert.equal(run('init', ...args).status, 0, args.join(' '));
     assert.equal(read('agentrite.json'), SETTINGS_TEMPLATE.replace('"master"', '"main"'), args.join(' '));
   }
 });
 
 // R9, R15
-test('init claude opencode and init opencode claude both write the default file, byte for byte', (t) => {
-  const first = project(t);
+test('init claude opencode and init opencode claude both write the default file, byte for byte', (testContext) => {
+  const first = project(testContext);
   assert.equal(first.run('init', 'claude', 'opencode').status, 0);
   assert.equal(first.read('agentrite.json'), SETTINGS_TEMPLATE);
 
-  const second = project(t);
+  const second = project(testContext);
   const result = second.run('init', 'opencode', 'claude');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(second.read('agentrite.json'), SETTINGS_TEMPLATE);
@@ -1036,8 +1057,8 @@ test('init claude opencode and init opencode claude both write the default file,
 });
 
 // R8
-test('init prints the file it wrote after its notices, and the notice of the default branch last', (t) => {
-  const { base, run, read } = project(t);
+test('init prints the file it wrote after its notices, and the notice of the default branch last', (testContext) => {
+  const { base, run, read } = project(testContext);
   writeFileSync(join(base, 'AGENTS.md'), '# Our own instructions\n');
   writeFileSync(join(base, 'CLAUDE.md'), 'our own\n');
 
@@ -1060,8 +1081,8 @@ test('the notice of the default branch says what was written and where it is cha
   for (const line of defaultBranchNotice('master').split('\n')) assert.ok(line.length <= 120, line);
 });
 
-test('init with --default-branch prints the file it wrote and no notice of the default branch', (t) => {
-  const { run, read } = project(t);
+test('init with --default-branch prints the file it wrote and no notice of the default branch', (testContext) => {
+  const { run, read } = project(testContext);
 
   const result = run('init', 'claude', BRANCH, 'main');
 
@@ -1069,15 +1090,15 @@ test('init with --default-branch prints the file it wrote and no notice of the d
   assert.ok(result.stdout.endsWith(`\n\n${read('agentrite.json')}`), result.stdout);
   assert.doesNotMatch(result.stdout, /was written as the default branch/);
   // Also when the name given is the one that is written unasked.
-  const named = project(t);
+  const named = project(testContext);
   assert.doesNotMatch(named.run('init', 'claude', BRANCH, 'master').stdout, /was written as the default branch/);
   assert.equal(named.read('agentrite.json').includes('"defaultBranch": "master"'), true);
 });
 
 // R10
-test('init with --default-branch and no name, or an empty one, says why, writes nothing and exits 2', (t) => {
+test('init with --default-branch and no name, or an empty one, says why, writes nothing and exits 2', (testContext) => {
   for (const args of [['claude', BRANCH], ['claude', BRANCH, ''], [BRANCH]]) {
-    const { base, run } = project(t);
+    const { base, run } = project(testContext);
     const before = snapshot(base);
 
     const result = run('init', ...args);
@@ -1090,21 +1111,24 @@ test('init with --default-branch and no name, or an empty one, says why, writes 
 });
 
 // R13
-test('init with no harness, in a project with no agentrite.json, prints its usage, writes nothing and exits 2', (t) => {
-  for (const args of [[], [OPTION], [BRANCH, 'main'], [OPTION, BRANCH, 'main']]) {
-    const { base, run } = project(t);
-    const before = snapshot(base);
+test(
+  'init with no harness, in a project with no agentrite.json, prints its usage, writes nothing and exits 2',
+  (testContext) => {
+    for (const args of [[], [OPTION], [BRANCH, 'main'], [OPTION, BRANCH, 'main']]) {
+      const { base, run } = project(testContext);
+      const before = snapshot(base);
 
-    const result = run('init', ...args);
+      const result = run('init', ...args);
 
-    assert.equal(result.status, 2, args.join(' '));
-    assert.equal(result.stdout, '');
-    assert.equal(result.stderr, `${INIT_USAGE}\n`);
-    assert.deepEqual(snapshot(base), before);
-  }
-});
+      assert.equal(result.status, 2, args.join(' '));
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr, `${INIT_USAGE}\n`);
+      assert.deepEqual(snapshot(base), before);
+    }
+  },
+);
 
-test('an init that refuses for package.json or the lockfile has written no agentrite.json', (t) => {
+test('an init that refuses for package.json or the lockfile has written no agentrite.json', (testContext) => {
   const breakers = [
     (base) => rmSync(join(base, 'package.json')),
     (base) => writeFileSync(join(base, 'package.json'), 'not json'),
@@ -1112,7 +1136,7 @@ test('an init that refuses for package.json or the lockfile has written no agent
     (base) => writeFileSync(join(base, 'package-lock.json'), 'not json'),
   ];
   for (const breakIt of breakers) {
-    const { base, run } = project(t);
+    const { base, run } = project(testContext);
     breakIt(base);
     const before = snapshot(base);
 
@@ -1126,8 +1150,8 @@ test('an init that refuses for package.json or the lockfile has written no agent
 });
 
 // R13. `.dockerignore` is the last thing init reads, so it is the one a refusal came too late for.
-test('an init that refuses for a .dockerignore it cannot read has written no agentrite.json', (t) => {
-  const { base, run } = project(t);
+test('an init that refuses for a .dockerignore it cannot read has written no agentrite.json', (testContext) => {
+  const { base, run } = project(testContext);
   mkdirSync(join(base, '.dockerignore'));
   const before = snapshot(base);
 
@@ -1141,11 +1165,11 @@ test('an init that refuses for a .dockerignore it cannot read has written no age
 });
 
 // R11
-test('init with no argument takes the harnesses and the sandbox from the file, and leaves the file', (t) => {
-  const { base, run, read } = project(t);
+test('init with no argument takes the harnesses and the sandbox from the file, and leaves the file', (testContext) => {
+  const { base, run, read } = project(testContext);
   const settings = kitSettingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: true });
   writeFileSync(join(base, 'agentrite.json'), settings);
-  const given = project(t);
+  const given = project(testContext);
   const expected = given.run('init', 'opencode');
 
   const result = run('init');
@@ -1166,8 +1190,8 @@ test('init with no argument takes the harnesses and the sandbox from the file, a
 });
 
 // R11, R14
-test('init with no argument and sandbox false asks for no name and reads no lockfile', (t) => {
-  const { base, run, read } = project(t, { lockfile: 'not json' });
+test('init with no argument and sandbox false asks for no name and reads no lockfile', (testContext) => {
+  const { base, run, read } = project(testContext, { lockfile: 'not json' });
   writeFileSync(join(base, 'package.json'), '{\n  "dependencies": {}\n}\n');
   const settings = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: false });
   writeFileSync(join(base, 'agentrite.json'), settings);
@@ -1182,7 +1206,7 @@ test('init with no argument and sandbox false asks for no name and reads no lock
   assert.equal(read('agentrite.json'), settings);
 
   // With sandbox true, the same project is refused for its name.
-  const other = project(t);
+  const other = project(testContext);
   writeFileSync(join(other.base, 'package.json'), '{\n  "dependencies": {}\n}\n');
   writeFileSync(join(other.base, 'agentrite.json'), settings.replace('false', 'true'));
   const refused = other.run('init');
@@ -1191,7 +1215,7 @@ test('init with no argument and sandbox false asks for no name and reads no lock
 });
 
 // R12
-test('init given an argument in a project with an agentrite.json refuses, and writes nothing', (t) => {
+test('init given an argument in a project with an agentrite.json refuses, and writes nothing', (testContext) => {
   const valid = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
   for (const settings of [valid, 'not json']) {
     for (const args of [
@@ -1203,7 +1227,7 @@ test('init given an argument in a project with an agentrite.json refuses, and wr
       ['claude', NO_ORCHESTRATOR],
       ['opencode'],
     ]) {
-      const { base, run } = project(t);
+      const { base, run } = project(testContext);
       writeFileSync(join(base, 'agentrite.json'), settings);
       const before = snapshot(base);
 
@@ -1218,24 +1242,27 @@ test('init given an argument in a project with an agentrite.json refuses, and wr
 });
 
 // R5
-test('init with no argument in a project whose agentrite.json is not valid refuses, and writes nothing', (t) => {
-  for (const settings of ['not json', '{ "defaultBranch": "main", "harnesses": [], "sandbox": true }']) {
-    const { base, run } = project(t);
-    writeFileSync(join(base, 'agentrite.json'), settings);
-    const before = snapshot(base);
+test(
+  'init with no argument in a project whose agentrite.json is not valid refuses, and writes nothing',
+  (testContext) => {
+    for (const settings of ['not json', '{ "defaultBranch": "main", "harnesses": [], "sandbox": true }']) {
+      const { base, run } = project(testContext);
+      writeFileSync(join(base, 'agentrite.json'), settings);
+      const before = snapshot(base);
 
-    const result = run('init');
+      const result = run('init');
 
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.match(result.stderr, /^agentrite: agentrite\.json/);
-    assert.deepEqual(snapshot(base), before);
-  }
-});
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.match(result.stderr, /^agentrite: agentrite\.json/);
+      assert.deepEqual(snapshot(base), before);
+    }
+  },
+);
 
 // Unit 0054, R1, R5
-test('init --default-branch main opencode writes the default file with main and opencode alone', (t) => {
-  const { run, read } = project(t);
+test('init --default-branch main opencode writes the default file with main and opencode alone', (testContext) => {
+  const { run, read } = project(testContext);
 
   const result = run('init', BRANCH, 'main', 'opencode');
 
@@ -1247,43 +1274,49 @@ test('init --default-branch main opencode writes the default file with main and 
 });
 
 // Unit 0054, R4
-test('init given harnesses in a project without the kit installed refuses for standards, and writes nothing', (t) => {
-  const { base, run } = project(t);
-  rmSync(join(base, 'node_modules'), { recursive: true });
-  const before = snapshot(base);
+test(
+  'init given harnesses in a project without the kit installed refuses for standards, and writes nothing',
+  (testContext) => {
+    const { base, run } = project(testContext);
+    rmSync(join(base, 'node_modules'), { recursive: true });
+    const before = snapshot(base);
 
-  const result = run('init', 'claude', 'opencode');
+    const result = run('init', 'claude', 'opencode');
 
-  assert.equal(result.status, 1);
-  assert.equal(result.stdout, '');
-  assert.equal(
-    result.stderr,
-    'agentrite: agentrite.json: standards is "node_modules/agentrite/standards.md", and there is no file at it. ' +
-      "It must name a file in the project's working tree\n",
-  );
-  assert.deepEqual(snapshot(base), before);
-  assert.equal(exists(join(base, 'agentrite.json')), false);
-});
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      'agentrite: agentrite.json: standards is "node_modules/agentrite/standards.md", and there is no file at it. ' +
+        "It must name a file in the project's working tree\n",
+    );
+    assert.deepEqual(snapshot(base), before);
+    assert.equal(exists(join(base, 'agentrite.json')), false);
+  },
+);
 
 // Unit 0054, R1, R4
-test('init with no argument in a project whose agentrite.json lacks roles refuses, and writes nothing', (t) => {
-  const { base, run } = project(t);
-  const settings = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
-  const withoutRoles = JSON.stringify({ ...JSON.parse(settings), roles: undefined });
-  writeFileSync(join(base, 'agentrite.json'), withoutRoles);
-  const before = snapshot(base);
+test(
+  'init with no argument in a project whose agentrite.json lacks roles refuses, and writes nothing',
+  (testContext) => {
+    const { base, run } = project(testContext);
+    const settings = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
+    const withoutRoles = JSON.stringify({ ...JSON.parse(settings), roles: undefined });
+    writeFileSync(join(base, 'agentrite.json'), withoutRoles);
+    const before = snapshot(base);
 
-  const result = run('init');
+    const result = run('init');
 
-  assert.equal(result.status, 1);
-  assert.equal(result.stdout, '');
-  assert.equal(
-    result.stderr,
-    'agentrite: agentrite.json: roles is missing. It must hold an object from each of the roles specifier, ' +
-      "planner, implementer and reviewer, and from any role of the project's own, to the path of its file\n",
-  );
-  assert.deepEqual(snapshot(base), before);
-});
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      'agentrite: agentrite.json: roles is missing. It must hold an object from each of the roles specifier, ' +
+        "planner, implementer and reviewer, and from any role of the project's own, to the path of its file\n",
+    );
+    assert.deepEqual(snapshot(base), before);
+  },
+);
 
 // opencode.json and CLAUDE.md, which load process.md and standards.md
 
@@ -1297,9 +1330,9 @@ const UNAMENDABLE = {
 };
 
 // R3
-test('init opencode writes opencode.json as R3 gives it, after the line of package.json', (t) => {
+test('init opencode writes opencode.json as R3 gives it, after the line of package.json', (testContext) => {
   for (const args of [['opencode'], ['claude', 'opencode'], ['opencode', OPTION], ['claude', 'opencode', OPTION]]) {
-    const { run, read } = project(t);
+    const { run, read } = project(testContext);
 
     const result = run('init', ...args);
 
@@ -1312,10 +1345,10 @@ test('init opencode writes opencode.json as R3 gives it, after the line of packa
 });
 
 // R4
-test('init amends an opencode.json that is an object without the paths, and prints no notice of it', (t) => {
+test('init amends an opencode.json that is an object without the paths, and prints no notice of it', (testContext) => {
   const onlyProcess = `{\n  "instructions": ["${PROCESS}"]\n}\n`;
   for (const text of ['{\n  "model": "x"\n}\n', '{\n\t"instructions": ["a.md"]\n}', onlyProcess]) {
-    const { base, run, read } = project(t);
+    const { base, run, read } = project(testContext);
     writeFileSync(join(base, 'opencode.json'), text);
 
     const result = run('init', 'opencode');
@@ -1330,9 +1363,9 @@ test('init amends an opencode.json that is an object without the paths, and prin
 });
 
 // R4, R5
-test('init leaves an opencode.json that loads the paths, also one with a comment, and says so', (t) => {
+test('init leaves an opencode.json that loads the paths, also one with a comment, and says so', (testContext) => {
   for (const text of [`{ "instructions": ["a.md", "${PROCESS}", "${STANDARDS}"] }`, OPENCODE_WITH_COMMENT]) {
-    const { base, run, read } = project(t);
+    const { base, run, read } = project(testContext);
     writeFileSync(join(base, 'opencode.json'), text);
 
     const result = run('init', 'opencode');
@@ -1346,56 +1379,64 @@ test('init leaves an opencode.json that loads the paths, also one with a comment
 });
 
 // R5
-test('init leaves an opencode.json it cannot amend, with a notice of why, writes the rest and exits 0', (t) => {
-  const plain = project(t);
-  const expected = plain.run('init', 'opencode');
-  const cases = { ...UNAMENDABLE, 'a directory': null };
+test(
+  'init leaves an opencode.json it cannot amend, with a notice of why, writes the rest and exits 0',
+  (testContext) => {
+    const plain = project(testContext);
+    const expected = plain.run('init', 'opencode');
+    const cases = { ...UNAMENDABLE, 'a directory': null };
 
-  for (const [name, text] of Object.entries(cases)) {
-    const { base, run, read } = project(t);
-    if (text === null) mkdirSync(join(base, 'opencode.json'));
-    else writeFileSync(join(base, 'opencode.json'), text);
+    for (const [name, text] of Object.entries(cases)) {
+      const { base, run, read } = project(testContext);
+      if (text === null) mkdirSync(join(base, 'opencode.json'));
+      else writeFileSync(join(base, 'opencode.json'), text);
+
+      const result = run('init', 'opencode');
+
+      assert.equal(result.status, 0, `${name}: ${result.stderr}`);
+      assert.equal(result.stderr, '', name);
+      if (text === null) assert.ok(statSync(join(base, 'opencode.json')).isDirectory(), name);
+      else assert.equal(read('opencode.json'), text, name);
+      const swapped = linesOf(expected).map((line) =>
+        line === 'wrote opencode.json' ? 'skipped opencode.json, which cannot be amended' : line,
+      );
+      assert.deepEqual(linesOf(result), swapped, name);
+      const verdict = opencodeVerdict(text === null ? { found: true, error: 'x' } : { found: true, text }, STANDARDS);
+      if (text !== null) {
+        assert.ok(noticesOf(result).includes(opencodeInitNotice(verdict.problem, verdict.lacks)), name);
+      }
+      assert.match(noticesOf(result), /^opencode\.json was left as it is, because /m, name);
+      assert.ok(noticesOf(result).indexOf('opencode.json was left') < noticesOf(result).indexOf('"harnesses"'), name);
+      for (const [path, content] of snapshot(plain.base)) {
+        if (path === 'opencode.json' || content === null) continue;
+        assert.equal(read(path), content, `${name}: ${path}`);
+      }
+    }
+  },
+);
+
+// R18 of unit 0052
+test(
+  'init leaves a not-JSON opencode.json that quotes only process.md, with a notice naming standards.md',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    const text = `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`;
+    writeFileSync(join(base, 'opencode.json'), text);
 
     const result = run('init', 'opencode');
 
-    assert.equal(result.status, 0, `${name}: ${result.stderr}`);
-    assert.equal(result.stderr, '', name);
-    if (text === null) assert.ok(statSync(join(base, 'opencode.json')).isDirectory(), name);
-    else assert.equal(read('opencode.json'), text, name);
-    const swapped = linesOf(expected).map((line) =>
-      line === 'wrote opencode.json' ? 'skipped opencode.json, which cannot be amended' : line,
-    );
-    assert.deepEqual(linesOf(result), swapped, name);
-    const verdict = opencodeVerdict(text === null ? { found: true, error: 'x' } : { found: true, text }, STANDARDS);
-    if (text !== null) assert.ok(noticesOf(result).includes(opencodeInitNotice(verdict.problem, verdict.lacks)), name);
-    assert.match(noticesOf(result), /^opencode\.json was left as it is, because /m, name);
-    assert.ok(noticesOf(result).indexOf('opencode.json was left') < noticesOf(result).indexOf('"harnesses"'), name);
-    for (const [path, content] of snapshot(plain.base)) {
-      if (path === 'opencode.json' || content === null) continue;
-      assert.equal(read(path), content, `${name}: ${path}`);
-    }
-  }
-});
-
-// R18 of unit 0052
-test('init leaves a not-JSON opencode.json that quotes only process.md, with a notice naming standards.md', (t) => {
-  const { base, run, read } = project(t);
-  const text = `{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`;
-  writeFileSync(join(base, 'opencode.json'), text);
-
-  const result = run('init', 'opencode');
-
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(read('opencode.json'), text);
-  assert.ok(linesOf(result).includes('skipped opencode.json, which cannot be amended'), result.stdout);
-  const notice = noticesOf(result);
-  assert.ok(notice.includes(`Add them by hand:\n\n${STANDARDS}\n\n`), notice);
-  assert.ok(!notice.includes(`\n${PROCESS}\n`), notice);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read('opencode.json'), text);
+    assert.ok(linesOf(result).includes('skipped opencode.json, which cannot be amended'), result.stdout);
+    const notice = noticesOf(result);
+    assert.ok(notice.includes(`Add them by hand:\n\n${STANDARDS}\n\n`), notice);
+    assert.ok(!notice.includes(`\n${PROCESS}\n`), notice);
+  },
+);
 
 // R6
-test('an opencode.json that is not JSON neither stops init nor is written before a refusal', (t) => {
-  const refused = project(t);
+test('an opencode.json that is not JSON neither stops init nor is written before a refusal', (testContext) => {
+  const refused = project(testContext);
   writeFileSync(join(refused.base, 'package.json'), '{\n  "dependencies": {}\n}\n');
   writeFileSync(join(refused.base, 'opencode.json'), 'not json\n');
   const before = snapshot(refused.base);
@@ -1404,7 +1445,7 @@ test('an opencode.json that is not JSON neither stops init nor is written before
   assert.match(refusal.stderr, /has no name/);
   assert.deepEqual(snapshot(refused.base), before);
 
-  const { base, run, read } = project(t);
+  const { base, run, read } = project(testContext);
   writeFileSync(join(base, 'opencode.json'), 'not json\n');
   const result = run('init', 'opencode');
   assert.equal(result.status, 0, result.stderr);
@@ -1415,10 +1456,10 @@ test('an opencode.json that is not JSON neither stops init nor is written before
 });
 
 // R7
-test('init claude neither reads, writes nor names opencode.json, whatever is at its path', (t) => {
+test('init claude neither reads, writes nor names opencode.json, whatever is at its path', (testContext) => {
   const cases = { none: undefined, ...UNAMENDABLE, 'an object': '{ "model": "x" }\n', 'a directory': null };
   for (const [name, text] of Object.entries(cases)) {
-    const { base, run, read } = project(t);
+    const { base, run, read } = project(testContext);
     if (text === null) mkdirSync(join(base, 'opencode.json'));
     else if (text !== undefined) writeFileSync(join(base, 'opencode.json'), text);
 
@@ -1433,7 +1474,7 @@ test('init claude neither reads, writes nor names opencode.json, whatever is at 
 });
 
 // R2
-test('init claude notices an existing CLAUDE.md only for the lines it lacks', (t) => {
+test('init claude notices an existing CLAUDE.md only for the lines it lacks', (testContext) => {
   const cases = [
     ['our own\n', CLAUDE_NOTICE],
     ['# Ours\n\n@AGENTS.md\n', claudeInitNotice([`@${PROCESS}`, `@${STANDARDS}`])],
@@ -1442,7 +1483,7 @@ test('init claude notices an existing CLAUDE.md only for the lines it lacks', (t
     [`# Ours\r\n\r\n@${PROCESS}\r\n@${STANDARDS}\r\n@AGENTS.md\r\n`, undefined],
   ];
   for (const [text, notice] of cases) {
-    const { base, run, read } = project(t);
+    const { base, run, read } = project(testContext);
     writeFileSync(join(base, 'CLAUDE.md'), text);
 
     const result = run('init', 'claude');
@@ -1456,8 +1497,8 @@ test('init claude notices an existing CLAUDE.md only for the lines it lacks', (t
 });
 
 // R2
-test('init opencode does not notice an existing CLAUDE.md that lacks the lines', (t) => {
-  const { base, run } = project(t);
+test('init opencode does not notice an existing CLAUDE.md that lacks the lines', (testContext) => {
+  const { base, run } = project(testContext);
   writeFileSync(join(base, 'CLAUDE.md'), 'our own\n');
 
   const result = run('init', 'opencode');
@@ -1474,8 +1515,8 @@ const OWN_PLANNER = '---\ndescription: Plans as this project does.\n---\n\n# Our
 
 // A project with both harnesses and no sandbox, whose agentrite.json names `standards` and the planner's file
 // `planner`, with a file at each.
-function ownProject(t, { standards = HOUSE, planner = KIT_SETTINGS.roles.planner }) {
-  const made = project(t);
+function ownProject(testContext, { standards = HOUSE, planner = KIT_SETTINGS.roles.planner }) {
+  const made = project(testContext);
   const settings = { ...KIT_SETTINGS, roles: { ...KIT_SETTINGS.roles, planner } };
   const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude', 'opencode'], sandbox: false });
   writeFileSync(join(made.base, 'agentrite.json'), JSON.stringify({ ...JSON.parse(text), ...settings, standards }));
@@ -1486,25 +1527,28 @@ function ownProject(t, { standards = HOUSE, planner = KIT_SETTINGS.roles.planner
 }
 
 // R13, R14
-test('init writes the list after the wrappers and before AGENTS.md, with the files the settings give', (t) => {
-  const { run, read } = project(t);
+test(
+  'init writes the list after the wrappers and before AGENTS.md, with the files the settings give',
+  (testContext) => {
+    const { run, read } = project(testContext);
 
-  const result = run('init', 'claude', 'opencode');
+    const result = run('init', 'claude', 'opencode');
 
-  assert.equal(result.status, 0, result.stderr);
-  const wrappers = plannedFiles(['claude', 'opencode'], KIT_ROLES).map((file) => `wrote ${file.path}`);
-  assert.deepEqual(linesOf(result).slice(0, wrappers.length + 4), [
-    'wrote agentrite.json',
-    ...wrappers,
-    `wrote ${LIST}`,
-    'wrote AGENTS.md',
-    'wrote CLAUDE.md',
-  ]);
-  assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
-});
+    assert.equal(result.status, 0, result.stderr);
+    const wrappers = plannedFiles(['claude', 'opencode'], KIT_ROLES).map((file) => `wrote ${file.path}`);
+    assert.deepEqual(linesOf(result).slice(0, wrappers.length + 4), [
+      'wrote agentrite.json',
+      ...wrappers,
+      `wrote ${LIST}`,
+      'wrote AGENTS.md',
+      'wrote CLAUDE.md',
+    ]);
+    assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
+  },
+);
 
-test('init skips a list that exists, and leaves it as it is', (t) => {
-  const { base, run, read } = project(t);
+test('init skips a list that exists, and leaves it as it is', (testContext) => {
+  const { base, run, read } = project(testContext);
   mkdirSync(join(base, '.agentrite'));
   writeFileSync(join(base, LIST), 'ours\n');
 
@@ -1516,8 +1560,8 @@ test('init skips a list that exists, and leaves it as it is', (t) => {
 });
 
 // Unit 0056, R6: init removes nothing
-test('init in a project whose wrappers of a role that is gone are there removes nothing', (t) => {
-  const { base, run } = project(t);
+test('init in a project whose wrappers of a role that is gone are there removes nothing', (testContext) => {
+  const { base, run } = project(testContext);
   const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false });
   writeFileSync(join(base, 'agentrite.json'), text);
   mkdirSync(join(base, '.claude/agents'), { recursive: true });
@@ -1534,30 +1578,33 @@ test('init in a project whose wrappers of a role that is gone are there removes 
 });
 
 // Unit 0056, R5, R9
-test('init in a project that names a role of its own writes its wrappers for the harnesses and lists it', (t) => {
-  const { base, run, read } = project(t);
-  const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: false });
-  const roles = { ...KIT_SETTINGS.roles, 'security-reviewer': 'rules/security-reviewer.md' };
-  writeFileSync(join(base, 'agentrite.json'), JSON.stringify({ ...JSON.parse(text), roles }));
-  mkdirSync(join(base, 'rules'));
-  writeFileSync(join(base, 'rules/security-reviewer.md'), '---\ndescription: Reviews security.\n---\n\n# S\n');
+test(
+  'init in a project that names a role of its own writes its wrappers for the harnesses and lists it',
+  (testContext) => {
+    const { base, run, read } = project(testContext);
+    const text = kitSettingsText({ defaultBranch: 'main', harnesses: ['opencode'], sandbox: false });
+    const roles = { ...KIT_SETTINGS.roles, 'security-reviewer': 'rules/security-reviewer.md' };
+    writeFileSync(join(base, 'agentrite.json'), JSON.stringify({ ...JSON.parse(text), roles }));
+    mkdirSync(join(base, 'rules'));
+    writeFileSync(join(base, 'rules/security-reviewer.md'), '---\ndescription: Reviews security.\n---\n\n# S\n');
 
-  const result = run('init');
+    const result = run('init');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.ok(linesOf(result).includes('wrote .opencode/agents/security-reviewer.md'), result.stdout);
-  assert.ok(!exists(join(base, '.claude/agents/security-reviewer.md')));
-  assert.match(read('.opencode/agents/security-reviewer.md'), /^Read `rules\/security-reviewer\.md` in the project/m);
-  assert.equal(read(LIST), instructionsList({ standards: KIT_SETTINGS.standards, roles }));
-  assert.match(
-    read(LIST),
-    /\* security-reviewer: \[`rules\/security-reviewer\.md`\]\(\.\.\/rules\/security-reviewer\.md\)\n/,
-  );
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(linesOf(result).includes('wrote .opencode/agents/security-reviewer.md'), result.stdout);
+    assert.ok(!exists(join(base, '.claude/agents/security-reviewer.md')));
+    assert.match(read('.opencode/agents/security-reviewer.md'), /^Read `rules\/security-reviewer\.md` in the project/m);
+    assert.equal(read(LIST), instructionsList({ standards: KIT_SETTINGS.standards, roles }));
+    assert.match(
+      read(LIST),
+      /\* security-reviewer: \[`rules\/security-reviewer\.md`\]\(\.\.\/rules\/security-reviewer\.md\)\n/,
+    );
+  },
+);
 
 // R9, R11, R13
-test('init in a project with its own standards and planner writes everything from them', (t) => {
-  const { run, read } = ownProject(t, { planner: 'rules/planner.md' });
+test('init in a project with its own standards and planner writes everything from them', (testContext) => {
+  const { run, read } = ownProject(testContext, { planner: 'rules/planner.md' });
 
   const result = run('init');
 
@@ -1591,16 +1638,16 @@ function fixtureOf(directory, role) {
   ).content;
 }
 
-test('init in a project that names the kit standards writes CLAUDE.md importing them', (t) => {
-  const { run, read } = ownProject(t, { standards: STANDARDS });
+test('init in a project that names the kit standards writes CLAUDE.md importing them', (testContext) => {
+  const { run, read } = ownProject(testContext, { standards: STANDARDS });
 
   assert.equal(run('init').status, 0);
 
   assert.match(read('CLAUDE.md'), new RegExp(`^@${PROCESS}\n@${STANDARDS}\n@AGENTS\\.md$`, 'm'));
 });
 
-test('init amends an opencode.json with the standards the settings give, after process.md', (t) => {
-  const { base, run, read } = ownProject(t, {});
+test('init amends an opencode.json with the standards the settings give, after process.md', (testContext) => {
+  const { base, run, read } = ownProject(testContext, {});
   writeFileSync(join(base, 'opencode.json'), `{\n  "instructions": ["${PROCESS}"]\n}\n`);
 
   const result = run('init');
@@ -1611,26 +1658,29 @@ test('init amends an opencode.json with the standards the settings give, after p
 });
 
 // R12
-test('init notices a CLAUDE.md and an opencode.json that load the kit standards beside the project own', (t) => {
-  const claude = `@${PROCESS}\n@${HOUSE}\n@${STANDARDS}\n@AGENTS.md\n`;
-  const opencode = `{\n  "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"]\n}\n`;
-  const { base, run, read } = ownProject(t, {});
-  writeFileSync(join(base, 'CLAUDE.md'), claude);
-  writeFileSync(join(base, 'opencode.json'), opencode);
+test(
+  'init notices a CLAUDE.md and an opencode.json that load the kit standards beside the project own',
+  (testContext) => {
+    const claude = `@${PROCESS}\n@${HOUSE}\n@${STANDARDS}\n@AGENTS.md\n`;
+    const opencode = `{\n  "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"]\n}\n`;
+    const { base, run, read } = ownProject(testContext, {});
+    writeFileSync(join(base, 'CLAUDE.md'), claude);
+    writeFileSync(join(base, 'opencode.json'), opencode);
 
-  const result = run('init');
+    const result = run('init');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(read('CLAUDE.md'), claude);
-  assert.equal(read('opencode.json'), opencode);
-  assert.equal(
-    noticesOf(result),
-    `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n\n${NO_REPOSITORY}\n`,
-  );
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(read('CLAUDE.md'), claude);
+    assert.equal(read('opencode.json'), opencode);
+    assert.equal(
+      noticesOf(result),
+      `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n\n${NO_REPOSITORY}\n`,
+    );
+  },
+);
 
-test('init notices the kit standards only when the project has other standards', (t) => {
-  const { base, run } = ownProject(t, { standards: STANDARDS });
+test('init notices the kit standards only when the project has other standards', (testContext) => {
+  const { base, run } = ownProject(testContext, { standards: STANDARDS });
   writeFileSync(join(base, 'CLAUDE.md'), `@${PROCESS}\n@${STANDARDS}\n@AGENTS.md\n`);
   writeFileSync(join(base, 'opencode.json'), `{ "instructions": ["${PROCESS}", "${STANDARDS}"] }\n`);
 
@@ -1641,8 +1691,8 @@ test('init notices the kit standards only when the project has other standards',
 });
 
 // R15, R16
-test('init notices an existing AGENTS.md with the sections, and then that it does not name the list', (t) => {
-  const { base, run } = project(t);
+test('init notices an existing AGENTS.md with the sections, and then that it does not name the list', (testContext) => {
+  const { base, run } = project(testContext);
   writeFileSync(join(base, 'AGENTS.md'), '# Our own instructions\n');
 
   const result = run('init', OPTION, 'claude');
@@ -1656,8 +1706,8 @@ test('init notices an existing AGENTS.md with the sections, and then that it doe
   assert.ok(notices.indexOf(CLAUDE_NOTICE) === -1 || notices.indexOf(CLAUDE_NOTICE) > list, notices);
 });
 
-test('init gives an existing AGENTS.md that names the list the notice of the sections alone', (t) => {
-  const { base, run } = project(t);
+test('init gives an existing AGENTS.md that names the list the notice of the sections alone', (testContext) => {
+  const { base, run } = project(testContext);
   writeFileSync(join(base, 'AGENTS.md'), `# Ours\n\nRead the files [${LIST}](${LIST}) names.\n`);
 
   const result = run('init', OPTION, 'claude');
@@ -1667,16 +1717,16 @@ test('init gives an existing AGENTS.md that names the list the notice of the sec
   assert.doesNotMatch(noticesOf(result), /does not name \.agentrite/);
 });
 
-test('init gives no notice of AGENTS.md when it writes AGENTS.md', (t) => {
-  const { run } = project(t);
+test('init gives no notice of AGENTS.md when it writes AGENTS.md', (testContext) => {
+  const { run } = project(testContext);
   const result = run('init', OPTION, 'claude');
   assert.equal(result.status, 0, result.stderr);
   assert.doesNotMatch(result.stdout, /AGENTS\.md (?:is missing|does not name|exists)/);
 });
 
 // R8
-test('init refuses a project whose role file has no front matter, and writes nothing', (t) => {
-  const { base, run } = ownProject(t, { planner: 'rules/planner.md' });
+test('init refuses a project whose role file has no front matter, and writes nothing', (testContext) => {
+  const { base, run } = ownProject(testContext, { planner: 'rules/planner.md' });
   writeFileSync(join(base, 'rules', 'planner.md'), '# Our planner\n');
   const before = snapshot(base);
 
@@ -1689,9 +1739,9 @@ test('init refuses a project whose role file has no front matter, and writes not
 });
 
 // Unit 0058, R9, R11
-test('init given harnesses writes "bell": true after "sandbox", with and without --no-sandbox', (t) => {
+test('init given harnesses writes "bell": true after "sandbox", with and without --no-sandbox', (testContext) => {
   for (const args of [['claude'], ['opencode', OPTION], [OPTION, 'claude', 'opencode']]) {
-    const { run, read } = project(t);
+    const { run, read } = project(testContext);
 
     const result = run('init', ...args);
 
@@ -1701,69 +1751,79 @@ test('init given harnesses writes "bell": true after "sandbox", with and without
 });
 
 // Unit 0058, R8, R9, R11
-test('init with no argument in a project whose agentrite.json lacks bell, or holds a string, refuses it', (t) => {
-  const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
-  for (const [bell, found] of [
-    [undefined, 'missing'],
-    ['true', '"true"'],
-  ]) {
-    const { base, run } = project(t);
-    const text = `${JSON.stringify({ ...settings, bell }, null, 2)}\n`;
-    writeFileSync(join(base, 'agentrite.json'), text);
-    const before = snapshot(base);
+test(
+  'init with no argument in a project whose agentrite.json lacks bell, or holds a string, refuses it',
+  (testContext) => {
+    const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
+    for (const [bell, found] of [
+      [undefined, 'missing'],
+      ['true', '"true"'],
+    ]) {
+      const { base, run } = project(testContext);
+      const text = `${JSON.stringify({ ...settings, bell }, null, 2)}\n`;
+      writeFileSync(join(base, 'agentrite.json'), text);
+      const before = snapshot(base);
 
-    const result = run('init');
+      const result = run('init');
 
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.equal(result.stderr, `agentrite: agentrite.json: bell is ${found}. It must hold true or false\n`);
-    assert.deepEqual(snapshot(base), before);
-    assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), text);
-  }
-});
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr, `agentrite: agentrite.json: bell is ${found}. It must hold true or false\n`);
+      assert.deepEqual(snapshot(base), before);
+      assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), text);
+    }
+  },
+);
 
 // Unit 0065, R2
-test('init given harnesses writes the kit default definition as orchestrator, false with --no-orchestrator', (t) => {
-  for (const [args, value] of [
-    [['claude'], '"node_modules/agentrite/orchestrator.json"'],
-    [['opencode', OPTION], '"node_modules/agentrite/orchestrator.json"'],
-    [['claude', NO_ORCHESTRATOR], 'false'],
-    [[NO_ORCHESTRATOR, OPTION, 'opencode', NO_ORCHESTRATOR], 'false'],
-  ]) {
-    const { run, read } = project(t);
+test(
+  'init given harnesses writes the kit default definition as orchestrator, false with --no-orchestrator',
+  (testContext) => {
+    for (const [args, value] of [
+      [['claude'], '"node_modules/agentrite/orchestrator.json"'],
+      [['opencode', OPTION], '"node_modules/agentrite/orchestrator.json"'],
+      [['claude', NO_ORCHESTRATOR], 'false'],
+      [[NO_ORCHESTRATOR, OPTION, 'opencode', NO_ORCHESTRATOR], 'false'],
+    ]) {
+      const { run, read } = project(testContext);
 
-    const result = run('init', ...args);
+      const result = run('init', ...args);
 
-    assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
-    const standards = /^ {2}"standards": "node_modules\/agentrite\/standards\.md",\n/.source;
-    assert.match(read('agentrite.json'), new RegExp(`${standards} {2}"orchestrator": ${value},\n`, 'm'));
-  }
-});
+      assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+      const standards = /^ {2}"standards": "node_modules\/agentrite\/standards\.md",\n/.source;
+      assert.match(read('agentrite.json'), new RegExp(`${standards} {2}"orchestrator": ${value},\n`, 'm'));
+    }
+  },
+);
 
 // Unit 0065, R3
-test('init with no argument in a project whose agentrite.json lacks orchestrator refuses it, naming the key', (t) => {
-  const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
-  for (const [orchestrator, found] of [
-    [undefined, 'missing'],
-    [true, 'true'],
-  ]) {
-    const { base, run } = project(t);
-    const text = `${JSON.stringify({ ...settings, orchestrator }, null, 2)}\n`;
-    writeFileSync(join(base, 'agentrite.json'), text);
-    const before = snapshot(base);
+test(
+  'init with no argument in a project whose agentrite.json lacks orchestrator refuses it, naming the key',
+  (testContext) => {
+    const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
+    for (const [orchestrator, found] of [
+      [undefined, 'missing'],
+      [true, 'true'],
+    ]) {
+      const { base, run } = project(testContext);
+      const text = `${JSON.stringify({ ...settings, orchestrator }, null, 2)}\n`;
+      writeFileSync(join(base, 'agentrite.json'), text);
+      const before = snapshot(base);
 
-    const result = run('init');
+      const result = run('init');
 
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.equal(
-      result.stderr,
-      `agentrite: agentrite.json: orchestrator is ${found}. It must hold false, for a project that does not use the ` +
-        'orchestrator, or the path of a file, relative to the project root, that does not lead outside the project\n',
-    );
-    assert.deepEqual(snapshot(base), before);
-  }
-});
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.equal(
+        result.stderr,
+        `agentrite: agentrite.json: orchestrator is ${found}. It must hold false, for a project that does not use ` +
+          'the orchestrator, or the path of a file, relative to the project root, that does not lead outside the ' +
+          'project\n',
+      );
+      assert.deepEqual(snapshot(base), before);
+    }
+  },
+);
 
 // The commit-msg hook of unit 0078.
 

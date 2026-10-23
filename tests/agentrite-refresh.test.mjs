@@ -186,8 +186,8 @@ const PROJECT_OWNED = {
   'opencode.json': '{}\n',
 };
 
-function project(t) {
-  const base = temporaryDirectory(t, 'agentrite-refresh-');
+function project(testContext) {
+  const base = temporaryDirectory(testContext, 'agentrite-refresh-');
   installKit(base);
   writeFileSync(join(base, 'AGENTS.md'), AGENTS_NAMING_LIST);
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
@@ -235,8 +235,8 @@ function withNoRepository(notices) {
 
 // A project whose ten files are all out of date: the wrappers name the old package, one pins a model, the shim is
 // another script that is not executable, and the list is another text.
-function staleProject(t) {
-  const made = project(t);
+function staleProject(testContext) {
+  const made = project(testContext);
   for (const file of WRAPPERS) {
     made.write(file.path, file.content.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit'));
   }
@@ -248,8 +248,8 @@ function staleProject(t) {
   return { ...made, pinnedPath };
 }
 
-test('stale wrappers and a stale shim are refreshed, a pinned model is kept, and the run exits 0', (t) => {
-  const { base, refresh, read, pinnedPath } = staleProject(t);
+test('stale wrappers and a stale shim are refreshed, a pinned model is kept, and the run exits 0', (testContext) => {
+  const { base, refresh, read, pinnedPath } = staleProject(testContext);
 
   const result = refresh(['claude', 'opencode']);
 
@@ -266,8 +266,8 @@ test('stale wrappers and a stale shim are refreshed, a pinned model is kept, and
   assert.equal(linesOf(result).length, KIT_OWNED.length);
 });
 
-test('a wrapper that holds mode: subagent is refreshed to mode: all, and keeps its pinned model', (t) => {
-  const { refresh, read, write } = project(t);
+test('a wrapper that holds mode: subagent is refreshed to mode: all, and keeps its pinned model', (testContext) => {
+  const { refresh, read, write } = project(testContext);
   const wrappers = plannedFiles(['opencode'], KIT_ROLES);
   const pinnedPath = '.opencode/agents/reviewer.md';
   for (const file of wrappers) {
@@ -286,8 +286,8 @@ test('a wrapper that holds mode: subagent is refreshed to mode: all, and keeps i
   assert.equal(read(pinnedPath), withFrontmatter(rendered('opencode', 'reviewer'), 'mode:', ['model: some/model']));
 });
 
-test('a second run reports every file as up to date and writes none', (t) => {
-  const { base, refresh, read } = staleProject(t);
+test('a second run reports every file as up to date and writes none', (testContext) => {
+  const { base, refresh, read } = staleProject(testContext);
   assert.equal(refresh(['claude', 'opencode']).status, 0);
   const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
   const longAgo = new Date('2020-01-01T00:00:00Z');
@@ -304,8 +304,8 @@ test('a second run reports every file as up to date and writes none', (t) => {
   assert.doesNotMatch(result.stdout, /^(wrote|refreshed) /m);
 });
 
-test('a project with none of the files gets all ten, listed as written', (t) => {
-  const { base, refresh, read } = project(t);
+test('a project with none of the files gets all ten, listed as written', (testContext) => {
+  const { base, refresh, read } = project(testContext);
 
   const result = refresh(['claude', 'opencode']);
 
@@ -350,42 +350,45 @@ function earlierWrapper(harness, role) {
   return [...lines.slice(0, start), ...EARLIER_DESCRIPTIONS[role], ...lines.slice(end)].join('\n');
 }
 
-test('a project with the three wrappers of the release before gets the fourth, and keeps a pinned model', (t) => {
-  const { base, refresh, read, write } = project(t);
-  write('sandbox.sh', SHIM);
-  chmodSync(join(base, 'sandbox.sh'), 0o755);
-  for (const harness of ['claude', 'opencode']) {
-    for (const role of ['planner', 'implementer', 'reviewer']) {
-      write(`.${harness}/agents/${role}.md`, earlierWrapper(harness, role));
+test(
+  'a project with the three wrappers of the release before gets the fourth, and keeps a pinned model',
+  (testContext) => {
+    const { base, refresh, read, write } = project(testContext);
+    write('sandbox.sh', SHIM);
+    chmodSync(join(base, 'sandbox.sh'), 0o755);
+    for (const harness of ['claude', 'opencode']) {
+      for (const role of ['planner', 'implementer', 'reviewer']) {
+        write(`.${harness}/agents/${role}.md`, earlierWrapper(harness, role));
+      }
     }
-  }
-  const pinnedPath = '.opencode/agents/planner.md';
-  write(pinnedPath, withFrontmatter(read(pinnedPath), 'mode:', ['model: some/model']));
+    const pinnedPath = '.opencode/agents/planner.md';
+    write(pinnedPath, withFrontmatter(read(pinnedPath), 'mode:', ['model: some/model']));
 
-  const result = refresh(['claude', 'opencode']);
+    const result = refresh(['claude', 'opencode']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(linesOf(result), [
-    'wrote .claude/agents/specifier.md',
-    'refreshed .claude/agents/planner.md',
-    'refreshed .claude/agents/implementer.md',
-    'up to date .claude/agents/reviewer.md',
-    'wrote .opencode/agents/specifier.md',
-    'refreshed .opencode/agents/planner.md',
-    'refreshed .opencode/agents/implementer.md',
-    'up to date .opencode/agents/reviewer.md',
-    `wrote ${LIST}`,
-    'up to date sandbox.sh',
-  ]);
-  for (const file of WRAPPERS) {
-    const expected =
-      file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
-    assert.equal(read(file.path), expected, file.path);
-  }
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(linesOf(result), [
+      'wrote .claude/agents/specifier.md',
+      'refreshed .claude/agents/planner.md',
+      'refreshed .claude/agents/implementer.md',
+      'up to date .claude/agents/reviewer.md',
+      'wrote .opencode/agents/specifier.md',
+      'refreshed .opencode/agents/planner.md',
+      'refreshed .opencode/agents/implementer.md',
+      'up to date .opencode/agents/reviewer.md',
+      `wrote ${LIST}`,
+      'up to date sandbox.sh',
+    ]);
+    for (const file of WRAPPERS) {
+      const expected =
+        file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
+      assert.equal(read(file.path), expected, file.path);
+    }
+  },
+);
 
-test('a shim with the right content that is not executable is made executable', (t) => {
-  const { base, refresh, write } = project(t);
+test('a shim with the right content that is not executable is made executable', (testContext) => {
+  const { base, refresh, write } = project(testContext);
   write('sandbox.sh', SHIM);
   chmodSync(join(base, 'sandbox.sh'), 0o644);
 
@@ -397,22 +400,25 @@ test('a shim with the right content that is not executable is made executable', 
 });
 
 // Review C1
-test('a shim only someone other than its owner may execute is made executable, and is then up to date', (t) => {
-  const { base, refresh, write } = project(t);
-  write('sandbox.sh', SHIM);
-  chmodSync(join(base, 'sandbox.sh'), 0o645);
+test(
+  'a shim only someone other than its owner may execute is made executable, and is then up to date',
+  (testContext) => {
+    const { base, refresh, write } = project(testContext);
+    write('sandbox.sh', SHIM);
+    chmodSync(join(base, 'sandbox.sh'), 0o645);
 
-  const result = refresh(['claude']);
+    const result = refresh(['claude']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, line('refreshed', 'sandbox.sh'));
-  assert.equal(statSync(join(base, 'sandbox.sh')).mode & 0o777, 0o755);
-  assert.match(refresh(['claude']).stdout, line('up to date', 'sandbox.sh'));
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, line('refreshed', 'sandbox.sh'));
+    assert.equal(statSync(join(base, 'sandbox.sh')).mode & 0o777, 0o755);
+    assert.match(refresh(['claude']).stdout, line('up to date', 'sandbox.sh'));
+  },
+);
 
 // Review S1
-test('a pinned model in a wrapper with CRLF line endings survives the command', (t) => {
-  const { refresh, read, write } = project(t);
+test('a pinned model in a wrapper with CRLF line endings survives the command', (testContext) => {
+  const { refresh, read, write } = project(testContext);
   const path = '.opencode/agents/reviewer.md';
   const wrapper = rendered('opencode', 'reviewer');
   write(path, withFrontmatter(wrapper, 'mode:', ['model: some/model']).replaceAll('\n', '\r\n'));
@@ -426,12 +432,12 @@ test('a pinned model in a wrapper with CRLF line endings survives the command', 
 });
 
 // Review S4
-test('a model set off from its colon by a tab survives the command, in LF and in CRLF', (t) => {
+test('a model set off from its colon by a tab survives the command, in LF and in CRLF', (testContext) => {
   for (const [harness, ending] of [
     ['opencode', '\n'],
     ['claude', '\r\n'],
   ]) {
-    const { refresh, read, write } = project(t);
+    const { refresh, read, write } = project(testContext);
     const path = `.${harness}/agents/reviewer.md`;
     const wrapper = rendered(harness, 'reviewer');
     const pinned = wrapper.replace('\n---\n\n', '\nmodel:\tsome/model\n---\n\n');
@@ -446,22 +452,25 @@ test('a model set off from its colon by a tab survives the command, in LF and in
   }
 });
 
-test('the files that are the project own are byte for byte unchanged, and a missing one stays missing', (t) => {
-  const present = staleProject(t);
-  for (const [path, content] of Object.entries(PROJECT_OWNED)) present.write(path, content);
-  assert.equal(present.refresh(['claude', 'opencode']).status, 0);
-  for (const [path, content] of Object.entries(PROJECT_OWNED)) assert.equal(present.read(path), content, path);
+test(
+  'the files that are the project own are byte for byte unchanged, and a missing one stays missing',
+  (testContext) => {
+    const present = staleProject(testContext);
+    for (const [path, content] of Object.entries(PROJECT_OWNED)) present.write(path, content);
+    assert.equal(present.refresh(['claude', 'opencode']).status, 0);
+    for (const [path, content] of Object.entries(PROJECT_OWNED)) assert.equal(present.read(path), content, path);
 
-  const absent = staleProject(t);
-  rmSync(join(absent.base, 'AGENTS.md'));
-  assert.equal(absent.refresh(['claude', 'opencode']).status, 0);
-  for (const path of [...Object.keys(PROJECT_OWNED), 'sandbox', 'package-lock.json']) {
-    assert.equal(exists(join(absent.base, path)), false, path);
-  }
-});
+    const absent = staleProject(testContext);
+    rmSync(join(absent.base, 'AGENTS.md'));
+    assert.equal(absent.refresh(['claude', 'opencode']).status, 0);
+    for (const path of [...Object.keys(PROJECT_OWNED), 'sandbox', 'package-lock.json']) {
+      assert.equal(exists(join(absent.base, path)), false, path);
+    }
+  },
+);
 
-test('only the wrappers of the harnesses given are touched', (t) => {
-  const { base, refresh, read } = staleProject(t);
+test('only the wrappers of the harnesses given are touched', (testContext) => {
+  const { base, refresh, read } = staleProject(testContext);
   const opencodeBefore = WRAPPERS.filter((file) => file.path.startsWith('.opencode/')).map((file) => [
     file.path,
     read(file.path),
@@ -474,44 +483,47 @@ test('only the wrappers of the harnesses given are touched', (t) => {
   assert.doesNotMatch(result.stdout, /\.opencode/);
   assert.equal(read('.claude/agents/planner.md'), rendered('claude', 'planner'));
 
-  const fresh = project(t);
+  const fresh = project(testContext);
   assert.equal(fresh.refresh(['opencode']).status, 0);
   assert.equal(exists(join(fresh.base, '.claude')), false);
   assert.equal(exists(join(base, '.opencode', 'agents', 'planner.md')), true);
 });
 
-test('a symbolic link or a directory where a file would go is left, named, and the rest is refreshed', (t) => {
-  const { base, refresh, read } = staleProject(t);
-  const outside = temporaryDirectory(t, 'agentrite-refresh-outside-');
-  const target = join(outside, 'target.md');
-  writeFileSync(target, 'outside the project\n');
-  const linked = '.claude/agents/planner.md';
-  rmSync(join(base, linked));
-  symlinkSync(target, join(base, linked));
-  const dangling = '.claude/agents/reviewer.md';
-  rmSync(join(base, dangling));
-  symlinkSync(join(outside, 'nowhere.md'), join(base, dangling));
-  rmSync(join(base, 'sandbox.sh'));
-  mkdirSync(join(base, 'sandbox.sh'));
+test(
+  'a symbolic link or a directory where a file would go is left, named, and the rest is refreshed',
+  (testContext) => {
+    const { base, refresh, read } = staleProject(testContext);
+    const outside = temporaryDirectory(testContext, 'agentrite-refresh-outside-');
+    const target = join(outside, 'target.md');
+    writeFileSync(target, 'outside the project\n');
+    const linked = '.claude/agents/planner.md';
+    rmSync(join(base, linked));
+    symlinkSync(target, join(base, linked));
+    const dangling = '.claude/agents/reviewer.md';
+    rmSync(join(base, dangling));
+    symlinkSync(join(outside, 'nowhere.md'), join(base, dangling));
+    rmSync(join(base, 'sandbox.sh'));
+    mkdirSync(join(base, 'sandbox.sh'));
 
-  const result = refresh(['claude', 'opencode']);
+    const result = refresh(['claude', 'opencode']);
 
-  assert.equal(result.status, 1);
-  for (const path of [linked, dangling, 'sandbox.sh']) {
-    assert.match(result.stderr, new RegExp(path.replaceAll('.', '\\.')));
-    assert.doesNotMatch(result.stdout, new RegExp(` ${path.replaceAll('.', '\\.')}$`, 'm'));
-  }
-  assert.equal(readFileSync(target, 'utf-8'), 'outside the project\n');
-  assert.equal(exists(join(outside, 'nowhere.md')), false);
-  assert.equal(lstatSync(join(base, linked)).isSymbolicLink(), true);
-  assert.equal(lstatSync(join(base, 'sandbox.sh')).isDirectory(), true);
-  assert.equal(read('.claude/agents/implementer.md'), rendered('claude', 'implementer'));
-  assert.equal(read('.opencode/agents/planner.md'), rendered('opencode', 'planner'));
-  assert.match(result.stdout, line('refreshed', '.claude/agents/implementer.md'));
-});
+    assert.equal(result.status, 1);
+    for (const path of [linked, dangling, 'sandbox.sh']) {
+      assert.match(result.stderr, new RegExp(path.replaceAll('.', '\\.')));
+      assert.doesNotMatch(result.stdout, new RegExp(` ${path.replaceAll('.', '\\.')}$`, 'm'));
+    }
+    assert.equal(readFileSync(target, 'utf-8'), 'outside the project\n');
+    assert.equal(exists(join(outside, 'nowhere.md')), false);
+    assert.equal(lstatSync(join(base, linked)).isSymbolicLink(), true);
+    assert.equal(lstatSync(join(base, 'sandbox.sh')).isDirectory(), true);
+    assert.equal(read('.claude/agents/implementer.md'), rendered('claude', 'implementer'));
+    assert.equal(read('.opencode/agents/planner.md'), rendered('opencode', 'planner'));
+    assert.match(result.stdout, line('refreshed', '.claude/agents/implementer.md'));
+  },
+);
 
-test('a project with no package.json and no lockfile is refreshed', (t) => {
-  const { base, refresh, read } = staleProject(t);
+test('a project with no package.json and no lockfile is refreshed', (testContext) => {
+  const { base, refresh, read } = staleProject(testContext);
   assert.equal(exists(join(base, 'package.json')), false);
   assert.equal(exists(join(base, 'package-lock.json')), false);
 
@@ -525,45 +537,51 @@ const REFRESH_USAGE =
   'usage: agentrite refresh\nThe harnesses and the sandbox setting are read from agentrite.json\n';
 
 // R21
-test('every argument refresh took before prints its usage and where the settings are, writes nothing, exits 2', (t) => {
-  for (const args of [['claude'], ['claude', 'opencode'], ['--no-sandbox'], ['--no-sandbox', 'claude'], ['codex']]) {
-    for (const withFile of [true, false]) {
-      const { base, run, read, write } = staleProject(t);
-      if (withFile) write('agentrite.json', TEMPLATE);
-      const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
+test(
+  'every argument refresh took before prints its usage and where the settings are, writes nothing, exits 2',
+  (testContext) => {
+    for (const args of [['claude'], ['claude', 'opencode'], ['--no-sandbox'], ['--no-sandbox', 'claude'], ['codex']]) {
+      for (const withFile of [true, false]) {
+        const { base, run, read, write } = staleProject(testContext);
+        if (withFile) write('agentrite.json', TEMPLATE);
+        const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
 
-      const result = run('refresh', ...args);
+        const result = run('refresh', ...args);
 
-      assert.equal(result.status, 2, args.join(' '));
-      assert.equal(result.stdout, '');
-      assert.equal(result.stderr, REFRESH_USAGE);
-      for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
-      assert.equal(exists(join(base, 'agentrite.json')), withFile);
-      if (withFile) assert.equal(read('agentrite.json'), TEMPLATE);
+        assert.equal(result.status, 2, args.join(' '));
+        assert.equal(result.stdout, '');
+        assert.equal(result.stderr, REFRESH_USAGE);
+        for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
+        assert.equal(exists(join(base, 'agentrite.json')), withFile);
+        if (withFile) assert.equal(read('agentrite.json'), TEMPLATE);
+      }
     }
-  }
-});
+  },
+);
 
 // R6
-test('refresh in a project with no agentrite.json names the command that writes one, and writes nothing', (t) => {
-  const { base, run, read } = staleProject(t);
-  const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
+test(
+  'refresh in a project with no agentrite.json names the command that writes one, and writes nothing',
+  (testContext) => {
+    const { base, run, read } = staleProject(testContext);
+    const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
 
-  const result = run('refresh');
+    const result = run('refresh');
 
-  assert.equal(result.status, 1);
-  assert.equal(result.stdout, '');
-  assert.equal(
-    result.stderr,
-    'agentrite: the project has no agentrite.json. Run: npx agentrite config, which writes one\n',
-  );
-  for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
-  assert.equal(exists(join(base, 'agentrite.json')), false);
-});
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      'agentrite: the project has no agentrite.json. Run: npx agentrite config, which writes one\n',
+    );
+    for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
+    assert.equal(exists(join(base, 'agentrite.json')), false);
+  },
+);
 
 // R5
-test('refresh refuses a file that is not valid in a key it does not use, and writes nothing', (t) => {
-  const { run, read, write } = staleProject(t);
+test('refresh refuses a file that is not valid in a key it does not use, and writes nothing', (testContext) => {
+  const { run, read, write } = staleProject(testContext);
   const invalid = '{ "defaultBranch": 5, "harnesses": ["claude"], "sandbox": true }\n';
   write('agentrite.json', invalid);
   const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
@@ -578,30 +596,33 @@ test('refresh refuses a file that is not valid in a key it does not use, and wri
 });
 
 // R20, R22
-test('refresh does for each value of the two settings what it did for the arguments, and leaves the file', (t) => {
-  for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode'], ['opencode', 'claude']]) {
-    for (const sandbox of [true, false]) {
-      const { base, refresh, read } = project(t);
-      const text = kitSettingsText({ defaultBranch: 'master', harnesses, sandbox });
+test(
+  'refresh does for each value of the two settings what it did for the arguments, and leaves the file',
+  (testContext) => {
+    for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode'], ['opencode', 'claude']]) {
+      for (const sandbox of [true, false]) {
+        const { base, refresh, read } = project(testContext);
+        const text = kitSettingsText({ defaultBranch: 'master', harnesses, sandbox });
 
-      const result = refresh(harnesses, sandbox);
+        const result = refresh(harnesses, sandbox);
 
-      assert.equal(result.status, 0, result.stderr);
-      const expected = plannedFiles(harnesses, KIT_ROLES).map((file) => `wrote ${file.path}`);
-      expected.push(`wrote ${LIST}`);
-      if (sandbox) expected.push('wrote sandbox.sh');
-      assert.deepEqual(linesOf(result), expected);
-      assert.equal(exists(join(base, 'sandbox.sh')), sandbox);
-      for (const harness of ['claude', 'opencode']) {
-        assert.equal(exists(join(base, `.${harness}`)), harnesses.includes(harness), harness);
+        assert.equal(result.status, 0, result.stderr);
+        const expected = plannedFiles(harnesses, KIT_ROLES).map((file) => `wrote ${file.path}`);
+        expected.push(`wrote ${LIST}`);
+        if (sandbox) expected.push('wrote sandbox.sh');
+        assert.deepEqual(linesOf(result), expected);
+        assert.equal(exists(join(base, 'sandbox.sh')), sandbox);
+        for (const harness of ['claude', 'opencode']) {
+          assert.equal(exists(join(base, `.${harness}`)), harnesses.includes(harness), harness);
+        }
+        assert.equal(read('agentrite.json'), text);
       }
-      assert.equal(read('agentrite.json'), text);
     }
-  }
-});
+  },
+);
 
-test('refresh runs through a node_modules bin symlink the way npx does', (t) => {
-  const { base, read, write } = staleProject(t);
+test('refresh runs through a node_modules bin symlink the way npx does', (testContext) => {
+  const { base, read, write } = staleProject(testContext);
   mkdirSync(join(base, 'node_modules', '.bin'), { recursive: true });
   const bin = join(base, 'node_modules', '.bin', 'agentrite');
   symlinkSync(script, bin);
@@ -618,46 +639,52 @@ test('refresh runs through a node_modules bin symlink the way npx does', (t) => 
 
 const WRAPPER_PATHS = WRAPPERS.map((file) => file.path);
 
-test('refresh with sandbox false refreshes the wrappers, keeps a pinned model and says nothing of sandbox.sh', (t) => {
-  const { refresh, read, pinnedPath } = staleProject(t);
-  const shimBefore = read('sandbox.sh');
+test(
+  'refresh with sandbox false refreshes the wrappers, keeps a pinned model and says nothing of sandbox.sh',
+  (testContext) => {
+    const { refresh, read, pinnedPath } = staleProject(testContext);
+    const shimBefore = read('sandbox.sh');
 
-  const result = refresh(['claude', 'opencode'], false);
+    const result = refresh(['claude', 'opencode'], false);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  for (const file of WRAPPERS) {
-    const expected =
-      file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
-    assert.equal(read(file.path), expected, file.path);
-    assert.match(result.stdout, line('refreshed', file.path));
-  }
-  assert.deepEqual(linesOf(result), [...WRAPPER_PATHS, LIST].map((path) => `refreshed ${path}`));
-  assert.doesNotMatch(result.stdout, /sandbox\.sh/);
-  assert.equal(read('sandbox.sh'), shimBefore);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    for (const file of WRAPPERS) {
+      const expected =
+        file.path === pinnedPath ? withFrontmatter(file.content, 'mode:', ['model: some/model']) : file.content;
+      assert.equal(read(file.path), expected, file.path);
+      assert.match(result.stdout, line('refreshed', file.path));
+    }
+    assert.deepEqual(linesOf(result), [...WRAPPER_PATHS, LIST].map((path) => `refreshed ${path}`));
+    assert.doesNotMatch(result.stdout, /sandbox\.sh/);
+    assert.equal(read('sandbox.sh'), shimBefore);
+  },
+);
 
-test('refresh with sandbox false leaves a missing sandbox.sh missing, and refresh without it writes one', (t) => {
-  const { base, refresh } = project(t);
+test(
+  'refresh with sandbox false leaves a missing sandbox.sh missing, and refresh without it writes one',
+  (testContext) => {
+    const { base, refresh } = project(testContext);
 
-  const without = refresh(['claude'], false);
-  assert.equal(without.status, 0, without.stderr);
-  assert.equal(exists(join(base, 'sandbox.sh')), false);
-  assert.doesNotMatch(without.stdout, /sandbox\.sh/);
+    const without = refresh(['claude'], false);
+    assert.equal(without.status, 0, without.stderr);
+    assert.equal(exists(join(base, 'sandbox.sh')), false);
+    assert.doesNotMatch(without.stdout, /sandbox\.sh/);
 
-  const result = refresh(['claude']);
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, line('wrote', 'sandbox.sh'));
-  assert.equal(readFileSync(join(base, 'sandbox.sh'), 'utf-8'), SHIM);
-});
+    const result = refresh(['claude']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, line('wrote', 'sandbox.sh'));
+    assert.equal(readFileSync(join(base, 'sandbox.sh'), 'utf-8'), SHIM);
+  },
+);
 
-test('refresh with sandbox false does not look at what is at the path of sandbox.sh', (t) => {
-  const plain = project(t);
+test('refresh with sandbox false does not look at what is at the path of sandbox.sh', (testContext) => {
+  const plain = project(testContext);
   const expected = plain.refresh(['claude'], false);
 
-  const link = project(t);
+  const link = project(testContext);
   symlinkSync('/no/such/target', join(link.base, 'sandbox.sh'));
-  const directory = project(t);
+  const directory = project(testContext);
   mkdirSync(join(directory.base, 'sandbox.sh'));
 
   for (const made of [link, directory]) {
@@ -678,8 +705,8 @@ test('refresh with sandbox false does not look at what is at the path of sandbox
 
 const OLD_SHIM = '#!/bin/sh\necho old\n';
 
-function withOldShim(t, make) {
-  const made = project(t);
+function withOldShim(testContext, make) {
+  const made = project(testContext);
   make(join(made.base, 'agent.sh'));
   return made;
 }
@@ -689,8 +716,8 @@ function assertNothingSaid(result) {
   assert.doesNotMatch(result.stdout + result.stderr, /agent\.sh/);
 }
 
-test('refresh writes the missing sandbox.sh beside an agent.sh, and leaves the agent.sh as it is', (t) => {
-  const { base, refresh } = withOldShim(t, (path) => {
+test('refresh writes the missing sandbox.sh beside an agent.sh, and leaves the agent.sh as it is', (testContext) => {
+  const { base, refresh } = withOldShim(testContext, (path) => {
     writeFileSync(path, OLD_SHIM);
     chmodSync(path, 0o750);
   });
@@ -703,15 +730,15 @@ test('refresh writes the missing sandbox.sh beside an agent.sh, and leaves the a
   assert.equal(statSync(join(base, 'agent.sh')).mode & 0o777, 0o750);
 });
 
-test('refresh leaves an agent.sh that is a directory, or a dangling link, and exits 0', (t) => {
+test('refresh leaves an agent.sh that is a directory, or a dangling link, and exits 0', (testContext) => {
   for (const make of [(path) => mkdirSync(path), (path) => symlinkSync('no-such-target', path)]) {
-    const { refresh } = withOldShim(t, make);
+    const { refresh } = withOldShim(testContext, make);
     assertNothingSaid(refresh(['claude']));
   }
 });
 
-test('refresh with sandbox false writes no sandbox.sh and says nothing of an agent.sh', (t) => {
-  const { base, refresh } = withOldShim(t, (path) => writeFileSync(path, OLD_SHIM));
+test('refresh with sandbox false writes no sandbox.sh and says nothing of an agent.sh', (testContext) => {
+  const { base, refresh } = withOldShim(testContext, (path) => writeFileSync(path, OLD_SHIM));
 
   const result = refresh(['claude'], false);
 
@@ -748,14 +775,14 @@ function placed(made, path) {
 // Runs refresh in a project whose files are up to date, with `claude` and `opencode` at the paths of the two files,
 // and checks that it wrote neither and printed for the files what a project whose two files load the kit's
 // instructions gets.
-function refreshWith(t, harnesses, { claude, opencode }) {
-  const loading = project(t);
+function refreshWith(testContext, harnesses, { claude, opencode }) {
+  const loading = project(testContext);
   loading.write('CLAUDE.md', CLAUDE_LOADS);
   loading.write('opencode.json', OPENCODE_LOADS);
   const expected = loading.refresh(harnesses);
   assert.equal(noticesOf(expected), withNoRepository(''));
 
-  const made = project(t);
+  const made = project(testContext);
   place(made, 'CLAUDE.md', claude);
   place(made, 'opencode.json', opencode);
   const result = made.refresh(harnesses);
@@ -767,100 +794,117 @@ function refreshWith(t, harnesses, { claude, opencode }) {
   return result;
 }
 
-test('refresh with claude notices a CLAUDE.md that is missing or lacks a line, after the lines of the files', (t) => {
-  const cases = [
-    [undefined, claudeRefreshNotice(true, LINES)],
-    [`${STANDARDS_IMPORT}\n@AGENTS.md\n`, claudeRefreshNotice(false, [IMPORT])],
-    ['@AGENTS.md\n', claudeRefreshNotice(false, [IMPORT, STANDARDS_IMPORT])],
-    // The CLAUDE.md of the last release, which loads process.md alone.
-    [`# Ours\n\n${IMPORT}\n@AGENTS.md\n`, claudeRefreshNotice(false, [STANDARDS_IMPORT])],
-    ['our own\n', claudeRefreshNotice(false, LINES)],
-  ];
-  for (const [claude, notice] of cases) {
-    const result = refreshWith(t, ['claude'], { claude });
-    assert.equal(noticesOf(result), withNoRepository(`${notice}\n`), JSON.stringify(claude));
-    assert.ok(result.stdout.endsWith(`\n\n${notice}\n\n${NO_REPOSITORY}\n`), result.stdout);
-  }
-});
+test(
+  'refresh with claude notices a CLAUDE.md that is missing or lacks a line, after the lines of the files',
+  (testContext) => {
+    const cases = [
+      [undefined, claudeRefreshNotice(true, LINES)],
+      [`${STANDARDS_IMPORT}\n@AGENTS.md\n`, claudeRefreshNotice(false, [IMPORT])],
+      ['@AGENTS.md\n', claudeRefreshNotice(false, [IMPORT, STANDARDS_IMPORT])],
+      // The CLAUDE.md of the last release, which loads process.md alone.
+      [`# Ours\n\n${IMPORT}\n@AGENTS.md\n`, claudeRefreshNotice(false, [STANDARDS_IMPORT])],
+      ['our own\n', claudeRefreshNotice(false, LINES)],
+    ];
+    for (const [claude, notice] of cases) {
+      const result = refreshWith(testContext, ['claude'], { claude });
+      assert.equal(noticesOf(result), withNoRepository(`${notice}\n`), JSON.stringify(claude));
+      assert.ok(result.stdout.endsWith(`\n\n${notice}\n\n${NO_REPOSITORY}\n`), result.stdout);
+    }
+  },
+);
 
-test('refresh with claude prints nothing of a CLAUDE.md that holds the three lines, in LF or in CRLF', (t) => {
-  for (const claude of [CLAUDE_LOADS, CLAUDE_LOADS.replaceAll('\n', '\r\n')]) {
-    const result = refreshWith(t, ['claude'], { claude });
-    assert.equal(noticesOf(result), withNoRepository(''));
-    assert.doesNotMatch(result.stdout, /CLAUDE\.md/);
-  }
-});
+test(
+  'refresh with claude prints nothing of a CLAUDE.md that holds the three lines, in LF or in CRLF',
+  (testContext) => {
+    for (const claude of [CLAUDE_LOADS, CLAUDE_LOADS.replaceAll('\n', '\r\n')]) {
+      const result = refreshWith(testContext, ['claude'], { claude });
+      assert.equal(noticesOf(result), withNoRepository(''));
+      assert.doesNotMatch(result.stdout, /CLAUDE\.md/);
+    }
+  },
+);
 
-test('refresh with opencode notices an opencode.json that does not load the kit\'s instructions, with why', (t) => {
-  const both = [PROCESS, STANDARDS];
-  const cases = [
-    [undefined, 'it is missing', both],
-    ['{\n  "model": "x"\n}\n', 'it has no instructions list', both],
-    ['{ "instructions": ["a.md"] }\n', `its instructions list does not hold ${PROCESS} or ${STANDARDS}`, both],
-    // The opencode.json of the last release, which loads process.md alone.
-    [`{ "instructions": ["${PROCESS}"] }\n`, `its instructions list does not hold ${STANDARDS}`, [STANDARDS]],
-    ['not json\n', 'it is not JSON: ', both],
-    [`{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`, 'it is not JSON: ', [STANDARDS]],
-    [null, 'it cannot be read: ', both],
-  ];
-  for (const [opencode, problem, lacks] of cases) {
-    const result = refreshWith(t, ['opencode'], { opencode });
-    const notices = noticesOf(result);
-    assert.ok(notices.startsWith(`opencode.json does not load the kit's instructions,\nbecause ${problem}`), notices);
-    if (!problem.endsWith(': ')) assert.equal(notices, withNoRepository(`${opencodeRefreshNotice(problem, lacks)}\n`));
-    assert.match(notices, /refresh\ndoes not add them/);
-    assert.ok(notices.includes(`does not add them:\n\n${lacks.join('\n')}\n\n`), notices);
-  }
-});
+test(
+  'refresh with opencode notices an opencode.json that does not load the kit\'s instructions, with why',
+  (testContext) => {
+    const both = [PROCESS, STANDARDS];
+    const cases = [
+      [undefined, 'it is missing', both],
+      ['{\n  "model": "x"\n}\n', 'it has no instructions list', both],
+      ['{ "instructions": ["a.md"] }\n', `its instructions list does not hold ${PROCESS} or ${STANDARDS}`, both],
+      // The opencode.json of the last release, which loads process.md alone.
+      [`{ "instructions": ["${PROCESS}"] }\n`, `its instructions list does not hold ${STANDARDS}`, [STANDARDS]],
+      ['not json\n', 'it is not JSON: ', both],
+      [`{\n  // ours\n  "instructions": ["${PROCESS}"]\n}\n`, 'it is not JSON: ', [STANDARDS]],
+      [null, 'it cannot be read: ', both],
+    ];
+    for (const [opencode, problem, lacks] of cases) {
+      const result = refreshWith(testContext, ['opencode'], { opencode });
+      const notices = noticesOf(result);
+      assert.ok(notices.startsWith(`opencode.json does not load the kit's instructions,\nbecause ${problem}`), notices);
+      if (!problem.endsWith(': ')) {
+        assert.equal(notices, withNoRepository(`${opencodeRefreshNotice(problem, lacks)}\n`));
+      }
+      assert.match(notices, /refresh\ndoes not add them/);
+      assert.ok(notices.includes(`does not add them:\n\n${lacks.join('\n')}\n\n`), notices);
+    }
+  },
+);
 
-test('refresh with opencode prints nothing of an opencode.json that loads both paths, also one with a comment', (t) => {
-  for (const opencode of [OPENCODE_LOADS, `{\n  // ours\n  "instructions": ["${PROCESS}", "${STANDARDS}"]\n}\n`]) {
-    const result = refreshWith(t, ['opencode'], { opencode });
-    assert.equal(noticesOf(result), withNoRepository(''));
-    assert.doesNotMatch(result.stdout, /opencode\.json/);
-  }
-});
+test(
+  'refresh with opencode prints nothing of an opencode.json that loads both paths, also one with a comment',
+  (testContext) => {
+    for (const opencode of [OPENCODE_LOADS, `{\n  // ours\n  "instructions": ["${PROCESS}", "${STANDARDS}"]\n}\n`]) {
+      const result = refreshWith(testContext, ['opencode'], { opencode });
+      assert.equal(noticesOf(result), withNoRepository(''));
+      assert.doesNotMatch(result.stdout, /opencode\.json/);
+    }
+  },
+);
 
-test('refresh with both harnesses prints the notice of CLAUDE.md and then that of opencode.json', (t) => {
-  const result = refreshWith(t, ['claude', 'opencode'], { claude: undefined, opencode: undefined });
+test('refresh with both harnesses prints the notice of CLAUDE.md and then that of opencode.json', (testContext) => {
+  const result = refreshWith(testContext, ['claude', 'opencode'], { claude: undefined, opencode: undefined });
   const claude = claudeRefreshNotice(true, LINES);
   const opencode = opencodeRefreshNotice('it is missing', [PROCESS, STANDARDS]);
   assert.equal(noticesOf(result), withNoRepository(`${claude}\n\n${opencode}\n`));
 });
 
-test('refresh with one harness says nothing of the file of the other, whatever is at its path', (t) => {
+test('refresh with one harness says nothing of the file of the other, whatever is at its path', (testContext) => {
   for (const other of [undefined, 'not json\n', '{}\n', null]) {
-    const claudeOnly = refreshWith(t, ['claude'], { claude: CLAUDE_LOADS, opencode: other });
+    const claudeOnly = refreshWith(testContext, ['claude'], { claude: CLAUDE_LOADS, opencode: other });
     assert.doesNotMatch(claudeOnly.stdout, /opencode\.json/, String(other));
     assert.equal(noticesOf(claudeOnly), withNoRepository(''));
 
-    const opencodeOnly = refreshWith(t, ['opencode'], { claude: other, opencode: OPENCODE_LOADS });
+    const opencodeOnly = refreshWith(testContext, ['opencode'], { claude: other, opencode: OPENCODE_LOADS });
     assert.doesNotMatch(opencodeOnly.stdout, /CLAUDE\.md/, String(other));
     assert.equal(noticesOf(opencodeOnly), withNoRepository(''));
   }
 });
 
-test('the notices change neither what refresh writes nor its status, also when a wrapper is a symbolic link', (t) => {
-  const loading = project(t);
-  loading.write('CLAUDE.md', CLAUDE_LOADS);
-  loading.write('opencode.json', OPENCODE_LOADS);
-  const made = project(t);
-  for (const each of [loading, made]) {
-    mkdirSync(join(each.base, '.claude', 'agents'), { recursive: true });
-    symlinkSync('/no/such/target', join(each.base, '.claude', 'agents', 'planner.md'));
-  }
+test(
+  'the notices change neither what refresh writes nor its status, also when a wrapper is a symbolic link',
+  (testContext) => {
+    const loading = project(testContext);
+    loading.write('CLAUDE.md', CLAUDE_LOADS);
+    loading.write('opencode.json', OPENCODE_LOADS);
+    const made = project(testContext);
+    for (const each of [loading, made]) {
+      mkdirSync(join(each.base, '.claude', 'agents'), { recursive: true });
+      symlinkSync('/no/such/target', join(each.base, '.claude', 'agents', 'planner.md'));
+    }
 
-  const expected = loading.refresh(['claude', 'opencode']);
-  const result = made.refresh(['claude', 'opencode']);
+    const expected = loading.refresh(['claude', 'opencode']);
+    const result = made.refresh(['claude', 'opencode']);
 
-  assert.equal(expected.status, 1);
-  assert.equal(result.status, 1);
-  assert.equal(result.stderr, expected.stderr);
-  assert.deepEqual(linesOf(result), linesOf(expected));
-  assert.match(noticesOf(result), /^CLAUDE\.md does not load/m);
-  assert.match(noticesOf(result), /^opencode\.json does not load/m);
-  for (const path of ['CLAUDE.md', 'opencode.json']) assert.equal(exists(join(made.base, path)), false, path);
-});
+    assert.equal(expected.status, 1);
+    assert.equal(result.status, 1);
+    assert.equal(result.stderr, expected.stderr);
+    assert.deepEqual(linesOf(result), linesOf(expected));
+    assert.match(noticesOf(result), /^CLAUDE\.md does not load/m);
+    assert.match(noticesOf(result), /^opencode\.json does not load/m);
+    for (const path of ['CLAUDE.md', 'opencode.json']) assert.equal(exists(join(made.base, path)), false, path);
+  },
+);
 
 // Unit 0054: the list, and what follows the settings.
 
@@ -879,8 +923,8 @@ function refreshOwn(made, own) {
 }
 
 // R13, R14
-test('refresh writes the list, refreshes one that differs, and finds one that is up to date', (t) => {
-  const { refresh, read, write } = project(t);
+test('refresh writes the list, refreshes one that differs, and finds one that is up to date', (testContext) => {
+  const { refresh, read, write } = project(testContext);
 
   assert.match(refresh(['claude']).stdout, line('wrote', LIST));
   assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
@@ -890,7 +934,7 @@ test('refresh writes the list, refreshes one that differs, and finds one that is
   assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
 });
 
-test('a directory or a link at the path of the list is left, named, and the other files are written', (t) => {
+test('a directory or a link at the path of the list is left, named, and the other files are written', (testContext) => {
   for (const make of [
     (base) => mkdirSync(join(base, LIST), { recursive: true }),
     (base) => {
@@ -898,7 +942,7 @@ test('a directory or a link at the path of the list is left, named, and the othe
       symlinkSync('/no/such/target', join(base, LIST));
     },
   ]) {
-    const { base, refresh } = project(t);
+    const { base, refresh } = project(testContext);
     make(base);
 
     const result = refresh(['claude', 'opencode']);
@@ -913,8 +957,8 @@ test('a directory or a link at the path of the list is left, named, and the othe
 });
 
 // R9, R13
-test('the list and the wrappers follow a changed roles.reviewer and a changed standards', (t) => {
-  const made = project(t);
+test('the list and the wrappers follow a changed roles.reviewer and a changed standards', (testContext) => {
+  const made = project(testContext);
   assert.equal(made.refresh(['claude', 'opencode']).status, 0);
 
   const result = refreshOwn(made, { standards: HOUSE, roles: { reviewer: 'rules/reviewer.md' } });
@@ -949,33 +993,36 @@ function refreshWithRoles(made, extra) {
   return made.run('refresh');
 }
 
-test('refresh removes the wrappers of a role taken out of roles, after the files and before the notices', (t) => {
-  const made = project(t);
-  assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
-  const pinned = made.read('.opencode/agents/security-reviewer.md').replace('\n---\n\n', '\nmodel: x/y\n---\n\n');
-  made.write('.opencode/agents/security-reviewer.md', pinned);
+test(
+  'refresh removes the wrappers of a role taken out of roles, after the files and before the notices',
+  (testContext) => {
+    const made = project(testContext);
+    assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
+    const pinned = made.read('.opencode/agents/security-reviewer.md').replace('\n---\n\n', '\nmodel: x/y\n---\n\n');
+    made.write('.opencode/agents/security-reviewer.md', pinned);
 
-  const result = refreshWithRoles(made, []);
+    const result = refreshWithRoles(made, []);
 
-  assert.equal(result.status, 0, result.stderr);
-  for (const directory of WRAPPER_DIRS) {
-    assert.match(result.stdout, line('removed', `${directory}/security-reviewer.md`));
-    assert.ok(!exists(join(made.base, directory, 'security-reviewer.md')), directory);
-  }
-  const lines = result.stdout.split('\n');
-  const first = lines.findIndex((entry) => entry.startsWith('removed '));
-  assert.deepEqual(
-    lines.slice(first, first + 2),
-    WRAPPER_DIRS.map((directory) => `removed ${directory}/security-reviewer.md`),
-  );
-  assert.ok(lines.slice(0, first).every((entry) => /^(wrote|refreshed|up to date) /.test(entry)), result.stdout);
-  assert.equal(lines[first + 2], '', result.stdout);
-  const second = refreshWithRoles(made, []);
-  assert.doesNotMatch(second.stdout, /^removed /m);
-});
+    assert.equal(result.status, 0, result.stderr);
+    for (const directory of WRAPPER_DIRS) {
+      assert.match(result.stdout, line('removed', `${directory}/security-reviewer.md`));
+      assert.ok(!exists(join(made.base, directory, 'security-reviewer.md')), directory);
+    }
+    const lines = result.stdout.split('\n');
+    const first = lines.findIndex((entry) => entry.startsWith('removed '));
+    assert.deepEqual(
+      lines.slice(first, first + 2),
+      WRAPPER_DIRS.map((directory) => `removed ${directory}/security-reviewer.md`),
+    );
+    assert.ok(lines.slice(0, first).every((entry) => /^(wrote|refreshed|up to date) /.test(entry)), result.stdout);
+    assert.equal(lines[first + 2], '', result.stdout);
+    const second = refreshWithRoles(made, []);
+    assert.doesNotMatch(second.stdout, /^removed /m);
+  },
+);
 
-test('a renamed role loses the wrappers of its old name and gets those of its new one', (t) => {
-  const made = project(t);
+test('a renamed role loses the wrappers of its old name and gets those of its new one', (testContext) => {
+  const made = project(testContext);
   assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
 
   const result = refreshWithRoles(made, ['security-checker']);
@@ -986,8 +1033,8 @@ test('a renamed role loses the wrappers of its old name and gets those of its ne
   assert.ok(exists(join(made.base, '.opencode/agents/security-checker.md')));
 });
 
-test('refresh leaves an agent of the projects own, a link and a directory, and says nothing of them', (t) => {
-  const made = project(t);
+test('refresh leaves an agent of the projects own, a link and a directory, and says nothing of them', (testContext) => {
+  const made = project(testContext);
   for (const directory of WRAPPER_DIRS) {
     made.write(`${directory}/ours.md`, '---\nname: ours\ndescription: Ours.\n---\n\n# Ours\n');
     mkdirSync(join(made.base, directory, 'folder.md'));
@@ -1005,8 +1052,8 @@ test('refresh leaves an agent of the projects own, a link and a directory, and s
   }
 });
 
-test('refresh leaves the wrappers of a harness that harnesses no longer names', (t) => {
-  const made = project(t);
+test('refresh leaves the wrappers of a harness that harnesses no longer names', (testContext) => {
+  const made = project(testContext);
   assert.equal(refreshWithRoles(made, ['security-reviewer']).status, 0);
   const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: false });
   made.write('agentrite.json', text);
@@ -1019,27 +1066,30 @@ test('refresh leaves the wrappers of a harness that harnesses no longer names', 
 });
 
 // Unit 0056, R5, R9
-test('refresh writes the wrappers of a role of the projects own for the harnesses named, and lists it', (t) => {
-  const made = project(t);
-  made.write('rules/test-writer.md', '---\ndescription: Writes the tests first.\n---\n\n# T\n');
-  const roles = { ...KIT_SETTINGS.roles, 'test-writer': 'rules/test-writer.md' };
-  const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['opencode'], sandbox: false });
-  made.write('agentrite.json', JSON.stringify({ ...JSON.parse(text), roles }));
+test(
+  'refresh writes the wrappers of a role of the projects own for the harnesses named, and lists it',
+  (testContext) => {
+    const made = project(testContext);
+    made.write('rules/test-writer.md', '---\ndescription: Writes the tests first.\n---\n\n# T\n');
+    const roles = { ...KIT_SETTINGS.roles, 'test-writer': 'rules/test-writer.md' };
+    const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['opencode'], sandbox: false });
+    made.write('agentrite.json', JSON.stringify({ ...JSON.parse(text), roles }));
 
-  const result = made.run('refresh');
+    const result = made.run('refresh');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, line('wrote', '.opencode/agents/test-writer.md'));
-  assert.doesNotMatch(result.stdout, /\.claude\/agents\/test-writer/);
-  assert.match(made.read('.opencode/agents/test-writer.md'), /^Read `rules\/test-writer\.md` in the project root/m);
-  assert.match(made.read('.opencode/agents/test-writer.md'), /^ {2}Writes the tests first\.$/m);
-  assert.equal(made.read(LIST), instructionsList({ standards: KIT_SETTINGS.standards, roles }));
-  assert.ok(made.read(LIST).indexOf('* reviewer: ') < made.read(LIST).indexOf('* test-writer: '));
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, line('wrote', '.opencode/agents/test-writer.md'));
+    assert.doesNotMatch(result.stdout, /\.claude\/agents\/test-writer/);
+    assert.match(made.read('.opencode/agents/test-writer.md'), /^Read `rules\/test-writer\.md` in the project root/m);
+    assert.match(made.read('.opencode/agents/test-writer.md'), /^ {2}Writes the tests first\.$/m);
+    assert.equal(made.read(LIST), instructionsList({ standards: KIT_SETTINGS.standards, roles }));
+    assert.ok(made.read(LIST).indexOf('* reviewer: ') < made.read(LIST).indexOf('* test-writer: '));
+  },
+);
 
 // R11, R12
-test('refresh judges CLAUDE.md and opencode.json against the standards the settings give', (t) => {
-  const made = project(t);
+test('refresh judges CLAUDE.md and opencode.json against the standards the settings give', (testContext) => {
+  const made = project(testContext);
   made.write('CLAUDE.md', `@${PROCESS}\n@${HOUSE}\n@AGENTS.md\n`);
   made.write('opencode.json', `{ "instructions": ["${PROCESS}", "${HOUSE}"] }\n`);
 
@@ -1049,26 +1099,29 @@ test('refresh judges CLAUDE.md and opencode.json against the standards the setti
   assert.equal(noticesOf(result), withNoRepository(''));
 });
 
-test('refresh notices the kit standards in CLAUDE.md and opencode.json beside the project own, removing none', (t) => {
-  const claude = `@${PROCESS}\n@${HOUSE}\n${STANDARDS_IMPORT}\n@AGENTS.md\n`;
-  const opencode = `{ "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"] }\n`;
-  const made = project(t);
-  made.write('CLAUDE.md', claude);
-  made.write('opencode.json', opencode);
+test(
+  'refresh notices the kit standards in CLAUDE.md and opencode.json beside the project own, removing none',
+  (testContext) => {
+    const claude = `@${PROCESS}\n@${HOUSE}\n${STANDARDS_IMPORT}\n@AGENTS.md\n`;
+    const opencode = `{ "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"] }\n`;
+    const made = project(testContext);
+    made.write('CLAUDE.md', claude);
+    made.write('opencode.json', opencode);
 
-  const result = refreshOwn(made, { standards: HOUSE });
+    const result = refreshOwn(made, { standards: HOUSE });
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    noticesOf(result),
-    withNoRepository(`${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`),
-  );
-  assert.equal(made.read('CLAUDE.md'), claude);
-  assert.equal(made.read('opencode.json'), opencode);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      noticesOf(result),
+      withNoRepository(`${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`),
+    );
+    assert.equal(made.read('CLAUDE.md'), claude);
+    assert.equal(made.read('opencode.json'), opencode);
+  },
+);
 
-test('refresh gives no notice of the kit standards in a project that uses them', (t) => {
-  const made = project(t);
+test('refresh gives no notice of the kit standards in a project that uses them', (testContext) => {
+  const made = project(testContext);
   made.write('CLAUDE.md', CLAUDE_LOADS);
   made.write('opencode.json', OPENCODE_LOADS);
 
@@ -1078,51 +1131,57 @@ test('refresh gives no notice of the kit standards in a project that uses them',
 });
 
 // R16
-test('refresh notices an AGENTS.md that is missing or does not name the list, whatever the harnesses', (t) => {
-  for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode']]) {
-    for (const [agents, notice] of [
-      [undefined, agentsListNotice(true)],
-      ['# Ours\n\nRead node_modules/agentrite/standards.md.\n', agentsListNotice(false)],
-    ]) {
-      const made = project(t);
-      made.write('CLAUDE.md', CLAUDE_LOADS);
-      made.write('opencode.json', OPENCODE_LOADS);
-      rmSync(join(made.base, 'AGENTS.md'));
-      if (agents !== undefined) made.write('AGENTS.md', agents);
+test(
+  'refresh notices an AGENTS.md that is missing or does not name the list, whatever the harnesses',
+  (testContext) => {
+    for (const harnesses of [['claude'], ['opencode'], ['claude', 'opencode']]) {
+      for (const [agents, notice] of [
+        [undefined, agentsListNotice(true)],
+        ['# Ours\n\nRead node_modules/agentrite/standards.md.\n', agentsListNotice(false)],
+      ]) {
+        const made = project(testContext);
+        made.write('CLAUDE.md', CLAUDE_LOADS);
+        made.write('opencode.json', OPENCODE_LOADS);
+        rmSync(join(made.base, 'AGENTS.md'));
+        if (agents !== undefined) made.write('AGENTS.md', agents);
 
-      const result = made.refresh(harnesses);
+        const result = made.refresh(harnesses);
 
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(noticesOf(result), withNoRepository(`${notice}\n`), `${harnesses} ${JSON.stringify(agents)}`);
-      assert.equal(placed(made, 'AGENTS.md'), agents);
+        assert.equal(result.status, 0, result.stderr);
+        assert.equal(noticesOf(result), withNoRepository(`${notice}\n`), `${harnesses} ${JSON.stringify(agents)}`);
+        assert.equal(placed(made, 'AGENTS.md'), agents);
+      }
     }
-  }
-});
+  },
+);
 
-test('refresh prints the notices: CLAUDE.md, the kit standards in it, opencode.json, in it, then AGENTS.md', (t) => {
-  const made = project(t);
-  made.write('CLAUDE.md', `${STANDARDS_IMPORT}\n`);
-  made.write('opencode.json', `{ "instructions": ["${STANDARDS}"] }\n`);
-  rmSync(join(made.base, 'AGENTS.md'));
+test(
+  'refresh prints the notices: CLAUDE.md, the kit standards in it, opencode.json, in it, then AGENTS.md',
+  (testContext) => {
+    const made = project(testContext);
+    made.write('CLAUDE.md', `${STANDARDS_IMPORT}\n`);
+    made.write('opencode.json', `{ "instructions": ["${STANDARDS}"] }\n`);
+    rmSync(join(made.base, 'AGENTS.md'));
 
-  const result = refreshOwn(made, { standards: HOUSE });
+    const result = refreshOwn(made, { standards: HOUSE });
 
-  assert.equal(result.status, 0, result.stderr);
-  const notices = noticesOf(result);
-  const order = [
-    /^CLAUDE\.md does not load/m,
-    /^CLAUDE\.md imports the kit's standards\.md/m,
-    /^opencode\.json does not load/m,
-    /^opencode\.json lists the kit's standards\.md/m,
-    /^AGENTS\.md is missing/m,
-  ].map((pattern) => notices.search(pattern));
-  assert.ok(order.every((at) => at !== -1), notices);
-  assert.deepEqual([...order].sort((first, second) => first - second), order, notices);
-});
+    assert.equal(result.status, 0, result.stderr);
+    const notices = noticesOf(result);
+    const order = [
+      /^CLAUDE\.md does not load/m,
+      /^CLAUDE\.md imports the kit's standards\.md/m,
+      /^opencode\.json does not load/m,
+      /^opencode\.json lists the kit's standards\.md/m,
+      /^AGENTS\.md is missing/m,
+    ].map((pattern) => notices.search(pattern));
+    assert.ok(order.every((at) => at !== -1), notices);
+    assert.deepEqual([...order].sort((first, second) => first - second), order, notices);
+  },
+);
 
 // R8
-test('refresh refuses a role file without front matter, and writes nothing', (t) => {
-  const { run, read, write } = staleProject(t);
+test('refresh refuses a role file without front matter, and writes nothing', (testContext) => {
+  const { run, read, write } = staleProject(testContext);
   write('rules/reviewer.md', '# Our reviewer\n');
   const text = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: true });
   const settings = { ...JSON.parse(text), roles: { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' } };
@@ -1143,12 +1202,12 @@ test('refresh refuses a role file without front matter, and writes nothing', (t)
 });
 
 // Unit 0058, R8, R11
-test('refresh refuses a file that lacks bell, or whose bell is a string, and writes nothing', (t) => {
+test('refresh refuses a file that lacks bell, or whose bell is a string, and writes nothing', (testContext) => {
   for (const [replacement, found] of [
     ['', 'missing'],
     ['  "bell": "true",\n', '"true"'],
   ]) {
-    const { run, read, write } = staleProject(t);
+    const { run, read, write } = staleProject(testContext);
     const valid = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true });
     const text = valid.replace('  "bell": true,\n', replacement);
     assert.notEqual(text, valid);
@@ -1166,32 +1225,35 @@ test('refresh refuses a file that lacks bell, or whose bell is a string, and wri
 });
 
 // Unit 0065, R3
-test('refresh refuses a file that lacks orchestrator, or whose orchestrator names no file, and writes nothing', (t) => {
-  const line = '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
-  for (const [replacement, message] of [
-    ['', `orchestrator is missing. ${ORCHESTRATOR_MUST}`],
-    [
-      '  "orchestrator": "rules/missing.json",\n',
-      'orchestrator is "rules/missing.json", and there is no file at it. ' +
-        "It must name a file in the project's working tree",
-    ],
-  ]) {
-    const { run, read, write } = staleProject(t);
-    const valid = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true });
-    const text = valid.replace(line, replacement);
-    assert.notEqual(text, valid);
-    write('agentrite.json', text);
-    const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
+test(
+  'refresh refuses a file that lacks orchestrator, or whose orchestrator names no file, and writes nothing',
+  (testContext) => {
+    const line = '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
+    for (const [replacement, message] of [
+      ['', `orchestrator is missing. ${ORCHESTRATOR_MUST}`],
+      [
+        '  "orchestrator": "rules/missing.json",\n',
+        'orchestrator is "rules/missing.json", and there is no file at it. ' +
+          "It must name a file in the project's working tree",
+      ],
+    ]) {
+      const { run, read, write } = staleProject(testContext);
+      const valid = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true });
+      const text = valid.replace(line, replacement);
+      assert.notEqual(text, valid);
+      write('agentrite.json', text);
+      const before = Object.fromEntries(KIT_OWNED.map((path) => [path, read(path)]));
 
-    const result = run('refresh');
+      const result = run('refresh');
 
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.equal(result.stderr, `agentrite: agentrite.json: ${message}\n`);
-    for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
-    assert.equal(read('agentrite.json'), text);
-  }
-});
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr, `agentrite: agentrite.json: ${message}\n`);
+      for (const path of KIT_OWNED) assert.equal(read(path), before[path], path);
+      assert.equal(read('agentrite.json'), text);
+    }
+  },
+);
 
 const ORCHESTRATOR_MUST =
   'It must hold false, for a project that does not use the orchestrator, or the path of a file, relative to the ' +

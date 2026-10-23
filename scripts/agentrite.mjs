@@ -245,7 +245,7 @@ export function fillTemplate(template, values) {
     .split('\n')
     .flatMap((line) => {
       const alone = line.match(/^(\s*)\{\{(\w+)\}\}$/);
-      if (alone === null) return [line.replace(/\{\{(\w+)\}\}/g, (_, name) => valueOf(values, name))];
+      if (alone === null) return [line.replace(/\{\{(\w+)\}\}/g, (_placeholder, name) => valueOf(values, name))];
       const value = valueOf(values, alone[2]);
       return value === '' ? [] : value.split('\n').map((valueLine) => alone[1] + valueLine);
     })

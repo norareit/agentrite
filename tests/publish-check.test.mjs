@@ -57,8 +57,8 @@ function git(cwd, ...args) {
 }
 
 // A repository that holds a committed package.json at 5.0.0 and a committed CHANGELOG.md, or none when it is null.
-function repository(t, changelog = '# Changelog\n\n## 5.0.0\n\nNotes.\n') {
-  const root = temporaryDirectory(t, 'publish-check-');
+function repository(testContext, changelog = '# Changelog\n\n## 5.0.0\n\nNotes.\n') {
+  const root = temporaryDirectory(testContext, 'publish-check-');
 
   git(root, 'init', '-b', 'master');
   git(root, 'config', 'user.email', 'test@example.com');
@@ -76,21 +76,21 @@ function runCheck(root) {
   return spawnSync(process.execPath, [script], { cwd: root, encoding: 'utf-8' });
 }
 
-test('the check passes a version with its section in a clean working tree', (t) => {
-  const result = runCheck(repository(t));
+test('the check passes a version with its section in a clean working tree', (testContext) => {
+  const result = runCheck(repository(testContext));
   assert.equal(result.stderr, '');
   assert.equal(result.status, 0);
 });
 
-test('the check refuses a version with no section in CHANGELOG.md', (t) => {
-  const result = runCheck(repository(t, '# Changelog\n\n## 4.2.0\n\nNotes.\n'));
+test('the check refuses a version with no section in CHANGELOG.md', (testContext) => {
+  const result = runCheck(repository(testContext, '# Changelog\n\n## 4.2.0\n\nNotes.\n'));
   assert.equal(result.status, 1);
   assert.equal(result.stderr, `${RELEASE_NOTES_MESSAGE}\n`);
   assert.equal(result.stdout, '');
 });
 
-test('the check refuses a version when there is no CHANGELOG.md', (t) => {
-  const result = runCheck(repository(t, null));
+test('the check refuses a version when there is no CHANGELOG.md', (testContext) => {
+  const result = runCheck(repository(testContext, null));
   assert.equal(result.status, 1);
   assert.equal(result.stderr, `${RELEASE_NOTES_MESSAGE}\n`);
   assert.equal(result.stdout, '');
@@ -101,8 +101,8 @@ const WORKING_TREE_MESSAGE =
   '  README.md\n' +
   '  Commit the changes or put them aside, and run npm publish again.\n';
 
-test('the check refuses a tracked file with a change that is not staged', (t) => {
-  const root = repository(t);
+test('the check refuses a tracked file with a change that is not staged', (testContext) => {
+  const root = repository(testContext);
   writeFileSync(join(root, 'README.md'), 'Another kit.\n');
   const result = runCheck(root);
   assert.equal(result.status, 1);
@@ -110,8 +110,8 @@ test('the check refuses a tracked file with a change that is not staged', (t) =>
   assert.equal(result.stdout, '');
 });
 
-test('the check refuses a tracked file with a staged change', (t) => {
-  const root = repository(t);
+test('the check refuses a tracked file with a staged change', (testContext) => {
+  const root = repository(testContext);
   writeFileSync(join(root, 'README.md'), 'Another kit.\n');
   git(root, 'add', 'README.md');
   const result = runCheck(root);
@@ -119,8 +119,8 @@ test('the check refuses a tracked file with a staged change', (t) => {
   assert.equal(result.stderr, WORKING_TREE_MESSAGE);
 });
 
-test('the check refuses a change that is staged and then undone in the working tree', (t) => {
-  const root = repository(t);
+test('the check refuses a change that is staged and then undone in the working tree', (testContext) => {
+  const root = repository(testContext);
   writeFileSync(join(root, 'README.md'), 'Another kit.\n');
   git(root, 'add', 'README.md');
   writeFileSync(join(root, 'README.md'), 'A kit.\n');
@@ -129,24 +129,24 @@ test('the check refuses a change that is staged and then undone in the working t
   assert.equal(result.stderr, WORKING_TREE_MESSAGE);
 });
 
-test('the check passes a working tree with an untracked file', (t) => {
-  const root = repository(t);
+test('the check passes a working tree with an untracked file', (testContext) => {
+  const root = repository(testContext);
   writeFileSync(join(root, 'notes.txt'), 'Not tracked.\n');
   const result = runCheck(root);
   assert.equal(result.stderr, '');
   assert.equal(result.status, 0);
 });
 
-test('the check does not look at the branch', (t) => {
-  const root = repository(t);
+test('the check does not look at the branch', (testContext) => {
+  const root = repository(testContext);
   git(root, 'checkout', '-b', 'feature-0001-another');
   const result = runCheck(root);
   assert.equal(result.stderr, '');
   assert.equal(result.status, 0);
 });
 
-test('the check reports the missing release notes before a changed file', (t) => {
-  const root = repository(t, '# Changelog\n');
+test('the check reports the missing release notes before a changed file', (testContext) => {
+  const root = repository(testContext, '# Changelog\n');
   writeFileSync(join(root, 'README.md'), 'Another kit.\n');
   const result = runCheck(root);
   assert.equal(result.status, 1);

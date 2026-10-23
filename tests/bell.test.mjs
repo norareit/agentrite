@@ -80,8 +80,8 @@ test("Claude Code's managed settings of the bell hold the hooks of Notification 
 
 // The plugin of OpenCode copied into a directory of its own, beside a stand-in for the script that appends a line to
 // a file and then exits with `status`.
-function pluginBeside(t, status) {
-  const base = temporaryDirectory(t, 'bell-plugin-');
+function pluginBeside(testContext, status) {
+  const base = temporaryDirectory(testContext, 'bell-plugin-');
   const plugin = join(base, 'opencode-plugin.js');
   const rang = join(base, 'rang');
   copyFileSync(new URL('../container/bell/opencode-plugin.js', import.meta.url), plugin);
@@ -91,25 +91,28 @@ function pluginBeside(t, status) {
 }
 
 // R1
-test("OpenCode's plugin runs the script beside it at an idle session and at a permission asked", async (t) => {
-  const { plugin, times } = pluginBeside(t, 0);
-  const module = await import(pathToFileURL(plugin).href);
-  assert.deepEqual(Object.keys(module), ['RingBell']);
-  const hooks = await module.RingBell();
+test(
+  "OpenCode's plugin runs the script beside it at an idle session and at a permission asked",
+  async (testContext) => {
+    const { plugin, times } = pluginBeside(testContext, 0);
+    const module = await import(pathToFileURL(plugin).href);
+    assert.deepEqual(Object.keys(module), ['RingBell']);
+    const hooks = await module.RingBell();
 
-  await hooks.event({ event: { type: 'session.idle', properties: {} } });
-  assert.equal(times(), 1);
-  await hooks.event({ event: { type: 'permission.asked', properties: {} } });
-  assert.equal(times(), 2);
-  for (const type of ['message.updated', 'permission.updated', 'session.updated']) {
-    await hooks.event({ event: { type, properties: {} } });
-  }
-  assert.equal(times(), 2);
-});
+    await hooks.event({ event: { type: 'session.idle', properties: {} } });
+    assert.equal(times(), 1);
+    await hooks.event({ event: { type: 'permission.asked', properties: {} } });
+    assert.equal(times(), 2);
+    for (const type of ['message.updated', 'permission.updated', 'session.updated']) {
+      await hooks.event({ event: { type, properties: {} } });
+    }
+    assert.equal(times(), 2);
+  },
+);
 
 // R3
-test("OpenCode's plugin resolves and prints nothing when the script fails", (t) => {
-  const { plugin, times } = pluginBeside(t, 1);
+test("OpenCode's plugin resolves and prints nothing when the script fails", (testContext) => {
+  const { plugin, times } = pluginBeside(testContext, 1);
   const run = [
     `const { RingBell } = await import(${JSON.stringify(pathToFileURL(plugin).href)});`,
     'const hooks = await RingBell();',

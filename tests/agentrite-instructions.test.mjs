@@ -296,8 +296,8 @@ test('no notice holds an em dash', () => {
 
 // R5, R9
 
-test('readProjectFile tells a file, nothing, and something there that cannot be read apart', (t) => {
-  const root = temporaryDirectory(t, 'agentrite-instructions-');
+test('readProjectFile tells a file, nothing, and something there that cannot be read apart', (testContext) => {
+  const root = temporaryDirectory(testContext, 'agentrite-instructions-');
   writeFileSync(join(root, 'file.json'), '{}\n');
   mkdirSync(join(root, 'directory'));
   symlinkSync(join(root, 'nowhere'), join(root, 'dangling'));

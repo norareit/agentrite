@@ -75,8 +75,8 @@ services:
         # its tools and tests reach, such as github.com for git over HTTPS.
 `;
 
-function setUp(t) {
-  const base = temporaryDirectory(t, 'sandbox-update-');
+function setUp(testContext) {
+  const base = temporaryDirectory(testContext, 'sandbox-update-');
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });
@@ -110,8 +110,8 @@ function setUp(t) {
   return { base, root, home, refresh, sandbox, ...host };
 }
 
-test('a project of the release before starts its sandbox after the four steps, and its names stay', (t) => {
-  const { root, home, refresh, sandbox, dockerCalls } = setUp(t);
+test('a project of the release before starts its sandbox after the four steps, and its names stay', (testContext) => {
+  const { root, home, refresh, sandbox, dockerCalls } = setUp(testContext);
 
   // 1. refresh writes the shim and leaves the old files as they were
   const refreshed = refresh();

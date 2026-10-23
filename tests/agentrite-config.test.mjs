@@ -12,16 +12,16 @@ const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 
 // An empty directory, which has no package.json.
-function directory(t) {
-  const base = temporaryDirectory(t, 'agentrite-config-');
+function directory(testContext) {
+  const base = temporaryDirectory(testContext, 'agentrite-config-');
   const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
   return { base, run };
 }
 
 // R16
-test('config with an argument prints its usage, writes nothing and exits 2', (t) => {
+test('config with an argument prints its usage, writes nothing and exits 2', (testContext) => {
   for (const args of [['claude'], ['--no-sandbox'], ['--default-branch', 'main'], ['']]) {
-    const { base, run } = directory(t);
+    const { base, run } = directory(testContext);
 
     const result = run('config', ...args);
 
@@ -33,17 +33,20 @@ test('config with an argument prints its usage, writes nothing and exits 2', (t)
 });
 
 // R17, R18
-test('config writes the default file in a directory with no package.json, and prints it with its notice', (t) => {
-  const { base, run } = directory(t);
+test(
+  'config writes the default file in a directory with no package.json, and prints it with its notice',
+  (testContext) => {
+    const { base, run } = directory(testContext);
 
-  const result = run('config');
+    const result = run('config');
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(readdirSync(base), ['agentrite.json']);
-  assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), TEMPLATE);
-  assert.equal(result.stdout, `wrote agentrite.json\n\n${TEMPLATE}\n${CONFIG_NOTICE}`);
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(readdirSync(base), ['agentrite.json']);
+    assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), TEMPLATE);
+    assert.equal(result.stdout, `wrote agentrite.json\n\n${TEMPLATE}\n${CONFIG_NOTICE}`);
+  },
+);
 
 // R18
 test('the notice of config says the four things, in lines of at most 120 characters', () => {
@@ -57,14 +60,14 @@ test('the notice of config says the four things, in lines of at most 120 charact
 });
 
 // R19
-test('config leaves what is at the path of agentrite.json, whatever it is, and prints one line', (t) => {
+test('config leaves what is at the path of agentrite.json, whatever it is, and prints one line', (testContext) => {
   const makers = [
     (path) => writeFileSync(path, '{\n  "defaultBranch": "main",\n  "harnesses": ["claude"],\n  "sandbox": false\n}\n'),
     (path) => writeFileSync(path, 'not json'),
     (path) => mkdirSync(path),
   ];
   for (const make of makers) {
-    const { base, run } = directory(t);
+    const { base, run } = directory(testContext);
     const path = join(base, 'agentrite.json');
     make(path);
     const before = lstatSync(path).isFile() ? readFileSync(path, 'utf-8') : undefined;
@@ -80,8 +83,8 @@ test('config leaves what is at the path of agentrite.json, whatever it is, and p
 });
 
 // R46, and the list of unit 0054
-test('refresh runs on the file config wrote, and writes the eight wrappers, the list and sandbox.sh', (t) => {
-  const { base, run } = directory(t);
+test('refresh runs on the file config wrote, and writes the eight wrappers, the list and sandbox.sh', (testContext) => {
+  const { base, run } = directory(testContext);
   installKit(base);
   assert.equal(run('config').status, 0);
 
@@ -98,8 +101,8 @@ test('refresh runs on the file config wrote, and writes the eight wrappers, the 
 });
 
 // Unit 0058, R9
-test('config writes "bell": true after "sandbox"', (t) => {
-  const { base, run } = directory(t);
+test('config writes "bell": true after "sandbox"', (testContext) => {
+  const { base, run } = directory(testContext);
 
   assert.equal(run('config').status, 0);
 
@@ -107,8 +110,8 @@ test('config writes "bell": true after "sandbox"', (t) => {
 });
 
 // Unit 0058, R9, R11
-test('config skips an agentrite.json that lacks bell, and leaves it byte for byte', (t) => {
-  const { base, run } = directory(t);
+test('config skips an agentrite.json that lacks bell, and leaves it byte for byte', (testContext) => {
+  const { base, run } = directory(testContext);
   const path = join(base, 'agentrite.json');
   const text = TEMPLATE.replace('  "bell": true,\n', '');
   assert.notEqual(text, TEMPLATE);
@@ -122,8 +125,8 @@ test('config skips an agentrite.json that lacks bell, and leaves it byte for byt
 });
 
 // Unit 0065, R2
-test('config writes the kit default definition as orchestrator, after standards', (t) => {
-  const { base, run } = directory(t);
+test('config writes the kit default definition as orchestrator, after standards', (testContext) => {
+  const { base, run } = directory(testContext);
 
   assert.equal(run('config').status, 0);
 
@@ -133,8 +136,8 @@ test('config writes the kit default definition as orchestrator, after standards'
 });
 
 // Unit 0065, R3
-test('config skips an agentrite.json that lacks orchestrator, and leaves it byte for byte', (t) => {
-  const { base, run } = directory(t);
+test('config skips an agentrite.json that lacks orchestrator, and leaves it byte for byte', (testContext) => {
+  const { base, run } = directory(testContext);
   const path = join(base, 'agentrite.json');
   const text = TEMPLATE.replace('  "orchestrator": "node_modules/agentrite/orchestrator.json",\n', '');
   assert.notEqual(text, TEMPLATE);

@@ -122,8 +122,8 @@ test('each kit role file opens with its description in the folded form, as its w
 });
 
 // A project with the kit installed, and a file of its own at each of `files`, with what it holds.
-function projectWith(t, files = {}) {
-  const base = temporaryDirectory(t, 'agentrite-roles-');
+function projectWith(testContext, files = {}) {
+  const base = temporaryDirectory(testContext, 'agentrite-roles-');
   installKit(base);
   for (const [path, content] of Object.entries(files)) {
     mkdirSync(dirname(join(base, path)), { recursive: true });
@@ -134,20 +134,23 @@ function projectWith(t, files = {}) {
 
 const OWN_REVIEWER = '---\ndescription: Reviews as this project does.\n---\n\n# Our reviewer\n';
 
-test('readRoles reads the four kit files of a project with the kit installed, in the order of the roles', (t) => {
-  const roles = readRoles(projectWith(t), KIT_SETTINGS.roles);
-  assert.deepEqual(
-    roles,
-    ROLE_NAMES.map((name) => ({
-      name,
-      path: `node_modules/agentrite/roles/${name}.md`,
-      description: fixtureDescription(name),
-    })),
-  );
-});
+test(
+  'readRoles reads the four kit files of a project with the kit installed, in the order of the roles',
+  (testContext) => {
+    const roles = readRoles(projectWith(testContext), KIT_SETTINGS.roles);
+    assert.deepEqual(
+      roles,
+      ROLE_NAMES.map((name) => ({
+        name,
+        path: `node_modules/agentrite/roles/${name}.md`,
+        description: fixtureDescription(name),
+      })),
+    );
+  },
+);
 
-test('readRoles gives each of two roles that share a file that file and its description', (t) => {
-  const base = projectWith(t, { 'rules/both.md': '---\ndescription: Specifies and plans.\n---\n' });
+test('readRoles gives each of two roles that share a file that file and its description', (testContext) => {
+  const base = projectWith(testContext, { 'rules/both.md': '---\ndescription: Specifies and plans.\n---\n' });
   const roles = readRoles(base, { ...KIT_SETTINGS.roles, specifier: 'rules/both.md', planner: 'rules/both.md' });
   assert.deepEqual(roles.slice(0, 2), [
     { name: 'specifier', path: 'rules/both.md', description: 'Specifies and plans.' },
@@ -155,8 +158,8 @@ test('readRoles gives each of two roles that share a file that file and its desc
   ]);
 });
 
-test('readRoles refuses a role file without front matter, naming the file and the form it must have', (t) => {
-  const base = projectWith(t, { 'rules/reviewer.md': '# Our reviewer\n' });
+test('readRoles refuses a role file without front matter, naming the file and the form it must have', (testContext) => {
+  const base = projectWith(testContext, { 'rules/reviewer.md': '# Our reviewer\n' });
   assert.throws(() => readRoles(base, { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' }), {
     message:
       'rules/reviewer.md has no front matter that a role file must open with. It must be a line ---, then either ' +
@@ -166,8 +169,8 @@ test('readRoles refuses a role file without front matter, naming the file and th
 });
 
 // Unit 0056, R4, R5, R7
-test('readRoles gives the four roles and then an extra role with its path and description', (t) => {
-  const base = projectWith(t, { 'rules/auditor.md': '---\ndescription: Audits a unit.\n---\n\n# Auditor\n' });
+test('readRoles gives the four roles and then an extra role with its path and description', (testContext) => {
+  const base = projectWith(testContext, { 'rules/auditor.md': '---\ndescription: Audits a unit.\n---\n\n# Auditor\n' });
   const roles = readRoles(base, { ...KIT_SETTINGS.roles, auditor: 'rules/auditor.md' });
   assert.deepEqual(
     roles.map((role) => role.name),
@@ -180,15 +183,15 @@ test('readRoles gives the four roles and then an extra role with its path and de
   });
 });
 
-test('readRoles refuses an extra role file without front matter, naming the file', (t) => {
-  const base = projectWith(t, { 'rules/auditor.md': '# Auditor\n' });
+test('readRoles refuses an extra role file without front matter, naming the file', (testContext) => {
+  const base = projectWith(testContext, { 'rules/auditor.md': '# Auditor\n' });
   assert.throws(() => readRoles(base, { ...KIT_SETTINGS.roles, auditor: 'rules/auditor.md' }), {
     message: /^rules\/auditor\.md has no front matter that a role file must open with\./,
   });
 });
 
-test('readRoles refuses a role file it cannot read, naming it and the error', (t) => {
-  const base = projectWith(t);
+test('readRoles refuses a role file it cannot read, naming it and the error', (testContext) => {
+  const base = projectWith(testContext);
   mkdirSync(join(base, 'rules', 'reviewer.md'), { recursive: true });
   assert.throws(
     () => readRoles(base, { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' }),
@@ -206,8 +209,8 @@ function fixture(harness, name) {
   return readFileSync(new URL(`./fixtures/${harness}-agents/${name}.md`, import.meta.url), 'utf-8');
 }
 
-test('plannedFiles of both harnesses, from the kit role files, is the eight fixtures byte for byte', (t) => {
-  const roles = readRoles(projectWith(t), KIT_SETTINGS.roles);
+test('plannedFiles of both harnesses, from the kit role files, is the eight fixtures byte for byte', (testContext) => {
+  const roles = readRoles(projectWith(testContext), KIT_SETTINGS.roles);
   assert.deepEqual(
     plannedFiles(['claude', 'opencode'], roles),
     ['claude', 'opencode'].flatMap((harness) =>
@@ -220,28 +223,31 @@ test('plannedFiles of both harnesses, from the kit role files, is the eight fixt
   );
 });
 
-test('a role whose file is replaced gets a wrapper with that file description and a body naming its path', (t) => {
-  const base = projectWith(t, { 'rules/reviewer.md': OWN_REVIEWER });
-  const roles = readRoles(base, { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' });
-  const files = plannedFiles(['claude', 'opencode'], roles);
-  const body =
-    'Read `rules/reviewer.md` in the project root and follow it. It is your instruction; this file holds none of ' +
-    'its own.\n';
-  assert.equal(
-    files.find((file) => file.path === '.claude/agents/reviewer.md').content,
-    `---\nname: reviewer\ndescription: >-\n  Reviews as this project does.\n---\n\n${body}`,
-  );
-  assert.equal(
-    files.find((file) => file.path === '.opencode/agents/reviewer.md').content,
-    `---\ndescription: >-\n  Reviews as this project does.\nmode: all\n---\n\n${body}`,
-  );
-  for (const name of ['specifier', 'planner', 'implementer']) {
-    assert.equal(files.find((file) => file.path === `.claude/agents/${name}.md`).content, fixture('claude', name));
-  }
-});
+test(
+  'a role whose file is replaced gets a wrapper with that file description and a body naming its path',
+  (testContext) => {
+    const base = projectWith(testContext, { 'rules/reviewer.md': OWN_REVIEWER });
+    const roles = readRoles(base, { ...KIT_SETTINGS.roles, reviewer: 'rules/reviewer.md' });
+    const files = plannedFiles(['claude', 'opencode'], roles);
+    const body =
+      'Read `rules/reviewer.md` in the project root and follow it. It is your instruction; this file holds none of ' +
+      'its own.\n';
+    assert.equal(
+      files.find((file) => file.path === '.claude/agents/reviewer.md').content,
+      `---\nname: reviewer\ndescription: >-\n  Reviews as this project does.\n---\n\n${body}`,
+    );
+    assert.equal(
+      files.find((file) => file.path === '.opencode/agents/reviewer.md').content,
+      `---\ndescription: >-\n  Reviews as this project does.\nmode: all\n---\n\n${body}`,
+    );
+    for (const name of ['specifier', 'planner', 'implementer']) {
+      assert.equal(files.find((file) => file.path === `.claude/agents/${name}.md`).content, fixture('claude', name));
+    }
+  },
+);
 
-test('two roles that share a file both get wrappers with its description, each naming the file', (t) => {
-  const base = projectWith(t, { 'rules/reviewer.md': OWN_REVIEWER });
+test('two roles that share a file both get wrappers with its description, each naming the file', (testContext) => {
+  const base = projectWith(testContext, { 'rules/reviewer.md': OWN_REVIEWER });
   const shared = { ...KIT_SETTINGS.roles, implementer: 'rules/reviewer.md', reviewer: 'rules/reviewer.md' };
   const roles = readRoles(base, shared);
   for (const name of ['implementer', 'reviewer']) {
@@ -252,8 +258,8 @@ test('two roles that share a file both get wrappers with its description, each n
   }
 });
 
-test('no line of a planned wrapper is over 120 characters, and its body names the role file', (t) => {
-  const roles = readRoles(projectWith(t), KIT_SETTINGS.roles);
+test('no line of a planned wrapper is over 120 characters, and its body names the role file', (testContext) => {
+  const roles = readRoles(projectWith(testContext), KIT_SETTINGS.roles);
   for (const file of plannedFiles(['claude', 'opencode'], roles)) {
     const name = file.path.replace(/^.*\//, '').replace(/\.md$/, '');
     for (const line of file.content.split('\n')) {
@@ -278,8 +284,8 @@ const script = join(import.meta.dirname, '..', 'scripts', 'agentrite-roles.mjs')
 const scripts = join(import.meta.dirname, '..', 'scripts');
 const root = join(import.meta.dirname, '..');
 
-test('the module run by itself prints nothing and writes nothing', (t) => {
-  const base = temporaryDirectory(t, 'agentrite-roles-');
+test('the module run by itself prints nothing and writes nothing', (testContext) => {
+  const base = temporaryDirectory(testContext, 'agentrite-roles-');
 
   for (const args of [[], ['claude'], ['claude', 'opencode']]) {
     const result = spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });

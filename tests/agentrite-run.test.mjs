@@ -29,8 +29,8 @@ function wrapperDescription(wrapper) {
     .join(' ');
 }
 
-function emptyDirectory(t) {
-  const base = temporaryDirectory(t, 'agentrite-run-');
+function emptyDirectory(testContext) {
+  const base = temporaryDirectory(testContext, 'agentrite-run-');
   return base;
 }
 
@@ -67,8 +67,8 @@ test('no line of the listing is over 120 characters, and it ends with one line b
   assert.equal(listing, `${listing.trimEnd()}\n`);
 });
 
-test('agentrite roles prints the listing of the kit roles and exits 0 in a project that names them', (t) => {
-  const { agentrite } = project(t);
+test('agentrite roles prints the listing of the kit roles and exits 0 in a project that names them', (testContext) => {
+  const { agentrite } = project(testContext);
 
   const result = agentrite(['roles']);
 
@@ -77,16 +77,19 @@ test('agentrite roles prints the listing of the kit roles and exits 0 in a proje
   assert.equal(result.stdout, rolesListing(KIT_ROLES));
 });
 
-test('agentrite roles with an argument that is not --json prints its usage on standard error and exits 2', (t) => {
-  const cwd = emptyDirectory(t);
-  for (const args of [['claude'], ['--json', 'claude'], ['claude', '--json'], ['--json', '--json'], ['--yaml']]) {
-    const result = spawnSync(process.execPath, [script, 'roles', ...args], { cwd, encoding: 'utf-8' });
+test(
+  'agentrite roles with an argument that is not --json prints its usage on standard error and exits 2',
+  (testContext) => {
+    const cwd = emptyDirectory(testContext);
+    for (const args of [['claude'], ['--json', 'claude'], ['claude', '--json'], ['--json', '--json'], ['--yaml']]) {
+      const result = spawnSync(process.execPath, [script, 'roles', ...args], { cwd, encoding: 'utf-8' });
 
-    assert.equal(result.status, 2, args.join(' '));
-    assert.equal(result.stdout, '', args.join(' '));
-    assert.equal(result.stderr, 'usage: agentrite roles [--json]\n', args.join(' '));
-  }
-});
+      assert.equal(result.status, 2, args.join(' '));
+      assert.equal(result.stdout, '', args.join(' '));
+      assert.equal(result.stderr, 'usage: agentrite roles [--json]\n', args.join(' '));
+    }
+  },
+);
 
 // R20: the roles as JSON.
 
@@ -125,19 +128,22 @@ test('the JSON is indented by two, each key of a role on a line of its own, and 
   assert.equal(rolesJson(KIT_ROLES), `${JSON.stringify(JSON.parse(rolesJson(KIT_ROLES)), null, 2)}\n`);
 });
 
-test('agentrite roles --json prints the JSON of the kit roles and exits 0 in a project that names them', (t) => {
-  const { agentrite } = project(t);
+test(
+  'agentrite roles --json prints the JSON of the kit roles and exits 0 in a project that names them',
+  (testContext) => {
+    const { agentrite } = project(testContext);
 
-  const result = agentrite(['roles', '--json']);
+    const result = agentrite(['roles', '--json']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.equal(result.stdout, rolesJson(KIT_ROLES));
-  assert.deepEqual(
-    JSON.parse(result.stdout).roles.map((role) => role.name),
-    ROLE_NAMES,
-  );
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.equal(result.stdout, rolesJson(KIT_ROLES));
+    assert.deepEqual(
+      JSON.parse(result.stdout).roles.map((role) => role.name),
+      ROLE_NAMES,
+    );
+  },
+);
 
 // R12: the usage of `run`.
 
@@ -416,19 +422,19 @@ test('the prompt holds the text after an empty line, as it is written', () => {
 
 // R5 to R9, R21: the harness's argument list, which is exactly the row of the plan's table.
 
-const P = 'The unit is changes/0007-run-a-role/.';
+const PROMPT = 'The unit is changes/0007-run-a-role/.';
 const ROWS = {
   claude: {
     command: 'claude',
     skip: '--dangerously-skip-permissions',
-    interactive: (options, extra) => [...options, ...extra, '--', P],
-    headless: (options, extra) => ['--print', ...options, ...extra, '--', P],
+    interactive: (options, extra) => [...options, ...extra, '--', PROMPT],
+    headless: (options, extra) => ['--print', ...options, ...extra, '--', PROMPT],
   },
   opencode: {
     command: 'opencode',
     skip: '--auto',
-    interactive: (options, extra) => [...options, ...extra, '--prompt', P],
-    headless: (options, extra) => ['run', ...options, ...extra, '--', P],
+    interactive: (options, extra) => [...options, ...extra, '--prompt', PROMPT],
+    headless: (options, extra) => ['run', ...options, ...extra, '--', PROMPT],
   },
 };
 const EXTRA = ['--resume', 'an id', '--allowedTools', 'Read', 'Grep'];
@@ -438,9 +444,9 @@ test('every harness the kit has holds a row for each mode', () => {
   assert.deepEqual(Object.keys(ROWS).sort(), [...HARNESS_NAMES].sort());
   for (const harness of HARNESS_NAMES) {
     for (const headless of [false, true]) {
-      const started = harnessCommand({ ...START, harness, role: 'reviewer', headless, prompt: P });
+      const started = harnessCommand({ ...START, harness, role: 'reviewer', headless, prompt: PROMPT });
       assert.equal(typeof started.command, 'string');
-      assert.equal(started.args.at(-1), P);
+      assert.equal(started.args.at(-1), PROMPT);
     }
   }
 });
@@ -464,7 +470,7 @@ test('the argument list of each harness in each mode is the row of the table, op
                 model,
                 headless: mode === 'headless',
                 skipPermissions,
-                prompt: P,
+                prompt: PROMPT,
                 harnessArguments,
               }),
               { command: row.command, args: row[mode](options, harnessArguments) },
@@ -486,11 +492,11 @@ test('the prompt is last in every row, and what the caller gave stands in front 
         model: 'm',
         headless,
         skipPermissions: true,
-        prompt: P,
+        prompt: PROMPT,
         harnessArguments: EXTRA,
       });
       const at = args.indexOf(EXTRA[0]);
-      assert.equal(args.at(-1), P, `${harness} ${headless}`);
+      assert.equal(args.at(-1), PROMPT, `${harness} ${headless}`);
       assert.deepEqual(args.slice(at, at + EXTRA.length), EXTRA, `${harness} ${headless}`);
       assert.equal(args.length, at + EXTRA.length + 2, `${harness} ${headless}`);
       assert.ok(args.indexOf('m') < at && args.indexOf('--agent') < at, `${harness} ${headless}`);
@@ -499,7 +505,7 @@ test('the prompt is last in every row, and what the caller gave stands in front 
 });
 
 test('the four rows with nothing of the caller, written out', () => {
-  const all = { role: 'implementer', model: 'm', skipPermissions: true, prompt: P, harnessArguments: [] };
+  const all = { role: 'implementer', model: 'm', skipPermissions: true, prompt: PROMPT, harnessArguments: [] };
   assert.deepEqual(harnessCommand({ ...all, harness: 'claude', headless: false }).args, [
     '--agent',
     'implementer',
@@ -507,7 +513,7 @@ test('the four rows with nothing of the caller, written out', () => {
     'm',
     '--dangerously-skip-permissions',
     '--',
-    P,
+    PROMPT,
   ]);
   assert.deepEqual(harnessCommand({ ...all, harness: 'claude', headless: true }).args, [
     '--print',
@@ -517,7 +523,7 @@ test('the four rows with nothing of the caller, written out', () => {
     'm',
     '--dangerously-skip-permissions',
     '--',
-    P,
+    PROMPT,
   ]);
   assert.deepEqual(harnessCommand({ ...all, harness: 'opencode', headless: false }).args, [
     '--agent',
@@ -526,7 +532,7 @@ test('the four rows with nothing of the caller, written out', () => {
     'm',
     '--auto',
     '--prompt',
-    P,
+    PROMPT,
   ]);
   assert.deepEqual(harnessCommand({ ...all, harness: 'opencode', headless: true }).args, [
     'run',
@@ -536,7 +542,7 @@ test('the four rows with nothing of the caller, written out', () => {
     'm',
     '--auto',
     '--',
-    P,
+    PROMPT,
   ]);
 });
 
@@ -558,8 +564,8 @@ const UNIT_PROMPT = `The unit is changes/${UNIT}/.`;
 const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const REMEDY = 'Run: npx agentrite refresh, which writes the wrappers of the harnesses that agentrite.json names';
 
-function project(t, harnesses = ['claude', 'opencode']) {
-  const base = emptyDirectory(t);
+function project(testContext, harnesses = ['claude', 'opencode']) {
+  const base = emptyDirectory(testContext);
   installKit(base);
   const write = (path, content) => {
     mkdirSync(dirname(join(base, path)), { recursive: true });
@@ -605,19 +611,22 @@ function reviewerRun(key) {
   return ['run', 'reviewer', harness, '0007', ...mode];
 }
 
-test('run starts each harness in each mode with the arguments of its row, and its output is the command own', (t) => {
-  const { agentrite } = project(t);
-  for (const [key, expected] of Object.entries(STARTED)) {
-    const result = agentrite(reviewerRun(key));
+test(
+  'run starts each harness in each mode with the arguments of its row, and its output is the command own',
+  (testContext) => {
+    const { agentrite } = project(testContext);
+    for (const [key, expected] of Object.entries(STARTED)) {
+      const result = agentrite(reviewerRun(key));
 
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, started(key.split(' ')[0], expected([], UNIT_PROMPT)), key);
-    assert.equal(result.stderr, 'the harness, on standard error\n');
-  }
-});
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout, started(key.split(' ')[0], expected([], UNIT_PROMPT)), key);
+      assert.equal(result.stderr, 'the harness, on standard error\n');
+    }
+  },
+);
 
-test('run specifier starts each harness as the specifier, in a project that has its wrapper', (t) => {
-  const { agentrite, read } = project(t);
+test('run specifier starts each harness as the specifier, in a project that has its wrapper', (testContext) => {
+  const { agentrite, read } = project(testContext);
   for (const harness of HARNESS_NAMES) {
     assert.ok(read(`${WRAPPER_DIRECTORIES[harness]}/specifier.md`).includes('roles/specifier.md'), harness);
 
@@ -629,8 +638,8 @@ test('run specifier starts each harness as the specifier, in a project that has 
   }
 });
 
-test('run gives the harness the model, the permission flag and the text, and nothing beyond them', (t) => {
-  const { agentrite } = project(t);
+test('run gives the harness the model, the permission flag and the text, and nothing beyond them', (testContext) => {
+  const { agentrite } = project(testContext);
   const text = 'look at  the tests,\nand start with --headless';
 
   const claude = agentrite([
@@ -674,8 +683,8 @@ test('run gives the harness the model, the permission flag and the text, and not
   );
 });
 
-test('each harness in each mode gets what follows the -- before its prompt, as it is written', (t) => {
-  const { agentrite } = project(t);
+test('each harness in each mode gets what follows the -- before its prompt, as it is written', (testContext) => {
+  const { agentrite } = project(testContext);
   const extra = ['--resume', 'an id with spaces', '--model', 'theirs', '--', '--headless', ''];
   const prompt = `${UNIT_PROMPT}\n\nwhich word`;
   for (const [key, expected] of Object.entries(STARTED)) {
@@ -686,8 +695,8 @@ test('each harness in each mode gets what follows the -- before its prompt, as i
   }
 });
 
-test('a -- with nothing after it adds nothing, and the text stays in the prompt', (t) => {
-  const { agentrite } = project(t);
+test('a -- with nothing after it adds nothing, and the text stays in the prompt', (testContext) => {
+  const { agentrite } = project(testContext);
   const prompt = `${UNIT_PROMPT}\n\nwhich word`;
 
   const bare = agentrite(['run', 'reviewer', 'opencode', '0007', '--headless', '--prompt', 'which word', '--']);
@@ -696,8 +705,8 @@ test('a -- with nothing after it adds nothing, and the text stays in the prompt'
   assert.equal(bare.stdout, started('opencode', STARTED['opencode --headless']([], prompt)));
 });
 
-test('the standard input of run is the harness own', (t) => {
-  const { agentrite } = project(t);
+test('the standard input of run is the harness own', (testContext) => {
+  const { agentrite } = project(testContext);
 
   const result = agentrite(['run', 'reviewer', 'claude', '0007'], { input: 'typed\n', env: { FAKE_READS: '1' } });
 
@@ -705,8 +714,8 @@ test('the standard input of run is the harness own', (t) => {
   assert.equal(result.stdout, `${started('claude', STARTED.claude([], UNIT_PROMPT))}read: typed\n`);
 });
 
-test('run exits with the status the harness exited with', (t) => {
-  const { agentrite } = project(t);
+test('run exits with the status the harness exited with', (testContext) => {
+  const { agentrite } = project(testContext);
   for (const harness of HARNESS_NAMES) {
     for (const status of [0, 7]) {
       const result = agentrite(['run', 'reviewer', harness, '0007'], { env: { FAKE_STATUS: String(status) } });
@@ -716,8 +725,8 @@ test('run exits with the status the harness exited with', (t) => {
   }
 });
 
-test('run exits with a status other than 0 when a signal ended the harness', (t) => {
-  const { agentrite } = project(t);
+test('run exits with a status other than 0 when a signal ended the harness', (testContext) => {
+  const { agentrite } = project(testContext);
   for (const signal of ['TERM', 'KILL']) {
     const result = agentrite(['run', 'reviewer', 'opencode', '0007', '--headless'], {
       env: { FAKE_SIGNAL: signal, FAKE_STATUS: '0' },
@@ -733,44 +742,47 @@ function namedWithUsage(named) {
   return `${named}\n${RUN_USAGE}\n`;
 }
 
-test('a wrapper that is missing, or is not what refresh would leave, stops the run before a harness starts', (t) => {
-  for (const harness of HARNESS_NAMES) {
-    const path = `${WRAPPER_DIRECTORIES[harness]}/reviewer.md`;
-    const { base, agentrite, read, write } = project(t);
-    const asWritten = read(path);
-    const changed = {
-      'a key of the project own': asWritten.replace('\n---\n', '\nsteps: 5\n---\n'),
-      'an earlier package name': asWritten.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit'),
-      'no frontmatter': 'Review it.\n',
-      // The wrappers of the other harness hold no mode, and this one is then left out below.
-      'mode: subagent': asWritten.replace('mode: all\n', 'mode: subagent\n'),
-    };
-    if (harness === 'opencode') assert.match(asWritten, /^mode: all$/m);
+test(
+  'a wrapper that is missing, or is not what refresh would leave, stops the run before a harness starts',
+  (testContext) => {
+    for (const harness of HARNESS_NAMES) {
+      const path = `${WRAPPER_DIRECTORIES[harness]}/reviewer.md`;
+      const { base, agentrite, read, write } = project(testContext);
+      const asWritten = read(path);
+      const changed = {
+        'a key of the project own': asWritten.replace('\n---\n', '\nsteps: 5\n---\n'),
+        'an earlier package name': asWritten.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit'),
+        'no frontmatter': 'Review it.\n',
+        // The wrappers of the other harness hold no mode, and this one is then left out below.
+        'mode: subagent': asWritten.replace('mode: all\n', 'mode: subagent\n'),
+      };
+      if (harness === 'opencode') assert.match(asWritten, /^mode: all$/m);
 
-    for (const [why, content] of Object.entries(changed).filter(([, content]) => content !== asWritten)) {
-      write(path, content);
+      for (const [why, content] of Object.entries(changed).filter(([, content]) => content !== asWritten)) {
+        write(path, content);
 
-      const result = agentrite(['run', 'reviewer', harness, '0007']);
+        const result = agentrite(['run', 'reviewer', harness, '0007']);
 
-      assert.equal(result.status, 1, `${harness}, ${why}`);
-      assert.equal(result.stdout, '', `${harness}, ${why}`);
-      assert.equal(
-        result.stderr,
-        `agentrite: ${path} is not the file refresh would leave there. ${REMEDY}\n`,
-      );
+        assert.equal(result.status, 1, `${harness}, ${why}`);
+        assert.equal(result.stdout, '', `${harness}, ${why}`);
+        assert.equal(
+          result.stderr,
+          `agentrite: ${path} is not the file refresh would leave there. ${REMEDY}\n`,
+        );
+      }
+
+      rmSync(join(base, path));
+      const missing = agentrite(['run', 'reviewer', harness, '0007', '--headless']);
+
+      assert.equal(missing.status, 1, harness);
+      assert.equal(missing.stdout, '', harness);
+      assert.equal(missing.stderr, `agentrite: the project has no file ${path}. ${REMEDY}\n`);
     }
+  },
+);
 
-    rmSync(join(base, path));
-    const missing = agentrite(['run', 'reviewer', harness, '0007', '--headless']);
-
-    assert.equal(missing.status, 1, harness);
-    assert.equal(missing.stdout, '', harness);
-    assert.equal(missing.stderr, `agentrite: the project has no file ${path}. ${REMEDY}\n`);
-  }
-});
-
-test('only the wrapper of the role and the harness that are run is looked at', (t) => {
-  const { base, agentrite, write } = project(t);
+test('only the wrapper of the role and the harness that are run is looked at', (testContext) => {
+  const { base, agentrite, write } = project(testContext);
   rmSync(join(base, '.opencode'), { recursive: true });
   write('.claude/agents/planner.md', 'Ours.\n');
 
@@ -780,10 +792,10 @@ test('only the wrapper of the role and the harness that are run is looked at', (
   assert.match(result.stdout, /^claude\n/);
 });
 
-test('a wrapper with a pinned model does not stop the run, and the harness gets no model', (t) => {
+test('a wrapper with a pinned model does not stop the run, and the harness gets no model', (testContext) => {
   for (const harness of HARNESS_NAMES) {
     const path = `${WRAPPER_DIRECTORIES[harness]}/reviewer.md`;
-    const { agentrite, read, write } = project(t);
+    const { agentrite, read, write } = project(testContext);
     // Where refresh puts a pin: at the end of the frontmatter.
     const pinned = read(path).replace('\n---\n', '\nmodel: some/model\n---\n');
     write(path, pinned);
@@ -797,12 +809,12 @@ test('a wrapper with a pinned model does not stop the run, and the harness gets 
   }
 });
 
-test('a PATH without the command of the harness stops the run and names the command', (t) => {
+test('a PATH without the command of the harness stops the run and names the command', (testContext) => {
   for (const [absent, present] of [
     ['claude', 'opencode'],
     ['opencode', 'claude'],
   ]) {
-    const { agentrite } = project(t, [present]);
+    const { agentrite } = project(testContext, [present]);
 
     const result = agentrite(['run', 'reviewer', absent, '0007']);
 
@@ -812,8 +824,8 @@ test('a PATH without the command of the harness stops the run and names the comm
   }
 });
 
-test('run with no argument prints its usage on standard error, exits 2 and starts nothing', (t) => {
-  const { agentrite } = project(t);
+test('run with no argument prints its usage on standard error, exits 2 and starts nothing', (testContext) => {
+  const { agentrite } = project(testContext);
 
   const result = agentrite(['run']);
 
@@ -822,8 +834,8 @@ test('run with no argument prints its usage on standard error, exits 2 and start
   assert.equal(result.stderr, `${RUN_USAGE}\n`);
 });
 
-test('what run does not take is named before its usage, with exit 2 and nothing started', (t) => {
-  const { agentrite } = project(t);
+test('what run does not take is named before its usage, with exit 2 and nothing started', (testContext) => {
+  const { agentrite } = project(testContext);
   for (const [args, named] of [
     [['reviewer', 'codex', '0007'], 'unknown harness: codex'],
     [['reviewer', 'claude'], 'no unit given'],
@@ -843,8 +855,8 @@ test('what run does not take is named before its usage, with exit 2 and nothing 
   }
 });
 
-test('a unit that changes/ does not hold exits 1 and starts nothing', (t) => {
-  const { base, agentrite, write } = project(t);
+test('a unit that changes/ does not hold exits 1 and starts nothing', (testContext) => {
+  const { base, agentrite, write } = project(testContext);
   write('changes/0007-a-file', 'not a directory\n');
   write('changes/0012-twice/record.md', '');
   write('changes/0012-twice-again/record.md', '');
@@ -867,42 +879,48 @@ test('a unit that changes/ does not hold exits 1 and starts nothing', (t) => {
   assert.match(two.stderr, /^- changes\/0012-twice-again$/m);
 });
 
-test('a file beside the unit whose name opens with the same digits does not make the digits name two', (t) => {
-  const { agentrite, write } = project(t);
-  write('changes/0007-notes.md', 'a file\n');
+test(
+  'a file beside the unit whose name opens with the same digits does not make the digits name two',
+  (testContext) => {
+    const { agentrite, write } = project(testContext);
+    write('changes/0007-notes.md', 'a file\n');
 
-  const result = agentrite(['run', 'reviewer', 'claude', '0007']);
+    const result = agentrite(['run', 'reviewer', 'claude', '0007']);
 
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
-});
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
+  },
+);
 
 // R14
 
-test('agentrite alone and with a command it does not know print the usage of every command and exit 2', (t) => {
-  const { agentrite } = project(t);
-  const usage =
-    'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
-    '       agentrite init\n' +
-    '       agentrite config\n' +
-    '       agentrite refresh\n' +
-    '       agentrite roles [--json]\n' +
-    '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
-    '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
-    '[--skip-permissions]\n' +
-    '                     [-- <harness arguments...>]\n' +
-    '       agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]\n';
+test(
+  'agentrite alone and with a command it does not know print the usage of every command and exit 2',
+  (testContext) => {
+    const { agentrite } = project(testContext);
+    const usage =
+      'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
+      '       agentrite init\n' +
+      '       agentrite config\n' +
+      '       agentrite refresh\n' +
+      '       agentrite roles [--json]\n' +
+      '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
+      '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
+      '[--skip-permissions]\n' +
+      '                     [-- <harness arguments...>]\n' +
+      '       agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]\n';
 
-  const alone = agentrite([]);
-  const unknown = agentrite(['list-roles']);
+    const alone = agentrite([]);
+    const unknown = agentrite(['list-roles']);
 
-  assert.equal(alone.status, 2);
-  assert.equal(alone.stdout, '');
-  assert.equal(alone.stderr, usage);
-  assert.equal(unknown.status, 2);
-  assert.equal(unknown.stdout, '');
-  assert.equal(unknown.stderr, `unknown command: list-roles\n${usage}`);
-});
+    assert.equal(alone.status, 2);
+    assert.equal(alone.stdout, '');
+    assert.equal(alone.stderr, usage);
+    assert.equal(unknown.status, 2);
+    assert.equal(unknown.stdout, '');
+    assert.equal(unknown.stderr, `unknown command: list-roles\n${usage}`);
+  },
+);
 
 // Unit 0054, R10: run and roles read agentrite.json and the role files it names.
 
@@ -916,21 +934,24 @@ function withOwnReviewer(made) {
   made.write('agentrite.json', JSON.stringify({ ...settings, roles }));
 }
 
-test('roles and roles --json list the descriptions of the files the settings give, a replaced role included', (t) => {
-  const made = project(t);
-  withOwnReviewer(made);
-  const own = { name: 'reviewer', path: 'rules/reviewer.md', description: 'Reviews as this project does.' };
-  const roles = KIT_ROLES.map((role) => (role.name === 'reviewer' ? own : role));
+test(
+  'roles and roles --json list the descriptions of the files the settings give, a replaced role included',
+  (testContext) => {
+    const made = project(testContext);
+    withOwnReviewer(made);
+    const own = { name: 'reviewer', path: 'rules/reviewer.md', description: 'Reviews as this project does.' };
+    const roles = KIT_ROLES.map((role) => (role.name === 'reviewer' ? own : role));
 
-  const listing = made.agentrite(['roles']);
-  const json = made.agentrite(['roles', '--json']);
+    const listing = made.agentrite(['roles']);
+    const json = made.agentrite(['roles', '--json']);
 
-  assert.equal(listing.status, 0, listing.stderr);
-  assert.equal(listing.stdout, rolesListing(roles));
-  assert.equal(json.status, 0, json.stderr);
-  assert.equal(json.stdout, rolesJson(roles));
-  assert.ok(listing.stdout.endsWith('reviewer\n  Reviews as this project does.\n'), listing.stdout);
-});
+    assert.equal(listing.status, 0, listing.stderr);
+    assert.equal(listing.stdout, rolesListing(roles));
+    assert.equal(json.status, 0, json.stderr);
+    assert.equal(json.stdout, rolesJson(roles));
+    assert.ok(listing.stdout.endsWith('reviewer\n  Reviews as this project does.\n'), listing.stdout);
+  },
+);
 
 const FRONT_MATTER_REFUSAL =
   'agentrite: rules/reviewer.md has no front matter that a role file must open with. It must be a line ---, then ' +
@@ -974,38 +995,44 @@ const REFUSED = [
 ];
 
 for (const { what, arrange, says } of REFUSED) {
-  test(`roles and run refuse a project with ${what}, print nothing on standard output and start nothing`, (t) => {
-    const made = project(t);
-    arrange(made);
+  test(
+    `roles and run refuse a project with ${what}, print nothing on standard output and start nothing`,
+    (testContext) => {
+      const made = project(testContext);
+      arrange(made);
 
-    for (const args of [['roles'], ['roles', '--json'], ['run', 'reviewer', 'claude', '0007']]) {
-      const result = made.agentrite(args);
+      for (const args of [['roles'], ['roles', '--json'], ['run', 'reviewer', 'claude', '0007']]) {
+        const result = made.agentrite(args);
 
-      assert.equal(result.status, 1, args.join(' '));
-      assert.equal(result.stdout, '', args.join(' '));
-      says(result.stderr);
-    }
-  });
+        assert.equal(result.status, 1, args.join(' '));
+        assert.equal(result.stdout, '', args.join(' '));
+        says(result.stderr);
+      }
+    },
+  );
 }
 
-test('run refuses the kit reviewer wrapper when roles names another file, and starts with the refreshed one', (t) => {
-  const made = project(t);
-  withOwnReviewer(made);
+test(
+  'run refuses the kit reviewer wrapper when roles names another file, and starts with the refreshed one',
+  (testContext) => {
+    const made = project(testContext);
+    withOwnReviewer(made);
 
-  const refused = made.agentrite(['run', 'reviewer', 'claude', '0007']);
+    const refused = made.agentrite(['run', 'reviewer', 'claude', '0007']);
 
-  assert.equal(refused.status, 1);
-  assert.equal(refused.stdout, '');
-  assert.equal(
-    refused.stderr,
-    `agentrite: .claude/agents/reviewer.md is not the file refresh would leave there. ${REMEDY}\n`,
-  );
+    assert.equal(refused.status, 1);
+    assert.equal(refused.stdout, '');
+    assert.equal(
+      refused.stderr,
+      `agentrite: .claude/agents/reviewer.md is not the file refresh would leave there. ${REMEDY}\n`,
+    );
 
-  assert.equal(made.agentrite(['refresh']).status, 0);
-  const result = made.agentrite(['run', 'reviewer', 'claude', '0007']);
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
-});
+    assert.equal(made.agentrite(['refresh']).status, 0);
+    const result = made.agentrite(['run', 'reviewer', 'claude', '0007']);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, started('claude', STARTED.claude([], UNIT_PROMPT)));
+  },
+);
 
 // Unit 0056, R5, R7, R8: a role of the project's own.
 
@@ -1020,33 +1047,36 @@ function withSecurityReviewer(made) {
   assert.equal(made.agentrite(['refresh']).status, 0);
 }
 
-test('roles and roles --json list a role of the projects own after the four, with its path in the JSON', (t) => {
-  const made = project(t);
-  withSecurityReviewer(made);
-  const own = {
-    name: 'security-reviewer',
-    path: 'rules/security-reviewer.md',
-    description: 'Reviews the security of a unit.',
-  };
+test(
+  'roles and roles --json list a role of the projects own after the four, with its path in the JSON',
+  (testContext) => {
+    const made = project(testContext);
+    withSecurityReviewer(made);
+    const own = {
+      name: 'security-reviewer',
+      path: 'rules/security-reviewer.md',
+      description: 'Reviews the security of a unit.',
+    };
 
-  const listing = made.agentrite(['roles']);
-  const json = made.agentrite(['roles', '--json']);
+    const listing = made.agentrite(['roles']);
+    const json = made.agentrite(['roles', '--json']);
 
-  assert.equal(listing.status, 0, listing.stderr);
-  assert.equal(listing.stdout, rolesListing([...KIT_ROLES, own]));
-  assert.ok(listing.stdout.endsWith('security-reviewer\n  Reviews the security of a unit.\n'), listing.stdout);
-  assert.equal(json.status, 0, json.stderr);
-  assert.equal(json.stdout, rolesJson([...KIT_ROLES, own]));
-  const roles = JSON.parse(json.stdout).roles;
-  assert.deepEqual(
-    roles.map((role) => role.name),
-    [...ROLE_NAMES, 'security-reviewer'],
-  );
-  assert.deepEqual(roles.at(-1), own);
-});
+    assert.equal(listing.status, 0, listing.stderr);
+    assert.equal(listing.stdout, rolesListing([...KIT_ROLES, own]));
+    assert.ok(listing.stdout.endsWith('security-reviewer\n  Reviews the security of a unit.\n'), listing.stdout);
+    assert.equal(json.status, 0, json.stderr);
+    assert.equal(json.stdout, rolesJson([...KIT_ROLES, own]));
+    const roles = JSON.parse(json.stdout).roles;
+    assert.deepEqual(
+      roles.map((role) => role.name),
+      [...ROLE_NAMES, 'security-reviewer'],
+    );
+    assert.deepEqual(roles.at(-1), own);
+  },
+);
 
-test('run starts the harness as a role of the projects own', (t) => {
-  const made = project(t);
+test('run starts the harness as a role of the projects own', (testContext) => {
+  const made = project(testContext);
   withSecurityReviewer(made);
 
   const result = made.agentrite(['run', 'security-reviewer', 'claude', '0007']);
@@ -1055,8 +1085,8 @@ test('run starts the harness as a role of the projects own', (t) => {
   assert.equal(result.stdout, started('claude', ['--agent', 'security-reviewer', '--', UNIT_PROMPT]));
 });
 
-test('run refuses a role the settings do not name, naming the roles they do, and starts nothing', (t) => {
-  const made = project(t);
+test('run refuses a role the settings do not name, naming the roles they do, and starts nothing', (testContext) => {
+  const made = project(testContext);
   withSecurityReviewer(made);
   const roles = 'specifier, planner, implementer, reviewer and security-reviewer';
 
@@ -1073,12 +1103,12 @@ test('run refuses a role the settings do not name, naming the roles they do, and
 });
 
 // Unit 0058, R8, R11
-test('agentrite roles refuses a file that lacks bell, or whose bell is a string, naming the key', (t) => {
+test('agentrite roles refuses a file that lacks bell, or whose bell is a string, naming the key', (testContext) => {
   for (const [replacement, found] of [
     ['', 'missing'],
     ['  "bell": "true",\n', '"true"'],
   ]) {
-    const { agentrite, write } = project(t);
+    const { agentrite, write } = project(testContext);
     const text = SETTINGS.replace('  "bell": true,\n', replacement);
     assert.notEqual(text, SETTINGS);
     write('agentrite.json', text);
@@ -1092,21 +1122,27 @@ test('agentrite roles refuses a file that lacks bell, or whose bell is a string,
 });
 
 // Unit 0065, R3
-test('agentrite roles refuses a file that lacks orchestrator, or whose orchestrator names no file, exiting 1', (t) => {
-  const line = '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
-  for (const [replacement, message] of [
-    ['', /agentrite\.json: orchestrator is missing\. It must hold false, for a project that does not use the/],
-    ['  "orchestrator": "rules/missing.json",\n', /agentrite\.json: orchestrator is "rules\/missing\.json", and there/],
-  ]) {
-    const { agentrite, write } = project(t);
-    const text = SETTINGS.replace(line, replacement);
-    assert.notEqual(text, SETTINGS);
-    write('agentrite.json', text);
+test(
+  'agentrite roles refuses a file that lacks orchestrator, or whose orchestrator names no file, exiting 1',
+  (testContext) => {
+    const line = '  "orchestrator": "node_modules/agentrite/orchestrator.json",\n';
+    for (const [replacement, message] of [
+      ['', /agentrite\.json: orchestrator is missing\. It must hold false, for a project that does not use the/],
+      [
+        '  "orchestrator": "rules/missing.json",\n',
+        /agentrite\.json: orchestrator is "rules\/missing\.json", and there/,
+      ],
+    ]) {
+      const { agentrite, write } = project(testContext);
+      const text = SETTINGS.replace(line, replacement);
+      assert.notEqual(text, SETTINGS);
+      write('agentrite.json', text);
 
-    const result = agentrite(['roles']);
+      const result = agentrite(['roles']);
 
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.match(result.stderr, message);
-  }
-});
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.match(result.stderr, message);
+    }
+  },
+);

@@ -20,8 +20,8 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 // runs what follows `--` as the user running the suite. `setprivCalls` is what it recorded.
 //
 // `prepare`, when given, is called with the home after it is made and before the guard runs.
-function runGuard(t, agentUid, guard = 'check_home_owner', prepare = () => {}) {
-  const base = temporaryDirectory(t, 'entrypoint-home-');
+function runGuard(testContext, agentUid, guard = 'check_home_owner', prepare = () => {}) {
+  const base = temporaryDirectory(testContext, 'entrypoint-home-');
   const home = join(base, 'home');
   mkdirSync(join(home, '.claude'), { recursive: true });
   mkdirSync(join(home, '.local', 'share'), { recursive: true });
@@ -57,18 +57,18 @@ const realOwner = () => String(process.getuid());
 // the whole suite runs.
 const skip = process.platform !== 'linux' ? skipReason('needs GNU stat, the guard runs in the Linux container') : false;
 
-test('a home owned by another uid is refused, naming both uids and the recovery', { skip }, (t) => {
+test('a home owned by another uid is refused, naming both uids and the recovery', { skip }, (testContext) => {
   const owner = realOwner();
   const agentUid = Number(owner) === 1000 ? 501 : 1000;
-  const { status, stderr } = runGuard(t, agentUid);
+  const { status, stderr } = runGuard(testContext, agentUid);
   assert.equal(status, 1, stderr);
   assert.match(stderr, new RegExp(`${owner}, but the agent is uid ${agentUid}`));
   assert.match(stderr, /cannot write its home/);
   assert.match(stderr, /docker volume rm <project>_agent-home/);
 });
 
-test('a home the agent owns passes the guard, including a new one it owns', { skip }, (t) => {
-  const { status, stderr } = runGuard(t, realOwner());
+test('a home the agent owns passes the guard, including a new one it owns', { skip }, (testContext) => {
+  const { status, stderr } = runGuard(testContext, realOwner());
   assert.equal(status, 0, stderr);
   assert.doesNotMatch(stderr, /is owned by uid/);
 });
@@ -77,18 +77,18 @@ test('a home the agent owns passes the guard, including a new one it owns', { sk
 // lacks, and every directory above it, as root, which is what a volume of an earlier release gets.
 test('a home in which the agent owns the directories above the log mounts passes, and nothing is said', {
   skip,
-}, (t) => {
-  const { status, stdout, stderr } = runGuard(t, realOwner(), 'check_log_directory_owners');
+}, (testContext) => {
+  const { status, stdout, stderr } = runGuard(testContext, realOwner(), 'check_log_directory_owners');
   assert.equal(status, 0, stderr);
   assert.equal(stdout + stderr, '');
 });
 
 test('a home in which another uid owns a directory above a log mount is refused, naming it and the recovery', {
   skip,
-}, (t) => {
+}, (testContext) => {
   const owner = realOwner();
   const agentUid = Number(owner) === 1000 ? 501 : 1000;
-  const { home, status, stderr } = runGuard(t, agentUid, 'check_log_directory_owners');
+  const { home, status, stderr } = runGuard(testContext, agentUid, 'check_log_directory_owners');
   assert.equal(status, 1, stderr);
   assert.ok(
     stderr.startsWith(
@@ -108,25 +108,29 @@ test('a home in which another uid owns a directory above a log mount is refused,
 // convention make .local, is closed to it. The agent is the one who has to use these directories, so they are read
 // as the agent. The suite's user owns what it makes and is not root, so it can show that the read goes through the
 // user switch, and not the fault itself: that is shown on a real Docker, in the unit's record.
-test('the directories above the log mounts are read as the agent, and the top of the home is not', { skip }, (t) => {
-  const { home, status, stderr, setprivCalls } = runGuard(t, realOwner(), 'check_log_directory_owners');
-  assert.equal(status, 0, stderr);
-  assert.deepEqual(
-    setprivCalls,
-    ['.claude', '.local', '.local/share'].map(
-      (name) => `--reuid=agent --regid=agent --init-groups -- stat -c %u ${home}/${name}`,
-    ),
-  );
-  assert.deepEqual(runGuard(t, realOwner()).setprivCalls, []);
-});
+test(
+  'the directories above the log mounts are read as the agent, and the top of the home is not',
+  { skip },
+  (testContext) => {
+    const { home, status, stderr, setprivCalls } = runGuard(testContext, realOwner(), 'check_log_directory_owners');
+    assert.equal(status, 0, stderr);
+    assert.deepEqual(
+      setprivCalls,
+      ['.claude', '.local', '.local/share'].map(
+        (name) => `--reuid=agent --regid=agent --init-groups -- stat -c %u ${home}/${name}`,
+      ),
+    );
+    assert.deepEqual(runGuard(testContext, realOwner()).setprivCalls, []);
+  },
+);
 
 test('a directory above a log mount that cannot be examined is refused by the entrypoint, not by stat', {
   skip,
-}, (t) => {
+}, (testContext) => {
   // Closed to its owner too, so that reading what is in it fails for the user running the suite as it would for
   // anyone. Opened again once the guard has run, so that the home can be removed.
   const close = (home) => chmodSync(join(home, '.local'), 0o000);
-  const { home, status, stderr } = runGuard(t, realOwner(), 'check_log_directory_owners', close);
+  const { home, status, stderr } = runGuard(testContext, realOwner(), 'check_log_directory_owners', close);
   chmodSync(join(home, '.local'), 0o700);
   assert.equal(status, 1, stderr);
   assert.ok(

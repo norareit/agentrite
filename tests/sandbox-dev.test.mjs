@@ -22,8 +22,8 @@ const nameFromVariable = '${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}';
 // `fakeHost`, whose `docker` says the image exists and records each call with the SANDBOX_PROJECT_NAME and the
 // AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
 // home of whoever runs the suite holds.
-function setUp(t) {
-  const base = temporaryDirectory(t, 'sandbox-dev-');
+function setUp(testContext) {
+  const base = temporaryDirectory(testContext, 'sandbox-dev-');
   const root = join(base, 'checkout');
   mkdirSync(join(root, 'sandbox'), { recursive: true });
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');
@@ -60,23 +60,23 @@ function setUp(t) {
 
 // The wrapper builds only a missing image or on --rebuild, and a run on an image built before the change under
 // test exits 0 all the same, so the shim asks for the build itself.
-test("the shim runs the checkout's own wrapper, and builds before it runs although the image exists", (t) => {
-  const { root, run, dockerCalls, prefix, logs } = setUp(t);
+test("the shim runs the checkout's own wrapper, and builds before it runs although the image exists", (testContext) => {
+  const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
   const result = run(['--in-place']);
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}sandbox`]);
 });
 
 // The release sandbox's image and home volume are safe only while the name is the shim's to set.
-test('the shim sets the dev name over one the caller had set', (t) => {
-  const { root, run, dockerCalls, prefix, logs } = setUp(t);
+test('the shim sets the dev name over one the caller had set', (testContext) => {
+  const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
   const result = run(['--in-place'], { SANDBOX_PROJECT_NAME: 'ritenoar-agentrite-sandbox' });
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}sandbox`]);
 });
 
-test("the shim passes the wrapper's options and the command on", (t) => {
-  const { base, run, dockerCalls, prefix, logs } = setUp(t);
+test("the shim passes the wrapper's options and the command on", (testContext) => {
+  const { base, run, dockerCalls, prefix, logs } = setUp(testContext);
   const workdir = join(base, 'elsewhere');
   const mounted = join(base, 'mounted');
   mkdirSync(workdir);
@@ -90,8 +90,8 @@ test("the shim passes the wrapper's options and the command on", (t) => {
 });
 
 // Unit 0058, R3: the bell rings in ./sandbox-dev.sh as in ./sandbox.sh, read from the checkout's agentrite.json.
-test("the shim with \"bell\": true has the checkout's wrapper mount the bell and name the plugin", (t) => {
-  const { root, run, dockerCalls, prefix, logs } = setUp(t);
+test("the shim with \"bell\": true has the checkout's wrapper mount the bell and name the plugin", (testContext) => {
+  const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
   writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
   const result = run(['--in-place']);
   assert.equal(result.status, 0, result.stderr);
@@ -123,8 +123,8 @@ function withUnitRun({ base, root }) {
   writeFileSync(join(base, 'running-container'), '0123456789ab\n');
 }
 
-test('the shim connects to a unit run under the dev name, and asks for no build', (t) => {
-  const host = setUp(t);
+test('the shim connects to a unit run under the dev name, and asks for no build', (testContext) => {
+  const host = setUp(testContext);
   withUnitRun(host);
   const result = host.run(['--connect', unitBranch, 'echo', 'hi']);
   assert.equal(result.status, 0, result.stderr);
@@ -139,8 +139,8 @@ test('the shim connects to a unit run under the dev name, and asks for no build'
 
 // The directory of --mount is passed over, so the --connect after it is seen, and the wrapper's refusal names the
 // option the caller gave and not one the shim added.
-test('the shim adds no --rebuild to a --connect that follows another option and its directory', (t) => {
-  const host = setUp(t);
+test('the shim adds no --rebuild to a --connect that follows another option and its directory', (testContext) => {
+  const host = setUp(testContext);
   withUnitRun(host);
   const result = host.run(['--mount', host.base, '--connect', unitBranch]);
   assert.equal(result.status, 2, result.stderr);
@@ -150,8 +150,8 @@ test('the shim adds no --rebuild to a --connect that follows another option and 
 });
 
 // Unit 0066, R6: the shim exits as the checkout's wrapper does, with 1 for a refusal that is not of its arguments.
-test("the shim exits 1 for a checkout whose agentrite.json is at fault, with the reader's message", (t) => {
-  const { root, run, dockerCalls } = setUp(t);
+test("the shim exits 1 for a checkout whose agentrite.json is at fault, with the reader's message", (testContext) => {
+  const { root, run, dockerCalls } = setUp(testContext);
   writeFileSync(join(root, 'agentrite.json'), '{}\n');
   const result = run(['--in-place', 'echo', 'hi']);
   assert.equal(result.status, 1, result.stderr);
@@ -163,8 +163,8 @@ for (const [what, args, command] of [
   ['after --in-place', ['--in-place', 'echo', '--connect'], 'echo --connect'],
   ['after a --', ['--in-place', '--', '--connect'], '--connect'],
 ]) {
-  test(`the shim builds for a run whose command holds --connect ${what}`, (t) => {
-    const { root, run, dockerCalls, prefix, logs } = setUp(t);
+  test(`the shim builds for a run whose command holds --connect ${what}`, (testContext) => {
+    const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
     const result = run(args);
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(dockerCalls(), [
@@ -174,8 +174,8 @@ for (const [what, args, command] of [
   });
 }
 
-test('the shim builds for a unit run whose command holds --connect', (t) => {
-  const host = setUp(t);
+test('the shim builds for a unit run whose command holds --connect', (testContext) => {
+  const host = setUp(testContext);
   withUnitRun(host);
   rmSync(join(host.base, 'running-container'));
   const result = host.run([unitBranch, 'echo', '--connect']);
@@ -188,8 +188,8 @@ test('the shim builds for a unit run whose command holds --connect', (t) => {
 // The name of --variant is passed over as the directory of --mount is, so the --connect after it is seen. Without
 // the pass, the name would be taken for the unit and the shim would add the --rebuild the wrapper refuses.
 for (const variantOption of [['--variant', 'opus'], ['--variant=opus']]) {
-  test(`the shim adds no --rebuild to a --connect that follows ${variantOption.join(' ')}`, (t) => {
-    const host = setUp(t);
+  test(`the shim adds no --rebuild to a --connect that follows ${variantOption.join(' ')}`, (testContext) => {
+    const host = setUp(testContext);
     withUnitRun(host);
     execFileSync('git', ['branch', `${unitBranch}--opus`], { cwd: host.root });
     const result = host.run([...variantOption, '--connect', '0026']);
@@ -201,8 +201,8 @@ for (const variantOption of [['--variant', 'opus'], ['--variant=opus']]) {
   });
 }
 
-test('the shim builds for a unit run of a variant that follows --variant and its name', (t) => {
-  const host = setUp(t);
+test('the shim builds for a unit run of a variant that follows --variant and its name', (testContext) => {
+  const host = setUp(testContext);
   withUnitRun(host);
   rmSync(join(host.base, 'running-container'));
   const result = host.run(['--variant', 'opus', '0026', 'echo', 'hi']);

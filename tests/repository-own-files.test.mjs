@@ -76,32 +76,35 @@ test('the roles of the installed release lists the spec reviewer after the four'
 });
 
 // Unit 0054, R25
-test('the refresh of the installed release finds every file it writes at the root up to date, changing none', (t) => {
-  const release = installedRelease();
-  const copy = temporaryDirectory(t, 'repository-own-files-');
-  const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf-8' }).split('\0');
-  const files = tracked.filter((path) => path !== '' && existsSync(join(root, path)));
-  const longAgo = new Date('2020-01-01T00:00:00Z');
-  for (const path of files) {
-    mkdirSync(dirname(join(copy, path)), { recursive: true });
-    copyFileSync(join(root, path), join(copy, path));
-    chmodSync(join(copy, path), statSync(join(root, path)).mode & 0o777);
-    utimesSync(join(copy, path), longAgo, longAgo);
-  }
-  mkdirSync(join(copy, 'node_modules'));
-  symlinkSync(release, join(copy, 'node_modules', 'agentrite'), 'dir');
+test(
+  'the refresh of the installed release finds every file it writes at the root up to date, changing none',
+  (testContext) => {
+    const release = installedRelease();
+    const copy = temporaryDirectory(testContext, 'repository-own-files-');
+    const tracked = execFileSync('git', ['ls-files', '-z'], { cwd: root, encoding: 'utf-8' }).split('\0');
+    const files = tracked.filter((path) => path !== '' && existsSync(join(root, path)));
+    const longAgo = new Date('2020-01-01T00:00:00Z');
+    for (const path of files) {
+      mkdirSync(dirname(join(copy, path)), { recursive: true });
+      copyFileSync(join(root, path), join(copy, path));
+      chmodSync(join(copy, path), statSync(join(root, path)).mode & 0o777);
+      utimesSync(join(copy, path), longAgo, longAgo);
+    }
+    mkdirSync(join(copy, 'node_modules'));
+    symlinkSync(release, join(copy, 'node_modules', 'agentrite'), 'dir');
 
-  const result = spawnSync(process.execPath, [join(release, 'scripts', 'agentrite.mjs'), 'refresh'], {
-    cwd: copy,
-    encoding: 'utf-8',
-  });
+    const result = spawnSync(process.execPath, [join(release, 'scripts', 'agentrite.mjs'), 'refresh'], {
+      cwd: copy,
+      encoding: 'utf-8',
+    });
 
-  assert.equal(result.status, 0, result.stderr);
-  const lines = result.stdout.split('\n\n')[0].trimEnd().split('\n');
-  assert.ok(lines.length > 0 && lines.every((line) => line.startsWith('up to date ')), result.stdout);
-  for (const path of files) {
-    assert.equal(readFileSync(join(copy, path), 'utf-8'), readFileSync(join(root, path), 'utf-8'), path);
-    assert.equal(statSync(join(copy, path)).mtimeMs, longAgo.getTime(), path);
-  }
-  assert.deepEqual(pathsUnder(copy).sort(), [...files].sort());
-});
+    assert.equal(result.status, 0, result.stderr);
+    const lines = result.stdout.split('\n\n')[0].trimEnd().split('\n');
+    assert.ok(lines.length > 0 && lines.every((line) => line.startsWith('up to date ')), result.stdout);
+    for (const path of files) {
+      assert.equal(readFileSync(join(copy, path), 'utf-8'), readFileSync(join(root, path), 'utf-8'), path);
+      assert.equal(statSync(join(copy, path)).mtimeMs, longAgo.getTime(), path);
+    }
+    assert.deepEqual(pathsUnder(copy).sort(), [...files].sort());
+  },
+);

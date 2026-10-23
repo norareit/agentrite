@@ -477,13 +477,13 @@ test('the template is the default file, and settingsText of its own values is th
 
 // R5, R6: the one function that touches the file system.
 
-function directory(t) {
-  const base = temporaryDirectory(t, 'agentrite-settings-');
+function directory(testContext) {
+  const base = temporaryDirectory(testContext, 'agentrite-settings-');
   return base;
 }
 
-test('readSettings reads the agentrite.json of the root it is given', (t) => {
-  const base = directory(t);
+test('readSettings reads the agentrite.json of the root it is given', (testContext) => {
+  const base = directory(testContext);
   writeFileSync(join(base, 'agentrite.json'), settingsText(VALID));
   writePathsOf(base, VALID);
   assert.deepEqual(readSettings(base), VALID);
@@ -491,7 +491,7 @@ test('readSettings reads the agentrite.json of the root it is given', (t) => {
 
 const NO_FILE_MUST = "It must name a file in the project's working tree";
 
-test('readSettings refuses a path of a key that names no file, a directory or a dangling link', (t) => {
+test('readSettings refuses a path of a key that names no file, a directory or a dangling link', (testContext) => {
   for (const [key, settingsOf] of [
     ['standards', (path) => withKey('standards', path)],
     ['orchestrator', (path) => withKey('orchestrator', path)],
@@ -502,7 +502,7 @@ test('readSettings refuses a path of a key that names no file, a directory or a 
       (base, path) => mkdirSync(join(base, path), { recursive: true }),
       (base, path) => symlinkSync(join(base, 'nowhere.md'), join(base, path)),
     ]) {
-      const base = directory(t);
+      const base = directory(testContext);
       writePathsOf(base, VALID);
       const path = 'rules/missing.md';
       make(base, path);
@@ -514,8 +514,8 @@ test('readSettings refuses a path of a key that names no file, a directory or a 
   }
 });
 
-test('readSettings judges standards, then orchestrator, then the roles in their order', (t) => {
-  const base = directory(t);
+test('readSettings judges standards, then orchestrator, then the roles in their order', (testContext) => {
+  const base = directory(testContext);
   writeFileSync(join(base, 'agentrite.json'), textOf({ ...VALID, roles: { ...VALID.roles, planner: 'p.md' } }));
   assert.throws(() => readSettings(base), {
     message: `agentrite.json: standards is "rules/house.md", and there is no file at it. ${NO_FILE_MUST}`,
@@ -531,10 +531,10 @@ test('readSettings judges standards, then orchestrator, then the roles in their 
   });
 });
 
-test('readSettings takes a path through a node_modules/agentrite that links outside the project', (t) => {
-  const kit = directory(t);
+test('readSettings takes a path through a node_modules/agentrite that links outside the project', (testContext) => {
+  const kit = directory(testContext);
   writePathsOf(kit, { standards: 'standards.md', roles: { reviewer: 'roles/reviewer.md' } });
-  const base = directory(t);
+  const base = directory(testContext);
   writePathsOf(base, VALID);
   mkdirSync(join(base, 'node_modules'));
   symlinkSync(kit, join(base, 'node_modules', 'agentrite'), 'dir');
@@ -547,52 +547,58 @@ test('readSettings takes a path through a node_modules/agentrite that links outs
   assert.deepEqual(readSettings(base), linked);
 });
 
-test('readSettings refuses an extra role that names no file, with roles.<name> as the key, after the four', (t) => {
-  const base = directory(t);
-  const settings = { ...VALID, roles: { ...VALID.roles, 'test-writer': 'rules/tests.md' } };
-  writePathsOf(base, VALID);
-  writeFileSync(join(base, 'agentrite.json'), textOf(settings));
-  assert.throws(() => readSettings(base), {
-    message: `agentrite.json: roles.test-writer is "rules/tests.md", and there is no file at it. ${NO_FILE_MUST}`,
-  });
-});
+test(
+  'readSettings refuses an extra role that names no file, with roles.<name> as the key, after the four',
+  (testContext) => {
+    const base = directory(testContext);
+    const settings = { ...VALID, roles: { ...VALID.roles, 'test-writer': 'rules/tests.md' } };
+    writePathsOf(base, VALID);
+    writeFileSync(join(base, 'agentrite.json'), textOf(settings));
+    assert.throws(() => readSettings(base), {
+      message: `agentrite.json: roles.test-writer is "rules/tests.md", and there is no file at it. ${NO_FILE_MUST}`,
+    });
+  },
+);
 
-test('readSettings looks for no file for an orchestrator that is false', (t) => {
-  const base = directory(t);
+test('readSettings looks for no file for an orchestrator that is false', (testContext) => {
+  const base = directory(testContext);
   const optedOut = withKey('orchestrator', false);
   writePathsOf(base, optedOut);
   writeFileSync(join(base, 'agentrite.json'), textOf(optedOut));
   assert.deepEqual(readSettings(base), optedOut);
 });
 
-test('readSettings takes two roles that name one file', (t) => {
-  const base = directory(t);
+test('readSettings takes two roles that name one file', (testContext) => {
+  const base = directory(testContext);
   writePathsOf(base, VALID);
   const shared = { ...VALID, roles: { ...VALID.roles, planner: 'rules/specifier.md' } };
   writeFileSync(join(base, 'agentrite.json'), textOf(shared));
   assert.deepEqual(readSettings(base), shared);
 });
 
-test('readSettings in a directory with no file names the command that writes one', (t) => {
-  assert.throws(() => readSettings(directory(t)), { message: NO_FILE });
+test('readSettings in a directory with no file names the command that writes one', (testContext) => {
+  assert.throws(() => readSettings(directory(testContext)), { message: NO_FILE });
 });
 
-test('readSettings of a file that cannot be read names the file, the error and what the file must hold', (t) => {
-  const base = directory(t);
-  mkdirSync(join(base, 'agentrite.json'));
-  assert.throws(
-    () => readSettings(base),
-    (error) => {
-      assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
-      assert.match(error.message, /EISDIR/);
-      assert.ok(error.message.endsWith(OBJECT_SENTENCE), error.message);
-      return true;
-    },
-  );
-});
+test(
+  'readSettings of a file that cannot be read names the file, the error and what the file must hold',
+  (testContext) => {
+    const base = directory(testContext);
+    mkdirSync(join(base, 'agentrite.json'));
+    assert.throws(
+      () => readSettings(base),
+      (error) => {
+        assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
+        assert.match(error.message, /EISDIR/);
+        assert.ok(error.message.endsWith(OBJECT_SENTENCE), error.message);
+        return true;
+      },
+    );
+  },
+);
 
-test('readSettings refuses a file that is not valid as parseSettings does', (t) => {
-  const base = directory(t);
+test('readSettings refuses a file that is not valid as parseSettings does', (testContext) => {
+  const base = directory(testContext);
   writeFileSync(join(base, 'agentrite.json'), textOf(withKey('sandbox', 'false')));
   assert.throws(() => readSettings(base), { message: `agentrite.json: sandbox is "false". ${SANDBOX_MUST}` });
 });
@@ -605,8 +611,8 @@ function entryPoint(...args) {
   return spawnSync(process.execPath, [script, ...args], { encoding: 'utf-8' });
 }
 
-test('run with a project root, the module prints the default branch and a line break, and exits 0', (t) => {
-  const base = directory(t);
+test('run with a project root, the module prints the default branch and a line break, and exits 0', (testContext) => {
+  const base = directory(testContext);
   writeFileSync(join(base, 'agentrite.json'), settingsText(VALID));
   writePathsOf(base, VALID);
 
@@ -617,22 +623,30 @@ test('run with a project root, the module prints the default branch and a line b
   assert.equal(result.stderr, '');
 });
 
-test('run on a project with no file, or with one that is not valid, it prints why on standard error alone', (t) => {
-  const missing = entryPoint(directory(t));
-  assert.equal(missing.status, 1);
-  assert.equal(missing.stdout, '');
-  assert.equal(missing.stderr, `agentrite: ${NO_FILE}\n`);
+test(
+  'run on a project with no file, or with one that is not valid, it prints why on standard error alone',
+  (testContext) => {
+    const missing = entryPoint(directory(testContext));
+    assert.equal(missing.status, 1);
+    assert.equal(missing.stdout, '');
+    assert.equal(missing.stderr, `agentrite: ${NO_FILE}\n`);
 
-  const base = directory(t);
-  writeFileSync(join(base, 'agentrite.json'), textOf(withKey('harnesses', [])));
-  const invalid = entryPoint(base);
-  assert.equal(invalid.status, 1);
-  assert.equal(invalid.stdout, '');
-  assert.equal(invalid.stderr, `agentrite: agentrite.json: harnesses is []. ${HARNESSES_MUST}\n`);
-});
+    const base = directory(testContext);
+    writeFileSync(join(base, 'agentrite.json'), textOf(withKey('harnesses', [])));
+    const invalid = entryPoint(base);
+    assert.equal(invalid.status, 1);
+    assert.equal(invalid.stdout, '');
+    assert.equal(invalid.stderr, `agentrite: agentrite.json: harnesses is []. ${HARNESSES_MUST}\n`);
+  },
+);
 
-test('run with no project root, or with more than one argument, it prints its usage and exits 2', (t) => {
-  for (const args of [[], [directory(t), 'more'], [directory(t), 'bell', 'more'], [directory(t), 'Bell']]) {
+test('run with no project root, or with more than one argument, it prints its usage and exits 2', (testContext) => {
+  for (const args of [
+    [],
+    [directory(testContext), 'more'],
+    [directory(testContext), 'bell', 'more'],
+    [directory(testContext), 'Bell'],
+  ]) {
     const result = entryPoint(...args);
     assert.equal(result.status, 2);
     assert.equal(result.stdout, '');
@@ -703,8 +717,8 @@ test('parseBell refuses JSON that is no object, naming what it holds and that be
   }
 });
 
-test('readBell reads the bell of the agentrite.json at the root, with no file the paths name', (t) => {
-  const base = directory(t);
+test('readBell reads the bell of the agentrite.json at the root, with no file the paths name', (testContext) => {
+  const base = directory(testContext);
   writeFileSync(join(base, 'agentrite.json'), settingsText({ ...VALID, bell: false }));
   assert.equal(readBell(base), false);
 });
@@ -713,12 +727,15 @@ const NO_FILE_BELL =
   'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
   'Run: npx agentrite config, which writes one';
 
-test('readBell in a directory with no file says that bell is missing and names the command that writes one', (t) => {
-  assert.throws(() => readBell(directory(t)), { message: NO_FILE_BELL });
-});
+test(
+  'readBell in a directory with no file says that bell is missing and names the command that writes one',
+  (testContext) => {
+    assert.throws(() => readBell(directory(testContext)), { message: NO_FILE_BELL });
+  },
+);
 
-test('readBell of a file that cannot be read names the file, the error and that bell cannot be read', (t) => {
-  const base = directory(t);
+test('readBell of a file that cannot be read names the file, the error and that bell cannot be read', (testContext) => {
+  const base = directory(testContext);
   mkdirSync(join(base, 'agentrite.json'));
   assert.throws(
     () => readBell(base),
@@ -731,22 +748,25 @@ test('readBell of a file that cannot be read names the file, the error and that 
   );
 });
 
-test('run with a project root and bell, the module prints true or false and a line break, and exits 0', (t) => {
-  for (const bell of [true, false]) {
-    const base = directory(t);
-    writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
-    const result = entryPoint(base, 'bell');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, `${bell}\n`);
-    assert.equal(result.stderr, '');
-  }
-});
+test(
+  'run with a project root and bell, the module prints true or false and a line break, and exits 0',
+  (testContext) => {
+    for (const bell of [true, false]) {
+      const base = directory(testContext);
+      writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
+      const result = entryPoint(base, 'bell');
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stdout, `${bell}\n`);
+      assert.equal(result.stderr, '');
+    }
+  },
+);
 
 // A shell that sets FORCE_COLOR would give a value printed in colour to container/sandbox.sh, which takes nothing but
 // the bare word for true.
-test('run with bell, the module prints the bare word also where the environment asks for colour', (t) => {
+test('run with bell, the module prints the bare word also where the environment asks for colour', (testContext) => {
   for (const bell of [true, false]) {
-    const base = directory(t);
+    const base = directory(testContext);
     writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
     const result = spawnSync(process.execPath, [script, base, 'bell'], {
       encoding: 'utf-8',
@@ -757,22 +777,25 @@ test('run with bell, the module prints the bare word also where the environment 
   }
 });
 
-test('run with bell on a file at fault, or on no file, it prints why on standard error alone and exits 1', (t) => {
-  const missing = entryPoint(directory(t), 'bell');
-  assert.equal(missing.status, 1);
-  assert.equal(missing.stdout, '');
-  assert.equal(missing.stderr, `agentrite: ${NO_FILE_BELL}\n`);
+test(
+  'run with bell on a file at fault, or on no file, it prints why on standard error alone and exits 1',
+  (testContext) => {
+    const missing = entryPoint(directory(testContext), 'bell');
+    assert.equal(missing.status, 1);
+    assert.equal(missing.stdout, '');
+    assert.equal(missing.stderr, `agentrite: ${NO_FILE_BELL}\n`);
 
-  for (const [text, message] of [
-    ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
-    ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
-    ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
-  ]) {
-    const base = directory(t);
-    writeFileSync(join(base, 'agentrite.json'), text);
-    const result = entryPoint(base, 'bell');
-    assert.equal(result.status, 1, text);
-    assert.equal(result.stdout, '', text);
-    assert.equal(result.stderr, `agentrite: ${message}\n`, text);
-  }
-});
+    for (const [text, message] of [
+      ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
+      ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
+      ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
+    ]) {
+      const base = directory(testContext);
+      writeFileSync(join(base, 'agentrite.json'), text);
+      const result = entryPoint(base, 'bell');
+      assert.equal(result.status, 1, text);
+      assert.equal(result.stdout, '', text);
+      assert.equal(result.stderr, `agentrite: ${message}\n`, text);
+    }
+  },
+);

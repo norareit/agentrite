@@ -60,11 +60,11 @@ const digest = (content) => `sha256:${createHash('sha256').update(content).diges
 // the wrapper, through the shim for `dev`, with `args`, and forgets the calls of earlier starts first. `builds`,
 // `tags` and `runs` read the calls of the last start. The images are removed when the test ends, and so are the
 // earlier builds of the test that later ones left without a name.
-function setUp(t, layout = 'installed') {
-  const base = temporaryDirectory(t, 'sandbox-project-dockerfile-');
+function setUp(testContext, layout = 'installed') {
+  const base = temporaryDirectory(testContext, 'sandbox-project-dockerfile-');
   const root = join(base, 'project');
   const image = `agentrite-project-dockerfile-test-${process.pid}-${(images += 1)}`;
-  t.after(() => {
+  testContext.after(() => {
     spawnSync('docker', ['image', 'rm', '--force', image, `${image}-base`], { stdio: 'ignore' });
     spawnSync('docker', ['image', 'prune', '--force', '--filter', `label=${standInLabel}`], { stdio: 'ignore' });
   });
@@ -131,8 +131,8 @@ const builtBoth = { kit: true, project: true };
 test(
   "a project's file is built on the kit's image, kept under -base, and is not built again unchanged",
   { skip },
-  (t) => {
-    const project = setUp(t);
+  (testContext) => {
+    const project = setUp(testContext);
     const { root, image, projectFile } = project;
     project.writeProjectFile(adding());
     const first = project.start('--in-place', 'echo', 'hi');
@@ -154,17 +154,21 @@ test(
   },
 );
 
-test("without a project's file, a start builds the kit's image under the image's name and no -base", { skip }, (t) => {
-  const project = setUp(t);
-  assertStarted(project, project.start('--in-place', 'echo', 'hi'), { kit: true, project: false });
-  assert.deepEqual(project.tags(), []);
-  assert.ok(holds(project.image, '/kit-marker'));
-  assert.ok(!exists(`${project.image}-base`));
-  assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
-});
+test(
+  "without a project's file, a start builds the kit's image under the image's name and no -base",
+  { skip },
+  (testContext) => {
+    const project = setUp(testContext);
+    assertStarted(project, project.start('--in-place', 'echo', 'hi'), { kit: true, project: false });
+    assert.deepEqual(project.tags(), []);
+    assert.ok(holds(project.image, '/kit-marker'));
+    assert.ok(!exists(`${project.image}-base`));
+    assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
+  },
+);
 
-test("a project's file changed after a build is built again, and the kit's image is not", { skip }, (t) => {
-  const project = setUp(t);
+test("a project's file changed after a build is built again, and the kit's image is not", { skip }, (testContext) => {
+  const project = setUp(testContext);
   project.writeProjectFile(adding());
   assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
   project.writeProjectFile(adding('COPY added /added-again\n'));
@@ -178,8 +182,8 @@ test("a project's file changed after a build is built again, and the kit's image
   assert.ok(holds(project.image, '/added-again'));
 });
 
-test("a project's file added after a build without one is built, and then not again", { skip }, (t) => {
-  const project = setUp(t);
+test("a project's file added after a build without one is built, and then not again", { skip }, (testContext) => {
+  const project = setUp(testContext);
   assertStarted(project, project.start('--in-place', 'echo', 'hi'), { kit: true, project: false });
   project.writeProjectFile(adding());
   const result = project.start('--in-place', 'echo', 'hi');
@@ -189,54 +193,66 @@ test("a project's file added after a build without one is built, and then not ag
   assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
 });
 
-test("a project's file removed after a build leaves the kit's image, built anew, and then not again", { skip }, (t) => {
-  const project = setUp(t);
-  project.writeProjectFile(adding());
-  assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
-  rmSync(project.projectFile);
-  const result = project.start('--in-place', 'echo', 'hi');
-  assertStarted(project, result, { kit: true, project: false });
-  assert.match(
-    result.stderr,
-    /sandbox\.sh: the image was built from a sandbox\/Dockerfile that is no longer there\. Rebuilding\./,
-  );
-  const labels = JSON.parse(docker('image', 'inspect', '--format', '{{json .Config.Labels}}', project.image));
-  assert.ok(!(projectLabel in labels), "the image holds no label of a project's file");
-  assert.ok(!holds(project.image, '/added'));
-  assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
-});
+test(
+  "a project's file removed after a build leaves the kit's image, built anew, and then not again",
+  { skip },
+  (testContext) => {
+    const project = setUp(testContext);
+    project.writeProjectFile(adding());
+    assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
+    rmSync(project.projectFile);
+    const result = project.start('--in-place', 'echo', 'hi');
+    assertStarted(project, result, { kit: true, project: false });
+    assert.match(
+      result.stderr,
+      /sandbox\.sh: the image was built from a sandbox\/Dockerfile that is no longer there\. Rebuilding\./,
+    );
+    const labels = JSON.parse(docker('image', 'inspect', '--format', '{{json .Config.Labels}}', project.image));
+    assert.ok(!(projectLabel in labels), "the image holds no label of a project's file");
+    assert.ok(!holds(project.image, '/added'));
+    assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
+  },
+);
 
-test("--rebuild builds the kit's image and the project's file on it", { skip }, (t) => {
-  const project = setUp(t);
+test("--rebuild builds the kit's image and the project's file on it", { skip }, (testContext) => {
+  const project = setUp(testContext);
   project.writeProjectFile(adding());
   assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
   assertStarted(project, project.start('--rebuild', '--in-place', 'echo', 'hi'), builtBoth);
 });
 
-test("a kit's image built anew for another harness version has the project's file built on it", { skip }, (t) => {
-  const project = setUp(t);
-  project.writeProjectFile(adding());
-  assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
-  writeCommand(project.bin, 'claude', `echo '${newClaude} (Claude Code)'`);
-  const result = project.start('--in-place', 'echo', 'hi');
-  assertStarted(project, result, builtBoth);
-  assert.match(result.stderr, new RegExp(`the image holds Claude Code ${hostVersions.claude} and ${newClaude}`));
-  assert.equal(label(project.image, claudeLabel), newClaude);
-  assert.ok(holds(project.image, '/added'));
-});
+test(
+  "a kit's image built anew for another harness version has the project's file built on it",
+  { skip },
+  (testContext) => {
+    const project = setUp(testContext);
+    project.writeProjectFile(adding());
+    assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
+    writeCommand(project.bin, 'claude', `echo '${newClaude} (Claude Code)'`);
+    const result = project.start('--in-place', 'echo', 'hi');
+    assertStarted(project, result, builtBoth);
+    assert.match(result.stderr, new RegExp(`the image holds Claude Code ${hostVersions.claude} and ${newClaude}`));
+    assert.equal(label(project.image, claudeLabel), newClaude);
+    assert.ok(holds(project.image, '/added'));
+  },
+);
 
-test("a project's file that fails to build ends the start with Docker's output, and runs nothing", { skip }, (t) => {
-  const project = setUp(t);
-  project.writeProjectFile(`${opening}COPY not-there /not-there\n`);
-  const result = project.start('--in-place', 'echo', 'hi');
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /not-there/);
-  assert.equal(project.projectBuilds().length, 1);
-  assert.deepEqual(project.runs(), []);
-});
+test(
+  "a project's file that fails to build ends the start with Docker's output, and runs nothing",
+  { skip },
+  (testContext) => {
+    const project = setUp(testContext);
+    project.writeProjectFile(`${opening}COPY not-there /not-there\n`);
+    const result = project.start('--in-place', 'echo', 'hi');
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /not-there/);
+    assert.equal(project.projectBuilds().length, 1);
+    assert.deepEqual(project.runs(), []);
+  },
+);
 
-test("a kit's build that fails ends the start before the project's file is built", { skip }, (t) => {
-  const project = setUp(t);
+test("a kit's build that fails ends the start before the project's file is built", { skip }, (testContext) => {
+  const project = setUp(testContext);
   project.writeProjectFile(adding());
   writeFileSync(project.buildFails, '');
   const result = project.start('--in-place', 'echo', 'hi');
@@ -269,8 +285,8 @@ for (const { instruction, line, differs } of [
   test(
     `an image whose project's file sets ${instruction} is refused at every start until the file drops it`,
     { skip },
-    (t) => {
-      const project = setUp(t);
+    (testContext) => {
+      const project = setUp(testContext);
       const { image } = project;
       project.writeProjectFile(adding(`${line}\n`));
       const assertRefused = (result) => {
@@ -307,8 +323,8 @@ for (const { instruction, line, differs } of [
 test(
   "a unit run of an image whose project's file sets ENTRYPOINT is refused before its clone is made",
   { skip },
-  (t) => {
-    const project = setUp(t);
+  (testContext) => {
+    const project = setUp(testContext);
     const { root, home } = project;
     writeFileSync(join(root, '.gitignore'), 'node_modules/\n');
     const git = (...args) =>
@@ -331,13 +347,17 @@ for (const [name, labelled] of [
   [opencodeLabel, 'OpenCode'],
   [projectLabel, "a project's file"],
 ]) {
-  test(`a project's file that sets the label of ${labelled} does not have the next start build`, { skip }, (t) => {
-    const project = setUp(t);
-    const value = name === projectLabel ? `sha256:${'0'.repeat(64)}` : '1.0.0';
-    project.writeProjectFile(adding(`LABEL ${name}=${value}\n`));
-    assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
-    assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
-  });
+  test(
+    `a project's file that sets the label of ${labelled} does not have the next start build`,
+    { skip },
+    (testContext) => {
+      const project = setUp(testContext);
+      const value = name === projectLabel ? `sha256:${'0'.repeat(64)}` : '1.0.0';
+      project.writeProjectFile(adding(`LABEL ${name}=${value}\n`));
+      assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
+      assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
+    },
+  );
 }
 
 for (const [name, harness, command, printed] of [
@@ -347,8 +367,8 @@ for (const [name, harness, command, printed] of [
   test(
     `a label of ${harness} in a project's file that names the host's new version does not stop a build`,
     { skip },
-    (t) => {
-      const project = setUp(t);
+    (testContext) => {
+      const project = setUp(testContext);
       const version = printed.split(' ')[0];
       project.writeProjectFile(adding(`LABEL ${name}=${version}\n`));
       assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
@@ -362,8 +382,8 @@ for (const [name, harness, command, printed] of [
   );
 }
 
-test('the dev shim builds both images at every start, and --connect builds nothing', { skip }, (t) => {
-  const project = setUp(t, 'dev');
+test('the dev shim builds both images at every start, and --connect builds nothing', { skip }, (testContext) => {
+  const project = setUp(testContext, 'dev');
   project.writeProjectFile(adding());
   assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
   assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
