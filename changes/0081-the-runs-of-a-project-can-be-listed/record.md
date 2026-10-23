@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-23T14:24:42Z
 ---
 
@@ -24,3 +24,4 @@ timestamp: 2026-10-23T14:24:42Z
   followed output of unit 0080 is found from the listing, and the human's choice of the path of the current step's
   file over the files of every step. Added `followed` to the JSON document, what the command reads of the file, its
   tests and decision, and the files of every step as item 4 of "Beyond the request". The status is `draft`
+- 2026-10-23T16:30:14Z [human] approved the spec. The status is `approved`
