@@ -15,5 +15,5 @@ timestamp: 2026-10-23T14:24:42Z
   removing runs to a later unit. Made the unit as a feature. Numbered 0080: the highest number in `changes/` is 0079.
   Read the spec of 0075, "How a run ends" and "What .orchestrator holds" of `README.md`, and how `runStep` reads what a
   harness prints and `followPrinter` prints it. Wrote `spec.md`. The status is `draft`
-- 2026-10-23T15:25:27Z [human] approved the spec, without item 1 of "Beyond the request", which may be built later if it turns out to
-  be missed. The status is `approved`
+- 2026-10-23T15:25:27Z [human] approved the spec, without item 1 of "Beyond the request", which may be built later
+  if it turns out to be missed. The status is `approved`
