@@ -52,3 +52,10 @@ timestamp: 2026-10-23T14:24:42Z
   the `followedFile` tests and the sentence in `README.md` on lines missing are changed to match, and the double-failure
   test now has the append write part of the line. `npm test` reported 1087 passed, 0 failed and 30 skipped, and
   `npm run check-changes` passed, on the tree before this entry's commit. The status stays `in-progress`
+- 2026-10-23T16:56:32Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0080 at
+  `4451f6184b058701a640184a0111cfcc6bc17b2a`, compared with `00d0d0fb6aee82ca1e446a8dab4371dc644f81cf`.
+  Returned no new findings in `.reviews/0080-the-followed-output-of-a-run-is-kept/review-20261023T165632Z.md`.
+  `npm test`: 1087 passed, 0 failed, 30 Docker-dependent tests skipped. `npm run check-changes` and both delta and
+  merge-base whitespace checks passed. Independently checked partial-append recovery with repeated truncation failure
+  and a multibyte retained line using injected filesystem operations. Not verified: Docker-backed sandbox execution,
+  real-provider harness sessions, or a filesystem-induced write failure in a complete command run
