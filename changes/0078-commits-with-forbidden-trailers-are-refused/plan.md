@@ -223,7 +223,7 @@ before it records no kit version and is built again at the first start.
 
 ### The documents
 
-- [ ] `README.md`: add `## Git hooks` after "Installing it into a project" and its subsections, before "The project's
+- [x] `README.md`: add `## Git hooks` after "Installing it into a project" and its subsections, before "The project's
   settings", and add it to the table of contents. It says where `init` and `refresh` write the hook, the hooks
   directory git uses, `core.hooksPath` among it; its mark line; what it refuses, linking to the checker's entry rather
   than describing it again; what `init` does with a file already there and outside a git repository; what `refresh`
@@ -233,36 +233,36 @@ before it records no kit version and is built again at the first start.
   it; how a project with a hook of its own calls the checker from it, as `node
   node_modules/agentrite/container/check-commit-message.mjs "$1"` from the top of the work tree; and that the hook in
   the sandbox is in `SANDBOX.md` (R17)
-- [ ] `README.md`: add `### check-commit-message` after `### check-changes`, with its form, its one argument, the lines
+- [x] `README.md`: add `### check-commit-message` after `### check-changes`, with its form, its one argument, the lines
   it prints for a refused message and its closing sentence, what it prints for a file it cannot read and for wrong
   arguments, and its statuses 0, 1 and 2 by "Exit statuses" (R17)
-- [ ] `README.md`: add a line to `### agentrite init` and one to `### agentrite refresh` that each writes the hook,
+- [x] `README.md`: add a line to `### agentrite init` and one to `### agentrite refresh` that each writes the hook,
   linking to "Git hooks", and add the two notices to the order of notices each section gives. Add to "On a fresh
   clone" one sentence that `npx agentrite refresh` writes the hook, which a clone does not copy, linking to "Git
   hooks" (R17)
-- [ ] `README.md`: in "Updating a project to a newer kit", replace the paragraph about the group `tty` and its command
+- [x] `README.md`: in "Updating a project to a newer kit", replace the paragraph about the group `tty` and its command
   with one that says the first start of the sandbox after the update builds the image again, since the image records
   the release of the kit it was built from, and that the wrapper says so before it builds. In the list of what
   `refresh` writes there, add the hook (R16, R17)
-- [ ] `README.md`: in "What is here", let the row of `container/` name the commit-msg hook of the image and the checker
+- [x] `README.md`: in "What is here", let the row of `container/` name the commit-msg hook of the image and the checker
   of commit messages, and let the row of `templates/project/` stay true with the hook among the files `init` writes
   (R19)
-- [ ] `SANDBOX.md`: add `## Commit messages` after "Running on the tree as it is". It says what a reader sees when a
+- [x] `SANDBOX.md`: add `## Commit messages` after "Running on the tree as it is". It says what a reader sees when a
   commit is refused in the container, the checker's lines and sentence; that it is the rule of the host's hook, run
   by the same checker; that git in the container runs the image's hooks only, so that the hooks of a repository
   mounted with `--in-place` or `--workdir` and of a hooks directory that its configuration names, as `npm ci` may set
   in a clone, are not run there, and that a project runs its own checks as commands; and that the image is built again
   at the first start after an update of the kit, saying so (R18)
-- [ ] `SANDBOX.md`: in "What the sandbox defends against", add that git in the container runs the image's hook, which
+- [x] `SANDBOX.md`: in "What the sandbox defends against", add that git in the container runs the image's hook, which
   the agent cannot write, and not the clone's, and add to what it does not defend against `--no-verify` and a command
   that sets `core.hooksPath` itself. Remove the entry "Claude Code in the sandbox does not ring the bell, while
   OpenCode does" from "When something goes wrong", by the human's decision recorded in `record.md`. Check that no
   link to the removed entry is left, and that the README paragraph that linked to it is the one replaced above (R18)
-- [ ] `CONTRIBUTING.md`: check that "What the repository holds besides the package" needs no row, since the unit adds
+- [x] `CONTRIBUTING.md`: check that "What the repository holds besides the package" needs no row, since the unit adds
   nothing at the root of the repository, and that "The kit's own tests" stays true with the new container test
   skipped on a host without Docker (R19)
-- [ ] Check every line the unit changed is within 120 characters and that `SANDBOX.md` holds no HTML
-- [ ] Commit point 5, below
+- [x] Check every line the unit changed is within 120 characters and that `SANDBOX.md` holds no HTML
+- [x] Commit point 5, below
 
 ## Verification
 
@@ -282,4 +282,4 @@ before it records no kit version and is built again at the first start.
   file's `core.hooksPath`, and their tests
 - [x] `feature-0078 Give the wrapper's fake hosts the kit's version label`: the fixture alone, behavior unchanged
 - [x] `feature-0078 Build the image again for a new kit`: the label, the build argument, the wrapper, and their tests
-- [ ] `feature-0078 Describe the commit-msg hook`: `README.md` and `SANDBOX.md`
+- [x] `feature-0078 Describe the commit-msg hook`: `README.md` and `SANDBOX.md`

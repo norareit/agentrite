@@ -24,6 +24,7 @@ A project can add roles of its own as well. See [Adding a role](#adding-a-role).
 * [Running a role](#running-a-role)
 * [The orchestrator](#the-orchestrator)
 * [Installing it into a project](#installing-it-into-a-project)
+* [Git hooks](#git-hooks)
 * [The project's settings](#the-projects-settings)
 * [Replacing a role or the standards](#replacing-a-role-or-the-standards)
 * [Adding a role](#adding-a-role)
@@ -45,21 +46,21 @@ The "rite" is also Ritenoar's, whose projects carry it.
 
 ## What is here
 
-| Path                 | What it holds                                                                     |
-|----------------------|-----------------------------------------------------------------------------------|
-| `process.md`         | How work is done: the changes process, the roles, the commit prefixes             |
-| `standards.md`       | The rules on how text, documentation, commits, code and tests are written         |
-| `orchestrator.json`  | The orchestrator's default definition, which a project may copy and change        |
-| `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it          |
-| `README.md`          | What the kit is and how a project uses it                                         |
-| `LICENSE`            | The MIT License, which the kit is open source under                               |
-| `SANDBOX.md`         | The reference of the sandbox                                                      |
-| `package.json`       | The package's name, its version and the commands it installs                      |
-| `roles/`             | The specifier, planner, implementer and reviewer instructions                     |
-| `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit               |
-| `templates/project/` | The files `agentrite init` fills in and writes, and the one `config` writes       |
-| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` command                |
-| `container/`         | The agent sandbox: image, entrypoint, egress proxy, base Compose file and wrapper |
+| Path                 | What it holds                                                                             |
+|----------------------|-------------------------------------------------------------------------------------------|
+| `process.md`         | How work is done: the changes process, the roles, the commit prefixes                     |
+| `standards.md`       | The rules on how text, documentation, commits, code and tests are written                 |
+| `orchestrator.json`  | The orchestrator's default definition, which a project may copy and change                |
+| `CHANGELOG.md`       | What each release changed, and what is worth knowing when updating to it                  |
+| `README.md`          | What the kit is and how a project uses it                                                 |
+| `LICENSE`            | The MIT License, which the kit is open source under                                       |
+| `SANDBOX.md`         | The reference of the sandbox                                                              |
+| `package.json`       | The package's name, its version and the commands it installs                              |
+| `roles/`             | The specifier, planner, implementer and reviewer instructions                             |
+| `templates/changes/` | The starting `spec.md`, `plan.md` and `record.md` for a change unit                       |
+| `templates/project/` | The files `agentrite init` writes, its `commit-msg` hook among them, and `config`'s       |
+| `scripts/`           | `check-changes.mjs`, the freeze check, and the `agentrite` command                        |
+| `container/`         | The agent sandbox: image, entrypoint, egress proxy, Compose file, wrapper, commit checker |
 
 Nothing here names a particular project. A rule that would need rewording to make sense elsewhere belongs in the
 project's own `AGENTS.md`, which links here for the rest.
@@ -111,8 +112,9 @@ npx agentrite init
 ```
 
 Sets a project up, from its root: writes `agentrite.json`, the wrappers of every role `roles` names, the list of the
-instruction files in use, the project's agent instructions and the sandbox's files, writes or amends `opencode.json`
-with `opencode`, and prints each file it wrote, changed or skipped. The first form is for a project with no
+instruction files in use, the project's agent instructions, the sandbox's files and the `commit-msg` hook, writes or
+amends `opencode.json` with `opencode`, and prints each file it wrote, changed or skipped. The hook is written as
+[Git hooks](#git-hooks) says. The first form is for a project with no
 `agentrite.json`, and writes that file from its arguments. The second is for a project that has one, and takes the
 harnesses and the sandbox setting from it.
 
@@ -187,11 +189,11 @@ agents then do not learn from it which role and standards files the project uses
 
 The notices come in this order: the sections of `AGENTS.md`, the notice of `AGENTS.md` and the list, the lines
 `CLAUDE.md` lacks, the kit's standards in `CLAUDE.md`, an `opencode.json` that cannot be amended, the kit's standards
-in `opencode.json`.
+in `opencode.json`, and last that no hook was written, outside a git repository.
 
-With `--no-sandbox`, or with `sandbox` `false` in the file, `init` writes the role wrappers, the list, `AGENTS.md`
-and `CLAUDE.md`, amends `package.json`, writes or amends `opencode.json` with `opencode`, and prints the same lines and
-notices for them. It does not write, change or
+With `--no-sandbox`, or with `sandbox` `false` in the file, `init` writes the role wrappers, the list, `AGENTS.md`,
+`CLAUDE.md` and the hook, amends `package.json`, writes or amends `opencode.json` with `opencode`, and prints the same
+lines and notices for them. It does not write, change or
 read `sandbox.sh`, `sandbox/compose.project.yml` or `.dockerignore`, prints no line for any of the three, and leaves
 one that exists as it is. It runs when `package.json` has no `name`, and does not read `package-lock.json`. It still
 refuses, writing nothing, when `package.json` is missing or cannot be read. The option goes at any place among the
@@ -204,8 +206,8 @@ once. The form `--no-orchestrator=<value>` is not taken, and is refused as an un
 
 It exits with `0`, `1` when it refuses or fails, and `2` for wrong arguments, as [Exit statuses](#exit-statuses) says.
 
-See "Installing it into a project", "How the kit's instructions reach an agent", "The project's settings" and
-"Replacing a role or the standards".
+See "Installing it into a project", "Git hooks", "How the kit's instructions reach an agent", "The project's
+settings" and "Replacing a role or the standards".
 
 ### agentrite config
 
@@ -246,7 +248,8 @@ matter "Replacing a role or the standards" gives is refused: `refresh` names the
 have, writes nothing and exits 1. It then writes the list `.agentrite/instructions.md` from `standards` and `roles`,
 whatever is at its path. With `sandbox` `true` it refreshes `sandbox.sh` too, and writes one that is missing. With
 `sandbox` `false`, `sandbox.sh` is not read or written and no line is printed for it: what is at its path, a symbolic
-link or a directory included, changes neither what `refresh` prints nor its exit status.
+link or a directory included, changes neither what `refresh` prints nor its exit status. After them it writes the
+`commit-msg` hook where there is none, and rewrites one that carries the kit's mark, as [Git hooks](#git-hooks) says.
 
 After the lines of the files and before the notices, `refresh` removes the wrapper of a role that `roles` no longer
 names, as a role taken out or renamed leaves one. In the wrapper directory of each harness that `harnesses` names, it
@@ -269,12 +272,13 @@ It reads `AGENTS.md` too, whatever the harnesses, and never writes it. For one t
 text `.agentrite/instructions.md`, it prints a notice: that agents then do not learn from `AGENTS.md` which role and
 standards files the project uses, that `refresh` does not change `AGENTS.md`, and where the README says what it must
 hold. The notices come in this order: the lines `CLAUDE.md` lacks, the kit's standards in it, what `opencode.json`
-lacks, the kit's standards in it, then `AGENTS.md`. None of them changes what `refresh` writes or its exit status.
+lacks, the kit's standards in it, `AGENTS.md`, then the hook's: a hook of the project's own at its path, or none
+written outside a git repository. None of them changes what `refresh` writes or its exit status.
 
 It exits with `0`, `1` when it refuses or fails, and `2` for an argument, as [Exit statuses](#exit-statuses) says.
 
-See "Updating a project to a newer kit", "How the kit's instructions reach an agent", "The project's settings" and
-"Replacing a role or the standards".
+See "Updating a project to a newer kit", "Git hooks", "How the kit's instructions reach an agent", "The project's
+settings" and "Replacing a role or the standards".
 
 ### agentrite roles
 
@@ -463,6 +467,36 @@ It exits with `0`, `1` for units at fault or a check that failed, and `2` for mo
 refuses with its usage and without checking anything, as [Exit statuses](#exit-statuses) says.
 
 See "Installing it into a project" and "The project's settings".
+
+### check-commit-message
+
+```sh
+node node_modules/agentrite/container/check-commit-message.mjs <commit message file>
+```
+
+The check of a commit message against the trailers the standards forbid, which the `commit-msg` hook of the project
+and that of the sandbox run. It reads the file and refuses the message when a line of it starts with `Co-Authored-By:`
+or `Claude-Session:`, the name in any case, as git reads a trailer's name, with nothing before it and the colon right
+after it. A line that starts with `#` is not read, and a name anywhere but at the start of a line refuses nothing.
+
+For a message it does not refuse it prints nothing. For one it refuses it prints on standard error, for each
+offending line, `line <number>: <line>`, with the line's number in the file and the line as written, and then:
+
+```
+The standards forbid the trailers Co-Authored-By and Claude-Session, so remove these lines and make the commit again.
+```
+
+A file it cannot read it refuses with `check-commit-message: cannot read <path>: <reason>`.
+
+| Argument or option      | What it is                                                                  |
+|-------------------------|-----------------------------------------------------------------------------|
+| `<commit message file>` | The file that holds the message, as git gives it to a `commit-msg` hook     |
+
+It exits with `0` for a message it does not refuse, `1` for one it refuses or a file it cannot read, and `2` for no
+path or more than one, which it refuses with what is wrong and its usage, reading nothing, as
+[Exit statuses](#exit-statuses) says.
+
+See "Git hooks".
 
 ### sandbox.sh
 
@@ -990,6 +1024,7 @@ It prints each file it wrote, changed or skipped. It writes:
 | `opencode.json`               | For `opencode`: loads `process.md` and the standards. Amended if present             |
 | `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "The sandbox"        |
 | `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                      |
+| `.git/hooks/commit-msg`       | The hook that refuses a commit message the standards forbid. See "Git hooks"         |
 
 * Every generated file is the project's own once written, and the project may edit any of them, but for the list
   `.agentrite/instructions.md`, which `refresh` writes as `agentrite.json` gives it. The list is committed, as the
@@ -1154,9 +1189,69 @@ the sandbox admits the hosts they need itself. See "Reaching more hosts" of `SAN
 runs the wrapper from `node_modules`, though, so a fresh clone needs `npm ci` on the host before its sandbox can
 start.
 
+A clone does not copy git's hooks, so a fresh clone has no `commit-msg` hook until `npx agentrite refresh` writes it.
+See [Git hooks](#git-hooks).
+
 The kit is a development dependency. An install that leaves those out, as `npm ci --omit=dev` and an `npm ci` with
 `NODE_ENV=production` do, installs no kit, and `npx agentrite` and `npm run check-changes` do not run there. A job
 that runs the change check therefore installs with a plain `npm ci`.
+
+## Git hooks
+
+The kit puts one git hook in a project, `commit-msg`, which git runs after a commit message is written and before
+the commit is made. It refuses a message that holds a trailer the standards forbid, `Co-Authored-By` or
+`Claude-Session`, and git then makes no commit and shows what it printed. The rule is the one
+[check-commit-message](#check-commit-message) gives, since the hook runs that checker.
+
+The hook is written into the hooks directory that git uses for the project: `.git/hooks` unless the project sets
+`core.hooksPath`, which git then reads in its place, a directory outside the project included. In a linked worktree
+it is the hooks directory of the repository the worktree belongs to. `init` and `refresh` print its path relative to
+the project root when it is under it, as `.git/hooks/commit-msg`, and as it is otherwise.
+
+The hook is a shell script the owner may execute. Its second line is the kit's mark:
+
+```sh
+# agentrite: commit-msg hook
+```
+
+It finds the top of the work tree that git runs it in and runs
+`node <top>/node_modules/agentrite/container/check-commit-message.mjs` with the path git gives it, so it uses the
+checker of the kit installed in that work tree. When it cannot run the checker it refuses the commit too, and says
+which of the two it is and what to do:
+
+* `commit-msg: the commit message checker is not at <path>.`, when the work tree has no kit under `node_modules`. Its
+  dependencies are installed in that work tree, as with `npm ci`, and the commit is made again. Each worktree needs
+  its own, as the project's other commands do
+* `commit-msg: node is not on the PATH that git gives the hook, ...`, when git was started with a `PATH` that holds
+  no `node`, as a git client outside a terminal may be. `node` is made reachable from git, and the commit is made
+  again
+
+What `init` and `refresh` do with it:
+
+* `init` writes the hook where nothing is at its path, making the hooks directory when it is missing, and prints
+  `wrote <path>`. A file already there, of whatever content, it leaves as it is, and prints
+  `skipped <path>, which exists`
+* `refresh` writes the hook where nothing is at its path, and prints `wrote <path>`. A regular file that holds the
+  mark as a line of its own is the kit's: it rewrites it as this release writes it, and makes it executable, printing
+  `refreshed <path>`, or `up to date <path>` when there was nothing to change. Anything else at the path, a file
+  without the mark or a symbolic link among it, is the project's own: it leaves it as it is, prints no line for it,
+  and prints a notice that the hook at that path is not the kit's, that commit messages are then not checked for the
+  trailers unless that hook calls the checker, and that this section says how
+* Outside a git repository neither writes a hook. Each prints a notice that no hook was written and why, that the
+  project is not inside a git repository or that git could not be run, with what git said. The notice changes
+  neither what else they write nor their exit status
+
+A project with a `commit-msg` hook of its own keeps it, and calls the checker from it, from the top of the work tree:
+
+```sh
+node node_modules/agentrite/container/check-commit-message.mjs "$1" || exit 1
+```
+
+A project that does not want the hook puts a file of its own at the path, which `refresh` then leaves as it is.
+
+`git commit --no-verify` skips the hook, and a commit that git makes without running `commit-msg`, as some steps of
+`cherry-pick`, `revert` and `rebase` do, is not checked. The hook in the sandbox is the image's, and the clone's is
+not run there. See "Commit messages" in [`SANDBOX.md`](SANDBOX.md).
 
 ## The project's settings
 
@@ -1400,13 +1495,8 @@ refused. The line, after `sandbox`, with `false` for a project that wants no bel
   "bell": true,
 ```
 
-A project whose sandbox image was built before the kit made the agent a member of the group `tty` builds it again
-once, for Claude Code in the sandbox to ring, since the wrapper does not build it again for a new kit. See "Claude
-Code in the sandbox does not ring the bell, while OpenCode does" in "When something goes wrong" of `SANDBOX.md`:
-
-```sh
-./sandbox.sh --in-place --rebuild
-```
+The first start of the sandbox after the update builds its image again, since the image records the release of the
+kit it was built from, and the wrapper says so before it builds.
 
 Then bring the kit's own files in the project up to date, from the project root:
 
@@ -1415,8 +1505,9 @@ npx agentrite refresh
 ```
 
 It rewrites the role wrappers of the harnesses that `agentrite.json` names, the list `.agentrite/instructions.md`,
-and `sandbox.sh`, as the new release writes them, writes any that are missing, and prints each file as written,
-refreshed or up to date. The list is committed with the wrappers. Without it those
+`sandbox.sh`, and the `commit-msg` hook when it carries the kit's mark, as the new release writes them, writes any
+that are missing, and prints each file as written, refreshed or up to date. A hook of the project's own is left as it
+is, with a notice, as [Git hooks](#git-hooks) says. The list is committed with the wrappers. Without it those
 copies stay as an older release wrote them, and nothing says so. In a project whose `agentrite.json` says `sandbox`
 `false`, it leaves `sandbox.sh` out, so that one the project removed on purpose is not written back.
 

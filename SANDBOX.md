@@ -7,6 +7,7 @@ option, are in "Commands" of [`README.md`](README.md), and what the sandbox conf
 * [Getting the work back](#getting-the-work-back)
 * [Two agents on one unit](#two-agents-on-one-unit)
 * [Running on the tree as it is](#running-on-the-tree-as-it-is)
+* [Commit messages](#commit-messages)
 * [Logging in](#logging-in)
 * [Reaching more hosts](#reaching-more-hosts)
 * [Holding a harness version](#holding-a-harness-version)
@@ -246,6 +247,32 @@ In a run with `--in-place` or `--workdir`, the host and the sandbox share one `n
 side writes into the same directory. A unit run has a clone with a `node_modules` of its own, which the host never
 installs into. For what an install on the other side changes, see "When something goes wrong".
 
+## Commit messages
+
+A commit in the sandbox whose message holds a trailer the standards forbid, `Co-Authored-By` or `Claude-Session`, is
+refused, and git makes no commit. `git commit` prints each offending line and what to do, and exits 1:
+
+```
+line 3: Co-Authored-By: Claude <noreply@anthropic.com>
+The standards forbid the trailers Co-Authored-By and Claude-Session, so remove these lines and make the commit again.
+```
+
+The same commit without those lines is made. It is the rule of the project's own `commit-msg` hook on the host, run
+by the same checker, as "Git hooks" in [`README.md`](README.md) says.
+
+* The hook is the image's, and not the clone's: git in the container runs the hooks of a directory in the image,
+  which the agent cannot write. It holds in a unit run, with `--in-place`, `--workdir` and `--mount`, and in a command
+  of `--connect`, and in a unit run's clone before `npm ci`, since nothing of the project is needed for it
+* Git in the container runs the image's hooks only. The hooks of a repository mounted with `--in-place` or
+  `--workdir`, and those of a hooks directory that its configuration names, as `npm ci` may set in a clone, are not
+  run there. A project runs its own checks in the sandbox as commands
+* The image holds the hook of the kit it was built from. The first start after an update of the kit builds the image
+  again, and the wrapper says so before it builds:
+
+  ```
+  sandbox.sh: the image was built from the kit 8.0.0 and 8.1.0 is installed. Rebuilding.
+  ```
+
 ## Logging in
 
 A harness is logged in to its model provider from the sandbox's shell, and the login is kept:
@@ -386,8 +413,8 @@ The image is built anew at a start:
 
 * when the content of `sandbox/Dockerfile` is not the content the image was built from, which the image records as
   a label, and when the file was added or removed since the image was built. The wrapper says so
-* whenever the kit's image is built, for a reason in "Holding a harness version" or because there is none. The
-  project's file is then built on it in the same start
+* whenever the kit's image is built, for a reason in "Holding a harness version", for an update of the kit as
+  "Commit messages" says, or because there is none. The project's file is then built on it in the same start
 * with `--rebuild`, which builds both
 
 Otherwise a start builds nothing, and needs no network.
@@ -570,6 +597,8 @@ that agent:
 * nothing reaches the host's repository but the commits of the unit's branch and the files under `.reviews` and
   `.orchestrator`
 * a git hook, a line in `.git/config` and a file in `node_modules` stay in the clone
+* a commit in the container runs the image's `commit-msg` hook, which the agent cannot write, and not a hook of the
+  clone
 
 It does not defend against:
 
@@ -578,6 +607,8 @@ It does not defend against:
 * what a review file says, to a human or to an agent that reads it on the host
 * what a file under `.orchestrator` says, to a human or a program that reads it on the host
 * a run with `--in-place` or `--workdir`, which mounts a directory as it is
+* a commit made with `git commit --no-verify`, which skips the hook, or by a command that sets `core.hooksPath`
+  itself
 * a flaw in git's handling of a fetch from a hostile repository, or in Docker
 * the saved logins. Where they are is in "Where things are kept on the host"
 * what is in the project's log directory, which is one more place of the host that such an agent writes, in every
@@ -776,18 +807,6 @@ Why: the kit checks no version of either harness. What it promises for no versio
 
 What to do, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that
 works in the project's `sandbox/compose.project.yml`.
-
-**Claude Code in the sandbox does not ring the bell, while OpenCode does.**
-
-Why: the image was built before the kit made the agent a member of the group `tty`, which Claude Code's hooks need
-to reach the session's terminal. The wrapper builds the image again when a harness version changes, and not for a
-new kit.
-
-What to do: build the image again, once:
-
-```sh
-./sandbox.sh --in-place --rebuild
-```
 
 **The container cannot reach the model of the local model server.**
 

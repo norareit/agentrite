@@ -69,3 +69,11 @@ timestamp: 2026-10-22T22:02:19Z
   answer would have changed what the wrapper reads before it reads the kit's label, and the commit would not have been
   one of no behavior. The real `docker` answers only what its format asks, so the fake is the closer for it. The suite
   passes on the fixture commit, 1087 tests and none skipped
+- 2026-10-23T11:55:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the checker's closing text one
+  sentence, as requirement 5 asks: it had been two, and at 134 characters it broke the line limit in the code block of
+  `README.md` that shows it. The sentence now reads that the standards forbid the two trailers, so the lines are to be
+  removed and the commit made again, and it fits in 117 characters. `SANDBOX.md` shows the refusal in "Commit messages"
+  although its message names both why and what to do, since requirement 18 asks for what a reader sees when the hook
+  refuses a commit in the container. `CONTRIBUTING.md` needs no change: the unit adds nothing at the root of the
+  repository, and "The kit's own tests" already says that a host without Docker skips the tests that need it, which the
+  new container test does
