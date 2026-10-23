@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-23T15:12:33Z
 ---
 
@@ -21,3 +21,5 @@ timestamp: 2026-10-23T15:12:33Z
   it; a file the project ignores is not named among the files that differ, as `git status` names none; the entry
   ends as the record's lines end; a `## Log` with no entry gets the entry under its heading after one blank line;
   and `package.json` lists the new module in `files`, since the command imports it. The status stays `approved`
+- 2026-10-23T22:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on
+  `feature-0082-a-unit-can-be-approved-by-a-command` at `448b17b`. The status is `in-progress`

@@ -101,12 +101,12 @@ change, since the command is nothing a developer does with the sandbox.
 
 ## Tasks
 
-- [ ] Add to the new `tests/agentrite-approve.test.mjs` the unit tests of `parseApproveArgs`: `['0082']` and
+- [x] Add to the new `tests/agentrite-approve.test.mjs` the unit tests of `parseApproveArgs`: `['0082']` and
   `['changes/0082-x/']` give `{ unit }` as given; `[]` throws `no unit given`, `['0082', '0083']` `unexpected
   argument: 0083`, `['0082', '--json']` and `['--json', '0082']` `unknown option: --json`, `['-x', '0082']` `unknown
   option: -x`, `['--', '0082']` and `['0082', '--']` `unexpected argument: --`, each followed by a line feed and
   `APPROVE_FORM` (R2, R11, R15)
-- [ ] Add to it the unit tests of the rest of the module: `recordFields` gives the status and the kind, and throws,
+- [x] Add to it the unit tests of the rest of the module: `recordFields` gives the status and the kind, and throws,
   naming the file, for a record without `status`, without `kind`, without `## Log`, and with the kind `epic`;
   `approvalEntry` and `approvalMessage` for `feature`, `bug` and `task`, giving `spec`, `spec` and `record` and the
   prefixes `feature`, `bugfix` and `task`; `approvedRecord` changes the status line alone of the front matter, keeping
@@ -115,7 +115,7 @@ change, since the command is nothing a developer does with the sandbox.
   lines, with the rest of the text as it was; puts it under a `## Log` with no entry after one blank line; and ends it
   with `\r\n` in a record whose lines end so; `uncommittedFiles` with a prefix and without, for each state;
   `uncommittedRefusal`; and `approvedLine` (R3, R4, R5, R6, R9, R10, R15)
-- [ ] Write `scripts/agentrite-approve.mjs` as the approach gives it, until the tests of the two tasks above pass
+- [x] Write `scripts/agentrite-approve.mjs` as the approach gives it, until the tests of the two tasks above pass
   (R2, R3, R4, R5, R6, R9, R10, R11)
 - [ ] Add to `tests/agentrite-approve.test.mjs` a fixture of the command: a base with a `home` holding a `.gitconfig`
   of a name and an email, and a `project` made by `git init --quiet --initial-branch master`, with `installKit`, an
@@ -174,6 +174,6 @@ change, since the command is nothing a developer does with the sandbox.
 
 ## Commit Points
 
-- [ ] `feature-0082 Add the pure parts of the approval`: the first three tasks
+- [x] `feature-0082 Add the pure parts of the approval`: the first three tasks
 - [ ] `feature-0082 Approve a unit by a command`: the fourth to eleventh tasks
 - [ ] `feature-0082 Document the command approve`: the tasks of `README.md` and `process.md`
