@@ -31,6 +31,7 @@ import {
   ranTable,
   stepLine,
 } from '../scripts/agentrite-orchestrate.mjs';
+import { instantOf } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
 import { readOutcome } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
@@ -1911,4 +1912,9 @@ test('with --follow a message of a step is printed while the step still runs', a
   process.kill(child.pid, 'SIGTERM');
   assert.equal((await exited).signal, 'SIGTERM');
   assert.ok(await gone(harness), `the harness ${harness} is left`);
+});
+
+test('instantOf gives an instant in UTC to the second', () => {
+  assert.equal(instantOf(Date.UTC(2026, 9, 23, 10, 0, 5, 900)), '2026-10-23T10:00:05Z');
+  assert.equal(instantOf(Date.UTC(2026, 0, 2, 3, 4, 5)), '2026-01-02T03:04:05Z');
 });

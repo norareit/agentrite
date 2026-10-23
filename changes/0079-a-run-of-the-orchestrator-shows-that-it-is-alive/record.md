@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-23T14:24:42Z
 ---
 
@@ -25,3 +25,5 @@ timestamp: 2026-10-23T14:24:42Z
   the unit's branch at `1ebe83b`. Read `orchestrateCommand`, `makeRunDirectory` and the command's tests. Wrote
   `plan.md`: the heartbeat and the whole writes in `scripts/agentrite.mjs`, with no new module, and the command's
   tests waiting the real 10 seconds rather than a shorter interval. The status is `approved`
+- 2026-10-23T15:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a session on the Linux
+  host, on the unit's branch at `4eb9f8f`, began the work. The status is `in-progress`

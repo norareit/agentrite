@@ -63,7 +63,7 @@ already says that a file under `.orchestrator` is what an agent may have written
 
 ## Tasks
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, import `instantOf` from `../scripts/agentrite.mjs`, and add a test
+- [x] In `tests/agentrite-orchestrate.test.mjs`, import `instantOf` from `../scripts/agentrite.mjs`, and add a test
   that `instantOf(Date.UTC(2026, 9, 23, 10, 0, 5, 900))` gives `2026-10-23T10:00:05Z` and `instantOf(Date.UTC(2026,
   0, 2, 3, 4, 5))` gives `2026-01-02T03:04:05Z`. Run `npm test` and see it fail. In `scripts/agentrite.mjs`, add and
   export `instantOf(time)` of the approach, with a doc comment, and make `makeRunDirectory` name the run by
@@ -147,7 +147,7 @@ already says that a file under `.orchestrator` is what an agent may have written
 
 ## Commit Points
 
-- [ ] `feature-0079 Name a run's instant in one place`: the first task, which changes no behavior
+- [x] `feature-0079 Name a run's instant in one place`: the first task, which changes no behavior
 - [ ] `feature-0079 Write a file of a run's directory whole`: the second and third tasks
 - [ ] `feature-0079 Beat a heartbeat`: the fourth and fifth tasks
 - [ ] `feature-0079 Keep a heartbeat in a run's directory`: the sixth and seventh tasks

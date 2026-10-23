@@ -1279,6 +1279,16 @@ function checkApproved(root, directory) {
 }
 
 /**
+ * The instant of `time`, milliseconds since the epoch, in UTC to the second, as `2026-10-23T10:00:05Z`.
+ *
+ * @param {number} time
+ * @returns {string}
+ */
+export function instantOf(time) {
+  return new Date(time).toISOString().replace(/\.\d+Z$/, 'Z');
+}
+
+/**
  * Makes the directory of a new run of the unit, after making sure that `.orchestrator/.gitignore` holds `*` alone,
  * and returns its path from the root. It is named by the instant the run started, and made without `recursive`, so
  * that a second run in the same second fails rather than mixing with the first.
@@ -1293,7 +1303,7 @@ function makeRunDirectory(root, directory) {
   if (!isRegularFile(ignore) || readFileSync(ignore, 'utf-8') !== '*\n') writeFileSync(ignore, '*\n');
   const unitDirectory = join(ORCHESTRATOR_DIRECTORY, directory);
   mkdirSync(resolve(root, unitDirectory), { recursive: true });
-  const run = join(unitDirectory, new Date().toISOString().replace(/\.\d+Z$/, 'Z'));
+  const run = join(unitDirectory, instantOf(Date.now()));
   mkdirSync(resolve(root, run));
   return run;
 }
