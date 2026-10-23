@@ -25,3 +25,7 @@ timestamp: 2026-10-23T14:24:42Z
   file over the files of every step. Added `followed` to the JSON document, what the command reads of the file, its
   tests and decision, and the files of every step as item 4 of "Beyond the request". The status is `draft`
 - 2026-10-23T16:30:14Z [human] approved the spec. The status is `approved`
+- 2026-10-23T17:14:02Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0081-the-runs-of-a-project-can-be-listed` at `d01d9ae`, wrote `plan.md`. Read the branch with
+  `git symbolic-ref`, and planned a git that cannot be run as a failure that exits 1 before anything is written, since
+  requirement 1 gives `null` only for a detached `HEAD` and a root in no repository. The status is `approved`
