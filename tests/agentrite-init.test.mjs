@@ -1775,15 +1775,15 @@ function git(base, ...args) {
 }
 
 // A project of `project` that is a git repository.
-function repositoryProject(t) {
-  const made = project(t);
+function repositoryProject(testContext) {
+  const made = project(testContext);
   git(made.base, 'init', '-q');
   return made;
 }
 
 // R7, R21
-test('init writes the commit-msg hook into the hooks directory of the repository, executable by the owner', (t) => {
-  const { base, run, read } = repositoryProject(t);
+test('init writes the commit-msg hook into the repository hooks directory, executable by the owner', (testContext) => {
+  const { base, run, read } = repositoryProject(testContext);
 
   const result = run('init', 'claude');
 
@@ -1795,8 +1795,8 @@ test('init writes the commit-msg hook into the hooks directory of the repository
 });
 
 // R7, R21
-test('init writes the hook where core.hooksPath points, making the directory', (t) => {
-  const { base, run, read } = repositoryProject(t);
+test('init writes the hook where core.hooksPath points, making the directory', (testContext) => {
+  const { base, run, read } = repositoryProject(testContext);
   git(base, 'config', 'core.hooksPath', 'tools/hooks');
 
   const result = run('init', 'claude');
@@ -1808,9 +1808,9 @@ test('init writes the hook where core.hooksPath points, making the directory', (
 });
 
 // R7, R21
-test('init prints the absolute path of a hooks directory outside the project', (t) => {
-  const { base, run } = repositoryProject(t);
-  const outside = join(temporaryDirectory(t, 'agentrite-init-hooks-'), 'hooks');
+test('init prints the absolute path of a hooks directory outside the project', (testContext) => {
+  const { base, run } = repositoryProject(testContext);
+  const outside = join(temporaryDirectory(testContext, 'agentrite-init-hooks-'), 'hooks');
   git(base, 'config', 'core.hooksPath', outside);
 
   const result = run('init', 'claude');
@@ -1821,8 +1821,8 @@ test('init prints the absolute path of a hooks directory outside the project', (
 });
 
 // R9, R21
-test('init leaves a file already at the path of the hook as it is, and says it skipped it', (t) => {
-  const { base, run, read } = repositoryProject(t);
+test('init leaves a file already at the path of the hook as it is, and says it skipped it', (testContext) => {
+  const { base, run, read } = repositoryProject(testContext);
   const own = '#!/bin/sh\necho ours\n';
   mkdirSync(join(base, '.git/hooks'), { recursive: true });
   writeFileSync(join(base, '.git/hooks/commit-msg'), own);
@@ -1835,10 +1835,10 @@ test('init leaves a file already at the path of the hook as it is, and says it s
 });
 
 // R11, R21
-test('init outside a git repository writes no hook, notices why after its other notices, and writes the rest', (t) => {
-  const { base, run } = project(t);
+test('init outside a git repository writes no hook, notices why last, and writes the rest', (testContext) => {
+  const { base, run } = project(testContext);
   writeFileSync(join(base, 'AGENTS.md'), '# Our own instructions\n');
-  const given = repositoryProject(t);
+  const given = repositoryProject(testContext);
   const expected = given.run('init', 'claude');
 
   const result = run('init', 'claude');
@@ -1858,8 +1858,8 @@ test('init outside a git repository writes no hook, notices why after its other 
 });
 
 // R7, R21
-test('init --no-sandbox writes the hook too', (t) => {
-  const { run, read } = repositoryProject(t);
+test('init --no-sandbox writes the hook too', (testContext) => {
+  const { run, read } = repositoryProject(testContext);
 
   const result = run('init', OPTION, 'claude');
 

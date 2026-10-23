@@ -13,8 +13,8 @@ const CHECKER = 'node_modules/agentrite/container/check-commit-message.mjs';
 const REFUSED = /The standards forbid the trailers Co-Authored-By and Claude-Session, so remove these lines/;
 
 // A repository set up by `init`, with the kit installed as a project installs it, and a first commit.
-function repository(t) {
-  const base = temporaryDirectory(t, 'commit-msg-hook-');
+function repository(testContext) {
+  const base = temporaryDirectory(testContext, 'commit-msg-hook-');
   const root = join(base, 'project');
   mkdirSync(root);
   writeFileSync(join(root, 'package.json'), '{\n  "name": "my-app"\n}\n');
@@ -51,8 +51,8 @@ function repository(t) {
 
 // R12, R22
 for (const trailer of ['Co-Authored-By: Claude <noreply@anthropic.com>', 'Claude-Session: https://example.com/a']) {
-  test(`git commit -m is refused for a message with ${trailer.split(':')[0]}, and made without it`, (t) => {
-    const { git, head, change } = repository(t);
+  test(`git commit -m is refused for a message with ${trailer.split(':')[0]}, and made without it`, (testContext) => {
+    const { git, head, change } = repository(testContext);
     change('one');
     const before = head();
 
@@ -71,8 +71,8 @@ for (const trailer of ['Co-Authored-By: Claude <noreply@anthropic.com>', 'Claude
 }
 
 // R12, R22
-test('a message written by an editor is refused with a trailer, and made without it', (t) => {
-  const { base, git, head, change } = repository(t);
+test('a message written by an editor is refused with a trailer, and made without it', (testContext) => {
+  const { base, git, head, change } = repository(testContext);
   change('one');
   const before = head();
   const editor = (message) => {
@@ -96,8 +96,8 @@ test('a message written by an editor is refused with a trailer, and made without
 });
 
 // R12, R22
-test('git commit --amend that adds a trailer is refused, and leaves the commit as it was', (t) => {
-  const { git, ok, head } = repository(t);
+test('git commit --amend that adds a trailer is refused, and leaves the commit as it was', (testContext) => {
+  const { git, ok, head } = repository(testContext);
   const before = head();
   const message = ok(['log', '-1', '--format=%B']);
 
@@ -109,8 +109,8 @@ test('git commit --amend that adds a trailer is refused, and leaves the commit a
 });
 
 // R8, R22
-test('a commit is refused with the hook message when the checker is not under node_modules', (t) => {
-  const { root, git, head, change } = repository(t);
+test('a commit is refused with the hook message when the checker is not under node_modules', (testContext) => {
+  const { root, git, head, change } = repository(testContext);
   change('one');
   const before = head();
   renameSync(join(root, CHECKER), join(root, `${CHECKER}.away`));
@@ -124,8 +124,8 @@ test('a commit is refused with the hook message when the checker is not under no
 });
 
 // R8, R22
-test('a commit is refused with the hook message when node is not on the PATH git gives the hook', (t) => {
-  const { base, git, head, change } = repository(t);
+test('a commit is refused with the hook message when node is not on the PATH git gives the hook', (testContext) => {
+  const { base, git, head, change } = repository(testContext);
   change('one');
   const before = head();
   // A PATH that holds git and no node.

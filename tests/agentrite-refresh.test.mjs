@@ -1208,8 +1208,8 @@ function git(base, ...args) {
 }
 
 // A project of `project` that is a git repository, with the kit's other files up to date.
-function repositoryProject(t) {
-  const made = project(t);
+function repositoryProject(testContext) {
+  const made = project(testContext);
   git(made.base, 'init', '-q');
   return made;
 }
@@ -1219,8 +1219,8 @@ function executable(path) {
 }
 
 // R10, R21
-test('refresh writes the hook where there is none, executable, and says it wrote it', (t) => {
-  const { base, refresh, read } = repositoryProject(t);
+test('refresh writes the hook where there is none, executable, and says it wrote it', (testContext) => {
+  const { base, refresh, read } = repositoryProject(testContext);
   rmSync(join(base, '.git/hooks'), { recursive: true, force: true });
 
   const result = refresh(['claude']);
@@ -1233,8 +1233,8 @@ test('refresh writes the hook where there is none, executable, and says it wrote
 });
 
 // R10, R21
-test('refresh rewrites a hook that carries the mark and differs, as one an older kit wrote', (t) => {
-  const { base, refresh, read, write } = repositoryProject(t);
+test('refresh rewrites a hook that carries the mark and differs, as one an older kit wrote', (testContext) => {
+  const { base, refresh, read, write } = repositoryProject(testContext);
   write(HOOK, `#!/bin/sh\n${HOOK_MARK}\nexec node old-checker.mjs "$1"\n`);
   chmodSync(join(base, HOOK), 0o755);
 
@@ -1247,8 +1247,8 @@ test('refresh rewrites a hook that carries the mark and differs, as one an older
 });
 
 // R10, R21
-test('refresh makes a marked hook with the content of the template executable, and then finds it up to date', (t) => {
-  const { base, refresh, write } = repositoryProject(t);
+test('refresh makes a marked hook with the template content executable, then finds it up to date', (testContext) => {
+  const { base, refresh, write } = repositoryProject(testContext);
   write(HOOK, HOOK_TEMPLATE);
   chmodSync(join(base, HOOK), 0o644);
 
@@ -1265,8 +1265,8 @@ test('refresh makes a marked hook with the content of the template executable, a
 });
 
 // R10, R21
-test('refresh leaves a hook without the mark as it is, with a notice after the other notices', (t) => {
-  const { base, refresh, read, write } = repositoryProject(t);
+test('refresh leaves a hook without the mark as it is, with a notice after the other notices', (testContext) => {
+  const { base, refresh, read, write } = repositoryProject(testContext);
   const own = '#!/bin/sh\nnpx lint-commit "$1"\n';
   write(HOOK, own);
   chmodSync(join(base, HOOK), 0o644);
@@ -1284,8 +1284,8 @@ test('refresh leaves a hook without the mark as it is, with a notice after the o
 });
 
 // R10, R21
-test('refresh takes a symbolic link at the path of the hook for the project own, with the notice', (t) => {
-  const { base, refresh, write } = repositoryProject(t);
+test('refresh takes a symbolic link at the path of the hook for the project own, with the notice', (testContext) => {
+  const { base, refresh, write } = repositoryProject(testContext);
   write('hooks/ours', HOOK_TEMPLATE);
   mkdirSync(join(base, '.git/hooks'), { recursive: true });
   symlinkSync(join(base, 'hooks/ours'), join(base, HOOK));
@@ -1299,8 +1299,8 @@ test('refresh takes a symbolic link at the path of the hook for the project own,
 });
 
 // R10, R21
-test('refresh writes the hook where core.hooksPath points', (t) => {
-  const { base, refresh, read } = repositoryProject(t);
+test('refresh writes the hook where core.hooksPath points', (testContext) => {
+  const { base, refresh, read } = repositoryProject(testContext);
   git(base, 'config', 'core.hooksPath', 'tools/hooks');
 
   const result = refresh(['claude']);
@@ -1311,8 +1311,8 @@ test('refresh writes the hook where core.hooksPath points', (t) => {
 });
 
 // R11, R21
-test('refresh outside a git repository writes no hook and notices why, last', (t) => {
-  const { base, refresh } = project(t);
+test('refresh outside a git repository writes no hook and notices why, last', (testContext) => {
+  const { base, refresh } = project(testContext);
   rmSync(join(base, 'AGENTS.md'));
 
   const result = refresh(['claude']);
@@ -1326,9 +1326,9 @@ test('refresh outside a git repository writes no hook and notices why, last', (t
 });
 
 // R10, R11, R21
-test('the hook changes not the status of a refresh that leaves a file which is not a regular one', (t) => {
+test('the hook changes not the status of a refresh that leaves a file which is not a regular one', (testContext) => {
   for (const repository of [true, false]) {
-    const { base, refresh, write } = repository ? repositoryProject(t) : project(t);
+    const { base, refresh, write } = repository ? repositoryProject(testContext) : project(testContext);
     mkdirSync(join(base, LIST), { recursive: true });
     if (repository) write(HOOK, '#!/bin/sh\n');
 
