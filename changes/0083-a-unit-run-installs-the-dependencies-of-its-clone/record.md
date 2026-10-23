@@ -57,3 +57,11 @@ timestamp: 2026-10-23T22:37:29Z
   Left open, for a host with Docker, which this one lacks: `npm test` with `tests/sandbox-install.test.mjs` running,
   and `./sandbox-dev.sh` of a unit showing the install on standard error. The unit is handed over for review. The
   status stays `in-progress`
+- 2026-10-23T23:05:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded what blocks the status:
+  the unit cannot be `implemented` until the two open boxes of "Verification" in `plan.md` are ticked, which needs a
+  host with Docker. On such a host, on this branch: run `npm test` and confirm that it passes with the three tests of
+  `tests/sandbox-install.test.mjs` run and not skipped; then run `./sandbox-dev.sh <a unit with a branch> npx
+  agentrite units` and confirm that standard error holds the line `install-dependencies.sh: the clone is new, so its
+  dependencies are installed with npm ci` followed by npm's output, and that standard output holds the units alone.
+  When both hold, tick the two boxes and log the runs here, naming the commit they ran on. When either fails, log
+  what was seen here and leave its box open
