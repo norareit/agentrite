@@ -7,6 +7,7 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  renameSync,
   rmSync,
   writeFileSync,
 } from 'node:fs';
@@ -1286,6 +1287,31 @@ function checkApproved(root, directory) {
  */
 export function instantOf(time) {
   return new Date(time).toISOString().replace(/\.\d+Z$/, 'Z');
+}
+
+/**
+ * Writes `content` to `path` whole: a reader of `path` at any time reads what it held before or `content`, and never
+ * part of either. The content goes to a file in the same directory whose name opens with `.`, which then replaces
+ * `path` in one rename. When either step fails, that file is removed and the error thrown. `files` holds the
+ * functions of `node:fs` it calls, so that a test can record their order and make one of them fail.
+ *
+ * @param {string} path
+ * @param {string} content
+ * @param {Pick<typeof import('node:fs'), 'writeFileSync' | 'renameSync' | 'rmSync'>} files
+ */
+export function writeWhole(path, content, files) {
+  const temporary = join(dirname(path), `.${basename(path)}`);
+  try {
+    files.writeFileSync(temporary, content);
+    files.renameSync(temporary, path);
+  } catch (error) {
+    try {
+      files.rmSync(temporary, { force: true });
+    } catch {
+      // The error of the write is the one to report.
+    }
+    throw error;
+  }
 }
 
 /**

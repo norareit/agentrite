@@ -6,6 +6,7 @@ import {
   mkdirSync,
   readdirSync,
   readFileSync,
+  renameSync,
   rmSync,
   statSync,
   symlinkSync,
@@ -31,7 +32,7 @@ import {
   ranTable,
   stepLine,
 } from '../scripts/agentrite-orchestrate.mjs';
-import { instantOf } from '../scripts/agentrite.mjs';
+import { instantOf, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
 import { readOutcome } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
@@ -1917,4 +1918,64 @@ test('with --follow a message of a step is printed while the step still runs', a
 test('instantOf gives an instant in UTC to the second', () => {
   assert.equal(instantOf(Date.UTC(2026, 9, 23, 10, 0, 5, 900)), '2026-10-23T10:00:05Z');
   assert.equal(instantOf(Date.UTC(2026, 0, 2, 3, 4, 5)), '2026-01-02T03:04:05Z');
+});
+
+const REAL_FILES = { writeFileSync, renameSync, rmSync };
+
+test('writeWhole writes the temporary file, renames it over the file, and removes nothing', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-whole-');
+  const calls = [];
+  const recording = (name) => (...args) => {
+    calls.push([name, ...args]);
+    return REAL_FILES[name](...args);
+  };
+
+  writeWhole(join(directory, 'state.json'), '{}', {
+    writeFileSync: recording('writeFileSync'),
+    renameSync: recording('renameSync'),
+    rmSync: recording('rmSync'),
+  });
+
+  assert.deepEqual(calls, [
+    ['writeFileSync', join(directory, '.state.json'), '{}'],
+    ['renameSync', join(directory, '.state.json'), join(directory, 'state.json')],
+  ]);
+});
+
+test('writeWhole replaces a file and leaves the file alone in its directory', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-whole-');
+  writeFileSync(join(directory, 'state.json'), 'first');
+
+  writeWhole(join(directory, 'state.json'), 'second', REAL_FILES);
+
+  assert.equal(readFileSync(join(directory, 'state.json'), 'utf-8'), 'second');
+  assert.deepEqual(readdirSync(directory), ['state.json']);
+});
+
+test('writeWhole that fails while writing throws the error and leaves the file as it was', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-whole-');
+  writeFileSync(join(directory, 'state.json'), 'first');
+  const failure = new Error('disk full');
+  const failing = (path) => {
+    writeFileSync(path, 'par');
+    throw failure;
+  };
+
+  assert.throws(
+    () => writeWhole(join(directory, 'state.json'), 'second', { ...REAL_FILES, writeFileSync: failing }),
+    failure,
+  );
+
+  assert.equal(readFileSync(join(directory, 'state.json'), 'utf-8'), 'first');
+  assert.deepEqual(readdirSync(directory), ['state.json']);
+});
+
+test('writeWhole that fails while renaming throws and leaves no temporary file', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-whole-');
+  mkdirSync(join(directory, 'heartbeat'));
+  writeFileSync(join(directory, 'heartbeat', 'held'), 'x');
+
+  assert.throws(() => writeWhole(join(directory, 'heartbeat'), 'text', REAL_FILES));
+
+  assert.deepEqual(readdirSync(directory), ['heartbeat']);
 });

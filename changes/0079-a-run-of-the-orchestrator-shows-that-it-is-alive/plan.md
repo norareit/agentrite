@@ -69,7 +69,7 @@ already says that a file under `.orchestrator` is what an agent may have written
   export `instantOf(time)` of the approach, with a doc comment, and make `makeRunDirectory` name the run by
   `instantOf(Date.now())`. Run `npm test`: it passes, and `runDirectoryOf` still finds the directory by its form
   (R1, R2)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add unit tests of `writeWhole`, each in a directory of
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add unit tests of `writeWhole`, each in a directory of
   `temporaryDirectory`: (R5, R6, R12)
   - with `files` that records each call and then makes it with the real function of `node:fs`, writing `{}` to
     `state.json` calls `writeFileSync` with `.state.json` in the same directory and the content, then `renameSync`
@@ -82,7 +82,7 @@ already says that a file under `.orchestrator` is what an agent may have written
   - with the real functions, writing `heartbeat` where `heartbeat` is a directory that holds a file, so that the
     rename fails: `writeWhole` throws, and no name in the directory but `heartbeat` is left
   Run `npm test` and see them fail
-- [ ] In `scripts/agentrite.mjs`, import `renameSync` from `node:fs`, and add and export `writeWhole(path, content,
+- [x] In `scripts/agentrite.mjs`, import `renameSync` from `node:fs`, and add and export `writeWhole(path, content,
   files)` of the approach, with a doc comment that says why `files` is a parameter. Run `npm test`: the tests of the
   previous task pass (R5, R6)
 - [ ] In `tests/agentrite-orchestrate.test.mjs`, add unit tests of `heartbeatText` and `startHeartbeat`, the second
@@ -148,7 +148,7 @@ already says that a file under `.orchestrator` is what an agent may have written
 ## Commit Points
 
 - [x] `feature-0079 Name a run's instant in one place`: the first task, which changes no behavior
-- [ ] `feature-0079 Write a file of a run's directory whole`: the second and third tasks
+- [x] `feature-0079 Write a file of a run's directory whole`: the second and third tasks
 - [ ] `feature-0079 Beat a heartbeat`: the fourth and fifth tasks
 - [ ] `feature-0079 Keep a heartbeat in a run's directory`: the sixth and seventh tasks
 - [ ] `feature-0079 Document the heartbeat and whole files`: the two tasks of `README.md`
