@@ -32,7 +32,7 @@ import {
   ranTable,
   stepLine,
 } from '../scripts/agentrite-orchestrate.mjs';
-import { instantOf, writeWhole } from '../scripts/agentrite.mjs';
+import { heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
 import { readOutcome } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
@@ -1978,4 +1978,60 @@ test('writeWhole that fails while renaming throws and leaves no temporary file',
   assert.throws(() => writeWhole(join(directory, 'heartbeat'), 'text', REAL_FILES));
 
   assert.deepEqual(readdirSync(directory), ['heartbeat']);
+});
+
+test('heartbeatText is one instant followed by a line break, and nothing else', () => {
+  const text = heartbeatText(Date.UTC(2026, 9, 23, 10, 0, 5, 900));
+
+  assert.equal(text, '2026-10-23T10:00:05Z\n');
+  assert.match(text, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\n$/);
+});
+
+test('startHeartbeat writes at once and then every 10 seconds', (testContext) => {
+  testContext.mock.timers.enable({ apis: ['setInterval', 'Date'], now: Date.UTC(2026, 9, 23, 10, 0, 5) });
+  const written = [];
+
+  const stop = startHeartbeat((text) => written.push(text));
+  testContext.after(stop);
+
+  assert.deepEqual(written, ['2026-10-23T10:00:05Z\n']);
+  testContext.mock.timers.tick(9_999);
+  assert.equal(written.length, 1);
+  testContext.mock.timers.tick(1);
+  assert.deepEqual(written.slice(1), ['2026-10-23T10:00:15Z\n']);
+  testContext.mock.timers.tick(10_000);
+  assert.deepEqual(written.slice(2), ['2026-10-23T10:00:25Z\n']);
+});
+
+test('the function startHeartbeat returns stops the writes, and can be called again', (testContext) => {
+  testContext.mock.timers.enable({ apis: ['setInterval', 'Date'], now: Date.UTC(2026, 9, 23, 10, 0, 5) });
+  const written = [];
+  const stop = startHeartbeat((text) => written.push(text));
+
+  stop();
+  testContext.mock.timers.tick(60_000);
+
+  assert.equal(written.length, 1);
+  assert.doesNotThrow(stop);
+});
+
+test('a write of the heartbeat that fails does not stop it, and the next is made at its time', (testContext) => {
+  testContext.mock.timers.enable({ apis: ['setInterval', 'Date'], now: Date.UTC(2026, 9, 23, 10, 0, 5) });
+  const written = [];
+  let calls = 0;
+  const write = (text) => {
+    calls += 1;
+    if (calls <= 2) throw new Error('disk full');
+    written.push(text);
+  };
+
+  let stop;
+  assert.doesNotThrow(() => {
+    stop = startHeartbeat(write);
+  });
+  testContext.after(() => stop());
+  assert.doesNotThrow(() => testContext.mock.timers.tick(10_000));
+  testContext.mock.timers.tick(10_000);
+
+  assert.deepEqual(written, ['2026-10-23T10:00:25Z\n']);
 });

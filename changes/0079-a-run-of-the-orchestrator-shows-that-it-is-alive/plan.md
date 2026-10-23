@@ -85,7 +85,7 @@ already says that a file under `.orchestrator` is what an agent may have written
 - [x] In `scripts/agentrite.mjs`, import `renameSync` from `node:fs`, and add and export `writeWhole(path, content,
   files)` of the approach, with a doc comment that says why `files` is a parameter. Run `npm test`: the tests of the
   previous task pass (R5, R6)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add unit tests of `heartbeatText` and `startHeartbeat`, the second
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add unit tests of `heartbeatText` and `startHeartbeat`, the second
   with `testContext.mock.timers.enable({ apis: ['setInterval', 'Date'], now: Date.UTC(2026, 9, 23, 10, 0, 5) })`
   and a `write` that collects what it is given: (R1, R2, R3, R4, R12)
   - `heartbeatText(Date.UTC(2026, 9, 23, 10, 0, 5, 900))` gives `2026-10-23T10:00:05Z\n`, and matches
@@ -97,7 +97,7 @@ already says that a file under `.orchestrator` is what an agent may have written
     `tick(10_000)` throws nothing, and after a second `tick(10_000)` the collected write is
     `2026-10-23T10:00:25Z\n`, the instant of that beat
   Run `npm test` and see them fail
-- [ ] In `scripts/agentrite.mjs`, add `HEARTBEAT_MILLISECONDS`, with a doc comment that gives the 10 seconds and the
+- [x] In `scripts/agentrite.mjs`, add `HEARTBEAT_MILLISECONDS`, with a doc comment that gives the 10 seconds and the
   60 seconds of the decision, and add and export `heartbeatText(time)` and `startHeartbeat(write)` of the approach,
   with the comment on the dropped error. Run `npm test`: the tests of the previous task pass (R1, R2, R3, R4)
 - [ ] In `tests/agentrite-orchestrate.test.mjs`, add `'heartbeat'` to the lists of the run's directory in `a run
@@ -149,6 +149,6 @@ already says that a file under `.orchestrator` is what an agent may have written
 
 - [x] `feature-0079 Name a run's instant in one place`: the first task, which changes no behavior
 - [x] `feature-0079 Write a file of a run's directory whole`: the second and third tasks
-- [ ] `feature-0079 Beat a heartbeat`: the fourth and fifth tasks
+- [x] `feature-0079 Beat a heartbeat`: the fourth and fifth tasks
 - [ ] `feature-0079 Keep a heartbeat in a run's directory`: the sixth and seventh tasks
 - [ ] `feature-0079 Document the heartbeat and whole files`: the two tasks of `README.md`

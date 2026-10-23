@@ -1315,6 +1315,42 @@ export function writeWhole(path, content, files) {
 }
 
 /**
+ * How often a run writes its heartbeat. A reader calls a run without an end stale once its heartbeat is more than 60
+ * seconds old, which is six missed beats.
+ */
+const HEARTBEAT_MILLISECONDS = 10_000;
+
+/**
+ * The content of a run's `heartbeat`: the instant of `time` and a line break.
+ *
+ * @param {number} time
+ * @returns {string}
+ */
+export function heartbeatText(time) {
+  return `${instantOf(time)}\n`;
+}
+
+/**
+ * Calls `write` with the heartbeat at once and then every `HEARTBEAT_MILLISECONDS`, and returns the function that
+ * stops the beats.
+ *
+ * @param {(text: string) => void} write
+ * @returns {() => void}
+ */
+export function startHeartbeat(write) {
+  const beat = () => {
+    try {
+      write(heartbeatText(Date.now()));
+    } catch {
+      // The heartbeat is a sign for readers and not a part of the run, so a beat that fails is dropped.
+    }
+  };
+  beat();
+  const interval = setInterval(beat, HEARTBEAT_MILLISECONDS);
+  return () => clearInterval(interval);
+}
+
+/**
  * Makes the directory of a new run of the unit, after making sure that `.orchestrator/.gitignore` holds `*` alone,
  * and returns its path from the root. It is named by the instant the run started, and made without `recursive`, so
  * that a second run in the same second fails rather than mixing with the first.
