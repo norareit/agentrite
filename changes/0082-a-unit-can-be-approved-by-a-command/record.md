@@ -1,7 +1,7 @@
 ---
 kind: feature
-status: in-progress
-timestamp: 2026-10-23T15:12:33Z
+status: implemented
+timestamp: 2026-10-23T23:40:00Z
 ---
 
 # 0082 A unit can be approved by a command
@@ -57,3 +57,6 @@ timestamp: 2026-10-23T15:12:33Z
   `git diff --check` passed. Not independently verified: approval with the kit's actual hook, a nested project
   beyond the pure prefix test, Docker-dependent behavior, or historical test execution order. The status stays
   `in-progress`
+- 2026-10-23T23:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, at the human's request, set the
+  status to `implemented`. The review returned no blocking finding, its two findings P1 and C1 are applied, and every
+  task of `plan.md` is ticked. The status is `implemented`
