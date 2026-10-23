@@ -47,5 +47,6 @@ timestamp: 2026-10-23T15:12:33Z
   `.reviews/0082-a-unit-can-be-approved-by-a-command/review-20261023T223750Z.md` in `9accc7e`. P1: added the two tests
   of the usage to "Files" of `plan.md`. C1: added `agentrite approve` to the readers of `defaultBranch` and to the
   commands that read `agentrite.json` in "The project's settings" of `README.md`, removing nothing. On
-  `9accc7e` `npm test` reported 1187 passed and 0 failed, 30 skipped; lines of `README.md` and `plan.md` are at most 120 characters.
+  `9accc7e` `npm test` reported 1187 passed and 0 failed, 30 skipped; lines of `README.md` and
+  `plan.md` are at most 120 characters.
   `npm run check-changes` is run after the commit of this entry. The status stays `in-progress`
