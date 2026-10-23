@@ -140,7 +140,7 @@ the directory named as before.
 
 ## Tasks
 
-- [ ] Move `numberWidth` from `scripts/agentrite.mjs` to `scripts/agentrite-orchestrate.mjs`, exported, add
+- [x] Move `numberWidth` from `scripts/agentrite.mjs` to `scripts/agentrite-orchestrate.mjs`, exported, add
   `stepFileName(definition, number, role, kind)` there, and make `fileOf` of `orchestrateCommand` call it. Split
   `stepLine` into the exported `stepHead({ number, round, step })` and the rest. Add to
   `tests/agentrite-orchestrate.test.mjs` tests that `stepFileName` gives `00-planner.outcome.json` for the default
@@ -275,7 +275,7 @@ the directory named as before.
 
 ## Commit Points
 
-- [ ] `feature-0081 Name the files and the head of a step in the orchestrator's module`: the first task, which
+- [x] `feature-0081 Name the files and the head of a step in the orchestrator's module`: the first task, which
   changes no behavior
 - [ ] `feature-0081 Share isObject and the checks of a number and a limit`: the second task, which changes no
   behavior

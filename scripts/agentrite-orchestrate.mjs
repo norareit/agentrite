@@ -210,14 +210,52 @@ function inRound(round) {
 }
 
 /**
+ * What names a step in the lines about it: its number, round, role, harness and model.
+ *
+ * @param {Pick<Planned, 'number' | 'round' | 'step'>} planned
+ * @returns {string}
+ */
+export function stepHead({ number, round, step }) {
+  return `step ${number}${inRound(round)}, ${step.role}, ${step.harness}, ${step.model}`;
+}
+
+/**
+ * How many digits the number of a step's files takes: those of the highest number the definition can reach, and two
+ * at least, so that the names sort in the order the steps ran.
+ *
+ * @param {Definition} definition
+ * @returns {number}
+ */
+export function numberWidth(definition) {
+  const count = definition.steps.reduce(
+    (total, item) => total + ('repeat' in item ? item.repeat.times * item.repeat.steps.length : 1),
+    0,
+  );
+  return Math.max(2, String(count - 1).length);
+}
+
+/**
+ * The name of the file of kind `kind` that a run keeps for a step, such as `02-reviewer.followed.jsonl`.
+ *
+ * @param {Definition} definition
+ * @param {number} number
+ * @param {string} role
+ * @param {string} kind
+ * @returns {string}
+ */
+export function stepFileName(definition, number, role, kind) {
+  return `${String(number).padStart(numberWidth(definition), '0')}-${role}.${kind}`;
+}
+
+/**
  * The line before a step, and with `ended` the line after it.
  *
  * @param {Planned} planned
  * @param {Ran} [ended]
  * @returns {string}
  */
-export function stepLine({ number, round, step }, ended) {
-  const head = `step ${number}${inRound(round)}, ${step.role}, ${step.harness}, ${step.model}`;
+export function stepLine(planned, ended) {
+  const head = stepHead(planned);
   if (ended === undefined) return `${head}: started`;
   return `${head}: ${stepResult(ended)} after ${duration(ended.result.milliseconds)}`;
 }

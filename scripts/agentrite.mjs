@@ -49,6 +49,7 @@ import {
   orchestrate,
   ORCHESTRATE_FORM,
   parseOrchestrateArgs,
+  stepFileName,
   stepLine,
 } from './agentrite-orchestrate.mjs';
 import { outcomeRequest } from './agentrite-outcome.mjs';
@@ -1418,21 +1419,6 @@ function makeRunDirectory(root, directory) {
 }
 
 /**
- * How many digits the number of a step's files takes: those of the highest number the definition can reach, and two
- * at least, so that the names sort in the order the steps ran.
- *
- * @param {import('./agentrite-definition.mjs').Definition} definition
- * @returns {number}
- */
-function numberWidth(definition) {
-  const count = definition.steps.reduce(
-    (total, item) => total + ('repeat' in item ? item.repeat.times * item.repeat.steps.length : 1),
-    0,
-  );
-  return Math.max(2, String(count - 1).length);
-}
-
-/**
  * Sends `signal` to every process of the process group `group`, when it still has one.
  *
  * @param {number} group
@@ -1630,9 +1616,8 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
   const runDirectory = makeRunDirectory(root, directory);
   const write = (/** @type {string} */ name, /** @type {string} */ content) =>
     writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
-  const width = numberWidth(definition);
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
-    `${String(planned.number).padStart(width, '0')}-${planned.step.role}.${kind}`;
+    stepFileName(definition, planned.number, planned.step.role, kind);
   /** @type {{ role: string, harness: string, session: string }[]} */ const sessions = [];
   /** @type {object | null} */ let at = null;
   const writeState = (/** @type {object | null} */ ended) =>

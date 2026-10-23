@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-23T14:24:42Z
 ---
 
@@ -29,3 +29,5 @@ timestamp: 2026-10-23T14:24:42Z
   `feature-0081-the-runs-of-a-project-can-be-listed` at `d01d9ae`, wrote `plan.md`. Read the branch with
   `git symbolic-ref`, and planned a git that cannot be run as a failure that exits 1 before anything is written, since
   requirement 1 gives `null` only for a detached `HEAD` and a root in no repository. The status is `approved`
+- 2026-10-23T17:18:45Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on
+  `feature-0081-the-runs-of-a-project-can-be-listed`. The status is `in-progress`

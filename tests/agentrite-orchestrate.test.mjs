@@ -33,6 +33,8 @@ import {
   orchestrateUsage,
   parseOrchestrateArgs,
   ranTable,
+  stepFileName,
+  stepHead,
   stepLine,
   timedItems,
 } from '../scripts/agentrite-orchestrate.mjs';
@@ -354,6 +356,18 @@ function ended(planned, result) {
   const reading = full.response === undefined || full.timedOut ? { kind: 'none' } : readOutcome(full.response);
   return { planned, result: full, reading, stop: judgeStep(planned.step, full, reading) };
 }
+
+test('the head of a step gives its number, its round in a repeat, its role, harness and model', () => {
+  assert.equal(stepHead(reviewer), 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol');
+  assert.equal(stepHead(planner), 'step 0, planner, claude, claude-opus-5-5');
+});
+
+test('the name of a step file has as many digits as the highest step number needs, and two at least', () => {
+  assert.equal(stepFileName(DEFAULT, 0, 'planner', 'outcome.json'), '00-planner.outcome.json');
+  const many = { steps: [{ repeat: { times: 101, steps: [DEFAULT.steps[0]] } }] };
+  assert.equal(stepFileName(many, 0, 'implementer', 'followed.jsonl'), '000-implementer.followed.jsonl');
+  assert.equal(stepFileName(many, 100, 'implementer', 'followed.jsonl'), '100-implementer.followed.jsonl');
+});
 
 test('the line before a step gives its number, its round in a repeat, its role, harness and model', () => {
   assert.equal(stepLine(planner), 'step 0, planner, claude, claude-opus-5-5: started');
