@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-22T22:02:19Z
 ---
 
@@ -117,3 +117,8 @@ timestamp: 2026-10-22T22:02:19Z
   test` on the Linux host, with Docker: 1097 tests, 1097 pass, none fail and none skipped. `./sandbox.sh --in-place npm
   test`: 1097 tests, 1067 pass, none fail, and 30 skipped, those that need Docker. The status stays `in-progress`, until
   the human decides C1, the review's blocking finding
+- 2026-10-23T12:33:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision that C1 of
+  the review of `35280f5`, the one blocking finding, is resolved by the rename in `a3d34f5`. P1 does not block and is
+  applied. Every task of `plan.md` is ticked. The human decided too that the tests of `tests/agentrite-init.test.mjs`
+  and `tests/agentrite-refresh.test.mjs` that name their test context `t` are renamed, in a task of their own. The
+  status is `implemented`
