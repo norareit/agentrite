@@ -21,3 +21,7 @@ timestamp: 2026-10-23T14:24:42Z
   command. Named unit 0081 in the decision on the reader judging the state and in the first non-goal. The status is
   `draft`
 - 2026-10-23T15:09:47Z [human] approved the spec. The status is `approved`
+- 2026-10-23T15:24:53Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  the unit's branch at `1ebe83b`. Read `orchestrateCommand`, `makeRunDirectory` and the command's tests. Wrote
+  `plan.md`: the heartbeat and the whole writes in `scripts/agentrite.mjs`, with no new module, and the command's
+  tests waiting the real 10 seconds rather than a shorter interval. The status is `approved`
