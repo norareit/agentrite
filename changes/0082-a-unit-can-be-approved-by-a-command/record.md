@@ -35,5 +35,5 @@ timestamp: 2026-10-23T15:12:33Z
   The status stays `in-progress` for the review
 - 2026-10-23T22:55:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, at the human's request,
   removed the `Co-Authored-By` trailer from the first commit of the unit by rewriting the four commits of the unit.
-  They are now `f5cde92`, `3c13a30`, `214474f` and `b1cb342`, in place of the hashes of the entry above, and their trees are
-  unchanged. The status stays `in-progress`
+  They are now `f5cde92`, `3c13a30`, `214474f` and `b1cb342`, in place of the hashes of the entry above, and their trees
+  are unchanged. The status stays `in-progress`
