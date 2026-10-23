@@ -985,8 +985,9 @@ whose name opens with `.` is left in its directory.
 
 A followed file is added to and never rewritten. A line is added to it whole or not at all, so a program that reads it
 while the step runs takes the lines that end in a line break, and leaves a last line without one, which is being
-added. A line the command could not write is missing from it, and the lines after it are there, and a write that
-failed does not stop the run or change what it prints or its exit status.
+added. A line the command could not write is missing from it, and the lines after it are there. When a part of the
+failed line stands in the file and cannot be cut off, the lines after it are missing until it can. A write that failed
+does not stop the run or change what it prints or its exit status.
 
 A program that reads the directory tells the state of a run by `state.json` and `heartbeat`:
 

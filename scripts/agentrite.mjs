@@ -1321,8 +1321,9 @@ export function writeWhole(path, content, files) {
 /**
  * Makes the followed file of a step at `path`, empty, and returns the function that adds a line to its end. A line
  * is added whole or not at all: when an append throws, the file is cut back to the lines added before it, since a
- * part of the line may stand at its end. A failure of any of the three calls is dropped, since the file is for
- * readers and not a part of the run, as the heartbeat is, and the lines after it are added as if it had not failed.
+ * part of the line may stand at its end, and a cut back that fails is tried again before the next line is added, which
+ * is lost if it still fails. A failure of any of the three calls is dropped, since the file is for readers and not a
+ * part of the run, as the heartbeat is, and the lines after it are added as if it had not failed.
  * `files` holds the functions of `node:fs` it calls, so that a test can make one of them fail.
  *
  * @param {string} path
@@ -1331,21 +1332,31 @@ export function writeWhole(path, content, files) {
  */
 export function followedFile(path, files) {
   let length = 0;
+  let cutBackPending = false;
   try {
     files.writeFileSync(path, '');
   } catch {
     // The file is for readers, and the run goes on without it.
   }
+  const cutBack = () => {
+    try {
+      files.truncateSync(path, length);
+      cutBackPending = false;
+    } catch {
+      // The file is for readers, and the cut back is tried again before the next line.
+      cutBackPending = true;
+    }
+  };
   return (line) => {
+    // A part of an earlier line may still stand at the end, and appending behind it would corrupt this line too.
+    if (cutBackPending) cutBack();
+    if (cutBackPending) return;
     try {
       files.appendFileSync(path, line);
       length += Buffer.byteLength(line);
     } catch {
-      try {
-        files.truncateSync(path, length);
-      } catch {
-        // The file is for readers, and what could not be written is lost.
-      }
+      // The file is for readers, and what could not be written is lost.
+      cutBack();
     }
   };
 }

@@ -89,8 +89,8 @@ sandbox.
   makes the file empty before any line is added, and the lines added stand in it in their order, each whole; a making
   that throws does not throw, and a line added after it is written; an append that writes part of a line by the real
   `appendFileSync` and then throws does not throw, leaves the file holding only the lines before it, and the next line
-  is added whole after them; an append and a truncation that both throw do not throw, and the next line is still
-  attempted; and no other file is left in the directory (R6, R8, R12)
+  is added whole after them; an append that writes part of a line and a truncation that both throw do not throw, and no
+  line is added behind the part until a cut back succeeds; and no other file is left in the directory (R6, R8, R12)
 - [x] Add `followedFile` to `scripts/agentrite.mjs` as the approach gives it, with `appendFileSync` and
   `truncateSync` imported from `node:fs`, and export it (R2, R6, R8)
 - [x] Add to the fake harness of `tests/agentrite-orchestrate.test.mjs`, with its comment, that with `seen-<n>` it

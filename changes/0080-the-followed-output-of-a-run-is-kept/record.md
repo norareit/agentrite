@@ -46,3 +46,9 @@ timestamp: 2026-10-23T14:24:42Z
   30 Docker-dependent tests skipped. `npm run check-changes` and `git diff --check` passed. Reproduced S1 with
   injected filesystem operations. Not verified: Docker-backed sandbox execution, real-provider harness sessions,
   or a filesystem-induced write failure in a complete command run
+- 2026-10-23T17:20:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, applied S1 of
+  `.reviews/0080-the-followed-output-of-a-run-is-kept/review-20261023T164650Z.md`: `followedFile` now keeps that a cut
+  back is pending when it fails, retries it before the next line, and adds no line while it fails. The plan's task of
+  the `followedFile` tests and the sentence in `README.md` on lines missing are changed to match, and the double-failure
+  test now has the append write part of the line. `npm test` reported 1087 passed, 0 failed and 30 skipped, and
+  `npm run check-changes` passed, on the tree before this entry's commit. The status stays `in-progress`

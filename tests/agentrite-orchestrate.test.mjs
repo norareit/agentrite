@@ -2274,22 +2274,30 @@ test('followedFile whose append wrote part of a line cuts the file back, and the
   assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"c":3}\n');
 });
 
-test('followedFile whose append and truncation both throw does not throw, and tries the next line', (testContext) => {
+test('followedFile whose append and cut back fail does not throw, and adds no line behind a part', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-followed-');
   const path = join(directory, 'followed.jsonl');
-  let broken = true;
+  let broken = false;
   const failing = () => {
     throw new Error('gone');
+  };
+  const partial = (target, line) => {
+    if (!broken) return appendFileSync(target, line);
+    appendFileSync(target, line.slice(0, 3));
+    return failing();
   };
 
   const add = followedFile(path, {
     ...FOLLOWED_FILES,
-    appendFileSync: (target, line) => (broken ? failing() : appendFileSync(target, line)),
-    truncateSync: failing,
+    appendFileSync: partial,
+    truncateSync: (target, length) => (broken ? failing() : truncateSync(target, length)),
   });
-  assert.doesNotThrow(() => add('{"a":1}\n'));
+  add('{"a":1}\n');
+  broken = true;
+  assert.doesNotThrow(() => add('{"b":2}\n'));
+  assert.doesNotThrow(() => add('{"c":3}\n'));
   broken = false;
-  add('{"b":2}\n');
+  add('{"d":4}\n');
 
-  assert.equal(readFileSync(path, 'utf-8'), '{"b":2}\n');
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"d":4}\n');
 });
