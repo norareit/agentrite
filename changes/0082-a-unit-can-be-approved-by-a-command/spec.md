@@ -88,9 +88,9 @@ Tests:
 * **The unit by its name or its four digits, as `orchestrate` takes it.** The command writes and commits, so it must
   refuse digits that open more than one directory rather than guess, which `orchestrate`'s reading already does.
   `units`, which only reads, shows every directory the digits open instead
-* **Only from `draft`.** `process.md` orders the statuses, and an approval is the move from `draft` to `approved`. A unit
-  already approved, under way or ended has nothing to approve, and a human who runs the command on it has mistaken the
-  unit
+* **Only from `draft`.** `process.md` orders the statuses, and an approval is the move from `draft` to `approved`. A
+  unit already approved, under way or ended has nothing to approve, and a human who runs the command on it has mistaken
+  the unit
 * **Only on the default branch.** `process.md` puts the approval on the default branch, with the spec, and everything
   after it on the unit's branch. A command that approved on another branch would make a commit the freeze check and
   the branch cut by the sandbox cannot see
