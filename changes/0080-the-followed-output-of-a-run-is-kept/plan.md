@@ -124,7 +124,7 @@ sandbox.
   `runGrouped` take `line` always, and say in the comment of `orchestrateCommand` that every file of the run's
   directory but the followed files is written whole, and that a step's followed file is written with `--follow` and
   without it. Run `npm test` (R1, R2, R3, R5, R7, R9)
-- [ ] In "What .orchestrator holds" of `README.md`, add after the item of the outcome and response files an item of
+- [x] In "What .orchestrator holds" of `README.md`, add after the item of the outcome and response files an item of
   `<number>-<role>.followed.jsonl`: numbered as those files are; made empty when the step starts, before its harness
   starts; one line added for each text message and tool call that `--follow` prints of the step, once the harness has
   made it known, in the order it prints them, and nothing else; written with `--follow` and without it; each line one
@@ -132,12 +132,12 @@ sandbox.
   "kind": "call", "tool": ..., "label": ...}` with the label `--follow` prints, or `null`; `time` the instant
   `--follow` prints, in UTC with its date, as `2026-10-23T10:00:05Z`; with an example of a text line and a call line;
   and left in the directory when the step and the run end, however they end (R10)
-- [ ] In the same section, change "Every file of a run's directory is written whole." to say that every file but the
+- [x] In the same section, change "Every file of a run's directory is written whole." to say that every file but the
   followed files is, and add after that paragraph that a followed file is added to and never rewritten, a line is
   added whole or not at all, a program that reads it while the step runs takes the lines that end in a line break and
   leaves a last line without one, which is being added, and that a line the command could not write is missing while
   the lines after it are there (R6, R8, R10)
-- [ ] In "How a run ends" of `README.md`, change the sentence that a run started without `--follow` cannot be
+- [x] In "How a run ends" of `README.md`, change the sentence that a run started without `--follow` cannot be
   followed to say that it prints none of the messages and tool calls, and that the followed file of each step in the
   run's directory holds them, as "What .orchestrator holds" gives it (R11)
 

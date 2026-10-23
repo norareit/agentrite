@@ -869,8 +869,9 @@ the same time, the one that ended first is printed first:
 The time is the instant the harness gives for the message or the call, or, where it gives none, the instant the
 command learns of it, as `HH:MM:SS` in UTC. No result of a tool call, no reasoning of the agent and no other event of
 the harness is printed, in Claude Code and in OpenCode alike. The end report stands last, as without the option. The
-option is chosen when the run starts: a run started without it cannot be followed, and one started with it cannot be
-stopped from printing. A step followed, its two tool calls dimmed on the terminal:
+option is chosen when the run starts: a run started without it prints none of the messages and tool calls, and one
+started with it cannot be stopped from printing them. The followed file of each step in the run's directory holds them
+in both cases, as "What .orchestrator holds" gives. A step followed, its two tool calls dimmed on the terminal:
 
 ```
 step 1, implementer, claude, claude-sonnet-5-5: started
@@ -960,11 +961,32 @@ run's directory holds:
   have as many digits as the definition's highest step number needs, two at least, so that the names sort in the
   order the steps ran. An outcome file holds the step's items of `afterwards`, so the run's directory holds those of
   every step that gave an outcome of the form
+* `<number>-<role>.followed.jsonl` for each step that starts, numbered as those files are, and written with
+  `--follow` and without it. It is made empty when the step starts, before its harness starts. Each text message and
+  each tool call that `--follow` prints of the step is added to its end as one line, in the order `--follow` prints
+  them, once the harness has made it known, and nothing else is added: no result of a tool call, no reasoning of the
+  agent and no other event of the harness. A line is one JSON object and a line break. A text message is
+  `{"time": ..., "kind": "text", "text": ...}`, with its text in full, and a tool call is
+  `{"time": ..., "kind": "call", "tool": ..., "label": ...}`, with the name of the tool as the harness gives it, and
+  the label that `--follow` prints for it, or `null` for a call with none. `time` is the instant `--follow` prints,
+  as a whole instant in UTC with its date, as `2026-10-23T10:00:05Z`. The file is left in the run's directory when
+  the step and the run end, however they end. A step that ran past its time limit, or whose harness a signal ended,
+  keeps what was known of it. Two lines of one:
 
-Every file of a run's directory is written whole. A file that is being written stands in the same directory under a
-name that opens with `.` until it takes its own name, so a program that reads one of the files reads what it held
-before a write or what the write gives it, and never part of either. Once a run ended, no file whose name opens with
-`.` is left in its directory.
+  ```
+  {"time":"2026-10-23T10:00:05Z","kind":"text","text":"I will run the tests."}
+  {"time":"2026-10-23T10:00:09Z","kind":"call","tool":"Bash","label":"Run the unit tests"}
+  ```
+
+Every file of a run's directory but the followed files is written whole. A file that is being written stands in the
+same directory under a name that opens with `.` until it takes its own name, so a program that reads one of the files
+reads what it held before a write or what the write gives it, and never part of either. Once a run ended, no file
+whose name opens with `.` is left in its directory.
+
+A followed file is added to and never rewritten. A line is added to it whole or not at all, so a program that reads it
+while the step runs takes the lines that end in a line break, and leaves a last line without one, which is being
+added. A line the command could not write is missing from it, and the lines after it are there, and a write that
+failed does not stop the run or change what it prints or its exit status.
 
 A program that reads the directory tells the state of a run by `state.json` and `heartbeat`:
 
