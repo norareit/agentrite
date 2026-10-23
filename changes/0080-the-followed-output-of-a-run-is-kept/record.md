@@ -17,3 +17,11 @@ timestamp: 2026-10-23T14:24:42Z
   harness prints and `followPrinter` prints it. Wrote `spec.md`. The status is `draft`
 - 2026-10-23T15:25:27Z [human] approved the spec, without item 1 of "Beyond the request", which may be built later
   if it turns out to be missed. The status is `approved`
+- 2026-10-23T15:58:50Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  the unit's branch at `9456141`, with the human's notes that the file is the exception requirement 6 names to the
+  sentence of unit 0079 that every file of a run's directory is written whole, that it is appended to directly and not
+  through the run's write, and that `instantOf` gives the instant of requirement 5. Read `orchestrateCommand`,
+  `runStep`, `runGrouped`, `followPrinter`, `callLabel` and the command's tests. Wrote `plan.md`: the stamping of an
+  item's time moved out of the printer first, so that the terminal and the file take one instant, the line of an item
+  in `scripts/agentrite-orchestrate.mjs`, and the file, made empty before the harness starts and cut back after a
+  failed append, in `scripts/agentrite.mjs`. The status is `approved`
