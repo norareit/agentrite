@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-23T14:24:42Z
 ---
 
@@ -20,3 +20,4 @@ timestamp: 2026-10-23T14:24:42Z
   graphical interface would read the heartbeat, and the human's choice to name in this unit the one that adds the
   command. Named unit 0081 in the decision on the reader judging the state and in the first non-goal. The status is
   `draft`
+- 2026-10-23T15:09:47Z [human] approved the spec. The status is `approved`
