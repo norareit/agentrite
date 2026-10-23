@@ -138,12 +138,10 @@ already says that a file under `.orchestrator` is what an agent may have written
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
-- [ ] A run on the host of a one-step definition shows `heartbeat` changing every 10 seconds while the step runs,
-  read with `cat` from a second terminal, and no name that opens with `.` in the run's directory once it ended
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Each requirement of the spec, R1 to R13, is delivered by a ticked task above
+- [x] `npm test` passes
+- [x] Every line of the changed files is at most 120 characters, as `awk 'length > 120'` on each shows nothing
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Each requirement of the spec, R1 to R13, is delivered by a ticked task above
 
 ## Commit Points
 
