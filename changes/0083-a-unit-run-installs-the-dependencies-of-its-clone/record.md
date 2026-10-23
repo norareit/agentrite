@@ -84,3 +84,10 @@ timestamp: 2026-10-23T22:37:29Z
   tree's code is the same as that of `2212220`, where the run on the host with Docker skipped none.
   `npm run check-changes` exited 0. Every task of `plan.md` is ticked, and no review is saved under `.reviews/`. The
   unit is handed over for review. The status stays `in-progress`
+- 2026-10-23T23:17:54Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0083 at
+  `b7d9b883ffc1cf7add1f029f7bab746e68b335e9`, against the merge base with `origin/master`. Returned no findings on
+  spec conformance, plan fidelity or code quality. Saved the review in
+  `.reviews/0083-a-unit-run-installs-the-dependencies-of-its-clone/review-20261023T231719Z.md`. Independently ran
+  `npm test`: 1202 passed, none failed, 33 skipped for want of Docker; `npm run check-changes`, the shell syntax
+  checks and `git diff --check` passed. Could not independently verify the Docker-backed tests or the live
+  sandbox smoke test, since this environment has no Docker. The status stays `in-progress`
