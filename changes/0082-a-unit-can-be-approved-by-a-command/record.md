@@ -50,3 +50,10 @@ timestamp: 2026-10-23T15:12:33Z
   `9accc7e` `npm test` reported 1187 passed and 0 failed, 30 skipped; lines of `README.md` and
   `plan.md` are at most 120 characters.
   `npm run check-changes` is run after the commit of this entry. The status stays `in-progress`
+- 2026-10-23T22:43:47Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0082 at
+  `9c4cf597c7e5ab6ad5ddede8d1ce5c35b9296509`, from `99996e77a986f467e5da96573c9ee0d025159a08`. Returned no new
+  findings in `.reviews/0082-a-unit-can-be-approved-by-a-command/review-20261023T224347Z.md`. Ran `npm test`:
+  1187 passed, 0 failed, 30 Docker-dependent tests skipped; `npm run check-changes` and both branch and delta
+  `git diff --check` passed. Not independently verified: approval with the kit's actual hook, a nested project
+  beyond the pure prefix test, Docker-dependent behavior, or historical test execution order. The status stays
+  `in-progress`
