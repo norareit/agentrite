@@ -4,6 +4,7 @@ import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { executablePaths } from './dockerfile-executables.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const knownTerminal = fileURLToPath(new URL('../container/known-terminal.sh', import.meta.url));
@@ -102,7 +103,5 @@ test('the image holds the script at the path the entrypoint runs the command thr
   assert.ok(through, "the entrypoint's last command runs the command through a script");
   const [, path] = through;
   assert.match(dockerfile, new RegExp(`^COPY \\$\\{KIT_CONTAINER\\}/known-terminal\\.sh ${path}$`, 'm'));
-  const chmod = dockerfile.match(/^RUN chmod \+x (.+)$/m);
-  assert.ok(chmod, 'the Dockerfile makes the scripts it copies executable');
-  assert.ok(chmod[1].split(' ').includes(path), chmod[0]);
+  assert.ok(executablePaths(dockerfile).includes(path), 'the Dockerfile makes the script executable');
 });

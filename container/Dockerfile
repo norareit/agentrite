@@ -155,16 +155,20 @@ WORKDIR /work
 # depends on where the kit is installed, so container/sandbox.sh supplies it.
 # known-terminal.sh is what the entrypoint, and a command of --connect, run the command
 # through, so that its TERM is one the image holds a description of.
+# install-dependencies.sh is what container/sandbox.sh puts before the command of a unit
+# run's new clone, so that its dependencies are installed with npm ci first.
 ARG KIT_CONTAINER
 COPY ${KIT_CONTAINER}/entrypoint.sh /usr/local/bin/entrypoint.sh
 COPY ${KIT_CONTAINER}/known-terminal.sh /usr/local/bin/known-terminal.sh
+COPY ${KIT_CONTAINER}/install-dependencies.sh /usr/local/bin/install-dependencies.sh
 COPY ${KIT_CONTAINER}/egress-proxy.mjs ${KIT_CONTAINER}/sni.mjs /usr/local/lib/egress-proxy/
 # The checker of commit messages and the commit-msg hook that runs it, which compose.yml
 # names as git's hooks directory. They come from the kit alone, so that the check needs
 # nothing of the project, and a unit run's clone has it before npm ci.
 COPY ${KIT_CONTAINER}/check-commit-message.mjs /usr/local/lib/agentrite/
 COPY ${KIT_CONTAINER}/hooks/commit-msg /usr/local/lib/agentrite/hooks/
-RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/known-terminal.sh /usr/local/lib/agentrite/hooks/commit-msg
+RUN chmod +x /usr/local/bin/entrypoint.sh /usr/local/bin/known-terminal.sh \
+  /usr/local/bin/install-dependencies.sh /usr/local/lib/agentrite/hooks/commit-msg
 
 # The version of the kit this image was built from. container/sandbox.sh reads it at
 # each start and builds again when another kit is installed, so that the image holds

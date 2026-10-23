@@ -27,3 +27,9 @@ timestamp: 2026-10-23T22:37:29Z
   Docker, so the tests of real containers are skipped in every run of the suite here. The status is `in-progress`
 - 2026-10-23T22:55:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added `clone_is_new` and
   `default_command` as the first task gives them. `npm test` passed with 1187 tests, 30 skipped for want of Docker
+- 2026-10-23T23:01:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added
+  `tests/install-dependencies.test.mjs`, whose five tests failed with no script, then wrote
+  `container/install-dependencies.sh` and its `COPY` and `chmod`, and the five passed. Added a task to the plan: the
+  `RUN chmod` with the script beside the others is longer than 120 characters, so it continues on a second line, and
+  the test of `tests/known-terminal.test.mjs` read the first line alone. Both tests now read the paths with the new
+  `tests/dockerfile-executables.mjs`, and those of `tests/known-terminal.test.mjs` pass

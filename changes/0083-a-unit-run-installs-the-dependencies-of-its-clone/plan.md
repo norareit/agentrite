@@ -57,6 +57,9 @@ repository and `container/` ships as a whole, so neither table changes.
 - `container/Dockerfile`: the `COPY` of the script, its `chmod`, and the comment above them
 - `container/unit-clone.sh`: `clone_is_new`, called by `refuse_unlanded` and `prepare_clone`
 - `container/sandbox.sh`: `default_command`, the install before a new clone's command, and the head comment
+- `tests/dockerfile-executables.mjs`: new, the paths the `RUN chmod` of `container/Dockerfile` makes executable,
+  read across its continued lines, for the two tests below
+- `tests/known-terminal.test.mjs`: its test of the `chmod` reads the paths with `tests/dockerfile-executables.mjs`
 - `tests/install-dependencies.test.mjs`: new, the tests of the script on the host and of its place in the image
 - `tests/sandbox-unit-run.test.mjs`: the tests of the wrapper with a fake Docker
 - `tests/sandbox-install.test.mjs`: new, the tests of real containers, skipped without Docker
@@ -70,7 +73,7 @@ repository and `container/` ships as a whole, so neither table changes.
 - [x] Add `clone_is_new` to `container/unit-clone.sh` and call it from `refuse_unlanded` and `prepare_clone`, and add
   `default_command` to `container/sandbox.sh` and use it in `--connect`, as the approach gives them. `npm test` passes
   unchanged (R8)
-- [ ] Add the new `tests/install-dependencies.test.mjs`, which runs the script with `sh` on the host in a temporary
+- [x] Add the new `tests/install-dependencies.test.mjs`, which runs the script with `sh` on the host in a temporary
   directory, with a PATH of a stand-in `npm` that records its arguments and its working directory, prints `npm out`
   on standard output and `npm err` on standard error, and exits with the status a file gives, 0 when there is none:
   with `npm ci` succeeding and the command `node -e` printing `command out`, standard output is `command out` alone,
@@ -80,7 +83,11 @@ repository and `container/` ships as a whole, so neither table changes.
   the command as given. Add the test that `container/Dockerfile` copies the script to
   `/usr/local/bin/install-dependencies.sh` and makes it executable, as `tests/known-terminal.test.mjs` tests its own
   `COPY` (R1, R5, R6, R13)
-- [ ] Write `container/install-dependencies.sh`, executable, and its `COPY` and `chmod` in `container/Dockerfile`, as
+- [x] The `RUN chmod` of `container/Dockerfile` no longer fits one line with the script beside the others, so it
+  continues on a second. Add `tests/dockerfile-executables.mjs`, which reads the paths it makes executable across
+  its continued lines, and read them with it in the test of the `COPY` of the script and in that of
+  `known-terminal.sh` in `tests/known-terminal.test.mjs`, whose own reading takes the first line alone (R13)
+- [x] Write `container/install-dependencies.sh`, executable, and its `COPY` and `chmod` in `container/Dockerfile`, as
   the approach gives them, until the tests above pass (R1, R4, R5, R6)
 - [ ] Add to `tests/sandbox-unit-run.test.mjs`, with a `package-lock.json` committed on the unit's branch: a new
   clone of the unit's branch runs `sandbox /usr/local/bin/install-dependencies.sh echo hi`, the calls otherwise as
@@ -146,6 +153,6 @@ repository and `container/` ships as a whole, so neither table changes.
 ## Commit Points
 
 - [x] `feature-0083 Name the new clone and the default command once`: the first task
-- [ ] `feature-0083 Add the script that installs a new clone`: the second and third tasks
-- [ ] `feature-0083 Install the dependencies of a unit run's new clone`: the fourth to seventh tasks
+- [x] `feature-0083 Add the script that installs a new clone`: the second to fourth tasks
+- [ ] `feature-0083 Install the dependencies of a unit run's new clone`: the fifth to eighth tasks
 - [ ] `feature-0083 Document the install of a new clone`: the tasks of `SANDBOX.md` and `README.md`
