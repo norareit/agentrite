@@ -67,7 +67,7 @@ repository and `container/` ships as a whole, so neither table changes.
 
 ## Tasks
 
-- [ ] Add `clone_is_new` to `container/unit-clone.sh` and call it from `refuse_unlanded` and `prepare_clone`, and add
+- [x] Add `clone_is_new` to `container/unit-clone.sh` and call it from `refuse_unlanded` and `prepare_clone`, and add
   `default_command` to `container/sandbox.sh` and use it in `--connect`, as the approach gives them. `npm test` passes
   unchanged (R8)
 - [ ] Add the new `tests/install-dependencies.test.mjs`, which runs the script with `sh` on the host in a temporary
@@ -145,7 +145,7 @@ repository and `container/` ships as a whole, so neither table changes.
 
 ## Commit Points
 
-- [ ] `feature-0083 Name the new clone and the default command once`: the first task
+- [x] `feature-0083 Name the new clone and the default command once`: the first task
 - [ ] `feature-0083 Add the script that installs a new clone`: the second and third tasks
 - [ ] `feature-0083 Install the dependencies of a unit run's new clone`: the fourth to seventh tasks
 - [ ] `feature-0083 Document the install of a new clone`: the tasks of `SANDBOX.md` and `README.md`

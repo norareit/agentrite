@@ -180,13 +180,18 @@ find_variant_branch() {
   echo "$variant"
 }
 
+# Whether no earlier run left a clone at the path, so that this run makes it anew.
+clone_is_new() {
+  [ ! -e "$1" ]
+}
+
 # Fails, saying what to do first, when a new clone would be made while sandbox/<branch>
 # holds commits the branch lacks: they are an earlier run's, which the fetch after this
 # run would overwrite.
 refuse_unlanded() {
   local root="$1" branch="$2" clone="$3"
   local ref="refs/remotes/sandbox/$branch"
-  [ ! -e "$clone" ] || return 0
+  clone_is_new "$clone" || return 0
   git -C "$root" show-ref --verify --quiet "$ref" || return 0
   [ -n "$(git -C "$root" rev-list --max-count=1 "refs/heads/$branch..$ref")" ] || return 0
   echo "sandbox.sh: sandbox/$branch holds commits of an earlier run that $branch does not have," >&2
@@ -200,7 +205,7 @@ refuse_unlanded() {
 # the agent could rewrite.
 prepare_clone() {
   local root="$1" branch="$2" clone="$3"
-  if [ -e "$clone" ]; then
+  if ! clone_is_new "$clone"; then
     echo "sandbox.sh: resuming the clone of $branch that an earlier run left at $clone." >&2
     return 0
   fi

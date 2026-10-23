@@ -102,6 +102,10 @@ set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
+# The command of a run that is given none: the CMD of container/Dockerfile, which a test
+# in tests/sandbox-unit-run.test.mjs holds this against.
+default_command=bash
+
 # The caller names the project root. The kit is an installed package, and how deep it
 # sits under node_modules depends on the scope, on hoisting and on the package manager,
 # so counting directories up from here would be a guess.
@@ -686,7 +690,7 @@ if [ "$connect" -eq 1 ]; then
     echo "Nothing was run." >&2
     exit 1
   fi
-  [ $# -gt 0 ] || set -- bash
+  [ $# -gt 0 ] || set -- "$default_command"
   terminal=()
   if [ -t 0 ] && [ -t 1 ]; then
     terminal=(--tty)

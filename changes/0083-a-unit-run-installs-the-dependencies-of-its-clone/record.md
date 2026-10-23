@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-23T22:37:29Z
 ---
 
@@ -22,3 +22,8 @@ timestamp: 2026-10-23T22:37:29Z
   a command follow that section and its bullet on `./sandbox.sh` would otherwise not name the install's; and the
   bullet of "Commit messages" of `SANDBOX.md` on a clone before `npm ci` stays, since it tells the reader to run
   nothing and holds of a resumed clone. The status stays `approved`
+- 2026-10-23T22:53:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0083-a-unit-run-installs-the-dependencies-of-its-clone` at `14990d9`, began the work. The host has no
+  Docker, so the tests of real containers are skipped in every run of the suite here. The status is `in-progress`
+- 2026-10-23T22:55:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added `clone_is_new` and
+  `default_command` as the first task gives them. `npm test` passed with 1187 tests, 30 skipped for want of Docker
