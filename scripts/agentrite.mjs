@@ -55,6 +55,16 @@ import {
   variantOf,
 } from './agentrite-orchestrate.mjs';
 import { outcomeRequest } from './agentrite-outcome.mjs';
+import {
+  isRunDirectory,
+  parseRunsArgs,
+  runFrom,
+  runsJson,
+  runsListing,
+  RUNS_FORM,
+  runStateOf,
+  selectRuns,
+} from './agentrite-runs.mjs';
 import { HARNESS_NAMES, isKitWrapper, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
 import {
   harnessCommand,
@@ -1718,6 +1728,75 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
 }
 
 /**
+ * The text of the file at `path`, from the root, of a run. A read that throws is thrown again naming the file.
+ *
+ * @param {string} root
+ * @param {string} path
+ * @returns {string}
+ */
+function readRunFile(root, path) {
+  try {
+    return readFileSync(resolve(root, path), 'utf-8');
+  } catch (error) {
+    throw new Error(`${path} cannot be read: ${messageOf(error)}`);
+  }
+}
+
+/**
+ * The runs of the orchestrator of the project at `root`, each judged at the instant `now`, only those of the unit
+ * `number` names when one is given. It reads `.orchestrator/` and nothing else, and refuses a run whose files are not
+ * of the form the orchestrator writes.
+ *
+ * @param {string} root
+ * @param {string | undefined} number
+ * @param {number} now
+ * @returns {import('./agentrite-runs.mjs').Listed[]}
+ */
+export function readRuns(root, number, now) {
+  const orchestrator = resolve(root, ORCHESTRATOR_DIRECTORY);
+  if (!exists(orchestrator)) return [];
+  const directoriesOf = (/** @type {string} */ path) =>
+    readdirSync(path, { withFileTypes: true })
+      .filter((entry) => entry.isDirectory())
+      .map((entry) => entry.name);
+  return directoriesOf(orchestrator)
+    .filter((unit) => isUnitDirectory(unit) && (number === undefined || unit.startsWith(`${number}-`)))
+    .flatMap((unit) =>
+      directoriesOf(join(orchestrator, unit))
+        .filter((name) => isRunDirectory(name) && isRegularFile(join(orchestrator, unit, name, 'state.json')))
+        .map((name) => {
+          const directory = join(ORCHESTRATOR_DIRECTORY, unit, name);
+          const heartbeat = resolve(root, directory, 'heartbeat');
+          const run = runFrom(unit, name, {
+            state: readRunFile(root, join(directory, 'state.json')),
+            definition: readRunFile(root, join(directory, 'definition.json')),
+            heartbeat: isRegularFile(heartbeat) ? readFileSync(heartbeat, 'utf-8') : undefined,
+          });
+          const followed = run.followedName === null ? null : `${run.directory}/${run.followedName}`;
+          return {
+            ...run,
+            state: runStateOf(run, now),
+            followed: followed !== null && isRegularFile(resolve(root, followed)) ? followed : null,
+          };
+        }),
+    );
+}
+
+/**
+ * Prints the runs of the project, or the JSON document of them, and returns 0. Nothing is printed before every run
+ * was read, so that a run that is refused leaves standard output empty.
+ *
+ * @param {string} root
+ * @param {ReturnType<typeof parseRunsArgs>} parsed
+ * @returns {number}
+ */
+function runs(root, parsed) {
+  const selection = selectRuns(readRuns(root, parsed.number, Date.now()), parsed.limit);
+  process.stdout.write(parsed.json ? runsJson(selection) : runsListing(selection, parsed.number));
+  return 0;
+}
+
+/**
  * A command: `form` is the one line that says how it is run, `parse` reads the arguments after the command's name,
  * and throws what to print for ones it does not take, and `run` takes the project root and what `parse` returned,
  * and returns the exit status, or a promise of it.
@@ -1747,6 +1826,7 @@ const COMMANDS = {
   units: { form: UNITS_FORM, parse: parseUnitsArgs, run: units },
   run: { form: RUN_FORM, parse: parseRunArgs, run },
   orchestrate: { form: ORCHESTRATE_FORM, parse: parseOrchestrateArgs, run: orchestrateCommand },
+  runs: { form: RUNS_FORM, parse: parseRunsArgs, run: runs },
 };
 
 /**

@@ -248,3 +248,12 @@ test('in one object, a key it does not take is named before a value of the wrong
   refuses({ steps: [{ model: '', role: 'x', extra: 1 }] }, `steps[0].extra is no key of a step. ${STEP_KEYS}`);
   refuses({ steps: [step({ model: '', role: 'x' })] }, `steps[0].role is "x". It must hold ${ROLES_MUST}`);
 });
+
+test('a definition read with its path alone takes a role and a harness that are strings that are not empty', () => {
+  const context = { path: PATH };
+  const given = { steps: [step({ role: 'anything', harness: 'elsewhere' })] };
+
+  assert.deepEqual(parse(given, context), given);
+  refuses({ steps: [step({ role: '' })] }, 'steps[0].role is "". It must hold a string that is not empty', context);
+  refuses({ steps: [step({ harness: 3 })] }, 'steps[0].harness is 3. It must hold a string that is not empty', context);
+});

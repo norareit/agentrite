@@ -179,21 +179,21 @@ the directory named as before.
   after `checkApproved`, give the variant to `makeRunDirectory`, which names the directory by `runName`, write
   `branch` in `writeState` after `definition`, and say in the comments of `makeRunDirectory` and `orchestrateCommand`
   that the directory's name holds the variant and `state.json` the branch. Run `npm test` (R1, R3, R4, R5)
-- [ ] Add to `tests/agentrite-definition.test.mjs` that a definition parsed with `{ path }` alone takes a step of any
+- [x] Add to `tests/agentrite-definition.test.mjs` that a definition parsed with `{ path }` alone takes a step of any
   role and harness that is a string that is not empty, and refuses a `role` of `""` and a `harness` of `3`, naming
   each with `a string that is not empty`. Make `parseDefinition` and `parseStep` judge so when the context holds no
   `roles` and `harnesses` (R8)
-- [ ] Write `tests/agentrite-runs.test.mjs` with the unit tests of `parseRunsArgs`: no argument gives `{ number:
+- [x] Write `tests/agentrite-runs.test.mjs` with the unit tests of `parseRunsArgs`: no argument gives `{ number:
   undefined, limit: 50, json: false }`; `0029`, `--limit 5`, `--limit=5`, `--limit 0` and `--json` each read; the
   options before, between and after the number; and each wrong argument of R19 throws its line and `RUNS_FORM`:
   `29`, `00290`, `0029 0030`, `--limit`, `--limit --json`, `--limit 1 --limit 2`, `--limit -1`, `--limit 1.5`,
   `--limit x`, `--json=yes` and `--status draft` (R6, R19, R24)
-- [ ] Add `RUNS_FORM` and `parseRunsArgs` in the new `scripts/agentrite-runs.mjs` (R6, R19)
-- [ ] Add the unit tests of `isRunDirectory`: `2026-10-21T10:00:00Z`, `2026-10-21T10:00:00Z--opus` and
+- [x] Add `RUNS_FORM` and `parseRunsArgs` in the new `scripts/agentrite-runs.mjs` (R6, R19)
+- [x] Add the unit tests of `isRunDirectory`: `2026-10-21T10:00:00Z`, `2026-10-21T10:00:00Z--opus` and
   `2026-10-21T10:00:00Z--gpt-6-1` are runs; `2026-10-21T10:00:00Z--`, `2026-10-21T10:00:00Z--Opus`,
   `2026-10-21T10:00:00Z-opus`, `2026-10-21T10:00Z`, `2026-10-21 10:00:00Z`, `.2026-10-21T10:00:00Z` and `latest`
   are not. Add `isRunDirectory` (R7, R24)
-- [ ] Add the unit tests of `runFrom` and `runStateOf`, with a `state.json` and a `definition.json` written as the
+- [x] Add the unit tests of `runFrom` and `runStateOf`, with a `state.json` and a `definition.json` written as the
   orchestrator writes them: a run of the default definition at step 2, round 1 of 3, gives its `step`, `head` and
   `followedName` `02-reviewer.followed.jsonl`; at step 0 it gives no round and no rounds; with `at: null` no step,
   no head and no followed name; a run of a definition of 101 steps at step 100 gives `100-implementer.followed.jsonl`;
@@ -203,18 +203,18 @@ the directory named as before.
   60 seconds and 1 millisecond before gives `stale`; a missing one, an empty one, one without its line break and one
   with a second line give `heartbeat: null` and `stale`; and `2026-99-99T99:99:99Z\n`, which is of the form but no
   instant `Date.parse` reads, gives that `heartbeat` and `stale` (R2, R8, R10, R11, R24)
-- [ ] Add the unit tests of each refusal of `runFrom`, each by the exact message naming
+- [x] Add the unit tests of each refusal of `runFrom`, each by the exact message naming
   `.orchestrator/0029-x/2026-10-21T10:00:00Z/state.json` or `definition.json`: a `state.json` that is not JSON, that
   is an array, with a key `extra`, with `unit` missing, with `branch` of `""`, with `at.number` of `-1`, with
   `at.round` of `{ at: 4, of: 3 }`, with a session lacking `session`, with `ended.status` of `"0"`; a
   `definition.json` that is not JSON and one without `steps`; and an `at` whose `item` is past the last item, whose
   `index` is past the last step of the repeat, whose `round` is `null` in a repeat, whose `round.of` is not the
   repeat's `times`, and whose `index` is not `null` outside a repeat (R13, R24)
-- [ ] Add `runFrom`, `STALE_MILLISECONDS` and `runStateOf` as the approach gives them, importing `isObject`,
+- [x] Add `runFrom`, `STALE_MILLISECONDS` and `runStateOf` as the approach gives them, importing `isObject`,
   `jsonFault`, `jsonKeyFault` and `jsonPath` from `scripts/agentrite-json.mjs`, `parseDefinition`, and
   `stepFileName`, `stepHead`, `VARIANT_PATTERN` and `INSTANT_PATTERN` from `scripts/agentrite-orchestrate.mjs`
   (R7, R8, R10, R11, R13)
-- [ ] Add the unit tests of `selectRuns`: runs given out of order come the latest instant first, two units at one
+- [x] Add the unit tests of `selectRuns`: runs given out of order come the latest instant first, two units at one
   instant in the order of their directories, `0029`'s `<instant>`, `<instant>--gpt-6-1` and `<instant>--opus` in
   that order, and the input is not changed; 60 runs give 50 and a total of 60, `--limit 5` gives 5, and `0` gives 60.
   Of `runsListing`: a running run, a stale one with a heartbeat and one without, each at a step and before the
@@ -223,8 +223,8 @@ the directory named as before.
   nothing to show. Of `runsJson`: the keys of a run and of its step in the order of R18, `variant`, `branch`,
   `heartbeat`, `step`, `followed` and `ended` each as a value and as `null`, the total, and `{ "runs": [], "total":
   0 }` with nothing to show (R9, R12, R15, R16, R17, R18, R24)
-- [ ] Add `selectRuns`, `runLine`, `runsListing` and `runsJson` (R9, R12, R15, R16, R17, R18)
-- [ ] Add to `tests/agentrite-runs.test.mjs` the unit tests of `readRuns`, on a temporary directory with run
+- [x] Add `selectRuns`, `runLine`, `runsListing` and `runsJson` (R9, R12, R15, R16, R17, R18)
+- [x] Add to `tests/agentrite-runs.test.mjs` the unit tests of `readRuns`, on a temporary directory with run
   directories written by a helper of the test: no `.orchestrator/` gives `[]`; a `.gitignore`, a directory
   `history-0001-old`, a file `0029-x` and, in a unit directory, a directory `latest`, a file of a run's name and a run
   without `state.json` are not read, also when they hold a `state.json` that is not JSON; a number gives the runs of
@@ -232,11 +232,11 @@ the directory named as before.
   `.orchestrator/0029-x/<run>/02-reviewer.followed.jsonl`, and of `100-implementer.followed.jsonl` for the definition
   of 101 steps, and `null` when the file is missing and for a run with no step; a `definition.json` that is missing
   is refused as one that cannot be read; and `directory` is `.orchestrator/0029-x/<run>` (R7, R8, R13, R14, R18, R24)
-- [ ] Add `readRuns` and `runs` to `scripts/agentrite.mjs`, exported `readRuns`, and `runs` in `COMMANDS` after
+- [x] Add `readRuns` and `runs` to `scripts/agentrite.mjs`, exported `readRuns`, and `runs` in `COMMANDS` after
   `orchestrate`; add `scripts/agentrite-runs.mjs` to `files` of `package.json` and to the list of
   `tests/package-documents.test.mjs`; and end the usage of `tests/agentrite-init.test.mjs` with `       agentrite runs
   [<number>] [--limit <count>] [--json]` (R6, R7, R8, R13, R14, R17, R23)
-- [ ] Add to `tests/agentrite-runs.test.mjs` the tests of the command, run by `spawnSync` in a temporary directory
+- [x] Add to `tests/agentrite-runs.test.mjs` the tests of the command, run by `spawnSync` in a temporary directory
   holding no `agentrite.json`, no `changes/` and no git repository: a project of 53 runs of `0029-x` with and without
   variants, `0030-y` and `0031-z`, a running one, a stale one and an ended one among them, gives 50 lines, the latest
   first, and the closing line `showing 50 of 53 runs, --limit 0 shows them all`, exiting 0; `0030` gives the runs of
@@ -245,7 +245,7 @@ the directory named as before.
   }`, exiting 0; a malformed `state.json` exits 1 with nothing on standard output and the file named on standard
   error; and `--limit x` exits 2 with the line and the usage on standard error (R6, R9, R14, R15, R16, R17, R18, R19,
   R26)
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the test that, after `a run whose every item ends` of
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the test that, after `a run whose every item ends` of
   `ONE_STEP`, `agentrite runs --json` lists the run as `ended`, with its `branch` `null`, its `step` the implementer
   at number 0 and its `followed` the path of `00-implementer.followed.jsonl`, so that the reader reads what the
   writer writes (R7, R8, R18)
@@ -280,6 +280,6 @@ the directory named as before.
 - [x] `feature-0081 Share isObject and the checks of a number and a limit`: the second task, which changes no
   behavior
 - [x] `feature-0081 Keep the branch and the variant of a run`: the third to seventh tasks
-- [ ] `feature-0081 List the runs of a project`: the eighth to twentieth tasks
+- [x] `feature-0081 List the runs of a project`: the eighth to twentieth tasks
 - [ ] `feature-0081 Document the runs and the variants of a run`: the three tasks of `README.md` and the one of
   `SANDBOX.md`

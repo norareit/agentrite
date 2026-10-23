@@ -12,7 +12,8 @@ import { isObject, jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mj
  * }} Step
  * @typedef {{ times: number, until?: 'no-blocking-findings', steps: Step[] }} Repeat
  * @typedef {{ steps: (Step | { repeat: Repeat })[] }} Definition
- * @typedef {{ roles: string[], harnesses: string[] }} Names What `agentrite.json` names, which a step must name
+ * @typedef {{ roles?: string[], harnesses?: string[] }} Names What `agentrite.json` names, which a step must name. A
+ * definition read without them, as one a run kept, takes any role and harness that is a string that is not empty
  */
 
 const OBJECT_MUST = 'It must hold a JSON object with one key, steps';
@@ -102,12 +103,18 @@ function valueAt(object, path, key, holds, must) {
  */
 function parseStep(value, path, { roles, harnesses }) {
   checkKeys(value, path, PLACES.step);
-  const roleMust = `a role that roles in ${SETTINGS_FILE} names: ${inWords(roles)}`;
-  const harnessMust = `a harness that harnesses in ${SETTINGS_FILE} names: ${inWords(harnesses)}`;
+  const named = (/** @type {string[] | undefined} */ names, /** @type {string} */ key, /** @type {string} */ list) =>
+    names === undefined
+      ? { holds: isFilledString, must: 'a string that is not empty' }
+      : {
+          holds: (/** @type {unknown} */ given) => isNamed(given, names),
+          must: `a ${key} that ${list} in ${SETTINGS_FILE} names: ${inWords(names)}`,
+        };
+  const [roleCheck, harnessCheck] = [named(roles, 'role', 'roles'), named(harnesses, 'harness', 'harnesses')];
   const modelMust = "the harness's own id of a model, as a string that is not empty";
   /** @type {Step} */ const step = {
-    role: /** @type {string} */ (valueAt(value, path, 'role', (role) => isNamed(role, roles), roleMust)),
-    harness: /** @type {string} */ (valueAt(value, path, 'harness', (name) => isNamed(name, harnesses), harnessMust)),
+    role: /** @type {string} */ (valueAt(value, path, 'role', roleCheck.holds, roleCheck.must)),
+    harness: /** @type {string} */ (valueAt(value, path, 'harness', harnessCheck.holds, harnessCheck.must)),
     model: /** @type {string} */ (valueAt(value, path, 'model', isFilledString, modelMust)),
   };
   if (Object.hasOwn(value, 'prompt')) {

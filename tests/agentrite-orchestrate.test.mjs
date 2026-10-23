@@ -1621,6 +1621,27 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
 
 // R25: the branch and the variant of a run
 
+test('agentrite runs lists a run the orchestrator wrote, with its end, step and followed file', (testContext) => {
+  const { base, write, agentrite, answer } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  answer(1, claudePrinted(responseOf({ ...DONE, summary: 'Built.' })));
+  assert.equal(agentrite('orchestrate', '0029', '--definition', 'one.json').status, 0);
+
+  const result = agentrite('runs', '--json');
+
+  assert.equal(result.status, 0, result.stderr);
+  const { runs, total } = JSON.parse(result.stdout);
+  const run = runDirectoryOf(base);
+  assert.equal(total, 1);
+  assert.equal(runs[0].state, 'ended');
+  assert.equal(runs[0].branch, null);
+  assert.equal(runs[0].directory, run.name);
+  assert.equal(runs[0].step.number, 0);
+  assert.equal(runs[0].step.role, 'implementer');
+  assert.equal(runs[0].followed, `${run.name}/00-implementer.followed.jsonl`);
+  assert.equal(runs[0].ended.status, 0);
+});
+
 const TRY_BRANCH = 'feature-0029-try-the-orchestrator';
 const STARTED_AT = '2026-10-21T10:00:00Z';
 
