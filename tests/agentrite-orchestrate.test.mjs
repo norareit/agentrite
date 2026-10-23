@@ -24,6 +24,7 @@ import {
   endReport,
   followedText,
   followPrinter,
+  timedItems,
   exitStatus,
   judgeStep,
   orchestrate,
@@ -725,7 +726,7 @@ test('a call with a pattern of two lines is printed on one line, in each harness
     ['opencode', opencode, 'grep'],
   ]) {
     /** @type {string[]} */ const written = [];
-    followPrinter((text) => written.push(text), Date.now)(HEADLESS[harness].follow(line));
+    followPrinter((text) => written.push(text))(timedItems(HEADLESS[harness].follow(line), Date.now));
     assert.equal(written.join(''), `${dim(`14:03:27 → ${tool} first\\nsecond`)}\n`, harness);
   }
 });
@@ -738,8 +739,10 @@ test('calls OpenCode makes known in the reverse of the order made are printed as
       part: { type: 'tool', tool: 'bash', state: { status: 'completed', input: { command } } },
     });
   /** @type {string[]} */ const written = [];
-  const print = followPrinter((text) => written.push(text), Date.now);
-  for (const line of [ended(7, 'true'), ended(9, 'sleep 2')]) print(HEADLESS.opencode.follow(line));
+  const print = followPrinter((text) => written.push(text));
+  for (const line of [ended(7, 'true'), ended(9, 'sleep 2')]) {
+    print(timedItems(HEADLESS.opencode.follow(line), Date.now));
+  }
   assert.equal(written.join(''), `${dim('17:12:07 → bash true')}\n${dim('17:12:09 → bash sleep 2')}\n`);
 });
 
@@ -763,14 +766,32 @@ test('followedText gives a call as one dimmed line, and a text as its time and i
   );
 });
 
+test('timedItems keeps the time of an item and gives one without the instant now gives, changing no item', () => {
+  const given = [
+    { kind: 'text', time: Date.UTC(2026, 9, 22, 9, 0, 3), text: 'Kept.' },
+    { kind: 'text', time: undefined, text: 'Stamped.' },
+    { ...call({ command: 'ls' }), time: undefined },
+  ];
+  const before = structuredClone(given);
+  let calls = 0;
+  const now = () => Date.UTC(2026, 9, 22, 9, 0, ++calls);
+  const timed = timedItems(given, now);
+  assert.deepEqual(
+    timed.map((item) => item.time),
+    [Date.UTC(2026, 9, 22, 9, 0, 3), Date.UTC(2026, 9, 22, 9, 0, 1), Date.UTC(2026, 9, 22, 9, 0, 2)],
+  );
+  assert.equal(calls, 2);
+  assert.deepEqual(given, before);
+});
+
 test('followPrinter sets each text apart by one blank line, and the calls on lines of their own', () => {
   /** @type {string[]} */ const written = [];
   const now = () => Date.UTC(2026, 9, 22, 9, 0, 0);
-  const print = followPrinter((text) => written.push(text), now);
+  const print = followPrinter((text) => written.push(text));
   const text = (words, time) => ({ kind: 'text', time, text: words });
-  print([text('First.', undefined)]);
-  print([call({ command: 'ls' }), call({ path: '/work/a.mjs' }, Date.UTC(2026, 9, 22, 9, 0, 2))]);
-  print([text('Second.', Date.UTC(2026, 9, 22, 9, 0, 3)), text('Third.', undefined)]);
+  print(timedItems([text('First.', undefined)], now));
+  print(timedItems([call({ command: 'ls' }), call({ path: '/work/a.mjs' }, Date.UTC(2026, 9, 22, 9, 0, 2))], now));
+  print(timedItems([text('Second.', Date.UTC(2026, 9, 22, 9, 0, 3)), text('Third.', undefined)], now));
   assert.equal(
     written.join(''),
     [

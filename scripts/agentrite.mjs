@@ -42,6 +42,7 @@ import {
   endReport,
   exitStatus,
   followPrinter,
+  timedItems,
   orchestrate,
   ORCHESTRATE_FORM,
   parseOrchestrateArgs,
@@ -1605,8 +1606,9 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
         writeState(null);
         console.log(stepLine(planned));
       },
-      run: (planned) =>
-        runStep(
+      run: (planned) => {
+        const print = followPrinter((text) => process.stdout.write(text));
+        return runStep(
           root,
           directory,
           skipPermissions,
@@ -1614,8 +1616,9 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
           (running) => {
             group = running;
           },
-          follow ? followPrinter((text) => process.stdout.write(text), Date.now) : undefined,
-        ),
+          follow ? (items) => print(timedItems(items, Date.now)) : undefined,
+        );
+      },
       ended(entry) {
         const { planned, result, reading } = entry;
         const { role, harness } = planned.step;

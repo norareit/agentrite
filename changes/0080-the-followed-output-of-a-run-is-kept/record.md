@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-23T14:24:42Z
 ---
 
@@ -25,3 +25,5 @@ timestamp: 2026-10-23T14:24:42Z
   item's time moved out of the printer first, so that the terminal and the file take one instant, the line of an item
   in `scripts/agentrite-orchestrate.mjs`, and the file, made empty before the harness starts and cut back after a
   failed append, in `scripts/agentrite.mjs`. The status is `approved`
+- 2026-10-23T16:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
+  branch at `8a46637`. The status is `in-progress`

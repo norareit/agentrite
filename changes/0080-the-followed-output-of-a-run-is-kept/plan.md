@@ -70,7 +70,7 @@ sandbox.
 
 ## Tasks
 
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` a test of `timedItems`: an item with a time keeps it, one without
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` a test of `timedItems`: an item with a time keeps it, one without
   takes what `now` gives, `now` is called once for each item without a time and not for one with it, and the items
   given are not changed. Change the test `followPrinter sets each text apart by one blank line, and the calls on lines
   of their own` to give the printer timed items, and the tests that print `HEADLESS[harness].follow(line)` to stamp

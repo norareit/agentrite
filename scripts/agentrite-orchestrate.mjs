@@ -388,19 +388,35 @@ export function followedText(item, time) {
 }
 
 /**
+ * A followed item with its time known.
+ *
+ * @typedef {import('./agentrite-headless.mjs').Followed & { time: number }} Timed
+ */
+
+/**
+ * The items with the time each is followed at: the time the harness gave, or what `now` gives for an item it gave
+ * none for. The terminal and the followed file take the same instant of an item because it is set once, here.
+ *
+ * @param {Followed[]} items
+ * @param {() => number} now
+ * @returns {Timed[]}
+ */
+export function timedItems(items, now) {
+  return items.map((item) => ({ ...item, time: item.time ?? now() }));
+}
+
+/**
  * The printer of one step: it writes the items followed of the step as they are made known, each text message
- * between blank lines, one blank line between two of them, and the calls on consecutive lines. An item with no time
- * takes the instant it is printed.
+ * between blank lines, one blank line between two of them, and the calls on consecutive lines.
  *
  * @param {(text: string) => void} write
- * @param {() => number} now
- * @returns {(items: Followed[]) => void}
+ * @returns {(items: Timed[]) => void}
  */
-export function followPrinter(write, now) {
+export function followPrinter(write) {
   let afterText = false;
   return (items) => {
     for (const item of items) {
-      const text = followedText(item, clockTime(item.time ?? now()));
+      const text = followedText(item, clockTime(item.time));
       if (item.kind === 'call') write(`${text}\n`);
       else write(`${afterText ? '' : '\n'}${text}\n\n`);
       afterText = item.kind === 'text';
