@@ -103,3 +103,17 @@ timestamp: 2026-10-22T22:02:19Z
   1097 passed, none failed or skipped; `./sandbox.sh --in-place npm test`: 1067 passed, none failed, 30 skipped for
   Docker; and the diff check, which passed. Not independently verified: a non-Linux host, a graphical git client's
   PATH, historical test-first runs, the manual scratch-project and sandbox-dev session, or a published-release update
+- 2026-10-23T12:31:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1 of the review of
+  `35280f5`: the test context the unit's own tests name `t` is now `testContext`, in all of
+  `tests/commit-msg-hook.test.mjs` and in the tests of the hook that the unit added at the end of
+  `tests/agentrite-init.test.mjs` and `tests/agentrite-refresh.test.mjs`, and three of their titles are shortened to
+  keep the lines within 120 characters, in `a3d34f5`. The tests those two files held before the unit still name it `t`,
+  which they are left with, since the unit changes no code it did not add. The two files therefore hold both names
+- 2026-10-23T12:31:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied P1 of the review of
+  `35280f5`: `plan.md` has a ticked task, after commit point 4, for the fake hosts' refusal of a configuration without a
+  required variable and for the marker of the kit's version in the question for the merged configuration, traced to R16
+  and R24, and a commit point for `275e0a6`. The reason is in the entry of 2026-10-23T12:11:23Z
+- 2026-10-23T12:31:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on `a3d34f5`. `npm
+  test` on the Linux host, with Docker: 1097 tests, 1097 pass, none fail and none skipped. `./sandbox.sh --in-place npm
+  test`: 1097 tests, 1067 pass, none fail, and 30 skipped, those that need Docker. The status stays `in-progress`, until
+  the human decides C1, the review's blocking finding

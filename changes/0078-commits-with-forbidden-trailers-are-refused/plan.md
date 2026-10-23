@@ -220,6 +220,13 @@ before it records no kit version and is built again at the first start.
 - [x] In `tests/wrapper-fixture.mjs`, give the stand-in image of `dockerHost` the build argument and the label of the
   kit's version, so that the tests with real Docker see what the kit's image records. Run the whole suite (R16, R24)
 - [x] Commit point 4, below
+- [x] Added during the work, after the documents, as `record.md` says: in `tests/wrapper-fixture.mjs`, let the fake
+  hosts' answer to `config --format json` refuse, as Compose does, when a variable that `container/compose.yml`
+  requires with `:?` has no value, and confirm that the suite then fails. In `container/sandbox.sh`, hand the
+  question for the merged configuration the marker for `SANDBOX_AGENTRITE_VERSION` too, as it is handed for the two
+  harness versions, since the question is asked before the kit's version is read, by `--connect` among the rest. Run
+  the whole suite (R16, R24). Committed as
+  `feature-0078 Hand Compose the kit's version when the wrapper reads the configuration`
 
 ### The documents
 
@@ -283,3 +290,5 @@ before it records no kit version and is built again at the first start.
 - [x] `feature-0078 Give the wrapper's fake hosts the kit's version label`: the fixture alone, behavior unchanged
 - [x] `feature-0078 Build the image again for a new kit`: the label, the build argument, the wrapper, and their tests
 - [x] `feature-0078 Describe the commit-msg hook`: `README.md` and `SANDBOX.md`
+- [x] `feature-0078 Hand Compose the kit's version when the wrapper reads the configuration`: the task added during
+  the work, the fake hosts' refusal and the marker, after the documents
