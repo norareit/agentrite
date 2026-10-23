@@ -122,3 +122,19 @@ timestamp: 2026-10-22T22:02:19Z
   applied. Every task of `plan.md` is ticked. The human decided too that the tests of `tests/agentrite-init.test.mjs`
   and `tests/agentrite-refresh.test.mjs` that name their test context `t` are renamed, in a task of their own. The
   status is `implemented`
+
+## Amendments
+
+- 2026-10-23T12:41:45Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, renamed every one-character variable
+  of the repository, in `ce15b35`, on the human's decision, which replaces the task of its own that the last entry of
+  the log names: the work is done on this unit's branch with no unit of its own, and covers every file that breaks the
+  rule, not only the two files of that entry. The test context `t` is `testContext` in the 23 files of `tests/` that
+  named it so, 920 uses. `P` of `tests/agentrite-run.test.mjs` is `PROMPT`. The unused parameters `_` of
+  `scripts/agentrite.mjs` and `scripts/agentrite-orchestrate.mjs` are `_placeholder` and `_cell`, and the fields `_`
+  that `read` discards in `container/entrypoint.sh` and `container/sandbox.sh` are `keyword` and `rest`, and the loop's
+  `_` there is `attempt`. A `test(` call that the longer name took over 120 characters is written with its title and its
+  callback on lines of their own, as the suite already writes a long one, 128 of them, and 13 other lines are broken
+  where they ran over. Nothing a test checks changed. `npm test` on the Linux host, with Docker: 1097 tests, 1097 pass,
+  none fail and none skipped. `./sandbox.sh --in-place npm test`: 1097 tests, 1067 pass, none fail, and 30 skipped,
+  those that need Docker. A search of the tracked code, outside `node_modules` and `changes/`, for a declaration, a
+  parameter, a `for` or a `read` of one character finds none
