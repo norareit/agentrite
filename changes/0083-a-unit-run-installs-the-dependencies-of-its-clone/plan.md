@@ -143,8 +143,8 @@ repository and `container/` ships as a whole, so neither table changes.
 
 ## Verification
 
-- [ ] `npm test` passes, on a host with Docker, where `tests/sandbox-install.test.mjs` runs
-- [ ] `./sandbox-dev.sh <a unit with a branch> npx agentrite units` on a host with Docker shows the line of the
+- [x] `npm test` passes, on a host with Docker, where `tests/sandbox-install.test.mjs` runs
+- [x] `./sandbox-dev.sh <a unit with a branch> npx agentrite units` on a host with Docker shows the line of the
   install and npm's output on standard error, and the units on standard output
 - [x] `grep -n "npm ci" README.md SANDBOX.md` shows no example of a unit run that opens with `npm ci`, and no sentence
   that tells the reader to run it in a new clone before a command

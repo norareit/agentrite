@@ -65,3 +65,16 @@ timestamp: 2026-10-23T22:37:29Z
   dependencies are installed with npm ci` followed by npm's output, and that standard output holds the units alone.
   When both hold, tick the two boxes and log the runs here, naming the commit they ran on. When either fails, log
   what was seen here and leave its box open
+- 2026-10-23T23:08:48Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  which has Docker 28.4.0 and Compose 2.39.2, on `feature-0083-a-unit-run-installs-the-dependencies-of-its-clone` at
+  `2212220`, ran the two checks of "Verification" left open for want of Docker. `npm test`, after `npm ci`, passed
+  with 1235 tests and none skipped, so the three tests of `tests/sandbox-install.test.mjs` ran.
+  `./sandbox-dev.sh 0083 npx agentrite units`, with no clone of the unit under `ritenoar-agentrite-sandbox-dev`,
+  exited 0. Its standard error held the entrypoint's lines, then
+  `install-dependencies.sh: the clone is new, so its dependencies are installed with npm ci`, then npm's `added 1
+  package, and audited 2 packages` and `found 0 vulnerabilities`. Its standard output held the units, after the
+  progress of the image build that the `--rebuild` of `./sandbox-dev.sh` adds, which this unit does not change. To
+  see the run's own standard output apart from the build's, ran `container/sandbox.sh` of the working copy with the
+  same project name, the same unit and command and no `--rebuild`, again on a new clone: it exited 0, standard error
+  held the same line and npm's output, and standard output held the 50 lines of units and the `showing 50 of 83
+  units` line alone. Ticked the two boxes of "Verification". The status stays `in-progress`
