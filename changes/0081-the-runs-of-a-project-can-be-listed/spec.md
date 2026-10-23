@@ -54,7 +54,9 @@ The command:
    the directory
 8. The command reads nothing but `.orchestrator/` in the directory it runs in: no `changes/`, no `agentrite.json` and
    no git. The variant of a run is the one its directory's name gives, and its branch the one its `state.json` holds.
-   A `state.json` without `branch`, as of a run from before this unit, is read as one whose `branch` is `null`
+   A `state.json` without `branch`, as of a run from before this unit, is read as one whose `branch` is `null`. Of the
+   followed output of unit 0080, the command reads only whether the file of the run's step is there, and not what it
+   holds
 9. Runs are listed by the instant they started, the latest first. Runs that started at the same instant are listed in
    the order of their unit directories, and runs of one unit in the order of their directories' names
 
@@ -105,6 +107,9 @@ The JSON document:
     * `heartbeat`, the instant its `heartbeat` holds, or `null` when it holds none of the form or is missing
     * `step`, `null` for a run with no step, or an object with the step's `number`, its `round` and the `rounds` of its
       repeat, both `null` for a step outside a repeat, its `role`, its `harness` and its `model`
+    * `followed`, the path from the directory the command runs in of the file of unit 0080 that holds the followed
+      output of the run's step, or `null` for a run with no step and when the run's directory holds no such file, as
+      for a run from before unit 0080 or a step whose file is not yet made
     * `ended`, `null` for a run without an end, or its end as `state.json` holds it, with its `status` and its `line`
 
     When there is nothing to show, `runs` is an empty array, and no line of text is printed
@@ -135,7 +140,9 @@ Tests:
     and each wrong argument of requirement 19; which directories are runs, a run without `state.json`, a `state.json`
     without `branch`; the order of the runs, runs of one unit at the same instant among them; each state with a
     heartbeat that is recent, one at the margin, an old one, a missing one and one not of the form; the step inside
-    and outside a repeat and before the first step; the line of each state, with and without a variant; `<number>`;
+    and outside a repeat and before the first step; `followed` for a step whose file is there, numbered with two
+    digits and with more, for one whose file is not, and for a run with no step; the line of each state, with and
+    without a variant; `<number>`;
     the default limit, `--limit` with a count and with 0, the closing line; the line when there is nothing to show
     with and without a number; the JSON document with and without runs; and each refusal of requirement 13
 25. Tests of the orchestrator show that a run on a variant's branch, on the unit's branch and on a detached `HEAD` each
@@ -166,6 +173,11 @@ Tests:
   disagree sees a fault the command did not make
 * **Runs from before this unit are read as they are.** Their directories have no variant and their `state.json` no
   `branch`, which reads as a run with no branch. Nothing renames or rewrites them
+* **The path of the current step's followed output, not of every step's files.** The human chose it. The number in the
+  name of a step's file has as many digits as the definition's highest step number needs, so a reader that made the
+  name itself would depend on the layout of `.orchestrator/`, which the command is there to spare it. The step the run
+  is at is the one a reader follows live. The files of every step that ran, for a reader that shows the earlier steps
+  of a run, are item 4 of "Beyond the request"
 * **The command judges the state, by the rule of unit 0079.** The interface, and a human at a terminal, then judge it
   the same way, and the rule is written in one place of the code. The clock is the reader's, as the rule says
 * **The line of a state reuses the orchestrator's own text.** The step is named as the line before a step names it,
@@ -197,7 +209,7 @@ Tests:
 ## Non-goals
 
 * Filtering the runs by their state, by their variant, by their harness or by their outcome
-* Showing a run's outcomes, the summary of its last step, its sessions or its followed output
+* Showing a run's outcomes, the summary of its last step, its sessions, or what its followed output holds
 * Reading the units' titles or statuses from `changes/`
 * Renaming or rewriting the runs from before this unit
 * Removing runs, or any other write to `.orchestrator/` by `runs`
@@ -214,3 +226,7 @@ Tests:
 3. **The summary of the last outcome.** The line of an ended run would add the summary of its last step's outcome. It
    costs the reading of outcome files and tests. Without it, the human reads the outcome file in the run's directory,
    which the JSON document names
+4. **The files of every step.** The JSON document would hold, for each step that ran, its number, its role and the
+   paths of its followed output and of its outcome or response file, so that a reader can show each step of a run,
+   one that ended among them. It costs an array of steps, its requirements and tests. Without it, a reader shows the
+   step a run is at, and the human opens the run's directory for the steps before it
