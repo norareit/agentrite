@@ -22,16 +22,17 @@ import {
   clockTime,
   duration,
   endReport,
+  exitStatus,
+  followedLine,
   followedText,
   followPrinter,
-  timedItems,
-  exitStatus,
   judgeStep,
   orchestrate,
   orchestrateUsage,
   parseOrchestrateArgs,
   ranTable,
   stepLine,
+  timedItems,
 } from '../scripts/agentrite-orchestrate.mjs';
 import { heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
@@ -782,6 +783,35 @@ test('timedItems keeps the time of an item and gives one without the instant now
   );
   assert.equal(calls, 2);
   assert.deepEqual(given, before);
+});
+
+test('followedLine gives a text as one line of JSON holding its full text, with the keys in order', () => {
+  const words = 'First "line".\n\nSecond line.\n';
+  const line = followedLine({ kind: 'text', time: 0, text: words }, '2026-10-22T14:03:27Z');
+  assert.equal(line.indexOf('\n'), line.length - 1);
+  assert.deepEqual(JSON.parse(line), { time: '2026-10-22T14:03:27Z', kind: 'text', text: words });
+  assert.deepEqual(Object.keys(JSON.parse(line)), ['time', 'kind', 'text']);
+});
+
+test('followedLine gives a call with the label callLabel gives, or null for none', () => {
+  const instant = '2026-10-22T14:03:31Z';
+  const parsed = (fields) => JSON.parse(followedLine(call(fields), instant));
+  assert.deepEqual(parsed({ description: 'Run the tests' }), {
+    time: instant,
+    kind: 'call',
+    tool: 'Bash',
+    label: 'Run the tests',
+  });
+  assert.equal(parsed({ pattern: 'first\nsecond' }).label, 'first\\nsecond');
+  assert.equal(parsed({}).label, null);
+  assert.deepEqual(Object.keys(parsed({})), ['time', 'kind', 'tool', 'label']);
+});
+
+test('followedLine takes the instant it is given, with its date in UTC', () => {
+  const time = Date.UTC(2026, 9, 22, 14, 3, 27, 900);
+  const line = followedLine({ kind: 'text', time, text: 'Hello' }, instantOf(time));
+  assert.equal(JSON.parse(line).time, '2026-10-22T14:03:27Z');
+  assert.ok(`${instantOf(time)}`.endsWith(clockTime(time) + 'Z'));
 });
 
 test('followPrinter sets each text apart by one blank line, and the calls on lines of their own', () => {

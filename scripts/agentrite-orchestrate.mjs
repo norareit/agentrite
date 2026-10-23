@@ -388,6 +388,23 @@ export function followedText(item, time) {
 }
 
 /**
+ * The line of the followed file for one item: a JSON object and a line break. The label is the one the terminal
+ * prints, so that the two cannot drift apart, and `JSON.stringify` writes a line break of a text as `\\n`, so the line
+ * holds none but its last.
+ *
+ * @param {Followed} item
+ * @param {string} instant the item's time, as `instantOf` gives it
+ * @returns {string}
+ */
+export function followedLine(item, instant) {
+  const object =
+    item.kind === 'text'
+      ? { time: instant, kind: 'text', text: item.text }
+      : { time: instant, kind: 'call', tool: item.tool, label: callLabel(item) ?? null };
+  return `${JSON.stringify(object)}\n`;
+}
+
+/**
  * A followed item with its time known.
  *
  * @typedef {import('./agentrite-headless.mjs').Followed & { time: number }} Timed

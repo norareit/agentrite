@@ -77,14 +77,14 @@ sandbox.
   them with `timedItems` first. Add `timedItems` and the typedef `Timed` to `scripts/agentrite-orchestrate.mjs`, make
   `followPrinter(write)` take `Timed[]` and print `clockTime(item.time)`, and in `orchestrateCommand` give the printer
   `timedItems(items, Date.now)`. Every test passes as before (R5)
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `followedLine`: a text whose text holds line
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `followedLine`: a text whose text holds line
   breaks, a trailing one among them, and double quotes gives one line that ends in its one line break, whose
   `JSON.parse` is `{ time, kind: 'text', text }` with the text in full, and whose keys stand in that order; a call of
   `Bash` with a description gives `{ time, kind: 'call', tool: 'Bash', label: 'Run the tests' }`; a call whose pattern
   holds a line break gives the label with `\n` as `callLabel` writes it; a call with none of the fields gives `label:
   null`; and `followedLine(item, instantOf(Date.UTC(2026, 9, 22, 14, 3, 27, 900)))` gives `time` as
   `2026-10-22T14:03:27Z`, the same second as `clockTime` of that instant, with its date (R4, R5, R12)
-- [ ] Add `followedLine` to `scripts/agentrite-orchestrate.mjs` as the approach gives it, and export it (R4)
+- [x] Add `followedLine` to `scripts/agentrite-orchestrate.mjs` as the approach gives it, and export it (R4)
 - [ ] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `followedFile`, in a temporary directory: it
   makes the file empty before any line is added, and the lines added stand in it in their order, each whole; a making
   that throws does not throw, and a line added after it is written; an append that writes part of a line by the real
