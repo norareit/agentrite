@@ -100,7 +100,7 @@ already says that a file under `.orchestrator` is what an agent may have written
 - [x] In `scripts/agentrite.mjs`, add `HEARTBEAT_MILLISECONDS`, with a doc comment that gives the 10 seconds and the
   60 seconds of the decision, and add and export `heartbeatText(time)` and `startHeartbeat(write)` of the approach,
   with the comment on the dropped error. Run `npm test`: the tests of the previous task pass (R1, R2, R3, R4)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add `'heartbeat'` to the lists of the run's directory in `a run
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add `'heartbeat'` to the lists of the run's directory in `a run
   whose every item ends runs the default definition`, `a run whose steps leave items for after the run`, `a step
   past its limit is ended by SIGTERM` and `a run with --follow ends, writes its directory and exits as the same run
   without it`. In the last, compare the contents of the two runs' files but `heartbeat`, whose instant differs from
@@ -113,13 +113,13 @@ already says that a file under `.orchestrator` is what an agent may have written
   `00-implementer.outcome.json`, `definition.json`, `heartbeat` and `state.json` and no name that opens with `.`,
   and `state.json` holds the end of a complete run. Run `npm test` and see the changed and the new tests fail on the
   missing `heartbeat` (R2, R3, R6, R7, R13)
-- [ ] In `scripts/agentrite.mjs`, make `orchestrateCommand` write by `writeWhole`, start the heartbeat directly after
+- [x] In `scripts/agentrite.mjs`, make `orchestrateCommand` write by `writeWhole`, start the heartbeat directly after
   `makeRunDirectory`, stop it directly before the end is written into `state.json` and in a `finally`, as the
   approach says, and say in its doc comment that the run's directory holds a heartbeat while the run lasts and that
   every file of it is written whole. Run `npm test`: every test passes, those of the run's output, its exit statuses,
   its `state.json`, its signals and its time limits among them, and `a run writes nothing outside .orchestrator`
   (R2, R3, R5, R6, R7, R8, R13)
-- [ ] In `README.md`, "What .orchestrator holds": add `heartbeat` to the list of a run's directory, as one instant in
+- [x] In `README.md`, "What .orchestrator holds": add `heartbeat` to the list of a run's directory, as one instant in
   UTC to the second, as `2026-10-23T10:00:05Z`, followed by a line break; written when the directory is made, before
   the first step, and then every 10 seconds while the run lasts, between steps and while a step runs, with
   `--follow` and without it, each write replacing the instant before it; on the clock of the machine the command runs
@@ -127,7 +127,7 @@ already says that a file under `.orchestrator` is what an agent may have written
   last instant. Say that every file of a run's directory is written whole, under a name that opens with `.` in the
   same directory until it takes its own, so that a program that reads one reads what it held before a write or what
   the write gives it, and that no such file is left once the run ended (R9)
-- [ ] In `README.md`, after that list, say how a program that reads the directory tells a run's state: a run whose
+- [x] In `README.md`, after that list, say how a program that reads the directory tells a run's state: a run whose
   `state.json` holds an end has ended, whatever `heartbeat` holds; a run without an end whose `heartbeat` is at most
   60 seconds old has a sign of life; any other run without an end, one without a `heartbeat` among them, has had none
   for over 60 seconds, and is called stale. Then say what a stale run can be: one whose process ended without writing
@@ -150,5 +150,5 @@ already says that a file under `.orchestrator` is what an agent may have written
 - [x] `feature-0079 Name a run's instant in one place`: the first task, which changes no behavior
 - [x] `feature-0079 Write a file of a run's directory whole`: the second and third tasks
 - [x] `feature-0079 Beat a heartbeat`: the fourth and fifth tasks
-- [ ] `feature-0079 Keep a heartbeat in a run's directory`: the sixth and seventh tasks
-- [ ] `feature-0079 Document the heartbeat and whole files`: the two tasks of `README.md`
+- [x] `feature-0079 Keep a heartbeat in a run's directory`: the sixth and seventh tasks
+- [x] `feature-0079 Document the heartbeat and whole files`: the two tasks of `README.md`

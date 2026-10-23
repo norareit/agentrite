@@ -949,11 +949,34 @@ run's directory holds:
 * `definition.json`, the definition the run runs, as it was read at the start
 * `state.json`, the state of the run: the unit, the definition's path as it was given, the step and round it is at,
   the id of each harness session, and when the run ended, its exit status and how it ended
+* `heartbeat`, one instant in UTC to the second, as `2026-10-23T10:00:05Z`, followed by a line break, and nothing
+  else. The command writes it when it makes the run's directory, before the first step starts, and then every 10
+  seconds while the run lasts, between steps and while a step runs, with `--follow` and without it. Each write
+  replaces the instant before it with the instant of that write, on the clock of the machine the command runs on,
+  which in a unit run is the container's. Once the end of the run is in `state.json`, the command writes it no more,
+  and it holds the instant of its last write
 * `<number>-<role>.outcome.json` for each step that gave an outcome of the form, as it stood in its block, and
   `<number>-<role>.response.md` for a step that did not, holding its final response when there was one. The numbers
   have as many digits as the definition's highest step number needs, two at least, so that the names sort in the
   order the steps ran. An outcome file holds the step's items of `afterwards`, so the run's directory holds those of
   every step that gave an outcome of the form
+
+Every file of a run's directory is written whole. A file that is being written stands in the same directory under a
+name that opens with `.` until it takes its own name, so a program that reads one of the files reads what it held
+before a write or what the write gives it, and never part of either. Once a run ended, no file whose name opens with
+`.` is left in its directory.
+
+A program that reads the directory tells the state of a run by `state.json` and `heartbeat`:
+
+* A run whose `state.json` holds an end has ended, whatever `heartbeat` holds
+* A run without an end whose `heartbeat` is at most 60 seconds old has a sign of life
+* Any other run without an end, one without a `heartbeat` among them, has had none for over 60 seconds, and is called
+  stale
+
+A stale run can be one whose process ended without writing its end, as when a signal ended it; one on a machine that
+sleeps, which gives signs of life again once it wakes; or one whose clock is behind the reader's by more than the
+margin, as a container's in a virtual machine can be. The harness of a step can still be running when the command's own
+process was killed, and the run then shows as stale.
 
 At the start of each run the command makes sure that `.orchestrator/.gitignore` holds `*` and nothing else, and
 writes it when it is missing or holds anything else. So git ignores the directory in every project, without a line in
