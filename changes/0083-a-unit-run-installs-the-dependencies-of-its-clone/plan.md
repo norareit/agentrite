@@ -146,11 +146,11 @@ repository and `container/` ships as a whole, so neither table changes.
 - [ ] `npm test` passes, on a host with Docker, where `tests/sandbox-install.test.mjs` runs
 - [ ] `./sandbox-dev.sh <a unit with a branch> npx agentrite units` on a host with Docker shows the line of the
   install and npm's output on standard error, and the units on standard output
-- [ ] `grep -n "npm ci" README.md SANDBOX.md` shows no example of a unit run that opens with `npm ci`, and no sentence
+- [x] `grep -n "npm ci" README.md SANDBOX.md` shows no example of a unit run that opens with `npm ci`, and no sentence
   that tells the reader to run it in a new clone before a command
-- [ ] `npm run check-changes` passes, after the commits
-- [ ] Every line of the changed files fits 120 characters, checked before each commit
-- [ ] Every requirement 1 to 13 is traced by a task above, and every task traces to one
+- [x] `npm run check-changes` passes, after the commits
+- [x] Every line of the changed files fits 120 characters, checked before each commit
+- [x] Every requirement 1 to 13 is traced by a task above, and every task traces to one
 
 ## Commit Points
 

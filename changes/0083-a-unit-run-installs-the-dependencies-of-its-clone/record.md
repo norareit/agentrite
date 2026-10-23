@@ -50,3 +50,10 @@ timestamp: 2026-10-23T22:37:29Z
   goes wrong" of `SANDBOX.md`, and "sandbox.sh", "Exit statuses", "Running a role" and "The orchestrator" of
   `README.md`, as the plan's tasks give them. `npm test` passed on the changed documents with 1202 tests and 33
   skipped, all for want of Docker
+- 2026-10-23T23:05:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification on
+  `75190a9`: `npm run check-changes` exited 0; `grep -n "npm ci" README.md SANDBOX.md` shows no example of a unit run
+  that opens with it and no sentence that has the reader run it in a new clone before a command; every line of the
+  changed files fits 120 characters; every task names the requirements it answers, and each of 1 to 13 is named.
+  Left open, for a host with Docker, which this one lacks: `npm test` with `tests/sandbox-install.test.mjs` running,
+  and `./sandbox-dev.sh` of a unit showing the install on standard error. The unit is handed over for review. The
+  status stays `in-progress`
