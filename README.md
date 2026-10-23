@@ -428,6 +428,9 @@ It refuses, starts nothing, writes nothing and exits 1 when:
 * `changes/` holds no directory for the unit, or more than one for its digits
 * the unit's status is not `approved`. It names the status, and says that a run starts the work of an approved unit.
   A `record.md` that is missing, or holds no status, is refused as one that is missing a status field
+* the branch checked out in the project root ends in `--` and a variant that is not one or more words of the lowercase
+  letters `a` to `z` and the digits `0` to `9`, joined by single hyphens. It names the branch and the form a variant
+  takes. A directory that is in no git repository, and a detached `HEAD`, are not refused
 
 It takes no `--`: a step's harness gets the arguments the definition and the command give it, and no other.
 
@@ -440,6 +443,87 @@ wrong arguments or none, which it refuses with its usage, and `3`, its own statu
 repeat stopped, which waits for the human. See [Exit statuses](#exit-statuses).
 
 See "The orchestrator".
+
+### agentrite runs
+
+```sh
+npx agentrite runs [<number>] [--limit <count>] [--json]
+```
+
+Lists the runs of the orchestrator in the directory it runs in. It reads `.orchestrator/` as it stands there and
+nothing else: no `changes/`, no `agentrite.json` and no git, so it runs in a directory that has none of them. A run is
+a directory `.orchestrator/<unit-directory>/<run>/` whose `<unit-directory>` is four digits, a hyphen and at least one
+character more, and whose `<run>` is an instant of the form `2026-10-21T10:00:00Z`, alone or followed by `--` and a
+variant. No other directory of `.orchestrator/` is listed, whatever it holds, and nor is a run whose directory holds
+no `state.json`, which the orchestrator writes right after making the directory. The runs come by the instant they
+started, the latest first. Runs that started at the same instant come in the order of their unit directories, and runs
+of one unit in the order of their directories' names. The options may stand at any place among the arguments.
+
+Each run is one line: the instant it started, the four digits of its unit followed by `--` and its variant for a run on
+a variant's branch, its state, and what the state gives. The first three are padded to the widest value of their column
+among the lines listed, the columns separated by two spaces. The variant is the one the directory's name gives. The
+state is judged by the rule of "What .orchestrator holds", on the clock of the machine the command runs on:
+
+* `running`: the run has no end and a sign of life in the last 60 seconds. The line gives the step the run is at, as the
+  line the orchestrator prints before a step names it, without `: started`, or `before its first step`
+* `stale`: the run has no end and no sign of life in the last 60 seconds. The line gives `no sign of life since` and the
+  instant of its `heartbeat`, or `no sign of life` for a run with none, then `, at` and the step, or
+  `, before its first step`
+* `ended`: the run's `state.json` holds an end, whatever its `heartbeat` holds. The line gives the line of its end, as
+  `state.json` holds it
+
+```text
+2026-10-23T10:05:00Z  0081--opus  running  step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol
+2026-10-23T09:40:00Z  0081        stale    no sign of life since 2026-10-23T09:41:10Z, before its first step
+2026-10-22T16:00:00Z  0080        ended    The run ran every item of the definition to its end.
+```
+
+`<number>` is exactly four digits. With it the command lists the runs whose unit directory opens with those digits and a
+hyphen, those of every variant among them. Without a limit at most 50 runs are listed. `--limit <count>` sets another
+maximum and `--limit 0` lists every run. The limit counts the runs that remain after `<number>`. When the limit leaves
+runs out, the listing ends with the line
+
+```text
+showing <shown> of <total> runs, --limit 0 shows them all
+```
+
+When there is nothing to show, because there is no `.orchestrator/`, it holds no run, or no run is of the unit that
+`<number>` names, the listing is the one line `no runs`, or `no runs of` and the number when one was given. The command
+exits `0`.
+
+With `--json` the command prints one JSON document instead: an object with the key `runs`, an array of the runs listed
+in the same order, and the key `total`, the number of runs there are after `<number>` and before the limit. Each run is
+an object with:
+
+* `number`, a string of the four digits of its unit, and `unit`, the name of its unit directory
+* `variant`, its variant, or `null` for a run without one, and `branch`, the branch its `state.json` holds, or `null`
+  for a run without one, as one from before `state.json` held it
+* `run`, the instant it started, and `directory`, the path of its directory from the directory the command runs in
+* `state`, one of `running`, `stale` and `ended`
+* `heartbeat`, the instant its `heartbeat` holds, or `null` when it holds none of the form or is missing
+* `step`, `null` for a run that is not at a step yet, or an object with the step's `number`, its `round` and the
+  `rounds` of its repeat, both `null` for a step outside a repeat, its `role`, its `harness` and its `model`
+* `followed`, the path from the directory the command runs in of the file that holds the followed output of the run's
+  step, or `null` for a run with no step and when the run's directory holds no such file, as for a run from before the
+  followed files or a step whose file is not yet made. The command reads whether the file is there and not what it holds
+* `ended`, `null` for a run without an end, or its end as `state.json` holds it, with its `status` and its `line`
+
+When there is nothing to show, `runs` is an empty array and no line of text is printed.
+
+It refuses a run whose `state.json` or `definition.json` cannot be read, is not JSON, or is not of the form the
+orchestrator writes, or whose `at` names a step its definition does not have, naming the file and what is wrong with it.
+It prints nothing on standard output and exits 1. It prints what is wrong, then its usage, and exits 2 for a `<number>`
+that is not four digits, a second `<number>`, `--limit` without a value or given twice, a `<count>` that is not a whole
+number of zero or more, and an option the command does not take.
+
+| Argument or option | What it is                                                                          |
+|--------------------|-------------------------------------------------------------------------------------|
+| `<number>`         | Four digits. Lists the runs of the unit or units whose directory opens with them    |
+| `--limit <count>`  | Lists at most that many runs, 50 without it, and every run for 0                    |
+| `--json`           | Prints one JSON document in place of the text                                       |
+
+It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
+says.
 
 ### check-changes
 
@@ -944,12 +1028,18 @@ command: the human takes over from where it stopped.
 ### What .orchestrator holds
 
 The command keeps each run in `.orchestrator/<unit-directory>/<run>/` of the project root, where `<run>` is the
-instant the run started, in UTC, as `2026-10-21T10:00:00Z`. Nothing but the command writes in `.orchestrator/`. A
-run's directory holds:
+instant the run started, in UTC, as `2026-10-21T10:00:00Z`. For a run on a variant's branch it is the instant, `--` and
+the variant, as `2026-10-21T10:00:00Z--opus`. The variant is what follows the last `--` in the name of the branch
+checked out in the project root when the run started, as the roles read it, so the runs of the variants of a unit have
+directories of their own even when they start in the same second. A run on a branch with no `--`, on a detached `HEAD`
+and outside a git repository has no variant, and its directory is the instant alone. Nothing but the command writes in
+`.orchestrator/`. A run's directory holds:
 
 * `definition.json`, the definition the run runs, as it was read at the start
-* `state.json`, the state of the run: the unit, the definition's path as it was given, the step and round it is at,
-  the id of each harness session, and when the run ended, its exit status and how it ended
+* `state.json`, the state of the run: the unit, the definition's path as it was given, the branch checked out when the
+  run started as `branch`, which is `null` on a detached `HEAD` and outside a git repository, is written once and never
+  changes, and is missing in a run from before it was written, the step and round it is at, the id of each harness
+  session, and when the run ended, its exit status and how it ended
 * `heartbeat`, one instant in UTC to the second, as `2026-10-23T10:00:05Z`, followed by a line break, and nothing
   else. The command writes it when it makes the run's directory, before the first step starts, and then every 10
   seconds while the run lasts, between steps and while a step runs, with `--follow` and without it. Each write
@@ -1000,6 +1090,8 @@ A stale run can be one whose process ended without writing its end, as when a si
 sleeps, which gives signs of life again once it wakes; or one whose clock is behind the reader's by more than the
 margin, as a container's in a virtual machine can be. The harness of a step can still be running when the command's own
 process was killed, and the run then shows as stale.
+
+`npx agentrite runs` lists the runs and tells their state by this rule. See "agentrite runs" in "Commands".
 
 At the start of each run the command makes sure that `.orchestrator/.gitignore` holds `*` and nothing else, and
 writes it when it is missing or holds anything else. So git ignores the directory in every project, without a line in

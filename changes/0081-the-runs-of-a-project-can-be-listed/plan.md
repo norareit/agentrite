@@ -249,20 +249,20 @@ the directory named as before.
   `ONE_STEP`, `agentrite runs --json` lists the run as `ended`, with its `branch` `null`, its `step` the implementer
   at number 0 and its `followed` the path of `00-implementer.followed.jsonl`, so that the reader reads what the
   writer writes (R7, R8, R18)
-- [ ] In "agentrite orchestrate" of "Commands" of `README.md`, add to the list of refusals a branch whose variant is
+- [x] In "agentrite orchestrate" of "Commands" of `README.md`, add to the list of refusals a branch whose variant is
   not of the form: it names the branch and the form a variant takes (R21)
-- [ ] Add "agentrite runs" to "Commands" of `README.md`, after "agentrite orchestrate": its form; that it lists the
+- [x] Add "agentrite runs" to "Commands" of `README.md`, after "agentrite orchestrate": its form; that it lists the
   runs of `.orchestrator/` of the directory it runs in, which runs are listed and which left out, and that it reads
   nothing else, no `changes/`, no `agentrite.json` and no git; the order; the line of a run with an example of each
   state, the three states by the rule of "What .orchestrator holds"; `<number>`; the limit and the closing line; the
   line with nothing to show and its exit status; the JSON document with every key; the refusals of a run's files,
   exiting 1, and the wrong arguments, exiting 2; a table of `<number>`, `--limit <count>` and `--json`; and its exit
   statuses by [Exit statuses](#exit-statuses) (R20)
-- [ ] In "What .orchestrator holds" of `README.md`, give `<run>` as the instant, followed by `--` and the variant for
+- [x] In "What .orchestrator holds" of `README.md`, give `<run>` as the instant, followed by `--` and the variant for
   a run on a variant's branch, as `2026-10-21T10:00:00Z--opus`, the variant read from the branch as `process.md`
   says; add `branch` to what `state.json` holds, `null` without a branch and absent in a run from before; and say that
   `npx agentrite runs` lists the runs and their states by the rule given there (R21)
-- [ ] In "Two implementations of one unit" of `SANDBOX.md`, add to the paragraph of the reviews that the runs of the
+- [x] In "Two implementations of one unit" of `SANDBOX.md`, add to the paragraph of the reviews that the runs of the
   orchestrator of the variants are kept apart by the name of their directory in `.orchestrator/<unit-directory>/`,
   which ends in `--<name>` for a variant, as the reviews are by the name of their file (R22)
 
@@ -281,5 +281,5 @@ the directory named as before.
   behavior
 - [x] `feature-0081 Keep the branch and the variant of a run`: the third to seventh tasks
 - [x] `feature-0081 List the runs of a project`: the eighth to twentieth tasks
-- [ ] `feature-0081 Document the runs and the variants of a run`: the three tasks of `README.md` and the one of
+- [x] `feature-0081 Document the runs and the variants of a run`: the three tasks of `README.md` and the one of
   `SANDBOX.md`

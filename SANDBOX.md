@@ -221,6 +221,11 @@ reviewer on a variant saves its findings in a file whose name ends in `--<name>.
 whose name holds no `--`. An implementer takes findings only from the files of its own run. The roles read the variant
 from the branch they are on.
 
+The runs of the orchestrator are kept apart in the same way, by the name of their directory in
+`.orchestrator/<unit-directory>/`: the directory of a run on a variant's branch ends in `--<name>`, as
+`2026-10-21T10:00:00Z--opus`, and that of a run on the unit's branch is the instant alone. Two variants that start in
+the same second each get a directory. `npx agentrite runs` shows the variant of each run.
+
 To compare two results and take one, use git. Compare with `git diff <unit's branch> <variant's branch>`, or of two
 variants' branches. Take one by merging its branch into the unit's branch with `git merge`, or by moving the unit's
 branch to it with `git branch --force <unit's branch> <variant's branch>` while the unit's branch is not checked out.
