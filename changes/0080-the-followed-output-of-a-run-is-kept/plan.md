@@ -93,11 +93,11 @@ sandbox.
   attempted; and no other file is left in the directory (R6, R8, R12)
 - [x] Add `followedFile` to `scripts/agentrite.mjs` as the approach gives it, with `appendFileSync` and
   `truncateSync` imported from `node:fs`, and export it (R2, R6, R8)
-- [ ] Add to the fake harness of `tests/agentrite-orchestrate.test.mjs`, with its comment, that with `seen-<n>` it
+- [x] Add to the fake harness of `tests/agentrite-orchestrate.test.mjs`, with its comment, that with `seen-<n>` it
   writes to `seen-<n>.out`, before it prints, a line for each file that `.orchestrator/*/*/*.followed.jsonl` matches
   from the directory it runs in: the file's name, a space, and `empty` or `holding` by `[ -s ]`. It uses nothing but
   the builtins of `sh`, as the rest of the fake does. A helper `sees(number)` of `project` writes `seen-<n>`
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the test that each step's file holds its messages and calls, in
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the test that each step's file holds its messages and calls, in
   the order `--follow` prints them, with `--follow` and without it: of `followedRun` with `--follow` and of one
   without it, `00-implementer.followed.jsonl` and `01-reviewer.followed.jsonl` each end in a line break, and their
   lines parse to `2026-10-22T14:03:27Z` text `I will run the tests.`, `28Z` call `Bash` label `Run the tests`, `29Z`
@@ -105,22 +105,22 @@ sandbox.
   diff.`, `04Z` call `bash` label `Show the diff`, `05Z` call `todowrite` label `null`, `08Z` text `REVIEWED` in full.
   These are the times, tools and labels the test of `--follow` sees printed. Neither file holds a string of `HIDDEN`,
   and the files of the two runs are the same, read after each run ended (R1, R3, R4, R5, R7, R13)
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the test that, without `--follow`, a step's file is made empty
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the test that, without `--follow`, a step's file is made empty
   before its harness starts and holds a message while the step still runs: a run of `ONE_STEP` whose harness, with
   `sees(1)`, prints the first two lines of `claudeFollowed(IMPLEMENTED)` and waits 60 seconds. Once its process id is
   written, `seen-1.out` is `00-implementer.followed.jsonl empty`; the file comes to hold the line of `I will run the
   tests.` while the harness is still alive, and the command printed no `I will run the tests.`; after a `SIGTERM` to
   the command, which then ends by it, the file is left holding that one line (R1, R2, R7, R13)
-- [ ] Change the test `a step past its limit is ended by SIGTERM, and the run stops by the case, its response kept` so
+- [x] Change the test `a step past its limit is ended by SIGTERM, and the run stops by the case, its response kept` so
   that the run's directory lists `00-implementer.followed.jsonl`, whose one line is the text of the response, with an
   instant of the form of `instantOf`, since `claudePrinted` gives no timestamp (R7, R13)
-- [ ] Add `00-planner.followed.jsonl` and the others of each step to every test that lists a run's directory
+- [x] Add `00-planner.followed.jsonl` and the others of each step to every test that lists a run's directory
   exactly, among them `a run whose every item ends runs the default definition and exits 0`, `a run whose steps leave
   items for after the run exits 0, and gives them grouped by step` and `a run with --follow ends, writes its directory
   and exits as the same run without it`, whose comparison of the contents of the two runs then covers the followed
   files too. No assertion of what the command prints, of its exit status, of `state.json` or of another file changes
   (R9, R13)
-- [ ] Wire the file into `orchestrateCommand` as the approach gives it, make `runStep` take the followed function and
+- [x] Wire the file into `orchestrateCommand` as the approach gives it, make `runStep` take the followed function and
   `runGrouped` take `line` always, and say in the comment of `orchestrateCommand` that every file of the run's
   directory but the followed files is written whole, and that a step's followed file is written with `--follow` and
   without it. Run `npm test` (R1, R2, R3, R5, R7, R9)

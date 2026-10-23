@@ -929,16 +929,26 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
 // Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n>, then the lines of err-<n>
 // on standard error, and exits with the status in status-<n>, or 0. With wait-<n>, it writes its process id to
 // pid-<n> and becomes a sleep of that many seconds, ignoring SIGTERM with ignore-term-<n>. With linger-<n>, it leaves
-// a sleep of that many seconds in the background, holding its standard output, and exits. Nothing but the builtins of
-// sh and the sleep linked into the PATH, since it holds no other command. The sleep is exec'd, so that the harness
-// stays one process whose id the test knows: a job started in the background would ignore SIGINT, where the harness
-// would not.
+// a sleep of that many seconds in the background, holding its standard output, and exits. With seen-<n>, it writes to
+// seen-<n>.out, before it prints, a line for each followed file of the runs, its name and empty or holding. Nothing but
+// the builtins of sh and the sleep linked into the PATH, since it holds no other command. The sleep is exec'd, so that
+// the harness stays one process whose id the test knows: a job started in the background would ignore SIGINT, where
+// the harness would not.
 const FAKE_HARNESS = `#!/bin/sh
 count=0
 if [ -f "$FAKE_DIR/count" ]; then read -r count < "$FAKE_DIR/count"; fi
 count=$((count + 1))
 printf '%s\\n' "$count" > "$FAKE_DIR/count"
 printf '%s\\n' "\${0##*/}" "$@" > "$FAKE_DIR/call-$count"
+if [ -f "$FAKE_DIR/seen-$count" ]; then
+  for file in .orchestrator/*/*/*.followed.jsonl; do
+    if [ -f "$file" ]; then
+      state=empty
+      if [ -s "$file" ]; then state=holding; fi
+      printf '%s %s\\n' "\${file##*/}" "$state"
+    fi
+  done > "$FAKE_DIR/seen-$count.out"
+fi
 if [ -f "$FAKE_DIR/out-$count" ]; then
   while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line"; done < "$FAKE_DIR/out-$count"
 fi
@@ -1015,6 +1025,8 @@ function project(testContext) {
   };
   // That the fake leaves a sleep of `seconds` holding its output at its call `number`, and exits.
   const lingers = (number, seconds) => writeFileSync(join(fakes, `linger-${number}`), `${seconds}\n`);
+  // That the fake at its call `number` records which followed files exist and whether they hold anything.
+  const sees = (number) => writeFileSync(join(fakes, `seen-${number}`), '');
   // The process id of the fake at its call `number`, once it wrote it.
   const pidOf = async (number) => {
     const path = join(fakes, `pid-${number}`);
@@ -1026,7 +1038,7 @@ function project(testContext) {
       .filter((name) => name.startsWith('call-'))
       .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
-  return { base, write, read, agentrite, started, answer, complains, waits, lingers, pidOf, calls };
+  return { base, write, read, agentrite, started, answer, complains, waits, lingers, sees, pidOf, calls };
 }
 
 // A call of the fake: its name, the arguments before the prompt, and the prompt, which is the last argument and may
@@ -1147,8 +1159,11 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.ok(reviewer.prompt.includes(`${REQUEST_LINE}, in round 1 of a repeat of at most 3 rounds, and reads`));
 
   assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-planner.followed.jsonl',
     '00-planner.outcome.json',
+    '01-implementer.followed.jsonl',
     '01-implementer.outcome.json',
+    '02-reviewer.followed.jsonl',
     '02-reviewer.outcome.json',
     'definition.json',
     'heartbeat',
@@ -1192,8 +1207,11 @@ test('a run whose steps leave items for after the run exits 0, and gives them gr
   assert.deepEqual(JSON.parse(read(`${run.name}/01-implementer.outcome.json`)).afterwards, built);
   assert.deepEqual(JSON.parse(read(`${run.name}/02-reviewer.outcome.json`)).afterwards, ['Check the dialog on macOS']);
   assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-planner.followed.jsonl',
     '00-planner.outcome.json',
+    '01-implementer.followed.jsonl',
     '01-implementer.outcome.json',
+    '02-reviewer.followed.jsonl',
     '02-reviewer.outcome.json',
     'definition.json',
     'heartbeat',
@@ -1409,7 +1427,7 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
     for (const [offset, line] of lines.entries()) assert.ok(report[at + offset].startsWith(line), report[at + offset]);
     assert.ok(!result.stdout.includes('Hidden.'));
     const run = runDirectoryOf(base);
-    const names = readdirSync(run.path);
+    const names = readdirSync(run.path).filter((name) => !name.endsWith('.followed.jsonl'));
     if (file === null) {
       assert.ok(!names.some((name) => name.startsWith('01-')), names.join(', '));
     } else {
@@ -1701,6 +1719,7 @@ test(
     assert.ok(!result.stdout.includes('Not finished.'), result.stdout);
     assert.ok(read(path).includes('"summary": "Not finished."'));
     assert.deepEqual(readdirSync(run.path).sort(), [
+      '00-implementer.followed.jsonl',
       '00-implementer.response.md',
       'definition.json',
       'heartbeat',
@@ -1710,6 +1729,11 @@ test(
     assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[9] }]);
     assert.match(state.sessions[0].session, UUID);
     assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
+    const [kept, ...rest] = read(`${run.name}/00-implementer.followed.jsonl`).split('\n');
+    assert.deepEqual(rest, ['']);
+    const { time, ...item } = JSON.parse(kept);
+    assert.match(time, /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/);
+    assert.deepEqual(item, { kind: 'text', text: responseOf({ ...DONE, summary: 'Not finished.' }) });
     assert.ok(await gone(harness), `the harness ${harness} is left`);
   },
 );
@@ -1947,7 +1971,9 @@ test('a run with --follow ends, writes its directory and exits as the same run w
   );
   assert.deepEqual(followed.files, plain.files);
   assert.deepEqual(followed.files, [
+    '00-implementer.followed.jsonl',
     '00-implementer.outcome.json',
+    '01-reviewer.followed.jsonl',
     '01-reviewer.outcome.json',
     'definition.json',
     'heartbeat',
@@ -1977,6 +2003,70 @@ test('with --follow a message of a step is printed while the step still runs', a
 
   process.kill(child.pid, 'SIGTERM');
   assert.equal((await exited).signal, 'SIGTERM');
+  assert.ok(await gone(harness), `the harness ${harness} is left`);
+});
+
+// The lines of a followed file of the run, parsed, after the run ended; each file ends in a line break.
+function followedLinesOf(name, read) {
+  const text = read(name);
+  assert.ok(text.endsWith('\n'), name);
+  return text
+    .slice(0, -1)
+    .split('\n')
+    .map((line) => JSON.parse(line));
+}
+
+test('the followed file of each step holds its messages and calls, with --follow and without', async (testContext) => {
+  const implementer = [
+    { time: '2026-10-22T14:03:27Z', kind: 'text', text: 'I will run the tests.' },
+    { time: '2026-10-22T14:03:28Z', kind: 'call', tool: 'Bash', label: 'Run the tests' },
+    { time: '2026-10-22T14:03:29Z', kind: 'call', tool: 'TodoWrite', label: null },
+    { time: '2026-10-22T14:03:30Z', kind: 'text', text: IMPLEMENTED },
+  ];
+  const reviewer = [
+    { time: '2026-10-22T15:00:03Z', kind: 'text', text: 'I will read the diff.' },
+    { time: '2026-10-22T15:00:04Z', kind: 'call', tool: 'bash', label: 'Show the diff' },
+    { time: '2026-10-22T15:00:05Z', kind: 'call', tool: 'todowrite', label: null },
+    { time: '2026-10-22T15:00:08Z', kind: 'text', text: REVIEWED },
+  ];
+  const kept = [];
+  for (const options of [['--follow'], []]) {
+    const { result, run, contents, files } = await followedRun(testContext, ...options);
+    assert.equal(result.status, 0, result.stderr);
+    const read = (path) => contents[files.indexOf(path)];
+    assert.deepEqual(followedLinesOf('00-implementer.followed.jsonl', read), implementer);
+    assert.deepEqual(followedLinesOf('01-reviewer.followed.jsonl', read), reviewer);
+    for (const content of contents) {
+      for (const hidden of HIDDEN) assert.ok(!content.includes(hidden), content);
+    }
+    kept.push([read('00-implementer.followed.jsonl'), read('01-reviewer.followed.jsonl')]);
+  }
+  assert.deepEqual(kept[0], kept[1]);
+});
+
+test('without --follow the file is made empty first and holds a message while the step runs', async (testContext) => {
+  const { base, write, read, started, answer, waits, sees, pidOf } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  answer(1, claudeFollowed(IMPLEMENTED).split('\n').slice(0, 2).join('\n'));
+  sees(1);
+  waits(1, 60);
+  const { child, ended, exited, output } = started('orchestrate', '0029', '--definition', 'one.json');
+  const harness = await pidOf(1);
+  assert.equal(read('fakes/seen-1.out'), '00-implementer.followed.jsonl empty\n');
+
+  const path = join(runDirectoryOf(base).path, '00-implementer.followed.jsonl');
+  for (let tries = 0; tries < 250 && !readFileSync(path, 'utf-8').includes('\n'); tries += 1) await delay(20);
+  assert.equal(
+    readFileSync(path, 'utf-8'),
+    `${JSON.stringify({ time: '2026-10-22T14:03:27Z', kind: 'text', text: 'I will run the tests.' })}\n`,
+  );
+  assert.doesNotThrow(() => process.kill(harness, 0), 'the harness ended before the message was added');
+  assert.ok(!output().includes('I will run the tests.'), output());
+
+  process.kill(child.pid, 'SIGTERM');
+  assert.equal((await exited).signal, 'SIGTERM');
+  await ended;
+  assert.equal(readFileSync(path, 'utf-8').split('\n').length, 2);
   assert.ok(await gone(harness), `the harness ${harness} is left`);
 });
 
@@ -2126,6 +2216,7 @@ test('a run keeps a heartbeat that moves on while a step runs and is left at its
   assert.equal(result.status, 0, result.stderr);
   assert.ok(read(`${run.name}/heartbeat`) >= moved);
   assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-implementer.followed.jsonl',
     '00-implementer.outcome.json',
     'definition.json',
     'heartbeat',

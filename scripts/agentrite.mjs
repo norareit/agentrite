@@ -43,6 +43,7 @@ import {
   endLine,
   endReport,
   exitStatus,
+  followedLine,
   followPrinter,
   timedItems,
   orchestrate,
@@ -1457,7 +1458,7 @@ const GRACE_MILLISECONDS = 10_000;
  * Runs `args` with this Node.js from `root` in a process group of its own, and gives how it ended, what it printed on
  * standard output, how long it ran until it exited and whether that reached `timeoutMinutes`. When it does, `SIGTERM`
  * is sent to the group, and `SIGKILL` when the group still has a process after the grace. `grouped` is given the
- * group when it starts, and `undefined` when the promise settles. `line`, when given, is given each line of standard
+ * group when it starts, and `undefined` when the promise settles. `line` is given each line of standard
  * output as it arrives, without its line break, and what is left after the last line break when the output closes,
  * all before the promise settles.
  *
@@ -1465,7 +1466,7 @@ const GRACE_MILLISECONDS = 10_000;
  * @param {string[]} args
  * @param {number | undefined} timeoutMinutes
  * @param {(group: number | undefined) => void} grouped
- * @param {((text: string) => void) | undefined} line
+ * @param {(text: string) => void} line
  * @returns {Promise<{
  *   status: number | null,
  *   signal: string | null,
@@ -1514,13 +1515,12 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
     child.stdout.setEncoding('utf-8');
     child.stdout.on('data', (chunk) => {
       stdout += chunk;
-      if (line === undefined) return;
       const lines = (partial + chunk).split('\n');
       partial = /** @type {string} */ (lines.pop());
       for (const complete of lines) line(complete);
     });
     child.stdout.on('end', () => {
-      if (line !== undefined && partial !== '') line(partial);
+      if (partial !== '') line(partial);
     });
     child.on('error', (error) => {
       clearTimeout(limit);
@@ -1545,15 +1545,15 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
  * Runs one step as `agentrite run` of this file, headless, in a process group of its own, and gives how its harness
  * ended, its final response, its session and whether it ran past its time limit. The harness's standard error
  * reaches the terminal, and its standard output is read. `grouped` is given the group when the step starts, and
- * `undefined` when it has ended. With `follow`, the printer of the step, what the harness makes known of the step in
- * each line it prints is printed as it arrives.
+ * `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line it prints, as
+ * it arrives.
  *
  * @param {string} root
  * @param {string} directory
  * @param {boolean} skipPermissions
  * @param {import('./agentrite-orchestrate.mjs').Planned} planned
  * @param {(group: number | undefined) => void} grouped
- * @param {((items: import('./agentrite-headless.mjs').Followed[]) => void) | undefined} follow
+ * @param {(items: import('./agentrite-headless.mjs').Followed[]) => void} follow
  * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
 async function runStep(root, directory, skipPermissions, { step, round, session }, grouped, follow) {
@@ -1575,7 +1575,7 @@ async function runStep(root, directory, skipPermissions, { step, round, session 
     '--',
     ...start.args,
   ];
-  const line = follow === undefined ? undefined : (/** @type {string} */ text) => follow(headless.follow(text));
+  const line = (/** @type {string} */ text) => follow(headless.follow(text));
   const { stdout, ...ended } = await runGrouped(root, args, step.timeoutMinutes, grouped, line);
   const read = headless.read(stdout);
   return { ...ended, response: read.response, session: read.session ?? start.session };
@@ -1602,8 +1602,9 @@ function passSignalsOn(running) {
  * Runs the definition on an approved unit, one step at a time, keeping the run in its directory under
  * `.orchestrator/`, prints a line before and after each step and what the human needs at the end, and returns the
  * exit status. With `follow`, the messages and tool calls of each step are printed between its two lines as it
- * runs. Nothing is written before every refusal has been ruled out, and nothing outside `.orchestrator/`. The run's
- * directory holds a `heartbeat` while the run lasts, and every file of it is written whole.
+ * runs, and with or without it they are added to the step's followed file. Nothing is written before every refusal
+ * has been ruled out, and nothing outside `.orchestrator/`. The run's directory holds a `heartbeat` while the run
+ * lasts, and every file of it but the followed files, which are added to, is written whole.
  *
  * @param {string} root
  * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
@@ -1641,6 +1642,11 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
         console.log(stepLine(planned));
       },
       run: (planned) => {
+        const add = followedFile(resolve(root, runDirectory, fileOf(planned, 'followed.jsonl')), {
+          writeFileSync,
+          appendFileSync,
+          truncateSync,
+        });
         const print = followPrinter((text) => process.stdout.write(text));
         return runStep(
           root,
@@ -1650,7 +1656,11 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
           (running) => {
             group = running;
           },
-          follow ? (items) => print(timedItems(items, Date.now)) : undefined,
+          (items) => {
+            const timed = timedItems(items, Date.now);
+            if (follow) print(timed);
+            for (const item of timed) add(followedLine(item, instantOf(item.time)));
+          },
         );
       },
       ended(entry) {
