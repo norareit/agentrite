@@ -5,6 +5,106 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 8.1.0
+
+### What changed
+
+* A unit can be cancelled. `cancelled` is a fifth status and, with `implemented`, one of the two end statuses. Only
+  the human cancels a unit, from `draft`, `approved` or `in-progress`, never one that is `implemented`, and the log
+  entry that cancels it gives the reason and names the unit that did the work or made it moot, when there is one. A
+  cancelled unit is frozen as an implemented one is, and its idea is taken up again by a new unit that names it in
+  `supersedes`. A unit with a branch is cancelled on the default branch with its documents only, and its branch is
+  not merged. `process.md` and the record template say so, and the reviewer no longer ties the freeze to
+  `implemented` alone (0074)
+* The change check rejects a change to the `spec.md` or `plan.md` of a unit `cancelled` on the merge base, and its
+  deletion, as for an implemented one. A cancelled unit may keep unticked tasks in its plan (0074)
+* `./sandbox.sh` refuses to cut a branch for a unit given by its number that is `cancelled` on the default branch,
+  and exits `1`. A cancelled unit whose branch exists is started as before (0074)
+* The new command `npx agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>]
+  [--json]` lists the units in `changes/` of the working tree, the newest first, one line each with its number,
+  status, kind and title, or as one JSON document. It lists at most 50 by default, and `--limit 0` lists all. It
+  needs no `agentrite.json`, and refuses a record without `status`, `kind` or a `#` heading. `process.md` tells agents
+  to run it rather than read the records (0077)
+* The new command `npx agentrite approve <unit>` approves a `draft` unit: it sets `status` to `approved`, adds the
+  human's entry to `## Log`, and commits `record.md` alone on the default branch, as `<prefix>-<number> Approve the
+  spec`, or `Approve the record` for a task. It refuses off the default branch, for a status other than `draft`, for
+  a feature or bug without `spec.md`, and while a file of the unit differs from what is committed. A commit that
+  fails leaves the record and the index as they were. `process.md` says an agent runs it only on the human's word
+  (0082)
+* The new command `npx agentrite runs [<number>] [--limit <count>] [--json]` lists the runs of the orchestrator under
+  `.orchestrator/`, the latest first, each as `running`, `stale` or `ended`, with the step a running or stale run is
+  at, or the line of its end. With `--json` it also gives each run's branch, heartbeat and the path of its step's
+  followed output. A project with no `.orchestrator/` prints `no runs` and exits `0` (0081)
+* `npx agentrite orchestrate` takes `--follow`, which prints each step's text messages in full and its tool calls as
+  one dimmed line each, with their time in UTC, while the step runs, in Claude Code and OpenCode alike. Without it a
+  run prints what it printed before (0075)
+* Every step of a run, with `--follow` or without it, has its messages and tool calls kept as JSON Lines in
+  `<number>-<role>.followed.jsonl` of the run's directory, added to as the step runs and left after it (0080)
+* A run's directory holds `heartbeat`, an instant in UTC that the command rewrites every 10 seconds while the run
+  lasts. A run without an end whose heartbeat is over 60 seconds old is stale. Every other file of the directory is
+  now written whole, under a name that opens with `.` until it takes its own (0079)
+* A run records its branch as `branch` in `state.json`. A run on a variant's branch has its directory named
+  `<instant>--<variant>`, so two variants started in the same second each run, and a variant not of the form
+  `--variant` takes is refused before anything is written (0081)
+* An outcome of a step holds a new required key, `afterwards`: what the human does, checks or decides after the run,
+  which the run goes on without. `questions` now holds only what the run cannot go on without. The request the
+  command adds to every step says which belongs where, and that both together are the step's `**Needed from you**`
+  list. The end report lists the `afterwards` of every step that ran, grouped by step, under `After the run:` (0076)
+* A `done` outcome whose `questions` is not empty now stops the run, with status `3`, where it went on (0076)
+* `agentrite init` and `refresh` write a `commit-msg` hook into the hooks directory git uses for the project,
+  `core.hooksPath` honored. It refuses a commit message with a `Co-Authored-By` or `Claude-Session` trailer, by the
+  new checker `node_modules/agentrite/container/check-commit-message.mjs`, and refuses the commit too when it cannot
+  find the checker under the work tree's `node_modules` or `node` on git's `PATH`. `refresh` rewrites a hook that
+  carries the kit's mark and leaves any other file there as it is, with a notice that says how to call the checker
+  from it. "Git hooks" of the README describes it (0078)
+* In the sandbox, git runs the image's `commit-msg` hook, which applies the same check in every run mode, a unit
+  run's clone before its install included (0078)
+* `./sandbox.sh` builds the image again when it was built from another release of the kit, or records none, and says
+  so before it builds. It refuses to start when it cannot read the installed kit's version (0078)
+* A unit run whose clone is new installs its dependencies with `npm ci` in the container, as the agent and after the
+  firewall, when the clone holds a `package-lock.json`, before the command or the shell starts. What npm prints goes
+  to standard error. An install that fails starts no command, and the wrapper exits with npm's status. A resumed
+  clone, `--in-place`, `--workdir` and `--connect` do not install. The examples no longer start with `npm ci` (0083)
+* Not in the package: this repository moved to 8.0.0 (0072), and step 6 of its release instructions settles the
+  release's own instructions before `refresh`, so that a release that adds a required key no longer stops there
+  (0073)
+
+### Worth knowing when you update
+
+* The first start of the sandbox after the update builds its image again, which can take minutes, and every start
+  after an update of the kit will
+* Run `refresh`, which writes the `commit-msg` hook, and commit anything else it wrote:
+
+  ```sh
+  npx agentrite refresh
+  ```
+
+  The hook is not committed, since it lives under `.git`, so every clone and every developer runs `refresh` once to
+  have it, as "On a fresh clone" of the README says. A project with a `commit-msg` hook of its own, or a hook manager
+  that owns the path, keeps it and gets a notice; it adds the line "Git hooks" gives to its own hook to have the check
+* On the host, a commit whose message holds `Co-Authored-By` or `Claude-Session` is now refused, and so is every
+  commit from a linked worktree without its own `node_modules`, or from a git client that does not have `node` on its
+  `PATH`
+* In the sandbox, git runs the image's hooks only. The hooks of a repository mounted with `--in-place` or `--workdir`,
+  and those of a hooks directory that `npm ci` sets up in a unit run's clone, as a hook manager does, no longer run
+  there. Run their checks as commands
+* A unit run of a new clone now runs `npm ci`, and so the project's install scripts, before its command. A command
+  that still starts with `npm ci` installs twice, and works. An install that fails now ends the run with npm's status
+* A run of the orchestrator whose step gives `done` with questions now stops with status `3`. A step whose outcome
+  lacks `afterwards`, as one that follows instructions of its own rather than the command's request, stops the run as
+  an outcome not of the form
+* A run on a branch whose name holds `--` now writes its directory as `<instant>--<variant>`, and one whose variant
+  is not lowercase letters, digits and single hyphens is refused. Runs from before this release are listed by `runs`
+  as they are
+* Steps in Claude Code are now run with `--output-format stream-json --verbose`, with `--follow` and without it. The
+  following of a step was checked against Claude Code 2.1.308 and OpenCode 1.19.3, by single headless calls of each
+  and by the suite; a whole run of the default definition with `--follow` on real harnesses was not checked
+* The change check now refuses a `record.md` whose `status:` line holds no value, which it read before as the first
+  word of the next line. No test covers that case
+* The hook was checked on a Linux host and in the sandbox. A host other than Linux, and a graphical git client, were
+  not checked
+* No edit to `agentrite.json` is needed
+
 ## 8.0.0
 
 ### What changed
