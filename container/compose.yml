@@ -128,11 +128,23 @@ services:
       # list them. It is set through the environment because git honors safe.directory
       # only in protected configuration, which this is, and neither config file will
       # do: /etc/gitconfig is the developer's own, mounted below, and the agent's
-      # ~/.gitconfig lives in the home volume, which a new volume starts without. A
-      # project that sets GIT_CONFIG_COUNT itself overrides this.
-      GIT_CONFIG_COUNT: "1"
+      # ~/.gitconfig lives in the home volume, which a new volume starts without.
+      #
+      # Git's hooks directory, set to the image's, which holds the kit's commit-msg hook.
+      # It refuses a commit message with a trailer the standards forbid. The hook is the
+      # image's and not the clone's, which the agent can write, .git included, and it is
+      # set here for the same reason as safe.directory: the environment outranks both
+      # config files, and belongs to the kit. It replaces the hooks of a mounted
+      # repository, and of a hooks directory that its configuration names, so that those
+      # are not run in the container.
+      #
+      # These are the two entries of git's environment configuration. A project that sets
+      # GIT_CONFIG_COUNT itself overrides both.
+      GIT_CONFIG_COUNT: "2"
       GIT_CONFIG_KEY_0: safe.directory
       GIT_CONFIG_VALUE_0: "*"
+      GIT_CONFIG_KEY_1: core.hooksPath
+      GIT_CONFIG_VALUE_1: /usr/local/lib/agentrite/hooks
 
     volumes:
       # Nothing is declared at /work. container/sandbox.sh passes the mount at /work for

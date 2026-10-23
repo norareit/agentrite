@@ -1,0 +1,5 @@
+#!/bin/sh
+# The commit-msg hook of the sandbox's image, which git in the container runs through core.hooksPath in the compose
+# file. It is the image's and not the clone's, since the agent can write the clone, its .git included. It runs the
+# checker the project's own hook runs, so that the rule is the same on the host and in the sandbox.
+exec node /usr/local/lib/agentrite/check-commit-message.mjs "$1"

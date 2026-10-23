@@ -16,3 +16,11 @@ export function listEntries(key) {
   }
   return entries;
 }
+
+// The value of one entry of the sandbox service's `environment:` mapping, the line `      <key>: <value>`, with
+// the quotes around the value removed.
+export function environmentEntry(key) {
+  const line = compose.split('\n').find((candidate) => candidate.startsWith(`      ${key}: `));
+  assert.ok(line, `the sandbox service's environment has ${key}`);
+  return line.slice(`      ${key}: `.length).replace(/^"(.*)"$/, '$1');
+}

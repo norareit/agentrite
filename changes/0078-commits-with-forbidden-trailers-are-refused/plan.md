@@ -161,9 +161,9 @@ before it records no kit version and is built again at the first start.
 
 ### The hook in the sandbox
 
-- [ ] Add to `tests/compose-entries.mjs` `environmentEntry(key)`, which reads the value of `      <key>: <value>` in
+- [x] Add to `tests/compose-entries.mjs` `environmentEntry(key)`, which reads the value of `      <key>: <value>` in
   the service's `environment:` mapping, with its quotes removed
-- [ ] Write `tests/sandbox-commit-msg.test.mjs` first: the compose file gives `GIT_CONFIG_COUNT` as `2`, keeps
+- [x] Write `tests/sandbox-commit-msg.test.mjs` first: the compose file gives `GIT_CONFIG_COUNT` as `2`, keeps
   `safe.directory` as entry 0, and gives entry 1 as `core.hooksPath` with the directory to which the Dockerfile copies
   the hook; `container/sandbox.sh` sets no `GIT_CONFIG_` variable and passes no `--env` of one, so that no run mode
   and not `--connect` replaces it; the Dockerfile's last stage copies `check-commit-message.mjs` and `hooks/commit-msg`
@@ -174,18 +174,18 @@ before it records no kit version and is built again at the first start.
   checker mounted read-only at the paths the Dockerfile copies them to, refuses `git commit -m` with a trailer in a
   new repository, leaving no commit, and makes the same commit without it. The paths are read from the Dockerfile and
   the compose file, not written again in the test (R13, R14, R15, R23)
-- [ ] Write `container/hooks/commit-msg`, executable: `#!/bin/sh` and `exec node
+- [x] Write `container/hooks/commit-msg`, executable: `#!/bin/sh` and `exec node
   /usr/local/lib/agentrite/check-commit-message.mjs "$1"`, with a comment that it is the image's hook and why
   (R13, R15)
-- [ ] In `container/Dockerfile`, beside the other `COPY ${KIT_CONTAINER}` lines, copy `check-commit-message.mjs` to
+- [x] In `container/Dockerfile`, beside the other `COPY ${KIT_CONTAINER}` lines, copy `check-commit-message.mjs` to
   `/usr/local/lib/agentrite/` and `hooks/commit-msg` to `/usr/local/lib/agentrite/hooks/`, and make the hook
   executable in the `RUN chmod` that follows. Nothing of the clone or of the build context's project files is read for
   it, so a unit run's clone needs no `npm ci` for the check (R13, R14, R15)
-- [ ] In `container/compose.yml`, set `GIT_CONFIG_COUNT` to `"2"` and add `GIT_CONFIG_KEY_1: core.hooksPath` and
+- [x] In `container/compose.yml`, set `GIT_CONFIG_COUNT` to `"2"` and add `GIT_CONFIG_KEY_1: core.hooksPath` and
   `GIT_CONFIG_VALUE_1: /usr/local/lib/agentrite/hooks`, with a comment that says why the hook comes from the image and
   through the environment, and that it replaces the hooks of a mounted repository and of a hooks directory its
   configuration names. Update the comment above `GIT_CONFIG_COUNT`, which speaks of one entry (R13)
-- [ ] Commit point 2, below
+- [x] Commit point 2, below
 
 ### The image built again for a new kit
 
@@ -278,7 +278,7 @@ before it records no kit version and is built again at the first start.
 
 - [x] `feature-0078 Refuse commit messages with forbidden trailers on the host`: the checker, the host's hook, `init`
   and `refresh`, and their tests
-- [ ] `feature-0078 Run the commit-msg hook in the sandbox`: the image's hook, the Dockerfile's copies, the compose
+- [x] `feature-0078 Run the commit-msg hook in the sandbox`: the image's hook, the Dockerfile's copies, the compose
   file's `core.hooksPath`, and their tests
 - [ ] `feature-0078 Give the wrapper's fake hosts the kit's version label`: the fixture alone, behavior unchanged
 - [ ] `feature-0078 Build the image again for a new kit`: the label, the build argument, the wrapper, and their tests
