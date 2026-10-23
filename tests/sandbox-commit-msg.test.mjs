@@ -7,6 +7,7 @@ import { posix } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { environmentEntry } from './compose-entries.mjs';
+import { executablePaths } from './dockerfile-executables.mjs';
 
 const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.url), 'utf-8');
 const wrapper = readFileSync(new URL('../container/sandbox.sh', import.meta.url), 'utf-8');
@@ -52,8 +53,8 @@ test('the wrapper sets no GIT_CONFIG_ variable and passes none to a container', 
 // R13, R14, R15: the image's files are copied from the kit's container directory alone, and not from the project
 // or the clone, so that a unit run's clone needs no npm ci for the check.
 test('the image holds the hook, executable, and the checker the hook runs', () => {
-  const chmod = /^RUN chmod \+x (.+)$/m.exec(lastStage())?.[1].split(' ');
-  assert.ok(chmod?.includes(posix.join(hooksDirectory, 'commit-msg')), `the last stage makes ${chmod} executable`);
+  const chmod = executablePaths(lastStage());
+  assert.ok(chmod.includes(posix.join(hooksDirectory, 'commit-msg')), `the last stage makes ${chmod} executable`);
   assert.match(readFileSync(hookFile, 'utf-8'), /^#!\/bin\/sh$/m);
   assert.notEqual(statSync(hookFile).mode & 0o100, 0);
   const runs = /^exec node (\S+) "\$1"$/m.exec(readFileSync(hookFile, 'utf-8'))?.[1];

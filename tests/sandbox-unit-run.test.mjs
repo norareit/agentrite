@@ -1744,3 +1744,119 @@ test('the forms the wrapper lists when nothing to mount is given show --variant 
   assert.ok(result.stderr.includes('sandbox.sh UNIT [--variant NAME] [COMMAND...]'), result.stderr);
   assert.ok(result.stderr.includes('sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]'), result.stderr);
 });
+
+// Unit 0083: a unit run whose clone the wrapper made installs the clone's dependencies before the command, when the
+// clone holds a package-lock.json. The stand-in `docker` runs no command, so these tests read where the wrapper puts
+// the script of the image, and tests/sandbox-install.test.mjs runs it in real containers.
+
+const installScript = '/usr/local/bin/install-dependencies.sh';
+
+// Commits a `package-lock.json` on the unit's branch, as a file, or as a directory that holds one when `directory`
+// says so, and checks `master` out again.
+function commitLockfile({ root, git }, { directory = false } = {}) {
+  git('checkout', '--quiet', branch);
+  const lockfile = join(root, 'package-lock.json');
+  if (directory) {
+    mkdirSync(lockfile);
+    writeFileSync(join(lockfile, 'inside'), 'not a lockfile\n');
+  } else {
+    writeFileSync(lockfile, '{}\n');
+  }
+  git('add', '.');
+  git('commit', '--quiet', '--message', 'the lockfile');
+  git('checkout', '--quiet', 'master');
+}
+
+// The calls of a unit run as `calls` holds them, with its command `echo hi` replaced by `command`.
+const withCommand = (calls, command) => calls.map((call) => call.replace(/ sandbox echo hi$/, ` sandbox ${command}`));
+
+test('a new clone that holds a package-lock.json runs the command through the install', (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host);
+  const result = host.run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), withCommand(host.unitRun(host.clone), `${installScript} echo hi`));
+});
+
+test('a new clone that holds a package-lock.json and is given no command installs before the shell', (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host);
+  const result = host.run([branch]);
+  assert.equal(result.status, 0, result.stderr);
+  const shell = firstCommandGets().defaultCommand;
+  assert.deepEqual(host.dockerCalls(), withCommand(host.unitRun(host.clone), `${installScript} ${shell}`));
+});
+
+test("a new clone of a variant's branch that holds a package-lock.json installs before the command", (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host);
+  const result = host.run([branch, '--variant', 'opus', 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  const clone = join(host.state, 'agentrite', 'project-sandbox', variantBranch);
+  assert.deepEqual(host.dockerCalls(), withCommand(variantRun(host, variantBranch, clone), `${installScript} echo hi`));
+});
+
+test('a run that resumes a clone does not install, though the clone holds a package-lock.json', (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host);
+  host.agent('echo kept > kept.txt');
+  assert.equal(host.run([branch, 'echo', 'hi']).status, 0);
+  const result = host.run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stderr, /resuming the clone/);
+  assert.deepEqual(host.dockerCalls(), [
+    ...withCommand(host.unitRun(host.clone), `${installScript} echo hi`),
+    ...host.unitRun(host.clone),
+  ]);
+});
+
+test('a command npm ci given by the human follows the install as it was given', (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host);
+  const result = host.run([branch, 'npm', 'ci']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), withCommand(host.unitRun(host.clone), `${installScript} npm ci`));
+});
+
+test('a package-lock.json that is a directory installs nothing', (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host, { directory: true });
+  const result = host.run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), host.unitRun(host.clone));
+});
+
+test('a new clone without a package-lock.json runs the command alone, and says nothing of it', (testContext) => {
+  const host = setUp(testContext);
+  const result = host.run([branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), host.unitRun(host.clone));
+  assert.doesNotMatch(result.stderr, /install|npm ci/);
+});
+
+for (const [form, args] of [
+  ['--in-place', () => ['--in-place']],
+  ['--workdir', (host) => ['--workdir', host.base]],
+]) {
+  test(`${form} runs the command alone, though the directory holds a package-lock.json`, (testContext) => {
+    const host = setUp(testContext);
+    writeFileSync(join(host.root, 'package-lock.json'), '{}\n');
+    writeFileSync(join(host.base, 'package-lock.json'), '{}\n');
+    const result = host.run([...args(host), 'echo', 'hi']);
+    assert.equal(result.status, 0, result.stderr);
+    const calls = host.dockerCalls();
+    assert.equal(calls.length, 1, calls.join('\n'));
+    assert.match(calls[0], / sandbox echo hi$/);
+    assert.ok(!calls[0].includes(installScript), calls[0]);
+  });
+}
+
+test('--connect runs the command alone, though the clone holds a package-lock.json', (testContext) => {
+  const host = setUp(testContext);
+  commitLockfile(host);
+  writeFileSync(join(host.root, 'package-lock.json'), '{}\n');
+  markRunning(host);
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});

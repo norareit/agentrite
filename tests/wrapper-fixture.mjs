@@ -369,7 +369,9 @@ exec "${docker}" "$@"`,
 //   `imageLabels`, without recording them
 // * `compose ... run` it records, and turns into a real `docker run --rm --name <name>` of `image`, with the volumes
 //   of the call, the user and group of the suite, `/work` as its working directory, `HOME` in `/tmp`, and the
-//   call's command. The flags of the call besides its name and its volumes are not passed on
+//   call's command. The flags of the call besides its name and its volumes are not passed on. The image is not the
+//   kit's, so the working tree's `container/install-dependencies.sh` is mounted read-only at the path the kit's
+//   image holds it at, and a unit run of a new clone runs the real script with the `npm` of the image
 // * `exec` it records, and turns into a real `docker exec` as the user and group of the suite, with the call's working
 //   directory, environment and command. The image has no `agent` account and no `known-terminal.sh`, so the call's
 //   user is replaced and the script is left out
@@ -379,6 +381,7 @@ export function containerHost(base, recorded, image) {
   const host = hostBin(base);
   const { bin } = host;
   const docker = findOnPath('docker');
+  const installDependencies = fileURLToPath(new URL('../container/install-dependencies.sh', import.meta.url));
 
   const calls = join(base, 'docker-calls');
   const projectBuildArgs = join(base, 'project-build-args.json');
@@ -411,7 +414,9 @@ if [ "$1" = "compose" ]; then
     esac
   done
   shift
-  exec "${docker}" run --rm "\${flags[@]}" --user "$(id -u):$(id -g)" --workdir /work --env HOME=/tmp "${image}" "$@"
+  exec "${docker}" run --rm "\${flags[@]}" \\
+    --volume "${installDependencies}:/usr/local/bin/install-dependencies.sh:ro" \\
+    --user "$(id -u):$(id -g)" --workdir /work --env HOME=/tmp "${image}" "$@"
 fi
 if [ "$1" = "exec" ]; then
   echo "${record} docker $*" >> "${calls}"

@@ -59,7 +59,8 @@ repository and `container/` ships as a whole, so neither table changes.
 - `container/sandbox.sh`: `default_command`, the install before a new clone's command, and the head comment
 - `tests/dockerfile-executables.mjs`: new, the paths the `RUN chmod` of `container/Dockerfile` makes executable,
   read across its continued lines, for the two tests below
-- `tests/known-terminal.test.mjs`: its test of the `chmod` reads the paths with `tests/dockerfile-executables.mjs`
+- `tests/known-terminal.test.mjs` and `tests/sandbox-commit-msg.test.mjs`: their tests of the `chmod` read the paths
+  with `tests/dockerfile-executables.mjs`
 - `tests/install-dependencies.test.mjs`: new, the tests of the script on the host and of its place in the image
 - `tests/sandbox-unit-run.test.mjs`: the tests of the wrapper with a fake Docker
 - `tests/sandbox-install.test.mjs`: new, the tests of real containers, skipped without Docker
@@ -85,11 +86,12 @@ repository and `container/` ships as a whole, so neither table changes.
   `COPY` (R1, R5, R6, R13)
 - [x] The `RUN chmod` of `container/Dockerfile` no longer fits one line with the script beside the others, so it
   continues on a second. Add `tests/dockerfile-executables.mjs`, which reads the paths it makes executable across
-  its continued lines, and read them with it in the test of the `COPY` of the script and in that of
-  `known-terminal.sh` in `tests/known-terminal.test.mjs`, whose own reading takes the first line alone (R13)
+  its continued lines, and read them with it in the test of the `COPY` of the script, in that of `known-terminal.sh`
+  in `tests/known-terminal.test.mjs` and in that of the hook in `tests/sandbox-commit-msg.test.mjs`, whose own
+  readings take the first line alone (R13)
 - [x] Write `container/install-dependencies.sh`, executable, and its `COPY` and `chmod` in `container/Dockerfile`, as
   the approach gives them, until the tests above pass (R1, R4, R5, R6)
-- [ ] Add to `tests/sandbox-unit-run.test.mjs`, with a `package-lock.json` committed on the unit's branch: a new
+- [x] Add to `tests/sandbox-unit-run.test.mjs`, with a `package-lock.json` committed on the unit's branch: a new
   clone of the unit's branch runs `sandbox /usr/local/bin/install-dependencies.sh echo hi`, the calls otherwise as
   `unitRun` gives them; one with no command runs `sandbox /usr/local/bin/install-dependencies.sh bash`, `bash` held
   against the `CMD` of `container/Dockerfile` by the `defaultCommand` that `firstCommandGets` reads; a new clone of a
@@ -99,10 +101,10 @@ repository and `container/` ships as a whole, so neither table changes.
   without a lockfile, that a new clone runs `sandbox echo hi` and its standard error holds no line of an install; and
   with a `package-lock.json` in the project root, that `--in-place` and `--workdir` run the command alone and that
   `--connect` makes the one call `connectCall` gives (R1, R2, R3, R7, R8, R13)
-- [ ] Add the install to `container/sandbox.sh` as the approach gives it, and its paragraph of the head comment,
+- [x] Add the install to `container/sandbox.sh` as the approach gives it, and its paragraph of the head comment,
   until the tests above pass (R1, R2, R3, R7, R8)
-- [ ] Add the volume of the script to `containerHost` in `tests/wrapper-fixture.mjs`, and its comment (R13)
-- [ ] Add the new `tests/sandbox-install.test.mjs`, skipped where `docker info` fails, as
+- [x] Add the volume of the script to `containerHost` in `tests/wrapper-fixture.mjs`, and its comment (R13)
+- [x] Add the new `tests/sandbox-install.test.mjs`, skipped where `docker info` fails, as
   `tests/sandbox-orchestrator-mount.test.mjs` skips, on `containerProject` with a Compose project named after the
   process and the container removed after each test. On the unit's branch it commits a `package.json` of the package
   `p` with the dependency `local` as `file:local`, the package `local/package.json`, the `package-lock.json` that
@@ -154,5 +156,5 @@ repository and `container/` ships as a whole, so neither table changes.
 
 - [x] `feature-0083 Name the new clone and the default command once`: the first task
 - [x] `feature-0083 Add the script that installs a new clone`: the second to fourth tasks
-- [ ] `feature-0083 Install the dependencies of a unit run's new clone`: the fifth to eighth tasks
+- [x] `feature-0083 Install the dependencies of a unit run's new clone`: the fifth to eighth tasks
 - [ ] `feature-0083 Document the install of a new clone`: the tasks of `SANDBOX.md` and `README.md`

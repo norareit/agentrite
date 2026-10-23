@@ -32,7 +32,9 @@
 #   container/unit-clone.sh. With --variant the run is of the unit's variant: the
 #   branch is the unit's followed by two hyphens and the variant's name, so a variant
 #   has the container, the clone and the bringing back of a unit run of its own, and
-#   runs beside the unit's.
+#   runs beside the unit's. A new clone that holds a package-lock.json has its
+#   dependencies installed with npm ci in the container before the command, by
+#   container/install-dependencies.sh of the image.
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
@@ -940,7 +942,16 @@ fi
 # because Docker creates a mount's missing source and its missing mount point as root.
 # A stopped container that a crash left under the name is removed, and Docker refuses
 # to remove one that is running.
+new_clone=0
+! clone_is_new "$clone" || new_clone=1
 prepare_clone "$root" "$branch" "$clone"
+# A new clone holds what is committed and no node_modules, so its dependencies are
+# installed in the container, by the image's script, before the command. A clone that is
+# resumed has what its earlier run left, and is used as it is.
+if [ "$new_clone" -eq 1 ] && [ -f "$clone/package-lock.json" ]; then
+  [ $# -gt 0 ] || set -- "$default_command"
+  set -- /usr/local/bin/install-dependencies.sh "$@"
+fi
 mkdir -p "$root/.reviews" "$clone/.reviews" "$root/.orchestrator" "$clone/.orchestrator"
 docker rm "$container_name" >/dev/null 2>&1 || true
 

@@ -33,3 +33,14 @@ timestamp: 2026-10-23T22:37:29Z
   `RUN chmod` with the script beside the others is longer than 120 characters, so it continues on a second line, and
   the test of `tests/known-terminal.test.mjs` read the first line alone. Both tests now read the paths with the new
   `tests/dockerfile-executables.mjs`, and those of `tests/known-terminal.test.mjs` pass
+- 2026-10-23T23:12:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the tests of the install
+  to `tests/sandbox-unit-run.test.mjs`. Before the wrapper changed, the five that expect the install failed and the
+  five that expect none passed. Added the install to `container/sandbox.sh`, and all ten passed. Added the volume of
+  the script to `containerHost` and the new `tests/sandbox-install.test.mjs`. Not checked: the three tests of real
+  containers, which are skipped here for want of Docker. What was checked of them instead: `bash -n` passes on the
+  `docker` that `containerHost` writes, and `container/install-dependencies.sh` run with `sh` on this host's npm
+  11.19.1, in a directory of the package `p` and its dependency `local`, printed `installed` on standard output and
+  `added 1 package` on standard error, and exited 7 with a `preinstall` of `exit 7`, the command not run. The lockfile
+  of the test is the one that npm wrote there. `tests/sandbox-commit-msg.test.mjs` read the `RUN chmod` from its first
+  line alone too, and failed with it continued, so it reads it with `tests/dockerfile-executables.mjs` as well, which
+  the plan now names. `npm test` passed with 1202 tests and 33 skipped, all for want of Docker
