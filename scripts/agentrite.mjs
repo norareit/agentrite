@@ -49,8 +49,10 @@ import {
   orchestrate,
   ORCHESTRATE_FORM,
   parseOrchestrateArgs,
+  runName,
   stepFileName,
   stepLine,
+  variantOf,
 } from './agentrite-orchestrate.mjs';
 import { outcomeRequest } from './agentrite-outcome.mjs';
 import { HARNESS_NAMES, isKitWrapper, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
@@ -1399,21 +1401,42 @@ export function startHeartbeat(write) {
 }
 
 /**
+ * The name of the branch checked out in `root`, or `null` when none is: on a detached `HEAD`, and in a directory that
+ * is in no git repository. A git that cannot be run, or that fails otherwise, is an error.
+ *
+ * @param {string} root
+ * @returns {string | null}
+ */
+function checkedOutBranch(root) {
+  const result = spawnSync('git', ['symbolic-ref', '--quiet', 'HEAD'], { cwd: root, encoding: 'utf-8' });
+  if (result.error !== undefined) throw new Error(`git could not be run: ${result.error.message}`);
+  if (result.status === 0) {
+    const reference = result.stdout.trim();
+    return reference.startsWith('refs/heads/') ? reference.slice('refs/heads/'.length) : null;
+  }
+  // `--quiet` makes a detached HEAD exit 1 and say nothing.
+  if (result.status === 1 || /not a git repository/.test(result.stderr)) return null;
+  throw new Error(`git could not be run: ${result.stderr.trim()}`);
+}
+
+/**
  * Makes the directory of a new run of the unit, after making sure that `.orchestrator/.gitignore` holds `*` alone,
- * and returns its path from the root. It is named by the instant the run started, and made without `recursive`, so
- * that a second run in the same second fails rather than mixing with the first.
+ * and returns its path from the root. It is named by the instant the run started, followed by `--` and the variant
+ * for a run on a variant's branch, and made without `recursive`, so that a second run of one variant in the same
+ * second fails rather than mixing with the first.
  *
  * @param {string} root
  * @param {string} directory
+ * @param {string | null} variant
  * @returns {string}
  */
-function makeRunDirectory(root, directory) {
+function makeRunDirectory(root, directory, variant) {
   const ignore = resolve(root, ORCHESTRATOR_DIRECTORY, '.gitignore');
   mkdirSync(dirname(ignore), { recursive: true });
   if (!isRegularFile(ignore) || readFileSync(ignore, 'utf-8') !== '*\n') writeFileSync(ignore, '*\n');
   const unitDirectory = join(ORCHESTRATOR_DIRECTORY, directory);
   mkdirSync(resolve(root, unitDirectory), { recursive: true });
-  const run = join(unitDirectory, instantOf(Date.now()));
+  const run = join(unitDirectory, runName(instantOf(Date.now()), variant));
   mkdirSync(resolve(root, run));
   return run;
 }
@@ -1613,7 +1636,10 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
   const directory = resolveUnit(unit, changeDirectories(root));
   checkApproved(root, directory);
 
-  const runDirectory = makeRunDirectory(root, directory);
+  // The branch is read once, before anything is written: the run's directory holds the variant in its name and
+  // `state.json` the branch, and neither follows a branch checked out later.
+  const branch = checkedOutBranch(root);
+  const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
   const write = (/** @type {string} */ name, /** @type {string} */ content) =>
     writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
@@ -1621,7 +1647,10 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
   /** @type {{ role: string, harness: string, session: string }[]} */ const sessions = [];
   /** @type {object | null} */ let at = null;
   const writeState = (/** @type {object | null} */ ended) =>
-    write('state.json', `${JSON.stringify({ unit: directory, definition: path, at, sessions, ended }, null, 2)}\n`);
+    write(
+      'state.json',
+      `${JSON.stringify({ unit: directory, definition: path, branch, at, sessions, ended }, null, 2)}\n`,
+    );
 
   const stopHeartbeat = startHeartbeat((beat) => write('heartbeat', beat));
   try {

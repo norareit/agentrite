@@ -209,6 +209,43 @@ function inRound(round) {
   return round === undefined ? '' : `, round ${round.at} of ${round.of}`;
 }
 
+/** The source of the form a variant takes: the one `./sandbox.sh --variant` takes. */
+export const VARIANT_PATTERN = '[a-z0-9]+(?:-[a-z0-9]+)*';
+
+/** The source of the instant a run's directory is named by, as `instantOf` writes it. */
+export const INSTANT_PATTERN = '\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z';
+
+/**
+ * The variant of a run, by the rule of `process.md`: what follows the last `--` in the name of its branch, or `null`
+ * for a run without a branch and for a branch with no `--`. A variant of another form is refused, since it would
+ * name the run's directory.
+ *
+ * @param {string | null} branch
+ * @returns {string | null}
+ */
+export function variantOf(branch) {
+  if (branch === null || !branch.includes('--')) return null;
+  const variant = branch.slice(branch.lastIndexOf('--') + 2);
+  if (!new RegExp(`^${VARIANT_PATTERN}$`).test(variant)) {
+    throw new Error(
+      `the branch ${branch} gives the variant "${variant}", and a variant is one or more words of the lowercase ` +
+        'letters a to z and the digits 0 to 9, joined by single hyphens',
+    );
+  }
+  return variant;
+}
+
+/**
+ * The name of a run's directory: the instant it started, and for a run on a variant `--` and the variant.
+ *
+ * @param {string} instant
+ * @param {string | null} variant
+ * @returns {string}
+ */
+export function runName(instant, variant) {
+  return variant === null ? instant : `${instant}--${variant}`;
+}
+
 /**
  * What names a step in the lines about it: its number, round, role, harness and model.
  *

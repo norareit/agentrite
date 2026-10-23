@@ -152,20 +152,20 @@ the directory named as before.
   and `scripts/agentrite-outcome.mjs`. Add `numberError` and `limitError` to `scripts/agentrite-units.mjs`, exported,
   and call them in `argumentError` where its checks of the number and of the limit stand. The tests of
   `tests/agentrite-units.test.mjs` pass unchanged (R19)
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `variantOf`: `null` gives `null`;
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the unit tests of `variantOf`: `null` gives `null`;
   `feature-0029-try-the-orchestrator` gives `null`; `feature-0029-try-the-orchestrator--opus` gives `opus`;
   `a--b--gpt-6-1` gives `gpt-6-1`; and `feature-0029-x--Opus`, `feature-0029-x--` and `feature-0029-x--a/b` each
   throw the message of the approach with that branch and variant. And of `runName`: `2026-10-21T10:00:00Z` with
   `null` and with `opus` (R2, R3, R4, R24)
-- [ ] Add `VARIANT_PATTERN`, `INSTANT_PATTERN`, `variantOf` and `runName` to `scripts/agentrite-orchestrate.mjs` as
+- [x] Add `VARIANT_PATTERN`, `INSTANT_PATTERN`, `variantOf` and `runName` to `scripts/agentrite-orchestrate.mjs` as
   the approach gives them (R2, R3, R4)
-- [ ] Link git into `bin` of the fixture `project` of `tests/agentrite-orchestrate.test.mjs`, found by `command -v
+- [x] Link git into `bin` of the fixture `project` of `tests/agentrite-orchestrate.test.mjs`, found by `command -v
   git` as `SLEEP` is, and add a helper `agentriteAt(time, ...args)` that runs the command with `NODE_OPTIONS` set to
   `--import=` a `data:text/javascript,` module that makes `Date.now` give `time`, and a helper `onBranch(branch)` that
   runs, from the test process, `git init --quiet` in the base when it is no repository yet and then `git symbolic-ref
   HEAD refs/heads/<branch>`. Assert, in `a run whose every item ends runs the default definition and exits 0`, that
   `state.branch` is `null` (R1, R25)
-- [ ] Add to `tests/agentrite-orchestrate.test.mjs` the test that three runs of `ONE_STEP` by `agentriteAt` at one
+- [x] Add to `tests/agentrite-orchestrate.test.mjs` the test that three runs of `ONE_STEP` by `agentriteAt` at one
   instant, on `feature-0029-try-the-orchestrator--opus`, on `feature-0029-try-the-orchestrator--gpt-6-1` and on
   `feature-0029-try-the-orchestrator`, each exit 0, that `.orchestrator/0029-try-the-orchestrator/` then holds
   `<instant>`, `<instant>--gpt-6-1` and `<instant>--opus`, and that the `branch` of each `state.json` is the branch
@@ -175,7 +175,7 @@ the directory named as before.
   `state.json` after `onBranch('other')` while it runs and after it ended. And by `refused`, whose `prepare` runs
   `git init` and `git symbolic-ref` on the base, that a run on `feature-0029-try-the-orchestrator--Opus` exits 1
   with the message of `variantOf`, starts nothing and makes no `.orchestrator` (R1, R2, R3, R4, R5, R25)
-- [ ] Add `checkedOutBranch` to `scripts/agentrite.mjs`, read the branch and its variant in `orchestrateCommand`
+- [x] Add `checkedOutBranch` to `scripts/agentrite.mjs`, read the branch and its variant in `orchestrateCommand`
   after `checkApproved`, give the variant to `makeRunDirectory`, which names the directory by `runName`, write
   `branch` in `writeState` after `definition`, and say in the comments of `makeRunDirectory` and `orchestrateCommand`
   that the directory's name holds the variant and `state.json` the branch. Run `npm test` (R1, R3, R4, R5)
@@ -279,7 +279,7 @@ the directory named as before.
   changes no behavior
 - [x] `feature-0081 Share isObject and the checks of a number and a limit`: the second task, which changes no
   behavior
-- [ ] `feature-0081 Keep the branch and the variant of a run`: the third to seventh tasks
+- [x] `feature-0081 Keep the branch and the variant of a run`: the third to seventh tasks
 - [ ] `feature-0081 List the runs of a project`: the eighth to twentieth tasks
 - [ ] `feature-0081 Document the runs and the variants of a run`: the three tasks of `README.md` and the one of
   `SANDBOX.md`

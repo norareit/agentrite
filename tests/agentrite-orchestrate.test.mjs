@@ -33,10 +33,12 @@ import {
   orchestrateUsage,
   parseOrchestrateArgs,
   ranTable,
+  runName,
   stepFileName,
   stepHead,
   stepLine,
   timedItems,
+  variantOf,
 } from '../scripts/agentrite-orchestrate.mjs';
 import { followedFile, heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
@@ -367,6 +369,34 @@ test('the name of a step file has as many digits as the highest step number need
   const many = { steps: [{ repeat: { times: 101, steps: [DEFAULT.steps[0]] } }] };
   assert.equal(stepFileName(many, 0, 'implementer', 'followed.jsonl'), '000-implementer.followed.jsonl');
   assert.equal(stepFileName(many, 100, 'implementer', 'followed.jsonl'), '100-implementer.followed.jsonl');
+});
+
+test('the variant of a run is what follows the last -- of its branch, and none without one', () => {
+  assert.equal(variantOf(null), null);
+  assert.equal(variantOf('feature-0029-try-the-orchestrator'), null);
+  assert.equal(variantOf('feature-0029-try-the-orchestrator--opus'), 'opus');
+  assert.equal(variantOf('a--b--gpt-6-1'), 'gpt-6-1');
+});
+
+test('a variant that is not words of a to z and 0 to 9 joined by single hyphens is refused', () => {
+  for (const [branch, variant] of [
+    ['feature-0029-x--Opus', 'Opus'],
+    ['feature-0029-x--', ''],
+    ['feature-0029-x--a/b', 'a/b'],
+  ]) {
+    assert.throws(
+      () => variantOf(branch),
+      new Error(
+        `the branch ${branch} gives the variant "${variant}", and a variant is one or more words of the lowercase ` +
+          'letters a to z and the digits 0 to 9, joined by single hyphens',
+      ),
+    );
+  }
+});
+
+test('the name of a run is its instant, followed by -- and its variant for a run with one', () => {
+  assert.equal(runName('2026-10-21T10:00:00Z', null), '2026-10-21T10:00:00Z');
+  assert.equal(runName('2026-10-21T10:00:00Z', 'opus'), '2026-10-21T10:00:00Z--opus');
 });
 
 test('the line before a step gives its number, its round in a repeat, its role, harness and model', () => {
@@ -986,6 +1016,7 @@ exit "$status"
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const SLEEP = spawnSync('sh', ['-c', 'command -v sleep'], { encoding: 'utf-8' }).stdout.trim();
+const GIT = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf-8' }).stdout.trim();
 const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const UNIT = '0029-try-the-orchestrator';
 const APPROVED = '---\nkind: feature\nstatus: approved\ntimestamp: 2026-10-21T10:00:00Z\n---\n\n# 0029\n';
@@ -1005,8 +1036,16 @@ function project(testContext) {
     chmodSync(join(base, 'bin', harness), 0o755);
   }
   symlinkSync(SLEEP, join(base, 'bin', 'sleep'));
+  symlinkSync(GIT, join(base, 'bin', 'git'));
   const options = { cwd: base, env: { PATH: join(base, 'bin'), FAKE_DIR: fakes } };
   const agentrite = (...args) => spawnSync(process.execPath, [script, ...args], { ...options, encoding: 'utf-8' });
+  // The command run as if it was `time` milliseconds after the epoch, so that runs start at an instant of the test's
+  // choosing.
+  const agentriteAt = (time, ...args) => {
+    const clock = encodeURIComponent(`Date.now = () => ${time};`);
+    const env = { ...options.env, NODE_OPTIONS: `--import=data:text/javascript,${clock}` };
+    return spawnSync(process.execPath, [script, ...args], { ...options, env, encoding: 'utf-8' });
+  };
   // The command started and not waited on, with a promise of how it ended and what it printed, one of how it exited,
   // which does not wait for whatever process it left holding its output, and what it printed on standard output so
   // far.
@@ -1052,7 +1091,18 @@ function project(testContext) {
       .filter((name) => name.startsWith('call-'))
       .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
-  return { base, write, read, agentrite, started, answer, complains, waits, lingers, sees, pidOf, calls };
+  return { base, write, read, agentrite, agentriteAt, started, answer, complains, waits, lingers, sees, pidOf, calls };
+}
+
+// Checks out `branch` in the project at `base`, making it a git repository when it is none yet. The branch has no
+// commit, which is all the command reads of it.
+function onBranch(base, branch) {
+  const git = (...args) => {
+    const result = spawnSync('git', args, { cwd: base, encoding: 'utf-8' });
+    assert.equal(result.status, 0, result.stderr);
+  };
+  if (!existsSync(join(base, '.git'))) git('init', '--quiet');
+  git('symbolic-ref', 'HEAD', `refs/heads/${branch}`);
 }
 
 // A call of the fake: its name, the arguments before the prompt, and the prompt, which is the last argument and may
@@ -1188,6 +1238,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   const state = JSON.parse(read(`${run.name}/state.json`));
   assert.equal(state.unit, UNIT);
   assert.equal(state.definition, 'node_modules/agentrite/orchestrator.json');
+  assert.equal(state.branch, null);
   assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1 });
   assert.deepEqual(state.sessions, [
     { role: 'planner', harness: 'claude', session: planner.options[9] },
@@ -1566,6 +1617,94 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
   ]) {
     refused(testContext, prepare, args, message);
   }
+});
+
+// R25: the branch and the variant of a run
+
+const TRY_BRANCH = 'feature-0029-try-the-orchestrator';
+const STARTED_AT = '2026-10-21T10:00:00Z';
+
+function implemented() {
+  return claudePrinted(responseOf({ ...DONE, summary: 'Built.' }));
+}
+
+test('three runs in one second, on two variants and the unit branch, each run and keep their branch', (testContext) => {
+  const { base, write, agentriteAt, answer, read } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  const branches = [`${TRY_BRANCH}--opus`, `${TRY_BRANCH}--gpt-6-1`, TRY_BRANCH];
+  branches.forEach((_branch, index) => answer(index + 1, implemented()));
+
+  const directories = branches.map((branch) => {
+    onBranch(base, branch);
+    const result = agentriteAt(Date.parse(STARTED_AT), 'orchestrate', '0029', '--definition', 'one.json');
+    assert.equal(result.status, 0, result.stderr);
+    return branch;
+  });
+
+  assert.deepEqual(readdirSync(join(base, '.orchestrator', UNIT)).sort(), [
+    STARTED_AT,
+    `${STARTED_AT}--gpt-6-1`,
+    `${STARTED_AT}--opus`,
+  ]);
+  for (const [name, branch] of [
+    [`${STARTED_AT}--opus`, directories[0]],
+    [`${STARTED_AT}--gpt-6-1`, directories[1]],
+    [STARTED_AT, directories[2]],
+  ]) {
+    assert.equal(JSON.parse(read(`.orchestrator/${UNIT}/${name}/state.json`)).branch, branch);
+  }
+});
+
+test('a run on a detached HEAD writes no branch, and its directory is named by the instant alone', (testContext) => {
+  const { base, write, agentriteAt, answer, read } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  answer(1, implemented());
+  onBranch(base, TRY_BRANCH);
+  const identity = ['-c', 'user.name=test', '-c', 'user.email=test@example.com', '-c', 'commit.gpgsign=false'];
+  const commit = [...identity, 'commit', '--quiet', '--allow-empty', '-m', 'x'];
+  const commands = [commit, ['checkout', '--quiet', '--detach']];
+  for (const args of commands) {
+    assert.equal(spawnSync('git', args, { cwd: base, encoding: 'utf-8' }).status, 0);
+  }
+
+  const result = agentriteAt(Date.parse(STARTED_AT), 'orchestrate', '0029', '--definition', 'one.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(readdirSync(join(base, '.orchestrator', UNIT)), [STARTED_AT]);
+  assert.equal(JSON.parse(read(`.orchestrator/${UNIT}/${STARTED_AT}/state.json`)).branch, null);
+});
+
+test('a run keeps the branch it started on when another is checked out while it runs', async (testContext) => {
+  const { base, write, started, answer, waits, read } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  answer(1, implemented());
+  waits(1, 2);
+  onBranch(base, `${TRY_BRANCH}--opus`);
+  const { ended } = started('orchestrate', '0029', '--definition', 'one.json');
+  const unitDirectory = join(base, '.orchestrator', UNIT);
+  const made = () => existsSync(unitDirectory) && readdirSync(unitDirectory).length > 0;
+  for (let tries = 0; tries < 250 && !made(); tries += 1) await delay(20);
+  const [name] = readdirSync(unitDirectory);
+  assert.match(name, /--opus$/);
+
+  onBranch(base, 'other');
+  const result = await ended;
+
+  assert.equal(result.status, 0, result.stderr);
+  const state = JSON.parse(read(`.orchestrator/${UNIT}/${name}/state.json`));
+  assert.equal(state.branch, `${TRY_BRANCH}--opus`);
+  assert.notEqual(state.ended, null);
+});
+
+test('a run on a branch whose variant is not of the form is refused, writing nothing', (testContext) => {
+  const branch = `${TRY_BRANCH}--Opus`;
+  refused(
+    testContext,
+    ({ base }) => onBranch(base, branch),
+    ['0029'],
+    `the branch ${branch} gives the variant "Opus", and a variant is one or more words of the lowercase letters a to ` +
+      'z and the digits 0 to 9, joined by single hyphens',
+  );
 });
 
 const ORCHESTRATE_USAGE_FORM =
