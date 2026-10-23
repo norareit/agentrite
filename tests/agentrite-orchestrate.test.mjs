@@ -44,6 +44,7 @@ const DEFAULT = parseDefinition(readFileSync(new URL('../orchestrator.json', imp
   ...NAMES,
 });
 
+const HEARTBEAT_FORM = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\n$/;
 const FENCE = '```';
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
@@ -1097,6 +1098,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
     '01-implementer.outcome.json',
     '02-reviewer.outcome.json',
     'definition.json',
+    'heartbeat',
     'state.json',
   ]);
   assert.equal(read(`${run.name}/definition.json`), read('node_modules/agentrite/orchestrator.json'));
@@ -1141,6 +1143,7 @@ test('a run whose steps leave items for after the run exits 0, and gives them gr
     '01-implementer.outcome.json',
     '02-reviewer.outcome.json',
     'definition.json',
+    'heartbeat',
     'state.json',
   ]);
 });
@@ -1644,7 +1647,12 @@ test(
     );
     assert.ok(!result.stdout.includes('Not finished.'), result.stdout);
     assert.ok(read(path).includes('"summary": "Not finished."'));
-    assert.deepEqual(readdirSync(run.path).sort(), ['00-implementer.response.md', 'definition.json', 'state.json']);
+    assert.deepEqual(readdirSync(run.path).sort(), [
+      '00-implementer.response.md',
+      'definition.json',
+      'heartbeat',
+      'state.json',
+    ]);
     const state = JSON.parse(read(`${run.name}/state.json`));
     assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[9] }]);
     assert.match(state.sessions[0].session, UUID);
@@ -1889,9 +1897,13 @@ test('a run with --follow ends, writes its directory and exits as the same run w
     '00-implementer.outcome.json',
     '01-reviewer.outcome.json',
     'definition.json',
+    'heartbeat',
     'state.json',
   ]);
-  assert.deepEqual(followed.contents, plain.contents);
+  const heartbeatAt = followed.files.indexOf('heartbeat');
+  for (const run of [followed, plain]) assert.match(run.contents[heartbeatAt], HEARTBEAT_FORM);
+  const withoutHeartbeat = (run) => run.contents.filter((content, index) => index !== heartbeatAt);
+  assert.deepEqual(withoutHeartbeat(followed), withoutHeartbeat(plain));
   assert.deepEqual(JSON.parse(followed.contents.at(-1)).sessions, [
     { role: 'implementer', harness: 'claude', session: 'claude-session' },
     { role: 'reviewer', harness: 'opencode', session: 'ses_follow' },
@@ -2034,4 +2046,37 @@ test('a write of the heartbeat that fails does not stop it, and the next is made
   testContext.mock.timers.tick(10_000);
 
   assert.deepEqual(written, ['2026-10-23T10:00:25Z\n']);
+});
+
+test('a run keeps a heartbeat that moves on while a step runs and is left at its last instant', async (testContext) => {
+  const { base, write, read, started, answer, waits, pidOf } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  answer(1, claudePrinted(responseOf(DONE)));
+  waits(1, 12);
+  const { ended } = started('orchestrate', '0029', '--definition', 'one.json');
+  const harness = await pidOf(1);
+
+  const run = runDirectoryOf(base);
+  const first = read(`${run.name}/heartbeat`);
+  assert.match(first, HEARTBEAT_FORM);
+  assert.ok(Math.abs(Date.now() - Date.parse(first.trim())) <= 5_000, first);
+  assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended, null);
+  let moved = first;
+  for (let tries = 0; tries < 150 && moved === first; tries += 1) {
+    await delay(100);
+    moved = read(`${run.name}/heartbeat`);
+  }
+  assert.ok(moved > first, `${first} then ${moved}`);
+  assert.doesNotThrow(() => process.kill(harness, 0), 'the harness ended before the heartbeat moved on');
+
+  const result = await ended;
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(read(`${run.name}/heartbeat`) >= moved);
+  assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-implementer.outcome.json',
+    'definition.json',
+    'heartbeat',
+    'state.json',
+  ]);
+  assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.status, 0);
 });

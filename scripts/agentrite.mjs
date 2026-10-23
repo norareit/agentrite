@@ -1567,7 +1567,8 @@ function passSignalsOn(running) {
  * Runs the definition on an approved unit, one step at a time, keeping the run in its directory under
  * `.orchestrator/`, prints a line before and after each step and what the human needs at the end, and returns the
  * exit status. With `follow`, the messages and tool calls of each step are printed between its two lines as it
- * runs. Nothing is written before every refusal has been ruled out, and nothing outside `.orchestrator/`.
+ * runs. Nothing is written before every refusal has been ruled out, and nothing outside `.orchestrator/`. The run's
+ * directory holds a `heartbeat` while the run lasts, and every file of it is written whole.
  *
  * @param {string} root
  * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
@@ -1581,7 +1582,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
 
   const runDirectory = makeRunDirectory(root, directory);
   const write = (/** @type {string} */ name, /** @type {string} */ content) =>
-    writeFileSync(resolve(root, runDirectory, name), content);
+    writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
   const width = numberWidth(definition);
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
     `${String(planned.number).padStart(width, '0')}-${planned.step.role}.${kind}`;
@@ -1590,52 +1591,58 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
   const writeState = (/** @type {object | null} */ ended) =>
     write('state.json', `${JSON.stringify({ unit: directory, definition: path, at, sessions, ended }, null, 2)}\n`);
 
-  write('definition.json', text);
-  writeState(null);
-  /** @type {number | undefined} */ let group;
-  passSignalsOn(() => group);
-  /** @type {string | undefined} */ let responsePath;
-  const { ran, end } = await orchestrate(definition, {
-    started(planned) {
-      const { number, item, round, index } = planned;
-      at = { number, item, round: round ?? null, index: index ?? null };
-      writeState(null);
-      console.log(stepLine(planned));
-    },
-    run: (planned) =>
-      runStep(
-        root,
-        directory,
-        skipPermissions,
-        planned,
-        (running) => {
-          group = running;
-        },
-        follow ? followPrinter((text) => process.stdout.write(text), Date.now) : undefined,
-      ),
-    ended(entry) {
-      const { planned, result, reading } = entry;
-      const { role, harness } = planned.step;
-      if (result.session !== undefined) {
-        const known = sessions.find((listed) => listed.role === role && listed.harness === harness);
-        if (known === undefined) sessions.push({ role, harness, session: result.session });
-        else known.session = result.session;
-      }
-      responsePath = undefined;
-      if (reading.kind === 'outcome') {
-        write(fileOf(planned, 'outcome.json'), `${reading.text}\n`);
-      } else if (result.response !== undefined) {
-        write(fileOf(planned, 'response.md'), result.response);
-        responsePath = join(runDirectory, fileOf(planned, 'response.md'));
-      }
-      writeState(null);
-      console.log(stepLine(planned, entry));
-    },
-  });
-  const status = exitStatus(end);
-  writeState({ status, line: endLine(end) });
-  process.stdout.write(`\n${endReport(ran, end, { runDirectory, unitDirectory: directory, responsePath })}`);
-  return status;
+  const stopHeartbeat = startHeartbeat((beat) => write('heartbeat', beat));
+  try {
+    write('definition.json', text);
+    writeState(null);
+    /** @type {number | undefined} */ let group;
+    passSignalsOn(() => group);
+    /** @type {string | undefined} */ let responsePath;
+    const { ran, end } = await orchestrate(definition, {
+      started(planned) {
+        const { number, item, round, index } = planned;
+        at = { number, item, round: round ?? null, index: index ?? null };
+        writeState(null);
+        console.log(stepLine(planned));
+      },
+      run: (planned) =>
+        runStep(
+          root,
+          directory,
+          skipPermissions,
+          planned,
+          (running) => {
+            group = running;
+          },
+          follow ? followPrinter((text) => process.stdout.write(text), Date.now) : undefined,
+        ),
+      ended(entry) {
+        const { planned, result, reading } = entry;
+        const { role, harness } = planned.step;
+        if (result.session !== undefined) {
+          const known = sessions.find((listed) => listed.role === role && listed.harness === harness);
+          if (known === undefined) sessions.push({ role, harness, session: result.session });
+          else known.session = result.session;
+        }
+        responsePath = undefined;
+        if (reading.kind === 'outcome') {
+          write(fileOf(planned, 'outcome.json'), `${reading.text}\n`);
+        } else if (result.response !== undefined) {
+          write(fileOf(planned, 'response.md'), result.response);
+          responsePath = join(runDirectory, fileOf(planned, 'response.md'));
+        }
+        writeState(null);
+        console.log(stepLine(planned, entry));
+      },
+    });
+    const status = exitStatus(end);
+    stopHeartbeat();
+    writeState({ status, line: endLine(end) });
+    process.stdout.write(`\n${endReport(ran, end, { runDirectory, unitDirectory: directory, responsePath })}`);
+    return status;
+  } finally {
+    stopHeartbeat();
+  }
 }
 
 /**
