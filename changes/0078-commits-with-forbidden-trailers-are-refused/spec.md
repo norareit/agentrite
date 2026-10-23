@@ -80,11 +80,14 @@ In the sandbox:
 
 The documents:
 
-17. `README.md` describes what `init` and `refresh` do about the hook where it describes the files they write, with the
-    notices of requirements 10 and 11, and what the hook prints when it cannot run the checker (requirement 8). It
-    says that the wrapper builds the image again for a new kit, where it describes updating a project. It describes
-    the checker with its form, its arguments, the messages it prints and its exit statuses by "Exit statuses", and
-    says how a project that has a hook of its own calls it from that hook
+17. `README.md` has a section `## Git hooks`, after "Installing it into a project", which describes the hook: where
+    it is written, its mark, what it refuses, what `init` and `refresh` each do with it, the notices of requirements
+    10 and 11, what the hook prints when it cannot run the checker (requirement 8), and how a project that has a hook
+    of its own calls the checker from that hook. It points to `SANDBOX.md` for the hook in the sandbox. The checker
+    has an entry of its own under `## Commands`, beside `check-changes`, with its form, its arguments, the messages it
+    prints and its exit statuses by "Exit statuses", and the section links to it rather than describing it again.
+    The entries of `init` and `refresh` each say in a line that they write the hook, and link to the section. It
+    says that the wrapper builds the image again for a new kit, where it describes updating a project
 18. `SANDBOX.md` says what a reader sees when the hook refuses a commit in the container, that it is the same rule as
     on the host, and that it is the image's hook and not the clone's. It says that git in the container runs the
     image's hooks only, so that the hooks of the mounted repository and of a hooks directory its configuration names
@@ -140,6 +143,11 @@ Tests:
   holds. The developer's `/etc/gitconfig` is mounted as the developer wrote it, and the agent's `~/.gitconfig` lives in
   the home volume. The environment of the container, which the sandbox already uses for `safe.directory`, outranks
   both and belongs to the kit. The human chose to cover the host and the sandbox both, since agents commit in both
+* **The hook has a section of its own in `README.md`.** It is a new kind of thing the kit puts in a project, one
+  that both `init` and `refresh` act on, and part of what a reader needs of it, such as its mark, a worktree, and
+  calling the checker from a hook of the project's own, belongs to neither command. Describing it in the entries of
+  both commands was rejected, since it would be written twice or split between them. The checker is under
+  `## Commands`, since a project runs it, as `check-changes` is
 * **A hook that cannot run the checker refuses the commit.** A worktree without its own `node_modules`, a removed
   `node_modules` and a git client whose `PATH` has no `node` all run the hook without a checker. Letting the commit
   through there, with a notice, was rejected: it checks nothing in exactly the case the hook is for, and an agent

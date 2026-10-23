@@ -38,3 +38,7 @@ timestamp: 2026-10-22T22:02:19Z
   request body when the account's setting on OpenAI's servers enables it, and OpenCode instructs no trailer. Added both
   to items 1 and 3. The trailer of Codex is caught by requirement 2, which reads the name whatever its case, so no
   requirement changed. The status is `draft`
+- 2026-10-23T11:20:19Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in a session on the Linux host, on
+  `master` at `c6a7c7e`, on the human's decision that `README.md` describes the hook in a section `## Git hooks` of its
+  own, with the checker as an entry under `## Commands` and a linking line in the entries of `init` and `refresh`.
+  Rewrote requirement 17 and added the decision. The status is `draft`
