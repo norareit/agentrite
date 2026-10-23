@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-23T15:12:33Z
 ---
 
@@ -14,3 +14,4 @@ timestamp: 2026-10-23T15:12:33Z
   Made the unit as a feature. Numbered 0082: the highest number in `changes/` is 0081. Read the statuses and the log
   format in `process.md`, the approval of 0078 in its history, "agentrite orchestrate" of `README.md`, and how
   `resolveUnit` reads a unit. Wrote `spec.md`. The status is `draft`
+- 2026-10-23T16:35:14Z [human] approved the spec. The status is `approved`
