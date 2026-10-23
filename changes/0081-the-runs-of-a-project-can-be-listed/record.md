@@ -48,3 +48,9 @@ timestamp: 2026-10-23T14:24:42Z
   `.reviews/0081-the-runs-of-a-project-can-be-listed/review-20261023T173600Z.md`. `npm test` reported 1135 passing,
   0 failing and 30 Docker-dependent skips; `npm run check-changes` and `git diff --check` passed. Docker-backed
   sandbox execution, real model-provider sessions and historical test-first ordering were not verified.
+- 2026-10-23T17:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, accepted S1 of
+  `.reviews/0081-the-runs-of-a-project-can-be-listed/review-20261023T173600Z.md` and fixed it in `a6b6233`: `readRuns`
+  leaves out a run only when `state.json` is absent (`ENOENT`), and refuses a `state.json` that is a directory or
+  whose stat fails otherwise, naming the path. Added a test for a directory and for a symbolic link loop (`ELOOP`).
+  `npm test` reported 1136 passing, 0 failing and 30 skipped on `a6b6233`. Not checked: a real `EACCES`. The status is
+  `in-progress`
