@@ -27,13 +27,13 @@ timestamp: 2026-10-23T22:37:29Z
   Docker, so the tests of real containers are skipped in every run of the suite here. The status is `in-progress`
 - 2026-10-23T22:55:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added `clone_is_new` and
   `default_command` as the first task gives them. `npm test` passed with 1187 tests, 30 skipped for want of Docker
-- 2026-10-23T23:01:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added
+- 2026-10-23T22:57:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added
   `tests/install-dependencies.test.mjs`, whose five tests failed with no script, then wrote
   `container/install-dependencies.sh` and its `COPY` and `chmod`, and the five passed. Added a task to the plan: the
   `RUN chmod` with the script beside the others is longer than 120 characters, so it continues on a second line, and
   the test of `tests/known-terminal.test.mjs` read the first line alone. Both tests now read the paths with the new
   `tests/dockerfile-executables.mjs`, and those of `tests/known-terminal.test.mjs` pass
-- 2026-10-23T23:12:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the tests of the install
+- 2026-10-23T23:00:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the tests of the install
   to `tests/sandbox-unit-run.test.mjs`. Before the wrapper changed, the five that expect the install failed and the
   five that expect none passed. Added the install to `container/sandbox.sh`, and all ten passed. Added the volume of
   the script to `containerHost` and the new `tests/sandbox-install.test.mjs`. Not checked: the three tests of real
@@ -44,3 +44,9 @@ timestamp: 2026-10-23T22:37:29Z
   of the test is the one that npm wrote there. `tests/sandbox-commit-msg.test.mjs` read the `RUN chmod` from its first
   line alone too, and failed with it continued, so it reads it with `tests/dockerfile-executables.mjs` as well, which
   the plan now names. `npm test` passed with 1202 tests and 33 skipped, all for want of Docker
+- 2026-10-23T23:03:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, corrected the timestamps of the
+  two entries before this one, which were written without reading the clock, to the minute before the commit each
+  went in with, read from `git log`. Changed "Running a unit", "Two implementations of one unit" and "When something
+  goes wrong" of `SANDBOX.md`, and "sandbox.sh", "Exit statuses", "Running a role" and "The orchestrator" of
+  `README.md`, as the plan's tasks give them. `npm test` passed on the changed documents with 1202 tests and 33
+  skipped, all for want of Docker

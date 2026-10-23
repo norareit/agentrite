@@ -54,9 +54,18 @@ Before the container starts, the wrapper clones the repository, with that branch
 host's branch is at:
 
 * The clone holds what is committed and nothing else. Uncommitted work, ignored files such as a `.env`, and
-  `node_modules` stay on the host. So the first command in a new clone is `npm ci`, without which the role files
-  under `node_modules` are not found, the suite does not run, and the change check refuses too, since the files that
-  `agentrite.json` names under `node_modules` are not there
+  `node_modules` stay on the host. Without `node_modules` the role files under it are not found, the suite does not
+  run, and the change check refuses too, since the files that `agentrite.json` names under `node_modules` are not
+  there. So a new clone that holds a `package-lock.json` has its dependencies installed with `npm ci` in the
+  container, as the agent and after the firewall, before the command or the shell starts:
+    * The wrapper's standard error says first that the dependencies are being installed, and what npm prints, on its
+      standard output and its standard error alike, is on standard error too. The standard output of the run is the
+      command's own
+    * An install that fails starts no command. The work is brought back as after any run, and the wrapper exits with
+      npm's status. See "When something goes wrong"
+    * A clone without a `package-lock.json` is not installed, and nothing is said of an install
+    * A clone that an earlier run left is resumed as it is and not installed, and neither is the tree of `--in-place`
+      or `--workdir`, nor a command of `--connect`
 * A project's own role or standards file, named in `agentrite.json`, is in the clone only when it is committed
 * The host's other branches are in the clone as `origin/*`. The default branch is among them, as
   `origin/<default branch>`, which is the base the change check compares with
@@ -90,20 +99,20 @@ terminal, and none without one. A `TERM` that the image holds no description of,
 own program may be, is `xterm-256color` in the sandbox, with the host's `COLORTERM` beside it. `echo $TERM` in the
 sandbox shows which it is.
 
-The orchestrator, which takes a unit through its roles, runs in a unit run as any command does, after `npm ci` in
-the clone, and passes `--skip-permissions` to every step. See "The orchestrator" of `README.md`:
+The orchestrator, which takes a unit through its roles, runs in a unit run as any command does, and passes
+`--skip-permissions` to every step. See "The orchestrator" of `README.md`:
 
 ```sh
-./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions'
+./sandbox.sh 0029 npx agentrite orchestrate 0029 --skip-permissions
 ```
 
-From the shell of a unit run, it is `npx agentrite orchestrate 0029 --skip-permissions` after `npm ci`.
+From the shell of a unit run, it is `npx agentrite orchestrate 0029 --skip-permissions`.
 
 `--follow` is given to the command in a unit run as on the host, to print each step's messages and tool calls while
 it runs:
 
 ```sh
-./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions --follow'
+./sandbox.sh 0029 npx agentrite orchestrate 0029 --skip-permissions --follow
 ```
 
 For a unit run that starts nothing, see "When something goes wrong".
@@ -185,11 +194,12 @@ implement one unit, each on its own, and the results can be laid side by side. `
 agents on one tree. In two terminals, with another `--model` in each:
 
 ```sh
-./sandbox.sh 0029 --variant opus sh -c 'npm ci && npx agentrite run implementer claude 0029 --model <id>'
-./sandbox.sh 0029 --variant gpt-6-1 sh -c 'npm ci && npx agentrite run implementer opencode 0029 --model <id>'
+./sandbox.sh 0029 --variant opus npx agentrite run implementer claude 0029 --model <id>
+./sandbox.sh 0029 --variant gpt-6-1 npx agentrite run implementer opencode 0029 --model <id>
 ```
 
-Each clone is new and holds no `node_modules`, so each command installs first, as "Running a unit" says.
+Each clone is new and holds no `node_modules`, so each has its dependencies installed before its command, as "Running
+a unit" says.
 
 * `--variant` is optional. Without it a unit run is as "Running a unit" says. It is given before the unit or right
   after it, and it is refused together with `--in-place` and `--workdir`, which have no unit, and when it is given
@@ -658,12 +668,24 @@ Why, and what to do for each:
   the local branch, for example with `git branch main origin/main` for a default branch `main`. Or, when the name
   is not the project's default branch, correct `defaultBranch` in `agentrite.json`
 
+**A unit run prints that the dependencies of the clone are being installed with `npm ci`, then npm's error, starts no
+command, and the wrapper exits with npm's status.**
+
+Why: `npm ci` failed in the new clone, as it does for a `package-lock.json` that is out of step with `package.json`,
+for a registry that the allowlist does not admit, or for an install script that failed.
+
+What to do: correct what npm names on the unit's branch, commit it and run again. A clone that held no work the host
+lacks was removed, so the next run makes a new clone and installs it. A clone that was kept is resumed as it is,
+without an install, so run `npm ci` in its shell.
+
 **In a unit run's clone, or in a new checkout, the change check, `npx agentrite` and `./sandbox.sh` refuse
 `agentrite.json`, saying that `standards` or a role of `roles` is a path and there is no file at it.**
 
 Why: every command that reads `agentrite.json` checks that each file it names is in the working tree. The kit's own
-files are under `node_modules`, which a clone and a new checkout do not have until `npm ci` has run. A project's own
-role or standards file is in a clone only when it is committed.
+files are under `node_modules`, which a new checkout does not have until `npm ci` has run. A unit run's new clone has
+its dependencies installed before the command, so the case is left for a clone that a run resumed, for a new
+checkout, and for a clone whose install failed. A project's own role or standards file is in a clone only when it is
+committed.
 
 What to do: run `npm ci` in the clone or the checkout, for a path under `node_modules`. For a file of the project's
 own, commit it on the branch the clone is of. For a path that names no file anywhere, as after a release that moved

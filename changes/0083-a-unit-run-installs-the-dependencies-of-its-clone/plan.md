@@ -114,7 +114,7 @@ repository and `container/` ships as a whole, so neither table changes.
   `preinstall` script of `exit 7` exits 7, prints nothing on standard output, and has standard error that holds the
   script's line and not the command's; and a second run of a clone that the first left, kept by a file that is not
   committed, prints no line of an install (R1, R3, R4, R5, R6, R13)
-- [ ] Change "Running a unit" of `SANDBOX.md`: the bullet on what the clone holds says that a new clone that holds a
+- [x] Change "Running a unit" of `SANDBOX.md`: the bullet on what the clone holds says that a new clone that holds a
   `package-lock.json` has its dependencies installed with `npm ci` in the container, as the agent and after the
   firewall, before the command or the shell starts; that the line of the install and what npm prints are on standard
   error and the command's standard output is its own; that an install that fails starts no command, the work is
@@ -123,17 +123,17 @@ repository and `container/` ships as a whole, so neither table changes.
   first command in a new clone is `npm ci`. The two examples of the orchestrator become `./sandbox.sh 0029 npx
   agentrite orchestrate 0029 --skip-permissions` and the same with `--follow`, and the sentence before them and the
   one on the shell of a unit run no longer say "after `npm ci`" (R9, R10)
-- [ ] Change "Two implementations of one unit" of `SANDBOX.md`: the two examples become `./sandbox.sh 0029 --variant
+- [x] Change "Two implementations of one unit" of `SANDBOX.md`: the two examples become `./sandbox.sh 0029 --variant
   opus npx agentrite run implementer claude 0029 --model <id>` and its OpenCode line, and the sentence after them
   says that each new clone has its dependencies installed before its command, as "Running a unit" says (R10)
-- [ ] Add to "When something goes wrong" of `SANDBOX.md` an entry, beside the one on `agentrite.json` refused: what
+- [x] Add to "When something goes wrong" of `SANDBOX.md` an entry, beside the one on `agentrite.json` refused: what
   is seen, the line of the install followed by npm's error, no command started, and the wrapper exiting with npm's
   status; why, `npm ci` failed in the new clone, as for a `package-lock.json` out of step with `package.json`, a
   registry the allowlist does not admit, or an install script that failed; and what to do, correct what npm names on
   the branch and run again, which makes a new clone when the failed run's was removed, or run `npm ci` in the shell of
   a clone that was kept. Change the entry on `agentrite.json` refused: a unit run's new clone is installed before the
   command, and the case is left for a resumed clone, a new checkout, and a clone whose install failed (R11)
-- [ ] Change `README.md`: in "sandbox.sh", the paragraph on statuses says that a unit run whose install of a new
+- [x] Change `README.md`: in "sandbox.sh", the paragraph on statuses says that a unit run whose install of a new
   clone failed passes on npm's status; in "Exit statuses", the bullet on `./sandbox.sh` says that a unit run passes
   on the status of the install of a new clone too, once that started; in "Running a role", `npx agentrite` is there
   in a unit run's clone, whose dependencies the run installs before the command, like the role files; and in "The
@@ -157,4 +157,4 @@ repository and `container/` ships as a whole, so neither table changes.
 - [x] `feature-0083 Name the new clone and the default command once`: the first task
 - [x] `feature-0083 Add the script that installs a new clone`: the second to fourth tasks
 - [x] `feature-0083 Install the dependencies of a unit run's new clone`: the fifth to eighth tasks
-- [ ] `feature-0083 Document the install of a new clone`: the tasks of `SANDBOX.md` and `README.md`
+- [x] `feature-0083 Document the install of a new clone`: the tasks of `SANDBOX.md` and `README.md`

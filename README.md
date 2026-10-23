@@ -684,7 +684,9 @@ branch, a unit given by a number that names no branch and that is cancelled on t
 for the branch or none to connect to, a clone not yet brought back, and Docker or npm that cannot be asked. A Docker
 command it runs before that which fails, as Compose reading the configuration or the build of the image, ends it with
 Docker's status, which it passes on. Once the command started, it passes on the command's status, as
-[Exit statuses](#exit-statuses) says.
+[Exit statuses](#exit-statuses) says. A unit run of a new clone that holds a `package-lock.json` installs the clone's
+dependencies with `npm ci` in the container before the command, and when that install fails it starts no command and
+passes on npm's status.
 
 With a project's `sandbox/Dockerfile`, `--rebuild` builds that file anew on the image too. See "Adding software to
 the sandbox" in [`SANDBOX.md`](SANDBOX.md).
@@ -724,8 +726,10 @@ a caller cannot tell it from the command's own. Before that program started, the
 * `npx agentrite run`, once the harness started. A harness that a signal ended has no status to pass on, and the
   command exits `1`
 * `./sandbox.sh` with a unit, `--in-place` or `--workdir`, once the command, or the shell, in the container started.
-  A unit run whose command exited `0` and whose work was not brought back exits `1`. Before that, a Docker command
-  it runs which fails, as Compose reading the configuration or the build of the image, passes on Docker's status
+  A unit run of a new clone passes on the status of the install of its dependencies as well, once that started:
+  npm's, when the install fails and starts no command. A unit run whose command exited `0` and whose work was not
+  brought back exits `1`. Before that, a Docker command it runs which fails, as Compose reading the configuration or
+  the build of the image, passes on Docker's status
 * `./sandbox.sh --connect`, once the connected command started
 
 ## Running a role
@@ -745,8 +749,8 @@ npx agentrite run reviewer opencode 0032
 * The command waits for the harness, and exits with the status the harness exited with, or with 1 when a signal ended
   the harness
 * The command starts no sandbox: it starts the harness where it is run, on the host or inside the sandbox, and
-  `./sandbox.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there after
-  `npm ci` in the clone, like the role files
+  `./sandbox.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there in the
+  clone, whose dependencies the run installs before the command, like the role files
 
 The options, which may stand anywhere among the arguments before a `--`:
 
@@ -1173,10 +1177,10 @@ npx agentrite orchestrate 0029 --follow
 `--skip-permissions` is passed to the `agentrite run` of every step. What it does in each harness is in
 [Running a role](#running-a-role). Without it, a headless step gets only what the harness's settings allow, and a
 step that needs more is refused it. The option belongs in the sandbox, where the run is in a unit run on the clone of
-the unit's branch, after `npm ci` in the clone:
+the unit's branch:
 
 ```sh
-./sandbox.sh 0029 sh -c 'npm ci && npx agentrite orchestrate 0029 --skip-permissions'
+./sandbox.sh 0029 npx agentrite orchestrate 0029 --skip-permissions
 ```
 
 A unit run mounts the host's `.orchestrator` at `/work/.orchestrator`, so the run's directory is on the host as it is
