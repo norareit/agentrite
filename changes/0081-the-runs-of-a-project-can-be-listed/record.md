@@ -14,3 +14,9 @@ timestamp: 2026-10-23T14:24:42Z
   the unit as a feature. Numbered 0081: the highest number in `changes/` is 0080. Read "agentrite units", "The
   orchestrator" and "Exit statuses" of `README.md`, the spec of 0077, and how `orchestrateCommand` writes `state.json`
   and `stepLine` and `endLine` name a step and an end. Wrote `spec.md`. The status is `draft`
+- 2026-10-23T14:53:09Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's question how the runs
+  of the variants of a unit are told apart, and the human's choice to have both the variant in the name of a run's
+  directory and the branch in `state.json`, and to fold this into this unit. Read "Two implementations of one unit" of
+  `SANDBOX.md`. Added requirements 1 to 5 on the branch and the variant of a run, the variant in the listing and in
+  the JSON document, its documents and tests, its decisions and a filter by variant as item 2 of "Beyond the
+  request", and renumbered the rest. The status is `draft`
