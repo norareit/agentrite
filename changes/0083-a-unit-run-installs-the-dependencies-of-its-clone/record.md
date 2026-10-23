@@ -16,3 +16,9 @@ timestamp: 2026-10-23T22:37:29Z
   `SANDBOX.md`, "sandbox.sh" of `README.md`, and how `container/sandbox.sh`, `container/unit-clone.sh` and
   `container/entrypoint.sh` make the clone and start the command. Wrote `spec.md`. The status is `draft`
 - 2026-10-23T22:44:30Z [human] approved the spec. The status is `approved`
+- 2026-10-23T22:52:22Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  `feature-0083-a-unit-run-installs-the-dependencies-of-its-clone` at `cf4f3bc`, wrote `plan.md`. Read as the only
+  readings that work: "Exit statuses" of `README.md` changes with "sandbox.sh", since `AGENTS.md` has every status of
+  a command follow that section and its bullet on `./sandbox.sh` would otherwise not name the install's; and the
+  bullet of "Commit messages" of `SANDBOX.md` on a clone before `npm ci` stays, since it tells the reader to run
+  nothing and holds of a resumed clone. The status stays `approved`
