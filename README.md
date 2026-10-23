@@ -1454,7 +1454,7 @@ A project's settings are in `agentrite.json` at the project root, a JSON object 
 
 | Key             | What it holds                                         | What reads it                        |
 |-----------------|-------------------------------------------------------|--------------------------------------|
-| `defaultBranch` | The branch that units are cut from and compared with  | The change check and a unit run      |
+| `defaultBranch` | The branch that units are cut from and compared with  | Change check, unit run, `approve`    |
 | `harnesses`     | The harnesses the project uses, as a list             | `init` and `refresh`                 |
 | `sandbox`       | `true` with the sandbox, `false` without it           | `init` and `refresh`                 |
 | `bell`          | `true` for a sandbox that rings, `false` for none     | `./sandbox.sh`, at each start        |
@@ -1517,9 +1517,9 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   outside is judged on the path as it is written, with no symbolic link followed. Whether it names a file is judged with
   symbolic links followed, so a kit linked into `node_modules`, as `npm link` does, is taken
 * The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by
-  `agentrite orchestrate`, by the change check, and by `./sandbox.sh`. Every form of `./sandbox.sh` but `--connect`
-  reads `bell` at each start, and judges no other key of the file, unless a unit run cuts a branch, which reads the
-  whole file. `--connect` does not read it
+  `agentrite orchestrate`, by `agentrite approve`, by the change check, and by `./sandbox.sh`. Every form of
+  `./sandbox.sh` but `--connect` reads `bell` at each start, and judges no other key of the file, unless a unit run
+  cuts a branch, which reads the whole file. `--connect` does not read it
 * A command that reads the file refuses in a project that has none, and names `npx agentrite config` as the command
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused

@@ -95,6 +95,8 @@ change, since the command is nothing a developer does with the sandbox.
 - `tests/agentrite-approve.test.mjs`: new, the unit tests of the module and the tests of the command in a git
   repository
 - `tests/package-documents.test.mjs`: `scripts/agentrite-approve.mjs` in the list of `files`
+- `tests/agentrite-init.test.mjs`, `tests/agentrite-run.test.mjs`: the line of `approve` in the usage that each
+  asserts in full
 - `README.md`: `### agentrite approve`
 - `process.md`: the paragraph on the command in "Changes"
 - `changes/0082-a-unit-can-be-approved-by-a-command/record.md`: the log of the work
