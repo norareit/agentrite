@@ -78,3 +78,9 @@ timestamp: 2026-10-23T22:37:29Z
   same project name, the same unit and command and no `--rebuild`, again on a new clone: it exited 0, standard error
   held the same line and npm's output, and standard output held the 50 lines of units and the `showing 50 of 83
   units` line alone. Ticked the two boxes of "Verification". The status stays `in-progress`
+- 2026-10-23T23:15:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  which has no Docker, on `feature-0083-a-unit-run-installs-the-dependencies-of-its-clone` at `b400c15`, the final
+  tree, ran the suites again. `npm test` passed with 1235 tests, 1202 run and 33 skipped, all for want of Docker. The
+  tree's code is the same as that of `2212220`, where the run on the host with Docker skipped none.
+  `npm run check-changes` exited 0. Every task of `plan.md` is ticked, and no review is saved under `.reviews/`. The
+  unit is handed over for review. The status stays `in-progress`
