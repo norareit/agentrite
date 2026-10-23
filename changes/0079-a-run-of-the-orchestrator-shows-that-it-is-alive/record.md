@@ -33,5 +33,5 @@ timestamp: 2026-10-23T14:24:42Z
   and checks the directory after the end, so a manual run adds nothing a test does not show. `npm test` on `f80b779`
   reported 1077 passed, 0 failed, 30 skipped, and `npm run check-changes` passed on the committed branch. No line of
   the changed files is over 120 characters. The first commit of the unit carries a `Co-Authored-By` trailer that the
-  standards forbid, added from a harness reminder before the rule was weighed. The human asked for the rewrite, and the commits of the unit were replayed without it, so
-  their hashes changed. The status is `in-progress`
+  standards forbid, added from a harness reminder before the rule was weighed. The human asked for the rewrite, and the commits of the
+  unit were replayed without it, so their hashes changed. The status is `in-progress`
