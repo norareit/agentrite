@@ -535,8 +535,10 @@ unit_container_running() {
 # project's file gives, which stands above the host's. For this one question Compose is
 # handed a marker in place of the two versions: a marker that comes back says the project
 # gives none, and anything else is the project's own value, also when it equals the
-# host's. Captured first, so that a configuration Compose refuses stops here with
-# Compose's own error. node reads the result; the host has node for npm already.
+# host's. The kit's version, which Compose requires too and which nothing here reads, is
+# handed the marker as well, since --connect asks this before the version is read.
+# Captured first, so that a configuration Compose refuses stops here with Compose's own
+# error. node reads the result; the host has node for npm already.
 #
 # A service named agent is looked for first, because the kit's file configures none: the
 # only one there is the project's, from before the sandbox was named. Compose merges it
@@ -547,7 +549,7 @@ unheld="sandbox.sh/no-version-from-the-project"
 read_merged_configuration() {
   local config merged
   config="$(SANDBOX_CLAUDE_CODE_VERSION="$unheld" SANDBOX_OPENCODE_VERSION="$unheld" \
-    "${compose[@]}" config --format json)"
+    SANDBOX_AGENTRITE_VERSION="$unheld" "${compose[@]}" config --format json)"
   merged="$(node -e '
     let json = "";
     process.stdin.on("data", (chunk) => (json += chunk));

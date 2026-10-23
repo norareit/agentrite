@@ -129,10 +129,21 @@ const mergedConfiguration = `
     });
   `;
 
+// The variables that the kit's base Compose file requires with `${NAME:?...}`, which Compose refuses to read the file
+// without, whatever it is asked.
+const requiredVariables = [
+  ...readFileSync(new URL('../container/compose.yml', import.meta.url), 'utf-8').matchAll(/\$\{(\w+):\?/g),
+].map((match) => match[1]);
+
 // The lines of a fake `docker` that answer `config --format json` with the build arguments of the file
-// `projectBuildArgs`, as `fakeHost` describes.
+// `projectBuildArgs`, as `fakeHost` describes. As Compose does, it refuses when a variable of `requiredVariables` is
+// missing a value.
 function configAnswer(projectBuildArgs) {
+  const required = requiredVariables
+    .map((name) => `  [ -n "\${${name}:-}" ] || { echo "required variable ${name} is missing a value" >&2; exit 15; }`)
+    .join('\n');
   return `if [[ " $* " == *" config --format json "* ]]; then
+${required}
   [ -s "${projectBuildArgs}" ] || { echo "validating compose.project.yml: invalid" >&2; exit 15; }
   for argument in "$@"; do
     [ "$previous" != "-f" ] || export PROJECT_COMPOSE="$argument"
