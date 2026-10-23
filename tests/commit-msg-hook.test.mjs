@@ -10,7 +10,7 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 const kit = join(import.meta.dirname, '..');
 const agentrite = join(kit, 'scripts', 'agentrite.mjs');
 const CHECKER = 'node_modules/agentrite/container/check-commit-message.mjs';
-const REFUSED = /The standards forbid the trailers Co-Authored-By and Claude-Session in a commit message\./;
+const REFUSED = /The standards forbid the trailers Co-Authored-By and Claude-Session, so remove these lines/;
 
 // A repository set up by `init`, with the kit installed as a project installs it, and a first commit.
 function repository(t) {

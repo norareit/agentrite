@@ -9,8 +9,8 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 
 const checker = fileURLToPath(new URL('../container/check-commit-message.mjs', import.meta.url));
 const closingSentence =
-  'The standards forbid the trailers Co-Authored-By and Claude-Session in a commit message. Remove these lines ' +
-  'and make the commit again.';
+  'The standards forbid the trailers Co-Authored-By and Claude-Session, so remove these lines and make the commit ' +
+  'again.';
 const usage = 'usage: node node_modules/agentrite/container/check-commit-message.mjs <commit message file>';
 
 function check(testContext, message) {

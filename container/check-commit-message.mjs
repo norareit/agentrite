@@ -13,8 +13,8 @@ import { pathToFileURL } from 'node:url';
 const FORBIDDEN_TRAILER = /^(?:co-authored-by|claude-session):/i;
 
 const CLOSING_SENTENCE =
-  'The standards forbid the trailers Co-Authored-By and Claude-Session in a commit message. Remove these lines ' +
-  'and make the commit again.';
+  'The standards forbid the trailers Co-Authored-By and Claude-Session, so remove these lines and make the commit ' +
+  'again.';
 
 const USAGE = 'usage: node node_modules/agentrite/container/check-commit-message.mjs <commit message file>';
 
