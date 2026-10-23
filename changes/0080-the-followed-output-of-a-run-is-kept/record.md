@@ -27,3 +27,12 @@ timestamp: 2026-10-23T14:24:42Z
   failed append, in `scripts/agentrite.mjs`. The status is `approved`
 - 2026-10-23T16:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
   branch at `8a46637`. The status is `in-progress`
+- 2026-10-23T16:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built every task of `plan.md`
+  in the five commits it names, and ticked them. Two additions the plan did not name: the existing test of a step
+  that fails to give an outcome filters the followed files out of the names it checks for a `01-` file, since the
+  followed file of step 1 now stands there; and a followed file of a step is also checked in the test of a step past
+  its limit. `npm test` reported 1087 passed and 0 failed on `f6aeebb`, and `npm run check-changes` passed. Not
+  checked: a unit run in the sandbox, and a failed write of the file in a run of the command, which only the unit
+  tests of `followedFile` cover. The first commit carries a `Co-Authored-By` trailer that the standards forbid, added
+  in error from the harness's attribution reminder, and is not rewritten, as `AGENTS.md` forbids that without the
+  human's ask. The status stays `in-progress`, for the review

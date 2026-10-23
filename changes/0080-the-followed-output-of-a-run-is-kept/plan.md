@@ -143,15 +143,15 @@ sandbox.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes, after the commits
-- [ ] Every line of the changed files fits 120 characters, checked before each commit
-- [ ] Every requirement 1 to 13 is traced by a task above, and every task traces to one
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes, after the commits
+- [x] Every line of the changed files fits 120 characters, checked before each commit
+- [x] Every requirement 1 to 13 is traced by a task above, and every task traces to one
 
 ## Commit Points
 
-- [ ] `feature-0080 Stamp the followed items before they are printed`: the first task, which changes no behavior
-- [ ] `feature-0080 Give the line of a followed item`: the second and third tasks
-- [ ] `feature-0080 Add the lines of a followed file`: the fourth and fifth tasks
-- [ ] `feature-0080 Keep the followed output of each step`: the sixth to eleventh tasks
-- [ ] `feature-0080 Document the followed files`: the three tasks of `README.md`
+- [x] `feature-0080 Stamp the followed items before they are printed`: the first task, which changes no behavior
+- [x] `feature-0080 Give the line of a followed item`: the second and third tasks
+- [x] `feature-0080 Add the lines of a followed file`: the fourth and fifth tasks
+- [x] `feature-0080 Keep the followed output of each step`: the sixth to eleventh tasks
+- [x] `feature-0080 Document the followed files`: the three tasks of `README.md`
