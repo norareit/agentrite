@@ -268,10 +268,10 @@ the directory named as before.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes, after the commits
-- [ ] Every line of the changed files fits 120 characters, checked before each commit
-- [ ] Every requirement 1 to 26 is traced by a task above, and every task traces to one
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes, after the commits
+- [x] Every line of the changed files fits 120 characters, checked before each commit
+- [x] Every requirement 1 to 26 is traced by a task above, and every task traces to one
 
 ## Commit Points
 
