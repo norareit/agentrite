@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-23T22:37:29Z
 ---
 
@@ -15,3 +15,4 @@ timestamp: 2026-10-23T22:37:29Z
   "Running a unit", "Getting the work back", "Where things are kept on the host" and "When something goes wrong" of
   `SANDBOX.md`, "sandbox.sh" of `README.md`, and how `container/sandbox.sh`, `container/unit-clone.sh` and
   `container/entrypoint.sh` make the clone and start the command. Wrote `spec.md`. The status is `draft`
+- 2026-10-23T22:44:30Z [human] approved the spec. The status is `approved`
