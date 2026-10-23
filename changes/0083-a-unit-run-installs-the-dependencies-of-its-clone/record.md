@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-23T22:37:29Z
 ---
 
@@ -91,3 +91,9 @@ timestamp: 2026-10-23T22:37:29Z
   `npm test`: 1202 passed, none failed, 33 skipped for want of Docker; `npm run check-changes`, the shell syntax
   checks and `git diff --check` passed. Could not independently verify the Docker-backed tests or the live
   sandbox smoke test, since this environment has no Docker. The status stays `in-progress`
+- 2026-10-23T23:20:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  which has no Docker, on `feature-0083-a-unit-run-installs-the-dependencies-of-its-clone` at `4431657`, read the review
+  saved in `.reviews/0083-a-unit-run-installs-the-dependencies-of-its-clone/review-20261023T231719Z.md`, which returned
+  no findings, so none blocks and none is left for the human to decide. Every task of `plan.md` is ticked. `npm test`
+  passed with 1235 tests, 1202 run and 33 skipped, all for want of Docker, and `npm run check-changes` exited 0. The
+  status is `implemented`
