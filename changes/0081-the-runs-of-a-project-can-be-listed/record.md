@@ -43,3 +43,8 @@ timestamp: 2026-10-23T14:24:42Z
   the Co-Authored-By trailer that the first commit of the branch carried, by rewriting the nine commits of the branch
   from it on. The commits were `f13c1da` to `aef3ed5`, and the hashes of this record were updated to them. The status is
   `in-progress`
+- 2026-10-23T17:36:00Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0081 at
+  `352c8108e4fe4d075ddb9efc230bbe57ea42f83e`, against merge base `d01d9ae` with `origin/master`. Returned S1 in
+  `.reviews/0081-the-runs-of-a-project-can-be-listed/review-20261023T173600Z.md`. `npm test` reported 1135 passing,
+  0 failing and 30 Docker-dependent skips; `npm run check-changes` and `git diff --check` passed. Docker-backed
+  sandbox execution, real model-provider sessions and historical test-first ordering were not verified.
