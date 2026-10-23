@@ -117,39 +117,39 @@ change, since the command is nothing a developer does with the sandbox.
   `uncommittedRefusal`; and `approvedLine` (R3, R4, R5, R6, R9, R10, R15)
 - [x] Write `scripts/agentrite-approve.mjs` as the approach gives it, until the tests of the two tasks above pass
   (R2, R3, R4, R5, R6, R9, R10, R11)
-- [ ] Add to `tests/agentrite-approve.test.mjs` a fixture of the command: a base with a `home` holding a `.gitconfig`
+- [x] Add to `tests/agentrite-approve.test.mjs` a fixture of the command: a base with a `home` holding a `.gitconfig`
   of a name and an email, and a `project` made by `git init --quiet --initial-branch master`, with `installKit`, an
   `agentrite.json` of `kitSettingsText` with `defaultBranch` `master`, a `.gitignore` of `node_modules`, a draft
   feature `0010-a-feature` with `spec.md` and `record.md`, and a draft task `0011-a-task` with `record.md`, all
   committed; git and the command run with `HOME` the base's `home`, `GIT_CONFIG_NOSYSTEM` `1` and the `PATH`. Helpers
   give the status of `git status --porcelain`, the text of `git diff --cached`, `HEAD`, and a record (R16)
-- [ ] Add the tests of an approval: of the feature by `0010`, and of the task by `changes/0011-a-task/`, each exiting
+- [x] Add the tests of an approval: of the feature by `0010`, and of the task by `changes/0011-a-task/`, each exiting
   0, printing the one line of `approvedLine` with the short hash of the new `HEAD`, with a `HEAD` whose parent is the
   `HEAD` before, whose message is `feature-0010 Approve the spec` and `task-0011 Approve the record`, whose author is
   the name of the `.gitconfig`, which changes `changes/<directory>/record.md` alone, and whose record is the one before
   with `status: approved` and the entry of its kind, its instant matched by the form of an instant; and a `commit-msg`
   hook that writes the message to a file outside the project and exits 0 has run with that message (R1, R3, R4, R5,
   R6, R7, R9, R16)
-- [ ] Add the test that a file `other.txt` staged and a tracked file changed and not staged, both outside the unit,
+- [x] Add the test that a file `other.txt` staged and a tracked file changed and not staged, both outside the unit,
   are not in the commit of an approval, and that `git status --porcelain` and `git diff --cached` give for them after
   the approval what they gave before it (R6, R16)
-- [ ] Add the test that a `commit-msg` hook that prints `refused by the hook` on standard error and exits 1 makes the
+- [x] Add the test that a `commit-msg` hook that prints `refused by the hook` on standard error and exits 1 makes the
   command exit 1 with that line on standard error, and leaves `HEAD`, the text of the record, `git status --porcelain`
   and `git diff --cached` as they were before, with a file staged outside the unit (R8, R16)
-- [ ] Add the tests of each refusal of R10, each exiting 1 with its message on standard error, nothing on standard
+- [x] Add the tests of each refusal of R10, each exiting 1 with its message on standard error, nothing on standard
   output, and `HEAD`, `git status --porcelain` and the record as they were: no `agentrite.json`; an `agentrite.json`
   that is not JSON; a project in no git repository, the fixture's files without `.git`; a branch `other` checked out;
   a detached `HEAD`; the digits `0099`; the digits `0010` with a second directory `0010-twin` committed; a unit with
   no `record.md`; records without `status`, without `kind` and without `## Log`; a record with the kind `epic`; the
   status `approved`; a feature and a bug with no `spec.md`; and a `spec.md` changed, a `spec.md` staged and a
   `notes.md` not tracked in the unit's directory, the message naming each by its path and state (R10, R16)
-- [ ] Add the tests that `approve` with no argument, with `0010 0011`, with `0010 --json` and with `0010 --` exits 2,
+- [x] Add the tests that `approve` with no argument, with `0010 0011`, with `0010 --json` and with `0010 --` exits 2,
   writes the line of what is wrong and the form on standard error, and changes nothing (R11, R16)
-- [ ] Add `repositoryPrefix` and `approve` to `scripts/agentrite.mjs`, import the module, and add `approve` to
+- [x] Add `repositoryPrefix` and `approve` to `scripts/agentrite.mjs`, import the module, and add `approve` to
   `COMMANDS` after `units`, as the approach gives them, until the tests of the command pass. Add to
   `tests/agentrite-approve.test.mjs` the test that `agentrite` with no argument prints `usage: agentrite approve
   <unit>` among its forms, after that of `units` (R1 to R11, R13)
-- [ ] Add `scripts/agentrite-approve.mjs` to `files` in `package.json` and to its list in
+- [x] Add `scripts/agentrite-approve.mjs` to `files` in `package.json` and to its list in
   `tests/package-documents.test.mjs`, after `scripts/agentrite-units.mjs`
 - [ ] Add `### agentrite approve` to "Commands" of `README.md`, after `### agentrite units`: its form `npx agentrite
   approve <unit>`, that it runs from the project root and takes no option; what it writes in `record.md`, the status
@@ -175,5 +175,5 @@ change, since the command is nothing a developer does with the sandbox.
 ## Commit Points
 
 - [x] `feature-0082 Add the pure parts of the approval`: the first three tasks
-- [ ] `feature-0082 Approve a unit by a command`: the fourth to eleventh tasks
+- [x] `feature-0082 Approve a unit by a command`: the fourth to eleventh tasks
 - [ ] `feature-0082 Document the command approve`: the tasks of `README.md` and `process.md`

@@ -36,6 +36,16 @@ import {
   opencodeVerdict,
   readProjectFile,
 } from './agentrite-instructions.mjs';
+import {
+  APPROVE_FORM,
+  approvalMessage,
+  approvedLine,
+  approvedRecord,
+  parseApproveArgs,
+  recordFields,
+  uncommittedFiles,
+  uncommittedRefusal,
+} from './agentrite-approve.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
 import { HEADLESS } from './agentrite-headless.mjs';
 import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
@@ -1194,6 +1204,114 @@ function units(root, parsed) {
 }
 
 /**
+ * What `git rev-parse --show-prefix` prints in `root`: the path from the top of the repository to `root`, which is
+ * empty at the top. `null` when `root` is in no git repository. A git that cannot be run, or that fails otherwise, is
+ * an error.
+ *
+ * @param {string} root
+ * @returns {string | null}
+ */
+function repositoryPrefix(root) {
+  const result = spawnSync('git', ['rev-parse', '--show-prefix'], { cwd: root, encoding: 'utf-8' });
+  if (result.error !== undefined) throw new Error(`git could not be run: ${result.error.message}`);
+  if (result.status === 0) return result.stdout.replace(/\n$/, '');
+  if (/not a git repository/.test(result.stderr)) return null;
+  throw new Error(`git could not be run: ${result.stderr.trim()}`);
+}
+
+/**
+ * Throws unless `root` is in a git repository with the default branch checked out, and returns the prefix of `root`.
+ *
+ * @param {string} root
+ * @param {string} defaultBranch
+ * @returns {string}
+ */
+function approvalPrefix(root, defaultBranch) {
+  const prefix = repositoryPrefix(root);
+  const committedOn = `an approval is committed on the default branch ${defaultBranch}`;
+  if (prefix === null) throw new Error(`${root} is in no git repository, and ${committedOn}`);
+  const branch = checkedOutBranch(root);
+  if (branch === null) throw new Error(`no branch is checked out, and ${committedOn}`);
+  if (branch !== defaultBranch) throw new Error(`the branch checked out is ${branch}, and ${committedOn}`);
+  return prefix;
+}
+
+/**
+ * Throws unless the unit's record can be approved, and returns its text and kind.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {{ text: string, kind: string }}
+ */
+function approvableRecord(root, directory) {
+  const recordFile = `changes/${directory}/record.md`;
+  const path = resolve(root, recordFile);
+  if (!isRegularFile(path)) throw new Error(`${recordFile} does not exist`);
+  const text = readFileSync(path, 'utf-8');
+  const { status, kind } = recordFields(text, recordFile);
+  if (status !== 'draft') {
+    throw new Error(`the unit changes/${directory}/ is ${status}, and an approval moves a unit from draft`);
+  }
+  const specFile = `changes/${directory}/spec.md`;
+  if (kind !== 'task' && !isRegularFile(resolve(root, specFile))) {
+    throw new Error(`${specFile} does not exist, and the approval of a feature or a bug is that of its spec`);
+  }
+  return { text, kind };
+}
+
+/**
+ * Throws unless every file of the unit's directory is as the commit checked out has it.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @param {string} prefix
+ */
+function checkCommitted(root, directory, prefix) {
+  const status = spawnSync(
+    'git',
+    ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--no-renames', '--', `changes/${directory}/`],
+    { cwd: root, encoding: 'utf-8' },
+  );
+  if (status.error !== undefined) throw new Error(`git could not be run: ${status.error.message}`);
+  if (status.status !== 0) throw new Error(`git could not be run: ${status.stderr.trim()}`);
+  const files = uncommittedFiles(status.stdout, prefix);
+  if (files.length > 0) throw new Error(uncommittedRefusal(directory, files));
+}
+
+/**
+ * Approves a unit: sets its status to `approved`, logs the approval, and commits the record alone on the default
+ * branch. When the commit fails, the record is put back as it was.
+ *
+ * @param {string} root
+ * @param {{ unit: string }} parsed
+ * @returns {number}
+ */
+function approve(root, { unit }) {
+  const { defaultBranch } = readSettings(root);
+  const prefix = approvalPrefix(root, defaultBranch);
+  const directory = resolveUnit(unit, changeDirectories(root));
+  const { text, kind } = approvableRecord(root, directory);
+  checkCommitted(root, directory, prefix);
+
+  const recordFile = `changes/${directory}/record.md`;
+  const message = approvalMessage(kind, directory);
+  writeFileSync(resolve(root, recordFile), approvedRecord(text, kind, instantOf(Date.now())));
+  // The path after `--` makes git commit that file alone, and leave the index of every other file as it was.
+  const commit = spawnSync('git', ['commit', '--quiet', '--message', message, '--', recordFile], {
+    cwd: root,
+    encoding: 'utf-8',
+  });
+  if (commit.error !== undefined || commit.status !== 0) {
+    writeFileSync(resolve(root, recordFile), text);
+    process.stderr.write(commit.error === undefined ? `${commit.stdout}${commit.stderr}` : `${commit.error.message}\n`);
+    throw new Error(`the commit failed, and ${recordFile} is as it was`);
+  }
+  const hash = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf-8' });
+  console.log(approvedLine(directory, hash.stdout.trim(), message));
+  return 0;
+}
+
+/**
  * Throws unless the wrapper of `role` for `harness` is in the project at `root` as refresh would leave it, given
  * the project's `roles`. A harness that is given another wrapper may go on as its default agent, which never reads
  * the role's file, and say so in one line that is easy to miss.
@@ -1845,6 +1963,7 @@ const COMMANDS = {
   },
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
   units: { form: UNITS_FORM, parse: parseUnitsArgs, run: units },
+  approve: { form: APPROVE_FORM, parse: parseApproveArgs, run: approve },
   run: { form: RUN_FORM, parse: parseRunArgs, run },
   orchestrate: { form: ORCHESTRATE_FORM, parse: parseOrchestrateArgs, run: orchestrateCommand },
   runs: { form: RUNS_FORM, parse: parseRunsArgs, run: runs },
