@@ -1,0 +1,22 @@
+#!/bin/sh
+# agentrite: commit-msg hook
+# Refuses a commit message that holds a trailer the standards forbid, by running the checker of the installed kit.
+# npx agentrite refresh rewrites this file while it holds the line above. See "Git hooks" in
+# node_modules/agentrite/README.md, which also says how to call the checker from a hook of the project's own.
+
+top=$(git rev-parse --show-toplevel) || exit 1
+checker="$top/node_modules/agentrite/container/check-commit-message.mjs"
+
+if [ ! -f "$checker" ]; then
+  echo "commit-msg: the commit message checker is not at $checker." >&2
+  echo "Install the project's dependencies in this work tree, as with npm ci, and commit again." >&2
+  exit 1
+fi
+
+if ! command -v node >/dev/null 2>&1; then
+  echo "commit-msg: node is not on the PATH that git gives the hook, so the commit message cannot be checked." >&2
+  echo "Make node reachable from git, as by adding its directory to the PATH git is started with, and commit again." >&2
+  exit 1
+fi
+
+exec node "$checker" "$1"

@@ -55,3 +55,10 @@ timestamp: 2026-10-22T22:02:19Z
 - 2026-10-23T11:34:42Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   began the work on `feature-0078-commits-with-forbidden-trailers-are-refused` at `543a76b`. The status is
   `in-progress`
+- 2026-10-23T11:44:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added
+  `tests/package-documents.test.mjs` to the plan's files: it compares `files` of `package.json` in full, so
+  `scripts/agentrite-hook.mjs` is added there too. In `tests/settings-update.test.mjs` the project is a git repository,
+  so `refresh` writes the hook rather than printing the notice of requirement 11: the test expects the line `wrote
+  .git/hooks/commit-msg`, and its installed kit gets `container/check-commit-message.mjs`, without which the hook
+  refuses the test's next commit. `tests/sandbox-update.test.mjs` compares no output in full that the hook changes, and
+  is unchanged

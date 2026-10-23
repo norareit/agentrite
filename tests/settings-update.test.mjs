@@ -61,7 +61,7 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   write('changes/0001-a-unit/record.md', '---\nkind: feature\nstatus: approved\n---\n');
   const installed = join(root, 'node_modules', 'agentrite');
   mkdirSync(join(installed, 'container'), { recursive: true });
-  for (const file of ['sandbox.sh', 'unit-clone.sh']) {
+  for (const file of ['sandbox.sh', 'unit-clone.sh', 'check-commit-message.mjs']) {
     copyFileSync(join(kit, 'container', file), join(installed, 'container', file));
   }
   chmodSync(join(installed, 'container', 'sandbox.sh'), 0o755);
@@ -116,7 +116,13 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   const refreshed = command('refresh');
   assert.equal(refreshed.status, 0, refreshed.stderr);
   const wrappers = plannedFiles(['claude', 'opencode'], KIT_ROLES).map((file) => `up to date ${file.path}`);
-  assert.deepEqual(linesOf(refreshed), [...wrappers, `wrote ${LIST}`, 'up to date sandbox.sh']);
+  // The project is a git repository, so refresh writes the commit-msg hook of unit 0078, which a clone lacks.
+  assert.deepEqual(linesOf(refreshed), [
+    ...wrappers,
+    `wrote ${LIST}`,
+    'up to date sandbox.sh',
+    'wrote .git/hooks/commit-msg',
+  ]);
   // A project set up before the release that loads the kit's instructions has neither file that loads them, nor an
   // AGENTS.md that names the list, and is told so.
   const paths = ['node_modules/agentrite/process.md', 'node_modules/agentrite/standards.md'];

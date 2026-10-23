@@ -34,6 +34,7 @@ import {
 } from './agentrite-instructions.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
 import { HEADLESS } from './agentrite-headless.mjs';
+import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
 import { formattedLike } from './agentrite-json.mjs';
 import {
   endLine,
@@ -726,6 +727,53 @@ function writeDockerignore({ path, isNew, content }) {
 }
 
 /**
+ * The path of the `commit-msg` hook in the hooks directory that git uses for the project at `root`, which honors
+ * `core.hooksPath` and a linked worktree, or the reason there is none.
+ *
+ * @param {string} root
+ * @returns {{ path: string } | { reason: string }}
+ */
+function hookPath(root) {
+  const result = spawnSync('git', ['rev-parse', '--path-format=absolute', '--git-path', 'hooks'], {
+    cwd: root,
+    encoding: 'utf-8',
+  });
+  if (result.error !== undefined) return { reason: `git could not be run: ${result.error.message}` };
+  if (result.status === 0) return { path: join(result.stdout.trimEnd(), 'commit-msg') };
+  if (/not a git repository/i.test(result.stderr)) return { reason: 'the project is not inside a git repository' };
+  return { reason: `git could not be run: ${result.stderr.trim()}` };
+}
+
+/**
+ * @returns {string}
+ */
+function readHookTemplate() {
+  return readFileSync(new URL('../templates/project/commit-msg', import.meta.url), 'utf-8');
+}
+
+/**
+ * Writes the kit's hook at the planned path unless a file is there, prints what it did, and returns the notices to
+ * print: the one for a project with no hooks directory.
+ *
+ * @param {string} root
+ * @param {ReturnType<typeof hookPath>} planned
+ * @returns {string[]}
+ */
+function writeHook(root, planned) {
+  if ('reason' in planned) return [noRepositoryNotice(planned.reason)];
+  const printed = printedHookPath(root, planned.path);
+  if (exists(planned.path)) {
+    console.log(`skipped ${printed}, which exists`);
+    return [];
+  }
+  mkdirSync(dirname(planned.path), { recursive: true });
+  writeFileSync(planned.path, readHookTemplate(), { flag: 'wx' });
+  chmodSync(planned.path, 0o755);
+  console.log(`wrote ${printed}`);
+  return [];
+}
+
+/**
  * Writes the project's `opencode.json`, amends it, or leaves it, prints what it did, and returns the notices to
  * print: for one it cannot amend, and for one that lists the kit's standards beside the project's own, judged on
  * the file as it was read, since amending only adds.
@@ -850,6 +898,7 @@ function init(root, given) {
     ...plannedProjectFiles(root, manifest, { harnesses, standards, roles }, settings.sandbox),
   ];
   const ignore = settings.sandbox ? plannedDockerignore(root) : undefined;
+  const hook = hookPath(root);
   /** @type {string[]} */ const notices = [];
 
   for (const file of files) {
@@ -882,6 +931,8 @@ function init(root, given) {
   if (harnesses.includes('opencode')) notices.push(...writeOpencodeJson(root, standards));
 
   if (ignore !== undefined) writeDockerignore(ignore);
+
+  notices.push(...writeHook(root, hook));
 
   for (const notice of notices) console.log(`\n${notice}`);
 
@@ -993,9 +1044,40 @@ function refresh(root) {
     if (file.executable) chmodSync(absolute, 0o755);
     console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${file.path}`);
   }
+  const hookNotices = refreshHook(root);
   removeStaleWrappers(root, harnesses, roles.map((role) => role.name));
-  for (const notice of instructionNotices(root, harnesses, standards)) console.log(`\n${notice}`);
+  for (const notice of [...instructionNotices(root, harnesses, standards), ...hookNotices]) {
+    console.log(`\n${notice}`);
+  }
   return status;
+}
+
+/**
+ * Makes the hook at the path git uses for the project at `root` the kit's, when nothing is there or what is there
+ * carries the kit's mark, prints what it did, and returns the notices to print. Anything else at the path is the
+ * project's own and is left as it is. Neither case changes the status of `refresh`.
+ *
+ * @param {string} root
+ * @returns {string[]}
+ */
+function refreshHook(root) {
+  const planned = hookPath(root);
+  if ('reason' in planned) return [noRepositoryNotice(planned.reason)];
+  const printed = printedHookPath(root, planned.path);
+  const kind = kindOf(planned.path);
+  const existing = kind === 'file' ? readFileSync(planned.path, 'utf-8') : undefined;
+  if (kind === 'other' || (existing !== undefined && !isKitHook(existing))) return [foreignHookNotice(printed)];
+
+  const content = readHookTemplate();
+  if (existing === content && (lstatSync(planned.path).mode & 0o100) !== 0) {
+    console.log(`up to date ${printed}`);
+    return [];
+  }
+  mkdirSync(dirname(planned.path), { recursive: true });
+  writeFileSync(planned.path, content);
+  chmodSync(planned.path, 0o755);
+  console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${printed}`);
+  return [];
 }
 
 /**

@@ -21,6 +21,7 @@ import {
   opencodeKitStandardsNotice,
   opencodeRefreshNotice,
 } from '../scripts/agentrite-instructions.mjs';
+import { foreignHookNotice, HOOK_MARK, noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { refreshedWrapper } from '../scripts/agentrite.mjs';
 import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
@@ -28,6 +29,9 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const SHIM = readFileSync(new URL('../templates/project/sandbox.sh', import.meta.url), 'utf-8');
+const HOOK_TEMPLATE = readFileSync(new URL('../templates/project/commit-msg', import.meta.url), 'utf-8');
+// The notice of R11 of unit 0078, which every project of the suite that is not a git repository gets.
+const NO_REPOSITORY = noRepositoryNotice('the project is not inside a git repository');
 
 function rendered(harness, role) {
   const directory = harness === 'claude' ? '.claude/agents' : '.opencode/agents';
@@ -221,6 +225,12 @@ function linesOf(result) {
 // The notices refresh prints after the lines, each after an empty line.
 function noticesOf(result) {
   return result.stdout.split('\n\n').slice(1).join('\n\n');
+}
+
+// The notices that `noticesOf` gives for a project of `project`, which is not a git repository, when the other
+// notices are `notices`.
+function withNoRepository(notices) {
+  return `${notices === '' ? '' : `${notices}\n`}${NO_REPOSITORY}\n`;
 }
 
 // A project whose ten files are all out of date: the wrappers name the old package, one pins a model, the shim is
@@ -743,7 +753,7 @@ function refreshWith(t, harnesses, { claude, opencode }) {
   loading.write('CLAUDE.md', CLAUDE_LOADS);
   loading.write('opencode.json', OPENCODE_LOADS);
   const expected = loading.refresh(harnesses);
-  assert.equal(noticesOf(expected), '');
+  assert.equal(noticesOf(expected), withNoRepository(''));
 
   const made = project(t);
   place(made, 'CLAUDE.md', claude);
@@ -768,15 +778,15 @@ test('refresh with claude notices a CLAUDE.md that is missing or lacks a line, a
   ];
   for (const [claude, notice] of cases) {
     const result = refreshWith(t, ['claude'], { claude });
-    assert.equal(noticesOf(result), `${notice}\n`, JSON.stringify(claude));
-    assert.ok(result.stdout.endsWith(`\n\n${notice}\n`), result.stdout);
+    assert.equal(noticesOf(result), withNoRepository(`${notice}\n`), JSON.stringify(claude));
+    assert.ok(result.stdout.endsWith(`\n\n${notice}\n\n${NO_REPOSITORY}\n`), result.stdout);
   }
 });
 
 test('refresh with claude prints nothing of a CLAUDE.md that holds the three lines, in LF or in CRLF', (t) => {
   for (const claude of [CLAUDE_LOADS, CLAUDE_LOADS.replaceAll('\n', '\r\n')]) {
     const result = refreshWith(t, ['claude'], { claude });
-    assert.equal(noticesOf(result), '');
+    assert.equal(noticesOf(result), withNoRepository(''));
     assert.doesNotMatch(result.stdout, /CLAUDE\.md/);
   }
 });
@@ -797,7 +807,7 @@ test('refresh with opencode notices an opencode.json that does not load the kit\
     const result = refreshWith(t, ['opencode'], { opencode });
     const notices = noticesOf(result);
     assert.ok(notices.startsWith(`opencode.json does not load the kit's instructions,\nbecause ${problem}`), notices);
-    if (!problem.endsWith(': ')) assert.equal(notices, `${opencodeRefreshNotice(problem, lacks)}\n`);
+    if (!problem.endsWith(': ')) assert.equal(notices, withNoRepository(`${opencodeRefreshNotice(problem, lacks)}\n`));
     assert.match(notices, /refresh\ndoes not add them/);
     assert.ok(notices.includes(`does not add them:\n\n${lacks.join('\n')}\n\n`), notices);
   }
@@ -806,7 +816,7 @@ test('refresh with opencode notices an opencode.json that does not load the kit\
 test('refresh with opencode prints nothing of an opencode.json that loads both paths, also one with a comment', (t) => {
   for (const opencode of [OPENCODE_LOADS, `{\n  // ours\n  "instructions": ["${PROCESS}", "${STANDARDS}"]\n}\n`]) {
     const result = refreshWith(t, ['opencode'], { opencode });
-    assert.equal(noticesOf(result), '');
+    assert.equal(noticesOf(result), withNoRepository(''));
     assert.doesNotMatch(result.stdout, /opencode\.json/);
   }
 });
@@ -815,18 +825,18 @@ test('refresh with both harnesses prints the notice of CLAUDE.md and then that o
   const result = refreshWith(t, ['claude', 'opencode'], { claude: undefined, opencode: undefined });
   const claude = claudeRefreshNotice(true, LINES);
   const opencode = opencodeRefreshNotice('it is missing', [PROCESS, STANDARDS]);
-  assert.equal(noticesOf(result), `${claude}\n\n${opencode}\n`);
+  assert.equal(noticesOf(result), withNoRepository(`${claude}\n\n${opencode}\n`));
 });
 
 test('refresh with one harness says nothing of the file of the other, whatever is at its path', (t) => {
   for (const other of [undefined, 'not json\n', '{}\n', null]) {
     const claudeOnly = refreshWith(t, ['claude'], { claude: CLAUDE_LOADS, opencode: other });
     assert.doesNotMatch(claudeOnly.stdout, /opencode\.json/, String(other));
-    assert.equal(noticesOf(claudeOnly), '');
+    assert.equal(noticesOf(claudeOnly), withNoRepository(''));
 
     const opencodeOnly = refreshWith(t, ['opencode'], { claude: other, opencode: OPENCODE_LOADS });
     assert.doesNotMatch(opencodeOnly.stdout, /CLAUDE\.md/, String(other));
-    assert.equal(noticesOf(opencodeOnly), '');
+    assert.equal(noticesOf(opencodeOnly), withNoRepository(''));
   }
 });
 
@@ -1036,7 +1046,7 @@ test('refresh judges CLAUDE.md and opencode.json against the standards the setti
   const result = refreshOwn(made, { standards: HOUSE });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(noticesOf(result), '');
+  assert.equal(noticesOf(result), withNoRepository(''));
 });
 
 test('refresh notices the kit standards in CLAUDE.md and opencode.json beside the project own, removing none', (t) => {
@@ -1049,7 +1059,10 @@ test('refresh notices the kit standards in CLAUDE.md and opencode.json beside th
   const result = refreshOwn(made, { standards: HOUSE });
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(noticesOf(result), `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`);
+  assert.equal(
+    noticesOf(result),
+    withNoRepository(`${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`),
+  );
   assert.equal(made.read('CLAUDE.md'), claude);
   assert.equal(made.read('opencode.json'), opencode);
 });
@@ -1061,7 +1074,7 @@ test('refresh gives no notice of the kit standards in a project that uses them',
 
   const result = made.refresh(['claude', 'opencode']);
 
-  assert.equal(noticesOf(result), '');
+  assert.equal(noticesOf(result), withNoRepository(''));
 });
 
 // R16
@@ -1080,7 +1093,7 @@ test('refresh notices an AGENTS.md that is missing or does not name the list, wh
       const result = made.refresh(harnesses);
 
       assert.equal(result.status, 0, result.stderr);
-      assert.equal(noticesOf(result), `${notice}\n`, `${harnesses} ${JSON.stringify(agents)}`);
+      assert.equal(noticesOf(result), withNoRepository(`${notice}\n`), `${harnesses} ${JSON.stringify(agents)}`);
       assert.equal(placed(made, 'AGENTS.md'), agents);
     }
   }
@@ -1183,3 +1196,145 @@ test('refresh refuses a file that lacks orchestrator, or whose orchestrator name
 const ORCHESTRATOR_MUST =
   'It must hold false, for a project that does not use the orchestrator, or the path of a file, relative to the ' +
   'project root, that does not lead outside the project';
+
+// The commit-msg hook of unit 0078.
+
+const HOOK = '.git/hooks/commit-msg';
+
+function git(base, ...args) {
+  const result = spawnSync('git', args, { cwd: base, encoding: 'utf-8' });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout;
+}
+
+// A project of `project` that is a git repository, with the kit's other files up to date.
+function repositoryProject(t) {
+  const made = project(t);
+  git(made.base, 'init', '-q');
+  return made;
+}
+
+function executable(path) {
+  return (statSync(path).mode & 0o100) !== 0;
+}
+
+// R10, R21
+test('refresh writes the hook where there is none, executable, and says it wrote it', (t) => {
+  const { base, refresh, read } = repositoryProject(t);
+  rmSync(join(base, '.git/hooks'), { recursive: true, force: true });
+
+  const result = refresh(['claude']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(HOOK), HOOK_TEMPLATE);
+  assert.ok(executable(join(base, HOOK)));
+  assert.match(result.stdout, /^wrote \.git\/hooks\/commit-msg$/m);
+  assert.ok(!result.stdout.includes(NO_REPOSITORY), result.stdout);
+});
+
+// R10, R21
+test('refresh rewrites a hook that carries the mark and differs, as one an older kit wrote', (t) => {
+  const { base, refresh, read, write } = repositoryProject(t);
+  write(HOOK, `#!/bin/sh\n${HOOK_MARK}\nexec node old-checker.mjs "$1"\n`);
+  chmodSync(join(base, HOOK), 0o755);
+
+  const result = refresh(['claude']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(HOOK), HOOK_TEMPLATE);
+  assert.ok(executable(join(base, HOOK)));
+  assert.match(result.stdout, /^refreshed \.git\/hooks\/commit-msg$/m);
+});
+
+// R10, R21
+test('refresh makes a marked hook with the content of the template executable, and then finds it up to date', (t) => {
+  const { base, refresh, write } = repositoryProject(t);
+  write(HOOK, HOOK_TEMPLATE);
+  chmodSync(join(base, HOOK), 0o644);
+
+  const first = refresh(['claude']);
+
+  assert.equal(first.status, 0, first.stderr);
+  assert.ok(executable(join(base, HOOK)));
+  assert.match(first.stdout, /^refreshed \.git\/hooks\/commit-msg$/m);
+
+  const second = refresh(['claude']);
+
+  assert.equal(second.status, 0, second.stderr);
+  assert.match(second.stdout, /^up to date \.git\/hooks\/commit-msg$/m);
+});
+
+// R10, R21
+test('refresh leaves a hook without the mark as it is, with a notice after the other notices', (t) => {
+  const { base, refresh, read, write } = repositoryProject(t);
+  const own = '#!/bin/sh\nnpx lint-commit "$1"\n';
+  write(HOOK, own);
+  chmodSync(join(base, HOOK), 0o644);
+  rmSync(join(base, 'AGENTS.md'));
+
+  const result = refresh(['claude']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read(HOOK), own);
+  assert.equal(executable(join(base, HOOK)), false);
+  assert.doesNotMatch(linesOf(result).join('\n'), /commit-msg/);
+  const notices = noticesOf(result);
+  assert.ok(notices.endsWith(`${foreignHookNotice(HOOK)}\n`), notices);
+  assert.ok(notices.indexOf('AGENTS.md') < notices.indexOf(foreignHookNotice(HOOK)), notices);
+});
+
+// R10, R21
+test('refresh takes a symbolic link at the path of the hook for the project own, with the notice', (t) => {
+  const { base, refresh, write } = repositoryProject(t);
+  write('hooks/ours', HOOK_TEMPLATE);
+  mkdirSync(join(base, '.git/hooks'), { recursive: true });
+  symlinkSync(join(base, 'hooks/ours'), join(base, HOOK));
+
+  const result = refresh(['claude']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(lstatSync(join(base, HOOK)).isSymbolicLink());
+  assert.doesNotMatch(linesOf(result).join('\n'), /commit-msg/);
+  assert.ok(noticesOf(result).includes(foreignHookNotice(HOOK)), result.stdout);
+});
+
+// R10, R21
+test('refresh writes the hook where core.hooksPath points', (t) => {
+  const { base, refresh, read } = repositoryProject(t);
+  git(base, 'config', 'core.hooksPath', 'tools/hooks');
+
+  const result = refresh(['claude']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('tools/hooks/commit-msg'), HOOK_TEMPLATE);
+  assert.match(result.stdout, /^wrote tools\/hooks\/commit-msg$/m);
+});
+
+// R11, R21
+test('refresh outside a git repository writes no hook and notices why, last', (t) => {
+  const { base, refresh } = project(t);
+  rmSync(join(base, 'AGENTS.md'));
+
+  const result = refresh(['claude']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(exists(join(base, '.git')), false);
+  assert.doesNotMatch(linesOf(result).join('\n'), /commit-msg/);
+  const notices = noticesOf(result);
+  assert.ok(notices.endsWith(`${NO_REPOSITORY}\n`), notices);
+  assert.ok(notices.indexOf('AGENTS.md') < notices.indexOf(NO_REPOSITORY), notices);
+});
+
+// R10, R11, R21
+test('the hook changes not the status of a refresh that leaves a file which is not a regular one', (t) => {
+  for (const repository of [true, false]) {
+    const { base, refresh, write } = repository ? repositoryProject(t) : project(t);
+    mkdirSync(join(base, LIST), { recursive: true });
+    if (repository) write(HOOK, '#!/bin/sh\n');
+
+    const result = refresh(['claude']);
+
+    assert.equal(result.status, 1, `${repository}`);
+    assert.match(result.stderr, /left \.agentrite\/instructions\.md, which is not a regular file/);
+  }
+});

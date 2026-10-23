@@ -58,6 +58,7 @@ before it records no kit version and is built again at the first start.
   notices of requirements 10 and 11
 - `scripts/agentrite.mjs`: `init` and `refresh` write the hook, and `readTemplates` reads its template
 - `package.json`: `scripts/agentrite-hook.mjs` in `files`
+- `tests/package-documents.test.mjs`: `scripts/agentrite-hook.mjs` in the list of `files` it compares
 - `tests/check-commit-message.test.mjs`: new. The checker's unit tests
 - `tests/agentrite-hook.test.mjs`: new. The unit tests of `scripts/agentrite-hook.mjs`
 - `tests/agentrite-init.test.mjs`, `tests/agentrite-refresh.test.mjs`: the hook in `init` and `refresh`, and the
@@ -82,7 +83,7 @@ before it records no kit version and is built again at the first start.
 
 ### The checker
 
-- [ ] Write `tests/check-commit-message.test.mjs` first, against `offendingLines` and against the script run with
+- [x] Write `tests/check-commit-message.test.mjs` first, against `offendingLines` and against the script run with
   `node`: each of `Co-Authored-By` and `Claude-Session` refused as written, in lower case and in upper case; a
   trailer at the start of a later line, with its line number; a line that starts with `#` holding either name, not
   refused; a name inside a sentence, as `Do not add Co-Authored-By: lines`, not refused; a name with a space before
@@ -91,7 +92,7 @@ before it records no kit version and is built again at the first start.
   an empty message, exit 0 and nothing printed; a clean message, exit 0 and nothing printed on either stream; a file
   that does not exist, exit 1 with its path named; no path and two paths, each exit 2 with what is wrong and the
   usage, and nothing read (R2, R3, R4, R5, R6, R20)
-- [ ] Write `container/check-commit-message.mjs`: `offendingLines(text)` returns `{ number, line }` for each line that
+- [x] Write `container/check-commit-message.mjs`: `offendingLines(text)` returns `{ number, line }` for each line that
   matches `/^(co-authored-by|claude-session):/i`, numbered from 1, a line that starts with `#` never matching. The
   entry point prints on standard error `line <number>: <line>` for each, then the one sentence that the standards
   forbid the trailers `Co-Authored-By` and `Claude-Session` in a commit message and that the lines are to be removed
@@ -102,24 +103,24 @@ before it records no kit version and is built again at the first start.
 
 ### The hook on the host
 
-- [ ] Write `tests/agentrite-hook.test.mjs` first: `isKitHook` is true for a text that holds the mark as a line of its
+- [x] Write `tests/agentrite-hook.test.mjs` first: `isKitHook` is true for a text that holds the mark as a line of its
   own and false for one that holds it inside another line or not at all; the template `templates/project/commit-msg`
   holds the mark; the printed path is relative for a path under the root and absolute for one outside it; the notice
   of a hook that is the project's own names the path, says that commit messages are then not checked for the
   trailers, and names "Git hooks" in the kit's `README.md`; the notice outside a git repository says that no hook was
   written and why (R7, R10, R11)
-- [ ] Write `templates/project/commit-msg`: `#!/bin/sh`, the mark line `# agentrite: commit-msg hook`, a comment that
+- [x] Write `templates/project/commit-msg`: `#!/bin/sh`, the mark line `# agentrite: commit-msg hook`, a comment that
   points to "Git hooks" in the kit's `README.md`, the top of the work tree from `git rev-parse --show-toplevel`, and
   the checker's path under it, every path quoted since a project's path may hold a space. When the checker's file is
   not there, it prints on standard error that the checker is not at that path and to install the project's
   dependencies in that work tree, as with `npm ci`, and exits 1. When `command -v node` finds no `node`, it prints that
   `node` is not on the `PATH` git gives the hook and to make `node` reachable from git, and exits 1. Otherwise it runs
   `exec node "<checker>" "$1"` (R7, R8, R15)
-- [ ] Write `scripts/agentrite-hook.mjs`: `HOOK_MARK`, `isKitHook(text)`, `printedHookPath(root, path)`,
+- [x] Write `scripts/agentrite-hook.mjs`: `HOOK_MARK`, `isKitHook(text)`, `printedHookPath(root, path)`,
   `foreignHookNotice(printedPath)` and `noRepositoryNotice(reason)`, where the reason is either that the project root
   is not inside a git repository or that git could not be run, with the error it gave. Add the file to `files` in
   `package.json` (R7, R10, R11)
-- [ ] Add to `tests/agentrite-init.test.mjs`, before the code: in a project that is a git repository, `init` writes
+- [x] Add to `tests/agentrite-init.test.mjs`, before the code: in a project that is a git repository, `init` writes
   `.git/hooks/commit-msg` with the template's content, executable by the owner, and prints `wrote
   .git/hooks/commit-msg`; with `core.hooksPath` set to a relative directory that does not exist yet, it writes the
   hook there, making the directory; with `core.hooksPath` outside the project, it prints the absolute path; a file
@@ -127,11 +128,11 @@ before it records no kit version and is built again at the first start.
   not inside a git repository, no hook is written, the notice is printed after the other notices, every other file is
   written as before and the status is 0; with `--no-sandbox` the hook is written too. Add the notice of requirement 11
   to every existing test that compares the output of `init` in full (R7, R9, R11, R21)
-- [ ] In `scripts/agentrite.mjs`, add `hookPath(root)`, which runs `git rev-parse --path-format=absolute --git-path
+- [x] In `scripts/agentrite.mjs`, add `hookPath(root)`, which runs `git rev-parse --path-format=absolute --git-path
   hooks` in `root` and gives the path of `commit-msg` in that directory, or the reason there is none. `init` plans it
   before it writes anything, writes the hook with the flag `wx` and mode `0o755` after `.dockerignore`, prints `wrote`
   or `skipped` with the printed path, and puts the notice of requirement 11 last among its notices (R7, R9, R11)
-- [ ] Add to `tests/agentrite-refresh.test.mjs`, before the code: `refresh` writes the hook where there is none and
+- [x] Add to `tests/agentrite-refresh.test.mjs`, before the code: `refresh` writes the hook where there is none and
   prints `wrote`; rewrites a hook that carries the mark and differs from the template, as one an older kit wrote, and
   prints `refreshed`; makes a marked hook with the template's content but without the owner's execute bit executable;
   prints `up to date` for one that is the template and executable; leaves a file without the mark byte for byte,
@@ -140,14 +141,14 @@ before it records no kit version and is built again at the first start.
   there; outside a git repository writes no hook and prints the notice of requirement 11; and the status is that of
   the other files in every case. Add the notice of requirement 11 to every existing test that compares the output of
   `refresh` in full (R10, R11, R21)
-- [ ] In `scripts/agentrite.mjs`, `refresh` takes the hook after the kit's own files and before it removes stale
+- [x] In `scripts/agentrite.mjs`, `refresh` takes the hook after the kit's own files and before it removes stale
   wrappers: missing, it writes it; a regular file that `isKitHook` accepts, it rewrites as the other kit files are
   rewritten, `refreshed` or `up to date`, with the execute bit; anything else is the project's own, left as it is,
   with the notice of requirement 10. The notices of requirements 10 and 11 come last among its notices. Neither
   changes the status (R10, R11)
-- [ ] Add the notice of requirement 11 to the outputs that `tests/settings-update.test.mjs` and
+- [x] Add the notice of requirement 11 to the outputs that `tests/settings-update.test.mjs` and
   `tests/sandbox-update.test.mjs` compare in full, and run the whole suite (R11)
-- [ ] Write `tests/commit-msg-hook.test.mjs`: make a git repository in a temporary directory with a `package.json`,
+- [x] Write `tests/commit-msg-hook.test.mjs`: make a git repository in a temporary directory with a `package.json`,
   install the kit as `installKit` does and copy `container/check-commit-message.mjs` under its
   `node_modules/agentrite/container/`, run `init` with the working tree's `scripts/agentrite.mjs`, and show that
   `git commit -m` is refused for a message with `Co-Authored-By` and for one with `Claude-Session`, with the checker's
@@ -156,7 +157,7 @@ before it records no kit version and is built again at the first start.
   `git commit --amend` adding a trailer is refused and leaves the commit as it was. Then remove the checker's file
   and show a commit refused with the hook's message about the checker, and with the file back, run `git commit` with
   a `PATH` that holds `git` and no `node` and show it refused with the hook's message about `node` (R8, R12, R22)
-- [ ] Commit point 1, below
+- [x] Commit point 1, below
 
 ### The hook in the sandbox
 
@@ -275,7 +276,7 @@ before it records no kit version and is built again at the first start.
 
 ## Commit Points
 
-- [ ] `feature-0078 Refuse commit messages with forbidden trailers on the host`: the checker, the host's hook, `init`
+- [x] `feature-0078 Refuse commit messages with forbidden trailers on the host`: the checker, the host's hook, `init`
   and `refresh`, and their tests
 - [ ] `feature-0078 Run the commit-msg hook in the sandbox`: the image's hook, the Dockerfile's copies, the compose
   file's `core.hooksPath`, and their tests

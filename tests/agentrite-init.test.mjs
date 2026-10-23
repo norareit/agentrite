@@ -24,6 +24,7 @@ import {
   opencodeKitStandardsNotice,
   opencodeVerdict,
 } from '../scripts/agentrite-instructions.mjs';
+import { noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import {
   AGENTS_SECTIONS,
@@ -63,6 +64,9 @@ const OPENCODE =
   `{\n  "$schema": "https://opencode.ai/config.json",\n` +
   `  "instructions": [\n    "${PROCESS}",\n    "${STANDARDS}"\n  ]\n}\n`;
 const EXCEPTION = `!${KIT_CONTAINER}/**`;
+const HOOK_TEMPLATE = readFileSync(new URL('../templates/project/commit-msg', import.meta.url), 'utf-8');
+// The notice of R11 of unit 0078, which every project of the suite that is not a git repository gets.
+const NO_REPOSITORY = noRepositoryNotice('the project is not inside a git repository');
 
 function files(harnesses, overrides = {}) {
   return projectFiles({
@@ -1150,7 +1154,7 @@ test('init with no argument takes the harnesses and the sandbox from the file, a
   assert.equal(result.stderr, '');
   assert.equal(
     result.stdout,
-    ['skipped agentrite.json, which exists', ...linesOf(expected).slice(1), ''].join('\n'),
+    ['skipped agentrite.json, which exists', ...linesOf(expected).slice(1), '', NO_REPOSITORY, ''].join('\n'),
   );
   assert.equal(read('agentrite.json'), settings);
   for (const [path, content] of snapshot(given.base)) {
@@ -1621,7 +1625,7 @@ test('init notices a CLAUDE.md and an opencode.json that load the kit standards 
   assert.equal(read('opencode.json'), opencode);
   assert.equal(
     noticesOf(result),
-    `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n`,
+    `${claudeKitStandardsNotice(HOUSE)}\n\n${opencodeKitStandardsNotice(HOUSE)}\n\n${NO_REPOSITORY}\n`,
   );
 });
 
@@ -1633,7 +1637,7 @@ test('init notices the kit standards only when the project has other standards',
   const result = run('init');
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(noticesOf(result), '');
+  assert.equal(noticesOf(result), `${NO_REPOSITORY}\n`);
 });
 
 // R15, R16
@@ -1759,4 +1763,107 @@ test('init with no argument in a project whose agentrite.json lacks orchestrator
     );
     assert.deepEqual(snapshot(base), before);
   }
+});
+
+// The commit-msg hook of unit 0078.
+
+
+function git(base, ...args) {
+  const result = spawnSync('git', args, { cwd: base, encoding: 'utf-8' });
+  assert.equal(result.status, 0, result.stderr);
+  return result.stdout;
+}
+
+// A project of `project` that is a git repository.
+function repositoryProject(t) {
+  const made = project(t);
+  git(made.base, 'init', '-q');
+  return made;
+}
+
+// R7, R21
+test('init writes the commit-msg hook into the hooks directory of the repository, executable by the owner', (t) => {
+  const { base, run, read } = repositoryProject(t);
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('.git/hooks/commit-msg'), HOOK_TEMPLATE);
+  assert.notEqual(statSync(join(base, '.git/hooks/commit-msg')).mode & 0o100, 0);
+  assert.match(result.stdout, /^wrote \.git\/hooks\/commit-msg$/m);
+  assert.ok(!result.stdout.includes(NO_REPOSITORY), result.stdout);
+});
+
+// R7, R21
+test('init writes the hook where core.hooksPath points, making the directory', (t) => {
+  const { base, run, read } = repositoryProject(t);
+  git(base, 'config', 'core.hooksPath', 'tools/hooks');
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('tools/hooks/commit-msg'), HOOK_TEMPLATE);
+  assert.match(result.stdout, /^wrote tools\/hooks\/commit-msg$/m);
+  assert.equal(exists(join(base, '.git/hooks/commit-msg')), false);
+});
+
+// R7, R21
+test('init prints the absolute path of a hooks directory outside the project', (t) => {
+  const { base, run } = repositoryProject(t);
+  const outside = join(temporaryDirectory(t, 'agentrite-init-hooks-'), 'hooks');
+  git(base, 'config', 'core.hooksPath', outside);
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(join(outside, 'commit-msg'), 'utf-8'), HOOK_TEMPLATE);
+  assert.ok(result.stdout.split('\n').includes(`wrote ${join(outside, 'commit-msg')}`), result.stdout);
+});
+
+// R9, R21
+test('init leaves a file already at the path of the hook as it is, and says it skipped it', (t) => {
+  const { base, run, read } = repositoryProject(t);
+  const own = '#!/bin/sh\necho ours\n';
+  mkdirSync(join(base, '.git/hooks'), { recursive: true });
+  writeFileSync(join(base, '.git/hooks/commit-msg'), own);
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('.git/hooks/commit-msg'), own);
+  assert.match(result.stdout, /^skipped \.git\/hooks\/commit-msg, which exists$/m);
+});
+
+// R11, R21
+test('init outside a git repository writes no hook, notices why after its other notices, and writes the rest', (t) => {
+  const { base, run } = project(t);
+  writeFileSync(join(base, 'AGENTS.md'), '# Our own instructions\n');
+  const given = repositoryProject(t);
+  const expected = given.run('init', 'claude');
+
+  const result = run('init', 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(exists(join(base, '.git')), false);
+  assert.doesNotMatch(result.stdout, /commit-msg$/m);
+  const notices = noticesOf(result);
+  assert.ok(notices.indexOf(NO_REPOSITORY) > notices.indexOf('AGENTS.md'), notices);
+  assert.ok(result.stdout.indexOf(NO_REPOSITORY) < result.stdout.indexOf('\n{\n'), result.stdout);
+  for (const [path, content] of snapshot(given.base)) {
+    if (path === '.git' || path.startsWith('.git/') || path === 'AGENTS.md') continue;
+    assert.equal(exists(join(base, path)), true, path);
+    if (content !== null) assert.equal(readFileSync(join(base, path), 'utf-8'), content, path);
+  }
+  assert.equal(expected.status, 0, expected.stderr);
+});
+
+// R7, R21
+test('init --no-sandbox writes the hook too', (t) => {
+  const { run, read } = repositoryProject(t);
+
+  const result = run('init', OPTION, 'claude');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('.git/hooks/commit-msg'), HOOK_TEMPLATE);
+  assert.match(result.stdout, /^wrote \.git\/hooks\/commit-msg$/m);
 });
