@@ -189,7 +189,7 @@ before it records no kit version and is built again at the first start.
 
 ### The image built again for a new kit
 
-- [ ] In `tests/wrapper-fixture.mjs`, with no change of behavior: export `kitVersion`, a version no release has, and
+- [x] In `tests/wrapper-fixture.mjs`, with no change of behavior: export `kitVersion`, a version no release has, and
   `installKitPackage(installed)`, which writes `package.json` with `name` `agentrite` and that version into a directory
   that stands for an installed kit; let the fake hosts' default answer to `image inspect` be
   `<claude>|<opencode>|<kit>`, and export `imageLabelsText({ claude, opencode, kit })` that gives that answer. Call
@@ -280,6 +280,6 @@ before it records no kit version and is built again at the first start.
   and `refresh`, and their tests
 - [x] `feature-0078 Run the commit-msg hook in the sandbox`: the image's hook, the Dockerfile's copies, the compose
   file's `core.hooksPath`, and their tests
-- [ ] `feature-0078 Give the wrapper's fake hosts the kit's version label`: the fixture alone, behavior unchanged
+- [x] `feature-0078 Give the wrapper's fake hosts the kit's version label`: the fixture alone, behavior unchanged
 - [ ] `feature-0078 Build the image again for a new kit`: the label, the build argument, the wrapper, and their tests
 - [ ] `feature-0078 Describe the commit-msg hook`: `README.md` and `SANDBOX.md`

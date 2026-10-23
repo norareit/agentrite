@@ -62,3 +62,10 @@ timestamp: 2026-10-22T22:02:19Z
   .git/hooks/commit-msg`, and its installed kit gets `container/check-commit-message.mjs`, without which the hook
   refuses the test's next commit. `tests/sandbox-update.test.mjs` compares no output in full that the hook changes, and
   is unchanged
+- 2026-10-23T11:48:53Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave the fake hosts of
+  `tests/wrapper-fixture.mjs` an answer to `image inspect` of the labels its format names, all three when it names the
+  kit's version and the two of the harnesses otherwise, rather than `<claude>|<opencode>|<kit>` to every format as the
+  plan's task says. The wrapper reads the OpenCode label as all that follows the first `|`, so a third field in every
+  answer would have changed what the wrapper reads before it reads the kit's label, and the commit would not have been
+  one of no behavior. The real `docker` answers only what its format asks, so the fake is the closer for it. The suite
+  passes on the fixture commit, 1087 tests and none skipped

@@ -7,7 +7,7 @@ import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, w
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { dockerHost, hostVersions, standInLabel, writeCommand } from './wrapper-fixture.mjs';
+import { dockerHost, hostVersions, installKitPackage, standInLabel, writeCommand } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
@@ -86,6 +86,7 @@ function setUp(t, layout = 'installed') {
   for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
     copyFileSync(join(kitScripts, file), join(kit, 'scripts', file));
   }
+  installKitPackage(kit);
   const home = join(base, 'home');
   mkdirSync(home);
   const host = dockerHost(base, []);

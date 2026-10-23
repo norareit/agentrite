@@ -20,6 +20,7 @@ import { skipReason } from './skip-reason.mjs';
 import {
   assertFormsListed,
   fakeHost,
+  installKitPackage,
   logDirectories,
   logDirectory,
   logMounts,
@@ -58,6 +59,7 @@ function setUp(t, { imageExists = true } = {}) {
   cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
   // The files agentrite.json names, which the reader checks.
   copyKitInstructions(join(container, '..'));
+  installKitPackage(join(container, '..'));
   writeFileSync(join(root, 'agentrite.json'), settingsFor('master'));
   mkdirSync(join(root, 'sandbox'));
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), '');

@@ -17,7 +17,7 @@ import { test } from 'node:test';
 import { agentsListNotice, claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { copyKitInstructions, installKit, KIT_ROLES } from './installed-kit.mjs';
-import { fakeHost } from './wrapper-fixture.mjs';
+import { fakeHost, installKitPackage } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const kit = join(import.meta.dirname, '..');
@@ -67,6 +67,7 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   chmodSync(join(installed, 'container', 'sandbox.sh'), 0o755);
   cpSync(join(kit, 'scripts'), join(installed, 'scripts'), { recursive: true });
   copyKitInstructions(installed);
+  installKitPackage(installed);
   const home = join(base, 'home');
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');

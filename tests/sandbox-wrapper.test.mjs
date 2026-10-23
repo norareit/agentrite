@@ -18,6 +18,8 @@ import {
   assertFormsListed,
   fakeHost,
   hostVersions,
+  imageLabelsText,
+  installKitPackage,
   latestVersions,
   logDirectories,
   logDirectory,
@@ -75,6 +77,7 @@ function setUp(
   mkdirSync(container, { recursive: true });
   copyFileSync(wrapper, join(container, 'sandbox.sh'));
   chmodSync(join(container, 'sandbox.sh'), 0o755);
+  installKitPackage(join(container, '..'));
   // The wrapper reads bell with the kit's reader of agentrite.json, in the kit's scripts/ beside its container/.
   mkdirSync(join(container, '..', 'scripts'));
   for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
@@ -226,7 +229,7 @@ test('the wrapper keeps the versions the image records with neither harness on t
   const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -237,7 +240,7 @@ test('the wrapper keeps the versions the image records with neither harness on t
 test('the wrapper keeps a pre-release version the image records of a harness that is not on the PATH', (t) => {
   const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
   rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, `${hostVersions.claude}|0.0.0-dev-202610030456\n`);
+  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -253,7 +256,7 @@ for (const [present, absent, versions] of [
   test(`the wrapper takes the host's version of ${present} and the image's of ${absent}, which is absent`, (t) => {
     const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
     rmSync(join(bin, absent));
-    writeFileSync(imageLabels, `${versions.claude}|${versions.opencode}\n`);
+    writeFileSync(imageLabels, imageLabelsText(versions));
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
@@ -284,7 +287,7 @@ for (const [what, script] of [
   test(`the wrapper counts a harness on the host that ${what} as not installed, and says so`, (t) => {
     const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
     writeCommand(bin, 'claude', script);
-    writeFileSync(imageLabels, `${builtBefore.claude}|${hostVersions.opencode}\n`);
+    writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, noVersionLine('claude', 'Claude Code'));
@@ -297,7 +300,7 @@ for (const [what, script] of [
 test("the wrapper names OpenCode's command when that is the one that prints no version", (t) => {
   const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
   writeCommand(bin, 'opencode', 'exit 3');
-  writeFileSync(imageLabels, `${hostVersions.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: builtBefore.opencode }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, noVersionLine('opencode', 'OpenCode'));
@@ -348,7 +351,7 @@ test("the wrapper does not use a version the caller's environment holds for a ha
   const { root, container, home, bin, imageLabels, dockerCalls } = setUp(t, kitPath);
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
     encoding: 'utf-8',
     env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
@@ -369,7 +372,7 @@ test('the wrapper builds nothing when the image holds the wanted versions', (t) 
 
 test('the wrapper says which harness differs from the image, and builds before it runs', (t) => {
   const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, `${builtBefore.claude}|${hostVersions.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, holdsLine('Claude Code', builtBefore.claude, hostVersions.claude, 'the host'));
@@ -378,7 +381,7 @@ test('the wrapper says which harness differs from the image, and builds before i
 
 test('the wrapper says so for each harness when both differ from the image', (t) => {
   const { root, container, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
@@ -392,7 +395,7 @@ test('the wrapper says so for each harness when both differ from the image', (t)
 
 test('the wrapper rebuilds an image that records no versions, which one built before the labels is', (t) => {
   const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, '|\n');
+  writeFileSync(imageLabels, imageLabelsText({ claude: '', opencode: '' }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
@@ -405,7 +408,7 @@ test('the wrapper rebuilds an image that records no versions, which one built be
 
 test("the wrapper builds nothing when the image holds the project's version and the host's of the other", (t) => {
   const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath, { OPENCODE_VERSION: '1.18.20' });
-  writeFileSync(imageLabels, `${hostVersions.claude}|1.18.20\n`);
+  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '1.18.20' }));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -427,8 +430,18 @@ test("the wrapper rebuilds for the project's version, whatever the host has, and
 // A project may hold the very version the host has. The value is the same and the source is not: the project's
 // file stands first.
 for (const [harness, argument, held, labels] of [
-  ['Claude Code', 'CLAUDE_CODE_VERSION', hostVersions.claude, `${builtBefore.claude}|${hostVersions.opencode}\n`],
-  ['OpenCode', 'OPENCODE_VERSION', hostVersions.opencode, `${hostVersions.claude}|${builtBefore.opencode}\n`],
+  [
+    'Claude Code',
+    'CLAUDE_CODE_VERSION',
+    hostVersions.claude,
+    imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }),
+  ],
+  [
+    'OpenCode',
+    'OPENCODE_VERSION',
+    hostVersions.opencode,
+    imageLabelsText({ claude: hostVersions.claude, opencode: builtBefore.opencode }),
+  ],
 ]) {
   test(`the wrapper names the project's file for a version of ${harness} it gives that equals the host's`, (t) => {
     const { root, container, imageLabels, run, dockerCalls } = setUp(t, kitPath, { [argument]: held });
@@ -471,7 +484,7 @@ test('the wrapper builds with the latest on --rebuild with neither harness, what
   const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
@@ -485,7 +498,7 @@ test('the wrapper builds with the latest on --rebuild with neither harness, what
 test('the wrapper takes the latest of an absent harness when the other differs from the image', (t) => {
   const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
   rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
@@ -506,7 +519,7 @@ for (const [what, label] of [
   test(`the wrapper builds when the image records ${what} of a harness that has no other source`, (t) => {
     const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(t, kitPath);
     rmSync(join(bin, 'claude'));
-    writeFileSync(imageLabels, `${label}|${hostVersions.opencode}\n`);
+    writeFileSync(imageLabels, imageLabelsText({ claude: label, opencode: hostVersions.opencode }));
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, latestLine('Claude Code', latestVersions.claude));
@@ -559,7 +572,7 @@ test('the wrapper asks npm nothing, and so needs none, when no build is due', (t
   rmSync(join(bin, 'claude'));
   rmSync(join(bin, 'opencode'));
   rmSync(join(bin, 'npm'));
-  writeFileSync(imageLabels, `${builtBefore.claude}|${builtBefore.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
@@ -576,7 +589,7 @@ test('the wrapper builds on --rebuild although the image holds the wanted versio
 
 test("the wrapper stops with the build's own error when the build fails, and runs and makes nothing", (t) => {
   const { root, container, imageLabels, buildFails, run, dockerCalls } = setUp(t, kitPath);
-  writeFileSync(imageLabels, `${builtBefore.claude}|${hostVersions.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
   writeFileSync(buildFails, '');
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 17);

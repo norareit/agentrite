@@ -15,7 +15,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { agentsListNotice } from '../scripts/agentrite-instructions.mjs';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
-import { fakeHost } from './wrapper-fixture.mjs';
+import { fakeHost, installKitPackage } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 // R7: a project that release 4.2.0 set up starts its sandbox after the four steps of the release notes and no
@@ -85,6 +85,7 @@ function setUp(t) {
   mkdirSync(join(root, 'agent'));
   writeFileSync(join(root, 'package.json'), '{\n  "name": "my-app"\n}\n');
   copyKitInstructions(join(root, 'node_modules', 'agentrite'));
+  installKitPackage(join(root, 'node_modules', 'agentrite'));
   // The wrapper reads bell at each start with the kit's reader of agentrite.json, in the kit's scripts/.
   cpSync(kitScripts, join(root, 'node_modules', 'agentrite', 'scripts'), { recursive: true });
   writeFileSync(

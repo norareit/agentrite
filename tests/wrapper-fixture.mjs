@@ -26,6 +26,32 @@ export const hostVersions = { claude: '99.1.0', opencode: '98.2.0' };
 // `hostVersions`, so that the tests tell the two sources apart by their values.
 export const latestVersions = { claude: '97.3.0', opencode: '96.4.0' };
 
+// The version of the kit that `installKitPackage` installs, which no release has, so that no test comes to depend on
+// the version of the working tree.
+export const kitVersion = '97.0.0';
+
+// Writes the `package.json` of an installed kit into `installed`, a directory that stands for one, with the version
+// `kitVersion`. The wrapper reads it beside its `container/`.
+export function installKitPackage(installed) {
+  mkdirSync(installed, { recursive: true });
+  writeFileSync(join(installed, 'package.json'), `${JSON.stringify({ name: 'agentrite', version: kitVersion })}\n`);
+}
+
+// The content of a fake host's `imageLabels`: the image's three labels, the versions of the two harnesses and of the
+// kit, as `<claude>|<opencode>|<kit>`. The kit's is `kitVersion` unless it is given.
+export function imageLabelsText({ claude, opencode, kit = kitVersion }) {
+  return `${claude}|${opencode}|${kit}\n`;
+}
+
+// The lines of a fake `docker` that answer `image inspect` with the labels in `imageLabels` that the format names:
+// all three when it names the kit's version, and the two of the harnesses otherwise, as the real one answers only
+// what its format asks.
+function labelsAnswer(imageLabels) {
+  return `labels="$(cat "${imageLabels}")"
+  [[ " $* " == *com.ritenoar.agentrite.kit-version* ]] || labels="\${labels%|*}"
+  echo "$labels"; exit 0`;
+}
+
 // The two directories the wrapper mounts from the host, as they lie in a home: Claude Code's sessions and OpenCode's
 // data. In the project's log directory they have these places, and in the container the same under /home/agent.
 export const logDirectories = ['.claude/projects', '.local/share/opencode'];
@@ -167,10 +193,11 @@ esac`,
 //       refuses. The name and the services come from the file of the last `-f` of the call: a line
 //       `name: <name>` at the left margin gives the name and the image, and a line `  agent:` makes a service
 //       `agent` beside a `sandbox` that has no image, as Compose merges the two files
-//     * `image inspect`, with the content of `imageLabels`, which is the image's two version labels as
-//       `<claude>|<opencode>`, or with exit 1 when the file is not there, which stands for a missing image. An
-//       `image inspect` whose format names the label of a project's Dockerfile is answered with the content of
-//       `imageProjectDockerfile` instead, which is empty unless a test writes it, and with exit 1 likewise
+//     * `image inspect`, with the content of `imageLabels`, which is the image's three version labels as
+//       `imageLabelsText` writes them, the kit's left out when the format does not name it, or with exit 1 when the
+//       file is not there, which stands for a missing image. An `image inspect` whose format names the label of a
+//       project's Dockerfile is answered with the content of `imageProjectDockerfile` instead, which is empty unless a
+//       test writes it, and with exit 1 likewise
 //     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
 //       running under the name the file holds, and with nothing otherwise. It fails instead, as it does with no
 //       daemon to ask, when the file `psFails` is there
@@ -197,7 +224,7 @@ export function fakeHost(base, recorded) {
   const psFails = join(base, 'ps-fails');
   const execStatus = join(base, 'exec-status');
   writeFileSync(projectBuildArgs, '{}');
-  writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(hostVersions));
   writeFileSync(imageProjectDockerfile, '');
   const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
   writeCommand(
@@ -206,7 +233,7 @@ export function fakeHost(base, recorded) {
     `if [ "$1 $2" = "image inspect" ]; then
   [ -f "${imageLabels}" ] || exit 1
   [[ " $* " != *com.ritenoar.agentrite.project-dockerfile* ]] || { cat "${imageProjectDockerfile}"; exit 0; }
-  cat "${imageLabels}"; exit 0
+  ${labelsAnswer(imageLabels)}
 fi
 if [ "$1" = "ps" ]; then
   if [ -f "${psFails}" ]; then echo "Cannot connect to the Docker daemon" >&2; exit 1; fi
@@ -343,7 +370,7 @@ export function containerHost(base, recorded, image) {
   const projectBuildArgs = join(base, 'project-build-args.json');
   const imageLabels = join(base, 'image-labels');
   writeFileSync(projectBuildArgs, '{}');
-  writeFileSync(imageLabels, `${hostVersions.claude}|${hostVersions.opencode}\n`);
+  writeFileSync(imageLabels, imageLabelsText(hostVersions));
   const record = recorded.map((variable) => `${variable}=$${variable}`).join(' ');
   const passed = [
     `export DOCKER_CONFIG="${process.env.DOCKER_CONFIG ?? join(homedir(), '.docker')}"`,
@@ -355,7 +382,7 @@ export function containerHost(base, recorded, image) {
     `${passed}
 if [ "$1 $2" = "image inspect" ]; then
   [[ " $* " != *com.ritenoar.agentrite.project-dockerfile* ]] || exit 1
-  cat "${imageLabels}"; exit 0
+  ${labelsAnswer(imageLabels)}
 fi
 ${configAnswer(projectBuildArgs)}
 if [ "$1" = "compose" ]; then
@@ -414,6 +441,7 @@ export function containerProject(t, prefix, name) {
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
   copyKitInstructions(join(container, '..'));
+  installKitPackage(join(container, '..'));
   writeFileSync(
     join(root, 'agentrite.json'),
     kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true, bell: false }),

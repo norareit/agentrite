@@ -4,7 +4,7 @@ import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { fakeHost, logDirectory, logMounts } from './wrapper-fixture.mjs';
+import { fakeHost, installKitPackage, logDirectory, logMounts } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const shim = fileURLToPath(new URL('../sandbox-dev.sh', import.meta.url));
@@ -36,6 +36,8 @@ function setUp(t) {
     chmodSync(to, 0o755);
   }
   copyFileSync(dockerfile, join(root, 'container', 'Dockerfile'));
+  // The checkout's own package.json, from which the wrapper reads the kit's version.
+  installKitPackage(root);
   // The wrapper reads bell with the kit's reader of agentrite.json, in the checkout's scripts/.
   mkdirSync(join(root, 'scripts'));
   for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
