@@ -23,3 +23,13 @@ timestamp: 2026-10-23T15:12:33Z
   and `package.json` lists the new module in `files`, since the command imports it. The status stays `approved`
 - 2026-10-23T22:05:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on
   `feature-0082-a-unit-can-be-approved-by-a-command` at `448b17b`. The status is `in-progress`
+- 2026-10-23T22:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the unit on
+  `feature-0082-a-unit-can-be-approved-by-a-command` in `d343ac0`, `1b191d2` and `6e50d98`, tests first for the pure
+  parts. Two tests outside the new file, in `tests/agentrite-init.test.mjs` and `tests/agentrite-run.test.mjs`,
+  listed the usage of every command and gained the line of `approve`. On `6e50d98` `npm test` reported 1187 passed
+  and 0 failed, and `npm run check-changes` passed. Lines of the changed files are at most 120 characters, checked
+  with `awk` on the scripts, tests, `README.md` and `process.md`. Not checked: the hook of the kit itself in the
+  command's tests, which use a stand-in `commit-msg` hook, and a project that is a subdirectory of a repository
+  beyond the unit test of the prefix. The commit `d343ac0` carries a `Co-Authored-By` trailer that the standards
+  forbid, added by mistake from the harness's attribution reminder; it is not rewritten, for the human to decide.
+  The status stays `in-progress` for the review

@@ -166,10 +166,10 @@ change, since the command is nothing a developer does with the sandbox.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes, after the commits
-- [ ] Every line of the changed files fits 120 characters, checked before each commit
-- [ ] Every requirement 1 to 16 is traced by a task above, and every task traces to one or is the listing of the
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes, after the commits
+- [x] Every line of the changed files fits 120 characters, checked before each commit
+- [x] Every requirement 1 to 16 is traced by a task above, and every task traces to one or is the listing of the
   module in the package, which the import of R1 to R11 needs
 
 ## Commit Points
