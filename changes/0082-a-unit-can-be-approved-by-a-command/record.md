@@ -37,3 +37,9 @@ timestamp: 2026-10-23T15:12:33Z
   removed the `Co-Authored-By` trailer from the first commit of the unit by rewriting the four commits of the unit.
   They are now `f5cde92`, `3c13a30`, `214474f` and `b1cb342`, in place of the hashes of the entry above, and their trees
   are unchanged. The status stays `in-progress`
+- 2026-10-23T22:38:27Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0082 at
+  `99996e77a986f467e5da96573c9ee0d025159a08`, against merge base `dd7d669` with `origin/master`. Returned P1 and C1
+  in `.reviews/0082-a-unit-can-be-approved-by-a-command/review-20261023T223750Z.md`. Ran `npm test`: 1187 passed,
+  0 failed, 30 Docker-dependent tests skipped; `npm run check-changes` and `git diff --check` passed. Not independently
+  verified: approval with the kit's actual hook, approval in a nested project beyond the pure prefix test,
+  Docker-dependent behavior, or the historical order of test execution. The status stays `in-progress`
