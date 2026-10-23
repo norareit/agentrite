@@ -31,15 +31,15 @@ timestamp: 2026-10-23T14:24:42Z
   requirement 1 gives `null` only for a detached `HEAD` and a root in no repository. The status is `approved`
 - 2026-10-23T17:18:45Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on
   `feature-0081-the-runs-of-a-project-can-be-listed`. The status is `in-progress`
-- 2026-10-23T17:29:28Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built every task of `plan.md` in the
-  five commit points, the last of them `d411c44`. Two things the plan left to the build, neither a change of it: `runLine` is not
-  exported, its work being done inside `runsListing`, since the columns need the widest value
-  of the listing; and `parseDefinition` takes `roles` and `harnesses` as optional and judges a step's role and
-  harness as non-empty strings without them. `npm test` reported 1135 passing and 0 failing on `d411c44`, and
-  `npm run check-changes` passed. Every line of the changed files was checked to fit 120 characters. Not checked: the
-  sandbox's unit run of an orchestrator on a variant's branch, which the tests stand in for with a git repository in a
-  temporary directory
-- 2026-10-23T17:29:28Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, noted that the first commit of this
-  branch, `b1d4bab`, carries a `Co-Authored-By` trailer that the project's standards forbid, which the harness's attribution
-  reminder asked for. The later commits carry none. It is not rewritten, since `AGENTS.md` forbids rewriting a commit
-  unless the human asks. The status is `in-progress`
+- 2026-10-23T17:29:28Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built every task of `plan.md` in
+  the five commit points, the last of them `d411c44`. Two things the plan left to the build, neither a change of it:
+  `runLine` is not exported, its work being done inside `runsListing`, since the columns need the widest value of the
+  listing; and `parseDefinition` takes `roles` and `harnesses` as optional and judges a step's role and harness as
+  non-empty strings without them. `npm test` reported 1135 passing and 0 failing on `d411c44`, and `npm run
+  check-changes` passed. Every line of the changed files was checked to fit 120 characters. Not checked: the sandbox's
+  unit run of an orchestrator on a variant's branch, which the tests stand in for with a git repository in a temporary
+  directory
+- 2026-10-23T17:29:28Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, noted that the first commit of
+  this branch, `b1d4bab`, carries a `Co-Authored-By` trailer that the project's standards forbid, which the harness's
+  attribution reminder asked for. The later commits carry none. It is not rewritten, since `AGENTS.md` forbids rewriting
+  a commit unless the human asks. The status is `in-progress`
