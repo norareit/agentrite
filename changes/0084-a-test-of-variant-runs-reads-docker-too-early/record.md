@@ -33,5 +33,12 @@ timestamp: 2026-10-23T23:50:06Z
   Docker, and call no `docker` but their fake. No line of the file is over 120 characters, and nothing outside the file
   changed in the commit. `npm run check-changes` passed before the record entry was committed. The status is
   `in-progress`
+- 2026-10-24T23:49:46Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0084 at
+  `92cc7ba718c1513e4aa2807321ec0933ea5dda44`, against merge base `4c43c10` with `master`. Returned nonblocking P1
+  in `.reviews/0084-a-test-of-variant-runs-reads-docker-too-early/review-20261024T234946Z.md`; no spec-conformance
+  or code-quality findings. Independently ran the test file (8 passed), the regression tests alone (3 passed),
+  `npm test` (1238 passed, none failed or skipped), `npm run check-changes` and `git diff --check master...HEAD`
+  (both passed). The original intermittent race and historical tests-first ordering were not independently
+  verified. The status stays `in-progress`
 
 ## Amendments
