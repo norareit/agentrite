@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-10-23T23:50:06Z
 ---
 
@@ -23,5 +23,15 @@ timestamp: 2026-10-23T23:50:06Z
   Linux host, cut `bugfix-0084-a-test-of-variant-runs-reads-docker-too-early` from `master` at `4c43c10`. Judged that
   the fix needs a plan: regression tests, a wait moved out of `setUp`, and the five tests of the file waiting through
   it. Wrote `plan.md` against `tests/sandbox-variant.test.mjs` as it is on the branch. The status stays `approved`
+- 2026-10-25T09:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work and built it in
+  `tests/sandbox-variant.test.mjs` alone as commit `e840e69`: `runningContainers`, `waitForRun` and `branchOf` at the
+  top level, `wait` and `runningNames` of `setUp` through them, and three regression tests with a fake `docker`, without
+  `{ skip }`. The regression tests and the wait were written in one step, so the tests were not seen failing before the
+  wait existed. `node --test tests/sandbox-variant.test.mjs` reported 8 passed, 0 failed, and `npm test` 1238 passed, 0
+  failed, both before a formatting-only pass of Prettier with the file's own style (4 spaces, single quotes, 120
+  columns); the file alone was run again after it, 8 passed. The three `waitForRun` tests alone passed on this host with
+  Docker, and call no `docker` but their fake. No line of the file is over 120 characters, and nothing outside the file
+  changed in the commit. `npm run check-changes` passed before the record entry was committed. The status is
+  `in-progress`
 
 ## Amendments

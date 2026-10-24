@@ -45,7 +45,7 @@ was asked.
 
 ## Tasks
 
-- [ ] Write the regression tests first, in `tests/sandbox-variant.test.mjs`, without `{ skip }`, against
+- [x] Write the regression tests first, in `tests/sandbox-variant.test.mjs`, without `{ skip }`, against
   `waitForRun` as the approach gives it, each named with the prefix `waitForRun`, and see them fail because it does
   not exist yet (R4):
     * a fake `docker` that answers `ps` with `other-container` alone on its first three calls, and with
@@ -56,28 +56,28 @@ was asked.
       names the container and names `other-container` (R2)
     * no ready file in the gate, with a `timeout` of 300: the wait rejects with a message that names the run's label
       and its ready file, and the fake was never called (R2)
-- [ ] Add `runningContainers(docker)` and `waitForRun` at the top level of the file as the approach gives them, and
+- [x] Add `runningContainers(docker)` and `waitForRun` at the top level of the file as the approach gives them, and
   see the three regression tests pass (R1, R2)
-- [ ] Add `branchOf(label)`, and make `wait(label)` of `setUp` call `waitForRun` with the gate and the container of
+- [x] Add `branchOf(label)`, and make `wait(label)` of `setUp` call `waitForRun` with the gate and the container of
   the label's branch, and `runningNames()` call `runningContainers('docker')`. Change no assertion of the five tests
   that need Docker, and update the comment above `setUp` to say that `wait` waits for the run to be in its container
   and for Docker to list the container (R1, R3)
-- [ ] Check that nothing outside `tests/sandbox-variant.test.mjs` changed in the unit's implementation commit, and
+- [x] Check that nothing outside `tests/sandbox-variant.test.mjs` changed in the unit's implementation commit, and
   that every line of the file fits 120 characters (R5)
-- [ ] Log in `record.md` what was built, the runs of the suite below and their results
+- [x] Log in `record.md` what was built, the runs of the suite below and their results
 
 ## Verification
 
-- [ ] `node --test tests/sandbox-variant.test.mjs` passes on the Linux host with Docker, all eight tests run
-- [ ] The three regression tests carry no `{ skip }` and call no `docker` but their fake, so that a host without
+- [x] `node --test tests/sandbox-variant.test.mjs` passes on the Linux host with Docker, all eight tests run
+- [x] The three regression tests carry no `{ skip }` and call no `docker` but their fake, so that a host without
   Docker, as the sandbox, runs them: read in the diff, and run alone with `node --test --test-name-pattern
   '^waitForRun' tests/sandbox-variant.test.mjs`
-- [ ] `npm test` passes on the Linux host with Docker
-- [ ] `npm run check-changes` passes once the work is committed
+- [x] `npm test` passes on the Linux host with Docker
+- [x] `npm run check-changes` passes once the work is committed
 
 ## Commit Points
 
-- [ ] `bugfix-0084 Plan waiting for Docker to list a variant test's container`: `plan.md` and the record's entry
-- [ ] `bugfix-0084 Wait for Docker to list a variant test's container`: `tests/sandbox-variant.test.mjs`, with the
+- [x] `bugfix-0084 Plan waiting for Docker to list a variant test's container`: `plan.md` and the record's entry
+- [x] `bugfix-0084 Wait for Docker to list a variant test's container`: `tests/sandbox-variant.test.mjs`, with the
   regression tests and the wait together, since the tests do not pass before the wait exists
-- [ ] `bugfix-0084 Record the implementation`: `record.md`
+- [x] `bugfix-0084 Record the implementation`: `record.md`
