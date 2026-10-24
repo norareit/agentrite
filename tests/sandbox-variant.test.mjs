@@ -1,9 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { containerProject, containerUnitBranch as unitBranch } from './wrapper-fixture.mjs';
+import { temporaryDirectory } from './temporary-directory.mjs';
+import { containerProject, containerUnitBranch as unitBranch, writeCommand } from './wrapper-fixture.mjs';
 
 const dockerLacking = spawnSync('docker', ['info'], { stdio: 'ignore' }).status !== 0;
 const skip = dockerLacking
@@ -14,6 +15,8 @@ const variantNames = ['opus', 'gpt-6-1'];
 // Named after the process, because Docker's container names are shared by every suite that runs on the host.
 const project = `project-sandbox-${process.pid}`;
 const containerOf = (branch) => `${project}-${branch}`;
+// The labels of the file are `unit` and the names of the variants.
+const branchOf = (label) => (label === 'unit' ? unitBranch : `${unitBranch}--${label}`);
 
 // What a run does in its container: commits a file named after the run in /work, says so by creating a file in the
 // directory mounted from the test, and waits until the test creates the run's release file there.
@@ -29,9 +32,41 @@ async function sleep(milliseconds) {
     await new Promise((resolve) => setTimeout(resolve, milliseconds));
 }
 
+// The names of the containers that `docker ps` lists as running, by the command `docker`.
+function runningContainers(docker) {
+    const listing = spawnSync(docker, ['ps', '--format', '{{.Names}}'], { encoding: 'utf-8' });
+    return listing.stdout.split('\n').filter(Boolean);
+}
+
+// Waits until the run `label` has touched its ready file in `gate` and `docker ps` lists its `container`. The ready
+// file comes first, and `docker ps` leaves out a container for a moment after its process has started, so a test
+// that read Docker as soon as the file was there would sometimes find the container missing. Docker is asked only
+// once the file is there.
+async function waitForRun({ label, gate, container, docker = 'docker', timeout = 60000 }) {
+    const bound = timeout === 60000 ? 'a minute' : `${timeout} milliseconds`;
+    const ready = join(gate, `ready-${label}`);
+    const deadline = Date.now() + timeout;
+    let listed = [];
+    while (true) {
+        if (existsSync(ready)) {
+            listed = runningContainers(docker);
+            if (listed.includes(container)) return;
+        }
+        if (Date.now() >= deadline) break;
+        await sleep(100);
+    }
+    assert.fail(
+        existsSync(ready)
+            ? `the run ${label} touched its ready file, but docker ps did not list its container ${container} ` +
+                  `within ${bound}. It listed: ${listed.join(', ') || 'none'}`
+            : `the run ${label} did not touch ${ready} within ${bound}`,
+    );
+}
+
 // The project of `containerProject`, with a directory `gate` mounted in every run. `start` runs the wrapper for a
 // run named `label` in the background, with `args` before the command, and returns what it ends with; `wait` waits
-// for the run to be in its container, and `release` lets it end. Every container is removed when the test ends.
+// for the run to be in its container and for Docker to list the container, and `release` lets it end. Every
+// container is removed when the test ends.
 function setUp(testContext) {
     const { base, root, git, state, clone, wrapper, environment } = containerProject(
         testContext,
@@ -52,15 +87,9 @@ function setUp(testContext) {
         running.push(child);
         return ended;
     };
-    const wait = async (label) => {
-        for (let waited = 0; !existsSync(join(gate, `ready-${label}`)); waited += 100) {
-            assert.ok(waited < 60000, `the run ${label} was not in its container within a minute`);
-            await sleep(100);
-        }
-    };
+    const wait = (label) => waitForRun({ label, gate, container: containerOf(branchOf(label)) });
     const release = (label) => writeFileSync(join(gate, `release-${label}`), '');
-    const runningNames = () =>
-        spawnSync('docker', ['ps', '--format', '{{.Names}}'], { encoding: 'utf-8' }).stdout.split('\n').filter(Boolean);
+    const runningNames = () => runningContainers('docker');
     // What a branch holds that the unit's branch did at the start does not.
     const startCommit = git('rev-parse', unitBranch);
     const added = (branch) => git('diff', '--name-only', startCommit, branch).split('\n').filter(Boolean);
@@ -208,4 +237,58 @@ test("--connect with --variant runs its command in the variant's container alone
     host.release('unit');
     await variant;
     await unitRun;
+});
+
+// A `docker` that answers `ps` with `other-container` alone on its first `leftOut` calls, and with `run-container` as
+// well from then on, or never when `leftOut` is huge. It counts its calls in `calls`, beside it.
+function fakeDocker(testContext, leftOut) {
+    const directory = temporaryDirectory(testContext, 'wait-for-run-');
+    const calls = join(directory, 'calls');
+    writeCommand(
+        directory,
+        'docker',
+        `count=$(cat "${calls}" 2>/dev/null || echo 0)
+count=$((count + 1))
+echo "$count" > "${calls}"
+echo other-container
+[ "$count" -gt ${leftOut} ] && echo run-container
+exit 0`,
+    );
+    return { docker: join(directory, 'docker'), callCount: () => Number(readFileSync(calls, 'utf-8')) };
+}
+
+test('waitForRun goes on while docker ps leaves the container out, and ends once it lists it', async (testContext) => {
+    const { docker, callCount } = fakeDocker(testContext, 3);
+    const gate = temporaryDirectory(testContext, 'wait-for-run-gate-');
+    writeFileSync(join(gate, 'ready-opus'), '');
+
+    await waitForRun({ label: 'opus', gate, container: 'run-container', docker });
+
+    assert.equal(callCount(), 4);
+});
+
+test('waitForRun fails naming the container and the ones listed when docker ps never lists it', async (testContext) => {
+    const { docker } = fakeDocker(testContext, 1000000);
+    const gate = temporaryDirectory(testContext, 'wait-for-run-gate-');
+    writeFileSync(join(gate, 'ready-opus'), '');
+
+    await assert.rejects(
+        waitForRun({ label: 'opus', gate, container: 'run-container', docker, timeout: 300 }),
+        (error) =>
+            error.message.includes('the run opus touched its ready file') &&
+            error.message.includes('docker ps did not list its container run-container within 300 milliseconds') &&
+            error.message.includes('It listed: other-container'),
+    );
+});
+
+test('waitForRun fails naming the ready file when it is missing, and does not ask docker', async (testContext) => {
+    const { docker } = fakeDocker(testContext, 0);
+    const gate = temporaryDirectory(testContext, 'wait-for-run-gate-');
+
+    await assert.rejects(
+        waitForRun({ label: 'opus', gate, container: 'run-container', docker, timeout: 300 }),
+        (error) =>
+            error.message.includes(`the run opus did not touch ${join(gate, 'ready-opus')} within 300 milliseconds`),
+    );
+    assert.equal(existsSync(join(docker, '..', 'calls')), false, 'docker was never called');
 });
