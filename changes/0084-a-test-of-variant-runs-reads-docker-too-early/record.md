@@ -19,5 +19,9 @@ timestamp: 2026-10-23T23:50:06Z
   started one at a time, at the moment their process had touched a file, and `docker inspect` said `running` for
   each. Wrote `spec.md`. The status is `draft`
 - 2026-10-24T23:42:58Z [human] approved the spec. The status is `approved`
+- 2026-10-24T23:46:09Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a run of the orchestrator on the Linux host,
+  cut `bugfix-0084-a-test-of-variant-runs-reads-docker-too-early` from `master` at `4c43c10`. Judged that the fix
+  needs a plan: regression tests, a wait moved out of `setUp`, and the five tests of the file waiting through it.
+  Wrote `plan.md` against `tests/sandbox-variant.test.mjs` as it is on the branch. The status stays `approved`
 
 ## Amendments
