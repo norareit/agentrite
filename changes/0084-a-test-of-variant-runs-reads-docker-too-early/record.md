@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-23T23:50:06Z
 ---
 
@@ -18,5 +18,6 @@ timestamp: 2026-10-23T23:50:06Z
   repository, as the spec gives it: `docker ps` left out 23 of 36 containers started twelve at a time, and 6 of 10
   started one at a time, at the moment their process had touched a file, and `docker inspect` said `running` for
   each. Wrote `spec.md`. The status is `draft`
+- 2026-10-24T23:42:58Z [human] approved the spec. The status is `approved`
 
 ## Amendments
