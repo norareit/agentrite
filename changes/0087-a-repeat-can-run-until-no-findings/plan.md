@@ -139,11 +139,11 @@ earlier step, beside `afterwards`.
 
 ## Verification
 
-- [ ] `npm test` passes in full
-- [ ] `node -e "JSON.parse(require('fs').readFileSync('orchestrator.json'))"` succeeds, and the JSON in "The
+- [x] `npm test` passes in full
+- [x] `node -e "JSON.parse(require('fs').readFileSync('orchestrator.json'))"` succeeds, and the JSON in "The
   definition" of `README.md` is the same text as `orchestrator.json`
-- [ ] Every line the unit touches in `README.md`, `scripts/` and `tests/` is at most 120 characters
-- [ ] `npm run check-changes` passes on the committed branch
+- [x] Every line the unit touches in `README.md`, `scripts/` and `tests/` is at most 120 characters
+- [x] `npm run check-changes` passes on the committed branch
 
 ## Commit Points
 

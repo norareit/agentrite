@@ -50,3 +50,11 @@ timestamp: 2026-10-25T00:11:13Z
   default as it ships and whose README test compares the JSON of "The definition" with it, so it failed too. Added a
   task for it to `plan.md` before doing it, and moved the change of `"until"` in the README's JSON into this commit,
   so that its suites pass. The three files reported 153 passed, 0 failed
+- 2026-10-25T11:19:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the two values of `until`
+  into "The definition" of `README.md`, with the prose before the default's JSON, and the non-blocking findings still
+  open into "How a run ends", as commit `a5b6abc`. On `a5b6abc`: `npm test` reported 1251 tests, 1251 passed, 0
+  failed, 0 skipped; `orchestrator.json` parses as JSON, and the README holds it, as a block marked `json`, text for
+  text; no line of `README.md`, `scripts/`, `tests/` or the unit's documents is over 120 characters, and
+  `git diff --check` reported nothing; `npm run check-changes` exited 0. The commit of this entry changes only
+  `plan.md` and `record.md`. Every task of `plan.md` is ticked. The unit is handed over for review, and the status
+  stays `in-progress`
