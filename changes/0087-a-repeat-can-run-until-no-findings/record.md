@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-25T00:11:13Z
 ---
 
@@ -19,3 +19,4 @@ timestamp: 2026-10-25T00:11:13Z
   step whose outcome holds the open findings, and as listing them however the run ends after the repeat, since items
   may follow the repeat and the end report otherwise takes only the last step's outcome. Added requirement 11, a
   test of the command, since the standards ask for end-to-end coverage of a feature that can be tested end to end
+- 2026-10-25T11:05:22Z [human] approved the spec. The status is `approved`
