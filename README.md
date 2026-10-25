@@ -848,7 +848,8 @@ What a run does is in its definition, a JSON file that `orchestrator` in `agentr
 `node_modules/agentrite/orchestrator.json`, has the planner write the plan in Claude Code on Opus, and then runs at most
 three rounds of the implementer in Claude Code on Sonnet followed by a review in OpenCode on GPT Sol. The implementer
 of the first round builds the unit, and that of a later round applies the findings of the review before it. A review
-with no blocking finding ends the repeat, and a third review with one stops the run:
+with no findings ends the repeat. A third review with a blocking finding stops the run, and a third review with only
+non-blocking findings lets the run end, with those findings listed in the end report:
 
 ```json
 {
@@ -885,10 +886,15 @@ with no blocking finding ends the repeat, and a third review with one stops the 
 * A repeat is an object with one key, `repeat`, an object that holds `times`, a whole number of one or more, and
   `steps`, a list of one or more steps, and may hold `until`. It runs its steps in order, round after round. A repeat
   holds no repeat
-* `until`, whose only value is `"no-blocking-findings"`, ends the repeat when the outcome of the last step of a round
-  has no blocking finding, and the run goes on with the item after the repeat. When it still has one after the last
-  round, the repeat ran out, and the run stops. A repeat without `until` runs all its rounds, and never stops the run
-  by itself
+* `until` says when the repeat ends, and holds `"no-blocking-findings"` or `"no-findings"`. When it holds for the
+  outcome of the last step of a round, the repeat ends, and the run goes on with the item after the repeat. A repeat
+  without `until` runs all its rounds, and never stops the run by itself
+* `"no-blocking-findings"` holds when that outcome has no blocking finding. When it still has one after the last
+  round, the repeat ran out, and the run stops
+* `"no-findings"` holds when that outcome has no finding, blocking or not, so that the rounds are used to fix the
+  non-blocking findings too. When it still has a blocking finding after the last round, the repeat ran out, and the
+  run stops. When it has findings after the last round and none of them is blocking, the run goes on with the item
+  after the repeat, and the end report lists those findings, as "How a run ends" gives
 * `stopWhen`, whose only value is `"blocking-findings"`, stops the run after the step when a finding of its outcome
   is blocking. Any step may hold it, in a repeat or not
 * `timeoutMinutes` is the step's time limit in minutes, a number greater than 0 and at most 1440, the minutes of a
@@ -1042,7 +1048,8 @@ The run stops, and runs nothing after the step, when:
 * the outcome is `done` and `questions` is not empty, since the step cannot go on without the human's answers
 * `declines` is not empty, since only the human decides a proposed decline
 * the step holds `stopWhen`, and a finding of its outcome is blocking
-* a repeat with `until` ran out
+* a repeat with `until` ran out. A repeat with `"no-findings"` whose last round leaves only non-blocking findings did
+  not run out, and stops no run
 
 `afterwards` stops no run. A run that ran every item to its end exits 0 also when a step left items in it.
 
@@ -1050,11 +1057,15 @@ When the run ends, the command prints last: a list of every step that ran, with 
 how long it took; how the run ended, and for a stop which step stopped it and why, with what is wrong with an outcome
 not of the form; then from the outcome of the step that ran last, when it is of the form, its summary, the blocking
 findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
-then the items of `afterwards` of every step that gave an outcome of the form; and last the run's directory, and that
+then, for each repeat with `"no-findings"` that let the run go on with only non-blocking findings after its last
+round, in the order they ran and whatever ended the run, the line `Non-blocking findings still open after step
+<number>:`, with the number of the step whose outcome holds them, followed by each of them with its id and its
+summary, in the form of the blocking findings still open; then the items of `afterwards` of every step that gave an
+outcome of the form; and last the run's directory, and that
 the reviewer's findings are under `.reviews/<unit-directory>/`. For a last step without an outcome of the form, it
 gives the path of its final response in the run's directory instead, or says that the harness gave none. For a step
 that ran past its time limit, it gives the limit, and the path of its final response or that the harness gave none.
-Nothing else is taken from an earlier step.
+Nothing is taken from an earlier step but the non-blocking findings still open and the items of `afterwards`.
 
 ```
 0  planner      claude    claude-opus-5-5     12m 04s

@@ -124,14 +124,14 @@ earlier step, beside `afterwards`.
   `README.md holds the default definition of the orchestrator in a block marked json` compares the README's JSON with
   it, so change `"until"` of the JSON in "The definition" of `README.md` in the same commit, which keeps the suites of
   that commit green. Run the file to green (R7, R8)
-- [ ] In "The definition" of `README.md`, describe `until` with its two values: `"no-blocking-findings"` as today, and
+- [x] In "The definition" of `README.md`, describe `until` with its two values: `"no-blocking-findings"` as today, and
   `"no-findings"`, which ends the repeat when the outcome of the last step of a round holds no finding, stops the run
   when that outcome still holds a blocking finding after the last round, and otherwise lets the run go on with its
   findings listed in the end report. Rewrite the prose before the default's JSON to say that a review with no
   findings ends the repeat, that a third review with a blocking finding stops the run, and that a third review with
   only non-blocking findings lets the run end with those findings listed. Replace the JSON with `orchestrator.json`
   as it ships (R8)
-- [ ] In "How a run ends" of `README.md`, change the item `a repeat with until ran out` to say that a repeat with
+- [x] In "How a run ends" of `README.md`, change the item `a repeat with until ran out` to say that a repeat with
   `"no-findings"` whose last round leaves only non-blocking findings stops no run. In the paragraph of what the
   command prints last, add after the lines of the step that ran last the line `Non-blocking findings still open after
   step <number>:` and its findings, for each repeat that ended so, in the order they ran and whatever ended the run,
@@ -152,4 +152,4 @@ earlier step, beside `afterwards`.
 - [x] `feature-0087 End a repeat at no findings and list what it left open`: the tasks of the repeat, the end report
   and the test of the command
 - [x] `feature-0087 Run the default's repeat until no findings`: the two tasks of the default
-- [ ] `feature-0087 Describe until no-findings in the README`: the two tasks of `README.md`
+- [x] `feature-0087 Describe until no-findings in the README`: the two tasks of `README.md`
