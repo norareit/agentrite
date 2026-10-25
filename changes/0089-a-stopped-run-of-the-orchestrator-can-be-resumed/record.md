@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-25T14:12:42Z
 ---
 
@@ -22,3 +22,4 @@ timestamp: 2026-10-25T14:12:42Z
   again is resumed at the step that was asked, and that a rerun is asked again as any step is. Replaced the numbering of
   requirement 6, by the definition, with numbers that go on from the stopped run. Adjusted requirement 11 and the first
   decision to match, and added the decisions on the numbers and that 0089 is built after 0088. The status stays `draft`
+- 2026-10-25T16:05:05Z [human] approved the spec. The status is `approved`
