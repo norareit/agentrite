@@ -74,7 +74,7 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
 
 ## Tasks
 
-- [ ] Write the regression test of the command in `tests/agentrite-orchestrate.test.mjs`, beside the test of each
+- [x] Write the regression test of the command in `tests/agentrite-orchestrate.test.mjs`, beside the test of each
   stop: the default definition, the planner done, the implementer of round 1 printing
   `claudePrinted('I did the work, and give no block.', <session>)`, the ask again printing a done outcome, and a
   review with no finding. The run exits 0 with five calls; the fourth is `claude` with `--resume` and the session of
@@ -82,14 +82,14 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
   request for round 1 of 3, without the implementer's prompt of the definition. The run's directory holds
   `01-implementer.response.md` with the first response and `02-implementer.outcome.json`, and the reviewer is step 3.
   Run `npm test` and see it fail (R1, R3, R4, R7)
-- [ ] In the same file, take the case `claudePrinted('I did the work, and give no block.')` out of the test `each stop
+- [x] In the same file, take the case `claudePrinted('I did the work, and give no block.')` out of the test `each stop
   of a step exits 3, starts nothing after the step and says what the human needs`, and add a test of the command in
   which the ask again also gives no block: the run exits 3 after three calls with `Step 2 stopped the run: its final
   response holds no block marked json.` and `The final response of step 2 is at <run>/02-implementer.response.md.`,
   and `01-implementer.response.md` is there too (R2, R3, R7)
-- [ ] Add a test of the command in which the reviewer, on OpenCode, prints `opencodePrinted('No block.')`: the next
+- [x] Add a test of the command in which the reviewer, on OpenCode, prints `opencodePrinted('No block.')`: the next
   call is `opencode` with `--session ses_test` last among its options and the ask again's prompt (R5, R7)
-- [ ] Add unit tests of `orchestrate` through `runWith`, whose results then name a session, as `session: 'abc'`
+- [x] Add unit tests of `orchestrate` through `runWith`, whose results then name a session, as `session: 'abc'`
   (R1, R2, R3, R7):
     * a step with no final response, or with a response without a block, is followed by a step planned with
       `asked: true`, the same step, item, round and index, and the next number, and the step asked has `stop`
@@ -100,21 +100,21 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
     * a step with `stopWhen` whose ask again gives a blocking finding stops by `stopWhen`
     * a step whose harness exits 1, one that ran past its time limit, one that gave several blocks, and one without a
       session, as `runWith` gives by default, are not asked again
-- [ ] Add unit tests of `stepLine` for an ask again, started and ended; of `ranTable` with an ask again among rows
+- [x] Add unit tests of `stepLine` for an ask again, started and ended; of `ranTable` with an ask again among rows
   without one, whose rows end with no space; and of `stepFileName` for a definition of one step repeated 51 times,
   whose numbers take three digits (R4, R7)
-- [ ] Change the expected text of the request in `tests/agentrite-outcome.test.mjs`: a constant `REQUEST_LAST` with
+- [x] Change the expected text of the request in `tests/agentrite-outcome.test.mjs`: a constant `REQUEST_LAST` with
   the paragraph of the approach, which `request(round)` places between `REQUEST_LISTS` and `REQUEST_RECORD`, each
   after an empty line. Add a test that `askAgainRequest(round)` is the ask again's paragraph, an empty line and
   `outcomeRequest(round)`, in a repeat and outside one. Run `npm test` and see these fail (R6, R7)
-- [ ] Add `askAgainRequest` and the paragraph of `outcomeRequest` to `scripts/agentrite-outcome.mjs`, wrapped within
+- [x] Add `askAgainRequest` and the paragraph of `outcomeRequest` to `scripts/agentrite-outcome.mjs`, wrapped within
   120 characters, which the test of the source's line limit checks (R1, R6)
-- [ ] Add `asked` to `Planned` and the ask again to `orchestrate` in `scripts/agentrite-orchestrate.mjs`, and extend
+- [x] Add `asked` to `Planned` and the ask again to `orchestrate` in `scripts/agentrite-orchestrate.mjs`, and extend
   the doc comment of `orchestrate` with it (R1, R2, R3, R5)
-- [ ] Give an ask again its prompt in `runStep` of `scripts/agentrite.mjs` (R1)
-- [ ] Mark the ask again in `stepLine` and `ranTable`, and count two steps for each in `numberWidth`, with their doc
+- [x] Give an ask again its prompt in `runStep` of `scripts/agentrite.mjs` (R1)
+- [x] Mark the ask again in `stepLine` and `ranTable`, and count two steps for each in `numberWidth`, with their doc
   comments (R4)
-- [ ] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
+- [x] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
   `CONTRIBUTING.md` gives
 - [ ] Write the sections of `README.md` the approach names, wrapped within 120 characters (R8)
 
@@ -127,8 +127,8 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
 
 ## Commit Points
 
-- [ ] After the request holds its new paragraph and `askAgainRequest`, with their tests: the sixth and seventh tasks,
+- [x] After the request holds its new paragraph and `askAgainRequest`, with their tests: the sixth and seventh tasks,
   `scripts/agentrite-outcome.mjs` and `tests/agentrite-outcome.test.mjs` alone
-- [ ] After the ask again runs, shows and has its tests, with `npm test` passing: the remaining tasks up to the run of
+- [x] After the ask again runs, shows and has its tests, with `npm test` passing: the remaining tasks up to the run of
   the suite
 - [ ] After `README.md`

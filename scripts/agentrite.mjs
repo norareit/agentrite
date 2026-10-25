@@ -66,7 +66,7 @@ import {
   stepLine,
   variantOf,
 } from './agentrite-orchestrate.mjs';
-import { outcomeRequest } from './agentrite-outcome.mjs';
+import { askAgainRequest, outcomeRequest } from './agentrite-outcome.mjs';
 import {
   isRunDirectory,
   parseRunsArgs,
@@ -1692,7 +1692,8 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
 }
 
 /**
- * Runs one step as `agentrite run` of this file, headless, in a process group of its own, and gives how its harness
+ * Runs one step as `agentrite run` of this file, headless, in a process group of its own, with the step's prompt and
+ * the request of its outcome, or for an ask again the request of an ask again alone, and gives how its harness
  * ended, its final response, its session and whether it ran past its time limit. The harness's standard error
  * reaches the terminal, and its standard output is read. `grouped` is given the group when the step starts, and
  * `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line it prints, as
@@ -1706,11 +1707,13 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
  * @param {(items: import('./agentrite-headless.mjs').Followed[]) => void} follow
  * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
-async function runStep(root, directory, skipPermissions, { step, round, session }, grouped, follow) {
+async function runStep(root, directory, skipPermissions, { step, round, session, asked }, grouped, follow) {
   const headless = HEADLESS[step.harness];
   const start = headless.arguments(session);
   const request = outcomeRequest(round);
-  const prompt = step.prompt === undefined ? request : `${step.prompt}\n\n${request}`;
+  const given = step.prompt === undefined ? request : `${step.prompt}\n\n${request}`;
+  // An ask again continues the session of a step that was given its prompt already, and asks for its outcome alone.
+  const prompt = asked ? askAgainRequest(round) : given;
   const args = [
     fileURLToPath(import.meta.url),
     'run',

@@ -46,7 +46,7 @@ import {
 } from '../scripts/agentrite-orchestrate.mjs';
 import { followedFile, heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
-import { readOutcome } from '../scripts/agentrite-outcome.mjs';
+import { askAgainRequest, readOutcome } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -343,6 +343,83 @@ test('each case of requirement 18 stops at the step it holds for and runs nothin
   }
 });
 
+// Unit 0088, R1 to R3: the ask again.
+
+test('a step without a final response, or without a block, is asked again as itself, numbered next', async () => {
+  for (const response of [undefined, 'No block here.']) {
+    const run = await runWith(DEFAULT, [done(), { response, session: 'abc' }, done(), done()]);
+    assert.deepEqual(
+      run.planned.map(({ number, step, item, round, index, asked }) => [number, step.role, item, round, index, asked]),
+      [
+        [0, 'planner', 0, undefined, undefined, false],
+        [1, 'implementer', 1, { at: 1, of: 3 }, 0, false],
+        [2, 'implementer', 1, { at: 1, of: 3 }, 0, true],
+        [3, 'reviewer', 1, { at: 1, of: 3 }, 1, false],
+      ],
+    );
+    assert.equal(run.planned[2].step, run.planned[1].step);
+    assert.equal(run.planned[2].session, 'abc');
+    assert.equal(run.ran[1].reading.kind, 'none');
+    assert.equal(run.ran[1].stop, undefined);
+    assert.deepEqual(run.end, { kind: 'complete' });
+    assert.equal(run.left, 0);
+  }
+});
+
+test('an ask again without an outcome stops the run by none at the ask again, and is not asked again', async () => {
+  const run = await runWith(DEFAULT, [done(), { response: 'No block.', session: 'abc' }, { response: 'None.' }]);
+  assert.equal(run.planned.length, 3);
+  assert.equal(run.end.kind, 'stopped');
+  assert.equal(run.end.by, 'none');
+  assert.equal(run.end.ran.planned.number, 2);
+  assert.equal(run.end.ran.planned.asked, true);
+});
+
+test('the ask again of the last step of a round stands for it under until', async () => {
+  const noBlock = { response: 'No block.', session: 'r' };
+  const again = await runWith(DEFAULT, [done(), done(), noBlock, blocked(), done(), done()]);
+  assert.deepEqual(summary(again.planned), [
+    [0, 'planner', '-'],
+    [1, 'implementer', '1/3'],
+    [2, 'reviewer', '1/3'],
+    [3, 'reviewer', '1/3'],
+    [4, 'implementer', '2/3'],
+    [5, 'reviewer', '2/3'],
+  ]);
+  assert.deepEqual(again.end, { kind: 'complete' });
+
+  const ends = await runWith(DEFAULT, [done(), done(), noBlock, done()]);
+  assert.equal(ends.planned.length, 4);
+  assert.deepEqual(ends.end, { kind: 'complete' });
+});
+
+test('the ask again of a step with stopWhen that gives a blocking finding stops by stopWhen', async () => {
+  const definition = {
+    steps: [
+      { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' },
+      { role: 'planner', harness: 'claude', model: 'm' },
+    ],
+  };
+  const run = await runWith(definition, [{ response: 'No block.', session: 's' }, blocked()]);
+  assert.equal(run.planned.length, 2);
+  assert.equal(run.end.by, 'stopWhen');
+  assert.equal(run.end.ran.planned.number, 1);
+});
+
+test('a failed harness, a time limit reached, several blocks and an unknown session are not asked again', async () => {
+  for (const [result, by] of [
+    [{ status: 1, response: 'No block.', session: 'abc' }, 'harness'],
+    [{ status: null, signal: 'SIGTERM', timedOut: true, response: 'No block.', session: 'abc' }, 'timeout'],
+    [{ response: `${responseOf(DONE)}\n${responseOf(DONE)}`, session: 'abc' }, 'several'],
+    [{ response: 'No block.' }, 'none'],
+  ]) {
+    const run = await runWith(DEFAULT, [done(), done(), result]);
+    assert.equal(run.planned.length, 3, by);
+    assert.equal(run.end.by, by, by);
+    assert.equal(run.end.ran.planned.number, 2, by);
+  }
+});
+
 test('of two cases that hold, the first of the order is named', () => {
   const step = { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' };
   const reading = (outcome) => readOutcome(responseOf(outcome));
@@ -434,7 +511,15 @@ test('started and ended are called once each per step, in order, ended with the 
 
 // R14
 
-const planner = { number: 0, item: 0, round: undefined, index: undefined, step: DEFAULT.steps[0], session: undefined };
+const planner = {
+  number: 0,
+  item: 0,
+  round: undefined,
+  index: undefined,
+  step: DEFAULT.steps[0],
+  session: undefined,
+  asked: false,
+};
 const reviewer = {
   number: 2,
   item: 1,
@@ -442,6 +527,7 @@ const reviewer = {
   index: 1,
   step: DEFAULT.steps[1].repeat.steps[1],
   session: undefined,
+  asked: false,
 };
 
 function ended(planned, result) {
@@ -461,6 +547,15 @@ test('the name of a step file has as many digits as the highest step number need
   const many = { steps: [{ repeat: { times: 101, steps: [DEFAULT.steps[0]] } }] };
   assert.equal(stepFileName(many, 0, 'implementer', 'followed.jsonl'), '000-implementer.followed.jsonl');
   assert.equal(stepFileName(many, 100, 'implementer', 'followed.jsonl'), '100-implementer.followed.jsonl');
+});
+
+// Unit 0088, R4: room for an ask again after every step.
+test('the name of a step file leaves room for an ask again after every step the definition can reach', () => {
+  const fifty = { steps: [{ repeat: { times: 50, steps: [DEFAULT.steps[0]] } }] };
+  assert.equal(stepFileName(fifty, 0, 'planner', 'outcome.json'), '00-planner.outcome.json');
+  const fiftyOne = { steps: [{ repeat: { times: 51, steps: [DEFAULT.steps[0]] } }] };
+  assert.equal(stepFileName(fiftyOne, 0, 'planner', 'outcome.json'), '000-planner.outcome.json');
+  assert.equal(stepFileName(fiftyOne, 101, 'planner', 'outcome.json'), '101-planner.outcome.json');
 });
 
 test('the variant of a run is what follows the last -- of its branch, and none without one', () => {
@@ -515,6 +610,16 @@ test('the line after a step adds its outcome and how long it took, the harness c
   assert.equal(stepLine(planner, ended(planner, done())), line);
 });
 
+// Unit 0088, R4
+test('the lines of an ask again say that it asked again for the outcome, and its head does not', () => {
+  const asked = { ...reviewer, number: 3, asked: true };
+  const head = 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, asked again for its outcome';
+  assert.equal(stepLine(asked), `${head}: started`);
+  assert.equal(stepLine(asked, ended(asked, done())), `${head}: done after 0m 08s`);
+  assert.equal(stepLine(asked, ended(asked, { response: 'No.' })), `${head}: no outcome after 0m 08s`);
+  assert.equal(stepHead(asked), 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol');
+});
+
 test('duration rounds to whole seconds, and gives hours from an hour on', () => {
   assert.equal(duration(0), '0m 00s');
   assert.equal(duration(999), '0m 01s');
@@ -546,6 +651,23 @@ test('the table of the steps that ran is the spec example, line for line', () =>
       '2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s',
       '3  implementer  claude    claude-sonnet-5-5   15m 50s',
       '4  reviewer     opencode  openai/gpt-6.1-sol   6m 03s',
+    ].join('\n'),
+  );
+});
+
+// Unit 0088, R4
+test('the table marks an ask again in a last column, and its other rows end with no space', () => {
+  const ran = SPEC_STEPS.slice(0, 3).map(([step, milliseconds], number) => {
+    const asked = number === 2;
+    const planned = { number, item: 0, round: undefined, index: undefined, step, session: undefined, asked };
+    return ended(planned, { ...done(), milliseconds });
+  });
+  assert.equal(
+    ranTable(ran),
+    [
+      '0  planner      claude    claude-opus-5-5     12m 04s',
+      '1  implementer  claude    claude-sonnet-5-5   41m 37s',
+      '2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s  asked again',
     ].join('\n'),
   );
 });
@@ -1715,6 +1837,103 @@ test('stopWhen stops a run outside a repeat, and inside it on the review, exitin
   }
 });
 
+// Unit 0088, R1 to R5, R7: a step whose final response holds no block marked json is asked again for its outcome.
+
+const ASK_AGAIN_LINE = 'Your last response held no block marked json';
+const NO_BLOCK = 'I did the work, and give no block.';
+
+test('a step without a block is asked again in its session, and the run goes on by the answer', (testContext) => {
+  const { base, agentrite, answer, calls, read } = project(testContext);
+  answer(1, claudePrinted(responseOf({ ...DONE, summary: 'Planned.' })));
+  answer(2, claudePrinted(NO_BLOCK, 'implementer-session'));
+  answer(3, claudePrinted(responseOf({ ...DONE, summary: 'Built.' })));
+  answer(4, opencodePrinted(responseOf({ ...DONE, summary: 'Reviewed.' })));
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  const made = calls();
+  assert.equal(made.length, 4);
+  const asked = made[2];
+  assert.equal(asked.harness, 'claude');
+  assert.deepEqual(asked.options.slice(-2), ['--resume', 'implementer-session']);
+  assert.equal(asked.prompt, `The unit is changes/${UNIT}/.\n\n${askAgainRequest({ at: 1, of: 3 })}`);
+  assert.ok(asked.prompt.includes(`\n\n${ASK_AGAIN_LINE}`));
+  assert.ok(!asked.prompt.includes(IMPLEMENTER_PROMPT));
+  assert.equal(made[3].harness, 'opencode');
+
+  const lines = stepLines(result.stdout);
+  assert.equal(lines.length, 8);
+  assert.match(lines[3], /^step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5: no outcome after /);
+  const head = 'step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for its outcome';
+  assert.equal(lines[4], `${head}: started`);
+  assert.match(lines[5], new RegExp(`^${head}: done after 0m 0\\ds$`));
+  assert.equal(lines[6], 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started');
+  const rows = result.stdout.split('\n').filter((line) => /^\d  /.test(line));
+  assert.equal(rows.length, 4);
+  assert.match(rows[2], /^2  implementer  claude {4}claude-sonnet-5-5 {3}0m 0\ds {2}asked again$/);
+  for (const row of [rows[0], rows[1], rows[3]]) assert.ok(!row.endsWith(' ') && !row.includes('asked'), row);
+
+  const run = runDirectoryOf(base);
+  assert.deepEqual(readdirSync(run.path).sort(), [
+    '00-planner.followed.jsonl',
+    '00-planner.outcome.json',
+    '01-implementer.followed.jsonl',
+    '01-implementer.response.md',
+    '02-implementer.followed.jsonl',
+    '02-implementer.outcome.json',
+    '03-reviewer.followed.jsonl',
+    '03-reviewer.outcome.json',
+    'definition.json',
+    'heartbeat',
+    'state.json',
+  ]);
+  assert.equal(read(`${run.name}/01-implementer.response.md`), NO_BLOCK);
+  assert.deepEqual(JSON.parse(read(`${run.name}/02-implementer.outcome.json`)), { ...DONE, summary: 'Built.' });
+  assert.deepEqual(JSON.parse(read(`${run.name}/state.json`)).at, {
+    number: 3,
+    item: 1,
+    round: { at: 1, of: 3 },
+    index: 1,
+  });
+});
+
+test('an ask again without a block stops the run, and both responses are kept', (testContext) => {
+  const { base, agentrite, answer, calls, read } = project(testContext);
+  answer(1, claudePrinted(responseOf(DONE)));
+  answer(2, claudePrinted(NO_BLOCK, 'implementer-session'));
+  answer(3, claudePrinted('I still give no block.'));
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.equal(calls().length, 3);
+  const run = runDirectoryOf(base);
+  const report = result.stdout.split('\n');
+  const at = report.indexOf('Step 2 stopped the run: its final response holds no block marked json.');
+  assert.notEqual(at, -1, result.stdout);
+  assert.equal(report[at + 1], `The final response of step 2 is at ${run.name}/02-implementer.response.md.`);
+  assert.equal(read(`${run.name}/01-implementer.response.md`), NO_BLOCK);
+  assert.equal(read(`${run.name}/02-implementer.response.md`), 'I still give no block.');
+});
+
+test('a step of OpenCode without a block is asked again in its session', (testContext) => {
+  const { agentrite, answer, calls } = project(testContext);
+  answer(1, claudePrinted(responseOf(DONE)));
+  answer(2, claudePrinted(responseOf(DONE)));
+  answer(3, opencodePrinted('No block.'));
+  answer(4, opencodePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  const made = calls();
+  assert.equal(made.length, 4);
+  assert.equal(made[3].harness, 'opencode');
+  assert.deepEqual(made[3].options.slice(-2), ['--session', 'ses_test']);
+  assert.equal(made[3].prompt, `The unit is changes/${UNIT}/.\n\n${askAgainRequest({ at: 1, of: 3 })}`);
+});
+
 test('each stop of a step exits 3, starts nothing after the step and says what the human needs', (testContext) => {
   for (const [printed, status, lines, file] of [
     [
@@ -1744,12 +1963,6 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
         '  S1: It holds.',
       ],
       'outcome.json',
-    ],
-    [
-      claudePrinted('I did the work, and give no block.'),
-      undefined,
-      ['Step 1 stopped the run: its final response holds no block marked json.', 'The final response of step 1 is at'],
-      'response.md',
     ],
     [
       claudePrinted(`${responseOf(DONE)}\n${responseOf(DONE)}`),

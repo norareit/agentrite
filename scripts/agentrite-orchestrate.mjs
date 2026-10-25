@@ -16,8 +16,10 @@ import { optionError } from './agentrite-run.mjs';
  *   index: number | undefined,
  *   step: Step,
  *   session: string | undefined,
+ *   asked: boolean,
  * }} Planned A step about to run: its number in the order the steps run, its item of the definition, its round and
- *   its place among the steps of a repeat, and the session it continues
+ *   its place among the steps of a repeat, the session it continues, and whether it is an ask again, which asks the
+ *   step before it, in its session, for the outcome its final response did not hold
  * @typedef {{
  *   status: number | null,
  *   signal: string | null,
@@ -84,8 +86,9 @@ export function judgeStep(step, { status, signal, timedOut }, reading) {
  * Runs the items of `definition` in order, one step at a time, and a repeat's steps round after round, until every
  * item has run or a step or a repeat stops the run. A step of a role and a harness that already ran continues the
  * session the last of them gave. The running of a step, and what is said before and after it, are the caller's.
- * `unfixed` holds, in the order the repeats ran, the last step of each repeat that let the run go on with findings
- * still open.
+ * A step judged `none` whose session is known, and that is not itself an ask again, is followed by an ask again of
+ * the same step in that session, whose `Ran` stands for the step's in how the run goes on and ends. `unfixed` holds,
+ * in the order the repeats ran, the last step of each repeat that let the run go on with findings still open.
  *
  * @param {Definition} definition
  * @param {Effects} effects
@@ -101,21 +104,34 @@ export async function orchestrate(definition, effects) {
    * @param {number} item
    * @param {{ at: number, of: number } | undefined} round
    * @param {number | undefined} index
+   * @param {boolean} [asked]
    * @returns {Promise<Ran>}
    */
-  const runStep = async (step, item, round, index) => {
+  const runStep = async (step, item, round, index, asked = false) => {
     const key = JSON.stringify([step.role, step.harness]);
-    /** @type {Planned} */ const planned = { number: ran.length, item, round, index, step, session: sessions.get(key) };
+    /** @type {Planned} */ const planned = {
+      number: ran.length,
+      item,
+      round,
+      index,
+      step,
+      session: sessions.get(key),
+      asked,
+    };
     effects.started(planned);
     const result = await effects.run(planned);
     if (result.session !== undefined) sessions.set(key, result.session);
     // A step the command ended did not finish, so what it printed is not its outcome, and is kept as its response.
     /** @type {Reading} */ const reading =
       result.response === undefined || result.timedOut ? { kind: 'none' } : readOutcome(result.response);
-    /** @type {Ran} */ const entry = { planned, result, reading, stop: judgeStep(step, result, reading) };
+    const stop = judgeStep(step, result, reading);
+    // `none` is judged only of a harness that exited 0 by itself, within its time limit, with no block marked json or
+    // no final response: a step that finished, whose outcome alone is missing.
+    const askAgain = stop === 'none' && !asked && sessions.has(key);
+    /** @type {Ran} */ const entry = { planned, result, reading, stop: askAgain ? undefined : stop };
     ran.push(entry);
     effects.ended(entry);
-    return entry;
+    return askAgain ? runStep(step, item, round, index, true) : entry;
   };
 
   for (const [item, entry] of definition.steps.entries()) {
@@ -277,8 +293,8 @@ export function stepHead({ number, round, step }) {
 }
 
 /**
- * How many digits the number of a step's files takes: those of the highest number the definition can reach, and two
- * at least, so that the names sort in the order the steps ran.
+ * How many digits the number of a step's files takes: those of the highest number the definition can reach, with an
+ * ask again after every step, and two at least, so that the names sort in the order the steps ran.
  *
  * @param {Definition} definition
  * @returns {number}
@@ -288,7 +304,7 @@ export function numberWidth(definition) {
     (total, item) => total + ('repeat' in item ? item.repeat.times * item.repeat.steps.length : 1),
     0,
   );
-  return Math.max(2, String(count - 1).length);
+  return Math.max(2, String(2 * count - 1).length);
 }
 
 /**
@@ -305,21 +321,22 @@ export function stepFileName(definition, number, role, kind) {
 }
 
 /**
- * The line before a step, and with `ended` the line after it.
+ * The line before a step, and with `ended` the line after it, each saying of an ask again that it is one.
  *
  * @param {Planned} planned
  * @param {Ran} [ended]
  * @returns {string}
  */
 export function stepLine(planned, ended) {
-  const head = stepHead(planned);
+  const head = `${stepHead(planned)}${planned.asked ? ', asked again for its outcome' : ''}`;
   if (ended === undefined) return `${head}: started`;
   return `${head}: ${stepResult(ended)} after ${duration(ended.result.milliseconds)}`;
 }
 
 /**
- * The list of every step that ran, one line each: its number, role, harness, model and how long it took, each column
- * as wide as its widest entry and two spaces apart, the duration aligned right.
+ * The list of every step that ran, one line each: its number, role, harness, model, how long it took and, for an ask
+ * again, `asked again`, each column as wide as its widest entry and two spaces apart, the duration aligned right, and
+ * no line ending in a space.
  *
  * @param {Ran[]} ran
  * @returns {string}
@@ -331,12 +348,13 @@ export function ranTable(ran) {
     planned.step.harness,
     planned.step.model,
     duration(result.milliseconds),
+    planned.asked ? 'asked again' : '',
   ]);
   const widths = rows[0].map((_cell, column) => Math.max(...rows.map((row) => row[column].length)));
-  const last = widths.length - 1;
+  const durationColumn = 4;
   const aligned = (/** @type {string} */ cell, /** @type {number} */ column) =>
-    column === last ? cell.padStart(widths[column]) : cell.padEnd(widths[column]);
-  return rows.map((row) => row.map(aligned).join('  ')).join('\n');
+    column === durationColumn ? cell.padStart(widths[column]) : cell.padEnd(widths[column]);
+  return rows.map((row) => row.map(aligned).join('  ').trimEnd()).join('\n');
 }
 
 /**

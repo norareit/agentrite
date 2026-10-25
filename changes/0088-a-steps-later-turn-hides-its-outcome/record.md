@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-10-25T14:10:17Z
 ---
 
@@ -34,3 +34,9 @@ timestamp: 2026-10-25T14:10:17Z
   again in `stepLine` and not in `stepHead`, so that `agentrite runs` does not change, and in a last column of the
   end report's list that a run without an ask again leaves empty. The status stays `approved`
 - 2026-10-25T14:46:48Z [human] approved the corrected spec. The status stays `approved`
+- 2026-10-25T15:38:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `bugfix-0088-a-steps-later-turn-hides-its-outcome` at `b33e1e5`, began the work by the plan. The status is
+  `in-progress`
+- 2026-10-25T15:44:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the first task's "five calls" and "the
+  fourth" as four calls and the third, the ask again: the plan's own steps, the planner, the implementer, its ask
+  again and the reviewer as step 3, make four, and no other reading fits
