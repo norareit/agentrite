@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-24T23:14:27Z
 ---
 
@@ -48,5 +48,6 @@ timestamp: 2026-10-24T23:14:27Z
   `.reviews/security-audit-<commit>.md`. R13 and R18 and the decision on the findings say so, and `AGENTS.md` is to
   except the files whose name begins with `security-` from what the implementer and the reviewer take. The status is
   `draft`
+- 2026-10-25T14:06:11Z [human] approved the spec. The status is `approved`
 
 ## Amendments
