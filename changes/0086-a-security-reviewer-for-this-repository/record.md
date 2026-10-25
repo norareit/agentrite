@@ -42,5 +42,11 @@ timestamp: 2026-10-24T23:14:27Z
   audit has no unit run and so not the host's `.reviews`, so the human moves its findings file out of the clone before
   removing it; this is the only reading that keeps both decisions. This settles the spec review's F1: the response is
   excepted in R16, and the session logs are accepted with `.reviews/security/` in a decision. The status is `draft`
+- 2026-10-25T14:01:08Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's correction that the
+  findings are kept in the unit's directory of `.reviews`, beside the other reviews, as the spec reviewer's are, and not
+  in a subdirectory: a unit review saves `.reviews/<unit-directory>/security-review-<commit>.md` and an audit
+  `.reviews/security-audit-<commit>.md`. R13 and R18 and the decision on the findings say so, and `AGENTS.md` is to
+  except the files whose name begins with `security-` from what the implementer and the reviewer take. The status is
+  `draft`
 
 ## Amendments
