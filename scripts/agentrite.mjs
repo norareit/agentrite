@@ -1788,7 +1788,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
     /** @type {number | undefined} */ let group;
     passSignalsOn(() => group);
     /** @type {string | undefined} */ let responsePath;
-    const { ran, end } = await orchestrate(definition, {
+    const { ran, end, unfixed } = await orchestrate(definition, {
       started(planned) {
         const { number, item, round, index } = planned;
         at = { number, item, round: round ?? null, index: index ?? null };
@@ -1839,7 +1839,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
     const status = exitStatus(end);
     stopHeartbeat();
     writeState({ status, line: endLine(end) });
-    process.stdout.write(`\n${endReport(ran, end, { runDirectory, unitDirectory: directory, responsePath })}`);
+    process.stdout.write(`\n${endReport(ran, end, unfixed, { runDirectory, unitDirectory: directory, responsePath })}`);
     return status;
   } finally {
     stopHeartbeat();

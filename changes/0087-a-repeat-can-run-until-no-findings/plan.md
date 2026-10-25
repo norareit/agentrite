@@ -77,7 +77,7 @@ earlier step, beside `afterwards`.
   message it expects reads `It must hold "no-blocking-findings" or "no-findings"`. Run the file and see the two fail
   (R1, R10)
 - [x] In `scripts/agentrite-definition.mjs`, take both values as the approach gives, and run the file to green (R1)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add a constant `UNTIL_NO_FINDINGS`, a definition of one repeat of 3
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add a constant `UNTIL_NO_FINDINGS`, a definition of one repeat of 3
   rounds with `until: 'no-findings'` and the single step of a reviewer, followed by a planner, as the test
   `a repeat with until that holds at once goes on with the item after it` builds it. Add unit tests through `runWith`
   (R3 to R5, R10):
@@ -90,10 +90,10 @@ earlier step, beside `afterwards`.
       planner not run, and `unfixed` empty
     * `no-findings`, `clean()` in all three rounds: the planner runs, the run is `complete`, exit status 0, and
       `unfixed` holds the `Ran` of step 2 alone
-- [ ] Add the same cases for `until: 'no-blocking-findings'`, with an outcome with no finding, one with `MINOR` alone
+- [x] Add the same cases for `until: 'no-blocking-findings'`, with an outcome with no finding, one with `MINOR` alone
   and one with a blocking finding, in a round before the last and in the last: the repeat ends at the first round
   whose review blocks nothing, a last round that blocks runs out as today, and `unfixed` is empty in each (R2, R10)
-- [ ] Add unit tests of the end report through `reportOf`, which passes `run.unfixed` to `endReport` (R6, R10):
+- [x] Add unit tests of the end report through `reportOf`, which passes `run.unfixed` to `endReport` (R6, R10):
     * the run of `UNTIL_NO_FINDINGS` with `clean()` in all three rounds and a planner that gives `done()`: after the
       planner's summary come `Non-blocking findings still open after step 2:` and `  C1: A name could be clearer`,
       then the lines of where
@@ -106,10 +106,10 @@ earlier step, beside `afterwards`.
     * the run of the default that ran out, as the test `the report of a repeat that ran out gives the open blocking
       findings and the rounds` has it, still gives `Blocking findings still open:` with the blocking findings alone,
       and no line of non-blocking findings (R4)
-- [ ] Run the file and see the new tests fail, then make `runRepeat`, `orchestrate`, `findingLine`, `unfixedLines`,
+- [x] Run the file and see the new tests fail, then make `runRepeat`, `orchestrate`, `findingLine`, `unfixedLines`,
   `lastStepLines` and `endReport` as the approach gives, and pass `unfixed` from `orchestrate` to `endReport` in
   `scripts/agentrite.mjs`. Run the file to green (R2 to R6)
-- [ ] Add a test of the command beside `a run whose repeat ends at its first round goes on with the item after the
+- [x] Add a test of the command beside `a run whose repeat ends at its first round goes on with the item after the
   repeat`: a definition in `definitions/until.json` of one repeat of 2 rounds with `until: 'no-findings'` and the
   single step of a reviewer in OpenCode, answered with an outcome holding `MINOR` in both rounds. The command exits 0,
   makes two calls, and its standard output holds `\nNon-blocking findings still open after step 1:\n  C1: A name could
@@ -143,7 +143,7 @@ earlier step, beside `afterwards`.
 
 - [x] `feature-0087 Plan a repeat that runs until no findings`: `plan.md` and the log entry in `record.md`
 - [x] `feature-0087 Take no-findings as the until of a repeat`: the first two tasks
-- [ ] `feature-0087 End a repeat at no findings and list what it left open`: the tasks of the repeat, the end report
+- [x] `feature-0087 End a repeat at no findings and list what it left open`: the tasks of the repeat, the end report
   and the test of the command
 - [ ] `feature-0087 Run the default's repeat until no findings`: the task of the default
 - [ ] `feature-0087 Describe until no-findings in the README`: the two tasks of `README.md`

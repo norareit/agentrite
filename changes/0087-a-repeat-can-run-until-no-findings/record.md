@@ -32,3 +32,14 @@ timestamp: 2026-10-25T00:11:13Z
 - 2026-10-25T11:10:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the two tests of the first
   task and saw them fail with `node --test tests/agentrite-definition.test.mjs`, 19 passed and 2 failed, then took
   both values of `until` in `scripts/agentrite-definition.mjs`, after which the file reported 21 passed, 0 failed
+- 2026-10-25T11:14:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the unit tests of the
+  repeat for both values of `until` and of the end report, through `untilRepeat`, which builds `UNTIL_NO_FINDINGS` and
+  `UNTIL_NO_BLOCKING`, and `reportOf` passing `run.unfixed`. With `node --test` on the test file and only the tests
+  of `until` and of the report selected, 20 failed and 6 passed: the new tests, and the earlier tests of the report,
+  which failed on the new parameter of `endReport`. The run-out case of the report is tested on `UNTIL_NO_FINDINGS`
+  rather than on the default, so that it does not depend on the default's `until`. Then made `runRepeat`, with
+  `untilHolds`, `orchestrate`, `findingLine`, `unfixedLines`, `lastStepLines` and `endReport` as the plan gives, and
+  passed `unfixed` in `scripts/agentrite.mjs`. The test of the command was written after the code, as the plan orders
+  it, and was seen failing afterwards by running it against the two scripts as committed at `1b350e5`, which made 1
+  call where 2 were expected; with the change it passes. The orchestrate and definition test files reported 131
+  passed, 0 failed

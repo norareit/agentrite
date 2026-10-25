@@ -6,6 +6,7 @@ import { optionError } from './agentrite-run.mjs';
  * @typedef {import('./agentrite-definition.mjs').Definition} Definition
  * @typedef {import('./agentrite-definition.mjs').Step} Step
  * @typedef {import('./agentrite-headless.mjs').Followed} Followed
+ * @typedef {import('./agentrite-outcome.mjs').Finding} Finding
  * @typedef {import('./agentrite-outcome.mjs').Outcome} Outcome
  * @typedef {import('./agentrite-outcome.mjs').Reading} Reading
  * @typedef {{
@@ -83,13 +84,16 @@ export function judgeStep(step, { status, signal, timedOut }, reading) {
  * Runs the items of `definition` in order, one step at a time, and a repeat's steps round after round, until every
  * item has run or a step or a repeat stops the run. A step of a role and a harness that already ran continues the
  * session the last of them gave. The running of a step, and what is said before and after it, are the caller's.
+ * `unfixed` holds, in the order the repeats ran, the last step of each repeat that let the run go on with findings
+ * still open.
  *
  * @param {Definition} definition
  * @param {Effects} effects
- * @returns {Promise<{ ran: Ran[], end: End }>}
+ * @returns {Promise<{ ran: Ran[], end: End, unfixed: Ran[] }>}
  */
 export async function orchestrate(definition, effects) {
   /** @type {Ran[]} */ const ran = [];
+  /** @type {Ran[]} */ const unfixed = [];
   /** @type {Map<string, string>} */ const sessions = new Map();
 
   /**
@@ -115,13 +119,14 @@ export async function orchestrate(definition, effects) {
   };
 
   for (const [item, entry] of definition.steps.entries()) {
-    const end =
+    /** @type {{ end: End | undefined, unfixed?: Ran }} */ const ended =
       'repeat' in entry
         ? await runRepeat(entry.repeat, item, runStep)
-        : stoppedBy(await runStep(entry, item, undefined, undefined));
-    if (end !== undefined) return { ran, end };
+        : { end: stoppedBy(await runStep(entry, item, undefined, undefined)) };
+    if (ended.unfixed !== undefined) unfixed.push(ended.unfixed);
+    if (ended.end !== undefined) return { ran, end: ended.end, unfixed };
   }
-  return { ran, end: { kind: 'complete' } };
+  return { ran, end: { kind: 'complete' }, unfixed };
 }
 
 /**
@@ -133,13 +138,26 @@ function stoppedBy(ran) {
 }
 
 /**
- * Runs the rounds of a repeat, and gives how it stopped the run, or `undefined` when the run goes on after it. The
- * step is judged first, and the repeat's `until` only on the last step of a round that let the run go on.
+ * True when `until` holds for the outcome of the last step of a round.
+ *
+ * @param {NonNullable<import('./agentrite-definition.mjs').Repeat['until']>} until
+ * @param {Outcome} outcome
+ * @returns {boolean}
+ */
+function untilHolds(until, outcome) {
+  return until === 'no-findings' ? outcome.findings.length === 0 : !blocks(outcome);
+}
+
+/**
+ * Runs the rounds of a repeat, and gives in `end` how it stopped the run, or `undefined` when the run goes on after
+ * it. The step is judged first, and the repeat's `until` only on the last step of a round that let the run go on.
+ * When `until` does not hold after the last round and no finding blocks, as under `"no-findings"`, the run goes on,
+ * and `unfixed` is that last step, whose findings are still open.
  *
  * @param {import('./agentrite-definition.mjs').Repeat} repeat
  * @param {number} item
  * @param {(step: Step, item: number, round: { at: number, of: number }, index: number) => Promise<Ran>} runStep
- * @returns {Promise<End | undefined>}
+ * @returns {Promise<{ end: End | undefined, unfixed?: Ran }>}
  */
 async function runRepeat({ times, until, steps }, item, runStep) {
   for (let at = 1; at <= times; at += 1) {
@@ -147,13 +165,15 @@ async function runRepeat({ times, until, steps }, item, runStep) {
     for (const [index, step] of steps.entries()) {
       last = await runStep(step, item, { at, of: times }, index);
       const end = stoppedBy(last);
-      if (end !== undefined) return end;
+      if (end !== undefined) return { end };
     }
     if (until === undefined || last === undefined || last.reading.kind !== 'outcome') continue;
-    if (!blocks(last.reading.outcome)) return undefined;
-    if (at === times) return { kind: 'ran-out', rounds: times, ran: last };
+    if (untilHolds(until, last.reading.outcome)) return { end: undefined };
+    if (at < times) continue;
+    if (blocks(last.reading.outcome)) return { end: { kind: 'ran-out', rounds: times, ran: last } };
+    return { end: undefined, unfixed: last };
   }
-  return undefined;
+  return { end: undefined };
 }
 
 /**
@@ -355,7 +375,7 @@ export function endLine(end) {
 /**
  * What the last step's outcome holds that the human needs, or where its final response is when it has none of the
  * form. Nothing is taken from an outcome not of the form, and nothing but the items for after the run, which
- * `afterwardsLines` gives, from an earlier step.
+ * `afterwardsLines` gives, and the findings a repeat left open, which `unfixedLines` gives, from an earlier step.
  *
  * @param {Ran} last
  * @param {End} end
@@ -372,13 +392,37 @@ function lastStepLines(last, end, responsePath) {
   const lines = [`Summary: ${summary}`];
   const open = findings.filter((finding) => finding.blocking);
   if ((end.kind === 'ran-out' || (end.kind === 'stopped' && end.by === 'stopWhen')) && open.length > 0) {
-    lines.push('Blocking findings still open:', ...open.map((finding) => `  ${finding.id}: ${finding.summary}`));
+    lines.push('Blocking findings still open:', ...open.map(findingLine));
   }
   if (questions.length > 0) lines.push('Questions:', ...questions.map((question) => `  - ${question}`));
   if (declines.length > 0) {
     lines.push('Proposed declines:', ...declines.map((decline) => `  ${decline.finding}: ${decline.reason}`));
   }
   return lines;
+}
+
+/**
+ * The line of one finding in a list of findings of the end report.
+ *
+ * @param {Finding} finding
+ * @returns {string}
+ */
+function findingLine(finding) {
+  return `  ${finding.id}: ${finding.summary}`;
+}
+
+/**
+ * The findings still open of each repeat that let the run go on with them, in the order the repeats ran, each after
+ * a line that names the step whose outcome holds them.
+ *
+ * @param {Ran[]} unfixed
+ * @returns {string[]}
+ */
+function unfixedLines(unfixed) {
+  return unfixed.flatMap(({ planned, reading }) => [
+    `Non-blocking findings still open after step ${planned.number}:`,
+    ...(reading.kind === 'outcome' ? reading.outcome.findings.map(findingLine) : []),
+  ]);
 }
 
 /**
@@ -400,19 +444,22 @@ function afterwardsLines(ran) {
 
 /**
  * What the command prints last, when a run ends: the steps that ran, how the run ended, what the last step's outcome
- * holds, the items for after the run of every step, and where the run and the reviewer's findings are.
+ * holds, the findings each repeat left open, the items for after the run of every step, and where the run and the
+ * reviewer's findings are.
  *
  * @param {Ran[]} ran
  * @param {End} end
+ * @param {Ran[]} unfixed
  * @param {{ runDirectory: string, unitDirectory: string, responsePath: string | undefined }} where
  * @returns {string}
  */
-export function endReport(ran, end, { runDirectory, unitDirectory, responsePath }) {
+export function endReport(ran, end, unfixed, { runDirectory, unitDirectory, responsePath }) {
   return [
     ranTable(ran),
     '',
     endLine(end),
     ...lastStepLines(/** @type {Ran} */ (ran.at(-1)), end, responsePath),
+    ...unfixedLines(unfixed),
     ...afterwardsLines(ran),
     '',
     `The run's directory: ${runDirectory}/`,

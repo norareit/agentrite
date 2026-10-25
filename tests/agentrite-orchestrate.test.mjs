@@ -171,6 +171,94 @@ test('a repeat with until that holds at once goes on with the item after it', as
   assert.deepEqual(run.end, { kind: 'complete' });
 });
 
+// Unit 0087, R2 to R5: the two values of until, in a repeat of 3 rounds of the step of a reviewer, and a planner after
+// it.
+
+function untilRepeat(until) {
+  return {
+    steps: [
+      { repeat: { times: 3, until, steps: [{ role: 'reviewer', harness: 'opencode', model: 'm' }] } },
+      { role: 'planner', harness: 'claude', model: 'm' },
+    ],
+  };
+}
+
+const UNTIL_NO_FINDINGS = untilRepeat('no-findings');
+const UNTIL_NO_BLOCKING = untilRepeat('no-blocking-findings');
+
+const roles = (run) => run.planned.map(({ step }) => step.role);
+const reviewsThenPlanner = (reviews) => [...Array(reviews).fill('reviewer'), 'planner'];
+
+// The run of a repeat of `untilRepeat` whose three reviews each blocked.
+function assertRanOut(run) {
+  assert.deepEqual(roles(run), ['reviewer', 'reviewer', 'reviewer']);
+  assert.equal(run.end.kind, 'ran-out');
+  assert.equal(run.end.rounds, 3);
+  assert.equal(run.end.ran.planned.number, 2);
+  assert.equal(exitStatus(run.end), 3);
+  assert.deepEqual(run.unfixed, []);
+}
+
+test('until no-findings ends the repeat at a review with no finding, and goes on with the planner', async () => {
+  const run = await runWith(UNTIL_NO_FINDINGS, [done(), done()]);
+  assert.deepEqual(summary(run.planned), [
+    [0, 'reviewer', '1/3'],
+    [1, 'planner', '-'],
+  ]);
+  assert.deepEqual(run.end, { kind: 'complete' });
+  assert.deepEqual(run.unfixed, []);
+});
+
+test('until no-findings goes on to the next round after a review with only a non-blocking finding', async () => {
+  const run = await runWith(UNTIL_NO_FINDINGS, [clean(), clean(), done(), done()]);
+  assert.deepEqual(summary(run.planned), [
+    [0, 'reviewer', '1/3'],
+    [1, 'reviewer', '2/3'],
+    [2, 'reviewer', '3/3'],
+    [3, 'planner', '-'],
+  ]);
+  assert.deepEqual(run.end, { kind: 'complete' });
+  assert.deepEqual(run.unfixed, []);
+});
+
+test('until no-findings goes on to the next round after a review with a blocking finding', async () => {
+  const run = await runWith(UNTIL_NO_FINDINGS, [blocked(), done(), done()]);
+  assert.deepEqual(roles(run), reviewsThenPlanner(2));
+  assert.deepEqual(run.end, { kind: 'complete' });
+  assert.deepEqual(run.unfixed, []);
+});
+
+test('until no-findings runs out at a blocking finding in the last round, and runs nothing after it', async () => {
+  assertRanOut(await runWith(UNTIL_NO_FINDINGS, [blocked(), blocked(), blocked()]));
+});
+
+test('until no-findings with only non-blocking findings in the last round goes on, leaving them open', async () => {
+  const run = await runWith(UNTIL_NO_FINDINGS, [clean(), clean(), clean(), done()]);
+  assert.deepEqual(roles(run), reviewsThenPlanner(3));
+  assert.deepEqual(run.end, { kind: 'complete' });
+  assert.equal(exitStatus(run.end), 0);
+  assert.equal(run.unfixed.length, 1);
+  assert.equal(run.unfixed[0], run.ran[2]);
+});
+
+test('until no-blocking-findings ends the repeat at the first review that blocks nothing, as before', async () => {
+  const cases = [
+    [[done(), done()], 1],
+    [[clean(), done()], 1],
+    [[blocked(), done(), done()], 2],
+    [[blocked(), clean(), done()], 2],
+    [[blocked(), blocked(), done(), done()], 3],
+    [[blocked(), blocked(), clean(), done()], 3],
+  ];
+  for (const [results, reviews] of cases) {
+    const run = await runWith(UNTIL_NO_BLOCKING, results);
+    assert.deepEqual(roles(run), reviewsThenPlanner(reviews));
+    assert.deepEqual(run.end, { kind: 'complete' });
+    assert.deepEqual(run.unfixed, []);
+  }
+  assertRanOut(await runWith(UNTIL_NO_BLOCKING, [blocked(), blocked(), blocked()]));
+});
+
 // The review's finding S1: an outcome in a blockquote lets the run go on.
 test('a step that gives its outcome in a blockquote does not stop the run', async () => {
   const quoted = (outcome) => ({ response: responseOf(outcome).replace(/^/gm, '> ') });
@@ -471,7 +559,7 @@ const WHERE_LINES = [
 
 async function reportOf(results, definition = DEFAULT, where = WHERE) {
   const run = await runWith(definition, results);
-  return endReport(run.ran, run.end, where).split('\n');
+  return endReport(run.ran, run.end, run.unfixed, where).split('\n');
 }
 
 test(
@@ -583,6 +671,74 @@ test('the report of a harness that failed after it gave an outcome gives the out
   assert.deepEqual((await reportOf([done(), { status: 1, ...done({ summary: 'Half done.' }) }])).slice(3, 5), [
     'Step 1 stopped the run: its harness exited with 1.',
     'Summary: Half done.',
+  ]);
+});
+
+// Unit 0087, R4 and R6: the non-blocking findings a repeat with until no-findings left open, in the end report.
+
+const UNFIXED_LINES = ['Non-blocking findings still open after step 2:', '  C1: A name could be clearer'];
+
+test('the report gives the non-blocking findings still open after the summary of the last step', async () => {
+  const lines = await reportOf([clean(), clean(), clean(), done()], UNTIL_NO_FINDINGS);
+  assert.deepEqual(lines.slice(4), [
+    '',
+    'The run ran every item of the definition to its end.',
+    'Summary: Did it.',
+    ...UNFIXED_LINES,
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('the non-blocking findings still open stand before the items for after the run', async () => {
+  const lines = await reportOf([clean(), clean(), clean(), later('Check it on macOS.')], UNTIL_NO_FINDINGS);
+  assert.deepEqual(lines.slice(6, -WHERE_LINES.length - 1), [
+    'Summary: Did it.',
+    ...UNFIXED_LINES,
+    'After the run:',
+    '  step 3, planner:',
+    '    - Check it on macOS.',
+  ]);
+});
+
+test('the non-blocking findings still open are given when a later step stops the run', async () => {
+  const asks = done({ outcome: 'needs-human', summary: 'Stopped.' });
+  const lines = await reportOf([clean(), clean(), clean(), asks], UNTIL_NO_FINDINGS);
+  assert.deepEqual(lines.slice(5), [
+    'Step 3 stopped the run: its outcome is needs-human.',
+    'Summary: Stopped.',
+    ...UNFIXED_LINES,
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('the non-blocking findings still open of two repeats are given for each, in the order they ran', async () => {
+  const review = { role: 'reviewer', harness: 'opencode', model: 'm' };
+  const once = { repeat: { times: 1, until: 'no-findings', steps: [review] } };
+  const other = { id: 'C1', blocking: false, summary: 'A comment could be shorter' };
+  const lines = await reportOf([clean(), done({ findings: [other] })], { steps: [once, once] });
+  assert.deepEqual(lines.slice(3), [
+    'The run ran every item of the definition to its end.',
+    'Summary: Did it.',
+    'Non-blocking findings still open after step 0:',
+    '  C1: A name could be clearer',
+    'Non-blocking findings still open after step 1:',
+    '  C1: A comment could be shorter',
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('the report of a repeat with until no-findings that ran out gives the blocking findings alone', async () => {
+  const lines = await reportOf([blocked(), blocked(), blocked()], UNTIL_NO_FINDINGS);
+  assert.deepEqual(lines.slice(4), [
+    'Step 2 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.',
+    'Summary: Did it.',
+    'Blocking findings still open:',
+    '  S1: R1 is not met',
+    ...WHERE_LINES,
+    '',
   ]);
 });
 
@@ -1316,6 +1472,31 @@ test('a run whose repeat ends at its first round goes on with the item after the
   );
   assert.equal(stepLines(result.stdout)[2], 'step 1, planner, claude, claude-opus-5-5: started');
   assert.ok(readdirSync(runDirectoryOf(base).path).includes('01-planner.outcome.json'));
+});
+
+// Unit 0087, R11
+test('a run whose repeat with until no-findings ends on non-blocking findings exits 0, listing them', (testContext) => {
+  const { write, agentrite, answer, calls } = project(testContext);
+  write(
+    'definitions/until.json',
+    JSON.stringify({
+      steps: [
+        {
+          repeat: { times: 2, until: 'no-findings', steps: [{ role: 'reviewer', harness: 'opencode', model: 'm' }] },
+        },
+      ],
+    }),
+  );
+  for (const number of [1, 2]) answer(number, opencodePrinted(responseOf({ ...DONE, findings: [MINOR] })));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'definitions/until.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(calls().length, 2);
+  assert.ok(
+    result.stdout.includes('\nNon-blocking findings still open after step 1:\n  C1: A name could be clearer\n'),
+    result.stdout,
+  );
 });
 
 test(
