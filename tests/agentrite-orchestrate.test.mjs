@@ -33,6 +33,7 @@ import {
   OPENING_RULE,
   plainOutput,
   judgeStep,
+  resumePosition,
   orchestrate,
   orchestrateUsage,
   parseOrchestrateArgs,
@@ -74,8 +75,9 @@ const blocked = () => done({ findings: [BLOCKING, MINOR] });
 const clean = () => done({ findings: [MINOR] });
 const later = (...afterwards) => done({ afterwards });
 
-// Runs `definition` with effects whose `run` gives the results listed, in turn, and records what it is given.
-async function runWith(definition, results) {
+// Runs `definition` with effects whose `run` gives the results listed, in turn, and records what it is given. With
+// `from`, it starts at that position, as a resume does.
+async function runWith(definition, results, from) {
   const calls = [];
   const queue = [...results];
   const effects = {
@@ -88,7 +90,7 @@ async function runWith(definition, results) {
     },
     ended: (ran) => calls.push(['ended', ran]),
   };
-  const outcome = await orchestrate(definition, effects);
+  const outcome = await orchestrate(definition, effects, from);
   const planned = calls.filter(([kind]) => kind === 'run').map(([, step]) => step);
   return { ...outcome, calls, planned, left: queue.length };
 }
@@ -507,6 +509,158 @@ test('started and ended are called once each per step, in order, ended with the 
   assert.equal(ended.reading.kind, 'outcome');
   assert.equal(ended.stop, undefined);
   assert.equal(ended.result.milliseconds, 1000);
+});
+
+// Unit 0089, R2, R4, R6: a run that starts at the position of the step that stopped a run.
+
+const sessionKey = (role, harness) => JSON.stringify([role, harness]);
+const IMPLEMENTER_SESSION = [{ role: 'implementer', harness: 'claude', session: 'implementer-session' }];
+
+test('the position of a resume is the step at names, and for an ask again the step it asked', () => {
+  const sessions = [
+    { role: 'planner', harness: 'claude', session: 'p' },
+    { role: 'reviewer', harness: 'opencode', session: 'ses_r' },
+  ];
+  const map = new Map([
+    [sessionKey('planner', 'claude'), 'p'],
+    [sessionKey('reviewer', 'opencode'), 'ses_r'],
+  ]);
+  assert.deepEqual(resumePosition({ number: 0, item: 0, round: null, index: null }, sessions), {
+    item: 0,
+    round: undefined,
+    index: undefined,
+    number: 0,
+    sessions: map,
+  });
+  const inRepeat = { number: 4, item: 1, round: { at: 2, of: 3 }, index: 1 };
+  for (const asked of [undefined, false]) {
+    assert.deepEqual(resumePosition({ ...inRepeat, asked }, sessions), {
+      item: 1,
+      round: { at: 2, of: 3 },
+      index: 1,
+      number: 4,
+      sessions: map,
+    });
+  }
+  assert.deepEqual(resumePosition({ ...inRepeat, number: 5, asked: true }, []), {
+    item: 1,
+    round: { at: 2, of: 3 },
+    index: 1,
+    number: 4,
+    sessions: new Map(),
+  });
+});
+
+const positionAt = (at, sessions = []) => resumePosition(at, sessions);
+const REVIEW_ROUND_2 = { number: 4, item: 1, round: { at: 2, of: 3 }, index: 1 };
+const IMPLEMENT_ROUND_2 = { number: 3, item: 1, round: { at: 2, of: 3 }, index: 0 };
+
+test('a run from a position runs no item before it, and goes on from its round and index', async () => {
+  const run = await runWith(DEFAULT, [done(), blocked(), done(), clean()], positionAt(IMPLEMENT_ROUND_2));
+  assert.deepEqual(
+    run.planned.map(({ number, step, item, round, index, rerun }) => [number, step.role, item, round, index, rerun]),
+    [
+      [3, 'implementer', 1, { at: 2, of: 3 }, 0, true],
+      [4, 'reviewer', 1, { at: 2, of: 3 }, 1, false],
+      [5, 'implementer', 1, { at: 3, of: 3 }, 0, false],
+      [6, 'reviewer', 1, { at: 3, of: 3 }, 1, false],
+    ],
+  );
+  assert.deepEqual(run.end, { kind: 'complete' });
+
+  const outside = await runWith(DEFAULT, [done(), done(), done()], positionAt({ number: 0, item: 0, round: null }));
+  assert.deepEqual(summary(outside.planned), [
+    [0, 'planner', '-'],
+    [1, 'implementer', '1/3'],
+    [2, 'reviewer', '1/3'],
+  ]);
+  assert.equal(outside.planned[0].rerun, true);
+});
+
+test('a run without a position marks no step as a rerun', async () => {
+  const run = await runWith(DEFAULT, [done(), done(), done()]);
+  assert.ok(run.planned.every(({ rerun }) => rerun === false));
+});
+
+test('the rerun continues the session the position holds for its role and harness, and none without', async () => {
+  const sessions = [
+    { role: 'implementer', harness: 'claude', session: 'implementer-session' },
+    { role: 'planner', harness: 'claude', session: 'planner-session' },
+  ];
+  const run = await runWith(DEFAULT, [done(), done()], positionAt(IMPLEMENT_ROUND_2, sessions));
+  assert.deepEqual(
+    run.planned.map(({ session }) => session),
+    ['implementer-session', undefined],
+  );
+  const fresh = await runWith(DEFAULT, [{ ...done(), session: 'new' }, done()], positionAt(REVIEW_ROUND_2, sessions));
+  assert.equal(fresh.planned[0].session, undefined);
+});
+
+test('a rerun without an outcome is asked again in its session, numbered one more, and not a rerun', async () => {
+  const from = positionAt(IMPLEMENT_ROUND_2, IMPLEMENTER_SESSION);
+  const run = await runWith(DEFAULT, [{ response: 'No block.' }, done(), done()], from);
+  assert.deepEqual(
+    run.planned.map(({ number, step, asked, rerun, session }) => [number, step.role, asked, rerun, session]),
+    [
+      [3, 'implementer', false, true, 'implementer-session'],
+      [4, 'implementer', true, false, 'implementer-session'],
+      [5, 'reviewer', false, false, undefined],
+    ],
+  );
+  assert.deepEqual(run.end, { kind: 'complete' });
+});
+
+test('a rerun of a step that stopped for questions goes on when done, and stops again when not', async () => {
+  const from = positionAt(IMPLEMENT_ROUND_2, IMPLEMENTER_SESSION);
+  const goes = await runWith(DEFAULT, [done(), done()], from);
+  assert.deepEqual(summary(goes.planned), [
+    [3, 'implementer', '2/3'],
+    [4, 'reviewer', '2/3'],
+  ]);
+  assert.deepEqual(goes.end, { kind: 'complete' });
+
+  const stops = await runWith(DEFAULT, [done({ questions: ['Which branch?'] })], from);
+  assert.equal(stops.planned.length, 1);
+  assert.equal(stops.end.by, 'questions');
+  assert.equal(stops.end.ran.planned.number, 3);
+});
+
+test('a rerun of a step that stopped by stopWhen goes on when clean, and stops again at a blocking one', async () => {
+  const definition = {
+    steps: [
+      { role: 'implementer', harness: 'claude', model: 'm' },
+      { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' },
+      { role: 'planner', harness: 'claude', model: 'm' },
+    ],
+  };
+  const from = positionAt({ number: 1, item: 1, round: null, index: null });
+  const goes = await runWith(definition, [clean(), done()], from);
+  assert.deepEqual(summary(goes.planned), [
+    [1, 'reviewer', '-'],
+    [2, 'planner', '-'],
+  ]);
+  assert.deepEqual(goes.end, { kind: 'complete' });
+
+  const stops = await runWith(definition, [blocked()], from);
+  assert.equal(stops.planned.length, 1);
+  assert.equal(stops.end.by, 'stopWhen');
+});
+
+test('a rerun of the last step of a repeat that ran out ends it when until holds, else runs out again', async () => {
+  const definition = { steps: [...DEFAULT.steps, { role: 'planner', harness: 'claude', model: 'm' }] };
+  const from = positionAt({ number: 6, item: 1, round: { at: 3, of: 3 }, index: 1 });
+  const goes = await runWith(definition, [done(), done()], from);
+  assert.deepEqual(summary(goes.planned), [
+    [6, 'reviewer', '3/3'],
+    [7, 'planner', '-'],
+  ]);
+  assert.deepEqual(goes.end, { kind: 'complete' });
+
+  const out = await runWith(definition, [blocked()], from);
+  assert.equal(out.planned.length, 1);
+  assert.equal(out.end.kind, 'ran-out');
+  assert.equal(out.end.rounds, 3);
+  assert.equal(out.end.ran.planned.number, 6);
 });
 
 // R14

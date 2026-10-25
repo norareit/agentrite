@@ -17,9 +17,19 @@ import { optionError } from './agentrite-run.mjs';
  *   step: Step,
  *   session: string | undefined,
  *   asked: boolean,
+ *   rerun: boolean,
  * }} Planned A step about to run: its number in the order the steps run, its item of the definition, its round and
- *   its place among the steps of a repeat, the session it continues, and whether it is an ask again, which asks the
- *   step before it, in its session, for the outcome its final response did not hold
+ *   its place among the steps of a repeat, the session it continues, whether it is an ask again, which asks the
+ *   step before it, in its session, for the outcome its final response did not hold, and whether it is the rerun
+ *   that a resume starts with, of the step that stopped the run it resumes
+ * @typedef {{
+ *   item: number,
+ *   round: { at: number, of: number } | undefined,
+ *   index: number | undefined,
+ *   number: number,
+ *   sessions: Map<string, string>,
+ * }} Position Where a resume starts: the item, the round and the index of the step it reruns, the number that step
+ *   takes, and the sessions of the run it resumes, by role and harness
  * @typedef {{
  *   status: number | null,
  *   signal: string | null,
@@ -83,21 +93,61 @@ export function judgeStep(step, { status, signal, timedOut }, reading) {
 }
 
 /**
+ * The key a session is kept by in a run: its role and its harness.
+ *
+ * @param {string} role
+ * @param {string} harness
+ * @returns {string}
+ */
+function sessionKey(role, harness) {
+  return JSON.stringify([role, harness]);
+}
+
+/**
+ * Where a resume of a stopped run starts, from the `at` and the `sessions` of its `state.json`: at the step `at`
+ * names, with its number, and for an ask again at the step it asked, whose number is the one before it.
+ *
+ * @param {{
+ *   number: number,
+ *   item: number,
+ *   round: { at: number, of: number } | null,
+ *   index: number | null,
+ *   asked?: boolean,
+ * }} at
+ * @param {{ role: string, harness: string, session: string }[]} sessions
+ * @returns {Position}
+ */
+export function resumePosition(at, sessions) {
+  return {
+    item: at.item,
+    round: at.round ?? undefined,
+    index: at.index ?? undefined,
+    // An ask again always takes the number after the step it asks.
+    number: at.asked === true ? at.number - 1 : at.number,
+    sessions: new Map(sessions.map(({ role, harness, session }) => [sessionKey(role, harness), session])),
+  };
+}
+
+/**
  * Runs the items of `definition` in order, one step at a time, and a repeat's steps round after round, until every
  * item has run or a step or a repeat stops the run. A step of a role and a harness that already ran continues the
  * session the last of them gave. The running of a step, and what is said before and after it, are the caller's.
  * A step judged `none` whose session is known, and that is not itself an ask again, is followed by an ask again of
  * the same step in that session, whose `Ran` stands for the step's in how the run goes on and ends. `unfixed` holds,
  * in the order the repeats ran, the last step of each repeat that let the run go on with findings still open.
+ * With `from`, the run is a resume: it starts at the step of that position, numbered by it, as its rerun, with the
+ * sessions it holds, and goes on from there as any run does.
  *
  * @param {Definition} definition
  * @param {Effects} effects
+ * @param {Position} [from]
  * @returns {Promise<{ ran: Ran[], end: End, unfixed: Ran[] }>}
  */
-export async function orchestrate(definition, effects) {
+export async function orchestrate(definition, effects, from) {
   /** @type {Ran[]} */ const ran = [];
   /** @type {Ran[]} */ const unfixed = [];
-  /** @type {Map<string, string>} */ const sessions = new Map();
+  /** @type {Map<string, string>} */ const sessions = new Map(from?.sessions);
+  const first = from?.number ?? 0;
 
   /**
    * @param {Step} step
@@ -108,15 +158,16 @@ export async function orchestrate(definition, effects) {
    * @returns {Promise<Ran>}
    */
   const runStep = async (step, item, round, index, asked = false) => {
-    const key = JSON.stringify([step.role, step.harness]);
+    const key = sessionKey(step.role, step.harness);
     /** @type {Planned} */ const planned = {
-      number: ran.length,
+      number: first + ran.length,
       item,
       round,
       index,
       step,
       session: sessions.get(key),
       asked,
+      rerun: from !== undefined && ran.length === 0,
     };
     effects.started(planned);
     const result = await effects.run(planned);
@@ -135,9 +186,12 @@ export async function orchestrate(definition, effects) {
   };
 
   for (const [item, entry] of definition.steps.entries()) {
+    if (from !== undefined && item < from.item) continue;
+    // Only the repeat a resume starts in starts past its first step.
+    const start = from !== undefined && item === from.item ? from : undefined;
     /** @type {{ end: End | undefined, unfixed?: Ran }} */ const ended =
       'repeat' in entry
-        ? await runRepeat(entry.repeat, item, runStep)
+        ? await runRepeat(entry.repeat, item, runStep, { at: start?.round?.at ?? 1, index: start?.index ?? 0 })
         : { end: stoppedBy(await runStep(entry, item, undefined, undefined)) };
     if (ended.unfixed !== undefined) unfixed.push(ended.unfixed);
     if (ended.end !== undefined) return { ran, end: ended.end, unfixed };
@@ -165,20 +219,22 @@ function untilHolds(until, outcome) {
 }
 
 /**
- * Runs the rounds of a repeat, and gives in `end` how it stopped the run, or `undefined` when the run goes on after
- * it. The step is judged first, and the repeat's `until` only on the last step of a round that let the run go on.
- * When `until` does not hold after the last round and no finding blocks, as under `"no-findings"`, the run goes on,
- * and `unfixed` is that last step, whose findings are still open.
+ * Runs the rounds of a repeat from the step `start` names, and gives in `end` how it stopped the run, or `undefined`
+ * when the run goes on after it. The step is judged first, and the repeat's `until` only on the last step of a round
+ * that let the run go on. When `until` does not hold after the last round and no finding blocks, as under
+ * `"no-findings"`, the run goes on, and `unfixed` is that last step, whose findings are still open.
  *
  * @param {import('./agentrite-definition.mjs').Repeat} repeat
  * @param {number} item
  * @param {(step: Step, item: number, round: { at: number, of: number }, index: number) => Promise<Ran>} runStep
+ * @param {{ at: number, index: number }} start the round and the index of the step to start at
  * @returns {Promise<{ end: End | undefined, unfixed?: Ran }>}
  */
-async function runRepeat({ times, until, steps }, item, runStep) {
-  for (let at = 1; at <= times; at += 1) {
+async function runRepeat({ times, until, steps }, item, runStep, start) {
+  for (let at = start.at; at <= times; at += 1) {
     /** @type {Ran | undefined} */ let last;
     for (const [index, step] of steps.entries()) {
+      if (at === start.at && index < start.index) continue;
       last = await runStep(step, item, { at, of: times }, index);
       const end = stoppedBy(last);
       if (end !== undefined) return { end };

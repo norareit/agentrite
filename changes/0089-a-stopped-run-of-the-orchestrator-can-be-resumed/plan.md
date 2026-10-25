@@ -86,21 +86,21 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ### The position a resume starts at
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, test the pure function that gives the position from a stopped run's
+- [x] In `tests/agentrite-orchestrate.test.mjs`, test the pure function that gives the position from a stopped run's
   `at` and `sessions`: a step outside a repeat, a step in a repeat, and an ask again, whose position is that of the step
   it asked with the number one lower; the sessions given as the map `orchestrate` keys by role and harness (R2, R6)
-- [ ] Add that function to `scripts/agentrite-orchestrate.mjs`, with a typedef for the position (R2, R6)
-- [ ] Test, with `runWith` given a position, that `orchestrate`: runs no item before the position's; runs the step of a
+- [x] Add that function to `scripts/agentrite-orchestrate.mjs`, with a typedef for the position (R2, R6)
+- [x] Test, with `runWith` given a position, that `orchestrate`: runs no item before the position's; runs the step of a
   repeat at the position's round and index, then the rest of that round and the later rounds; numbers the first step
   by the position and every step after it, an ask again among them, one more; marks the first step alone with
   `rerun`; gives the first step the session the position holds for its role and harness, and none when it holds none;
   and asks the rerun again when it gives no outcome and its session is known (R2, R6)
-- [ ] Test that a resume at a step that stopped for questions, and at one that stopped by `stopWhen`, goes on by the
+- [x] Test that a resume at a step that stopped for questions, and at one that stopped by `stopWhen`, goes on by the
   rerun's outcome: on to the next item when it is done and clean, and stopping again when it is not (R2, R4)
-- [ ] Test that a resume at the last step of the last round of a repeat that ran out ends the repeat and goes on with
+- [x] Test that a resume at the last step of the last round of a repeat that ran out ends the repeat and goes on with
   the item after it when `until` holds for the rerun, and runs out again with the same rounds, running no further
   round, when it does not (R4)
-- [ ] In `scripts/agentrite-orchestrate.mjs`, give `orchestrate` the optional position and `runRepeat` the round and
+- [x] In `scripts/agentrite-orchestrate.mjs`, give `orchestrate` the optional position and `runRepeat` the round and
   index to start at; add `rerun` to `Planned`, false for every step but the first of a resume; start the sessions map
   from the position's and the numbers from its number. A call without a position behaves as today, and every existing
   test passes unchanged (R2, R4, R6)
@@ -199,7 +199,7 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 - [x] `feature-0089 Plan the resume of a stopped run`: `plan.md` and the record's entry
 - [x] `feature-0089 Take resumes and asked in the state of a run`: the tasks of "The form of state.json"
-- [ ] `feature-0089 Start a run of the definition at a step`: the tasks of "The position a resume starts at"
+- [x] `feature-0089 Start a run of the definition at a step`: the tasks of "The position a resume starts at"
 - [ ] `feature-0089 Take --resume and --prompt, and print the opening line`: the tasks of "The prompt, the opening
   line and the options"
 - [ ] `feature-0089 Resume the latest stopped run of a unit`: the tasks of "The command"
