@@ -213,10 +213,10 @@ step the run goes on after that has no outcome file, so the files of the run say
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] No line of a changed file is longer than 120 characters
-- [ ] Every requirement from R1 to R12 is delivered by a ticked task, and every task traces to one
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed branch
+- [x] No line of a changed file is longer than 120 characters
+- [x] Every requirement from R1 to R12 is delivered by a ticked task, and every task traces to one
 
 ## Commit Points
 

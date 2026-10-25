@@ -60,3 +60,10 @@ timestamp: 2026-10-25T14:12:42Z
   S1" to `plan.md`: the resume reads from the stopped run's files whether a step of a run without `asked` is an ask
   again. Corrected the approach of `plan.md`, which held that such a run has no ask again, and reopened the
   verification for the new tasks
+- 2026-10-25T16:58:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied review finding
+  S1 in `5526891`: a resume reads whether the step of a run without `asked` is an ask again from the run's files,
+  by `isAskAgain`, and `README.md` says so. The regression test of a run written without `asked` that stopped at
+  an ask again failed before the fix, resuming at step 2, and passes after it. `npm test` passes on `5526891`, 1304
+  tests, and so does `npm run check-changes`. No line of a changed file is longer than 120 characters. Not checked:
+  a run actually written by the code of 0088, as the tests write one by removing `asked` from a run of this unit's
+  code. The status stays `in-progress` for a review of the fix
