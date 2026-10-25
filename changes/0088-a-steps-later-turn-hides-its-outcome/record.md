@@ -48,3 +48,10 @@ timestamp: 2026-10-25T14:10:17Z
   exited 0, and `git diff master -- scripts/agentrite-headless.mjs scripts/agentrite-run.mjs` showed nothing. Not
   checked: an ask again against a real Claude Code or OpenCode, which the tests stand in for with fake harnesses. The
   status stays `in-progress`, for the review
+- 2026-10-25T15:52:25Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0088 at
+  `d4b517a590c5ffcc00e87d72e6fba4e84ace4369`, against the merge base with `master`. Returned C1, non-blocking;
+  no spec-conformance or plan-fidelity findings. Saved the complete findings in
+  `.reviews/0088-a-steps-later-turn-hides-its-outcome/review-20261025T155225Z.md`. Ran `npm test`: 1269 passed,
+  none failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` passed. Did not verify an
+  ask again against real harness sessions or reproduce the external project's scheduled wakeup. The status stays
+  `in-progress`
