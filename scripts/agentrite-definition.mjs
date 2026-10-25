@@ -10,13 +10,16 @@ import { isObject, jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mj
  *   stopWhen?: 'blocking-findings',
  *   timeoutMinutes?: number,
  * }} Step
- * @typedef {{ times: number, until?: 'no-blocking-findings', steps: Step[] }} Repeat
+ * @typedef {{ times: number, until?: 'no-blocking-findings' | 'no-findings', steps: Step[] }} Repeat
  * @typedef {{ steps: (Step | { repeat: Repeat })[] }} Definition
  * @typedef {{ roles?: string[], harnesses?: string[] }} Names What `agentrite.json` names, which a step must name. A
  * definition read without them, as one a run kept, takes any role and harness that is a string that is not empty
  */
 
 const OBJECT_MUST = 'It must hold a JSON object with one key, steps';
+
+/** The values `until` of a repeat takes. */
+const UNTIL_VALUES = ['no-blocking-findings', 'no-findings'];
 
 /**
  * The keys each kind of object takes, in the order they are judged in, and the sentence that says so.
@@ -161,8 +164,10 @@ function parseRepeat(item, itemPath, names) {
   });
   /** @type {Repeat} */ const repeat = { times, steps };
   if (Object.hasOwn(value, 'until')) {
-    valueAt(value, path, 'until', (until) => until === 'no-blocking-findings', '"no-blocking-findings"');
-    repeat.until = 'no-blocking-findings';
+    const must = '"no-blocking-findings" or "no-findings"';
+    repeat.until = /** @type {Repeat['until']} */ (
+      valueAt(value, path, 'until', (until) => isNamed(until, UNTIL_VALUES), must)
+    );
   }
   return repeat;
 }

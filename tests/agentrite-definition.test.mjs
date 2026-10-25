@@ -69,6 +69,12 @@ test('a repeat without until is taken, and times of 1 and of 3.0', () => {
   assert.equal(parse(text).steps[0].repeat.times, 3);
 });
 
+test('a repeat with until no-findings is taken, as typed', () => {
+  assert.deepEqual(parse({ steps: [repeat({ until: 'no-findings' })] }), {
+    steps: [{ repeat: { times: 2, steps: [step()], until: 'no-findings' } }],
+  });
+});
+
 test('a role of the project own and a harness the project names alone are taken', () => {
   const context = { path: PATH, roles: ['planner', 'security-reviewer'], harnesses: ['opencode'] };
   const own = { role: 'security-reviewer', harness: 'opencode', model: 'x' };
@@ -158,10 +164,10 @@ test('stopWhen and until of any other value are refused', () => {
       `steps[0].stopWhen is ${JSON.stringify(stopWhen)}. It must hold "blocking-findings"`,
     );
   }
-  for (const until of ['blocking-findings', 'no-findings', false, null]) {
+  for (const until of ['blocking-findings', 'no-blocking', false, null]) {
     refuses(
       { steps: [repeat({ until })] },
-      `steps[0].repeat.until is ${JSON.stringify(until)}. It must hold "no-blocking-findings"`,
+      `steps[0].repeat.until is ${JSON.stringify(until)}. It must hold "no-blocking-findings" or "no-findings"`,
     );
   }
 });

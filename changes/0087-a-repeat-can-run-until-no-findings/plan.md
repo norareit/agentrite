@@ -71,12 +71,12 @@ earlier step, beside `afterwards`.
 
 ## Tasks
 
-- [ ] In `tests/agentrite-definition.test.mjs`, test that a repeat with `until: 'no-findings'` is taken as typed, beside
+- [x] In `tests/agentrite-definition.test.mjs`, test that a repeat with `until: 'no-findings'` is taken as typed, beside
   the one without `until`, and change the test `stopWhen and until of any other value are refused`: `'no-findings'`
   leaves the refused values of `until`, which are `'blocking-findings'`, `'no-blocking'`, `false` and `null`, and the
   message it expects reads `It must hold "no-blocking-findings" or "no-findings"`. Run the file and see the two fail
   (R1, R10)
-- [ ] In `scripts/agentrite-definition.mjs`, take both values as the approach gives, and run the file to green (R1)
+- [x] In `scripts/agentrite-definition.mjs`, take both values as the approach gives, and run the file to green (R1)
 - [ ] In `tests/agentrite-orchestrate.test.mjs`, add a constant `UNTIL_NO_FINDINGS`, a definition of one repeat of 3
   rounds with `until: 'no-findings'` and the single step of a reviewer, followed by a planner, as the test
   `a repeat with until that holds at once goes on with the item after it` builds it. Add unit tests through `runWith`
@@ -141,8 +141,8 @@ earlier step, beside `afterwards`.
 
 ## Commit Points
 
-- [ ] `feature-0087 Plan a repeat that runs until no findings`: `plan.md` and the log entry in `record.md`
-- [ ] `feature-0087 Take no-findings as the until of a repeat`: the first two tasks
+- [x] `feature-0087 Plan a repeat that runs until no findings`: `plan.md` and the log entry in `record.md`
+- [x] `feature-0087 Take no-findings as the until of a repeat`: the first two tasks
 - [ ] `feature-0087 End a repeat at no findings and list what it left open`: the tasks of the repeat, the end report
   and the test of the command
 - [ ] `feature-0087 Run the default's repeat until no findings`: the task of the default

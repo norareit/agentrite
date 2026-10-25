@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-25T00:11:13Z
 ---
 
@@ -26,3 +26,9 @@ timestamp: 2026-10-25T00:11:13Z
   a scratch copy of the tree, and listed them in the plan. Placed the non-blocking findings still open after the
   lines of the last step and before `After the run:`, which requirement 9 leaves to the README to state. The status
   stays `approved`
+- 2026-10-25T11:10:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0087-a-repeat-can-run-until-no-findings` at `f9451eb`, began the work. Ticked the plan's first commit
+  point, which the planner made as `f9451eb`. The status is `in-progress`
+- 2026-10-25T11:10:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the two tests of the first
+  task and saw them fail with `node --test tests/agentrite-definition.test.mjs`, 19 passed and 2 failed, then took
+  both values of `until` in `scripts/agentrite-definition.mjs`, after which the file reported 21 passed, 0 failed
