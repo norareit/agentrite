@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-10-25T14:10:17Z
 ---
 
@@ -16,3 +16,4 @@ timestamp: 2026-10-25T14:10:17Z
   `HEADLESS` of `scripts/agentrite-headless.mjs`, `runStep` of `scripts/agentrite.mjs` and `outcomeRequest` of
   `scripts/agentrite-outcome.mjs`. Did not verify that Claude Code honours the tools being taken away, which the spec
   leaves for before the build. Wrote `spec.md`. The status is `draft`
+- 2026-10-25T14:24:22Z [human] approved the spec. The status is `approved`
