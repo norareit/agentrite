@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
-import { outcomeRequest, readOutcome } from '../scripts/agentrite-outcome.mjs';
+import { askAgainRequest, outcomeRequest, readOutcome } from '../scripts/agentrite-outcome.mjs';
 
 // R15
 
@@ -30,6 +30,11 @@ const REQUEST_LISTS =
   'make. Every item of the list under the line **Needed from you** of your final response is also an item of ' +
   'exactly one of "questions" and "afterwards", and every item of these two is an item of that list.';
 
+// R6 of unit 0088
+const REQUEST_LAST =
+  'Your final response is the last response of this step: end no turn after it. Before you give it, wait until ' +
+  'every command you started in the background has ended, so that none of them reports its end after it.';
+
 const REQUEST_RECORD =
   'Record a finding that the prompt of this step accepts in record.md as accepted by the definition of the ' +
   'orchestrator, and not as a decision of the human. Set the status of the unit to no status later than ' +
@@ -45,6 +50,8 @@ function request(round) {
     ...REQUEST_LIST,
     '',
     REQUEST_LISTS,
+    '',
+    REQUEST_LAST,
     '',
     REQUEST_RECORD,
   ].join('\n');
@@ -64,6 +71,18 @@ test('the request of the outcome, in a repeat, says the round and how many round
 test('the request of the outcome, in a repeat and outside one, ends with how to record an accepted finding', () => {
   assert.ok(outcomeRequest(undefined).endsWith(`\n\n${REQUEST_RECORD}`));
   assert.ok(outcomeRequest({ at: 2, of: 3 }).endsWith(`\n\n${REQUEST_RECORD}`));
+});
+
+// R1 of unit 0088
+
+const ASK_AGAIN =
+  'Your last response held no block marked json, so AgentRite\'s orchestrator could not read the outcome of this ' +
+  'step. Give the outcome of the step now, for its work as it stands.';
+
+test('the request of an ask again is its paragraph followed by the request of the outcome, in a repeat too', () => {
+  assert.equal(askAgainRequest(undefined), `${ASK_AGAIN}\n\n${request('')}`);
+  const round = { at: 2, of: 3 };
+  assert.equal(askAgainRequest(round), `${ASK_AGAIN}\n\n${request(', in round 2 of a repeat of at most 3 rounds')}`);
 });
 
 test('each line of the source of the outcome fits the line limit', () => {

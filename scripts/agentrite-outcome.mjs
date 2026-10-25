@@ -20,7 +20,8 @@ import { isObject, jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mj
 /**
  * What the command adds to the prompt of every step, after the step's own, so that the step gives its outcome in a
  * form the command reads. A step in a repeat is told its round, and how many rounds the repeat has at most. The request
- * also says which of its lists an item for the human belongs in, how the step records a finding its prompt accepts,
+ * also says which of its lists an item for the human belongs in, that the final response is the step's last, given
+ * after every command it started in the background has ended, how the step records a finding its prompt accepts,
  * and the latest status it may set.
  *
  * @param {{ at: number, of: number } | undefined} round
@@ -62,10 +63,30 @@ export function outcomeRequest(round) {
       'is also an item of exactly one of "questions" and "afterwards", ' +
       'and every item of these two is an item of that list.',
     '',
+    'Your final response is the last response of this step: end no turn after it. ' +
+      'Before you give it, wait until every command you started in the background has ended, ' +
+      'so that none of them reports its end after it.',
+    '',
     'Record a finding that the prompt of this step accepts in record.md as accepted by the definition of the ' +
       'orchestrator, and not as a decision of the human. ' +
       'Set the status of the unit to no status later than in-progress, ' +
       'since the human sets implemented after the run.',
+  ].join('\n');
+}
+
+/**
+ * The whole prompt of an ask again, the step the command runs in the session of a step whose final response held no
+ * block marked json: that it held none, and the request of the outcome.
+ *
+ * @param {{ at: number, of: number } | undefined} round
+ * @returns {string}
+ */
+export function askAgainRequest(round) {
+  return [
+    "Your last response held no block marked json, so AgentRite's orchestrator could not read the outcome of this " +
+      'step. Give the outcome of the step now, for its work as it stands.',
+    '',
+    outcomeRequest(round),
   ].join('\n');
 }
 
