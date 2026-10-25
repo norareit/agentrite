@@ -107,20 +107,20 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ### The prompt, the opening line and the options
 
-- [ ] Test that the sentence of a rerun without `--prompt` says that the human resumed the run after it stopped at this
+- [x] Test that the sentence of a rerun without `--prompt` says that the human resumed the run after it stopped at this
   step, and that `resumeWords` gives the human's words when they are given and the sentence otherwise (R3)
-- [ ] Add the sentence and `resumeWords` to `scripts/agentrite-outcome.mjs` (R3)
-- [ ] Test the opening line: it names the stopped run's directory and the step it reruns by `stepHead`, as
+- [x] Add the sentence and `resumeWords` to `scripts/agentrite-outcome.mjs` (R3)
+- [x] Test the opening line: it names the stopped run's directory and the step it reruns by `stepHead`, as
   `Resuming the run .orchestrator/<unit>/<run>/ at step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5`.
   Test that `plainOutput` writes it as a line before the first step's line, and that `framedOutput` puts it and the
   first step's line in one frame, with no rule between them (R10)
-- [ ] Add the function of the opening line and `opening` to `RunOutput`, `plainOutput` and `framedOutput` (R10)
-- [ ] Test that `parseOrchestrateArgs` takes `--resume` and `--prompt <text>`, as `--prompt=<text>` too, at any place,
+- [x] Add the function of the opening line and `opening` to `RunOutput`, `plainOutput` and `framedOutput` (R10)
+- [x] Test that `parseOrchestrateArgs` takes `--resume` and `--prompt <text>`, as `--prompt=<text>` too, at any place,
   and gives `resume` and `prompt`; that `--prompt` without a text is refused as `--definition` without a file is; that
   `--prompt` without `--resume` is refused with the line `--prompt is taken only with --resume` and the usage; that
   `--definition` with `--resume` is parsed, since the command refuses it; and that the usage names both options.
   Update `USAGE_FORM` and `ORCHESTRATE_USAGE_FORM` to the new form (R9, R12)
-- [ ] In `scripts/agentrite-orchestrate.mjs`, add `resume` and `prompt` to `ORCHESTRATE_OPTIONS`, `prompt: 'a text'`
+- [x] In `scripts/agentrite-orchestrate.mjs`, add `resume` and `prompt` to `ORCHESTRATE_OPTIONS`, `prompt: 'a text'`
   to `ORCHESTRATE_VALUES`, the refusal of `--prompt` without `--resume`, and both options to `ORCHESTRATE_FORM` as
   `[--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]` and to `orchestrateUsage` (R9,
   R12)
@@ -200,7 +200,7 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 - [x] `feature-0089 Plan the resume of a stopped run`: `plan.md` and the record's entry
 - [x] `feature-0089 Take resumes and asked in the state of a run`: the tasks of "The form of state.json"
 - [x] `feature-0089 Start a run of the definition at a step`: the tasks of "The position a resume starts at"
-- [ ] `feature-0089 Take --resume and --prompt, and print the opening line`: the tasks of "The prompt, the opening
+- [x] `feature-0089 Take --resume and --prompt, and print the opening line`: the tasks of "The prompt, the opening
   line and the options"
 - [ ] `feature-0089 Resume the latest stopped run of a unit`: the tasks of "The command"
 - [ ] `feature-0089 Describe the resume of a run`: the tasks of "The documents"

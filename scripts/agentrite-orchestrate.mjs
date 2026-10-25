@@ -349,6 +349,17 @@ export function stepHead({ number, round, step }) {
 }
 
 /**
+ * The line a resume prints first, before its first step: the directory of the run it resumes and the step it reruns.
+ *
+ * @param {string} resumed the directory of the run resumed, from the project root
+ * @param {Pick<Planned, 'number' | 'round' | 'step'>} rerun
+ * @returns {string}
+ */
+export function openingLine(resumed, rerun) {
+  return `Resuming the run ${resumed}/ at ${stepHead(rerun)}`;
+}
+
+/**
  * How many digits the number of a step's files takes: those of the highest number the definition can reach, with an
  * ask again after every step, and two at least, so that the names sort in the order the steps ran.
  *
@@ -640,10 +651,11 @@ export function followPrinter(write) {
 }
 
 /**
- * What the command prints on standard output while it runs a definition: the line before a step, the items followed
- * of the step, the line after it, and the end report.
+ * What the command prints on standard output while it runs a definition: the opening line of a resume, the line
+ * before a step, the items followed of the step, the line after it, and the end report.
  *
  * @typedef {object} RunOutput
+ * @property {(line: string) => void} opening
  * @property {(line: string) => void} started
  * @property {(items: Timed[]) => void} items
  * @property {(line: string) => void} ended
@@ -658,6 +670,7 @@ export function followPrinter(write) {
  */
 export function plainOutput(write) {
   return {
+    opening: (line) => write(`${line}\n`),
     started: (line) => write(`${line}\n`),
     items: () => {},
     ended: (line) => write(`${line}\n`),
@@ -675,10 +688,10 @@ export const CLOSING_RULE = '='.repeat(RULE_WIDTH);
 
 /**
  * The output with `--follow`: as `plainOutput`, with the items of each step printed between its two lines, and the
- * command's own lines in frames. The line a step starts with has a frame of its own when it is the first step, the
- * line a step ends with shares one with the line the next step starts with, and the line the last step ends with
- * shares one with the end report. No frame is open while a step runs, so what the harness prints on standard error
- * then stands outside one.
+ * command's own lines in frames. The line a step starts with has a frame of its own when it is the first step, which
+ * the opening line of a resume shares, the line a step ends with shares one with the line the next step starts with,
+ * and the line the last step ends with shares one with the end report. No frame is open while a step runs, so what
+ * the harness prints on standard error then stands outside one.
  *
  * @param {(text: string) => void} write
  * @returns {RunOutput}
@@ -698,6 +711,10 @@ export function framedOutput(write) {
   };
   let print = followPrinter(put);
   return {
+    opening: (line) => {
+      openFrame();
+      put(`${line}\n`);
+    },
     started: (line) => {
       openFrame();
       put(`${line}\n${CLOSING_RULE}\n\n`);
@@ -719,7 +736,8 @@ export function framedOutput(write) {
 
 /** How `orchestrate` is run. */
 export const ORCHESTRATE_FORM =
-  'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
+  'usage: agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] ' +
+  '[--follow]';
 
 /**
  * @returns {string}
@@ -728,10 +746,13 @@ export function orchestrateUsage() {
   return [
     ORCHESTRATE_FORM,
     '',
-    '  <unit>               an approved unit, a directory of changes/, by its name or by the four digits its',
-    '                       name opens with',
+    '  <unit>               a unit, a directory of changes/, by its name or by the four digits its name opens',
+    '                       with. It is approved, and with --resume approved or in progress',
     '  --definition <file>  the definition to run, in the place of the one orchestrator in agentrite.json names:',
     '                       a path relative to the project root, or absolute',
+    '  --resume             resume the latest run of the unit on the branch checked out, which stopped for the',
+    '                       human, by running again the step that stopped it',
+    '  --prompt <text>      with --resume, the words of the human to the step that the resume reruns',
     '  --skip-permissions   given to the agentrite run of every step, so that no harness asks permission.',
     '                       Meant for the sandbox',
     "  --follow             print each step's messages and tool calls while it runs",
@@ -740,19 +761,28 @@ export function orchestrateUsage() {
 
 const ORCHESTRATE_OPTIONS = /** @type {const} */ ({
   definition: { type: 'string' },
+  resume: { type: 'boolean' },
+  prompt: { type: 'string' },
   'skip-permissions': { type: 'boolean' },
   follow: { type: 'boolean' },
 });
 
-const ORCHESTRATE_VALUES = { definition: 'a file' };
+const ORCHESTRATE_VALUES = { definition: 'a file', prompt: 'a text' };
 
 /**
  * The arguments of `orchestrate`. What it throws holds the usage: alone when there is no argument at all, and
  * otherwise after a line that names the first argument the command does not take. It takes no `--`, since it passes
- * nothing on to a harness.
+ * nothing on to a harness. `--prompt` is taken only with `--resume`.
  *
  * @param {string[]} args
- * @returns {{ unit: string, definition: string | undefined, skipPermissions: boolean, follow: boolean }}
+ * @returns {{
+ *   unit: string,
+ *   definition: string | undefined,
+ *   skipPermissions: boolean,
+ *   follow: boolean,
+ *   resume: boolean,
+ *   prompt: string | undefined,
+ * }}
  */
 export function parseOrchestrateArgs(args) {
   if (args.length === 0) throw new Error(orchestrateUsage());
@@ -764,13 +794,18 @@ export function parseOrchestrateArgs(args) {
     strict: false,
     tokens: true,
   });
-  const error = tokensError(tokens) ?? (positionals.length === 0 ? 'no unit given' : undefined);
+  const error =
+    tokensError(tokens) ??
+    (positionals.length === 0 ? 'no unit given' : undefined) ??
+    (values.prompt !== undefined && values.resume !== true ? '--prompt is taken only with --resume' : undefined);
   if (error !== undefined) throw new Error(`${error}\n${orchestrateUsage()}`);
   return {
     unit: positionals[0],
     definition: /** @type {string | undefined} */ (values.definition),
     skipPermissions: values['skip-permissions'] === true,
     follow: values.follow === true,
+    resume: values.resume === true,
+    prompt: /** @type {string | undefined} */ (values.prompt),
   };
 }
 

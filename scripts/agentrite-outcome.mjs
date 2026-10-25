@@ -90,6 +90,20 @@ export function askAgainRequest(round) {
   ].join('\n');
 }
 
+/** What a rerun is told in the place of the human's words, when the human gave none with `--prompt`. */
+export const RESUMED = "The human resumed the run of AgentRite's orchestrator after it stopped at this step.";
+
+/**
+ * What a rerun is told between its own prompt and the request of its outcome: the words of the human, or `RESUMED`
+ * when the human gave none.
+ *
+ * @param {string | undefined} words
+ * @returns {string}
+ */
+export function resumeWords(words) {
+  return words ?? RESUMED;
+}
+
 // A line that opens a fenced code block, once its blockquote markers are taken off: any indentation, three or more of
 // one fence character, and the info string. A backtick fence's info string holds no backtick. Any indentation, and
 // not CommonMark's three spaces at most, so that a fence in a list item indented four spaces is found.

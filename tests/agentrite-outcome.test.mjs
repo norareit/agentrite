@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
-import { askAgainRequest, outcomeRequest, readOutcome } from '../scripts/agentrite-outcome.mjs';
+import { askAgainRequest, outcomeRequest, readOutcome, RESUMED, resumeWords } from '../scripts/agentrite-outcome.mjs';
 
 // R15
 
@@ -83,6 +83,18 @@ test('the request of an ask again is its paragraph followed by the request of th
   assert.equal(askAgainRequest(undefined), `${ASK_AGAIN}\n\n${request('')}`);
   const round = { at: 2, of: 3 };
   assert.equal(askAgainRequest(round), `${ASK_AGAIN}\n\n${request(', in round 2 of a repeat of at most 3 rounds')}`);
+});
+
+// Unit 0089, R3
+
+test('the sentence of a rerun says that the human resumed the run after it stopped at this step', () => {
+  assert.equal(RESUMED, "The human resumed the run of AgentRite's orchestrator after it stopped at this step.");
+});
+
+test('resumeWords gives the words of the human when they are given, and the sentence of a rerun otherwise', () => {
+  assert.equal(resumeWords('Take the second reading of R2.'), 'Take the second reading of R2.');
+  assert.equal(resumeWords('First line.\nSecond line.'), 'First line.\nSecond line.');
+  assert.equal(resumeWords(undefined), RESUMED);
 });
 
 test('each line of the source of the outcome fits the line limit', () => {

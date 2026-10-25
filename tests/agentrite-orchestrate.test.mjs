@@ -35,6 +35,7 @@ import {
   judgeStep,
   resumePosition,
   orchestrate,
+  openingLine,
   orchestrateUsage,
   parseOrchestrateArgs,
   ranTable,
@@ -1344,6 +1345,32 @@ test('plainOutput writes the line of each step and a blank line before the repor
   );
 });
 
+// Unit 0089, R10: the opening line of a resume.
+
+test('the opening line names the run resumed and the step rerun, by its head', () => {
+  const step = { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' };
+  assert.equal(
+    openingLine(`.orchestrator/${'0029-x'}/2026-10-21T10:00:00Z`, { number: 2, round: { at: 1, of: 3 }, step }),
+    'Resuming the run .orchestrator/0029-x/2026-10-21T10:00:00Z/ at step 2, round 1 of 3, implementer, claude, ' +
+      'claude-sonnet-5-5',
+  );
+  assert.equal(
+    openingLine('.orchestrator/0029-x/2026-10-21T10:00:00Z--opus', { number: 0, round: undefined, step }),
+    'Resuming the run .orchestrator/0029-x/2026-10-21T10:00:00Z--opus/ at step 0, implementer, claude, ' +
+      'claude-sonnet-5-5',
+  );
+});
+
+test('plainOutput writes the opening line as a line before the line of the first step', () => {
+  /** @type {string[]} */ const written = [];
+  const output = plainOutput((text) => written.push(text));
+  output.opening('Resuming the run x/ at step 2');
+  output.started('step 2: started');
+  output.ended('step 2: done');
+  output.report('The report.\n');
+  assert.equal(written.join(''), 'Resuming the run x/ at step 2\nstep 2: started\nstep 2: done\n\nThe report.\n');
+});
+
 // R4, R8
 
 test('the rules are 80 plain characters, the opening one naming agentrite', () => {
@@ -1419,6 +1446,32 @@ test('framedOutput puts two steps in the frames of the run, with a blank line be
   );
 });
 
+// Unit 0089, R10
+test('framedOutput puts the opening line and the line of the first step in one frame', () => {
+  /** @type {string[]} */ const written = [];
+  const output = framedOutput((text) => written.push(text));
+  output.opening('Resuming the run x/ at step 2');
+  output.started('step 2: started');
+  output.ended('step 2: done');
+  output.report('The report.\n');
+  assert.equal(
+    written.join(''),
+    framed(
+      OPENING_RULE,
+      'Resuming the run x/ at step 2',
+      'step 2: started',
+      CLOSING_RULE,
+      '',
+      OPENING_RULE,
+      'step 2: done',
+      '',
+      'The report.',
+      CLOSING_RULE,
+      '',
+    ),
+  );
+});
+
 test('framedOutput leaves no frame open while a step runs', () => {
   /** @type {string[]} */ const written = [];
   const output = framedOutput((text) => written.push(text));
@@ -1431,15 +1484,13 @@ test('framedOutput leaves no frame open while a step runs', () => {
 
 // R10
 
-const USAGE_FORM = 'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
+const USAGE_FORM =
+  'usage: agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] ' +
+  '[--follow]';
+const PARSED = { definition: undefined, skipPermissions: false, follow: false, resume: false, prompt: undefined };
 
 test('parseOrchestrateArgs takes the unit, --definition, --skip-permissions and --follow, at any place', () => {
-  assert.deepEqual(parseOrchestrateArgs(['0029']), {
-    unit: '0029',
-    definition: undefined,
-    skipPermissions: false,
-    follow: false,
-  });
+  assert.deepEqual(parseOrchestrateArgs(['0029']), { unit: '0029', ...PARSED });
   for (const args of [
     ['0029', '--definition', 'other.json', '--skip-permissions'],
     ['--definition=other.json', '0029', '--skip-permissions'],
@@ -1447,23 +1498,55 @@ test('parseOrchestrateArgs takes the unit, --definition, --skip-permissions and 
   ]) {
     assert.deepEqual(
       parseOrchestrateArgs(args),
-      { unit: '0029', definition: 'other.json', skipPermissions: true, follow: false },
+      { unit: '0029', ...PARSED, definition: 'other.json', skipPermissions: true },
       args.join(' '),
     );
   }
   assert.equal(parseOrchestrateArgs(['0029', '--definition=-odd.json']).definition, '-odd.json');
   for (const [args, expected] of [
-    [['--follow', '0029'], { unit: '0029', definition: undefined, skipPermissions: false, follow: true }],
-    [
-      ['0029', '--follow', '--skip-permissions'],
-      { unit: '0029', definition: undefined, skipPermissions: true, follow: true },
-    ],
+    [['--follow', '0029'], { unit: '0029', ...PARSED, follow: true }],
+    [['0029', '--follow', '--skip-permissions'], { unit: '0029', ...PARSED, skipPermissions: true, follow: true }],
     [
       ['0029', '--definition', 'other.json', '--follow'],
-      { unit: '0029', definition: 'other.json', skipPermissions: false, follow: true },
+      { unit: '0029', ...PARSED, definition: 'other.json', follow: true },
     ],
   ]) {
     assert.deepEqual(parseOrchestrateArgs(args), expected, args.join(' '));
+  }
+});
+
+// Unit 0089, R3, R9, R12
+test('parseOrchestrateArgs takes --resume and --prompt <text>, at any place, and --definition with them', () => {
+  for (const args of [
+    ['0029', '--resume', '--prompt', 'Take the second reading.'],
+    ['--prompt=Take the second reading.', '--resume', '0029'],
+    ['--resume', '--prompt', 'Take the second reading.', '0029'],
+  ]) {
+    assert.deepEqual(
+      parseOrchestrateArgs(args),
+      { unit: '0029', ...PARSED, resume: true, prompt: 'Take the second reading.' },
+      args.join(' '),
+    );
+  }
+  assert.deepEqual(parseOrchestrateArgs(['0029', '--resume']), { unit: '0029', ...PARSED, resume: true });
+  assert.equal(parseOrchestrateArgs(['0029', '--resume', '--prompt=-a\nb']).prompt, '-a\nb');
+  assert.deepEqual(parseOrchestrateArgs(['0029', '--resume', '--definition', 'other.json', '--follow']), {
+    unit: '0029',
+    ...PARSED,
+    definition: 'other.json',
+    follow: true,
+    resume: true,
+  });
+});
+
+test('orchestrateUsage says what --resume and --prompt do', () => {
+  const lines = orchestrateUsage().split('\n');
+  assert.equal(lines[0], USAGE_FORM);
+  for (const line of [
+    '  --resume             resume the latest run of the unit on the branch checked out, which stopped for the',
+    '  --prompt <text>      with --resume, the words of the human to the step that the resume reruns',
+  ]) {
+    assert.ok(lines.includes(line), orchestrateUsage());
   }
 });
 
@@ -1495,6 +1578,12 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
     [['0029', '--skip-permissions=yes'], '--skip-permissions takes no value'],
     [['--skip-permissions'], 'no unit given'],
     [['0029', '--follow=yes'], '--follow takes no value'],
+    [['0029', '--resume=yes'], '--resume takes no value'],
+    [['0029', '--resume', '--prompt'], '--prompt takes a text, and none was given'],
+    [['0029', '--resume', '--prompt='], '--prompt takes a text, and none was given'],
+    [['0029', '--prompt', '--resume'], '--prompt takes a text, and none was given'],
+    [['0029', '--prompt', 'Go on.'], '--prompt is taken only with --resume'],
+    [['0029', '--prompt=Go on.', '--follow'], '--prompt is taken only with --resume'],
     [['--follow'], 'no unit given'],
     [['0029', '0030'], 'unexpected argument: 0030'],
     [['0029', '--'], 'unexpected argument: --'],
@@ -2387,8 +2476,7 @@ test('a run on a branch whose variant is not of the form is refused, writing not
   );
 });
 
-const ORCHESTRATE_USAGE_FORM =
-  'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
+const ORCHESTRATE_USAGE_FORM = USAGE_FORM;
 
 test(
   'no argument, or one it does not take, prints the usage on standard error and exits 2, starting nothing',
