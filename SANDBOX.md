@@ -115,6 +115,13 @@ it runs:
 ./sandbox.sh 0029 npx agentrite orchestrate 0029 --skip-permissions --follow
 ```
 
+A run that stopped for the human is resumed in a unit run on the same branch, once the human has done what it
+stopped for, with `--resume`, and with the human's words to the step it reruns in `--prompt`:
+
+```sh
+./sandbox.sh 0029 npx agentrite orchestrate 0029 --resume --skip-permissions --prompt "Take the second reading of R2."
+```
+
 For a unit run that starts nothing, see "When something goes wrong".
 
 ## Getting the work back

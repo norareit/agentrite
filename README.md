@@ -461,17 +461,20 @@ See "Running a role".
 ### agentrite orchestrate
 
 ```sh
-npx agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]
+npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]
 ```
 
 Takes an approved unit through its roles, from the project root, by the definition that `orchestrator` in
 `agentrite.json` names: it runs each step as `agentrite run` with `--headless`, one at a time, and ends when every
-item of the definition has run or a step stops the run. Run with no argument, it prints its usage.
+item of the definition has run or a step stops the run. With `--resume`, it resumes the latest run of the unit, which
+stopped for the human, as "How a run ends" gives. Run with no argument, it prints its usage.
 
 | Argument or option    | What it is                                                                                 |
 |-----------------------|--------------------------------------------------------------------------------------------|
 | `<unit>`              | A directory of `changes/`, by its name or by the four digits its name opens with           |
 | `--definition <file>` | Runs this definition, relative to the project root or absolute. Also `--definition=<file>` |
+| `--resume`            | Resumes the latest run of the unit, which stopped for the human. See "How a run ends"      |
+| `--prompt <text>`     | With `--resume`, the human's words to the step it reruns. Also `--prompt="<text>"`         |
 | `--skip-permissions`  | Passed to the `agentrite run` of every step. The option belongs in the sandbox             |
 | `--follow`            | Prints each step's messages and tool calls while it runs. See "How a run ends"             |
 
@@ -489,6 +492,24 @@ It refuses, starts nothing, writes nothing and exits 1 when:
   letters `a` to `z` and the digits `0` to `9`, joined by single hyphens. It names the branch and the form a variant
   takes. A directory that is in no git repository, and a detached `HEAD`, are not refused
 
+With `--resume`, it refuses as a run does for `agentrite.json`, for `orchestrator`, for the unit and for the form of
+the variant. It refuses `--definition`, saying that a resume runs the definition of the run it resumes, and in the
+place of the refusal of a unit that is not `approved`, it refuses a unit whose status is neither `approved` nor
+`in-progress`, naming the status and saying that a resume takes a unit that is approved or in progress. Beside these,
+it refuses, starts nothing, writes nothing and exits 1 when:
+
+* the unit has no run on the variant of the branch checked out. It names the unit, and the variant or that the runs
+  it looked for have none
+* the latest of those runs has not ended, or ended with a status other than 3. It names the run, its state and what
+  `agentrite runs` gives after the state, and says that a resume takes a run that ended with 3, which a run does when
+  it stops for the human
+* the latest run's `state.json` holds no `branch`, or one other than the branch checked out. It names both
+* the latest run's `state.json` or `definition.json` cannot be read or is not of the form the command writes, as
+  `agentrite runs` refuses them, or its `state.json` holds an end and no step it was at. It names the file and what is
+  wrong with it
+
+`--prompt` without `--resume` is refused with the usage, as wrong arguments are.
+
 It takes no `--`: a step's harness gets the arguments the definition and the command give it, and no other.
 
 Every step runs in a process group of its own. `SIGINT`, `SIGTERM` and `SIGHUP` sent to the command, as Ctrl-C on
@@ -497,7 +518,7 @@ signal.
 
 It exits with `0` for a run that ran every item of the definition to its end, `1` when it refuses or fails, `2` for
 wrong arguments or none, which it refuses with its usage, and `3`, its own status, for a run that a step or a
-repeat stopped, which waits for the human. See [Exit statuses](#exit-statuses).
+repeat stopped, which waits for the human. A resume exits as a run does. See [Exit statuses](#exit-statuses).
 
 See "The orchestrator".
 
@@ -833,7 +854,8 @@ The command starts nothing when:
 `agentrite orchestrate` takes an approved unit through its roles, so that the human does not start each one: it runs
 the steps of a definition one at a time, each as `agentrite run` with `--headless`, and ends when every step has run
 or a step needs the human. A run starts the work of a unit whose `record.md` has the status `approved`, as the human
-leaves it after approving the spec, and refuses a unit of any other status.
+leaves it after approving the spec, and refuses a unit of any other status. A resume of a run that stopped takes a unit
+that is `approved` or `in-progress`, as "How a run ends" gives.
 
 ```sh
 npx agentrite orchestrate 0029
@@ -1145,8 +1167,49 @@ A run that ran every item to its end exits 0, and a run that stopped exits 3, wh
 run that the command refused, and that started nothing, exits 1. See "agentrite orchestrate" in "Commands".
 
 A run neither sets the unit's status nor commits. What the roles do to the unit, their commits and their entries in
-`record.md` among it, is theirs, as when they are started by hand. A run that stopped is not picked up again by the
-command: the human takes over from where it stopped.
+`record.md` among it, is theirs, as when they are started by hand.
+
+Once the human has done what a run stopped for, as answering its questions, deciding its proposed declines or fixing
+what a review found, the run is resumed with `--resume`, from the project root on the branch the run ran on:
+
+```sh
+npx agentrite orchestrate 0029 --resume --prompt "Take the second reading of R2."
+```
+
+A resume takes the latest run of the unit on the variant of the branch checked out, the run that
+`npx agentrite runs` lists first among the runs of that unit and variant. A branch with no `--` resumes the runs with
+no variant. It takes that run only when the run ended with 3 and ran on the branch checked out, and a unit that is
+`approved` or `in-progress`. A run that has not ended, as one a signal ended, which shows as stale, is not resumed,
+and neither is a run other than the latest of its unit and variant: the human takes over from where it stopped.
+
+A resume reruns the step that stopped the run, in the round it stopped in, continuing the session the step's role
+and harness held in the run, as a later step of the same role and harness in a run does. When the run holds no
+session for them, the rerun starts a new one. A run that stopped at an ask again is resumed at the step that was
+asked: the rerun is that step, and not an ask again. The rerun's prompt is the step's own `prompt` from the
+definition, then the words of `--prompt` as they were written, then the request of "The outcome of a step", each
+apart by a blank line. Without `--prompt`, the words are replaced by the sentence `The human resumed the run of
+AgentRite's orchestrator after it stopped at this step.`
+
+The rerun is judged as any step is, by its outcome, its time and its harness's exit, and asked again when it gives no
+outcome and its session is known. The run goes on from it by the definition, the steps after it with the rounds and
+the sessions they would have had, had the step given that outcome the first time. A repeat whose `until` holds after
+the rerun ends, and the run goes on with the item after it. A repeat that ran out is resumed at its last round, so it
+gets no round beyond those of the definition, and runs out again when its `until` does not hold after the rerun.
+
+A resume runs the definition the stopped run holds in its `definition.json`, and not the one `agentrite.json` names
+when it is resumed. It is a run of its own, in a directory of its own, as "What .orchestrator holds" gives, and prints,
+writes and ends as a run does, with `--follow` and without it. The first line it prints, before the first step, names
+the run it resumes and the step it reruns. With `--follow`, it stands in the frame of the line the first step starts
+with:
+
+```
+Resuming the run .orchestrator/0029-export/2026-10-21T10:00:00Z/ at step 0, planner, claude, claude-opus-5-5
+step 0, planner, claude, claude-opus-5-5: started
+```
+
+Its steps are numbered on from the run it resumes, so the rerun has the number its step had there. Its end report
+gives the steps the resume ran: the non-blocking findings still open and the items of `afterwards` of the steps of the
+run it resumes stay in that run's report. A resume that stops is resumed in turn, as any run that stopped is.
 
 ### What .orchestrator holds
 
@@ -1161,8 +1224,11 @@ and outside a git repository has no variant, and its directory is the instant al
 * `definition.json`, the definition the run runs, as it was read at the start
 * `state.json`, the state of the run: the unit, the definition's path as it was given, the branch checked out when the
   run started as `branch`, which is `null` on a detached `HEAD` and outside a git repository, is written once and never
-  changes, and is missing in a run from before it was written, the step and round it is at, the id of each harness
-  session, and when the run ended, its exit status and how it ended
+  changes, and is missing in a run from before it was written, the name of the directory of the run it resumes as
+  `resumes`, which is `null` for a run that resumes none, the step and round it is at as `at`, with `asked`, `true`
+  for an ask again and `false` for any other step, the id of each harness session, and when the run ended, its exit
+  status and how it ended. `resumes` and `asked` are missing in a run from before they were written, which is read as
+  a run that resumes none and whose step is no ask again
 * `heartbeat`, one instant in UTC to the second, as `2026-10-23T10:00:05Z`, followed by a line break, and nothing
   else. The command writes it when it makes the run's directory, before the first step starts, and then every 10
   seconds while the run lasts, between steps and while a step runs, with `--follow` and without it. Each write
@@ -1191,6 +1257,14 @@ and outside a git repository has no variant, and its directory is the instant al
   {"time":"2026-10-23T10:00:05Z","kind":"text","text":"I will run the tests."}
   {"time":"2026-10-23T10:00:09Z","kind":"call","tool":"Bash","label":"Run the unit tests"}
   ```
+
+A resume has a directory of its own, named as any run's is by the instant it started and its variant, and the
+directory of the run it resumes is not changed. Its `definition.json` holds the text of the `definition.json` of the
+run it resumes, and its `state.json` holds that run's definition path as `definition`, that run's directory name as
+`resumes`, and that run's sessions, to which the resume's own are added. Its step files are numbered on from the run
+it resumes: the rerun has the number that the step of the definition it reruns had in that run, which for a run that
+stopped at an ask again is the number of the step that was asked, and every step after it, an ask again among them,
+has the next number, as in a run.
 
 Every file of a run's directory but the followed files is written whole. A file that is being written stands in the
 same directory under a name that opens with `.` until it takes its own name, so a program that reads one of the files
@@ -1248,6 +1322,18 @@ the unit's branch:
 
 A unit run mounts the host's `.orchestrator` at `/work/.orchestrator`, so the run's directory is on the host as it is
 written. See "Running a unit" of `SANDBOX.md`.
+
+A run that stopped is resumed where it ran, on the branch it ran on. On the host:
+
+```sh
+npx agentrite orchestrate 0029 --resume
+```
+
+In the sandbox, in a unit run on the clone of the unit's branch:
+
+```sh
+./sandbox.sh 0029 npx agentrite orchestrate 0029 --resume --skip-permissions
+```
 
 ## Installing it into a project
 

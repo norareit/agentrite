@@ -176,18 +176,18 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ### The documents
 
-- [ ] "agentrite orchestrate" of `README.md`: the form with both options, their rows in the table, that `--prompt` is
+- [x] "agentrite orchestrate" of `README.md`: the form with both options, their rows in the table, that `--prompt` is
   taken only with `--resume` and is refused with the usage otherwise, the refusals of a resume beside those of a run,
   and that a resume exits as a run does (R12)
-- [ ] "The orchestrator" of `README.md`: in "How a run ends", replace the sentence that a stopped run is not picked up
+- [x] "The orchestrator" of `README.md`: in "How a run ends", replace the sentence that a stopped run is not picked up
   again with what `--resume` does: which run it resumes, which step it reruns and with what prompt, how it goes on, the
   definition it runs, its opening line, and that it can be resumed in turn. In "On the host and in the sandbox", the
   command of a resume on the host and in the sandbox (R12)
-- [ ] "What .orchestrator holds" of `README.md`: that a resume has a directory of its own, that its `definition.json`
+- [x] "What .orchestrator holds" of `README.md`: that a resume has a directory of its own, that its `definition.json`
   is the stopped run's, that its `state.json` holds `resumes` and the stopped run's `definition` path, that `at`
   holds `asked`, that both keys are missing in a run from before them, how a resume's step files are numbered, and
   that the stopped run's directory is not changed (R12)
-- [ ] `SANDBOX.md`, after the command of a run in a unit run: the command of a resume in a unit run, as
+- [x] `SANDBOX.md`, after the command of a run in a unit run: the command of a resume in a unit run, as
   `./sandbox.sh 0029 npx agentrite orchestrate 0029 --resume --skip-permissions`, with `--prompt` (R12)
 
 ## Verification
@@ -205,4 +205,4 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 - [x] `feature-0089 Take --resume and --prompt, and print the opening line`: the tasks of "The prompt, the opening
   line and the options"
 - [x] `feature-0089 Resume the latest stopped run of a unit`: the tasks of "The command"
-- [ ] `feature-0089 Describe the resume of a run`: the tasks of "The documents"
+- [x] `feature-0089 Describe the resume of a run`: the tasks of "The documents"
