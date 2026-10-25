@@ -2395,7 +2395,7 @@ test(
   },
 );
 
-test('a run with --follow frames its step lines and the end report, the followed items between', async (testContext) => {
+test('a run with --follow frames its step lines and the end report, items between', async (testContext) => {
   const { result, run } = await followedRun(testContext, '--follow');
 
   const fixed = result.stdout.replace(/ after [^\n]*/g, ' after TIME').replaceAll(run.name, 'RUN');

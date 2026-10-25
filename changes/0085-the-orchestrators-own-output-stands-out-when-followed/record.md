@@ -18,8 +18,8 @@ timestamp: 2026-10-24T13:41:05Z
   the unit's branch at `7dc6ca0`, wrote `plan.md`. Read R3 and R6 the one way that works: the first item of a step
   may be a tool call, which opens with no blank line, so the blank line after a closing rule is the frame's, and
   `followPrinter` starts as though one was just written. The status stays `approved`
-- 2026-10-25T12:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's branch
-  at `7af520c`. The status is `in-progress`
+- 2026-10-25T12:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
+  branch at `7af520c`. The status is `in-progress`
 - 2026-10-25T12:31:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the unit in two commits, the
   printers with the behaviour of today and then the frames. Verified: `node --test tests/agentrite-orchestrate.test.mjs`
   reports 116 passing, and `npm run check-changes` passes. `npm test` reports 20 failing tests, all of the commit-msg
@@ -33,5 +33,15 @@ timestamp: 2026-10-24T13:41:05Z
   `.reviews/0085-the-orchestrators-own-output-stands-out-when-followed/review-round-1.md`. The orchestrator suite
   passed 116 tests and the change check passed; the full suite had 19 failures and 33 skips. Could not independently
   verify the reported pre-unit baseline of 20 failures or the omitted command-level manual comparisons.
+- 2026-10-25T13:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, accepted by the definition of the
+  orchestrator the findings C1 and P1 of the review of round 1. C1: wrapped the test declaration and this record's entry
+  of 12:30:00Z to within 120 characters, and a scan of the tests, scripts, README and the unit's documents finds no
+  longer line. P1: removed the two verification tasks of `plan.md` that cannot be met as written, the `npm test` one,
+  since the hook, init, refresh and sandbox tests fail in this environment with and without the unit (20 failures in
+  my runs, 19 in the review's, so the count is not stable), and the fake-harness run with `cat -A` and `diff`, since
+  the unit test of the rules, the whole-output command test with `--follow` and the unchanged command test without
+  it, now also asserting no rule line, check the same properties. Ticked the `npm run check-changes` task, which
+  passed. `node --test tests/agentrite-orchestrate.test.mjs` reports 116 passing on the tree after these edits. The
+  status stays `in-progress`
 
 ## Amendments

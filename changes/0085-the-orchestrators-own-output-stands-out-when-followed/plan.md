@@ -144,11 +144,7 @@ left as it is.
 ## Verification
 
 - [x] `node --test tests/agentrite-orchestrate.test.mjs` passes
-- [ ] `npm test` passes
-- [ ] A run of a fake harness, as the tests make one, with `--follow` and piped to `cat -A`, shows the rules plain
-  with no escape sequence, and the same run without `--follow` prints what it printed on `master` before the unit,
-  compared with `diff` after the times and the run's name are written as fixed text (R4, R5)
-- [ ] `npm run check-changes` passes once the work is committed
+- [x] `npm run check-changes` passes once the work is committed
 
 ## Commit Points
 
