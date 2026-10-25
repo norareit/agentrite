@@ -353,6 +353,26 @@ export function parseRun(unit, name, texts) {
 }
 
 /**
+ * Whether the step `at` names, of the role `role`, is an ask again, in a run of `definition` whose directory holds the
+ * files `names`. A run from unit 0089 on says so in `asked`. A run from before it says nothing, and may still have
+ * stopped at an ask again, since unit 0088 writes them: the step before an ask again is the only step that a run goes
+ * on after without an outcome file, so the step at `at` is an ask again when the step numbered one lower is of its
+ * role, ran in the run and has no outcome file.
+ *
+ * @param {import('./agentrite-definition.mjs').Definition} definition
+ * @param {{ number: number, asked?: boolean }} at
+ * @param {string} role
+ * @param {string[]} names
+ * @returns {boolean}
+ */
+export function isAskAgain(definition, { number, asked }, role, names) {
+  if (asked !== undefined) return asked;
+  if (number === 0) return false;
+  const fileOf = (/** @type {string} */ kind) => stepFileName(definition, number - 1, role, kind);
+  return names.includes(fileOf('followed.jsonl')) && !names.includes(fileOf('outcome.json'));
+}
+
+/**
  * The run that the directory `name` of the unit directory `unit` holds, from the text of its `state.json`, of its
  * `definition.json` and of its `heartbeat`, which is `undefined` when it is missing. Throws, naming the file by its
  * path from the directory `runs` runs in, when a file is not of the form the orchestrator writes.

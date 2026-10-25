@@ -198,17 +198,17 @@ The review of `d5bed69` found that a run written by 0088, before `asked`, can st
 took for the step that was asked and so numbered one too high. In such a run the step before an ask again is the only
 step the run goes on after that has no outcome file, so the files of the run say whether `at` is an ask again.
 
-- [ ] In `tests/agentrite-runs.test.mjs`, test `isAskAgain`: `asked` as `true` or `false` is taken as it is; without
+- [x] In `tests/agentrite-runs.test.mjs`, test `isAskAgain`: `asked` as `true` or `false` is taken as it is; without
   `asked`, `at` is an ask again when the files of the run hold the followed file of the step numbered one lower, of
   the same role, and no outcome file of it; it is none when they hold that outcome file, when the step numbered one
   lower is of another role or has no followed file, and at the step numbered 0 (R2, R6)
-- [ ] Add `isAskAgain` to `scripts/agentrite-runs.mjs` (R2, R6)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, test that a run written without `asked` that stopped at an ask again
+- [x] Add `isAskAgain` to `scripts/agentrite-runs.mjs` (R2, R6)
+- [x] In `tests/agentrite-orchestrate.test.mjs`, test that a run written without `asked` that stopped at an ask again
   is resumed at the step that was asked, numbered as it, and one that stopped at a step that is no ask again at that
   step, numbered as it (R2, R6, R11)
-- [ ] In the preparer of a resume in `scripts/agentrite.mjs`, read the names of the files of the stopped run and give
+- [x] In the preparer of a resume in `scripts/agentrite.mjs`, read the names of the files of the stopped run and give
   `resumePosition` the `at` with `asked` that `isAskAgain` gives (R2, R6)
-- [ ] In "What .orchestrator holds" of `README.md`, say that a resume reads whether the step of a run without `asked`
+- [x] In "What .orchestrator holds" of `README.md`, say that a resume reads whether the step of a run without `asked`
   is an ask again from the run's files, in the place of the sentence that such a step is no ask again (R12)
 
 ## Verification
@@ -227,4 +227,4 @@ step the run goes on after that has no outcome file, so the files of the run say
   line and the options"
 - [x] `feature-0089 Resume the latest stopped run of a unit`: the tasks of "The command"
 - [x] `feature-0089 Describe the resume of a run`: the tasks of "The documents"
-- [ ] `feature-0089 Resume an ask again of a run written before asked`: the tasks of "Review finding S1"
+- [x] `feature-0089 Resume an ask again of a run written before asked`: the tasks of "Review finding S1"

@@ -3611,6 +3611,47 @@ test('a resume with --follow opens its first frame with its opening line, and ke
   assert.ok(filesOf(context, resumed).includes('01-implementer.followed.jsonl'));
 });
 
+// Review finding S1: a run written by unit 0088, before asked, as it leaves its state.json.
+
+function withoutAsked(context, run) {
+  const state = stateOf(context, run);
+  delete state.at.asked;
+  context.write(`${run.directory}/state.json`, `${JSON.stringify(state, null, 2)}\n`);
+}
+
+test('a run without asked that stopped at an ask again is resumed at the step asked, numbered as it', (testContext) => {
+  const context = stoppedRun(testContext, NO_OUTCOME());
+  const { answer, calls, stopped } = context;
+  withoutAsked(context, stopped);
+  answer(4, claudePrinted(responseOf(DONE)));
+  answer(5, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(firstLine(result.stdout), `Resuming the run ${stopped.directory}/ at ${IMPLEMENTER_ROUND_1}`);
+  assert.deepEqual(startedLines(result.stdout), [`${IMPLEMENTER_ROUND_1}: started`, `${REVIEWER_ROUND_1}: started`]);
+  assert.deepEqual(calls()[3].options.slice(-2), ['--resume', 'implementer-session']);
+  assert.ok(filesOf(context, runOf(1)).includes('01-implementer.outcome.json'));
+});
+
+test('a run without asked that stopped at a step that is no ask again is resumed at that step', (testContext) => {
+  const context = stoppedRun(testContext, [
+    claudePrinted(responseOf(DONE)),
+    claudePrinted(responseOf({ ...DONE, questions: ['Which?'] }), 'implementer-session'),
+  ]);
+  const { answer, stopped } = context;
+  withoutAsked(context, stopped);
+  answer(3, claudePrinted(responseOf(DONE)));
+  answer(4, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(firstLine(result.stdout), `Resuming the run ${stopped.directory}/ at ${IMPLEMENTER_ROUND_1}`);
+  assert.deepEqual(startedLines(result.stdout), [`${IMPLEMENTER_ROUND_1}: started`, `${REVIEWER_ROUND_1}: started`]);
+});
+
 // R8, R9: the refusals of a resume.
 
 const STOPPED_END = { status: 3, line: 'Step 2 stopped the run: its outcome is needs-human.' };

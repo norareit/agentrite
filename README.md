@@ -1227,8 +1227,10 @@ and outside a git repository has no variant, and its directory is the instant al
   changes, and is missing in a run from before it was written, the name of the directory of the run it resumes as
   `resumes`, which is `null` for a run that resumes none, the step and round it is at as `at`, with `asked`, `true`
   for an ask again and `false` for any other step, the id of each harness session, and when the run ended, its exit
-  status and how it ended. `resumes` and `asked` are missing in a run from before they were written, which is read as
-  a run that resumes none and whose step is no ask again
+  status and how it ended. `resumes` and `asked` are missing in a run from before they were written. Such a run is
+  read as one that resumes none, and a resume reads whether its step is an ask again from its files: it is one when
+  the run's directory holds the followed file of the step numbered one lower, of the same role, and no outcome file
+  of it, since a run goes on after a step without an outcome only to ask it again
 * `heartbeat`, one instant in UTC to the second, as `2026-10-23T10:00:05Z`, followed by a line break, and nothing
   else. The command writes it when it makes the run's directory, before the first step starts, and then every 10
   seconds while the run lasts, between steps and while a step runs, with `--follow` and without it. Each write

@@ -71,6 +71,7 @@ import {
 import { askAgainRequest, outcomeRequest, resumeWords } from './agentrite-outcome.mjs';
 import {
   detailOf,
+  isAskAgain,
   isRunDirectory,
   parseRun,
   parseRunsArgs,
@@ -1900,7 +1901,8 @@ function prepareResume(root, { unit, definition: given }) {
     throw new Error(`the latest run, ${run}/, is ${runState}: ${detail}\n${RESUME_TAKES}`);
   }
   checkRunBranch(run, state.branch ?? null, branch);
-  const from = resumePosition(state.at, state.sessions);
+  const asked = isAskAgain(definition, state.at, step.role, readdirSync(resolve(root, run)));
+  const from = resumePosition({ ...state.at, asked }, state.sessions);
   return {
     directory,
     branch,

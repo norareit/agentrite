@@ -3,7 +3,9 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { parseDefinition } from '../scripts/agentrite-definition.mjs';
 import {
+  isAskAgain,
   isRunDirectory,
   parseRun,
   parseRunsArgs,
@@ -281,6 +283,23 @@ test('parseRun gives the state, the definition and the step at names, or null be
   assert.throws(() => parseRun('0029-x', INSTANT, { state: elsewhere, definition: DEFAULT }), {
     message: `${STATE_FILE}: at names a step that ${DEFINITION_FILE} does not have`,
   });
+});
+
+// Unit 0089, review finding S1: whether the step of a run written without asked is an ask again, by its files.
+
+test('isAskAgain takes asked as it is, and without it reads the files of the step numbered one lower', () => {
+  const definition = parseDefinition(DEFAULT, { path: 'definition.json' });
+  const at = { number: 2, item: 1, round: { at: 1, of: 3 }, index: 0 };
+  const asked = (given, names) => isAskAgain(definition, given, 'implementer', names);
+  const followed = '01-implementer.followed.jsonl';
+  assert.equal(asked({ ...at, asked: true }, []), true);
+  assert.equal(asked({ ...at, asked: false }, [followed]), false);
+  assert.equal(asked(at, [followed]), true);
+  assert.equal(asked(at, [followed, '01-implementer.response.md', '02-implementer.followed.jsonl']), true);
+  assert.equal(asked(at, [followed, '01-implementer.outcome.json']), false);
+  assert.equal(asked(at, ['01-planner.followed.jsonl']), false);
+  assert.equal(asked(at, []), false);
+  assert.equal(asked({ ...at, number: 0 }, ['00-implementer.followed.jsonl']), false);
 });
 
 test('a definition.json that is not of the form is refused, naming the file', () => {
