@@ -22,11 +22,13 @@ becoming public. They decided that:
 
 The role:
 
-1. `extra-roles/security-reviewer.md` holds the role. It opens with the front matter of a role file in a form
-   "Replacing a role or the standards" of `README.md` gives, and then first with an instruction to read `process.md`
-   and the project's standards, as "Adding a role" of `README.md` requires of an extra role
-2. `agentrite.json` names it in `roles` as `security-reviewer`, after `spec-reviewer`. Its wrappers for Claude Code
-   and OpenCode and its line in `.agentrite/instructions.md`, as `npx agentrite refresh` writes them, are committed
+1. The role is one of this repository's own roles, which are not in the package. Its file opens with the front matter
+   of a role file in a form "Replacing a role or the standards" of `README.md` gives, and then first with an
+   instruction to read `process.md` and the project's standards, as "Adding a role" of `README.md` requires of an
+   extra role
+2. `agentrite.json` names it in `roles` as `security-reviewer`, after `spec-reviewer`. What `npx agentrite refresh`
+   writes for it, its wrappers for Claude Code and OpenCode and its line in the list of the instruction files in use,
+   is committed
 3. The role file says that the role works in one of two modes, and what it is given in each:
     * a unit review, given a unit directory whose status is `in-progress`, of the diff of the unit's branch against
       the default branch, at the commit of the branch it reviews
