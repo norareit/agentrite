@@ -45,9 +45,10 @@ was asked.
 
 ## Tasks
 
-- [x] Write the regression tests first, in `tests/sandbox-variant.test.mjs`, without `{ skip }`, against
-  `waitForRun` as the approach gives it, each named with the prefix `waitForRun`, and see them fail because it does
-  not exist yet (R4):
+- [x] Write the regression tests, in `tests/sandbox-variant.test.mjs`, without `{ skip }`, against
+  `waitForRun` as the approach gives it, each named with the prefix `waitForRun` (R4). They were written together
+  with the wait and not seen failing first, as `record.md` says. Regression sensitivity was shown afterwards, by a
+  wait changed to ignore the listing, which made two of the three fail:
     * a fake `docker` that answers `ps` with `other-container` alone on its first three calls, and with
       `other-container` and the run's container from the fourth on: `waitForRun` resolves, and the fake was called
       four times, so the wait went on while the container was left out and ended once it was listed

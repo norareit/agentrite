@@ -40,5 +40,12 @@ timestamp: 2026-10-23T23:50:06Z
   `npm test` (1238 passed, none failed or skipped), `npm run check-changes` and `git diff --check master...HEAD`
   (both passed). The original intermittent race and historical tests-first ordering were not independently
   verified. The status stays `in-progress`
+- 2026-10-25T10:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, took the finding P1 of the review
+  `review-20261024T234946Z.md`, nonblocking, accepted by the definition of the orchestrator and not as a decision of
+  the human. The first task of `plan.md` said the tests were written first and seen failing, which did not happen, so
+  its text now says what was done. As evidence after the fact, and not as the red run that was skipped, the wait was
+  changed in a scratch edit to ignore the listing: of the three `waitForRun` tests, 2 failed (the delayed listing and
+  the never listed container) and 1 passed (the missing ready file, which does not depend on the listing). The edit
+  was reverted and is not committed. The status stays `in-progress`
 
 ## Amendments
