@@ -28,3 +28,9 @@ timestamp: 2026-10-25T14:10:17Z
   `spec.md`, keeping the request's paragraph on the final response as requirement 6. Dropped the old item 1 of
   "Beyond the request", which the ask again makes moot. The plan written for the earlier fix no longer fits, and goes
   to the planner. The status stays `approved`, as the human decided the fix
+- 2026-10-25T14:43:19Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  `bugfix-0088-a-steps-later-turn-hides-its-outcome`, rewrote `plan.md` for the corrected spec. The verification of
+  taking tools away and the tasks of `scripts/agentrite-headless.mjs` are gone with that fix. Put the mark of an ask
+  again in `stepLine` and not in `stepHead`, so that `agentrite runs` does not change, and in a last column of the
+  end report's list that a run without an ask again leaves empty. The status stays `approved`
+- 2026-10-25T14:46:48Z [human] approved the corrected spec. The status stays `approved`
