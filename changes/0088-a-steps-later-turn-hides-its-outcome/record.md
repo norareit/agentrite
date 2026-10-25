@@ -37,14 +37,14 @@ timestamp: 2026-10-25T14:10:17Z
 - 2026-10-25T15:38:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   on `bugfix-0088-a-steps-later-turn-hides-its-outcome` at `b33e1e5`, began the work by the plan. The status is
   `in-progress`
-- 2026-10-25T15:44:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the first task's "five calls" and "the
-  fourth" as four calls and the third, the ask again: the plan's own steps, the planner, the implementer, its ask
-  again and the reviewer as step 3, make four, and no other reading fits
-- 2026-10-25T15:47:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished every task of the plan. The new
-  tests of `orchestrate`, `stepLine`, `ranTable`, `stepFileName` and the command were seen failing before the code,
+- 2026-10-25T15:44:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the first task's "five calls"
+  and "the fourth" as four calls and the third, the ask again: the plan's own steps, the planner, the implementer, its
+  ask again and the reviewer as step 3, make four, and no other reading fits
+- 2026-10-25T15:47:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished every task of the plan. The
+  new tests of `orchestrate`, `stepLine`, `ranTable`, `stepFileName` and the command were seen failing before the code,
   but the test that a failed harness, a time limit, several blocks and an unknown session are not asked again, which
-  holds of the code before it too; those of the request were seen failing with `askAgainRequest` in place and the
-  new paragraph not yet. On `2b46717`, `npm test` ran 1269 tests, 1269 passing and none skipped, `npm run
-  check-changes` exited 0, and `git diff master -- scripts/agentrite-headless.mjs scripts/agentrite-run.mjs` showed
-  nothing. Not checked: an ask again against a real Claude Code or OpenCode, which the tests stand in for with fake
-  harnesses. The status stays `in-progress`, for the review
+  holds of the code before it too; those of the request were seen failing with `askAgainRequest` in place and the new
+  paragraph not yet. On `2b46717`, `npm test` ran 1269 tests, 1269 passing and none skipped, `npm run check-changes`
+  exited 0, and `git diff master -- scripts/agentrite-headless.mjs scripts/agentrite-run.mjs` showed nothing. Not
+  checked: an ask again against a real Claude Code or OpenCode, which the tests stand in for with fake harnesses. The
+  status stays `in-progress`, for the review
