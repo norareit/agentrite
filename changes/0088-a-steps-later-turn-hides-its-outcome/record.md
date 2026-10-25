@@ -55,3 +55,10 @@ timestamp: 2026-10-25T14:10:17Z
   none failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` passed. Did not verify an
   ask again against real harness sessions or reproduce the external project's scheduled wakeup. The status stays
   `in-progress`
+- 2026-10-25T15:56:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the review of `d4b517a` and
+  checked C1 against `runFrom` of `scripts/agentrite-runs.mjs`: it holds. A run made before this unit of a definition
+  that can reach 51 to 100 steps, or 501 to 1000, has its followed file under a narrower number than `numberWidth` now
+  gives, so `agentrite runs` gives it no followed file. Proposed a decline of C1, which stays open until the human
+  decides: finding the files of older runs is a change to `agentrite runs` that the spec does not ask for, the default
+  definition reaches 7 steps and is not touched, the followed file of such a run is still in its directory, and the runs
+  directories are ignored working files of one machine, not kept history. The status stays `in-progress`
