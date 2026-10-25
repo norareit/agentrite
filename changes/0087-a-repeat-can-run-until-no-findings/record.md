@@ -20,3 +20,9 @@ timestamp: 2026-10-25T00:11:13Z
   may follow the repeat and the end report otherwise takes only the last step's outcome. Added requirement 11, a
   test of the command, since the standards ask for end-to-end coverage of a feature that can be tested end to end
 - 2026-10-25T11:05:22Z [human] approved the spec. The status is `approved`
+- 2026-10-25T11:08:59Z [Claude Code, anthropic/claude-opus-5-5] as the planner, cut
+  `feature-0087-a-repeat-can-run-until-no-findings` from `master` at `3837f99` and wrote `plan.md`. Found the tests
+  that rely on the default ending its repeat at a review with only a non-blocking finding by a probe of the change on
+  a scratch copy of the tree, and listed them in the plan. Placed the non-blocking findings still open after the
+  lines of the last step and before `After the run:`, which requirement 9 leaves to the README to state. The status
+  stays `approved`
