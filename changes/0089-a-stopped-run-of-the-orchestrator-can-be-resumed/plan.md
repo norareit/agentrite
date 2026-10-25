@@ -192,10 +192,10 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] No line of a changed file is longer than 120 characters
-- [ ] Every requirement from R1 to R12 is delivered by a ticked task, and every task traces to one
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed branch
+- [x] No line of a changed file is longer than 120 characters
+- [x] Every requirement from R1 to R12 is delivered by a ticked task, and every task traces to one
 
 ## Commit Points
 

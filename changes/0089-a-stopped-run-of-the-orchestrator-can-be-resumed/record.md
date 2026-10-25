@@ -37,3 +37,9 @@ timestamp: 2026-10-25T14:12:42Z
   and not in `tests/agentrite-orchestrate.test.mjs` as the plan's list of files has it. Broadened the line of
   `<unit>` in the usage of `orchestrate`, which named only an approved unit, to the unit in progress a resume takes.
   Commit `08906d1` holds a test name longer than 120 characters, which `4594708` shortens
+- 2026-10-25T16:35:02Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished the tasks of
+  `plan.md` in six commits, from `7bd328b` to `aeb8758`. `npm test` passes on `aeb8758`, 1301 tests, among them
+  the tests of every case of requirement 11 with the fake harness of the command's tests. `npm run check-changes`
+  passes on `aeb8758`, and no line of a changed file is longer than 120 characters. Not checked: a resume with a real
+  Claude Code or OpenCode, and a resume through `./sandbox.sh`, whose command `SANDBOX.md` gives from how the
+  wrapper passes its arguments on. The status stays `in-progress` for the review
