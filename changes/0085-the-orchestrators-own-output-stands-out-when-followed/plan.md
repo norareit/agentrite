@@ -157,4 +157,4 @@ left as it is.
   with the behaviour of today", with no change of behaviour
 - [x] `feature-0085 Frame the orchestrator's own output when followed`: the tasks under "The frames" and "The
   documents"
-- [ ] `feature-0085 Record the implementation`: `record.md`
+- [x] `feature-0085 Record the implementation`: `record.md`

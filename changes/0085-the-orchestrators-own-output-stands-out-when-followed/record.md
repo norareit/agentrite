@@ -18,5 +18,15 @@ timestamp: 2026-10-24T13:41:05Z
   the unit's branch at `7dc6ca0`, wrote `plan.md`. Read R3 and R6 the one way that works: the first item of a step
   may be a tool call, which opens with no blank line, so the blank line after a closing rule is the frame's, and
   `followPrinter` starts as though one was just written. The status stays `approved`
+- 2026-10-25T12:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's branch
+  at `7af520c`. The status is `in-progress`
+- 2026-10-25T12:31:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the unit in two commits, the
+  printers with the behaviour of today and then the frames. Verified: `node --test tests/agentrite-orchestrate.test.mjs`
+  reports 116 passing, and `npm run check-changes` passes. `npm test` reports 20 failing tests, all of the commit-msg
+  hook, `init`, `refresh` and the sandbox, and the same 20 fail on `7af520c`, before the unit's work, in this
+  environment. A run of the command piped to `cat -A` was not made against a fake harness: the printer alone was
+  piped, which showed the rules plain with no escape sequence. The output without `--follow` was not compared with
+  `diff` against `master`: it is checked by the unchanged test of a run without it, which now also asserts no rule
+  line. Not checked: `SANDBOX.md`, which was read and left as it is as the plan says
 
 ## Amendments
