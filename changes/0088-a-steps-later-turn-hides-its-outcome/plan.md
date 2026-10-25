@@ -120,9 +120,9 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] `git diff master -- scripts/agentrite-headless.mjs scripts/agentrite-run.mjs` shows nothing, so no tool is taken
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed branch
+- [x] `git diff master -- scripts/agentrite-headless.mjs scripts/agentrite-run.mjs` shows nothing, so no tool is taken
   away and `agentrite run` outside the orchestrator is unchanged
 
 ## Commit Points
