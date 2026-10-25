@@ -63,6 +63,8 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 - `tests/agentrite-runs.test.mjs`: the form of `state.json` with and without the two keys
 - `tests/agentrite-orchestrate.test.mjs`: the position, the start in the middle, the prompt, the opening line, the
   options, and every command case of R11
+- `tests/agentrite-init.test.mjs` and `tests/agentrite-run.test.mjs`: the form of `orchestrate` in the usage of every
+  command, which both tests hold
 - `README.md`: "agentrite orchestrate", "The orchestrator" with "How a run ends" and "On the host and in the sandbox",
   and "What .orchestrator holds"
 - `SANDBOX.md`: the command of a resume in a unit run, in the part on the orchestrator of "Running a unit"
@@ -127,49 +129,49 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ### The command
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, with the fake harness, a helper that makes a stopped run by running
+- [x] In `tests/agentrite-orchestrate.test.mjs`, with the fake harness, a helper that makes a stopped run by running
   `orchestrate` with the outcomes given, so that each case resumes a run the command wrote. Test that a plain run's
   `state.json` holds `resumes` as `null` and `at.asked`, `true` at an ask again (R6)
-- [ ] Test the run chosen: of runs of the unit on two variants and on the unit's branch, a resume on each branch
+- [x] Test the run chosen: of runs of the unit on two variants and on the unit's branch, a resume on each branch
   resumes the latest of its own, and a branch with no `--` the latest with no variant (R1)
-- [ ] Test a resume of a run that stopped for a missing outcome after the ask again gave none either: it reruns the
+- [x] Test a resume of a run that stopped for a missing outcome after the ask again gave none either: it reruns the
   step that was asked, numbered as it, with the step's prompt, the human's words or the sentence, and the request of
   the outcome, continuing that step's session, and goes on by its outcome to the steps after it, with the sessions and
   the rounds they would have had. Test the same for questions, a blocking finding of `stopWhen`, and a repeat that ran
   out. Test that a step whose role and harness the stopped run holds no session for starts a new one (R2, R3, R4, R11)
-- [ ] Test the prompt with `--prompt`, and with `--prompt` holding a line break, and without it (R3)
-- [ ] Test that a resume runs the stopped run's `definition.json` after `agentrite.json` names another definition,
+- [x] Test the prompt with `--prompt`, and with `--prompt` holding a line break, and without it (R3)
+- [x] Test that a resume runs the stopped run's `definition.json` after `agentrite.json` names another definition,
   writes the same text to its own `definition.json` and the stopped run's `definition` path to its `state.json` (R5)
-- [ ] Test the resume's directory: a new one under the unit's, named by its instant and variant; its `state.json`
+- [x] Test the resume's directory: a new one under the unit's, named by its instant and variant; its `state.json`
   holding `resumes` with the stopped run's directory name, its `branch` and the sessions of both; its step files
   numbered from the rerun's number, an ask again after the rerun numbered one more; and the stopped run's directory
   unchanged, file for file (R6)
-- [ ] Test that a resume that stops is resumed in turn, from its own `state.json`, and that a third run continues the
+- [x] Test that a resume that stops is resumed in turn, from its own `state.json`, and that a third run continues the
   sessions of the first (R7)
-- [ ] Test each refusal of R8, each exiting 1, printing its message on standard error, starting no harness and making
+- [x] Test each refusal of R8, each exiting 1, printing its message on standard error, starting no harness and making
   no run directory: no run on the variant; a latest run running, stale, ended with 0, and ended with 1 or another
   status, each named with its state and detail as `runs` gives them; a latest run with no `branch`, `branch` `null`,
   and another branch, naming both; a latest `state.json` and `definition.json` that is not JSON or not of the form,
   naming the file; a unit that is `implemented`, `cancelled` and `draft`, naming the status; and `--definition` with
   `--resume`. Test that `--prompt` without `--resume` exits 2 with the usage (R8, R9)
-- [ ] Test that a resume prints its opening line first, then its step lines and end report, with `--follow` in frames
+- [x] Test that a resume prints its opening line first, then its step lines and end report, with `--follow` in frames
   and without it plainly, writes the followed files and the heartbeat, and exits 3 when it stops and 0 when it runs to
   its end (R10)
-- [ ] In `scripts/agentrite.mjs`, write `asked` in `at` and `resumes` in `state.json`, in the order unit, definition,
+- [x] In `scripts/agentrite.mjs`, write `asked` in `at` and `resumes` in `state.json`, in the order unit, definition,
   branch, resumes, at, sessions, ended (R6)
-- [ ] Extract from `readRuns` the listing of the run directories of one unit that have a `state.json`, and use it in
+- [x] Extract from `readRuns` the listing of the run directories of one unit that have a `state.json`, and use it in
   `readRuns` and in the resume (R1)
-- [ ] Add the preparer of a resume: it makes the refusals in the order of the approach, each message naming what R8
+- [x] Add the preparer of a resume: it makes the refusals in the order of the approach, each message naming what R8
   says it names; finds the latest run by the largest directory name among the unit's runs of the variant; parses its
   files with the function extracted from `runFrom`; refuses an ended run whose `at` is `null` as a `state.json` not of
   the form; and gives the definition, its text and path, the position, the sessions, `resumes` and the opening line
   (R1, R5, R8)
-- [ ] Refuse a unit of a status other than `approved` or `in-progress` in a resume, naming the status and saying that
+- [x] Refuse a unit of a status other than `approved` or `in-progress` in a resume, naming the status and saying that
   a resume takes a unit that is approved or in progress. A run keeps `checkApproved` as it is (R8)
-- [ ] Split `orchestrateCommand` into the preparation, the run's as today or the resume's, and what both share. The
+- [x] Split `orchestrateCommand` into the preparation, the run's as today or the resume's, and what both share. The
   shared part starts the sessions it writes from those it is given, passes the position to `orchestrate`, and prints
   the opening line through `output.opening` for a resume (R2, R6, R7, R10)
-- [ ] In `runStep`, give a planned step with `rerun` the step's `prompt`, `resumeWords` of the human's words, and the
+- [x] In `runStep`, give a planned step with `rerun` the step's `prompt`, `resumeWords` of the human's words, and the
   request of the outcome, apart by blank lines; an ask again and every other step keep their prompts (R3)
 
 ### The documents
@@ -202,5 +204,5 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 - [x] `feature-0089 Start a run of the definition at a step`: the tasks of "The position a resume starts at"
 - [x] `feature-0089 Take --resume and --prompt, and print the opening line`: the tasks of "The prompt, the opening
   line and the options"
-- [ ] `feature-0089 Resume the latest stopped run of a unit`: the tasks of "The command"
+- [x] `feature-0089 Resume the latest stopped run of a unit`: the tasks of "The command"
 - [ ] `feature-0089 Describe the resume of a run`: the tasks of "The documents"

@@ -48,7 +48,7 @@ import {
 } from '../scripts/agentrite-orchestrate.mjs';
 import { followedFile, heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
 import { HEADLESS } from '../scripts/agentrite-headless.mjs';
-import { askAgainRequest, readOutcome } from '../scripts/agentrite-outcome.mjs';
+import { askAgainRequest, outcomeRequest, readOutcome, RESUMED } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -1871,7 +1871,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.equal(state.unit, UNIT);
   assert.equal(state.definition, 'node_modules/agentrite/orchestrator.json');
   assert.equal(state.branch, null);
-  assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1 });
+  assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, asked: false });
   assert.deepEqual(state.sessions, [
     { role: 'planner', harness: 'claude', session: planner.options[9] },
     { role: 'implementer', harness: 'claude', session: implementer.options[9] },
@@ -2138,6 +2138,7 @@ test('a step without a block is asked again in its session, and the run goes on 
     item: 1,
     round: { at: 1, of: 3 },
     index: 1,
+    asked: false,
   });
 });
 
@@ -3240,4 +3241,529 @@ test('followedFile whose append and cut back fail does not throw, and adds no li
   add('{"d":4}\n');
 
   assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"d":4}\n');
+});
+
+// Unit 0089: `agentrite orchestrate --resume`, of runs the command wrote, on the unit's branch unless a test checks out
+// another. Each command runs at an instant of its own, minutes after the first run, so that no two of one variant make
+// the same directory.
+
+const FIRST_RUN = Date.parse(STARTED_AT);
+const minutesLater = (minutes) => FIRST_RUN + minutes * 60_000;
+const VARIANT_BRANCH = `${TRY_BRANCH}--opus`;
+
+// The run that started `minutes` after the first, on `variant`: its directory's name and its path from the root.
+function runOf(minutes, variant = null) {
+  const name = runName(instantOf(minutesLater(minutes)), variant);
+  return { name, directory: `.orchestrator/${UNIT}/${name}` };
+}
+
+// A project on `branch` with `files` written, and a run of `args` that stopped, its calls answered from 1 with what
+// `printed` lists: what the fake prints, or that and the status it exits with.
+function stoppedRun(testContext, printed, { args = [], branch = TRY_BRANCH, files = {} } = {}) {
+  const context = project(testContext);
+  for (const [path, content] of Object.entries(files)) context.write(path, content);
+  onBranch(context.base, branch);
+  printed.forEach((entry, index) =>
+    typeof entry === 'string' ? context.answer(index + 1, entry) : context.answer(index + 1, ...entry),
+  );
+  const result = context.agentriteAt(minutesLater(0), 'orchestrate', '0029', ...args);
+  assert.equal(result.status, 3, `${result.stdout}${result.stderr}`);
+  return { ...context, stopped: runOf(0, variantOf(branch)) };
+}
+
+// The resume of the project's latest run, `minutes` after the first run.
+function resume(context, minutes, ...args) {
+  return context.agentriteAt(minutesLater(minutes), 'orchestrate', '0029', '--resume', ...args);
+}
+
+const stateOf = (context, run) => JSON.parse(context.read(`${run.directory}/state.json`));
+const filesOf = (context, run) => readdirSync(join(context.base, run.directory)).sort();
+const firstLine = (stdout) => stdout.split('\n')[0];
+const startedLines = (stdout) => stepLines(stdout).filter((line) => line.endsWith(': started'));
+
+// A run stopped at the ask again of its implementer, which gave no outcome either.
+const NO_OUTCOME = () => [
+  claudePrinted(responseOf({ ...DONE, summary: 'Planned.' })),
+  claudePrinted(NO_BLOCK, 'implementer-session'),
+  claudePrinted('I still give no block.'),
+];
+const IMPLEMENTER_ROUND_1 = 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5';
+const REVIEWER_ROUND_1 = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+const rerunPrompt = (...parts) => [`The unit is changes/${UNIT}/.`, ...parts].join('\n\n');
+
+// R6
+
+test('a run writes resumes as null, and at with asked, true at an ask again', (testContext) => {
+  const context = stoppedRun(testContext, NO_OUTCOME());
+  const state = stateOf(context, context.stopped);
+  assert.deepEqual(Object.keys(state), ['unit', 'definition', 'branch', 'resumes', 'at', 'sessions', 'ended']);
+  assert.equal(state.resumes, null);
+  assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 0, asked: true });
+});
+
+// R2, R3, R6, R10, R11: a missing outcome.
+
+test('a resume after an ask again reruns the step asked, numbered as it, in its session', (testContext) => {
+  const context = stoppedRun(testContext, NO_OUTCOME());
+  const { answer, calls, stopped } = context;
+  answer(4, claudePrinted(responseOf({ ...DONE, summary: 'Built.' })));
+  answer(5, opencodePrinted(responseOf({ ...DONE, summary: 'Reviewed.' })));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(firstLine(result.stdout), `Resuming the run ${stopped.directory}/ at ${IMPLEMENTER_ROUND_1}`);
+  assert.deepEqual(startedLines(result.stdout), [`${IMPLEMENTER_ROUND_1}: started`, `${REVIEWER_ROUND_1}: started`]);
+  assert.equal(calls().length, 5);
+  const [rerun, reviewer] = calls().slice(3);
+  assert.deepEqual(rerun.options.slice(-2), ['--resume', 'implementer-session']);
+  assert.equal(rerun.prompt, rerunPrompt(IMPLEMENTER_PROMPT, RESUMED, outcomeRequest({ at: 1, of: 3 })));
+  assert.equal(reviewer.harness, 'opencode');
+  assert.ok(!reviewer.options.includes('--session'), reviewer.options.join(' '));
+  assert.ok(result.stdout.includes('\nThe run ran every item of the definition to its end.\nSummary: Reviewed.\n'));
+
+  const resumed = runOf(1);
+  assert.deepEqual(filesOf(context, resumed), [
+    '01-implementer.followed.jsonl',
+    '01-implementer.outcome.json',
+    '02-reviewer.followed.jsonl',
+    '02-reviewer.outcome.json',
+    'definition.json',
+    'heartbeat',
+    'state.json',
+  ]);
+  const [before, after] = [stateOf(context, stopped), stateOf(context, resumed)];
+  assert.equal(after.resumes, stopped.name);
+  assert.deepEqual(after.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, asked: false });
+  const reviewerSession = { role: 'reviewer', harness: 'opencode', session: 'ses_test' };
+  assert.deepEqual(after.sessions, [...before.sessions, reviewerSession]);
+  assert.deepEqual(after.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
+});
+
+// R2, R3, R4, R11: questions, with the human's words, and the rounds after the rerun.
+
+test('a resume after questions gives the rerun the words of --prompt, and goes on by its rounds', (testContext) => {
+  const context = stoppedRun(testContext, [
+    claudePrinted(responseOf(DONE)),
+    claudePrinted(responseOf({ ...DONE, questions: ['Which reading of R2?'] }), 'implementer-session'),
+  ]);
+  const { answer, calls } = context;
+  answer(3, claudePrinted(responseOf(DONE), 'implementer-session'));
+  answer(4, opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] })));
+  answer(5, claudePrinted(responseOf(DONE), 'implementer-session'));
+  answer(6, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1, '--prompt', 'Take the second reading of R2.');
+
+  assert.equal(result.status, 0, result.stderr);
+  const made = calls().slice(2);
+  assert.equal(made.length, 4);
+  assert.equal(
+    made[0].prompt,
+    rerunPrompt(IMPLEMENTER_PROMPT, 'Take the second reading of R2.', outcomeRequest({ at: 1, of: 3 })),
+  );
+  assert.deepEqual(made[0].options.slice(-2), ['--resume', 'implementer-session']);
+  assert.ok(!made[1].options.includes('--session'));
+  assert.equal(made[2].prompt, rerunPrompt(IMPLEMENTER_PROMPT, outcomeRequest({ at: 2, of: 3 })));
+  assert.deepEqual(made[2].options.slice(-2), ['--resume', 'implementer-session']);
+  assert.deepEqual(made[3].options.slice(-2), ['--session', 'ses_test']);
+  assert.deepEqual(startedLines(result.stdout), [
+    `${IMPLEMENTER_ROUND_1}: started`,
+    `${REVIEWER_ROUND_1}: started`,
+    'step 3, round 2 of 3, implementer, claude, claude-sonnet-5-5: started',
+    'step 4, round 2 of 3, reviewer, opencode, openai/gpt-6.1-sol: started',
+  ]);
+});
+
+// R2, R3, R5, R11: a blocking finding of stopWhen, the words of the human on two lines, and the stopped run's
+// definition.
+
+const STOP_WHEN = {
+  steps: [
+    { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
+    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol', stopWhen: 'blocking-findings' },
+    { role: 'planner', harness: 'claude', model: 'claude-opus-5-5' },
+  ],
+};
+
+test('a resume after stopWhen reruns the review in its session, and goes on when it is clean', (testContext) => {
+  const files = { 'stop.json': JSON.stringify(STOP_WHEN) };
+  const context = stoppedRun(
+    testContext,
+    [claudePrinted(responseOf(DONE)), opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] }))],
+    { args: ['--definition', 'stop.json'], files },
+  );
+  const { answer, calls, stopped, read } = context;
+  answer(3, opencodePrinted(responseOf({ ...DONE, findings: [MINOR] })));
+  answer(4, claudePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1, '--prompt', 'Fixed S1.\nLook again.');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(
+    firstLine(result.stdout),
+    `Resuming the run ${stopped.directory}/ at step 1, reviewer, opencode, openai/gpt-6.1-sol`,
+  );
+  const [review, planner] = calls().slice(2);
+  assert.equal(calls().length, 4);
+  assert.deepEqual(review.options.slice(-2), ['--session', 'ses_test']);
+  assert.equal(review.prompt, rerunPrompt('Fixed S1.\nLook again.', outcomeRequest(undefined)));
+  assert.equal(planner.options[8], '--session-id');
+  const resumed = runOf(1);
+  assert.equal(read(`${resumed.directory}/definition.json`), files['stop.json']);
+  assert.equal(stateOf(context, resumed).definition, 'stop.json');
+});
+
+test('a resume runs the definition of the run it resumes, and not the one agentrite.json names now', (testContext) => {
+  const context = stoppedRun(testContext, [
+    claudePrinted(responseOf(DONE)),
+    claudePrinted(responseOf({ ...DONE, questions: ['Which?'] })),
+  ]);
+  const { answer, calls, read, write } = context;
+  write('other.json', JSON.stringify(ONE_STEP));
+  write('agentrite.json', JSON.stringify({ ...JSON.parse(SETTINGS), orchestrator: 'other.json' }));
+  answer(3, claudePrinted(responseOf(DONE)));
+  answer(4, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(
+    calls().slice(2).map(({ harness }) => harness),
+    ['claude', 'opencode'],
+  );
+  const resumed = runOf(1);
+  assert.equal(read(`${resumed.directory}/definition.json`), read('node_modules/agentrite/orchestrator.json'));
+  assert.equal(stateOf(context, resumed).definition, 'node_modules/agentrite/orchestrator.json');
+});
+
+// R2, R4, R7, R11: a repeat that ran out, and a resume resumed.
+
+test('a resume of a repeat that ran out gets no round more, and is resumed in turn', (testContext) => {
+  const block = opencodePrinted(responseOf({ ...DONE, findings: [BLOCKING] }));
+  const built = claudePrinted(responseOf(DONE));
+  const context = stoppedRun(testContext, [claudePrinted(responseOf(DONE)), built, block, built, block, built, block]);
+  const { answer, calls, stopped, write } = context;
+  // A step of the stopped run may have set the unit in progress.
+  write(`changes/${UNIT}/record.md`, APPROVED.replace('approved', 'in-progress'));
+  answer(8, block);
+
+  const again = resume(context, 1);
+
+  assert.equal(again.status, 3, again.stderr);
+  assert.equal(calls().length, 8);
+  assert.ok(
+    again.stdout.includes(
+      'Step 6 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.\n',
+    ),
+    again.stdout,
+  );
+  const first = runOf(1);
+  assert.deepEqual(filesOf(context, first), [
+    '06-reviewer.followed.jsonl',
+    '06-reviewer.outcome.json',
+    'definition.json',
+    'heartbeat',
+    'state.json',
+  ]);
+
+  answer(9, opencodePrinted(responseOf(DONE)));
+  const last = resume(context, 2);
+
+  assert.equal(last.status, 0, last.stderr);
+  assert.equal(calls().length, 9);
+  assert.equal(
+    firstLine(last.stdout),
+    `Resuming the run ${first.directory}/ at step 6, round 3 of 3, reviewer, opencode, openai/gpt-6.1-sol`,
+  );
+  assert.deepEqual(calls()[8].options.slice(-2), ['--session', 'ses_test']);
+  const [initial, middle, final] = [stopped, first, runOf(2)].map((run) => stateOf(context, run));
+  assert.equal(middle.resumes, stopped.name);
+  assert.equal(final.resumes, first.name);
+  assert.deepEqual(final.sessions, initial.sessions);
+  assert.equal(final.sessions.length, 3);
+});
+
+// R2, R11: a rerun with no session to continue.
+
+test('a rerun whose role and harness the stopped run holds no session for starts a new one', (testContext) => {
+  const files = {
+    'review.json': JSON.stringify({ steps: [{ role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' }] }),
+  };
+  const context = stoppedRun(testContext, [['', 1]], { args: ['--definition', 'review.json'], files });
+  assert.deepEqual(stateOf(context, context.stopped).sessions, []);
+  context.answer(2, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(context.calls()[1].options, [
+    'run',
+    '--agent',
+    'reviewer',
+    '--model',
+    'openai/gpt-6.1-sol',
+    '--format',
+    'json',
+  ]);
+});
+
+// R6: the directory of a resume, on a variant, and an ask again after the rerun.
+
+// Every file under `directory` of the project, with its content.
+function filesUnder(base, directory) {
+  return readdirSync(join(base, directory), { recursive: true })
+    .sort()
+    .map((path) => [path, readFileSync(join(base, directory, path), 'utf-8')]);
+}
+
+test('a resume runs in a directory of its own, numbering on, and leaves the stopped run be', (testContext) => {
+  const context = stoppedRun(testContext, NO_OUTCOME(), { branch: VARIANT_BRANCH });
+  const { answer, base, stopped } = context;
+  assert.equal(stopped.name, `${STARTED_AT}--opus`);
+  const before = filesUnder(base, stopped.directory);
+  answer(4, claudePrinted('No block again.'));
+  answer(5, claudePrinted(responseOf(DONE)));
+  answer(6, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  const resumed = runOf(1, 'opus');
+  assert.deepEqual(readdirSync(join(base, '.orchestrator', UNIT)).sort(), [stopped.name, resumed.name]);
+  assert.deepEqual(filesOf(context, resumed), [
+    '01-implementer.followed.jsonl',
+    '01-implementer.response.md',
+    '02-implementer.followed.jsonl',
+    '02-implementer.outcome.json',
+    '03-reviewer.followed.jsonl',
+    '03-reviewer.outcome.json',
+    'definition.json',
+    'heartbeat',
+    'state.json',
+  ]);
+  const state = stateOf(context, resumed);
+  assert.equal(state.branch, VARIANT_BRANCH);
+  assert.equal(state.resumes, stopped.name);
+  assert.deepEqual(filesUnder(base, stopped.directory), before);
+});
+
+// R1: the run chosen.
+
+test('a resume resumes the latest run of the unit on the variant of the branch checked out', (testContext) => {
+  const context = project(testContext);
+  const { base, write, agentriteAt, answer } = context;
+  write('one.json', JSON.stringify(ONE_STEP));
+  const gpt = `${TRY_BRANCH}--gpt-6-1`;
+  let call = 0;
+  for (const [minutes, branch] of [
+    [-5, VARIANT_BRANCH],
+    [0, VARIANT_BRANCH],
+    [0, gpt],
+    [-5, TRY_BRANCH],
+    [0, TRY_BRANCH],
+  ]) {
+    call += 1;
+    answer(call, claudePrinted(responseOf({ ...DONE, outcome: 'needs-human', questions: ['Which?'] })));
+    onBranch(base, branch);
+    assert.equal(agentriteAt(minutesLater(minutes), 'orchestrate', '0029', '--definition', 'one.json').status, 3);
+  }
+
+  for (const [branch, variant] of [
+    [TRY_BRANCH, null],
+    [VARIANT_BRANCH, 'opus'],
+    [gpt, 'gpt-6-1'],
+  ]) {
+    call += 1;
+    answer(call, implemented());
+    onBranch(base, branch);
+
+    const result = resume(context, 1);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      firstLine(result.stdout),
+      `Resuming the run ${runOf(0, variant).directory}/ at step 0, implementer, claude, claude-sonnet-5-5`,
+    );
+  }
+});
+
+// R10
+
+test('a resume with --follow opens its first frame with its opening line, and keeps its files', (testContext) => {
+  const context = stoppedRun(testContext, NO_OUTCOME());
+  const { answer, read, stopped } = context;
+  answer(4, claudePrinted(responseOf(DONE)));
+  answer(5, opencodePrinted(responseOf(DONE)));
+
+  const result = resume(context, 1, '--follow');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(
+    result.stdout.startsWith(
+      `${OPENING_RULE}\nResuming the run ${stopped.directory}/ at ${IMPLEMENTER_ROUND_1}\n` +
+        `${IMPLEMENTER_ROUND_1}: started\n${CLOSING_RULE}\n`,
+    ),
+    result.stdout,
+  );
+  const resumed = runOf(1);
+  assert.match(read(`${resumed.directory}/heartbeat`), HEARTBEAT_FORM);
+  assert.ok(filesOf(context, resumed).includes('01-implementer.followed.jsonl'));
+});
+
+// R8, R9: the refusals of a resume.
+
+const STOPPED_END = { status: 3, line: 'Step 2 stopped the run: its outcome is needs-human.' };
+const REVIEWER_AT = { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, asked: false };
+
+// Writes the run that started `minutes` after the first, as the orchestrator leaves one that stopped at the review
+// of round 1 on the unit's branch, with the keys of `state` replaced, or removed when `undefined`, and with the text
+// of a file given in `texts` in the place of the orchestrator's.
+function writeRun({ write, read }, minutes, { state = {}, texts = {}, variant = null } = {}) {
+  const run = runOf(minutes, variant);
+  const full = {
+    unit: UNIT,
+    definition: 'node_modules/agentrite/orchestrator.json',
+    branch: TRY_BRANCH,
+    resumes: null,
+    at: REVIEWER_AT,
+    sessions: [],
+    ended: STOPPED_END,
+    ...state,
+  };
+  for (const [key, value] of Object.entries(state)) if (value === undefined) delete full[key];
+  write(`${run.directory}/state.json`, texts.state ?? `${JSON.stringify(full, null, 2)}\n`);
+  write(`${run.directory}/definition.json`, texts.definition ?? read('node_modules/agentrite/orchestrator.json'));
+  if (texts.heartbeat !== undefined) write(`${run.directory}/heartbeat`, texts.heartbeat);
+  return run;
+}
+
+function resumeRefused(testContext, prepare, args, message, branch = TRY_BRANCH) {
+  const context = project(testContext);
+  onBranch(context.base, branch);
+  prepare(context);
+  const orchestrator = () =>
+    existsSync(join(context.base, '.orchestrator')) ? snapshot(context.base, '.orchestrator') : null;
+  const before = orchestrator();
+
+  const result = resume(context, 1, ...args);
+
+  assert.equal(result.status, 1, `${message}: ${result.stdout}${result.stderr}`);
+  assert.equal(result.stdout, '');
+  if (message instanceof RegExp) assert.match(result.stderr, message);
+  else assert.equal(result.stderr, `agentrite: ${message}\n`);
+  assert.equal(context.calls().length, 0);
+  assert.deepEqual(orchestrator(), before);
+}
+
+const STARTED_RUN = `.orchestrator/${UNIT}/${STARTED_AT}`;
+const RESUME_TAKES = 'A resume takes a run that ended with the status 3, which a run does when it stops for the human';
+const notStopped = (state, detail) => `the latest run, ${STARTED_RUN}/, is ${state}: ${detail}\n${RESUME_TAKES}`;
+const otherBranch = (ran, checked) =>
+  `the latest run, ${STARTED_RUN}/, ${ran}, and the branch checked out is ${checked}. ` +
+  'A resume runs on the branch of the run it resumes';
+
+test('a resume refuses a unit with no run on the variant, and a latest run that did not stop', (testContext) => {
+  for (const [prepare, message, branch] of [
+    [() => {}, `the unit ${UNIT} has no run without a variant`],
+    [(context) => writeRun(context, 0, { variant: 'opus' }), `the unit ${UNIT} has no run without a variant`],
+    [(context) => writeRun(context, 0), `the unit ${UNIT} has no run on the variant opus`, VARIANT_BRANCH],
+    [
+      (context) => {
+        writeRun(context, -5);
+        writeRun(context, 0, { state: { ended: null }, texts: { heartbeat: heartbeatText(minutesLater(1)) } });
+      },
+      notStopped('running', REVIEWER_ROUND_1),
+    ],
+    [
+      (context) =>
+        writeRun(context, 0, { state: { ended: null }, texts: { heartbeat: heartbeatText(minutesLater(-3)) } }),
+      notStopped('stale', `no sign of life since 2026-10-21T09:57:00Z, at ${REVIEWER_ROUND_1}`),
+    ],
+    [
+      (context) => writeRun(context, 0, { state: { ended: { status: 0, line: 'The run ran every item.' } } }),
+      notStopped('ended', 'The run ran every item.'),
+    ],
+    [
+      (context) => writeRun(context, 0, { state: { ended: { status: 1, line: 'It failed.' } } }),
+      notStopped('ended', 'It failed.'),
+    ],
+  ]) {
+    resumeRefused(testContext, prepare, [], message, branch);
+  }
+});
+
+test('a resume refuses a latest run of no branch or another, and files not of the form', (testContext) => {
+  const STATE = `${STARTED_RUN}/state.json`;
+  const DEFINITION = `${STARTED_RUN}/definition.json`;
+  for (const [prepare, message] of [
+    [(context) => writeRun(context, 0, { state: { branch: undefined } }), otherBranch('holds no branch', TRY_BRANCH)],
+    [(context) => writeRun(context, 0, { state: { branch: null } }), otherBranch('holds no branch', TRY_BRANCH)],
+    [
+      (context) => writeRun(context, 0, { state: { branch: 'feature-0029-another' } }),
+      otherBranch('ran on the branch feature-0029-another', TRY_BRANCH),
+    ],
+    [(context) => writeRun(context, 0, { texts: { state: '{' } }), new RegExp(`^agentrite: ${STATE} is not JSON: `)],
+    [
+      (context) => writeRun(context, 0, { state: { extra: 1 } }),
+      `${STATE}: extra is no key of state.json. state.json holds unit, definition, branch, resumes, at, sessions and ` +
+        'ended',
+    ],
+    [
+      (context) => writeRun(context, 0, { state: { at: null } }),
+      `${STATE}: at is null. It must hold the step the run was at, in a run that ended`,
+    ],
+    [
+      (context) => writeRun(context, 0, { texts: { definition: '{' } }),
+      new RegExp(`^agentrite: ${DEFINITION} is not JSON: `),
+    ],
+    [
+      (context) => writeRun(context, 0, { texts: { definition: '{}' } }),
+      `${DEFINITION}: steps is missing. It must hold a list of one or more items, each a step or a repeat`,
+    ],
+  ]) {
+    resumeRefused(testContext, prepare, [], message);
+  }
+});
+
+test('a resume refuses a unit not approved or in progress, --definition, and an opted out project', (testContext) => {
+  const status = (name) => (context) => {
+    writeRun(context, 0);
+    context.write(`changes/${UNIT}/record.md`, APPROVED.replace('approved', name));
+  };
+  for (const [prepare, args, message] of [
+    ...['implemented', 'cancelled', 'draft'].map((name) => [
+      status(name),
+      [],
+      `the unit changes/${UNIT}/ is ${name}, and a resume takes a unit that is approved or in progress`,
+    ]),
+    [
+      (context) => writeRun(context, 0),
+      ['--definition', 'node_modules/agentrite/orchestrator.json'],
+      '--definition is not taken with --resume, since a resume runs the definition of the run it resumes',
+    ],
+    [
+      (context) => {
+        writeRun(context, 0);
+        context.write('agentrite.json', JSON.stringify({ ...JSON.parse(SETTINGS), orchestrator: false }));
+      },
+      [],
+      OPTED_OUT,
+    ],
+  ]) {
+    resumeRefused(testContext, prepare, args, message);
+  }
+});
+
+test('--prompt without --resume exits 2 with the usage, and starts nothing', (testContext) => {
+  const { base, agentrite, calls } = project(testContext);
+
+  const result = agentrite('orchestrate', '0029', '--prompt', 'Go on.');
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr.split('\n')[0], '--prompt is taken only with --resume');
+  assert.ok(result.stderr.includes(`${USAGE_FORM}\n\n  <unit>`), result.stderr);
+  assert.equal(calls().length, 0);
+  assert.ok(!existsSync(join(base, '.orchestrator')));
 });

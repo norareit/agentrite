@@ -102,6 +102,16 @@ export function isRunDirectory(name) {
   return new RegExp(`^${INSTANT_PATTERN}(?:--${VARIANT_PATTERN})?$`).test(name);
 }
 
+/**
+ * The variant of the run whose directory is named `name`: what follows its `--`, or `null` for a name without one.
+ *
+ * @param {string} name
+ * @returns {string | null}
+ */
+export function variantOfRun(name) {
+  return name.includes('--') ? name.slice(name.indexOf('--') + 2) : null;
+}
+
 const isFilledString = (/** @type {unknown} */ value) => typeof value === 'string' && value !== '';
 const isBoolean = (/** @type {unknown} */ value) => typeof value === 'boolean';
 const isCountOf = (/** @type {number} */ least) => (/** @type {unknown} */ value) =>
@@ -371,7 +381,7 @@ export function runFrom(unit, name, texts) {
   return {
     number: unit.slice(0, 4),
     unit,
-    variant: name.includes('--') ? name.slice(name.indexOf('--') + 2) : null,
+    variant: variantOfRun(name),
     branch: state.branch ?? null,
     run: name.slice(0, 20),
     directory,

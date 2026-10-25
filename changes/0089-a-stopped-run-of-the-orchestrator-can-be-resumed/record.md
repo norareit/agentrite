@@ -30,3 +30,10 @@ timestamp: 2026-10-25T14:12:42Z
 - 2026-10-25T16:16:14Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   on `feature-0089-a-stopped-run-of-the-orchestrator-can-be-resumed` at `f61a869`, began the work. The suites pass on
   `f61a869`, 1269 tests. The status is `in-progress`
+- 2026-10-25T16:32:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to the files of
+  `plan.md` `tests/agentrite-init.test.mjs` and `tests/agentrite-run.test.mjs`, which hold the form of
+  `orchestrate` in the usage of every command and failed with the new form until it was written there too. Put the
+  tests of `RESUMED` and `resumeWords` in `tests/agentrite-outcome.test.mjs`, beside those of the module they test,
+  and not in `tests/agentrite-orchestrate.test.mjs` as the plan's list of files has it. Broadened the line of
+  `<unit>` in the usage of `orchestrate`, which named only an approved unit, to the unit in progress a resume takes.
+  Commit `08906d1` holds a test name longer than 120 characters, which `4594708` shortens

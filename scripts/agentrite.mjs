@@ -56,19 +56,23 @@ import {
   exitStatus,
   followedLine,
   framedOutput,
+  openingLine,
   plainOutput,
   timedItems,
   orchestrate,
   ORCHESTRATE_FORM,
   parseOrchestrateArgs,
+  resumePosition,
   runName,
   stepFileName,
   stepLine,
   variantOf,
 } from './agentrite-orchestrate.mjs';
-import { askAgainRequest, outcomeRequest } from './agentrite-outcome.mjs';
+import { askAgainRequest, outcomeRequest, resumeWords } from './agentrite-outcome.mjs';
 import {
+  detailOf,
   isRunDirectory,
+  parseRun,
   parseRunsArgs,
   runFrom,
   runsJson,
@@ -76,6 +80,7 @@ import {
   RUNS_FORM,
   runStateOf,
   selectRuns,
+  variantOfRun,
 } from './agentrite-runs.mjs';
 import { HARNESS_NAMES, isKitWrapper, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
 import {
@@ -1402,18 +1407,43 @@ function readDefinition(root, given, settings) {
 }
 
 /**
- * Throws unless the unit's record says that it is approved. A record that is missing is refused as one that holds
- * no status.
+ * The status the unit's record holds. A record that is missing is refused as one that holds no status.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {string}
+ */
+function unitStatus(root, directory) {
+  const recordFile = `changes/${directory}/record.md`;
+  const path = resolve(root, recordFile);
+  return statusFrom(isRegularFile(path) ? readFileSync(path, 'utf-8') : '', recordFile);
+}
+
+/**
+ * Throws unless the unit's record says that it is approved.
  *
  * @param {string} root
  * @param {string} directory
  */
 function checkApproved(root, directory) {
-  const recordFile = `changes/${directory}/record.md`;
-  const path = resolve(root, recordFile);
-  const status = statusFrom(isRegularFile(path) ? readFileSync(path, 'utf-8') : '', recordFile);
+  const status = unitStatus(root, directory);
   if (status === 'approved') return;
   throw new Error(`the unit changes/${directory}/ is ${status}, and a run starts the work of an approved unit`);
+}
+
+/**
+ * Throws unless the unit's record says that it is approved or in progress, the statuses a unit has while a run of it
+ * is stopped for the human.
+ *
+ * @param {string} root
+ * @param {string} directory
+ */
+function checkResumable(root, directory) {
+  const status = unitStatus(root, directory);
+  if (status === 'approved' || status === 'in-progress') return;
+  throw new Error(
+    `the unit changes/${directory}/ is ${status}, and a resume takes a unit that is approved or in progress`,
+  );
 }
 
 /**
@@ -1693,25 +1723,28 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
 
 /**
  * Runs one step as `agentrite run` of this file, headless, in a process group of its own, with the step's prompt and
- * the request of its outcome, or for an ask again the request of an ask again alone, and gives how its harness
- * ended, its final response, its session and whether it ran past its time limit. The harness's standard error
- * reaches the terminal, and its standard output is read. `grouped` is given the group when the step starts, and
- * `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line it prints, as
- * it arrives.
+ * the request of its outcome, for the rerun of a resume with the human's `words` between them, or for an ask again
+ * the request of an ask again alone, and gives how its harness ended, its final response, its session and whether it
+ * ran past its time limit. The harness's standard error reaches the terminal, and its standard output is read.
+ * `grouped` is given the group when the step starts, and `undefined` when it has ended. `follow` is given what the
+ * harness makes known of the step in each line it prints, as it arrives.
  *
  * @param {string} root
  * @param {string} directory
  * @param {boolean} skipPermissions
+ * @param {string | undefined} words
  * @param {import('./agentrite-orchestrate.mjs').Planned} planned
  * @param {(group: number | undefined) => void} grouped
  * @param {(items: import('./agentrite-headless.mjs').Followed[]) => void} follow
  * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
-async function runStep(root, directory, skipPermissions, { step, round, session, asked }, grouped, follow) {
+async function runStep(root, directory, skipPermissions, words, planned, grouped, follow) {
+  const { step, round, session, asked, rerun } = planned;
   const headless = HEADLESS[step.harness];
   const start = headless.arguments(session);
-  const request = outcomeRequest(round);
-  const given = step.prompt === undefined ? request : `${step.prompt}\n\n${request}`;
+  const own = step.prompt === undefined ? [] : [step.prompt];
+  const resumed = rerun ? [resumeWords(words)] : [];
+  const given = [...own, ...resumed, outcomeRequest(round)].join('\n\n');
   // An ask again continues the session of a step that was given its prompt already, and asks for its outcome alone.
   const prompt = asked ? askAgainRequest(round) : given;
   const args = [
@@ -1752,39 +1785,176 @@ function passSignalsOn(running) {
 }
 
 /**
- * Runs the definition on an approved unit, one step at a time, keeping the run in its directory under
- * `.orchestrator/`, prints a line before and after each step and what the human needs at the end, and returns the
- * exit status. With `follow`, the messages and tool calls of each step are printed between its two lines as it
- * runs and its own lines and the end report stand in frames. With or without it the messages and tool calls are
- * added to the step's followed file. Nothing is written before every refusal has been ruled out, and nothing outside
- * `.orchestrator/`. The run's directory holds a `heartbeat` while the run lasts, and every file of it but the
- * followed files, which are added to, is written whole.
+ * What a run or a resume runs, once every refusal of it has been ruled out: the unit, the branch checked out, the
+ * definition with its path and its text, and for a resume where it starts, the sessions it starts with, the name of
+ * the directory of the run it resumes and the line it prints first.
+ *
+ * @typedef {{
+ *   directory: string,
+ *   branch: string | null,
+ *   path: string,
+ *   text: string,
+ *   definition: import('./agentrite-definition.mjs').Definition,
+ *   from: import('./agentrite-orchestrate.mjs').Position | undefined,
+ *   sessions: { role: string, harness: string, session: string }[],
+ *   resumes: string | null,
+ *   opening: string | undefined,
+ * }} Prepared
+ */
+
+/**
+ * Prepares a run of the definition on an approved unit from its first item, refusing what a run refuses.
+ *
+ * @param {string} root
+ * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
+ * @returns {Prepared}
+ */
+function prepareRun(root, { unit, definition: given }) {
+  const settings = readSettings(root);
+  const { path, text, definition } = readDefinition(root, given, settings);
+  const directory = resolveUnit(unit, changeDirectories(root));
+  checkApproved(root, directory);
+  // The branch is read once, before anything is written: the run's directory holds the variant in its name and
+  // `state.json` the branch, and neither follows a branch checked out later.
+  const branch = checkedOutBranch(root);
+  return {
+    directory,
+    branch,
+    path,
+    text,
+    definition,
+    from: undefined,
+    sessions: [],
+    resumes: null,
+    opening: undefined,
+  };
+}
+
+const DEFINITION_WITH_RESUME =
+  '--definition is not taken with --resume, since a resume runs the definition of the run it resumes';
+
+const RESUME_TAKES = 'A resume takes a run that ended with the status 3, which a run does when it stops for the human';
+
+/**
+ * The name of the directory of the latest run of the unit on `variant`, the one with no variant for `null`. Throws
+ * when the unit has none.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @param {string | null} variant
+ * @returns {string}
+ */
+function latestRunName(root, directory, variant) {
+  // The instant opens the name, so of the names of one variant the latest is the largest.
+  const names = runDirectoryNames(root, directory)
+    .filter((name) => variantOfRun(name) === variant)
+    .sort();
+  const latest = names.at(-1);
+  if (latest !== undefined) return latest;
+  throw new Error(
+    `the unit ${directory} has no run ${variant === null ? 'without a variant' : `on the variant ${variant}`}`,
+  );
+}
+
+/**
+ * Throws unless the run at `run` ran on the branch checked out, naming both.
+ *
+ * @param {string} run
+ * @param {string | null} ran
+ * @param {string | null} checked
+ */
+function checkRunBranch(run, ran, checked) {
+  if (ran !== null && ran === checked) return;
+  const was = ran === null ? 'holds no branch' : `ran on the branch ${ran}`;
+  const now = checked === null ? 'no branch is checked out' : `the branch checked out is ${checked}`;
+  throw new Error(`the latest run, ${run}/, ${was}, and ${now}. A resume runs on the branch of the run it resumes`);
+}
+
+/**
+ * Prepares the resume of the latest run of the unit on the variant of the branch checked out, which must have
+ * stopped for the human, refusing what a resume refuses, and writing nothing. The resume runs the stopped run's
+ * definition from the step that stopped it, with its sessions.
+ *
+ * @param {string} root
+ * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
+ * @returns {Prepared}
+ */
+function prepareResume(root, { unit, definition: given }) {
+  const settings = readSettings(root);
+  if (settings.orchestrator === false) throw new Error(OPTED_OUT);
+  if (given !== undefined) throw new Error(DEFINITION_WITH_RESUME);
+  const directory = resolveUnit(unit, changeDirectories(root));
+  checkResumable(root, directory);
+  const branch = checkedOutBranch(root);
+  const name = latestRunName(root, directory, variantOf(branch));
+  const run = join(ORCHESTRATOR_DIRECTORY, directory, name);
+  const texts = runTexts(root, run);
+  const { state, definition, step } = parseRun(directory, name, texts);
+  if (state.ended !== null && (state.at === null || step === null)) {
+    throw new Error(`${run}/state.json: at is null. It must hold the step the run was at, in a run that ended`);
+  }
+  const listed = runFrom(directory, name, { ...texts, heartbeat: readHeartbeat(root, run) });
+  const runState = runStateOf(listed, Date.now());
+  if (runState !== 'ended' || state.ended?.status !== 3 || state.at === null || step === null) {
+    const detail = detailOf({ ...listed, state: runState, followed: null });
+    throw new Error(`the latest run, ${run}/, is ${runState}: ${detail}\n${RESUME_TAKES}`);
+  }
+  checkRunBranch(run, state.branch ?? null, branch);
+  const from = resumePosition(state.at, state.sessions);
+  return {
+    directory,
+    branch,
+    path: state.definition,
+    text: texts.definition,
+    definition,
+    from,
+    sessions: state.sessions,
+    resumes: name,
+    opening: openingLine(run, { number: from.number, round: from.round, step }),
+  };
+}
+
+/**
+ * Runs the definition on an approved unit, one step at a time, or with `--resume` resumes the latest run of the unit
+ * that stopped for the human, keeping the run in its directory under `.orchestrator/`, prints a line before and after
+ * each step and what the human needs at the end, and returns the exit status. With `follow`, the messages and tool
+ * calls of each step are printed between its two lines as it runs and its own lines and the end report stand in
+ * frames. With or without it the messages and tool calls are added to the step's followed file. Nothing is written
+ * before every refusal has been ruled out, and nothing outside `.orchestrator/`. The run's directory holds a
+ * `heartbeat` while the run lasts, and every file of it but the followed files, which are added to, is written whole.
  *
  * @param {string} root
  * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
  * @returns {Promise<number>}
  */
-async function orchestrateCommand(root, { unit, definition: given, skipPermissions, follow }) {
-  const settings = readSettings(root);
-  const { path, text, definition } = readDefinition(root, given, settings);
-  const directory = resolveUnit(unit, changeDirectories(root));
-  checkApproved(root, directory);
+async function orchestrateCommand(root, parsed) {
+  const prepared = parsed.resume ? prepareResume(root, parsed) : prepareRun(root, parsed);
+  return runPrepared(root, prepared, parsed);
+}
 
-  // The branch is read once, before anything is written: the run's directory holds the variant in its name and
-  // `state.json` the branch, and neither follows a branch checked out later.
-  const branch = checkedOutBranch(root);
+/**
+ * Runs what was prepared: makes the run's directory, writes its files, prints the opening line of a resume, runs the
+ * steps from where the preparation says, and prints the end report.
+ *
+ * @param {string} root
+ * @param {Prepared} prepared
+ * @param {{ skipPermissions: boolean, follow: boolean, prompt: string | undefined }} options
+ * @returns {Promise<number>}
+ */
+async function runPrepared(root, prepared, { skipPermissions, follow, prompt: words }) {
+  const { directory, branch, path, text, definition, from, resumes, opening } = prepared;
   const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
   const output = (follow ? framedOutput : plainOutput)((text) => process.stdout.write(text));
   const write = (/** @type {string} */ name, /** @type {string} */ content) =>
     writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
     stepFileName(definition, planned.number, planned.step.role, kind);
-  /** @type {{ role: string, harness: string, session: string }[]} */ const sessions = [];
+  const sessions = prepared.sessions.map((session) => ({ ...session }));
   /** @type {object | null} */ let at = null;
   const writeState = (/** @type {object | null} */ ended) =>
     write(
       'state.json',
-      `${JSON.stringify({ unit: directory, definition: path, branch, at, sessions, ended }, null, 2)}\n`,
+      `${JSON.stringify({ unit: directory, definition: path, branch, resumes, at, sessions, ended }, null, 2)}\n`,
     );
 
   const stopHeartbeat = startHeartbeat((beat) => write('heartbeat', beat));
@@ -1794,10 +1964,11 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
     /** @type {number | undefined} */ let group;
     passSignalsOn(() => group);
     /** @type {string | undefined} */ let responsePath;
-    const { ran, end, unfixed } = await orchestrate(definition, {
+    if (opening !== undefined) output.opening(opening);
+    /** @type {import('./agentrite-orchestrate.mjs').Effects} */ const effects = {
       started(planned) {
-        const { number, item, round, index } = planned;
-        at = { number, item, round: round ?? null, index: index ?? null };
+        const { number, item, round, index, asked } = planned;
+        at = { number, item, round: round ?? null, index: index ?? null, asked };
         writeState(null);
         output.started(stepLine(planned));
       },
@@ -1811,6 +1982,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
           root,
           directory,
           skipPermissions,
+          words,
           planned,
           (running) => {
             group = running;
@@ -1840,7 +2012,8 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
         writeState(null);
         output.ended(stepLine(planned, entry));
       },
-    });
+    };
+    const { ran, end, unfixed } = await orchestrate(definition, effects, from);
     const status = exitStatus(end);
     stopHeartbeat();
     writeState({ status, line: endLine(end) });
@@ -1887,6 +2060,60 @@ function hasRunState(root, directory) {
 }
 
 /**
+ * The names of the directories in `path`.
+ *
+ * @param {string} path
+ * @returns {string[]}
+ */
+function directoriesOf(path) {
+  return readdirSync(path, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory())
+    .map((entry) => entry.name);
+}
+
+/**
+ * The names of the directories of the runs of the unit `unit` that have a `state.json`, which are none when
+ * `.orchestrator/` holds no directory of the unit.
+ *
+ * @param {string} root
+ * @param {string} unit
+ * @returns {string[]}
+ */
+function runDirectoryNames(root, unit) {
+  const path = resolve(root, ORCHESTRATOR_DIRECTORY, unit);
+  if (!exists(path)) return [];
+  return directoriesOf(path).filter(
+    (name) => isRunDirectory(name) && hasRunState(root, join(ORCHESTRATOR_DIRECTORY, unit, name)),
+  );
+}
+
+/**
+ * The text of the `state.json` and the `definition.json` of the run at `directory`, from the root.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {{ state: string, definition: string }}
+ */
+function runTexts(root, directory) {
+  return {
+    state: readRunFile(root, join(directory, 'state.json')),
+    definition: readRunFile(root, join(directory, 'definition.json')),
+  };
+}
+
+/**
+ * The text of the `heartbeat` of the run at `directory`, from the root, or `undefined` when it has none.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {string | undefined}
+ */
+function readHeartbeat(root, directory) {
+  const heartbeat = resolve(root, directory, 'heartbeat');
+  return isRegularFile(heartbeat) ? readFileSync(heartbeat, 'utf-8') : undefined;
+}
+
+/**
  * The runs of the orchestrator of the project at `root`, each judged at the instant `now`, only those of the unit
  * `number` names when one is given. It reads `.orchestrator/` and nothing else, and refuses a run whose files are not
  * of the form the orchestrator writes.
@@ -1899,23 +2126,13 @@ function hasRunState(root, directory) {
 export function readRuns(root, number, now) {
   const orchestrator = resolve(root, ORCHESTRATOR_DIRECTORY);
   if (!exists(orchestrator)) return [];
-  const directoriesOf = (/** @type {string} */ path) =>
-    readdirSync(path, { withFileTypes: true })
-      .filter((entry) => entry.isDirectory())
-      .map((entry) => entry.name);
   return directoriesOf(orchestrator)
     .filter((unit) => isUnitDirectory(unit) && (number === undefined || unit.startsWith(`${number}-`)))
     .flatMap((unit) =>
-      directoriesOf(join(orchestrator, unit))
-        .filter((name) => isRunDirectory(name) && hasRunState(root, join(ORCHESTRATOR_DIRECTORY, unit, name)))
+      runDirectoryNames(root, unit)
         .map((name) => {
           const directory = join(ORCHESTRATOR_DIRECTORY, unit, name);
-          const heartbeat = resolve(root, directory, 'heartbeat');
-          const run = runFrom(unit, name, {
-            state: readRunFile(root, join(directory, 'state.json')),
-            definition: readRunFile(root, join(directory, 'definition.json')),
-            heartbeat: isRegularFile(heartbeat) ? readFileSync(heartbeat, 'utf-8') : undefined,
-          });
+          const run = runFrom(unit, name, { ...runTexts(root, directory), heartbeat: readHeartbeat(root, directory) });
           const followed = run.followedName === null ? null : `${run.directory}/${run.followedName}`;
           return {
             ...run,
