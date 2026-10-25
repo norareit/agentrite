@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-23T23:50:06Z
 ---
 
@@ -47,5 +47,8 @@ timestamp: 2026-10-23T23:50:06Z
   changed in a scratch edit to ignore the listing: of the three `waitForRun` tests, 2 failed (the delayed listing and
   the never listed container) and 1 passed (the missing ready file, which does not depend on the listing). The edit
   was reverted and is not committed. The status stays `in-progress`
+- 2026-10-25T10:30:00Z [human] decided that the unit meets the bar for `implemented`: the review's one finding, P1,
+  is nonblocking and corrected, and every task of `plan.md` is ticked. Recorded by Claude Code,
+  anthropic/claude-sonnet-5-5, as the implementer, at the human's request. The status is `implemented`
 
 ## Amendments
