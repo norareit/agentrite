@@ -27,7 +27,9 @@ import {
   exitStatus,
   followedLine,
   followedText,
+  followOutput,
   followPrinter,
+  plainOutput,
   judgeStep,
   orchestrate,
   orchestrateUsage,
@@ -1037,6 +1039,51 @@ test('followPrinter sets each text apart by one blank line, and the calls on lin
       '',
       '09:00:00 Third.',
       '',
+      '',
+    ].join('\n'),
+  );
+});
+
+// R5, R6
+
+function runThrough(output) {
+  const now = () => Date.UTC(2026, 9, 22, 9, 0, 0);
+  const text = (words) => ({ kind: 'text', time: undefined, text: words });
+  output.started('step 0: started');
+  output.items(timedItems([text('First.'), call({ command: 'ls' })], now));
+  output.ended('step 0: done');
+  output.started('step 1: started');
+  output.items(timedItems([call({ command: 'pwd' })], now));
+  output.ended('step 1: done');
+  output.report('The report.\n');
+}
+
+test('plainOutput writes the line of each step and a blank line before the report, and nothing of the items', () => {
+  /** @type {string[]} */ const written = [];
+  runThrough(plainOutput((text) => written.push(text)));
+  assert.equal(
+    written.join(''),
+    'step 0: started\nstep 0: done\nstep 1: started\nstep 1: done\n\nThe report.\n',
+  );
+});
+
+test('followOutput writes the items of each step between the two lines of the step', () => {
+  /** @type {string[]} */ const written = [];
+  runThrough(followOutput((text) => written.push(text)));
+  assert.equal(
+    written.join(''),
+    [
+      'step 0: started',
+      '',
+      '09:00:00 First.',
+      '',
+      dim('14:03:31 → Bash ls'),
+      'step 0: done',
+      'step 1: started',
+      dim('14:03:31 → Bash pwd'),
+      'step 1: done',
+      '',
+      'The report.',
       '',
     ].join('\n'),
   );

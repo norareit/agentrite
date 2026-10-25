@@ -55,7 +55,8 @@ import {
   endReport,
   exitStatus,
   followedLine,
-  followPrinter,
+  followOutput,
+  plainOutput,
   timedItems,
   orchestrate,
   ORCHESTRATE_FORM,
@@ -1769,6 +1770,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
   // `state.json` the branch, and neither follows a branch checked out later.
   const branch = checkedOutBranch(root);
   const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
+  const output = (follow ? followOutput : plainOutput)((text) => process.stdout.write(text));
   const write = (/** @type {string} */ name, /** @type {string} */ content) =>
     writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
@@ -1793,7 +1795,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
         const { number, item, round, index } = planned;
         at = { number, item, round: round ?? null, index: index ?? null };
         writeState(null);
-        console.log(stepLine(planned));
+        output.started(stepLine(planned));
       },
       run: (planned) => {
         const add = followedFile(resolve(root, runDirectory, fileOf(planned, 'followed.jsonl')), {
@@ -1801,7 +1803,6 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
           appendFileSync,
           truncateSync,
         });
-        const print = followPrinter((text) => process.stdout.write(text));
         return runStep(
           root,
           directory,
@@ -1812,7 +1813,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
           },
           (items) => {
             const timed = timedItems(items, Date.now);
-            if (follow) print(timed);
+            output.items(timed);
             for (const item of timed) add(followedLine(item, instantOf(item.time)));
           },
         );
@@ -1833,13 +1834,13 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
           responsePath = join(runDirectory, fileOf(planned, 'response.md'));
         }
         writeState(null);
-        console.log(stepLine(planned, entry));
+        output.ended(stepLine(planned, entry));
       },
     });
     const status = exitStatus(end);
     stopHeartbeat();
     writeState({ status, line: endLine(end) });
-    process.stdout.write(`\n${endReport(ran, end, unfixed, { runDirectory, unitDirectory: directory, responsePath })}`);
+    output.report(endReport(ran, end, unfixed, { runDirectory, unitDirectory: directory, responsePath }));
     return status;
   } finally {
     stopHeartbeat();

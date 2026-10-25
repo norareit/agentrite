@@ -563,6 +563,51 @@ export function followPrinter(write) {
   };
 }
 
+/**
+ * What the command prints on standard output while it runs a definition: the line before a step, the items followed
+ * of the step, the line after it, and the end report.
+ *
+ * @typedef {object} RunOutput
+ * @property {(line: string) => void} started
+ * @property {(items: Timed[]) => void} items
+ * @property {(line: string) => void} ended
+ * @property {(text: string) => void} report
+ */
+
+/**
+ * The output without `--follow`: the lines of the steps, a blank line and the end report, and nothing of the items.
+ *
+ * @param {(text: string) => void} write
+ * @returns {RunOutput}
+ */
+export function plainOutput(write) {
+  return {
+    started: (line) => write(`${line}\n`),
+    items: () => {},
+    ended: (line) => write(`${line}\n`),
+    report: (text) => write(`\n${text}`),
+  };
+}
+
+/**
+ * The output with `--follow`: as `plainOutput`, with the items of each step printed between its two lines.
+ *
+ * @param {(text: string) => void} write
+ * @returns {RunOutput}
+ */
+export function followOutput(write) {
+  const plain = plainOutput(write);
+  let print = followPrinter(write);
+  return {
+    ...plain,
+    started: (line) => {
+      plain.started(line);
+      print = followPrinter(write);
+    },
+    items: (items) => print(items),
+  };
+}
+
 /** How `orchestrate` is run. */
 export const ORCHESTRATE_FORM =
   'usage: agentrite orchestrate <unit> [--definition <file>] [--skip-permissions] [--follow]';
