@@ -103,6 +103,7 @@ export function isRunDirectory(name) {
 }
 
 const isFilledString = (/** @type {unknown} */ value) => typeof value === 'string' && value !== '';
+const isBoolean = (/** @type {unknown} */ value) => typeof value === 'boolean';
 const isCountOf = (/** @type {number} */ least) => (/** @type {unknown} */ value) =>
   typeof value === 'number' && Number.isInteger(value) && value >= least;
 
@@ -143,14 +144,17 @@ function objectFault(value, path, place, checks) {
 const filledAt = (/** @type {unknown} */ value, /** @type {string} */ path) =>
   valueFault(path, value, isFilledString, 'a string that is not empty');
 
+const nullableFilledAt = (/** @type {unknown} */ value, /** @type {string} */ path) =>
+  value === undefined || value === null ? undefined : filledAt(value, path);
+
 const countAt = (/** @type {number} */ least) => (/** @type {unknown} */ value, /** @type {string} */ path) =>
   valueFault(path, value, isCountOf(least), `a whole number of ${least} or more`);
 
 const ROUND_PLACE = { name: 'a round', keys: ['at', 'of'], holds: 'A round holds at and of' };
 const AT_PLACE = {
   name: 'at',
-  keys: ['number', 'item', 'round', 'index'],
-  holds: 'at holds number, item, round and index',
+  keys: ['number', 'item', 'round', 'index', 'asked'],
+  holds: 'at holds number, item, round, index and asked',
 };
 const SESSION_PLACE = {
   name: 'a session',
@@ -160,8 +164,8 @@ const SESSION_PLACE = {
 const ENDED_PLACE = { name: 'ended', keys: ['status', 'line'], holds: 'ended holds status and line' };
 const STATE_PLACE = {
   name: 'state.json',
-  keys: ['unit', 'definition', 'branch', 'at', 'sessions', 'ended'],
-  holds: 'state.json holds unit, definition, branch, at, sessions and ended',
+  keys: ['unit', 'definition', 'branch', 'resumes', 'at', 'sessions', 'ended'],
+  holds: 'state.json holds unit, definition, branch, resumes, at, sessions and ended',
 };
 
 /**
@@ -187,6 +191,8 @@ function atFault(value, path) {
     item: countAt(0),
     round: (round, roundPath) => (round === null ? undefined : roundFault(round, roundPath)),
     index: (index, indexPath) => (index === null ? undefined : countAt(0)(index, indexPath)),
+    asked: (asked, askedPath) =>
+      asked === undefined ? undefined : valueFault(askedPath, asked, isBoolean, 'true or false'),
   });
 }
 
@@ -223,7 +229,8 @@ function endedFault(value, path) {
 
 /**
  * The first fault of the `state.json` the orchestrator writes, in the order of its keys, or `undefined`. A `branch`
- * that is missing is no fault, since a run from before unit 0081 has none.
+ * that is missing is no fault, since a run from before unit 0081 has none, and neither is a `resumes` or an `asked` of
+ * `at` that is missing, since a run from before unit 0089 has neither.
  *
  * @param {unknown} state
  * @returns {string | undefined}
@@ -232,7 +239,8 @@ function stateFault(state) {
   return objectFault(state, '', STATE_PLACE, {
     unit: filledAt,
     definition: filledAt,
-    branch: (branch, path) => (branch === undefined || branch === null ? undefined : filledAt(branch, path)),
+    branch: nullableFilledAt,
+    resumes: nullableFilledAt,
     at: atFault,
     sessions: sessionsFault,
     ended: endedFault,
@@ -287,6 +295,54 @@ function heartbeatInstant(text) {
 }
 
 /**
+ * The `state.json` of a run, with every key the orchestrator reads of it. `branch` is missing in a run from before
+ * unit 0081, and `resumes` and `asked` of `at` in a run from before unit 0089.
+ *
+ * @typedef {{
+ *   unit: string,
+ *   definition: string,
+ *   branch?: string | null,
+ *   resumes?: string | null,
+ *   at: {
+ *     number: number,
+ *     item: number,
+ *     round: { at: number, of: number } | null,
+ *     index: number | null,
+ *     asked?: boolean,
+ *   } | null,
+ *   sessions: { role: string, harness: string, session: string }[],
+ *   ended: { status: number, line: string } | null,
+ * }} RunState
+ */
+
+/**
+ * What the directory `name` of the unit directory `unit` holds, from the text of its `state.json` and of its
+ * `definition.json`: the state, the definition, and the step of the definition that `at` names, or `null` for a run
+ * before its first step. Throws, naming the file by its path from the project root, when a file is not of the form
+ * the orchestrator writes, or `at` names a step the definition does not have.
+ *
+ * @param {string} unit
+ * @param {string} name
+ * @param {{ state: string, definition: string }} texts
+ * @returns {{
+ *   state: RunState,
+ *   definition: import('./agentrite-definition.mjs').Definition,
+ *   step: import('./agentrite-definition.mjs').Step | null,
+ * }}
+ */
+export function parseRun(unit, name, texts) {
+  const directory = `.orchestrator/${unit}/${name}`;
+  const [stateFile, definitionFile] = [`${directory}/state.json`, `${directory}/definition.json`];
+  const state = /** @type {RunState} */ (parseState(texts.state, stateFile));
+  const definition = parseDefinition(texts.definition, { path: definitionFile });
+  const step = state.at === null ? null : (stepNamedBy(definition, state.at) ?? null);
+  if (state.at !== null && step === null) {
+    throw new Error(`${stateFile}: at names a step that ${definitionFile} does not have`);
+  }
+  return { state, definition, step };
+}
+
+/**
  * The run that the directory `name` of the unit directory `unit` holds, from the text of its `state.json`, of its
  * `definition.json` and of its `heartbeat`, which is `undefined` when it is missing. Throws, naming the file by its
  * path from the directory `runs` runs in, when a file is not of the form the orchestrator writes.
@@ -298,21 +354,10 @@ function heartbeatInstant(text) {
  */
 export function runFrom(unit, name, texts) {
   const directory = `.orchestrator/${unit}/${name}`;
-  const [stateFile, definitionFile] = [`${directory}/state.json`, `${directory}/definition.json`];
-  const state = /** @type {{
-   *   branch?: string | null,
-   *   at: { number: number, item: number, round: { at: number, of: number } | null, index: number | null } | null,
-   *   ended: { status: number, line: string } | null,
-   * }} */ (parseState(texts.state, stateFile));
-  const definition = parseDefinition(texts.definition, { path: definitionFile });
-
+  const { state, definition, step: found } = parseRun(unit, name, texts);
   const { at } = state;
-  const found = at === null ? undefined : stepNamedBy(definition, at);
-  if (at !== null && found === undefined) {
-    throw new Error(`${stateFile}: at names a step that ${definitionFile} does not have`);
-  }
   const step =
-    at === null || found === undefined
+    at === null || found === null
       ? null
       : {
           number: at.number,
@@ -334,7 +379,7 @@ export function runFrom(unit, name, texts) {
     step,
     followedName: step === null ? null : stepFileName(definition, step.number, step.role, 'followed.jsonl'),
     head:
-      at === null || found === undefined
+      at === null || found === null
         ? null
         : stepHead({ number: at.number, round: at.round ?? undefined, step: found }),
     ended: state.ended,
@@ -390,7 +435,7 @@ export function selectRuns(runs, limit) {
  * @param {Listed} listed
  * @returns {string}
  */
-function detailOf({ state, head, heartbeat, ended }) {
+export function detailOf({ state, head, heartbeat, ended }) {
   if (state === 'ended') return /** @type {{ line: string }} */ (ended).line;
   const at = head ?? 'before its first step';
   if (state === 'running') return at;

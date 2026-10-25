@@ -71,18 +71,18 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ### The form of state.json
 
-- [ ] In `tests/agentrite-runs.test.mjs`, test that `runFrom` accepts a `state.json` with `resumes` as a string that is
+- [x] In `tests/agentrite-runs.test.mjs`, test that `runFrom` accepts a `state.json` with `resumes` as a string that is
   not empty and as `null`, and one without `resumes`; that it refuses a `resumes` of another value, naming the file,
   `resumes` and what it must hold; that it accepts `at.asked` as `true`, `false` and missing, and refuses another value
   the same way; and that the message for an extra key of `state.json` and of `at` names the new keys among those they
   hold (R6, R8)
-- [ ] In `scripts/agentrite-runs.mjs`, add `resumes` to `STATE_PLACE` after `branch`, checked as `branch` is but for a
+- [x] In `scripts/agentrite-runs.mjs`, add `resumes` to `STATE_PLACE` after `branch`, checked as `branch` is but for a
   missing key, and `asked` to `AT_PLACE` after `index`, a boolean or missing. Update the `holds` texts (R6)
-- [ ] Extract from `runFrom` an exported function that parses the text of a run's `state.json` and `definition.json`
+- [x] Extract from `runFrom` an exported function that parses the text of a run's `state.json` and `definition.json`
   and gives the state, typed with every key the resume reads (`definition`, `branch`, `resumes`, `at` with `asked`,
   `sessions`, `ended`), the parsed definition, and the `at` checked against the definition by `stepNamedBy`, throwing
   as `runFrom` throws today. `runFrom` calls it and is otherwise unchanged, and its tests pass as they are (R8)
-- [ ] Export `detailOf`, unchanged (R8)
+- [x] Export `detailOf`, unchanged (R8)
 
 ### The position a resume starts at
 
@@ -197,8 +197,8 @@ ended with a status other than 3; the branch. Each is made before anything is wr
 
 ## Commit Points
 
-- [ ] `feature-0089 Plan the resume of a stopped run`: `plan.md` and the record's entry
-- [ ] `feature-0089 Take resumes and asked in the state of a run`: the tasks of "The form of state.json"
+- [x] `feature-0089 Plan the resume of a stopped run`: `plan.md` and the record's entry
+- [x] `feature-0089 Take resumes and asked in the state of a run`: the tasks of "The form of state.json"
 - [ ] `feature-0089 Start a run of the definition at a step`: the tasks of "The position a resume starts at"
 - [ ] `feature-0089 Take --resume and --prompt, and print the opening line`: the tasks of "The prompt, the opening
   line and the options"

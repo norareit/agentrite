@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import {
   isRunDirectory,
+  parseRun,
   parseRunsArgs,
   runFrom,
   runsJson,
@@ -208,7 +209,8 @@ test('a state.json that is not of the form the orchestrator writes is refused, n
   refuses('[]', `${STATE_FILE} holds [], which is no JSON object`);
   refuses(
     JSON.stringify({ ...withKey('extra', 1) }),
-    `${STATE_FILE}: extra is no key of state.json. state.json holds unit, definition, branch, at, sessions and ended`,
+    `${STATE_FILE}: extra is no key of state.json. state.json holds unit, definition, branch, resumes, at, sessions ` +
+      'and ended',
   );
   const { unit, ...withoutUnit } = withKey('at', null);
   refuses(JSON.stringify(withoutUnit), `${STATE_FILE}: unit is missing. It must hold a string that is not empty`);
@@ -232,6 +234,53 @@ test('a state.json that is not of the form the orchestrator writes is refused, n
     JSON.stringify(withKey('ended', { status: '0', line: 'x' })),
     `${STATE_FILE}: ended.status is "0". It must hold a whole number`,
   );
+});
+
+// Unit 0089, R6, R8: resumes, and asked in at.
+
+test('resumes is accepted as a string that is not empty, as null and missing, and refused otherwise', () => {
+  const texts = (overrides) => ({ state: stateText(overrides), definition: DEFAULT, heartbeat: undefined });
+  for (const resumes of [INSTANT, `${INSTANT}--opus`, null, undefined]) {
+    assert.equal(runFrom('0029-x', INSTANT, texts({ resumes })).run, INSTANT, String(resumes));
+  }
+  for (const [resumes, shown] of [
+    ['', '""'],
+    [1, '1'],
+    [false, 'false'],
+  ]) {
+    refusesRun(texts({ resumes }), `${STATE_FILE}: resumes is ${shown}. It must hold a string that is not empty`);
+  }
+});
+
+test('asked of at is accepted as true, false and missing, and refused otherwise', () => {
+  const texts = (at) => ({ state: stateText({ at }), definition: DEFAULT, heartbeat: undefined });
+  for (const asked of [true, false, undefined]) {
+    assert.equal(runFrom('0029-x', INSTANT, texts({ ...STEP_AT, asked })).step?.number, 2, String(asked));
+  }
+  for (const [asked, shown] of [
+    ['yes', '"yes"'],
+    [null, 'null'],
+    [1, '1'],
+  ]) {
+    refusesRun(texts({ ...STEP_AT, asked }), `${STATE_FILE}: at.asked is ${shown}. It must hold true or false`);
+  }
+  refusesRun(
+    texts({ ...STEP_AT, extra: 1 }),
+    `${STATE_FILE}: at.extra is no key of at. at holds number, item, round, index and asked`,
+  );
+});
+
+test('parseRun gives the state, the definition and the step at names, or null before the first step', () => {
+  const state = stateText({ resumes: `${INSTANT}--opus`, at: { ...STEP_AT, asked: true } });
+  const parsed = parseRun('0029-x', INSTANT, { state, definition: DEFAULT });
+  assert.deepEqual(parsed.state, JSON.parse(state));
+  assert.deepEqual(parsed.definition.steps.length, 2);
+  assert.equal(parsed.step?.role, 'reviewer');
+  assert.equal(parseRun('0029-x', INSTANT, { state: stateText({ at: null }), definition: DEFAULT }).step, null);
+  const elsewhere = stateText({ at: { ...STEP_AT, item: 2 } });
+  assert.throws(() => parseRun('0029-x', INSTANT, { state: elsewhere, definition: DEFAULT }), {
+    message: `${STATE_FILE}: at names a step that ${DEFINITION_FILE} does not have`,
+  });
 });
 
 test('a definition.json that is not of the form is refused, naming the file', () => {

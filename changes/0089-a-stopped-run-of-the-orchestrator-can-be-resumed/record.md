@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-25T14:12:42Z
 ---
 
@@ -27,3 +27,6 @@ timestamp: 2026-10-25T14:12:42Z
   `feature-0089-a-stopped-run-of-the-orchestrator-can-be-resumed`, cut from `master` at `71739d0`. Wrote `plan.md`.
   Read requirement 6 as needing `state.json` to say whether `at` is an ask again, which it does not today, and planned
   the key `asked` in `at` for it, read as `false` in a run from before it. The status stays `approved`
+- 2026-10-25T16:16:14Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0089-a-stopped-run-of-the-orchestrator-can-be-resumed` at `f61a869`, began the work. The suites pass on
+  `f61a869`, 1269 tests. The status is `in-progress`
