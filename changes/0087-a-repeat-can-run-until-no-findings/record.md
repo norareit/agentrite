@@ -58,3 +58,8 @@ timestamp: 2026-10-25T00:11:13Z
   `git diff --check` reported nothing; `npm run check-changes` exited 0. The commit of this entry changes only
   `plan.md` and `record.md`. Every task of `plan.md` is ticked. The unit is handed over for review, and the status
   stays `in-progress`
+- 2026-10-25T11:22:07Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, fully reviewed unit 0087 at `c72214d`
+  against merge base `3837f99` with `master`, with no findings on spec conformance, plan fidelity or code quality.
+  Saved the review in `.reviews/0087-a-repeat-can-run-until-no-findings/review-2026-10-25T112129Z.md`. Independently
+  ran `npm test`: 1251 passed, 0 failed, 0 skipped; `npm run check-changes` and `git diff --check` passed. Historical
+  failing test runs could not be established from committed snapshots alone. The status stays `in-progress`
