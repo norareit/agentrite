@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-10-25T00:11:13Z
 ---
 
@@ -63,3 +63,6 @@ timestamp: 2026-10-25T00:11:13Z
   Saved the review in `.reviews/0087-a-repeat-can-run-until-no-findings/review-2026-10-25T112129Z.md`. Independently
   ran `npm test`: 1251 passed, 0 failed, 0 skipped; `npm run check-changes` and `git diff --check` passed. Historical
   failing test runs could not be established from committed snapshots alone. The status stays `in-progress`
+- 2026-10-25T11:25:44Z [human] decided that the unit meets the bar for `implemented`: the review
+  `review-2026-10-25T112129Z.md` returned no findings, and every task of `plan.md` is ticked. Recorded by Claude Code,
+  anthropic/claude-opus-5-5, as the implementer, at the human's request. The status is `implemented`
