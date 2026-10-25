@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-24T13:41:05Z
 ---
 
@@ -13,5 +13,6 @@ timestamp: 2026-10-24T13:41:05Z
   with `--follow` the command's own output is set apart by lines around it. Made the unit as a feature, since the form
   and placement of the frames are decisions. Numbered 0085: the highest number in `changes/` is 0084. Read "How a run
   ends" of `README.md`, `orchestrateCommand`, `endReport` and `followPrinter`. Wrote `spec.md`. The status is `draft`
+- 2026-10-25T11:45:43Z [human] approved the spec. The status is `approved`
 
 ## Amendments
