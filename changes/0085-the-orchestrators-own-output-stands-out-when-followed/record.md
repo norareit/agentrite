@@ -43,5 +43,11 @@ timestamp: 2026-10-24T13:41:05Z
   it, now also asserting no rule line, check the same properties. Ticked the `npm run check-changes` task, which
   passed. `node --test tests/agentrite-orchestrate.test.mjs` reports 116 passing on the tree after these edits. The
   status stays `in-progress`
+- 2026-10-25T12:06:11Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0085 at
+  `6a9f26443b21bc4ebcfe2a60da0d3e1f562ae79a`, compared with `99bf78b6f188755a347fe1604324f24575d317d9`.
+  Returned no findings; the checks of C1 and P1 and all three axes are in
+  `.reviews/0085-the-orchestrators-own-output-stands-out-when-followed/review-round-2.md`. The orchestrator suite
+  passed 116 tests and the change check passed; the full suite again had 19 failures and 33 skips. The pre-unit
+  baseline and the omitted manual comparisons were not independently verified.
 
 ## Amendments
