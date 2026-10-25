@@ -28,5 +28,10 @@ timestamp: 2026-10-24T13:41:05Z
   piped, which showed the rules plain with no escape sequence. The output without `--follow` was not compared with
   `diff` against `master`: it is checked by the unchanged test of a run without it, which now also asserts no rule
   line. Not checked: `SANDBOX.md`, which was read and left as it is as the plan says
+- 2026-10-25T12:03:04Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0085 at
+  `99bf78b6f188755a347fe1604324f24575d317d9`. Returned P1 and C1 in
+  `.reviews/0085-the-orchestrators-own-output-stands-out-when-followed/review-round-1.md`. The orchestrator suite
+  passed 116 tests and the change check passed; the full suite had 19 failures and 33 skips. Could not independently
+  verify the reported pre-unit baseline of 20 failures or the omitted command-level manual comparisons.
 
 ## Amendments
