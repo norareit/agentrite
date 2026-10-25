@@ -43,3 +43,9 @@ timestamp: 2026-10-25T14:12:42Z
   passes on `aeb8758`, and no line of a changed file is longer than 120 characters. Not checked: a resume with a real
   Claude Code or OpenCode, and a resume through `./sandbox.sh`, whose command `SANDBOX.md` gives from how the
   wrapper passes its arguments on. The status stays `in-progress` for the review
+- 2026-10-25T16:43:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request
+  folded `4594708`, which shortened a test name to the line limit, into `08906d1`, and replayed the commits after
+  them, which left the tree as it was. The entries above name the commits as they were before: `08906d1` with
+  `4594708` is now `52aac3d`, `a171a6b` is `8ab459f`, `696f563` is `40227df`, `aeb8758` is `63658ae` and
+  `ccbd761` is `3a68d6e`, so the implementation is in five commits, from `7bd328b` to `63658ae`. `npm test`
+  passes on `3a68d6e`, 1301 tests, and so does `npm run check-changes`. The status stays `in-progress`
