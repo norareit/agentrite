@@ -12,7 +12,8 @@ remaining step by hand with `agentrite run`, keeping track of the rounds and the
 0065 left picking a stopped run up again for a later unit, and 0069 repeated that. The run of unit 0022 of
 aloudrite-intellij on 2026-10-25 is a case: the implementer finished and gave a valid outcome, a later turn of its own
 hid it, as 0088 describes, and the run stopped before the reviewer of round 1. The human was left to finish the loop
-by hand.
+by hand. 0088 now asks such a step again for its outcome, in its own session, so a missing outcome stops a run only
+when that ask again gives none either. Every other stop is as it was.
 
 ## Requirements
 
@@ -22,7 +23,9 @@ by hand.
 2. A resume reruns the step that stopped the run, in the round it stopped in, and goes on from there by the
    definition, as a run goes on after any step. The rerun step continues the session its role and harness held in
    the run, as a later step of the same role and harness in a run does. When the run holds no session for them, the
-   step starts a new one
+   step starts a new one. A run that stopped at an ask again of 0088 is resumed at the step of the definition that
+   was asked: the rerun is that step, with its prompt as requirement 3 gives it, and not an ask again. The rerun, and
+   every step after it, is asked again for a missing outcome as any step of a run is
 3. `--prompt <text>` gives the human's words to the rerun step. Its prompt is then the step's own prompt from the
    definition, the human's words, and the request for the outcome, in that order. Without `--prompt` the human's
    words are replaced by a sentence that says the human resumed the run after it stopped at this step. `--prompt` is
@@ -36,8 +39,10 @@ by hand.
 6. A resume is a run of its own, in a directory of its own under `.orchestrator/<unit-directory>/`, named as any run's
    is by the instant it started and its variant. Its `state.json` holds the key `resumes` with the name of the
    directory of the run it resumes; a run that does not resume another holds `resumes` as `null`. The step files of a
-   resume carry the numbers the steps have in the definition, as they would have in the run it resumes. The directory
-   of the stopped run is not changed
+   resume carry numbers that go on from the run it resumes: the rerun step has the number that the step of the
+   definition it reruns had in that run, which for a run that stopped at an ask again is the number of the step that
+   was asked, and every step after it, an ask again among them, has the next number, as in a run. The directory of
+   the stopped run is not changed
 7. A resume that stops can itself be resumed, as any stopped run can
 8. Beside the refusals of a run, `--resume` refuses, starts nothing, writes nothing and exits 1 when:
    * the unit has no run on the variant, naming the unit and the variant
@@ -55,8 +60,10 @@ by hand.
     run it resumes and the step it reruns
 11. Tests cover each case of requirements 1 to 10: the run chosen; the rerun of a step that stopped for a missing
     outcome, for questions, for a blocking finding of `stopWhen` and for a repeat that ran out, each going on by the
-    rerun's outcome; the session continued; the prompt with and without `--prompt`; the definition of the stopped
-    run; the new directory and its `resumes`; a resume resumed; and each refusal
+    rerun's outcome, the missing outcome being one that the ask again of 0088 did not give either, and the rerun
+    being of the step that was asked and numbered as it; the session continued; the prompt with and without
+    `--prompt`; the definition of the stopped run; the new directory and its `resumes`; a resume resumed; and each
+    refusal
 12. "agentrite orchestrate", "The orchestrator" and "What .orchestrator holds" of `README.md` describe `--resume`,
     `--prompt`, what a resume reruns, its refusals and `resumes`. "Usage" of the command lists both options.
     `SANDBOX.md` gives the command of a resume in a unit run beside the command of a run
@@ -65,11 +72,12 @@ by hand.
 
 * **A resume reruns the step that stopped the run.** One rule covers every way a run stops. After questions or
   proposed declines, the step hears the human's answer in the session that asked, and gives an outcome without them.
-  After a missing outcome, as for 0022, the step is asked again in its own session and gives it in a short turn. After
-  a blocking finding or a repeat that ran out, the human fixes or decides, and the reviewer reviews again, which is the
-  check the human needs. After a time limit or a failed harness, the step tries again where it was. Rejected: a resume
-  that goes on with the step after the one that stopped, which would take an outcome the orchestrator never read and
-  could not judge; and a choice between the two on every resume, which puts a decision on the human that the rule
+  After a missing outcome, which stops a run only when the ask again of 0088 gave none either, the step runs again in
+  its own session with its prompt and the human's words, which can say what kept it from giving one. After a blocking
+  finding or a repeat that ran out, the human fixes or decides, and the reviewer reviews again, which is the check
+  the human needs. After a time limit or a failed harness, the step tries again where it was. Rejected: a resume that
+  goes on with the step after the one that stopped, which would take an outcome the orchestrator never read and could
+  not judge; and a choice between the two on every resume, which puts a decision on the human that the rule
   answers
 * **The human's words go to the step through `--prompt`.** The step needs the answer to its questions or the decision
   on its declines, and the human gives it in their own words, as `agentrite run --prompt` takes them. Without words
@@ -84,6 +92,14 @@ by hand.
   followed by a later one that holds the unit's newer state. A run that ran to its end has nothing to resume, and one
   that has not ended may still be running, in another terminal or another container
 * **The branch must be the run's.** A step's session and the tree it worked on belong to the branch the run was on
+* **The numbers of a resume go on from the stopped run.** A step of the definition keeps its number in a run and in
+  its resumes, so the human finds the files of a rerun under the number of the step it reruns, and the numbers stay
+  bounded as in a run: a rerun of an ask again takes the number of the step that was asked, so resuming a resume does
+  not push the numbers past the digits a run's files take. Rejected: the position of the step in the definition,
+  which 0088 no longer gives a step, since an ask again takes a number of its own
+* **0089 is built after 0088.** It relies on the ask again: what stops a run for a missing outcome, how a stopped ask
+  again is rerun, and how steps are numbered. Built before it, a resume would number its steps by a rule 0088 then
+  changes
 * **A repeat gets no extra rounds.** The rounds are the definition's, as the human set them. A human who wants more
   resumes the stopped reviewer, which, when its review is clean, ends the repeat
 
