@@ -67,3 +67,9 @@ timestamp: 2026-10-25T14:12:42Z
   tests, and so does `npm run check-changes`. No line of a changed file is longer than 120 characters. Not checked:
   a run actually written by the code of 0088, as the tests write one by removing `asked` from a run of this unit's
   code. The status stays `in-progress` for a review of the fix
+- 2026-10-25T16:59:44Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0089 at `bfaea3d`, a delta
+  review from `d5bed69`, checking the correction for S1 and the intervening diff. Returned no new findings. The
+  review is in `.reviews/0089-a-stopped-run-of-the-orchestrator-can-be-resumed/review-20261025T165944Z.md`.
+  `npm test` passes, 1304 tests with none skipped, and `npm run check-changes` passes. Repeated the compatibility
+  reproduction with the older orchestration code in memory. Not verified: a real harness session, a resume through
+  `./sandbox.sh`, or an end-to-end run of the older 0088 command.
