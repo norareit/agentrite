@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-10-25T14:10:17Z
 ---
 
@@ -62,3 +62,8 @@ timestamp: 2026-10-25T14:10:17Z
   decides: finding the files of older runs is a change to `agentrite runs` that the spec does not ask for, the default
   definition reaches 7 steps and is not touched, the followed file of such a run is still in its directory, and the runs
   directories are ignored working files of one machine, not kept history. The status stays `in-progress`
+- 2026-10-25T15:56:59Z [human] declined review finding C1, as the implementer proposed, and left `d4b517a` as a commit
+  of its own
+- 2026-10-25T15:56:59Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's word in the session:
+  the review returned no blocking finding, its one finding, C1, is declined by the human, and every task of `plan.md` is
+  ticked. The status is `implemented`
