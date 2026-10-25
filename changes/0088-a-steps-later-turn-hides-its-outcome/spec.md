@@ -18,8 +18,9 @@ outcome, `done`, with no questions and three items in `afterwards`. At 13:04:03 
 there was nothing left to check, with no outcome, and that is the response the run's directory holds as
 `01-implementer.response.md`.
 
-**Expected.** A step that ends with a valid outcome has that outcome read, and the run goes on by it. Here the run
-would have gone on to the reviewer of round 1.
+**Expected.** A step that did its work is not lost to a response without an outcome. The run asks the step for its
+outcome, and goes on by the outcome it gives. Here the run would have asked the implementer, read `done`, and gone on
+to the reviewer of round 1.
 
 **Steps to reproduce.** Not reproduced on demand. The session log of the step,
 `~/.local/share/agentrite/aloudrite-intellij/.claude/projects/-work/ce86064c-2aed-4dce-b4a3-83b26e1affde.jsonl` on
@@ -39,58 +40,82 @@ response the orchestrator read is the text of 13:04:03 was seen.
 
 **Root cause.** A headless step of Claude Code can make turns of its own after its final response: `ScheduleWakeup`
 and `CronCreate` schedule a prompt for later, `Monitor` reports on a process as it runs, and a command started in the
-background reports its end. The step's prompt does not tell the agent that its final response must be its last, and
-nothing keeps it from scheduling a turn after it. The orchestrator reads the last response, which is then not the one
-with the outcome.
+background reports its end. The step's prompt does not tell the agent that its final response must be its last. The
+orchestrator reads the last response, which is then not the one with the outcome, and a step whose last response
+holds no outcome stops the run, however finished its work is.
 
-**Fix.** A headless step of Claude Code runs without the tools that schedule or report a later turn, and the request
-for the outcome tells the step to wait for every command it started in the background before it gives its final
-response.
+**Fix.** A step whose last response holds no outcome is asked for it once, in its own session, and the run goes on
+by the outcome that answer gives. The request for the outcome also tells every step that its final response is its
+last, and to wait for every command it started in the background before it gives it.
 
 ## Requirements
 
-1. A step of the orchestrator that runs Claude Code runs it with `ScheduleWakeup`, `CronCreate` and `Monitor` not
-   available to the agent, in its first run and in a run that continues its session
-2. The request that the orchestrator adds to the prompt of every step says that the final response is the step's last,
-   and that a command the step started in the background has ended before the step gives it
-3. A test shows that the arguments a step of Claude Code is started with leave out the tools of requirement 1, for a
-   first run and for a continued one, and a test shows that the request holds the text of requirement 2
-4. "The orchestrator" of `README.md` says that a step of Claude Code runs without those tools and why, and what the
-   request asks of a command run in the background
+1. When a step's harness exits with status 0, no signal ended it, it did not run past its time limit, and its final
+   response holds no block marked `json` or the harness gave no final response, and the step's session is known, the
+   run does not stop at that step. The command runs one step more, called the ask again: the same role, harness,
+   model, round and `timeoutMinutes`, continuing that step's session, with a prompt that says the last response held
+   no block marked `json`, asks for the step's outcome for its work as it stands, and is followed by the request for
+   the outcome. The prompt of the definition's step is not given to the ask again
+2. An ask again is never itself followed by an ask again. A step whose session is not known is not asked again, and
+   stops the run as before
+3. The outcome of the ask again stands for that of the step it follows: it is judged by every case of "How a run
+   ends", by the step's `stopWhen`, and, for the last step of a round, by the `until` of its repeat, and the end
+   report takes it as that of the step. An ask again without an outcome of the form stops the run as a step without
+   one does
+4. The ask again is a step of the run in every other respect: it has the next number, its line before and after it,
+   its followed file, its outcome or response file, its place as the step the run is at in `state.json`, and its row
+   in the list of the end report. Its line before and after it and its row say that it asked again for the outcome.
+   The step it follows keeps its own response file. The numbers of the files leave room for an ask again after every
+   step, so the names still sort in the order the steps ran
+5. Requirements 1 to 4 hold for every harness the orchestrator runs
+6. The request that the orchestrator adds to the prompt of every step says that the final response is the step's
+   last, and that a command the step started in the background has ended before the step gives it
+7. Tests of the command, with fake harnesses, show that a step whose final response holds no block marked `json` is
+   asked again in its session, with the prompt of requirement 1, and the run goes on by the outcome of the answer; that
+   an ask again without an outcome stops the run; that a step whose harness failed, or that ran past its time limit,
+   is not asked again; and that the lines, files and rows of requirement 4 are as stated. A test shows that the
+   request holds the text of requirement 6
+8. "The orchestrator" of `README.md` says when a step is asked again, what the ask again is given, how its outcome
+   counts, and how it shows in the lines, the files and the end report, and what the request asks of the final
+   response and of a command run in the background
 
 ## Decisions
 
 * **The kind is bug.** A run stopped for a step that did its work and gave a valid outcome, and the human asked for a
   bug
-* **The tools are taken away, and the prompt alone is not trusted with it.** A request in the prompt can be missed,
-  as the implementer of 0022 missed that its final response was read, and a missed request stops the run. Without the
-  tools the agent cannot schedule a later turn at all. A step that needs to wait still can, with a command in the
-  foreground that polls
-* **Commands in the background are not taken away.** Claude Code has no switch for them apart from its shell tool, and
-  a step uses them to run work side by side. A command in the background that ends before the final response does no
-  harm, so the request asks for that
-* **`Monitor` goes with the two that schedule.** It makes a turn whenever the process it watches prints, which after
-  the final response is the same fault. A step can read a log in the foreground instead
-* **The orchestrator does not take the last response that holds an outcome.** That would hide the turns after it: an
-  agent that changed the tree after giving its outcome would have its outcome read for a tree it no longer describes.
-  A step whose last response holds no outcome still stops the run
-* **OpenCode does not change.** It has no tool that schedules a later turn, and its run ends with its turn
-* **That Claude Code 2.1.310 in `--print` honours the tools being taken away, for `ScheduleWakeup`, `CronCreate` and
-  `Monitor`, is verified before anything is built on it**, as 0065 did for the resume of OpenCode. When a tool cannot
-  be taken away, the unit goes back to the specifier and the human
+* **The step is asked again, and its tools are kept.** Taking `ScheduleWakeup`, `CronCreate` and `Monitor` away from
+  a step of Claude Code was the first fix, and was rejected by the human for asking again. Taking them away covers
+  only those three, and costs every step what they are for, such as watching a long build. Asking again covers every
+  cause of a last response without an outcome, the three tools, a late notification of a command in the background,
+  and an agent that forgot the block, and costs one turn, only when it is needed
+* **The answer of the ask again is read, and not an earlier response with an outcome.** Taking the last response that
+  holds an outcome would hide the turns after it: an agent that changed the tree after giving its outcome would have
+  its outcome read for a tree it no longer describes. The ask again gives its outcome after its last turn, so it
+  describes the tree as it stands
+* **Once.** A step that cannot give an outcome when asked has a fault that a further ask would not cure, and the
+  human takes over as before
+* **Only for no block marked `json`.** That is the reading of this bug. A response with more than one block, or with
+  one not of the form, shows that the step tried to give an outcome, and stops the run as before
+* **Not after a failed harness or a time limit reached.** A harness that failed, or a step the command ended, did not
+  finish its work, so its outcome is not what is missing
+* **The ask again is a step of its own.** It runs as every step runs, with its own time limit, lines and files, so the
+  human sees in the end report and the run's directory that it happened and what each run said
+* **Every harness.** Forgetting the block is not one harness's fault, and the command already continues the session
+  of each harness it runs. The code that asks again names no harness
+* **The request still asks for the final response to be the last.** It makes an ask again rarer, and costs one
+  paragraph of the prompt
 
 ## Non-goals
 
-* Picking a stopped run up again, which would have let the run of 0022 go on by hand, and which 0065 left for a later
-  unit
-* A step that never ends while it waits, which the time limit of a step, from 0069, already stops
-* `agentrite run` outside the orchestrator, headless or in a session, which keeps every tool of its harness
+* Picking a stopped run up again, which 0065 left for a later unit and 0089 specifies
+* A step that waits for a wakeup after its final response: the process stays until it fires, as for 0022 for 16
+  minutes, and the time limit of a step, from 0069, bounds it
+* Taking any tool away from a step, or changing the arguments a step's harness is started with
+* `agentrite run` outside the orchestrator, headless or in a session
 * A change to a role file or to `process.md`
 
 ## Beyond the request
 
-1. **Say why a run stopped when a step went on after its outcome.** When the step's last response holds no outcome
-   and an earlier response of the same step does, the end report could say that the step answered again after its
-   outcome, and name the earlier response, so the human sees at once that the work was finished. It costs reading
-   every `result` event of the step and a line in the end report. Without it the human reads the followed file or the
-   session log, as for 0022
+1. **Ask again for an outcome with more than one block, or one not of the form.** The ask again would say what was
+   wrong, as the end report does. It costs a prompt for each case and their tests. Without it such a step stops the
+   run as today, with its response in the run's directory, and the human takes over
