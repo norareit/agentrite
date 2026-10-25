@@ -5,6 +5,40 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 8.2.0
+
+### What changed
+
+* `until` of a repeat in an orchestrator definition takes a second value, `"no-findings"`, which ends the repeat only
+  when the outcome of the last step of a round has no finding, blocking or not, so that the rounds are used to fix
+  non-blocking findings too. When a blocking finding is still open after the last round, the repeat ran out and the
+  run stops with status `3`, as with `"no-blocking-findings"`. When only non-blocking findings are open after the last
+  round, the run goes on with the item after the repeat, and the end report lists them under
+  `Non-blocking findings still open after step <number>:`, after the lines of the last step and before
+  `After the run:`. A definition whose `until` holds any other value is refused, and the message names both values.
+  `"no-blocking-findings"` behaves as before. "The definition" and "How a run ends" of the README describe both (0087)
+* The kit's default definition, `orchestrator.json`, now runs its rounds of the implementer and the review
+  `until` `"no-findings"`, and is otherwise unchanged (0087)
+* Not in the package: a test of this repository's suite that started variant runs in Docker now waits until Docker
+  lists a run's container before it reads which containers run, so that it no longer fails now and then on a loaded
+  host (0084)
+
+### Worth knowing when you update
+
+* A project whose `orchestrator` in `agentrite.json` names the kit's default,
+  `node_modules/agentrite/orchestrator.json`, gets the new `until` without asking for it. A review with only
+  non-blocking findings no longer ends the repeat, so a run can take up to all three rounds of the implementer and the
+  review where it took one before, with the time and the cost of those steps. A third review with only non-blocking
+  findings ends the repeat without stopping the run, which exits `0` when it runs to its end, and those findings are
+  listed in the end report rather than taken up by the run. A project that wants the earlier behavior copies the
+  default, sets `until` to `"no-blocking-findings"` and names the copy in `orchestrator`. A definition of the
+  project's own is not changed
+* The new `until` was checked by the suite, with fake steps and with the fake harness of the command's tests. A whole
+  run of the default definition on real harnesses with it was not checked
+* The first start of the sandbox after the update builds its image again, which can take minutes, as after every
+  update of the kit
+* No edit to `agentrite.json` is needed, and no `refresh`
+
 ## 8.1.0
 
 ### What changed
