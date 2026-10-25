@@ -54,3 +54,9 @@ timestamp: 2026-10-25T14:12:42Z
   `.reviews/0089-a-stopped-run-of-the-orchestrator-can-be-resumed/review-20261025T165111Z.md`. `npm test` passes,
   1301 tests with none skipped, and `npm run check-changes` passes. Reproduced the older ask-again numbering case
   in memory. Not verified: a resume with a real Claude Code or OpenCode session, or through `./sandbox.sh`.
+- 2026-10-25T16:56:05Z [human] accepted review finding S1, that a run written by 0088 without `asked`
+  that stopped at an ask again is resumed one number too high, and decided that it is fixed in this unit
+- 2026-10-25T16:56:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added "Review finding
+  S1" to `plan.md`: the resume reads from the stopped run's files whether a step of a run without `asked` is an ask
+  again. Corrected the approach of `plan.md`, which held that such a run has no ask again, and reopened the
+  verification for the new tasks
