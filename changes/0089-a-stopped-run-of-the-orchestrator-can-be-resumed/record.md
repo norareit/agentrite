@@ -23,3 +23,7 @@ timestamp: 2026-10-25T14:12:42Z
   requirement 6, by the definition, with numbers that go on from the stopped run. Adjusted requirement 11 and the first
   decision to match, and added the decisions on the numbers and that 0089 is built after 0088. The status stays `draft`
 - 2026-10-25T16:05:05Z [human] approved the spec. The status is `approved`
+- 2026-10-25T16:41:20Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  `feature-0089-a-stopped-run-of-the-orchestrator-can-be-resumed`, cut from `master` at `71739d0`. Wrote `plan.md`.
+  Read requirement 6 as needing `state.json` to say whether `at` is an ask again, which it does not today, and planned
+  the key `asked` in `at` for it, read as `false` in a run from before it. The status stays `approved`
