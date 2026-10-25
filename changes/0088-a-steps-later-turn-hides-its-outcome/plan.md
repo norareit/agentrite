@@ -116,7 +116,7 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
   comments (R4)
 - [x] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
   `CONTRIBUTING.md` gives
-- [ ] Write the sections of `README.md` the approach names, wrapped within 120 characters (R8)
+- [x] Write the sections of `README.md` the approach names, wrapped within 120 characters (R8)
 
 ## Verification
 
@@ -131,4 +131,4 @@ files of its own and that the step asked keeps its response file. `SANDBOX.md` a
   `scripts/agentrite-outcome.mjs` and `tests/agentrite-outcome.test.mjs` alone
 - [x] After the ask again runs, shows and has its tests, with `npm test` passing: the remaining tasks up to the run of
   the suite
-- [ ] After `README.md`
+- [x] After `README.md`

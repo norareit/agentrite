@@ -944,8 +944,8 @@ it, and the command reads it from the final response the harness printed. The bl
 response, in a blockquote, nested or not, and in a list item, at any indentation. It ends at its closing fence, at the
 end of its blockquote, or at the end of the response. A fence shown in a code block indented by four spaces counts as
 a block too. A response whose block stands in another form may be read as having no outcome, or more than one, and
-the run then stops, as "How a run ends" says, with the final response in the run's directory. The outcome holds
-these keys, and no other:
+the step is then asked again or the run stops, as "How a run ends" says, with the final response in the run's
+directory. The outcome holds these keys, and no other:
 
 * `outcome`: `"done"`, `"needs-human"` or `"failed"`
 * `summary`: a string, what the step did
@@ -965,6 +965,10 @@ item belongs in `questions`, with `needs-human`, when the step's work, or the st
 a spec that can be read in two ways, or a decision that the rest of the work depends on and that the step could not
 make. Every item of the list under `**Needed from you**` of the final response is also an item of exactly one of
 `questions` and `afterwards`, and every item of these two is an item of that list.
+
+The request says that the final response is the step's last response, after which the agent ends no turn, and that
+the agent waits until every command it started in the background has ended before it gives it, so that none of them
+reports its end after it. The command reads the response the harness gave last.
 
 The request also says that a finding the step's prompt accepts is recorded in `record.md` as accepted by the
 orchestrator's definition, and not as a decision of the human, and that the step sets the unit's status to no status
@@ -1057,7 +1061,9 @@ The run stops, and runs nothing after the step, when:
   step printed as an outcome: its final response is kept as that of a step without an outcome
 * the harness exits with a status other than 0, or a signal ends it. A step whose `agentrite run` refuses, as for a
   wrapper that `refresh` would rewrite, is such a step
-* the final response holds no block marked `json`, more than one, or one that is not an outcome of the form above
+* the final response holds more than one block marked `json`, or one that is not an outcome of the form above
+* the final response holds no block marked `json`, or the harness gave no final response, and the step is an ask
+  again or its session is not known. Any other such step is asked again, as below
 * the outcome is `needs-human` or `failed`
 * the outcome is `done` and `questions` is not empty, since the step cannot go on without the human's answers
 * `declines` is not empty, since only the human decides a proposed decline
@@ -1067,8 +1073,30 @@ The run stops, and runs nothing after the step, when:
 
 `afterwards` stops no run. A run that ran every item to its end exits 0 also when a step left items in it.
 
+A step whose harness exited with 0 and no signal, within its time limit, whose final response holds no block marked
+`json` or that gave no final response, and whose session is known, does not stop the run. The command runs one step
+more after it, the ask again, in every harness alike: the same role, harness, model, round and `timeoutMinutes`,
+continuing that step's session, with a prompt that says the last response held no block marked `json` and asks for
+the step's outcome for its work as it stands, followed by the request of "The outcome of a step". The step's own
+`prompt` is not given to it. The outcome of the ask again stands for the step's: the cases above judge it, and so do
+the step's `stopWhen` and, for the last step of a round, the repeat's `until`, and the end report takes it as the
+step's. An ask again is never asked again, so one whose final response holds no block marked `json` stops the run. A
+step whose harness failed or that ran past its time limit is not asked again, and neither is one whose final response
+holds more than one block marked `json` or one not of the form.
+
+An ask again is a step of the run in every other respect: it has the next number, its lines before and after it, its
+files in the run's directory, its place as the step the run is at in `state.json` and its row in the end report.
+Its lines say that it asked again for the outcome:
+
+```
+step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5: no outcome after 41m 37s
+step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for its outcome: started
+step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for its outcome: done after 0m 12s
+```
+
 When the run ends, the command prints last: a list of every step that ran, with its number, role, harness, model and
-how long it took; how the run ended, and for a stop which step stopped it and why, with what is wrong with an outcome
+how long it took, and `asked again` after an ask again; how the run ended, and for a stop which step stopped it and
+why, with what is wrong with an outcome
 not of the form; then from the outcome of the step that ran last, when it is of the form, its summary, the blocking
 findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
 then, for each repeat with `"no-findings"` that let the run go on with only non-blocking findings after its last
@@ -1085,6 +1113,15 @@ Nothing is taken from an earlier step but the non-blocking findings still open a
 0  planner      claude    claude-opus-5-5     12m 04s
 1  implementer  claude    claude-sonnet-5-5   41m 37s
 2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s
+```
+
+A run whose implementer was asked again lists the ask again as a step of its own:
+
+```
+0  planner      claude    claude-opus-5-5     12m 04s
+1  implementer  claude    claude-sonnet-5-5   41m 37s
+2  implementer  claude    claude-sonnet-5-5    0m 12s  asked again
+3  reviewer     opencode  openai/gpt-6.1-sol   8m 12s
 ```
 
 The items of `afterwards` are given whatever ended the run, under the line `After the run:`, grouped by step in the
@@ -1133,10 +1170,11 @@ and outside a git repository has no variant, and its directory is the instant al
   which in a unit run is the container's. Once the end of the run is in `state.json`, the command writes it no more,
   and it holds the instant of its last write
 * `<number>-<role>.outcome.json` for each step that gave an outcome of the form, as it stood in its block, and
-  `<number>-<role>.response.md` for a step that did not, holding its final response when there was one. The numbers
-  have as many digits as the definition's highest step number needs, two at least, so that the names sort in the
-  order the steps ran. An outcome file holds the step's items of `afterwards`, so the run's directory holds those of
-  every step that gave an outcome of the form
+  `<number>-<role>.response.md` for a step that did not, holding its final response when there was one. An ask
+  again has files of its own, numbered as any step, and the step it asks keeps its own `response.md`. The numbers
+  have as many digits as the highest step number the definition can reach needs, counting an ask again after every
+  step, two at least, so that the names sort in the order the steps ran. An outcome file holds the step's items of
+  `afterwards`, so the run's directory holds those of every step that gave an outcome of the form
 * `<number>-<role>.followed.jsonl` for each step that starts, numbered as those files are, and written with
   `--follow` and without it. It is made empty when the step starts, before its harness starts. Each text message and
   each tool call that `--follow` prints of the step is added to its end as one line, in the order `--follow` prints
