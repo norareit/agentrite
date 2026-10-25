@@ -35,5 +35,13 @@ timestamp: 2026-10-24T23:14:27Z
   place. F1 is open and waits on the human's decision: the role's response is an output outside its findings
   directory that no requirement excepts, and the project's log directory, which every sandbox run of the project
   mounts, keeps the role's session and so its findings where later runs can read them. The status is `draft`
+- 2026-10-25T12:22:20Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision that the findings are
+  kept in the existing `.reviews` and that the role gets no mount of its own: the findings go in
+  `.reviews/security/`, apart from `.reviews/<unit-directory>/`, whose files the implementer takes. R6, R7, R13, R16
+  and R18 and the decisions on the findings and the audit say so, and a non-goal names the later runs that can read
+  them. An audit has no unit run and so not the host's `.reviews`, so the human moves its findings file out of the
+  clone before removing it; this is the only reading that keeps both decisions. This settles the spec review's F1:
+  the response is excepted in R16, and the session logs are accepted with `.reviews/security/` in a decision. The
+  status is `draft`
 
 ## Amendments

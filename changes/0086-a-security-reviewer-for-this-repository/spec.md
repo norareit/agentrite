@@ -17,6 +17,7 @@ becoming public. They decided that:
 * it reviews the diff of each unit before the unit is merged, and the whole code base when the human asks for an
   audit
 * it always runs in the sandbox, and what only the host can do it hands to the human as steps to run
+* its findings are kept in the project's `.reviews`, which is ignored, and the sandbox gets no mount for it
 
 ## Requirements
 
@@ -39,15 +40,13 @@ The role:
 
 Where it runs:
 
-6. The role file says how the human starts each mode, with a host directory that lies outside every repository and
-   whose name is `security-reviews`, so that it is mounted at `/mnt/security-reviews`:
-    * a unit review as a unit run of the unit's branch, `./sandbox.sh --mount <directory> <unit>`, with the role
-      started in it
-    * an audit as `./sandbox.sh --mount <directory> --workdir <clone>`, where `<clone>` is a clone of the default
-      branch made for the audit and removed after it, with the role started in it
-7. Before it reads anything it is to review, the role checks that `/mnt/security-reviews` is a directory it can
-   write, and that `https://github.com` cannot be reached. When either check fails, it says which, writes nothing,
-   and stops
+6. The role file says how the human starts each mode, with no option of the sandbox beyond what the mode names:
+    * a unit review as a unit run of the unit's branch, `./sandbox.sh <unit>`, with the role started in it
+    * an audit as `./sandbox.sh --workdir <clone>`, where `<clone>` is a clone of the default branch made for the
+      audit, with the role started in it. After the run the human moves the findings file from the clone's
+      `.reviews/security/audit/` to the same directory of the project, and then removes the clone
+7. Before it reads anything it is to review, the role checks that `https://github.com` cannot be reached. When it
+   can, the role says so, writes nothing, and stops
 8. The role does nothing that needs the host, such as building or starting a container, testing a running sandbox
    from outside it, or reading the host's Docker configuration. It writes each such check into its findings as a
    step for the human to run, with what the step shows and what of its output to bring back
@@ -74,18 +73,19 @@ What it looks for:
 
 Its findings:
 
-13. The role saves its complete findings under `/mnt/security-reviews/` and nowhere else: those of a unit review in
+13. The role saves its complete findings under `.reviews/security/` and in no other file: those of a unit review in
     a directory named as the unit's directory, and those of an audit in `audit/`, each in a file whose name holds the
-    commit reviewed, so that a later review does not overwrite an earlier one
+    commit reviewed, so that a later review does not overwrite an earlier one. On a variant's branch the name ends in
+    `--<name>.md` with the variant's name, as `process.md` says of the reviews of a variant
 14. Each finding has a label, `S1`, `S2` and on, and gives: where it is; what is wrong; how it is exploited and from
     what position of the adversary; whether a proof of concept confirmed it or it is plausible from reading; its
     severity, one of `critical`, `high`, `medium` and `low`; a fix; and how weaknesses of its kind can be kept out in
     future, as a rule for the standards or `AGENTS.md`, a test or a check
 15. The role reports its findings in its response, and says in which file it saved them
-16. Nothing the role writes outside the findings directory names a finding, counts the findings, or says whether
-    there are any: no commit, no commit message, no file of the tree under review, and nothing under `.reviews` or
-    `.orchestrator`. It uses no tool that sends text anywhere but to the harness's own model, such as a web fetch,
-    `gh` or the creation of an issue
+16. Nothing the role writes, other than its findings file and its response, names a finding, counts the findings, or
+    says whether there are any: no commit, no commit message, no file of the tree under review, nothing else under
+    `.reviews` and nothing under `.orchestrator`. It uses no tool that sends text anywhere but to the harness's own
+    model, such as a web fetch, `gh` or the creation of an issue
 17. In a unit review the role appends one entry to the unit's `record.md`, `as the security-reviewer`, that names the
     commit it reviewed and whose text is the same whatever it found. It commits `record.md` alone, with the message
     `<prefix> Record a security review of <commit>`, and checks `record.md` for uncommitted changes of another first,
@@ -95,8 +95,10 @@ The repository:
 
 18. `AGENTS.md` says, in a section of its own, that a security finding, the decision on it and its outcome are
     written in nothing committed, as an exception to the rule of `process.md` that the outcome of each finding is
-    recorded in `record.md`. A fix that the human hands to a role is described by what it changes and not by the
-    attack it stops, in a plan, a record, a commit message and a code comment alike
+    recorded in `record.md`. It says that no role but the security reviewer reads `.reviews/security/`, and that a
+    finding the human hands to another role is given in the hand-over. A fix that the human hands to a role is
+    described by what it changes and not by the attack it stops, in a plan, a record, a commit message and a code
+    comment alike
 19. `npm test` and the change check pass on the unit's branch
 
 ## Decisions
@@ -104,13 +106,22 @@ The repository:
 * **A role of this repository's own.** The human chose `extra-roles/`, which `CONTRIBUTING.md` describes as the roles
   of this repository that are not in the package. Other projects do not get the role. Shipping it is item 1 of
   "Beyond the request"
-* **The findings outside `.reviews`.** `.reviews` is mounted into every unit run, of every role, and the implementer
-  takes findings from it and records their outcomes in `record.md`, which is committed. Findings there could be read
-  by any later run, and turned into committed text by a role that follows its own file. A host directory outside
-  every repository, mounted only into the security reviewer's run, is seen by no other run and cannot be committed by
-  mistake. A subdirectory of `.reviews`, such as `.reviews/security/`, was rejected because it is mounted into every
-  run. The fixed name `security-reviews` lets the role find the directory without being told, and lets it refuse a
-  run started without one
+* **The findings in `.reviews/security/`.** The human decided that the findings are kept in the existing `.reviews`
+  and that an extra role gets no mount of its own. `.reviews` is ignored, so nothing in it is committed, and it is
+  mounted into every unit run, so a unit review needs no option to start. The findings go in a subdirectory of their
+  own and not in `.reviews/<unit-directory>/`, because the implementer takes findings from the files of that
+  directory and records their outcomes in `record.md`, which is committed, and the implementer's file is the kit's.
+  A file of its own name in `.reviews/<unit-directory>/` was rejected for that reason. A unit directory's name
+  begins with its four-digit number, so `security` is never one. The cost is accepted: `.reviews` is mounted into
+  every unit run, so a later run of any role can read the findings. A role that follows its file and `AGENTS.md`
+  does not, as requirement 18 says. One that is misled can, and can write a finding into a commit of its branch,
+  which the human sees in the diff before merging. A host directory mounted only into the security reviewer's run
+  was the alternative, and the human declined it
+* **The response and the session logs.** The role reports its findings in its response, as every reviewing role
+  does, since the response is what the human reads. The harness keeps the session, and so the response, in the
+  project's log directory, which is on the host, outside every repository, and mounted into every run of the
+  project. That is the same exposure as `.reviews/security/`, to the runs of the project and to nothing published,
+  and is accepted on the same terms
 * **Always in the sandbox.** The sandbox's egress allows no GitHub host, and nothing reaches the host's repository but
   the unit's branch and the files under `.reviews` and `.orchestrator`. On the host, an agent has the developer's push
   credentials, `gh` and an open network. The role reads code that other agents wrote, possibly with instructions
@@ -123,7 +134,11 @@ The repository:
 * **An audit on a clone that is thrown away.** A unit run needs a unit, and an audit has none. `SANDBOX.md` says the
   sandbox does not defend against a run with `--workdir`, which mounts a directory as it is, so that a hook or a
   line of `.git/config` an agent writes there stays in the directory. A clone made for the audit and removed after it
-  is never worked in on the host, so nothing written into it runs there
+  is never worked in on the host, so nothing written into it runs there. The host's `.reviews` is mounted into a
+  unit run only, so the audit writes its findings in the clone's `.reviews/security/audit/`, and the human moves the
+  file to the project's before removing the clone. The file is text that only the human reads, and is not run.
+  `--in-place`, which would mount the project's `.reviews`, was rejected: it mounts the project root as it is, which
+  the sandbox does not defend against either, and the root is worked in on the host
 * **One entry whose text does not depend on the outcome.** "Adding a role" of `README.md` requires an extra role to
   write an entry in `record.md` each time it works on a unit, which is what makes the reviewer read its file. An
   entry that named the findings, counted them or said that there were none would tell a reader of the public record
@@ -149,6 +164,8 @@ The repository:
 * Keeping a weakness secret once it is in a branch that is pushed or in a diff that is merged. The role keeps its
   findings private, not the code under review
 * A role that ignores its file. The sandbox, and not the role file, is what holds a misled agent
+* Keeping the findings from a later run of the project that reads `.reviews/security/` against `AGENTS.md`. They are
+  kept out of what is committed and published, not out of the project's own runs
 * What the harness's model provider receives. The code under review reaches it in every role, in the sandbox or not
 * Any change to the sandbox, its egress allowlist or its mounts
 
