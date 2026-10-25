@@ -27,8 +27,10 @@ import {
   exitStatus,
   followedLine,
   followedText,
-  followOutput,
+  CLOSING_RULE,
+  framedOutput,
   followPrinter,
+  OPENING_RULE,
   plainOutput,
   judgeStep,
   orchestrate,
@@ -1029,7 +1031,6 @@ test('followPrinter sets each text apart by one blank line, and the calls on lin
   assert.equal(
     written.join(''),
     [
-      '',
       '09:00:00 First.',
       '',
       '\x1b[2m14:03:31 → Bash ls\x1b[22m',
@@ -1067,26 +1068,89 @@ test('plainOutput writes the line of each step and a blank line before the repor
   );
 });
 
-test('followOutput writes the items of each step between the two lines of the step', () => {
+// R4, R8
+
+test('the rules are 80 plain characters, the opening one naming agentrite', () => {
+  assert.equal(OPENING_RULE, `==== agentrite ${'='.repeat(65)}`);
+  assert.equal(CLOSING_RULE, '='.repeat(80));
+  for (const rule of [OPENING_RULE, CLOSING_RULE]) {
+    assert.equal(rule.length, 80);
+    assert.ok(!rule.includes('\x1b'));
+  }
+});
+
+const framed = (...lines) => lines.join('\n');
+
+test('framedOutput frames a step with no item and the report, no two rules on consecutive lines', () => {
   /** @type {string[]} */ const written = [];
-  runThrough(followOutput((text) => written.push(text)));
+  const output = framedOutput((text) => written.push(text));
+  output.started('step 0: started');
+  output.ended('step 0: done');
+  output.report('The report.\nIts end.\n');
   assert.equal(
     written.join(''),
-    [
+    framed(
+      OPENING_RULE,
       'step 0: started',
+      CLOSING_RULE,
       '',
-      '09:00:00 First.',
+      OPENING_RULE,
+      'step 0: done',
+      '',
+      'The report.',
+      'Its end.',
+      CLOSING_RULE,
+      '',
+    ),
+  );
+});
+
+test('framedOutput puts two steps in the frames of the run, with a blank line between a rule and an item', () => {
+  /** @type {string[]} */ const written = [];
+  const output = framedOutput((text) => written.push(text));
+  const now = () => Date.UTC(2026, 9, 22, 9, 0, 0);
+  const text = (words) => ({ kind: 'text', time: undefined, text: words });
+  output.started('step 0: started');
+  output.items(timedItems([call({ command: 'ls' })], now));
+  output.ended('step 0: done');
+  output.started('step 1: started');
+  output.items(timedItems([text('Only.')], now));
+  output.ended('step 1: done');
+  output.report('The report.\n');
+  assert.equal(
+    written.join(''),
+    framed(
+      OPENING_RULE,
+      'step 0: started',
+      CLOSING_RULE,
       '',
       dim('14:03:31 → Bash ls'),
+      '',
+      OPENING_RULE,
       'step 0: done',
       'step 1: started',
-      dim('14:03:31 → Bash pwd'),
+      CLOSING_RULE,
+      '',
+      '09:00:00 Only.',
+      '',
+      OPENING_RULE,
       'step 1: done',
       '',
       'The report.',
+      CLOSING_RULE,
       '',
-    ].join('\n'),
+    ),
   );
+});
+
+test('framedOutput leaves no frame open while a step runs', () => {
+  /** @type {string[]} */ const written = [];
+  const output = framedOutput((text) => written.push(text));
+  output.started('step 0: started');
+  const before = written.join('');
+  assert.ok(before.endsWith(`${CLOSING_RULE}\n\n`), before);
+  output.items(timedItems([call({ command: 'ls' })], Date.now));
+  assert.equal(written.join('').split(OPENING_RULE).length, 2);
 });
 
 // R10
@@ -2265,10 +2329,11 @@ function opencodeFollowed(response) {
 const IMPLEMENTED = responseOf({ ...DONE, summary: 'Implemented.' });
 const REVIEWED = responseOf({ ...DONE, summary: 'Reviewed.' });
 
-// What was printed between the line before the step of `head` and the line after it.
+// What was printed between the closing rule after the line before the step of `head` and the opening rule before the
+// line after it.
 function between(stdout, head) {
-  const start = stdout.indexOf(`${head}: started\n`) + `${head}: started\n`.length;
-  return stdout.slice(start, stdout.indexOf(`${head}: `, start));
+  const start = stdout.indexOf(`${head}: started\n${CLOSING_RULE}\n`) + `${head}: started\n${CLOSING_RULE}\n`.length;
+  return stdout.slice(start, stdout.indexOf(`${OPENING_RULE}\n${head}: `, start));
 }
 
 // A run of `FOLLOWED`, each step answered as its harness prints it and with a line on standard error.
@@ -2330,10 +2395,27 @@ test(
   },
 );
 
+test('a run with --follow frames its step lines and the end report, the followed items between', async (testContext) => {
+  const { result, run } = await followedRun(testContext, '--follow');
+
+  const fixed = result.stdout.replace(/ after [^\n]*/g, ' after TIME').replaceAll(run.name, 'RUN');
+  const report = endReportOf(result.stdout).replaceAll(run.name, 'RUN');
+  assert.ok(fixed.startsWith(`${OPENING_RULE}\n${IMPLEMENTER_HEAD}: started\n${CLOSING_RULE}\n\n14:03:27 `), fixed);
+  const frames = fixed.split(`${OPENING_RULE}\n`).slice(1);
+  assert.equal(frames.length, 3, fixed);
+  assert.equal(
+    frames[1],
+    `${IMPLEMENTER_HEAD}: done after TIME\n${REVIEWER_HEAD}: started\n${CLOSING_RULE}\n` +
+      between(fixed, REVIEWER_HEAD),
+  );
+  assert.equal(frames[2], `${REVIEWER_HEAD}: done after TIME\n\n${report}${CLOSING_RULE}\n`);
+  assert.ok(result.stdout.endsWith(`${CLOSING_RULE}\n`), result.stdout);
+});
+
 // What the command printed after the line after the last step and the blank line below it: the end report.
 function endReportOf(stdout) {
   const last = stepLines(stdout).at(-1);
-  return stdout.slice(stdout.lastIndexOf(`${last}\n`) + `${last}\n\n`.length);
+  return stdout.slice(stdout.lastIndexOf(`${last}\n`) + `${last}\n\n`.length).replace(`${CLOSING_RULE}\n`, '');
 }
 
 test(
@@ -2351,6 +2433,7 @@ test(
       `${REVIEWER_HEAD}: done`,
     ]);
     assert.deepEqual(lines.slice(4), ['', ...report]);
+    assert.ok(!lines.includes(OPENING_RULE) && !lines.includes(CLOSING_RULE), result.stdout);
     assert.ok(report[0].startsWith('0  implementer'), result.stdout);
     for (const shown of ['I will run the tests.', 'I will read the diff.', '→', ...HIDDEN]) {
       assert.ok(!result.stdout.includes(shown), result.stdout);

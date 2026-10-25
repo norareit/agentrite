@@ -1022,10 +1022,21 @@ command learns of it, as `HH:MM:SS` in UTC. No result of a tool call, no reasoni
 the harness is printed, in Claude Code and in OpenCode alike. The end report stands last, as without the option. The
 option is chosen when the run starts: a run started without it prints none of the messages and tool calls, and one
 started with it cannot be stopped from printing them. The followed file of each step in the run's directory holds them
-in both cases, as "What .orchestrator holds" gives. A step followed, its two tool calls dimmed on the terminal:
+in both cases, as "What .orchestrator holds" gives.
+
+With `--follow`, the command's own lines and the end report stand in frames, so that they are found among the messages
+and calls. A frame is an opening rule, `==== agentrite ` followed by `=` up to 80 characters in all, on the line before
+its lines, and a closing rule of 80 `=` on the line after them. The rules are plain characters on a terminal and on a
+pipe alike. The line the first step starts with has a frame of its own. The line a step ends with and the line the next
+step starts with share one, and so do the line the last step ends with and the end report, the blank line before the
+report kept. A blank line stands between a rule and the item of a step next to it, and no frame is open while a step
+runs, so what the harness prints on standard error then stands outside the frames. Without `--follow` the command
+prints no rule. A step followed, the first of a run of two, its two tool calls dimmed on the terminal:
 
 ```
+==== agentrite =================================================================
 step 1, implementer, claude, claude-sonnet-5-5: started
+================================================================================
 
 14:03:27 I will read the spec first, and then the tests of the command.
 
@@ -1034,7 +1045,10 @@ step 1, implementer, claude, claude-sonnet-5-5: started
 
 14:12:05 The tests pass, and the plan is ticked.
 
+==== agentrite =================================================================
 step 1, implementer, claude, claude-sonnet-5-5: done after 8m 41s
+step 2, reviewer, opencode, openai/gpt-6.1-sol: started
+================================================================================
 ```
 
 The run stops, and runs nothing after the step, when:

@@ -55,7 +55,7 @@ import {
   endReport,
   exitStatus,
   followedLine,
-  followOutput,
+  framedOutput,
   plainOutput,
   timedItems,
   orchestrate,
@@ -1752,9 +1752,10 @@ function passSignalsOn(running) {
  * Runs the definition on an approved unit, one step at a time, keeping the run in its directory under
  * `.orchestrator/`, prints a line before and after each step and what the human needs at the end, and returns the
  * exit status. With `follow`, the messages and tool calls of each step are printed between its two lines as it
- * runs, and with or without it they are added to the step's followed file. Nothing is written before every refusal
- * has been ruled out, and nothing outside `.orchestrator/`. The run's directory holds a `heartbeat` while the run
- * lasts, and every file of it but the followed files, which are added to, is written whole.
+ * runs and its own lines and the end report stand in frames. With or without it the messages and tool calls are
+ * added to the step's followed file. Nothing is written before every refusal has been ruled out, and nothing outside
+ * `.orchestrator/`. The run's directory holds a `heartbeat` while the run lasts, and every file of it but the
+ * followed files, which are added to, is written whole.
  *
  * @param {string} root
  * @param {ReturnType<typeof parseOrchestrateArgs>} parsed
@@ -1770,7 +1771,7 @@ async function orchestrateCommand(root, { unit, definition: given, skipPermissio
   // `state.json` the branch, and neither follows a branch checked out later.
   const branch = checkedOutBranch(root);
   const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
-  const output = (follow ? followOutput : plainOutput)((text) => process.stdout.write(text));
+  const output = (follow ? framedOutput : plainOutput)((text) => process.stdout.write(text));
   const write = (/** @type {string} */ name, /** @type {string} */ content) =>
     writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>

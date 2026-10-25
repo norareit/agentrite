@@ -546,19 +546,21 @@ export function timedItems(items, now) {
 
 /**
  * The printer of one step: it writes the items followed of the step as they are made known, each text message
- * between blank lines, one blank line between two of them, and the calls on consecutive lines.
+ * between blank lines, one blank line between two of them, and the calls on consecutive lines. The first item has no
+ * blank line before it, as the frame it follows ends in one.
  *
  * @param {(text: string) => void} write
  * @returns {(items: Timed[]) => void}
  */
 export function followPrinter(write) {
-  let afterText = false;
+  // The printer starts as though a blank line was just written: the frame the step's first item follows ends in one.
+  let afterBlank = true;
   return (items) => {
     for (const item of items) {
       const text = followedText(item, clockTime(item.time));
       if (item.kind === 'call') write(`${text}\n`);
-      else write(`${afterText ? '' : '\n'}${text}\n\n`);
-      afterText = item.kind === 'text';
+      else write(`${afterBlank ? '' : '\n'}${text}\n\n`);
+      afterBlank = item.kind === 'text';
     }
   };
 }
@@ -589,22 +591,55 @@ export function plainOutput(write) {
   };
 }
 
+const RULE_WIDTH = 80;
+
+/** The rule that opens a frame of the command's own output. */
+export const OPENING_RULE = '==== agentrite '.padEnd(RULE_WIDTH, '=');
+
+/** The rule that closes a frame of the command's own output. */
+export const CLOSING_RULE = '='.repeat(RULE_WIDTH);
+
 /**
- * The output with `--follow`: as `plainOutput`, with the items of each step printed between its two lines.
+ * The output with `--follow`: as `plainOutput`, with the items of each step printed between its two lines, and the
+ * command's own lines in frames. The line a step starts with has a frame of its own when it is the first step, the
+ * line a step ends with shares one with the line the next step starts with, and the line the last step ends with
+ * shares one with the end report. No frame is open while a step runs, so what the harness prints on standard error
+ * then stands outside one.
  *
  * @param {(text: string) => void} write
  * @returns {RunOutput}
  */
-export function followOutput(write) {
-  const plain = plainOutput(write);
-  let print = followPrinter(write);
+export function framedOutput(write) {
+  let tail = '';
+  let open = false;
+  const put = (/** @type {string} */ text) => {
+    write(text);
+    tail = (tail + text).slice(-2);
+  };
+  const openFrame = () => {
+    if (open) return;
+    if (tail !== '' && tail !== '\n\n') put('\n');
+    put(`${OPENING_RULE}\n`);
+    open = true;
+  };
+  let print = followPrinter(put);
   return {
-    ...plain,
     started: (line) => {
-      plain.started(line);
-      print = followPrinter(write);
+      openFrame();
+      put(`${line}\n${CLOSING_RULE}\n\n`);
+      open = false;
+      print = followPrinter(put);
     },
     items: (items) => print(items),
+    ended: (line) => {
+      openFrame();
+      put(`${line}\n`);
+    },
+    report: (text) => {
+      openFrame();
+      put(`\n${text}${CLOSING_RULE}\n`);
+      open = false;
+    },
   };
 }
 
