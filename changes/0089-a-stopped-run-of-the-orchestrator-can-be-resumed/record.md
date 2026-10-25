@@ -49,3 +49,8 @@ timestamp: 2026-10-25T14:12:42Z
   `4594708` is now `52aac3d`, `a171a6b` is `8ab459f`, `696f563` is `40227df`, `aeb8758` is `63658ae` and
   `ccbd761` is `3a68d6e`, so the implementation is in five commits, from `7bd328b` to `63658ae`. `npm test`
   passes on `3a68d6e`, 1301 tests, and so does `npm run check-changes`. The status stays `in-progress`
+- 2026-10-25T16:51:11Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0089 at `d5bed69`, a full
+  review against merge base `71739d0`. Returned S1. The findings are in
+  `.reviews/0089-a-stopped-run-of-the-orchestrator-can-be-resumed/review-20261025T165111Z.md`. `npm test` passes,
+  1301 tests with none skipped, and `npm run check-changes` passes. Reproduced the older ask-again numbering case
+  in memory. Not verified: a resume with a real Claude Code or OpenCode session, or through `./sandbox.sh`.
