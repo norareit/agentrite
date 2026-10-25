@@ -9,12 +9,12 @@ A release is made on the host, on `master`, from the repository root, in this or
 2. The release notes: a section is added to `CHANGELOG.md`
 3. The human reads, corrects and picks the version
 4. The commit
-5. What the human runs: `npm version` and `npm publish`
+5. What the human runs: `npm login`, `npm version` and `npm publish`
 6. The kit's own dependency: this repository moves to the release
 7. The push, which the human runs
 
 An agent runs steps 1 and 2, stops at step 3, and on the human's word runs step 4. It runs nothing of step 5: it
-ends step 4 by telling the human its two commands, and stops. On the human's word that `npm publish` succeeded it
+ends step 4 by telling the human its three commands, and stops. On the human's word that `npm publish` succeeded it
 runs step 6, and ends by telling the human the command of step 7, which it does not run. An agent asked only for
 the release notes runs step 2, stops at step 3, and on the human's word commits the section as step 4 gives it and
 nothing else. An agent asked only to move this repository to a release that is already made runs step 6 and nothing
@@ -90,22 +90,25 @@ which is this project's exception to working on a branch. On the human's word, w
 Commit nothing else, and push nothing. The notes are committed first because `npm version` refuses a working tree
 that is not clean, and so the tree the tag names holds the section, and the package does too.
 
-Then tell the human what is theirs now, as the two commands of step 5, with the part filled in, in that order. When
-the pointer has a version the registry does not have, as step 5 says, name its commands after those two. Do
-not run `npm version` or `npm publish`. Say that the push comes after step 6, and ask the human to say when
+Then tell the human what is theirs now, as the three commands of step 5, with the part filled in, in that order.
+When the pointer has a version the registry does not have, as step 5 says, name its commands after those three. Do
+not run `npm login`, `npm version` or `npm publish`. Say that the push comes after step 6, and ask the human to say when
 `npm publish` has succeeded. Stop until then.
 
 ## 5. What the human runs
 
-From the repository root, on `master`, on the host, with the npm login that owns the package `agentrite`:
+From the repository root, on `master`, on the host, logged in to npm as the owner of the package `agentrite`:
 
 ```sh
+npm login
 npm version <patch|minor|major>
 npm publish
 ```
 
-An agent runs neither. `npm publish` publishes, and what it publishes is never replaced. It runs on the host because
-it needs that npm login, which never enters the sandbox.
+An agent runs none of them. `npm login` comes first, before `npm version`, at every release: the login does not last
+from one release to the next, and without it `npm publish` fails only after `npm version` has made its commit and its
+tag. `npm publish` publishes, and what it publishes is never replaced. It runs on the host because it needs that npm
+login, which never enters the sandbox.
 
 `npm version`, with the part that gives the version of the section's heading, updates `package.json` and
 `package-lock.json`, and commits and tags the change. The bump is not optional: the registry takes a version once,
