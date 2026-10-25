@@ -94,8 +94,8 @@ const summary = (planned) =>
 
 // R12, R19, R20
 
-test('the default with no blocking finding at the first review runs steps 0 to 2 and ends complete', async () => {
-  const run = await runWith(DEFAULT, [done(), done(), clean()]);
+test('the default with no finding at the first review runs steps 0 to 2 and ends complete', async () => {
+  const run = await runWith(DEFAULT, [done(), done(), done()]);
   assert.deepEqual(summary(run.planned), [
     [0, 'planner', '-'],
     [1, 'implementer', '1/3'],
@@ -262,7 +262,7 @@ test('until no-blocking-findings ends the repeat at the first review that blocks
 // The review's finding S1: an outcome in a blockquote lets the run go on.
 test('a step that gives its outcome in a blockquote does not stop the run', async () => {
   const quoted = (outcome) => ({ response: responseOf(outcome).replace(/^/gm, '> ') });
-  const run = await runWith(DEFAULT, [quoted(DONE), quoted(DONE), quoted({ ...DONE, findings: [MINOR] })]);
+  const run = await runWith(DEFAULT, [quoted(DONE), quoted(DONE), quoted(DONE)]);
   assert.equal(run.planned.length, 3);
   assert.deepEqual(run.end, { kind: 'complete' });
 });
@@ -270,7 +270,7 @@ test('a step that gives its outcome in a blockquote does not stop the run', asyn
 // The delta review's finding S2: a quoted block left open does not hide the outcome after it.
 test('a step whose quoted block is left open before its outcome does not stop the run', async () => {
   const after = (outcome) => ({ response: `> ${FENCE}bash\n> npm test\n\n${responseOf(outcome)}` });
-  const run = await runWith(DEFAULT, [after(DONE), after(DONE), after({ ...DONE, findings: [MINOR] })]);
+  const run = await runWith(DEFAULT, [after(DONE), after(DONE), after(DONE)]);
   assert.equal(run.planned.length, 3);
   assert.deepEqual(run.end, { kind: 'complete' });
 });
@@ -407,7 +407,7 @@ test(
 );
 
 test('started and ended are called once each per step, in order, ended with the reading and the stop', async () => {
-  const run = await runWith(DEFAULT, [done(), done(), clean()]);
+  const run = await runWith(DEFAULT, [done(), done(), done()]);
   assert.deepEqual(
     run.calls.map(([kind, value]) => [kind, kind === 'ended' ? value.planned.number : value.number]),
     [
@@ -565,7 +565,7 @@ async function reportOf(results, definition = DEFAULT, where = WHERE) {
 test(
   'the report of a run that ran every item gives the table, the line of the end, the summary and where',
   async () => {
-    const lines = await reportOf([done(), done(), done({ summary: 'Reviewed it.', findings: [MINOR] })]);
+    const lines = await reportOf([done(), done(), done({ summary: 'Reviewed it.' })]);
     assert.deepEqual(lines.slice(3), [
       '',
       'The run ran every item of the definition to its end.',
@@ -1326,7 +1326,7 @@ const IMPLEMENTER_PROMPT =
 
 test('a run whose every item ends runs the default definition and exits 0', (testContext) => {
   const { base, agentrite, answer, calls, read } = project(testContext);
-  answerDefault(answer, [{ summary: 'Planned.' }, { summary: 'Built.' }, { summary: 'Reviewed.', findings: [MINOR] }]);
+  answerDefault(answer, [{ summary: 'Planned.' }, { summary: 'Built.' }, { summary: 'Reviewed.' }]);
 
   const result = agentrite('orchestrate', '0029');
 
@@ -1409,7 +1409,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
 test('a run whose steps leave items for after the run exits 0, and gives them grouped by step', (testContext) => {
   const { base, agentrite, answer, calls, read } = project(testContext);
   const built = ['Check the new action in a running IDE', 'Check it on Windows'];
-  answerDefault(answer, [{}, { afterwards: built }, { findings: [MINOR], afterwards: ['Check the dialog on macOS'] }]);
+  answerDefault(answer, [{}, { afterwards: built }, { afterwards: ['Check the dialog on macOS'] }]);
 
   const result = agentrite('orchestrate', '0029');
 

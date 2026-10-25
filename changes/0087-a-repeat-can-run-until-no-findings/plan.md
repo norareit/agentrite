@@ -67,6 +67,8 @@ earlier step, beside `afterwards`.
 - `tests/agentrite-definition.test.mjs`: the test of the default, and the tests of `until`
 - `tests/agentrite-orchestrate.test.mjs`: the tests of the repeat, of the end report and of the command, and the seven
   tests the new default changes
+- `tests/package-documents.test.mjs`: `DEFAULT_DEFINITION`, the default as it ships, which the README's JSON is
+  compared with
 - `README.md`: "The definition" and "How a run ends"
 
 ## Tasks
@@ -114,10 +116,14 @@ earlier step, beside `afterwards`.
   single step of a reviewer in OpenCode, answered with an outcome holding `MINOR` in both rounds. The command exits 0,
   makes two calls, and its standard output holds `\nNon-blocking findings still open after step 1:\n  C1: A name could
   be clearer\n` (R11)
-- [ ] Change `"until"` of `orchestrator.json` to `"no-findings"`. In `tests/agentrite-definition.test.mjs` the test of
+- [x] Change `"until"` of `orchestrator.json` to `"no-findings"`. In `tests/agentrite-definition.test.mjs` the test of
   the default expects `until: 'no-findings'`. Change the seven tests of `tests/agentrite-orchestrate.test.mjs` that
   the approach names so that their last review gives no finding, and rename the one at line 97. Run both files to
   green (R7)
+- [x] In `tests/package-documents.test.mjs`, change `"until"` of `DEFAULT_DEFINITION` to `"no-findings"`. Its test
+  `README.md holds the default definition of the orchestrator in a block marked json` compares the README's JSON with
+  it, so change `"until"` of the JSON in "The definition" of `README.md` in the same commit, which keeps the suites of
+  that commit green. Run the file to green (R7, R8)
 - [ ] In "The definition" of `README.md`, describe `until` with its two values: `"no-blocking-findings"` as today, and
   `"no-findings"`, which ends the repeat when the outcome of the last step of a round holds no finding, stops the run
   when that outcome still holds a blocking finding after the last round, and otherwise lets the run go on with its
@@ -145,5 +151,5 @@ earlier step, beside `afterwards`.
 - [x] `feature-0087 Take no-findings as the until of a repeat`: the first two tasks
 - [x] `feature-0087 End a repeat at no findings and list what it left open`: the tasks of the repeat, the end report
   and the test of the command
-- [ ] `feature-0087 Run the default's repeat until no findings`: the task of the default
+- [x] `feature-0087 Run the default's repeat until no findings`: the two tasks of the default
 - [ ] `feature-0087 Describe until no-findings in the README`: the two tasks of `README.md`

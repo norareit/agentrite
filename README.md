@@ -857,7 +857,7 @@ with no blocking finding ends the repeat, and a third review with one stops the 
     {
       "repeat": {
         "times": 3,
-        "until": "no-blocking-findings",
+        "until": "no-findings",
         "steps": [
           {
             "role": "implementer",

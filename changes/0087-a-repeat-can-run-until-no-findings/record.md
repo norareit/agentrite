@@ -43,3 +43,10 @@ timestamp: 2026-10-25T00:11:13Z
   it, and was seen failing afterwards by running it against the two scripts as committed at `1b350e5`, which made 1
   call where 2 were expected; with the change it passes. The orchestrate and definition test files reported 131
   passed, 0 failed
+- 2026-10-25T11:16:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed `"until"` of
+  `orchestrator.json` to `"no-findings"`. The orchestrate and definition test files then failed in the seven tests the
+  plan names and the test of the default in `tests/agentrite-definition.test.mjs`, and in nothing else; each was
+  changed as the plan gives. The plan missed `tests/package-documents.test.mjs`, whose `DEFAULT_DEFINITION` pins the
+  default as it ships and whose README test compares the JSON of "The definition" with it, so it failed too. Added a
+  task for it to `plan.md` before doing it, and moved the change of `"until"` in the README's JSON into this commit,
+  so that its suites pass. The three files reported 153 passed, 0 failed

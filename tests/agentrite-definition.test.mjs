@@ -37,7 +37,7 @@ test('the default definition is taken with the roles and harnesses of the defaul
       {
         repeat: {
           times: 3,
-          until: 'no-blocking-findings',
+          until: 'no-findings',
           steps: [
             {
               role: 'implementer',

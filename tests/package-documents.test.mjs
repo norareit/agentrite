@@ -103,7 +103,7 @@ const DEFAULT_DEFINITION = `{
     {
       "repeat": {
         "times": 3,
-        "until": "no-blocking-findings",
+        "until": "no-findings",
         "steps": [
           {
             "role": "implementer",
