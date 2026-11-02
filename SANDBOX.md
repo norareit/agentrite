@@ -854,3 +854,14 @@ apart, and the two share one OpenCode login.**
 Why: two projects whose root directories have one name share a log directory, wherever on the host they are.
 
 What to do: renaming one of the roots ends it.
+
+**Pasting an image into Claude Code with Ctrl+V pastes nothing, and Claude Code answers that images are pasted with
+Ctrl+V.**
+
+Why: text reaches the harness through the terminal, but an image does not. Claude Code reads an image from the
+system clipboard itself, with `wl-paste` or `xclip`. The image holds neither, and the container cannot reach the
+host's display, so there is no clipboard for it to read.
+
+What to do: save the image in the directory the container works in, or in one it mounts, and name its path in the
+container in the prompt, relative to the working directory for example. Dragging a file into the terminal types its
+path on the host, which the container does not have, since it mounts the work at `/work`.
