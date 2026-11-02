@@ -1,0 +1,19 @@
+---
+kind: feature
+status: draft
+timestamp: 2026-11-02T21:36:55Z
+---
+
+# 0091 One contract per harness
+
+## Log
+
+- 2026-11-02T21:36:55Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `40d502b`, on the
+  human's request for a way to know every feature a harness must support before another harness is added, with the
+  fix they chose: one module per harness implementing one contract, with a test that each harness implements all of
+  it, and a checklist in `CONTRIBUTING.md` for what code cannot enforce. The human declined a script that runs the
+  real harnesses, which is a non-goal. Numbered 0091: the highest number in `changes/`, on every branch, is 0090.
+  Read `HARNESSES` of `scripts/agentrite-roles.mjs`, `STARTS` and `runUsage` of `scripts/agentrite-run.mjs`,
+  `HEADLESS` of `scripts/agentrite-headless.mjs`, `scripts/agentrite-instructions.mjs`, the harness branches of
+  `init` and `refresh` in `scripts/agentrite.mjs`, the spec of 0090, and searched the tree for `claude` and
+  `opencode` for the places outside code. Wrote `spec.md`. The status is `draft`
