@@ -45,7 +45,7 @@ today.
 
 ## Tasks
 
-- [ ] Write `tests/agentrite-cleanup-period.test.mjs` against the functions below, before them. For
+- [x] Write `tests/agentrite-cleanup-period.test.mjs` against the functions below, before them. For
   `parseCleanupPeriod(text, path)`: `{"cleanupPeriodDays": 365}` gives `365`; `{"cleanupPeriodDays": 1}` gives `1`;
   `{}` and `{"model": "x", "env": {"TOKEN": "secret"}}` give `undefined`; and each of `0`, `1.5`, `-1`, `"365"`,
   `null`, `true`, `[]` and `{}` as the value throws a message that starts with the path, names `cleanupPeriodDays`,
@@ -54,18 +54,18 @@ today.
   says it is not a JSON object, and says to correct the file or remove the key. For `readCleanupPeriod(home)` with
   a temporary directory as `home`: no `.claude` gives `undefined`; `.claude/settings.json` with a number gives it;
   a directory at `.claude/settings.json` throws a message that names the path and says it cannot be read (R1, R4)
-- [ ] Write `scripts/agentrite-cleanup-period.mjs`. `parseCleanupPeriod` parses the text, takes the key only from an
+- [x] Write `scripts/agentrite-cleanup-period.mjs`. `parseCleanupPeriod` parses the text, takes the key only from an
   object that is not an array, accepts `Number.isInteger(value) && value >= 1`, and returns nothing else of the
   file. `readCleanupPeriod` reads `join(home, '.claude', 'settings.json')`, returns `undefined` for `ENOENT` only,
   and throws `cannot read <path>: <reason>` for any other error. The program takes the home as its one argument,
   prints the number or an empty line, and on a thrown message prints `agentrite: <message>` to standard error and
   exits 1; with a wrong number of arguments it prints its usage and exits 2, as `agentrite-settings.mjs` does. The
   entry check is the same `isMain` as that file's. Run the new tests (R1, R4, R5)
-- [ ] Add `scripts/agentrite-cleanup-period.mjs` to `files` in `package.json` and to the list in
+- [x] Add `scripts/agentrite-cleanup-period.mjs` to `files` in `package.json` and to the list in
   `tests/package-documents.test.mjs`, and copy it in the `setUp` of `tests/sandbox-wrapper.test.mjs`,
   `tests/sandbox-dev.test.mjs` and `tests/sandbox-project-dockerfile.test.mjs`. `tests/sandbox-unit-run.test.mjs`
   copies the whole `scripts/` and needs no change. Run `npm test`, which passes with the wrapper unchanged
-- [ ] Commit: `feature-0092 Add the reader of the host's cleanupPeriodDays`
+- [x] Commit: `feature-0092 Add the reader of the host's cleanupPeriodDays`
 - [ ] Write the wrapper's tests in `tests/sandbox-wrapper.test.mjs`, beside the status line's, failing before the
   wrapper changes. With `cleanupPeriodDays: 365` in the fake home's `.claude/settings.json`, together with
   `"env": {"TOKEN": "secret"}`: a start with `--in-place` and one with `--workdir` pass the mount
@@ -118,7 +118,7 @@ today.
 
 ## Commit Points
 
-- [ ] `feature-0092 Add the reader of the host's cleanupPeriodDays`, after the reader, its tests and the package
+- [x] `feature-0092 Add the reader of the host's cleanupPeriodDays`, after the reader, its tests and the package
   entry
 - [ ] `feature-0092 Give the sandbox the host's cleanupPeriodDays`, after the wrapper and its tests
 - [ ] `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`, after `SANDBOX.md`

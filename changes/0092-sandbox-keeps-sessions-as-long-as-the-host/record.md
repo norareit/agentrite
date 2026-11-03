@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-03T15:29:26Z
 ---
 
@@ -24,3 +24,6 @@ timestamp: 2026-11-03T15:29:26Z
   the wrapper's tests and `package.json`'s `files`. Wrote `plan.md`: a reader of the host's `cleanupPeriodDays` in
   `scripts/`, read with `bell` and written beside the log directory as a file renamed into place, so that a later
   start leaves a run under way with its number. The status is `approved`
+- 2026-11-03T15:41:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0092-sandbox-keeps-sessions-as-long-as-the-host` at `e27280f`, began the work. The status is
+  `in-progress`

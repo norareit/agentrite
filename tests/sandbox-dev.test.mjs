@@ -40,7 +40,7 @@ function setUp(testContext) {
   installKitPackage(root);
   // The wrapper reads bell with the kit's reader of agentrite.json, in the checkout's scripts/.
   mkdirSync(join(root, 'scripts'));
-  for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
+  for (const file of ['agentrite-settings.mjs', 'agentrite-cleanup-period.mjs', 'agentrite-roles.mjs']) {
     copyFileSync(join(kitScripts, file), join(root, 'scripts', file));
   }
   writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');

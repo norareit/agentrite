@@ -83,7 +83,7 @@ function setUp(testContext, layout = 'installed') {
     copyFileSync(from, to);
     chmodSync(to, 0o755);
   }
-  for (const file of ['agentrite-settings.mjs', 'agentrite-roles.mjs']) {
+  for (const file of ['agentrite-settings.mjs', 'agentrite-cleanup-period.mjs', 'agentrite-roles.mjs']) {
     copyFileSync(join(kitScripts, file), join(kit, 'scripts', file));
   }
   installKitPackage(kit);
