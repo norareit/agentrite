@@ -555,17 +555,17 @@ It holds:
   is started in `/work`, so Claude Code's sessions are under `.claude/projects/-work`
 * `<logs>/.local/share/opencode`, mounted at `/home/agent/.local/share/opencode`: OpenCode's data: its database,
   its login. OpenCode's login is `<logs>/.local/share/opencode/auth.json`, a file of the host
-* `<logs>/claude-cleanup-period.json`, mounted read-only at
-  `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`: the number of "How long Claude Code's
-  sessions are kept", alone. The wrapper writes it at a start when the host holds a number, and removes it at a
-  start when the host holds none
+* `<logs>/claude-cleanup-period-<n>.json`, such as `claude-cleanup-period-365.json`, mounted read-only at
+  `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`: the number `<n>` of "How long Claude Code's
+  sessions are kept", alone. The wrapper writes the file of a number at a start when the host holds that number
+  and the file is not there yet, and changes or removes none, so one is left for each number the host has held
 
 The two directories have the places they have in a home, so a tool on the host that reads the harnesses' logs is
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
 With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of both harnesses,
-OpenCode's login and `claude-cleanup-period.json` go with it. The next run makes the directory again, empty.
+OpenCode's login and the files of the numbers go with it. The next run makes the directory again, empty.
 
 **How long Claude Code's sessions are kept**
 

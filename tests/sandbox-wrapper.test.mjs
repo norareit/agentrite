@@ -4,7 +4,6 @@ import {
   chmodSync,
   copyFileSync,
   existsSync,
-  linkSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -1045,10 +1044,13 @@ test('a start reads bell again at each start, with no build in between', (testCo
 
 // Unit 0092: how long Claude Code's sessions are kept. A start reads cleanupPeriodDays from the host's
 // ~/.claude/settings.json, writes the number alone into the project's log directory, and mounts that file in the
-// drop-in directory of Claude Code's managed settings.
-const cleanupPeriodFile = (root) => join(homeLogs(root), 'claude-cleanup-period.json');
-const cleanupPeriodMount = (root) =>
-  `--volume ${cleanupPeriodFile(root)}:` +
+// drop-in directory of Claude Code's managed settings. The file is named after the number, and no start changes or
+// removes it, so that a start cannot change or remove the file that another start is about to mount.
+const cleanupPeriodFile = (root, days = 365) => join(homeLogs(root), `claude-cleanup-period-${days}.json`);
+const cleanupPeriodFiles = (root) =>
+  readdirSync(homeLogs(root)).filter((name) => name.startsWith('claude-cleanup-period'));
+const cleanupPeriodMount = (root, days = 365) =>
+  `--volume ${cleanupPeriodFile(root, days)}:` +
   '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro ';
 const hostSettingsPath = (home) => join(home, '.claude', 'settings.json');
 
@@ -1108,13 +1110,14 @@ for (const [what, text] of [
 
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(dockerCalls(), expectedRun(root, container));
-    assert.equal(existsSync(cleanupPeriodFile(root)), false);
+    assert.deepEqual(cleanupPeriodFiles(root), []);
   });
 
   test(`a start with ${what} on the host, after a start that gave a number, gives nothing`, (testContext) => {
     const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
     writeHostSettings(home, hostSettingsWithNumber(365));
     assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+    const before = statSync(cleanupPeriodFile(root)).ino;
     if (text === null) rmSync(hostSettingsPath(home));
     else writeHostSettings(home, text);
 
@@ -1125,7 +1128,10 @@ for (const [what, text] of [
       ...startRun(root, container, '--in-place', root, cleanupPeriodMount(root), ''),
       ...expectedRun(root, container),
     ]);
-    assert.equal(existsSync(cleanupPeriodFile(root)), false);
+    // The file of the earlier start is left as it was, since a run about to begin may yet mount it.
+    assert.deepEqual(cleanupPeriodFiles(root), ['claude-cleanup-period-365.json']);
+    assert.equal(statSync(cleanupPeriodFile(root)).ino, before);
+    assert.equal(readFileSync(cleanupPeriodFile(root), 'utf-8'), '{"cleanupPeriodDays": 365}\n');
   });
 }
 
@@ -1164,20 +1170,43 @@ for (const [form, formArgs] of startForms) {
   });
 }
 
-test('a later start with another number leaves the file of a start before it as it was', (testContext) => {
-  const { root, home, run } = setUp(testContext, kitPath);
+// Review S1: a start between another start's write and its mount neither changes nor removes the file that start
+// mounts, whatever number it has, or none.
+test('later starts with another number and with none leave the file of an earlier start as it was', (testContext) => {
+  const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
   writeHostSettings(home, hostSettingsWithNumber(365));
   assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
-  // What the container of the first start holds through its bind mount is the file as it was renamed into place.
-  const held = join(homeLogs(root), 'held.json');
-  linkSync(cleanupPeriodFile(root), held);
+  const before = statSync(cleanupPeriodFile(root, 365)).ino;
   writeHostSettings(home, hostSettingsWithNumber(90));
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  rmSync(hostSettingsPath(home));
 
   const result = run(root, '--in-place', 'echo', 'hi');
 
   assert.equal(result.status, 0, result.stderr);
-  assert.equal(readFileSync(held, 'utf-8'), '{"cleanupPeriodDays": 365}\n');
-  assert.equal(readFileSync(cleanupPeriodFile(root), 'utf-8'), '{"cleanupPeriodDays": 90}\n');
+  assert.deepEqual(dockerCalls(), [
+    ...startRun(root, container, '--in-place', root, cleanupPeriodMount(root, 365), ''),
+    ...startRun(root, container, '--in-place', root, cleanupPeriodMount(root, 90), ''),
+    ...expectedRun(root, container),
+  ]);
+  assert.equal(statSync(cleanupPeriodFile(root, 365)).ino, before);
+  assert.equal(readFileSync(cleanupPeriodFile(root, 365), 'utf-8'), '{"cleanupPeriodDays": 365}\n');
+  assert.equal(readFileSync(cleanupPeriodFile(root, 90), 'utf-8'), '{"cleanupPeriodDays": 90}\n');
+});
+
+test('a start whose number has its file already leaves that file as it is', (testContext) => {
+  const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+  writeHostSettings(home, hostSettingsWithNumber(365));
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  const before = statSync(cleanupPeriodFile(root)).ino;
+
+  const result = run(root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  const once = startRun(root, container, '--in-place', root, cleanupPeriodMount(root), '');
+  assert.deepEqual(dockerCalls(), [...once, ...once]);
+  assert.equal(statSync(cleanupPeriodFile(root)).ino, before);
+  assert.deepEqual(cleanupPeriodFiles(root), ['claude-cleanup-period-365.json']);
 });
 
 test('the file of the number can be read by every user, which the agent of the sandbox is', (testContext) => {
@@ -1188,7 +1217,7 @@ test('the file of the number can be read by every user, which the agent of the s
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(statSync(cleanupPeriodFile(root)).mode & 0o777, 0o644);
-  assert.deepEqual(readdirSync(homeLogs(root)).sort(), ['.claude', '.local', 'claude-cleanup-period.json']);
+  assert.deepEqual(readdirSync(homeLogs(root)).sort(), ['.claude', '.local', 'claude-cleanup-period-365.json']);
 });
 
 // Unit 0078: the kit's version. The image records the kit it was built from, and is built again for another.

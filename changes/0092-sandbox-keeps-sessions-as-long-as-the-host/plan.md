@@ -28,6 +28,13 @@ The host's file is found at `$HOME/.claude/settings.json`. With `HOME` unset or 
 nothing is given, as for a host without the file; the log directory block refuses such a start later, as it does
 today.
 
+After the review's S1, which the human accepted, the file is named after the number, as
+`<logs>/claude-cleanup-period-<n>.json`, and is written only when it is not there, by a rename as above, and
+never changed or removed. A start with no number removes nothing. A start between another start's write and its
+mount can then neither change nor remove the file that start mounts, so a run under way and a run about to begin
+alike keep their number, and Docker never meets a missing source, of which it would make a directory owned by root.
+One file is left for each number used, and goes with the log directory.
+
 ## Files
 
 - `scripts/agentrite-cleanup-period.mjs`: new. `parseCleanupPeriod(text, path)`, `readCleanupPeriod(home)` and the
@@ -108,6 +115,21 @@ today.
   the threat model's "none of the host's own `~/.claude`", and correct any that is no longer true (R9)
 - [x] Check every changed file for the line limit of 120 characters
 - [x] Commit: `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`
+- [x] After the review's S1: change the wrapper's tests first, so that they fail on the wrapper as it is. The file
+  of a start with 365 is `<logs>/claude-cleanup-period-365.json`, holding `{"cleanupPeriodDays": 365}` and a newline
+  with mode 644, and is the source of the mount. A start with no number, or with a file without the key, after a
+  start with 365 passes the arguments of `expectedRun` and leaves that file as it was. In place of the test of the
+  hard link: after a start with 365, a start with 90 and then a start with none leave the file of 365 with its
+  inode and its content, and the start with 90 mounts `<logs>/claude-cleanup-period-90.json`. A start with 365
+  when its file is there already leaves that file with its inode (S1)
+- [x] Change `container/sandbox.sh`: the file of the number is `$logs/claude-cleanup-period-$cleanup_period.json`,
+  made as before only when it is not there, and nothing is removed for a start with no number. Correct the
+  comments. Run the wrapper's and the unit run's tests, then `npm test` (S1)
+- [x] In `SANDBOX.md`, name the file of each number in the list of what the log directory holds, say that the
+  wrapper writes it at a start with that number when it is not there and never changes or removes it, and that
+  the files of the numbers go with the directory (S1, R9)
+- [x] Check every changed file for the line limit of 120 characters
+- [x] Commit: `feature-0092 Keep a file of the cleanupPeriodDays for each number`
 
 ## Verification
 
@@ -124,3 +146,4 @@ today.
   entry
 - [x] `feature-0092 Give the sandbox the host's cleanupPeriodDays`, after the wrapper and its tests
 - [x] `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`, after `SANDBOX.md`
+- [x] `feature-0092 Keep a file of the cleanupPeriodDays for each number`, after the correction of S1

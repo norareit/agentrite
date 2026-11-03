@@ -936,23 +936,24 @@ logs="$(cd "$logs" && pwd)"
 # The number read above, as a drop-in of Claude Code's managed settings, which stand above
 # the home volume's, so the agent cannot change it. The file is in the log directory, of
 # which only the two directories below are mounted, so the container reaches it through
-# this read-only mount alone. Several runs of the project root may be under way, and a
-# container's bind mount holds the file it was started with, so the file is never
-# written in place: a new one is renamed over it, and one left by an earlier start is
-# removed when the host holds no number, which leaves a run under way with its own.
-# Readable by all, since mktemp makes it the developer's alone and Claude Code reads it
-# as the agent.
-cleanup_period_file="$logs/claude-cleanup-period.json"
+# this read-only mount alone. Several runs of the project root may be under way or about
+# to mount their file, so each number has a file of its own, which no start changes or
+# removes: a later start cannot give another number to a run, and Docker never finds a
+# source gone, of which it would make a directory owned by root. The file is made by a
+# rename, so that no start mounts it half written, and two starts that make it at once
+# rename the same content. Readable by all, since mktemp makes it the developer's alone
+# and Claude Code reads it as the agent.
 if [ -n "$cleanup_period" ]; then
-  cleanup_period_new="$(mktemp "$logs/claude-cleanup-period.XXXXXX")"
-  printf '{"cleanupPeriodDays": %s}\n' "$cleanup_period" >"$cleanup_period_new"
-  chmod 644 "$cleanup_period_new"
-  mv -f "$cleanup_period_new" "$cleanup_period_file"
+  cleanup_period_file="$logs/claude-cleanup-period-$cleanup_period.json"
+  if [ ! -f "$cleanup_period_file" ]; then
+    cleanup_period_new="$(mktemp "$logs/claude-cleanup-period.XXXXXX")"
+    printf '{"cleanupPeriodDays": %s}\n' "$cleanup_period" >"$cleanup_period_new"
+    chmod 644 "$cleanup_period_new"
+    mv -f "$cleanup_period_new" "$cleanup_period_file"
+  fi
   mounts+=(
     --volume "$cleanup_period_file:/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro"
   )
-else
-  rm -f "$cleanup_period_file"
 fi
 
 mounts+=(
