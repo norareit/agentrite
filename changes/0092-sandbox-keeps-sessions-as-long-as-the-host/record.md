@@ -54,3 +54,10 @@ timestamp: 2026-11-03T15:29:26Z
   `changes/0093-hook-tests-fail-in-the-sandbox`
 - 2026-11-03T16:14:22Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ticked that check on the human's
   decision. Every task of `plan.md` is ticked, and the unit is handed over for review. The status is `in-progress`
+- 2026-11-03T16:19:41Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of 0092 at `6f7917d`,
+  against merge base `31bcf08` with `master`, restarted after the human reported a squash. Returned S1 in
+  `.reviews/0092-sandbox-keeps-sessions-as-long-as-the-host/review-2026-11-03-opencode.md`. Ran `npm test`: 1335
+  passed; `./sandbox-dev.sh --in-place npm test`: 1283 passed, 19 hook-related failures, 33 skipped; and
+  `npm run check-changes` and `git diff --check master...HEAD`: passed. Reproduced S1 with an isolated
+  overlapping-start probe using the wrapper's fake-host fixture. Did not independently repeat the interactive
+  Claude Code `/status` observation. The status is `in-progress`
