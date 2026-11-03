@@ -18,3 +18,9 @@ timestamp: 2026-11-03T15:29:26Z
   of what it cleans up and of managed settings drop-ins. Ran nothing in the sandbox. Wrote `spec.md`. The status is
   `draft`
 - 2026-11-03T15:37:14Z [human] approved the spec. The status is `approved`
+- 2026-11-03T15:39:46Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, on
+  `feature-0092-sandbox-keeps-sessions-as-long-as-the-host`, cut from `master` at `31bcf08`. Read `container/sandbox.sh`
+  around the reading of `bell`, `--connect` and the log directory, `scripts/agentrite-settings.mjs`, the `setUp` of
+  the wrapper's tests and `package.json`'s `files`. Wrote `plan.md`: a reader of the host's `cleanupPeriodDays` in
+  `scripts/`, read with `bell` and written beside the log directory as a file renamed into place, so that a later
+  start leaves a run under way with its number. The status is `approved`
