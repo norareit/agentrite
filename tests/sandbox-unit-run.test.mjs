@@ -436,6 +436,17 @@ const noCut = [
       /^sandbox\.sh: so no branch is cut for '0031'\.$/m,
     ],
   },
+  // Unit 0092, R4: the start reads the host's cleanupPeriodDays before a branch is cut, and is refused for it.
+  {
+    name: "a host's ~/.claude/settings.json that is not JSON",
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature');
+      mkdirSync(join(host.home, '.claude'));
+      writeFileSync(join(host.home, '.claude', 'settings.json'), 'not json');
+    },
+    says: [/^agentrite: .*\/\.claude\/settings\.json is not a JSON object: .*, so cleanupPeriodDays cannot be read\./m],
+  },
   // Unit 0054, R4
   {
     name: 'an agentrite.json whose standards names no file',
@@ -608,6 +619,21 @@ test('a unit run with "bell": true mounts the bell and names the plugin to OpenC
 test('--connect with an agentrite.json that lacks bell connects, reading nothing', (testContext) => {
   const host = setUp(testContext);
   writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('  "bell": false,\n', ''));
+  markRunning(host);
+
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});
+
+// Unit 0092, R1, R7: --connect starts nothing, so it reads nothing of the host's settings and connects whatever
+// they hold.
+test("--connect with a host's ~/.claude/settings.json that is not JSON connects, reading nothing", (testContext) => {
+  const host = setUp(testContext);
+  mkdirSync(join(host.home, '.claude'));
+  writeFileSync(join(host.home, '.claude', 'settings.json'), 'not json');
   markRunning(host);
 
   const result = host.run(['--connect', branch, 'echo', 'hi']);

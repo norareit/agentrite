@@ -66,7 +66,7 @@ today.
   `tests/sandbox-dev.test.mjs` and `tests/sandbox-project-dockerfile.test.mjs`. `tests/sandbox-unit-run.test.mjs`
   copies the whole `scripts/` and needs no change. Run `npm test`, which passes with the wrapper unchanged
 - [x] Commit: `feature-0092 Add the reader of the host's cleanupPeriodDays`
-- [ ] Write the wrapper's tests in `tests/sandbox-wrapper.test.mjs`, beside the status line's, failing before the
+- [x] Write the wrapper's tests in `tests/sandbox-wrapper.test.mjs`, beside the status line's, failing before the
   wrapper changes. With `cleanupPeriodDays: 365` in the fake home's `.claude/settings.json`, together with
   `"env": {"TOKEN": "secret"}`: a start with `--in-place` and one with `--workdir` pass the mount
   `--volume <logs>/claude-cleanup-period.json:/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro`
@@ -77,10 +77,12 @@ today.
   texts `not json`, `[]`, `{"cleanupPeriodDays": 0}`, `{"cleanupPeriodDays": 1.5}`, `{"cleanupPeriodDays": -1}`
   and `{"cleanupPeriodDays": "365"}` refuses the start with status 1 and the reader's message, with no docker call,
   no log directory made and no branch cut (R2, R3, R4, R5, R6, R7)
-- [ ] Write the test in `tests/sandbox-unit-run.test.mjs`, beside that of unit 0058's R7: `--connect` with
+- [x] Write the test in `tests/sandbox-unit-run.test.mjs`, beside that of unit 0058's R7: `--connect` with
   `not json` in the home's `.claude/settings.json` connects with status 0, an empty standard error and the
-  connect call alone (R7)
-- [ ] Change `container/sandbox.sh`. In the block that reads `bell`, when `connect` is 0 and `HOME` is not empty, set
+  connect call alone (R7). Added in the implementation: an entry of the same file's runs that cut no branch, in
+  which `not json` in the home's `.claude/settings.json` refuses a unit run with the reader's message and cuts no
+  branch, since the wrapper's tests have no repository in which a branch could be cut (R4)
+- [x] Change `container/sandbox.sh`. In the block that reads `bell`, when `connect` is 0 and `HOME` is not empty, set
   `cleanup_period` from `node "$here/../scripts/agentrite-cleanup-period.mjs" "$HOME"`, exiting 1 when it fails. In
   the block that makes the log directory, after `logs` is made absolute and before the log mounts are added, when
   `cleanup_period` is not empty, write `{"cleanupPeriodDays": <n>}` to a new file made with `mktemp` in `$logs`,
@@ -91,8 +93,8 @@ today.
   has mode 644. Say in the comments of the two blocks why the number is read
   early and written late, and that only the number crosses, and add the number to what the header comment says a
   start reads. Run the wrapper's and the unit run's tests (R1, R2, R3, R4, R5, R6)
-- [ ] Run `npm test`, which passes
-- [ ] Commit: `feature-0092 Give the sandbox the host's cleanupPeriodDays`
+- [x] Run `npm test`, which passes
+- [x] Commit: `feature-0092 Give the sandbox the host's cleanupPeriodDays`
 - [ ] Rewrite in `SANDBOX.md` the paragraph of the log directory section that tells the developer to set
   `cleanupPeriodDays` in the home volume, with its JSON example and the two sentences after it, into a paragraph
   under its own bold heading "How long Claude Code's sessions are kept", in the same section, saying each item of
@@ -120,5 +122,5 @@ today.
 
 - [x] `feature-0092 Add the reader of the host's cleanupPeriodDays`, after the reader, its tests and the package
   entry
-- [ ] `feature-0092 Give the sandbox the host's cleanupPeriodDays`, after the wrapper and its tests
+- [x] `feature-0092 Give the sandbox the host's cleanupPeriodDays`, after the wrapper and its tests
 - [ ] `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`, after `SANDBOX.md`

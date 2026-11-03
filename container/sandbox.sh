@@ -5,8 +5,10 @@
 # `docker compose run --volume` options, adds the developer's Claude Code status line
 # when the host has one, the two directories of the host that hold the harnesses' logs,
 # and the harnesses' bell when the project's agentrite.json holds "bell": true, which it
-# reads at each start but --connect, gives the command the host's TERM and COLORTERM,
-# and passes the rest through.
+# reads at each start but --connect, gives Claude Code the cleanupPeriodDays of the
+# host's ~/.claude/settings.json when it holds one, which it also reads at each start but
+# --connect, gives the command the host's TERM and COLORTERM, and passes the rest
+# through.
 # It sets nothing that confines the container; every such setting is in
 # container/compose.yml and the project's sandbox/compose.project.yml, and the firewall
 # is in container/entrypoint.sh.
@@ -337,6 +339,19 @@ fi
 bell=false
 if [ "$connect" -eq 0 ]; then
   bell="$(node "$here/../scripts/agentrite-settings.mjs" "$root" bell)" || exit 1
+fi
+
+# How long Claude Code in the sandbox keeps its sessions: the cleanupPeriodDays of the
+# host's ~/.claude/settings.json, and of no other file, read by the kit's reader of that
+# file, which prints the number alone, or nothing for a file without it, and its own
+# message for a value Claude Code would refuse. Nothing else of the file crosses, since it
+# can hold secrets. Read here, with bell and for the same reason, so that a refused start
+# has done nothing, and written only with the log directory below, so that a refused or
+# failed start writes nothing. --connect reads nothing: the command it connects has the
+# number of the run it joins.
+cleanup_period=""
+if [ "$connect" -eq 0 ] && [ -n "${HOME:-}" ]; then
+  cleanup_period="$(node "$here/../scripts/agentrite-cleanup-period.mjs" "$HOME")" || exit 1
 fi
 
 # The unit's branch, found with git alone, or cut from the default branch for a unit
@@ -917,6 +932,29 @@ fi
 logs="${XDG_DATA_HOME:-${HOME:?}/.local/share}/agentrite/$(basename "$root")"
 mkdir -p "$logs/.claude/projects" "$logs/.local/share/opencode"
 logs="$(cd "$logs" && pwd)"
+
+# The number read above, as a drop-in of Claude Code's managed settings, which stand above
+# the home volume's, so the agent cannot change it. The file is in the log directory, of
+# which only the two directories below are mounted, so the container reaches it through
+# this read-only mount alone. Several runs of the project root may be under way, and a
+# container's bind mount holds the file it was started with, so the file is never
+# written in place: a new one is renamed over it, and one left by an earlier start is
+# removed when the host holds no number, which leaves a run under way with its own.
+# Readable by all, since mktemp makes it the developer's alone and Claude Code reads it
+# as the agent.
+cleanup_period_file="$logs/claude-cleanup-period.json"
+if [ -n "$cleanup_period" ]; then
+  cleanup_period_new="$(mktemp "$logs/claude-cleanup-period.XXXXXX")"
+  printf '{"cleanupPeriodDays": %s}\n' "$cleanup_period" >"$cleanup_period_new"
+  chmod 644 "$cleanup_period_new"
+  mv -f "$cleanup_period_new" "$cleanup_period_file"
+  mounts+=(
+    --volume "$cleanup_period_file:/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro"
+  )
+else
+  rm -f "$cleanup_period_file"
+fi
+
 mounts+=(
   --volume "$logs/.claude/projects:/home/agent/.claude/projects"
   --volume "$logs/.local/share/opencode:/home/agent/.local/share/opencode"

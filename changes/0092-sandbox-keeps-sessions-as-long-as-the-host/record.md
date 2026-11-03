@@ -27,3 +27,7 @@ timestamp: 2026-11-03T15:29:26Z
 - 2026-11-03T15:41:03Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   on `feature-0092-sandbox-keeps-sessions-as-long-as-the-host` at `e27280f`, began the work. The status is
   `in-progress`
+- 2026-11-03T15:45:53Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to `plan.md` a test of
+  `tests/sandbox-unit-run.test.mjs` that the plan did not list: a unit run refused for a host's
+  `~/.claude/settings.json` that is not JSON cuts no branch. The plan put that check of R4 in the wrapper's tests,
+  which have no repository in which a branch could be cut

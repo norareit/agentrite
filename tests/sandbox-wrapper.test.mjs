@@ -4,6 +4,7 @@ import {
   chmodSync,
   copyFileSync,
   existsSync,
+  linkSync,
   mkdirSync,
   readdirSync,
   readFileSync,
@@ -27,6 +28,7 @@ import {
   logMounts,
   writeCommand,
 } from './wrapper-fixture.mjs';
+import { parseCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
@@ -1039,6 +1041,154 @@ test('a start reads bell again at each start, with no build in between', (testCo
     ...startRun(root, container, '--in-place', root, '', ''),
     ...startRun(root, container, '--in-place', root, bellMounts(container), bellEnvironment),
   ]);
+});
+
+// Unit 0092: how long Claude Code's sessions are kept. A start reads cleanupPeriodDays from the host's
+// ~/.claude/settings.json, writes the number alone into the project's log directory, and mounts that file in the
+// drop-in directory of Claude Code's managed settings.
+const cleanupPeriodFile = (root) => join(homeLogs(root), 'claude-cleanup-period.json');
+const cleanupPeriodMount = (root) =>
+  `--volume ${cleanupPeriodFile(root)}:` +
+  '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro ';
+const hostSettingsPath = (home) => join(home, '.claude', 'settings.json');
+
+function writeHostSettings(home, text) {
+  mkdirSync(join(home, '.claude'), { recursive: true });
+  writeFileSync(hostSettingsPath(home), text);
+}
+
+const hostSettingsWithNumber = (days) => JSON.stringify({ cleanupPeriodDays: days, env: { TOKEN: 'secret' } });
+
+for (const [form, formArgs] of startForms) {
+  test(`a start with ${form} gives the sandbox the host's cleanupPeriodDays alone`, (testContext) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeHostSettings(home, hostSettingsWithNumber(365));
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, cleanupPeriodMount(root), ''));
+    assert.equal(readFileSync(cleanupPeriodFile(root), 'utf-8'), '{"cleanupPeriodDays": 365}\n');
+    assert.ok(dockerCalls().every((call) => !call.includes('secret')));
+  });
+
+  test(`a start with ${form} mounts the number after the status line and the bell`, (testContext) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+    writeHostSettings(home, hostSettingsWithNumber(365));
+    writeFileSync(statusLinePath(home), 'echo line\n');
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    const statusLine =
+      `--volume ${statusLinePath(home)}:/etc/claude-code/statusline-command.sh:ro ` +
+      `--volume ${container}/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
+    const mounts = statusLine + bellMounts(container) + cleanupPeriodMount(root);
+    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, mounts, bellEnvironment));
+    assert.equal(readFileSync(cleanupPeriodFile(root), 'utf-8'), '{"cleanupPeriodDays": 365}\n');
+    assert.ok(dockerCalls().every((call) => !call.includes('secret')));
+  });
+}
+
+for (const [what, text] of [
+  ['no settings.json', null],
+  ['a settings.json without cleanupPeriodDays', '{"model": "x"}'],
+]) {
+  test(`a start with ${what} on the host gives the sandbox nothing for it`, (testContext) => {
+    const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    if (text !== null) writeHostSettings(home, text);
+
+    const result = run(root, '--in-place', 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), expectedRun(root, container));
+    assert.equal(existsSync(cleanupPeriodFile(root)), false);
+  });
+
+  test(`a start with ${what} on the host, after a start that gave a number, gives nothing`, (testContext) => {
+    const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    writeHostSettings(home, hostSettingsWithNumber(365));
+    assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+    if (text === null) rmSync(hostSettingsPath(home));
+    else writeHostSettings(home, text);
+
+    const result = run(root, '--in-place', 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), [
+      ...startRun(root, container, '--in-place', root, cleanupPeriodMount(root), ''),
+      ...expectedRun(root, container),
+    ]);
+    assert.equal(existsSync(cleanupPeriodFile(root)), false);
+  });
+}
+
+for (const [form, formArgs] of startForms) {
+  test(`a start with ${form} and a cleanupPeriodDays at fault is refused with the reader's message`, (testContext) => {
+    for (const text of [
+      'not json',
+      '[]',
+      '{"cleanupPeriodDays": 0}',
+      '{"cleanupPeriodDays": 1.5}',
+      '{"cleanupPeriodDays": -1}',
+      '{"cleanupPeriodDays": "365"}',
+    ]) {
+      const { base, root, home, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      writeHostSettings(home, text);
+      const message = (() => {
+        try {
+          parseCleanupPeriod(text, hostSettingsPath(home));
+        } catch (error) {
+          return error.message;
+        }
+        throw new Error(`${text} was not refused by the reader`);
+      })();
+
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+      assert.equal(result.status, 1, text);
+      assert.equal(result.stdout, '', text);
+      assert.equal(result.stderr, `agentrite: ${message}\n`, text);
+      assert.deepEqual(dockerCalls(), [], text);
+      assert.deepEqual(npmCalls(), [], text);
+      assert.equal(existsSync(homeLogs(root)), false, text);
+    }
+  });
+}
+
+test('a later start with another number leaves the file of a start before it as it was', (testContext) => {
+  const { root, home, run } = setUp(testContext, kitPath);
+  writeHostSettings(home, hostSettingsWithNumber(365));
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  // What the container of the first start holds through its bind mount is the file as it was renamed into place.
+  const held = join(homeLogs(root), 'held.json');
+  linkSync(cleanupPeriodFile(root), held);
+  writeHostSettings(home, hostSettingsWithNumber(90));
+
+  const result = run(root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(readFileSync(held, 'utf-8'), '{"cleanupPeriodDays": 365}\n');
+  assert.equal(readFileSync(cleanupPeriodFile(root), 'utf-8'), '{"cleanupPeriodDays": 90}\n');
+});
+
+test('the file of the number can be read by every user, which the agent of the sandbox is', (testContext) => {
+  const { root, home, run } = setUp(testContext, kitPath);
+  writeHostSettings(home, hostSettingsWithNumber(365));
+
+  const result = run(root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(statSync(cleanupPeriodFile(root)).mode & 0o777, 0o644);
+  assert.deepEqual(readdirSync(homeLogs(root)).sort(), ['.claude', '.local', 'claude-cleanup-period.json']);
 });
 
 // Unit 0078: the kit's version. The image records the kit it was built from, and is built again for another.
