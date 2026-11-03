@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-03T15:29:26Z
 ---
 
@@ -17,3 +17,4 @@ timestamp: 2026-11-03T15:29:26Z
   `SANDBOX.md` on the status line, the bell and the host, and Claude Code's documentation of `cleanupPeriodDays`,
   of what it cleans up and of managed settings drop-ins. Ran nothing in the sandbox. Wrote `spec.md`. The status is
   `draft`
+- 2026-11-03T15:37:14Z [human] approved the spec. The status is `approved`
