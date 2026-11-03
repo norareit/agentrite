@@ -65,8 +65,8 @@ timestamp: 2026-11-03T15:29:26Z
   each number, which no start changes or removes
 - 2026-11-03T16:26:29Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the correction of S1 to
   `plan.md`, with its approach, and began it. The status is `in-progress`
-- 2026-11-03T16:30:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, corrected S1 in `94603bf`: each number has
-  its file, `<logs>/claude-cleanup-period-<n>.json`, which a start writes when it is not there and no start
+- 2026-11-03T16:30:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, corrected S1 in `94603bf`: each
+  number has its file, `<logs>/claude-cleanup-period-<n>.json`, which a start writes when it is not there and no start
   changes or removes. The wrapper's tests of the correction failed on the wrapper before it, and pass after it.
   On `94603bf`, `npm test` passed on the host, 1336 tests with none skipped, and `npm run check-changes`
   passed. `./sandbox-dev.sh --in-place npm test` passed 1284, skipped 33 and failed the 19 tests of the
