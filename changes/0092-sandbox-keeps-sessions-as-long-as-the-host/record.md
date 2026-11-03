@@ -49,3 +49,8 @@ timestamp: 2026-11-03T15:29:26Z
   Code reads `/etc/claude-code/managed-settings.d/`, which also holds the bell's drop-in, and does not show the
   number in use, which Claude Code does not display. The check of `./sandbox.sh --in-place npm test` stays open
   for the failures of unit 0093. The status is `in-progress`
+- 2026-11-03T16:14:22Z [human] decided that the check of `./sandbox.sh --in-place npm test` counts as passed for
+  this unit: its 19 failures are not of this unit and are the bug of
+  `changes/0093-hook-tests-fail-in-the-sandbox`
+- 2026-11-03T16:14:22Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ticked that check on the human's
+  decision. Every task of `plan.md` is ticked, and the unit is handed over for review. The status is `in-progress`
