@@ -75,3 +75,10 @@ timestamp: 2026-11-03T15:29:26Z
   was `claude-cleanup-period-365.json`. Removed `claude-cleanup-period.json` from this project's log directory
   on the host, which this branch's wrapper wrote before the correction. Not checked: two starts made at the same
   moment with real Docker. The status is `in-progress`
+- 2026-11-03T16:33:41Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of 0092 at `ade2ca4`,
+  from the previous review's `6f7917d`. Verified the correction of S1 and returned no new findings, saved in
+  `.reviews/0092-sandbox-keeps-sessions-as-long-as-the-host/review-2026-11-03-opencode-delta-2.md`. Ran `npm test`:
+  1336 passed; `./sandbox-dev.sh --in-place npm test`: 1284 passed, 19 hook-related failures, 33 skipped;
+  `npm run check-changes` and `git diff --check 6f7917d..HEAD`: passed. Repeated the isolated overlapping-start
+  probe: the pending start kept 365 through later starts with 90 and no number. Did not independently check
+  simultaneous starts with real Docker or interactive Claude Code `/status`. The status is `in-progress`
