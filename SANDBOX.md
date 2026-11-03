@@ -558,6 +558,21 @@ The two directories have the places they have in a home, so a tool on the host t
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
+Claude Code in the sandbox removes its sessions older than 30 days, each time it starts. A `cleanupPeriodDays` in
+the host's own Claude Code settings does not reach the sandbox. To keep the sessions of one project longer, set it in
+that project's home volume, from the sandbox's shell, in `~/.claude/settings.json`, beside what that file already
+holds:
+
+```json
+{
+  "cleanupPeriodDays": 365
+}
+```
+
+The setting applies to every later run of the project, of any branch, until the home volume is removed. The first
+start after that removes sessions older than 30 days again. The agent can change the file, as it can the sessions
+themselves.
+
 With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of both harnesses and
 OpenCode's login go with it. The next run makes the directory again, empty.
 
