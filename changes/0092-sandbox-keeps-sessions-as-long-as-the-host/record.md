@@ -31,3 +31,15 @@ timestamp: 2026-11-03T15:29:26Z
   `tests/sandbox-unit-run.test.mjs` that the plan did not list: a unit run refused for a host's
   `~/.claude/settings.json` that is not JSON cuts no branch. The plan put that check of R4 in the wrapper's tests,
   which have no repository in which a branch could be cut
+- 2026-11-03T15:50:57Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on `680bae1`. On the
+  host `npm test` passed, 1335 tests with none skipped, and `npm run check-changes` passed. In the sandbox, run with
+  `./sandbox-dev.sh --in-place npm test` because `./sandbox.sh` runs the installed release, which does not hold
+  this unit, 1283 passed, 33 were skipped and 19 failed: those of `agentrite-init`, `agentrite-refresh`,
+  `commit-msg-hook` and `sandbox-update` that write or use the commit-msg hook, which find the image's own hook
+  at `/usr/local/lib/agentrite/hooks` through `core.hooksPath`. The first three files fail 17 tests and
+  `sandbox-update` fails as a whole the same way on `e27280f`, before this unit, so that verification task stays
+  open as a concern outside this unit. On the host, with `cleanupPeriodDays` of 365 in `~/.claude/settings.json`,
+  `./sandbox-dev.sh --in-place` printed `{"cleanupPeriodDays": 365}` from
+  `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`, mode 644, and the agent's write to it was
+  refused as a read-only file system. `/status` of Claude Code in the sandbox was not checked, since it needs an
+  interactive session, and that task stays open. The status is `in-progress`
