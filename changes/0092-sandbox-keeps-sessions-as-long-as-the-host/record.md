@@ -82,8 +82,8 @@ timestamp: 2026-11-03T15:29:26Z
   `npm run check-changes` and `git diff --check 6f7917d..HEAD`: passed. Repeated the isolated overlapping-start
   probe: the pending start kept 365 through later starts with 90 and no number. Did not independently check
   simultaneous starts with real Docker or interactive Claude Code `/status`. The status is `in-progress`
-- 2026-11-03T16:52:47Z [human] decided that the unit is implemented, the review of the correction of S1 having returned no new
-  findings
-- 2026-11-03T16:52:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the status on the human's decision: S1, the
-  one blocking finding, was accepted and corrected, the review of `ade2ca4` returned none, and every task of
-  `plan.md` is ticked. The status is `implemented`
+- 2026-11-03T16:52:47Z [human] decided that the unit is implemented, the review of the correction of S1
+  having returned no new findings
+- 2026-11-03T16:52:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the status on the human's
+  decision: S1, the one blocking finding, was accepted and corrected, the review of `ade2ca4` returned none, and
+  every task of `plan.md` is ticked. The status is `implemented`
