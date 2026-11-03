@@ -43,3 +43,9 @@ timestamp: 2026-11-03T15:29:26Z
   `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`, mode 644, and the agent's write to it was
   refused as a read-only file system. `/status` of Claude Code in the sandbox was not checked, since it needs an
   interactive session, and that task stays open. The status is `in-progress`
+- 2026-11-03T16:13:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ticked the last check of the plan's
+  verification but one: the human reported that `/status` of Claude Code in the sandbox lists User settings, Project
+  local settings and Enterprise managed settings (file + drop-ins) among its setting sources. That shows that Claude
+  Code reads `/etc/claude-code/managed-settings.d/`, which also holds the bell's drop-in, and does not show the
+  number in use, which Claude Code does not display. The check of `./sandbox.sh --in-place npm test` stays open
+  for the failures of unit 0093. The status is `in-progress`

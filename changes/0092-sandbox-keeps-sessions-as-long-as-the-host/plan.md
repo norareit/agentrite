@@ -114,7 +114,7 @@ today.
 - [x] `npm test` passes on the host
 - [ ] `./sandbox.sh --in-place npm test` passes, running the tests that need Linux tools in the sandbox
 - [x] `npm run check-changes` passes
-- [ ] On the host, with `cleanupPeriodDays` in `~/.claude/settings.json`, `./sandbox.sh --in-place cat
+- [x] On the host, with `cleanupPeriodDays` in `~/.claude/settings.json`, `./sandbox.sh --in-place cat
   /etc/claude-code/managed-settings.d/agentrite-cleanup-period.json` prints the number alone, and `/status` of
   Claude Code in the sandbox lists managed settings with drop-ins among its setting sources (R2)
 
