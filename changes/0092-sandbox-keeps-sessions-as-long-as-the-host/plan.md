@@ -95,19 +95,19 @@ today.
   start reads. Run the wrapper's and the unit run's tests (R1, R2, R3, R4, R5, R6)
 - [x] Run `npm test`, which passes
 - [x] Commit: `feature-0092 Give the sandbox the host's cleanupPeriodDays`
-- [ ] Rewrite in `SANDBOX.md` the paragraph of the log directory section that tells the developer to set
+- [x] Rewrite in `SANDBOX.md` the paragraph of the log directory section that tells the developer to set
   `cleanupPeriodDays` in the home volume, with its JSON example and the two sentences after it, into a paragraph
   under its own bold heading "How long Claude Code's sessions are kept", in the same section, saying each item of
   R8 in turn. Add `<logs>/claude-cleanup-period.json` to the list of what the log directory holds, saying that the
   wrapper writes it at a start when the host holds a number and removes it when it holds none, that it is mounted
   read-only, and that it goes with the directory when the directory is removed (R8, R9)
-- [ ] In the status line section of `SANDBOX.md`, change "The credentials, the settings and the history stay on the
+- [x] In the status line section of `SANDBOX.md`, change "The credentials, the settings and the history stay on the
   host" to say that they stay there apart from the number of "How long Claude Code's sessions are kept", which the
   wrapper reads on the host. In the bell section, change "which reads none of the host's settings" in the same
   way. Search `SANDBOX.md` for every other sentence on what the sandbox reads of the host's `~/.claude`, among them
   the threat model's "none of the host's own `~/.claude`", and correct any that is no longer true (R9)
-- [ ] Check every changed file for the line limit of 120 characters
-- [ ] Commit: `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`
+- [x] Check every changed file for the line limit of 120 characters
+- [x] Commit: `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`
 
 ## Verification
 
@@ -123,4 +123,4 @@ today.
 - [x] `feature-0092 Add the reader of the host's cleanupPeriodDays`, after the reader, its tests and the package
   entry
 - [x] `feature-0092 Give the sandbox the host's cleanupPeriodDays`, after the wrapper and its tests
-- [ ] `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`, after `SANDBOX.md`
+- [x] `feature-0092 Describe how long the sandbox keeps Claude Code's sessions`, after `SANDBOX.md`

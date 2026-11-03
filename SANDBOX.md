@@ -468,7 +468,8 @@ together with the kit's `container/claude-managed-settings.json` at `/etc/claude
 one setting runs the script with `bash`. With no such file on the host, neither is mounted.
 
 * That script is the only file under the host's `~/.claude` the sandbox can read, and the agent cannot change it.
-  The credentials, the settings and the history stay on the host
+  The credentials, the settings and the history stay on the host, apart from the number of "How long Claude Code's
+  sessions are kept", which the wrapper reads on the host and gives the sandbox alone
 * The script runs in the sandbox, so the tools it calls must be in the image, which has `jq` and `git`
 * Managed settings stand above Claude Code's other settings, so while the host file exists it replaces a status line
   set inside the sandbox, in the home volume's `~/.claude/settings.json`
@@ -494,7 +495,8 @@ each start, with Claude Code's hooks as managed settings and OpenCode's plugin n
 * The bell is the one byte BEL, written to the session's terminal. It comes out on the terminal the sandbox was
   started from, and through it tmux, which marks the window whose pane rang
 * The host's own hooks, plugins and settings of a bell do not hold in the sandbox, which reads none of the host's
-  settings. A hook that calls `tmux` cannot work there either, since tmux runs on the host
+  settings but the number of "How long Claude Code's sessions are kept". A hook that calls `tmux` cannot work there
+  either, since tmux runs on the host
 * A bell the developer sets in the home volume rings besides, and is not removed
 * A run with no terminal, such as `agentrite run --headless` started by a script, rings nothing
 * When the developer's organization delivers managed settings from the claude.ai console, Claude Code may ignore
@@ -553,15 +555,25 @@ It holds:
   is started in `/work`, so Claude Code's sessions are under `.claude/projects/-work`
 * `<logs>/.local/share/opencode`, mounted at `/home/agent/.local/share/opencode`: OpenCode's data: its database,
   its login. OpenCode's login is `<logs>/.local/share/opencode/auth.json`, a file of the host
+* `<logs>/claude-cleanup-period.json`, mounted read-only at
+  `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`: the number of "How long Claude Code's
+  sessions are kept", alone. The wrapper writes it at a start when the host holds a number, and removes it at a
+  start when the host holds none
 
 The two directories have the places they have in a home, so a tool on the host that reads the harnesses' logs is
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
-Claude Code in the sandbox removes its sessions older than 30 days, each time it starts. A `cleanupPeriodDays` in
-the host's own Claude Code settings does not reach the sandbox. To keep the sessions of one project longer, set it in
-that project's home volume, from the sandbox's shell, in `~/.claude/settings.json`, beside what that file already
-holds:
+With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of both harnesses,
+OpenCode's login and `claude-cleanup-period.json` go with it. The next run makes the directory again, empty.
+
+**How long Claude Code's sessions are kept**
+
+Claude Code in the sandbox removes its sessions older than `cleanupPeriodDays`, by default 30 days, each time it
+starts. The wrapper takes the number from the host's `~/.claude/settings.json` at each start, and from no other file
+of the host, so a value in the host's project or local settings, or in a file under `CLAUDE_CONFIG_DIR`, is not
+taken. To keep the sessions of every sandboxed project for a year, the host's `~/.claude/settings.json` holds,
+beside what it already holds:
 
 ```json
 {
@@ -569,12 +581,20 @@ holds:
 }
 ```
 
-The setting applies to every later run of the project, of any branch, until the home volume is removed. The first
-start after that removes sessions older than 30 days again. The agent can change the file, as it can the sessions
-themselves.
-
-With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of both harnesses and
-OpenCode's login go with it. The next run makes the directory again, empty.
+* Only the number reaches the sandbox, and nothing else of the file. It is given to Claude Code as managed
+  settings, so it stands above a `cleanupPeriodDays` set in the home volume's `~/.claude/settings.json`, and the
+  agent cannot change it
+* With no number on the host, because there is no such file or it holds no `cleanupPeriodDays`, the sandbox keeps
+  Claude Code's default of 30 days, or the value set in the home volume
+* A change on the host holds from the next start, with no rebuild. A shell connected with `--connect` has the number
+  of the run it joins
+* A number made smaller removes, at the next start, the sessions older than it. Sessions removed earlier do not come
+  back when it is made larger
+* The start is refused when the host's file cannot be read, is not a JSON object, or holds a `cleanupPeriodDays`
+  that is not a whole number of 1 or more, such as `0`, `1.5`, `-1` or `"365"`
+* When the developer's organization delivers managed settings from the claude.ai console, Claude Code may ignore the
+  number, as it does the status line, and then keeps sessions as that policy says
+* OpenCode's sessions are not affected
 
 **The home volume**
 
