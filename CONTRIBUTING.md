@@ -8,6 +8,7 @@ sandbox does is in [`SANDBOX.md`](SANDBOX.md). This document is not in the packa
 * [The kit's own tests](#the-kits-own-tests)
 * [The kit's own copy of the kit](#the-kits-own-copy-of-the-kit)
 * [Trying the working copy's sandbox](#trying-the-working-copys-sandbox)
+* [Adding a harness](#adding-a-harness)
 * [Releasing](#releasing)
 
 ## What the repository holds besides the package
@@ -225,6 +226,86 @@ Dockerfile, the entrypoint and the proxy as they are in the working tree, with t
   `docker volume rm ritenoar-agentrite-sandbox-dev_agent-home`. That leaves the log directory as it is
 * To remove what it alone created: that volume, `docker network rm ritenoar-agentrite-sandbox-dev_default` and
   `docker image rm ritenoar-agentrite-sandbox-dev`. The log directory is `./sandbox.sh`'s too, and stays
+
+## Adding a harness
+
+What the kit's code knows of a harness is in one module of its own, which implements the harness contract. Add:
+
+* A module `scripts/harnesses/<name>.mjs` that exports an object implementing `HARNESS_CONTRACT` of
+  `scripts/agentrite-harness.mjs`: its name and title, its role wrappers, its start, its headless run and how the
+  kit's instructions reach it. The JSDoc type `Harness` beside the contract says what each member takes and returns,
+  and `scripts/harnesses/claude.mjs` and `scripts/harnesses/opencode.mjs` are the two to follow
+* Its place in `HARNESSES` of `scripts/agentrite-harness.mjs`, the kit's only list of its harnesses. Every command
+  that goes over the harnesses takes them from it, in its order
+* Its file in `files` of `package.json`, and in the list of the test of the package's files in
+  `tests/package-documents.test.mjs`
+
+`tests/agentrite-harness.test.mjs` is the check of that part. It fails, naming the harness and the member, for a
+member of the contract the module lacks or has of another kind, and fails for a module of `scripts/harnesses/` that
+`HARNESSES` lacks and for an entry of `HARNESSES` without its module. A member added to the contract fails it for
+every harness that does not implement the member.
+
+The rest of what the kit knows of a harness is outside its module, in the places below, which no test ties to the
+list. Each says what a new harness takes there.
+
+* **The image**, `container/Dockerfile`: install the harness at the version that a build argument without a default
+  gives, and record that version in a label `com.ritenoar.agentrite.<harness>-version`
+* **The choice of that version**, in `container/sandbox.sh`: from the project's compose file, from the host's
+  `--version`, or the latest published, with the build argument passed in `container/compose.yml`, the shape of a
+  version the wrapper accepts, and the comparison with the image's label at each start, which rebuilds the image on
+  a difference
+* **Its own updates**, turned off in `container/Dockerfile`, so that the version the image holds is the one chosen
+* **The directories of its logs**: made and owned by the agent in `container/Dockerfile`, owned at
+  `container/entrypoint.sh`, mounted by `container/sandbox.sh` from the project's log directory on the host, and kept
+  outside the home volume in `container/compose.yml`
+* **Its login**: where the harness keeps it, which must survive a container in the home volume or in the log
+  directory, and a way to log in that needs no callback from a browser on the host into the sandbox
+* **The hosts the egress allowlist admits for it**, in `container/compose.yml`, each with a comment that says why,
+  and in the comment of `templates/project/sandbox/compose.project.yml` that lists the kit's own hosts
+* **The bell**: the hook or plugin under `container/bell/` that runs `container/bell/ring-bell.sh` when the harness
+  waits for the developer, and its mount and configuration in `container/sandbox.sh`
+* **The status line**, which only Claude Code has: `container/claude-managed-settings.json` and its mount in
+  `container/sandbox.sh`
+* **How long it keeps its sessions**, which only Claude Code carries from the host:
+  `scripts/agentrite-cleanup-period.mjs` and its call in `container/sandbox.sh`
+* **The trailers it adds to a commit message**, which `container/check-commit-message.mjs` refuses, and the rule on
+  them in `standards.md`
+* **The terminal variables** that `container/sandbox.sh` passes on into the container, which were added for
+  OpenCode's colours: a new harness may need others
+* **This repository's own files**: the default `harnesses` of `templates/project/agentrite.json`, this repository's
+  `agentrite.json`, its wrappers and instruction files (`CLAUDE.md`, `opencode.json`, `.claude/`, `.opencode/`), its
+  `sandbox/compose.project.yml`, and the table "What the repository holds besides the package" above, which lists
+  them
+* **The `CLAUDE.md` that `init` writes into every project**, from `templates/project/CLAUDE.md` in `processFiles` of
+  `scripts/agentrite.mjs`, whatever the harnesses. A new harness's instruction file is written only by its module's
+  `instructions.init`
+* **The default orchestrator**, `orchestrator.json`, whose steps each name a harness and a model of it
+* **The help texts that name harnesses**, in the usage of `agentrite run` in `scripts/agentrite-run.mjs`: a model id
+  of each harness, and what `--skip-permissions` gives each
+* **The documents**: the sections of `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md` and `SANDBOX.md` that
+  name each harness, the `keywords` of `package.json`, and the text of the `agentrite-roles` pointer package in
+  `pointers/agentrite-roles/`
+* **The components diagram**, `diagrams/components.mmd`, which names each harness and the directory of its role
+  wrappers. Generate its SVG with `npm run diagrams` and commit both
+* **The tests that hold a case for each harness**, where a new harness gets its own cases:
+    * the commands: `tests/agentrite-run.test.mjs`, `tests/agentrite-orchestrate.test.mjs` with its fake harnesses,
+      `tests/agentrite-outcome.test.mjs` for the headless readings, `tests/agentrite-roles.test.mjs` for the
+      wrappers and the harnesses' own agents, `tests/agentrite-settings.test.mjs`,
+      `tests/agentrite-definition.test.mjs` and `tests/agentrite-config.test.mjs` for the harnesses the settings
+      name
+    * `init` and `refresh`: `tests/agentrite-init.test.mjs`, `tests/agentrite-refresh.test.mjs` and
+      `tests/agentrite-instructions.test.mjs`
+    * the sandbox: `tests/harness-versions.test.mjs`, `tests/sandbox-wrapper.test.mjs`, `tests/wrapper-fixture.mjs`
+      and `tests/sandbox-project-dockerfile.test.mjs` for the versions; `tests/dockerfile-log-directories.test.mjs`
+      and `tests/entrypoint-home-owner.test.mjs` for the log directories; `tests/bell.test.mjs` and
+      `tests/sandbox-dev.test.mjs` for the bell; `tests/compose-allowlist.test.mjs`,
+      `tests/entrypoint-allowlist.test.mjs` and `tests/sandbox-update.test.mjs` for the allowlists;
+      `tests/claude-managed-settings.test.mjs` for the status line; `tests/agentrite-cleanup-period.test.mjs` for the
+      sessions kept; `tests/check-commit-message.test.mjs`, `tests/commit-msg-hook.test.mjs` and
+      `tests/sandbox-commit-msg.test.mjs` for the trailers
+    * the pointer package: `tests/pointers.test.mjs`
+
+  A test that names a harness only as an example of one, as in the settings it writes, needs nothing
 
 ## Releasing
 

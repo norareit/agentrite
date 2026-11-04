@@ -31,14 +31,14 @@ cannot be wrapped. Every other line keeps the limit.
 
 Each document answers the question its reader brings to it, and holds what answers it:
 
-| Document          | The reader's question                                    | What goes in it                                                                                                                |
-|-------------------|----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
-| `README.md`       | What is the kit, and how do I start?                     | What the kit is, its components, the quick start, how it works, the map of the documents, "What is here"                       |
-| `COMMANDS.md`     | What does a command take, do and exit with?              | The table of every command, each command's section with every argument, option and environment variable, and the exit statuses |
-| `ORCHESTRATOR.md` | How does the orchestrator take a unit through its roles? | Its definition, the outcome of a step, how a run ends, what `.orchestrator` holds, where it runs                               |
-| `SETUP.md`        | How do I install, configure and update the kit?          | Installing it, the git hooks, the project's settings, replacing and adding roles, updating                                     |
-| `SANDBOX.md`      | How do I run an agent in the sandbox?                    | What a developer does with the sandbox and meets in it, by what they are doing                                                 |
-| `CONTRIBUTING.md` | How do I work on the kit itself?                         | This repository's own commands, tests, copy of the kit and sandbox, and what it holds besides the package                      |
+| Document          | The reader's question                                    | What goes in it                                                                                                                        |
+|-------------------|----------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------|
+| `README.md`       | What is the kit, and how do I start?                     | What the kit is, its components, the quick start, how it works, the map of the documents, "What is here"                               |
+| `COMMANDS.md`     | What does a command take, do and exit with?              | The table of every command, each command's section with every argument, option and environment variable, and the exit statuses         |
+| `ORCHESTRATOR.md` | How does the orchestrator take a unit through its roles? | Its definition, the outcome of a step, how a run ends, what `.orchestrator` holds, where it runs                                       |
+| `SETUP.md`        | How do I install, configure and update the kit?          | Installing it, the git hooks, the project's settings, replacing and adding roles, updating                                             |
+| `SANDBOX.md`      | How do I run an agent in the sandbox?                    | What a developer does with the sandbox and meets in it, by what they are doing                                                         |
+| `CONTRIBUTING.md` | How do I work on the kit itself?                         | This repository's own commands, tests, copy of the kit and sandbox, what it holds besides the package, and what adding a harness takes |
 
 They are kept as follows.
 
