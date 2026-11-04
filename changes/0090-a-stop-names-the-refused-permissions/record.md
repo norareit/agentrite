@@ -53,3 +53,7 @@ timestamp: 2026-11-02T13:31:59Z
   README.md SANDBOX.md` shows nothing, and no line of the changed files but a row of a Markdown table is longer than
   120 characters. Not run: a real Claude Code or OpenCode, since the command's tests use the fake harnesses. The status
   is `in-progress`
+- 2026-11-04T19:53:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision: unit
+  0054's R24 test in `tests/repository-own-files.test.mjs` is left failing, as a known issue until the next release,
+  as for unit 0095. The task that runs `npm test` after the command's tests and the first box of "Verification" now
+  say so, and are ticked on the run on `e97d815` logged above. The status is `in-progress`
