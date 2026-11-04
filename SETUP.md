@@ -27,20 +27,21 @@ A project whose default branch is not `master` names it:
 npx agentrite init --default-branch main claude opencode
 ```
 
-It prints each file it wrote, changed or skipped. It writes:
+It prints each file it wrote, changed or skipped. It writes, and in a sandbox-only project, as said below, only some
+of them:
 
-| File                          | What it is for                                                                               |
-|-------------------------------|----------------------------------------------------------------------------------------------|
-| `agentrite.json`              | The project's settings, which the kit's commands read. See "The project's settings"          |
-| `.claude/agents/*.md`         | For `claude`: a wrapper per role for Claude Code, pointing at the role's file                |
-| `.opencode/agents/*.md`       | For `opencode`: the same for OpenCode                                                        |
-| `.agentrite/instructions.md`  | The list of the instruction files in use, which the kit writes from `agentrite.json`         |
-| `AGENTS.md`                   | The project's agent instructions, pointing at the list of the files in use                   |
-| `CLAUDE.md`                   | Imports the kit's `process.md`, the project's standards and `AGENTS.md`                      |
-| `opencode.json`               | For `opencode`: loads `process.md` and the standards. Amended if present                     |
-| `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "Before the first run" in `SANDBOX.md` |
-| `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                              |
-| `.git/hooks/commit-msg`       | The hook that refuses a commit message the standards forbid. See "Git hooks"                 |
+| File                          | What it is for                                                                                         | In a sandbox-only project |
+|-------------------------------|--------------------------------------------------------------------------------------------------------|---------------------------|
+| `agentrite.json`              | The project's settings, which the kit's commands read. See "The project's settings"                    | Written                   |
+| `.claude/agents/*.md`         | For `claude`: a wrapper per role for Claude Code, pointing at the role's file                          | Not written               |
+| `.opencode/agents/*.md`       | For `opencode`: the same for OpenCode                                                                  | Not written               |
+| `.agentrite/instructions.md`  | The list of the instruction files in use, which the kit writes from `agentrite.json`                   | Not written               |
+| `AGENTS.md`                   | The project's agent instructions, pointing at the list of the files in use                             | Not written               |
+| `CLAUDE.md`                   | Imports the kit's `process.md`, the project's standards and `AGENTS.md`                                | Not written               |
+| `opencode.json`               | For `opencode`: loads `process.md` and the standards. Amended if present                               | Not written               |
+| `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "Before the first run" in `SANDBOX.md` | Written                   |
+| `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                                        | Written                   |
+| `.git/hooks/commit-msg`       | The hook that refuses a commit message the standards forbid. See "Git hooks"                           | Not written               |
 
 * Every generated file is the project's own once written, and the project may edit any of them, but for the list
   `.agentrite/instructions.md`, which `refresh` writes as `agentrite.json` gives it. The list is committed, as the
@@ -50,6 +51,13 @@ It prints each file it wrote, changed or skipped. It writes:
 * A project without the sandbox runs `npx agentrite init --no-sandbox claude opencode`, which leaves out `sandbox.sh`,
   `sandbox/compose.project.yml` and `.dockerignore`, as "agentrite init" in `COMMANDS.md` says, and writes `sandbox` as
   `false` in `agentrite.json`
+* A project that uses the sandbox alone, without the change process in `changes/`, the roles or the orchestrator, is
+  a sandbox-only project, and runs `npx agentrite init --sandbox-only claude opencode`. It gets `agentrite.json`,
+  `sandbox.sh`, `sandbox/compose.project.yml` and `.dockerignore`, and nothing of the process: no wrapper, no list,
+  no `AGENTS.md`, `CLAUDE.md` or `opencode.json`, no `check-changes` script in `package.json` and no hook. `init`
+  writes `process` as `false`, `sandbox` as `true` and `orchestrator` as `false` in `agentrite.json`, and the harnesses
+  as `harnesses`. Its sandbox runs on a branch given by its name, as "Running on a branch without the change process"
+  in `SANDBOX.md` says. The whole package is installed, the commands of the process among them
 * `init` never regenerates one: a file it would create that already exists is left as it is and reported as
   skipped, so running it again only adds what is missing. In a project that has its `agentrite.json`, that is
   `npx agentrite init` with no argument
@@ -265,18 +273,23 @@ node node_modules/agentrite/container/check-commit-message.mjs "$1" || exit 1
 
 A project that does not want the hook puts a file of its own at the path, which `refresh` then leaves as it is.
 
+A sandbox-only project gets no hook: neither `init` nor `refresh` writes, reads or notices one there, and a hook a
+project has is left as it is. The trailer check enforces a rule of the kit's standards, which such a project has not
+taken on, and the sandbox runs no `commit-msg` hook for it either.
+
 `git commit --no-verify` skips the hook, and a commit that git makes without running `commit-msg`, as some steps of
 `cherry-pick`, `revert` and `rebase` do, is not checked. The hook in the sandbox is the image's, and the clone's is
 not run there. See "Commit messages" in [`SANDBOX.md`](SANDBOX.md).
 
 ## The project's settings
 
-A project's settings are in `agentrite.json` at the project root, a JSON object with seven keys:
+A project's settings are in `agentrite.json` at the project root, a JSON object with eight keys:
 
 | Key             | What it holds                                         | What reads it                        |
 |-----------------|-------------------------------------------------------|--------------------------------------|
 | `defaultBranch` | The branch that units are cut from and compared with  | Change check, unit run, `approve`    |
 | `harnesses`     | The harnesses the project uses, as a list             | `init` and `refresh`                 |
+| `process`       | `true` with the change process, `false` without it    | `init` and `refresh`                 |
 | `sandbox`       | `true` with the sandbox, `false` without it           | `init` and `refresh`                 |
 | `bell`          | `true` for a sandbox that rings, `false` for none     | `./sandbox.sh`, at each start        |
 | `standards`     | The path of the standards file the project uses       | `init` and `refresh`                 |
@@ -289,6 +302,7 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
 {
   "defaultBranch": "master",
   "harnesses": ["claude", "opencode"],
+  "process": true,
   "sandbox": true,
   "bell": true,
   "standards": "node_modules/agentrite/standards.md",
@@ -305,9 +319,17 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
 * `init` writes the file from its arguments in a project that has none, and `config` writes the default file. The
   default branch is `master` unless `--default-branch` or an edit says otherwise
 * The file is committed
-* All seven keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
-  `claude` and `opencode`, in which a name given more than once counts once, and `sandbox` and `bell` are each `true`
-  or `false`, not a string. A key the kit does not know is ignored
+* All eight keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
+  `claude` and `opencode`, in which a name given more than once counts once, and `process`, `sandbox` and `bell` are
+  each `true` or `false`, not a string. A key the kit does not know is ignored
+* `process` says whether the project uses the change process in `changes/`, with its roles and its orchestrator. It is
+  `true` in the file `config` writes and in the one `init` writes without `--sandbox-only`, and `false` in a
+  sandbox-only project, which `init --sandbox-only` writes. A file whose `process` and `sandbox` are both `false` is
+  refused by every command that reads the whole file, with a message that names both keys and says that a project
+  without the process has the sandbox: such a file would leave nothing of the kit set up. In a sandbox-only project
+  every other key stays required and is judged as in a project with the process, but `init` and `refresh` write and
+  read nothing of the process, as "agentrite init" and "agentrite refresh" in `COMMANDS.md` say, and the sandbox runs
+  on a branch given by its name, as "Running on a branch without the change process" in `SANDBOX.md` says
 * `bell` says whether the harnesses in the sandbox ring the terminal's bell when they need the developer or stop, as
   "The bell" in `SANDBOX.md` says. It is read at each start of the sandbox, so a change holds from the next start. It
   has no effect outside the sandbox: the harnesses on the host are the developer's, and the kit changes nothing of
@@ -339,8 +361,9 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   symbolic links followed, so a kit linked into `node_modules`, as `npm link` does, is taken
 * The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by
   `agentrite orchestrate`, by `agentrite approve`, by the change check, and by `./sandbox.sh`. Every form of
-  `./sandbox.sh` but `--connect` reads `bell` at each start, and judges no other key of the file, unless a unit run
-  cuts a branch, which reads the whole file. `--connect` does not read it
+  `./sandbox.sh` but `--connect` reads `bell` at each start, and judges no other key of the file, unless a unit run,
+  or a run on a branch in a sandbox-only project, cuts a branch, which reads the whole file. `--connect` does not read
+  it
 * A command that reads the file refuses in a project that has none, and names `npx agentrite config` as the command
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused
@@ -364,6 +387,11 @@ A setting is changed by editing the file by hand. What to run afterwards:
 * A role taken out of `roles`, or renamed: `npx agentrite refresh` removes the wrappers of the old name, as "agentrite
   refresh" in `COMMANDS.md` says, and writes those of the new one
 * A harness taken out, or `sandbox` set to `false`: no command removes a file, and what is left is removed by hand
+* `process` set to `false`: `npx agentrite refresh` rewrites `sandbox.sh` as the shim of a sandbox-only project. No
+  command removes a file of the process, and what is left, the wrappers, the list and the `commit-msg` hook among it,
+  is removed by hand. Until `refresh` is run, the sandbox runs as the shim it has says
+* `process` set to `true`: `npx agentrite init` with no argument writes the files of the process that are missing, and
+  `npx agentrite refresh` then rewrites `sandbox.sh` as the shim of a project with the process
 * `standards` or a file in `roles` changed: `npx agentrite refresh` rewrites the wrappers and the list, and prints the
   notices of "agentrite refresh" on a `CLAUDE.md` and an `opencode.json` that do not load the new standards, or still
   load the kit's beside them. The project changes those two files by hand
@@ -511,6 +539,14 @@ refused. The line, after `sandbox`, with `false` for a project that wants no bel
   "bell": true,
 ```
 
+A project whose `agentrite.json` lacks `process` adds it before any command that reads the file runs again: until then
+every such command refuses the file. A start of the sandbox that cuts no branch judges `bell` alone, and is not
+refused for it. The line, after `harnesses`:
+
+```json
+  "process": true,
+```
+
 The first start of the sandbox after the update builds its image again, since the image records the release of the
 kit it was built from, and the wrapper says so before it builds.
 
@@ -525,7 +561,8 @@ It rewrites the role wrappers of the harnesses that `agentrite.json` names, the 
 that are missing, and prints each file as written, refreshed or up to date. A hook of the project's own is left as it
 is, with a notice, as [Git hooks](#git-hooks) says. The list is committed with the wrappers. Without it those
 copies stay as an older release wrote them, and nothing says so. In a project whose `agentrite.json` says `sandbox`
-`false`, it leaves `sandbox.sh` out, so that one the project removed on purpose is not written back.
+`false`, it leaves `sandbox.sh` out, so that one the project removed on purpose is not written back. In a sandbox-only
+project it writes `sandbox.sh` alone.
 
 * A model pinned in a wrapper survives: a line in its frontmatter that opens with `model:` is kept, as written,
   after the kit's own keys

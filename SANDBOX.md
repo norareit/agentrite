@@ -6,6 +6,7 @@ option, are in "Commands" of [`COMMANDS.md`](COMMANDS.md), and what the sandbox 
 
 * [Before the first run](#before-the-first-run)
 * [Running a unit](#running-a-unit)
+* [Running on a branch without the change process](#running-on-a-branch-without-the-change-process)
 * [Getting the work back](#getting-the-work-back)
 * [Two agents on one unit](#two-agents-on-one-unit)
 * [Running on the tree as it is](#running-on-the-tree-as-it-is)
@@ -36,7 +37,7 @@ What a run needs:
 A project configures the sandbox with two files, and may add a third:
 
 * `sandbox.sh` at the project root, a shim that execs `node_modules/agentrite/container/sandbox.sh` with the
-  project root as its first argument
+  project root as its first argument, after `--sandbox-only` in a sandbox-only project
 * `sandbox/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
   allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
 * `sandbox/Dockerfile`, which the project may add for software it needs in the sandbox, such as a JDK, and which
@@ -153,6 +154,39 @@ stopped for, with `--resume`, and with the human's words to the step it reruns i
 ```
 
 For a unit run that starts nothing, see "When something goes wrong".
+
+## Running on a branch without the change process
+
+```sh
+./sandbox.sh docs-rewrite claude
+./sandbox.sh --connect docs-rewrite
+```
+
+A sandbox-only project uses the sandbox without the change process in `changes/`, the roles or the orchestrator. It
+is set up with `npx agentrite init --sandbox-only`, as "Installing it into a project" in [`SETUP.md`](SETUP.md) says,
+and its `agentrite.json` holds `"process": false`. Its shim tells the sandbox so, and a run there is given a branch
+rather than a unit:
+
+* The local branch of that exact name is run on a clone, as a unit run is. Only local branches are looked at
+* A name that is no local branch gets a branch of that name first, cut from the head of the local default branch that
+  `defaultBranch` names in `agentrite.json`. The wrapper says what it cut, from which branch and at which commit,
+  before it builds an image or starts a container. Nothing of `changes/` is read and no name is matched as a number:
+  `0029` is cut as a branch named `0029`
+* A name that git takes for no branch cuts nothing and starts nothing. See "When something goes wrong"
+* A command given without saying what to mount is taken for a branch's name, so `./sandbox.sh claude` cuts a branch
+  `claude`. The wrapper names the branch when it cuts it, and `git branch -d claude` removes it
+* The clone is made, brought back, kept and resumed as a unit run's is, as "Getting the work back" says, and two runs
+  never work on one branch, since the container is named after the Compose project and the branch
+* Neither `.reviews` nor `.orchestrator` is mounted in the clone or made in the project root: both are the change
+  process's
+* `--connect BRANCH` runs a command beside the run of that branch, as "Two agents on one unit" says for a unit. It
+  cuts no branch
+* There are no variants. Two runs beside each other are given two branches
+* `--in-place` and `--workdir` run as they do with the process, as "Running on the tree as it is" says
+* No commit message is checked, as "Commit messages" says
+
+A project that changes `process` in `agentrite.json` runs `npx agentrite refresh`, which rewrites `sandbox.sh` for the
+other mode, as "The project's settings" in `SETUP.md` says. Until then the sandbox runs as the shim it has.
 
 ## Getting the work back
 
@@ -318,6 +352,9 @@ by the same checker, as "Git hooks" in [`SETUP.md`](SETUP.md) says.
 * Git in the container runs the image's hooks only. The hooks of a repository mounted with `--in-place` or
   `--workdir`, and those of a hooks directory that its configuration names, as `npm ci` may set in a clone, are not
   run there. A project runs its own checks in the sandbox as commands
+* In a sandbox-only project no commit message is checked: git in the container runs the hooks of an empty directory of
+  the image, so a message with those trailers is committed. The hooks of a mounted repository, and of a hooks
+  directory its configuration names, are not run there either
 * The image holds the hook of the kit it was built from. The first start after an update of the kit builds the image
   again, and the wrapper says so before it builds:
 
@@ -561,6 +598,10 @@ The clone of the unit's branch that a unit run mounts at `/work`. It is under `$
 What it holds is in "Running a unit". A variant's clone is kept as a unit run's is, at its branch's name, as in
 `~/.local/state/agentrite/<Compose project>/feature-0029-sandbox-clone-of-the-branch--opus`.
 
+A run on a branch in a sandbox-only project keeps its clone as a unit run's is, at the branch's name. A unit run makes
+`.reviews` and `.orchestrator` in the project root, as "Running a unit" says, and a sandbox-only project's root gets
+neither.
+
 To discard a clone, remove its directory with `rm -rf`. When the wrapper removes it itself is in "Getting the work
 back".
 
@@ -762,6 +803,18 @@ Why, and what to do for each:
 * The unit is given by such a number, and the default branch that `agentrite.json` names is no local branch. Make
   the local branch, for example with `git branch main origin/main` for a default branch `main`. Or, when the name
   is not the project's default branch, correct `defaultBranch` in `agentrite.json`
+
+**In a sandbox-only project, the wrapper says why and starts nothing: it refuses the branch, or cuts none for it.**
+
+Why, and what to do for each:
+
+* The name is not one git takes for a branch, such as `HEAD`, a name that opens with `-`, or one that holds a space
+  or `..`. Give a name git takes, which `git check-ref-format --branch <name>` prints and a name it refuses does not
+* The default branch that `agentrite.json` names is no local branch, so no branch can be cut from it. Make the local
+  branch, for example with `git branch main origin/main` for a default branch `main`. Or, when the name is not the
+  project's default branch, correct `defaultBranch` in `agentrite.json`
+* With `--connect`, the name is no local branch, so there is no run to connect to. Give the name of the branch whose
+  run is under way, which `git branch` lists
 
 **A unit run prints that the dependencies of the clone are being installed with `npm ci`, then npm's error, starts no
 command, and the wrapper exits with npm's status.**

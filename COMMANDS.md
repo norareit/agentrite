@@ -5,7 +5,7 @@ takes.
 
 | Command                                                                                                                                    | What it does                                                   | Section                                         |
 |--------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|-------------------------------------------------|
-| `npx agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...`                                             | Sets a project up, writing `agentrite.json` from its arguments | [agentrite init](#agentrite-init)               |
+| `npx agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...`                            | Sets a project up, writing `agentrite.json` from its arguments | [agentrite init](#agentrite-init)               |
 | `npx agentrite init`                                                                                                                       | Sets a project up again from its `agentrite.json`              | [agentrite init](#agentrite-init)               |
 | `npx agentrite config`                                                                                                                     | Writes the default `agentrite.json` into a project             | [agentrite config](#agentrite-config)           |
 | `npx agentrite refresh`                                                                                                                    | Brings the kit's files in a project up to date                 | [agentrite refresh](#agentrite-refresh)         |
@@ -22,11 +22,13 @@ takes.
 | `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]`                                                                  | Starts the sandbox on the project root as it is                | [sandbox.sh](#sandboxsh)                        |
 | `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]`                                                               | Starts the sandbox on a directory as it is                     | [sandbox.sh](#sandboxsh)                        |
 | `./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]`                                                                                | Runs a command beside a unit run that is under way             | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... BRANCH [COMMAND...]`                                                                      | In a sandbox-only project, starts the sandbox on a branch      | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh --connect BRANCH [COMMAND...]`                                                                                               | In a sandbox-only project, runs a command beside a run         | [sandbox.sh](#sandboxsh)                        |
 
 ## agentrite init
 
 ```sh
-npx agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...
+npx agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...
 npx agentrite init
 ```
 
@@ -40,17 +42,18 @@ harnesses and the sandbox setting from it.
 | Argument or option        | What it is                                                                              |
 |---------------------------|-----------------------------------------------------------------------------------------|
 | `<harness>...`            | `claude` or `opencode`, one or both, for the harnesses the project uses                 |
+| `--sandbox-only`          | For a project that uses the sandbox without the change process, as said below           |
 | `--no-sandbox`            | For a project without the sandbox. Leaves out what is only for it, as said below        |
 | `--no-orchestrator`       | For a project without the orchestrator. Writes `orchestrator` as `false`                |
 | `--default-branch <name>` | The project's default branch, written as `defaultBranch`. `master` when not given       |
 
 In a project with no `agentrite.json`:
 
-* `init` writes the file with the harnesses given, each once and in the order `claude`, `opencode` whatever order
-  they were given in, with `sandbox` as `false` when `--no-sandbox` is given and `true` when it is not, with
-  `defaultBranch` as the name given, or `master`, with `orchestrator` as `false` when `--no-orchestrator` is given and
-  as the kit's default definition, `node_modules/agentrite/orchestrator.json`, when it is not, and with `standards`
-  and `roles` naming the kit's own files, as the default file does
+* `init` writes the file with the harnesses given, each once and in the order `claude`, `opencode` whatever order they
+  were given in, with `process` as `true`, with `sandbox` as `false` when `--no-sandbox` is given and `true` when it is
+  not, with `defaultBranch` as the name given, or `master`, with `orchestrator` as `false` when `--no-orchestrator` is
+  given and as the kit's default definition, `node_modules/agentrite/orchestrator.json`, when it is not, and with
+  `standards` and `roles` naming the kit's own files, as the default file does
 * Before it writes anything, it checks that each path of `standards`, `orchestrator` and `roles` names a file. In a
   project where the kit is not installed under `node_modules`, it refuses as a command that reads an `agentrite.json`
   whose path names no file does, writes nothing and exits 1
@@ -123,6 +126,27 @@ orchestrator either way. The option goes at any place among the harnesses, and g
 once. The form `--no-orchestrator=<value>` is not taken, and is refused as an unknown harness, as
 `--no-sandbox=<value>` is.
 
+`--sandbox-only` is for a project that uses the sandbox without the change process in `changes/`, the roles or the
+orchestrator. In a project with no `agentrite.json`, `init` writes the file with `process` as `false`, `sandbox` as
+`true` and `orchestrator` as `false`, and the other keys as it writes them without the option. The option goes at any
+place among the harnesses, and given more than once it counts as given once. The form `--sandbox-only=<value>` is not
+taken, and is refused as an unknown harness, as `--no-sandbox=<value>` is. `init` still needs one or more harnesses
+with it, and writes them as `harnesses`. Given together with `--no-sandbox`, in either order, it is refused: `init`
+says that a sandbox-only project has the sandbox, prints its usage, writes nothing and exits 2. Given together with
+`--no-orchestrator`, it writes what it writes alone. In a project with an `agentrite.json` it is refused as every other
+argument is.
+
+In a sandbox-only project, one whose `agentrite.json` holds `"process": false`, whether `init` was given
+`--sandbox-only` or no argument, `init` writes `agentrite.json` when it is missing, `sandbox.sh`,
+`sandbox/compose.project.yml` and `.dockerignore` as for the sandbox, and prints its line for each. The `sandbox.sh`
+it writes passes `--sandbox-only` to the kit's wrapper before the project root, so that the sandbox runs on a branch,
+as the forms of a sandbox-only project in [sandbox.sh](#sandboxsh) say. It does not write, change or read the role
+wrappers, `.agentrite/instructions.md`, `AGENTS.md`, `CLAUDE.md` or `opencode.json`, does not add the `check-changes`
+script to `package.json`, and does not write the `commit-msg` hook. It reads no role file, prints no line and no notice
+for any of them, and leaves one that exists as it is. It still checks that each path of `standards`, `orchestrator`
+and `roles` names a file, and prints the content of the file it wrote and the notice of the default branch, as without
+the option.
+
 It exits with `0`, `1` when it refuses or fails, and `2` for wrong arguments, as [Exit statuses](#exit-statuses) says.
 
 See "Installing it into a project", "Git hooks", "How the kit's instructions reach an agent", "The project's
@@ -170,6 +194,13 @@ that is missing. With `sandbox` `false`, `sandbox.sh` is not read or written and
 its path, a symbolic link or a directory included, changes neither what `refresh` prints nor its exit status. After them
 it writes the `commit-msg` hook where there is none, and rewrites one that carries the kit's mark, as [Git
 hooks](SETUP.md#git-hooks) says.
+
+In a sandbox-only project, one whose `agentrite.json` holds `"process": false`, `refresh` writes `sandbox.sh` as the
+shim of a sandbox-only project, which passes `--sandbox-only` to the kit's wrapper, and writes or reads nothing else.
+It reads no role file, writes no wrapper, no list and no hook, removes no wrapper, and prints no notice of `CLAUDE.md`,
+`opencode.json`, `AGENTS.md` or the hook. It prints the line of `sandbox.sh` alone. In a project with the process it
+writes `sandbox.sh` as the shim of a project with the process, so that a project that changes `process` runs `refresh`
+to have the shim of the other.
 
 After the lines of the files and before the notices, `refresh` removes the wrapper of a role that `roles` no longer
 names, as a role taken out or renamed leaves one. In the wrapper directory of each harness that `harnesses` names, it
@@ -676,7 +707,12 @@ See "Git hooks" in `SETUP.md`.
 ./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
 ./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
 ./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]
+./sandbox.sh [--rebuild] [--mount HOST[:ro]]... BRANCH [COMMAND...]
+./sandbox.sh --connect BRANCH [COMMAND...]
 ```
+
+The forms with `BRANCH` are those of a sandbox-only project, as said below, which takes `--in-place` and `--workdir`
+too and has no form with `UNIT`. A project with the process has no form with `BRANCH`.
 
 Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
 With `--connect` it starts nothing, and runs beside a unit run that is under way. A unit given by a number that no
@@ -695,6 +731,8 @@ starts nothing. See "The project's settings" in `SETUP.md`.
 | `--in-place`       | Mounts the project root, as it is                                                            |
 | `--workdir DIR`    | Mounts `DIR`, as it is                                                                       |
 | `--connect UNIT`   | Runs the command in the container of the unit's run that is under way. Takes `--variant`     |
+| `BRANCH`           | In a sandbox-only project, mounts a clone of the local branch of that name                   |
+| `--connect BRANCH` | In a sandbox-only project, runs the command in the container of the branch's run             |
 | `--rebuild`        | Builds the image before running, even if it exists and holds the wanted harness versions     |
 | `--mount HOST`     | Also mounts the host directory `HOST` at `/mnt/<basename>`, read-write. It may be repeated   |
 | `--mount HOST:ro`  | The same, read-only                                                                          |
@@ -703,6 +741,28 @@ starts nothing. See "The project's settings" in `SETUP.md`.
 
 `--variant` is given as `--variant NAME` or `--variant=NAME`, before `UNIT` or as the argument right after it. It is
 refused with `--in-place` and `--workdir`, and when given twice. Besides `--variant`, `--connect` takes no option.
+
+In a sandbox-only project, the shim that `init` and `refresh` write there passes `--sandbox-only` to the kit's
+wrapper, and the sandbox takes the forms of a sandbox-only project:
+
+* `BRANCH` is the name of a branch. A local branch of that exact name is run as it is. A name that is no local branch
+  gets a branch of that name first, cut from the head of the local branch that `defaultBranch` in `agentrite.json`
+  names, and the cut is said on standard error, with the branch it was cut from and the commit. Only local branches
+  are looked at, no name is matched as a number, and nothing of `changes/` is read: a name of digits is a branch's name
+  as any other is. A name that git takes for no branch, such as `HEAD` or one holding a space or `..`, is refused with
+  `1`, and nothing is cut or started. A missing local default branch is refused with `1` as it is for a unit
+* The run on the clone is made, brought back and resumed as a unit run is, and its container is named after the
+  branch. Neither `.reviews` nor `.orchestrator` is mounted or made
+* `--connect BRANCH` runs the command in the container of the run of the local branch of that exact name. A name that
+  is no local branch is refused with `1`, and nothing is cut
+* `--variant` is refused in every form with `2`, before anything is read, built or cut: variants belong to the change
+  process
+* `--in-place` and `--workdir` run as they do in a project with the process
+* The forms printed with a refusal of the arguments, and when nothing to mount was given, are those of a sandbox-only
+  project
+
+`--sandbox-only` is the shim's to pass, before the project root. Typed as an argument of `./sandbox.sh`, in either kind
+of project, it is refused as an option the sandbox does not take, with `2`.
 
 A word that opens with `-` where an option stands, and is none of the options above, is refused, named, and the
 forms printed. A unit or a command that opens with `-` goes after `--`. A command's own options after the unit, or
@@ -730,9 +790,9 @@ the sandbox" in [`SANDBOX.md`](SANDBOX.md).
 | `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                       |
 | `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                         |
 
-See in `SANDBOX.md` "Before the first run", "Running a unit", "Getting the work back", "Two agents on one
-unit", "Two implementations of one unit", "Running on the tree as it is", "The bell" and "Where things are kept on the
-host".
+See in `SANDBOX.md` "Before the first run", "Running a unit", "Running on a branch without the change process",
+"Getting the work back", "Two agents on one unit", "Two implementations of one unit", "Running on the tree as it is",
+"The bell" and "Where things are kept on the host".
 
 ## Exit statuses
 

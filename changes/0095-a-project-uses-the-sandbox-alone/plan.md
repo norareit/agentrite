@@ -256,7 +256,7 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ### The documents
 
-- [ ] `COMMANDS.md`: in the table at the top, add `[--sandbox-only]` to the synopsis of `init` and a row for each of
+- [x] `COMMANDS.md`: in the table at the top, add `[--sandbox-only]` to the synopsis of `init` and a row for each of
   the sandbox-only forms of `./sandbox.sh`, `BRANCH`, `--in-place`, `--workdir` and `--connect BRANCH`. In "agentrite
   init", describe `--sandbox-only`, where it may stand, that it is refused with `--no-sandbox` and taken with
   `--no-orchestrator`, what it writes in `agentrite.json`, and what `init` writes and leaves out in a sandbox-only
@@ -264,22 +264,23 @@ are checked as today, and nothing reads the content of the role files or the sta
   "sandbox.sh", the forms in a sandbox-only project, `BRANCH` and `--connect BRANCH` in the table of arguments, that
   `--variant` is refused there with 2, the refusal of a name that is no branch's with 1, and the refusal of
   `--sandbox-only` typed by the developer as an unknown option. (R26, R27)
-- [ ] `SETUP.md`: in "Installing it into a project", the sandbox-only setup with `init --sandbox-only`, and the files
+- [x] `SETUP.md`: in "Installing it into a project", the sandbox-only setup with `init --sandbox-only`, and the files
   table saying which files a sandbox-only project gets; in "Git hooks", that a sandbox-only project gets none; in
   "The project's settings", `process` in the table and the rules, that both `false` is refused, and that after a
   change `refresh` is run, and `init` with no argument first when switching to the process, the files of the other
   mode being removed by hand; in "Updating a project to a newer kit", the paragraph that a project whose file lacks
   `process` adds `"process": true` after `harnesses` before any command that reads the file runs again, as the
   paragraphs on `orchestrator` and `bell` say. (R25, R28)
-- [ ] `SANDBOX.md`: a section on running on a branch in a sandbox-only project, after "Running a unit", with the forms,
+- [x] `SANDBOX.md`: a section on running on a branch in a sandbox-only project, after "Running a unit", with the forms,
   the cut from the default branch, `--connect` and that variants are not there, and a pointer to "Getting the work
   back", which holds for it; in "Commit messages", that a sandbox-only project's commits are not checked and no hook
   of a mounted repository runs; in "Where things are kept on the host", that a sandbox-only project's root gets no
   `.reviews` or `.orchestrator`. The reader's refusals with a message that names why and what to do are not added to
-  "When something goes wrong". (R29)
-- [ ] `README.md`: the line of `SETUP.md` in "The documents" says that a project can set up the sandbox alone, and
+  "When something goes wrong", and those whose message leaves out what to do, of a name git takes for no branch, of a
+  missing default branch and of a `--connect` name that is no branch, are an entry there, as `AGENTS.md` has it. (R29)
+- [x] `README.md`: the line of `SETUP.md` in "The documents" says that a project can set up the sandbox alone, and
   nothing else of the README changes. (R30)
-- [ ] Check that this unit adds or renames no file or directory at the root of the repository and changes the package
+- [x] Check that this unit adds or renames no file or directory at the root of the repository and changes the package
   by none, so that neither "What is here" nor the table of `CONTRIBUTING.md` changes, and log that in `record.md`.
   (R31)
 
@@ -300,4 +301,4 @@ are checked as today, and nothing reads the content of the role files or the sta
 - [x] `feature-0095 Run the sandbox on a branch in a sandbox-only project`: the tasks under "The wrapper"
 - [x] `feature-0095 Set up a sandbox-only project with init and refresh`: the tasks under "`init`, `refresh` and the
   shim"
-- [ ] `feature-0095 Describe the sandbox-only setup`: the tasks under "The documents"
+- [x] `feature-0095 Describe the sandbox-only setup`: the tasks under "The documents"

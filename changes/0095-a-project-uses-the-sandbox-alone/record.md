@@ -70,3 +70,15 @@ timestamp: 2026-11-04T11:55:47Z
   and that test passes. The end-to-end test runs the shim on the fake host of `tests/wrapper-fixture.mjs`, and no
   container. `npm test` reports 1418 tests, 1417 passing and the one failing test of
   `tests/repository-own-files.test.mjs` logged above. The status is `in-progress`
+- 2026-11-04T14:59:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, described the sandbox-only setup in
+  `COMMANDS.md`, `SETUP.md`, `SANDBOX.md` and one line of the map of `README.md`. The table at the top of `COMMANDS.md`
+  gets a row for each of the two forms that are new, `BRANCH` and `--connect BRANCH`, and not a second row for
+  `--in-place` and `--workdir`, whose forms are the same in both kinds of project and already have one: R27 has a row
+  for each form, and the test of unit 0094 holds the rows against the forms of the first block of each section, so both
+  new forms are in that block of "sandbox.sh". The plan's four rows are read so. The refusals of a name git takes for no
+  branch, of a missing default branch and of a `--connect` name that is no branch name why and not what to do, so they
+  are an entry of "When something goes wrong" in `SANDBOX.md`, as `AGENTS.md` has it, and the refusal of `--variant`,
+  which names both, is not described there. The unit adds no file or directory at the root of the repository and changes
+  the package by none, so neither "What is here" nor the table of `CONTRIBUTING.md` changes (R31). `npm test` reports
+  1418 tests, 1417 passing and the one failing test of `tests/repository-own-files.test.mjs` logged above. The status is
+  `in-progress`

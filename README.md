@@ -161,7 +161,8 @@ The writers current workflow:
 * [`COMMANDS.md`](COMMANDS.md): what does a command take, what does it do and how does it exit?
 * [`ORCHESTRATOR.md`](ORCHESTRATOR.md): how does the orchestrator take a unit through its roles, and what does a run
   keep?
-* [`SETUP.md`](SETUP.md): how is the kit installed into a project, configured, given other roles and updated?
+* [`SETUP.md`](SETUP.md): how is the kit installed into a project, or the sandbox alone without the change process,
+  configured, given other roles and updated?
 * [`SANDBOX.md`](SANDBOX.md): how is an agent run in the sandbox, and what does the sandbox keep it from?
 * [`CHANGELOG.md`](CHANGELOG.md): what did a release change, and what is to be done when updating to it?
 * [`CONTRIBUTING.md`](CONTRIBUTING.md): how is the kit itself worked on?
