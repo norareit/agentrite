@@ -39,3 +39,41 @@ timestamp: 2026-11-02T21:36:55Z
   both are what the tests import and the tests cannot pass otherwise. The checklist gets entries beyond the spec's
   list for the session retention carried from the host, the default orchestrator and this repository's own sandbox
   compose file, which the search of requirement 8 found. The status is `approved`
+- 2026-11-04T20:34:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
+  `feature-0091-one-contract-per-harness` at `89ff60a`. The status is `in-progress`
+- 2026-11-04T20:45:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added a task to `plan.md`: the
+  test "no file under scripts/ has a shebang but the commands the package has" of `tests/agentrite-roles.test.mjs`
+  read every entry of `scripts/` as a file and failed with `EISDIR` on `scripts/harnesses/`, which requirement 10
+  asks for, so it now reads the files of `scripts/` and its subdirectories, the harness modules among them. It is the
+  one change to an existing test beyond its imports that requirement 5 leaves room for, since the test cannot pass
+  otherwise; it still fails for a shebang planted in `scripts/harnesses/opencode.mjs`, which was undone. In the same
+  reading as the planner's, `tests/agentrite-orchestrate.test.mjs` reaches the follower of a harness it names in a
+  loop as `harnessNamed(harness).headless`, where it reached `HEADLESS[harness]`, and two lines of
+  `tests/agentrite-outcome.test.mjs` are wrapped to 120 characters after `HEADLESS.claude` became
+  `claudeHarness.headless`; the second box of "Verification" now names both. The status is `in-progress`
+- 2026-11-04T20:45:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the unit in
+  `9bcd0a7` and `273e406`. `scripts/harnesses/claude.mjs` and `scripts/harnesses/opencode.mjs` each export one object
+  with the sixteen members of `HARNESS_CONTRACT` in `scripts/agentrite-harness.mjs`, the reading of refused calls
+  among them as `headless.refused` and `OPENCODE_REFUSAL` in the OpenCode module (R9). `init` writes or judges each
+  harness's instruction file through `instructions.init`, and `refresh` through `instructions.refresh`. Verified on
+  `273e406`: `npm test` reports 1447 tests, 1446 passing, none skipped, and 1 failing, unit 0054's R24 test in
+  `tests/repository-own-files.test.mjs`, which fails on `89ff60a` as well and which the human decided to leave
+  failing for unit 0090 until the next release; the first box of "Verification" is left open for the human to decide
+  for this unit. The new test passes, and fails with `claude lacks start.command` for the module without that member
+  and naming `extra.mjs` for a file planted in `scripts/harnesses/`, both undone. The three sandbox tests pass with
+  the copied scripts, which are the whole import closure of `agentrite-settings.mjs` and
+  `agentrite-cleanup-period.mjs` as computed from their imports. `npm pack --dry-run` lists the three new modules,
+  `git diff --check master...HEAD` reports nothing, no added line but a row of a Markdown table is longer than 120
+  characters, and `npm run check-changes` exits 0. Requirement 5 is held by the existing tests of `init`, `refresh`,
+  `run` and the orchestrator, which pass unchanged in their assertions; no real Claude Code or OpenCode was run. The
+  search of R3 in `scripts/*.mjs` outside `scripts/harnesses/` finds only the list in `scripts/agentrite-harness.mjs`,
+  the usage of `agentrite run`, the writing of `CLAUDE.md` in `processFiles` and `readTemplates` with the comments on
+  it, and `scripts/agentrite-cleanup-period.mjs`. The search of R8 lists 71 files. Each is accounted for by an entry
+  of "Adding a harness" in `CONTRIBUTING.md`, or names a harness only as an example: `process.md` as the author of an
+  example log entry, `RELEASING.md` with `opencode` as an example of a condition and Claude Code's `/release` skill of
+  this repository's own `.claude/`, and the tests that use `claude` as an example harness in the settings they write,
+  such as `tests/agentrite-approve.test.mjs`, `tests/check-changes.test.mjs`, `tests/agentrite-runs.test.mjs`,
+  `tests/sandbox-only.test.mjs`, `tests/sandbox-only-setup.test.mjs`, `tests/sandbox-unit-run.test.mjs` and
+  `tests/release.test.mjs`. The search found the tests of the bell's wiring, the allowlist comment, the status line,
+  the sessions kept, the trailers and the pointer package beyond the plan's list, and the checklist's entry on the
+  tests names them. The status is `in-progress`

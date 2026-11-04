@@ -126,7 +126,7 @@ now import as well. No assertion, input or expected value changes.
 
 ## Tasks
 
-- [ ] Write `tests/agentrite-harness.test.mjs`, which fails until the modules exist. It holds:
+- [x] Write `tests/agentrite-harness.test.mjs`, which fails until the modules exist. It holds:
     * a function of the test file that gives the faults of one harness against `HARNESS_CONTRACT`: for each member,
       `<name> lacks <member>` when the path leads to nothing, and `<name> has <member> as <found kind>, and the
       contract makes it <kind>` when the value is of another kind, where a `strings` value is an array whose items
@@ -152,51 +152,54 @@ now import as well. No assertion, input or expected value changes.
       lacking lines gives the init notice, and a file importing the kit's standards beside the project's own gives
       the kit-standards notice (R1, R5)
     * tests of `instructions.refresh` of each harness, one case per notice it can give (R1, R5)
-- [ ] Export `descriptionBlock`, and `body` as `wrapperBody`, from `scripts/agentrite-roles.mjs` (R1)
-- [ ] Export `isRecord`, `stringOrNone`, `jsonRecord`, `jsonRecords`, `textFollowed` and `callFollowed` from
+- [x] Export `descriptionBlock`, and `body` as `wrapperBody`, from `scripts/agentrite-roles.mjs` (R1)
+- [x] Export `isRecord`, `stringOrNone`, `jsonRecord`, `jsonRecords`, `textFollowed` and `callFollowed` from
   `scripts/agentrite-headless.mjs`, and reword its opening comment for a module of shared readers (R1)
-- [ ] Export `INSTRUCTIONS_SECTION` (renamed from `SECTION`), `isOwnStandards` and `messageOf` from
+- [x] Export `INSTRUCTIONS_SECTION` (renamed from `SECTION`), `isOwnStandards` and `messageOf` from
   `scripts/agentrite-instructions.mjs` (R1)
-- [ ] Write `scripts/harnesses/claude.mjs`: the object `claude` with the members of the table, its renderer, its start,
+- [x] Write `scripts/harnesses/claude.mjs`: the object `claude` with the members of the table, its renderer, its start,
   its headless run with `CLAUDE_TOOLS`, its reading of the final response and of refused calls, its instruction file
   `CLAUDE.md`, and `init` and `refresh` as the approach says; the moved Claude Code functions of the instructions
   module and `linesOf`, keeping their names and exports; the comment on `ownAgents` with its links (R1, R9)
-- [ ] Write `scripts/harnesses/opencode.mjs` in the same way, with `OPENCODE_TOOLS`, `OPENCODE_REFUSAL`, the
+- [x] Write `scripts/harnesses/opencode.mjs` in the same way, with `OPENCODE_TOOLS`, `OPENCODE_REFUSAL`, the
   `OpencodeEvent` typedef, `opencodeEvent`, `readOpencode`, `OPENCODE_SCHEMA`, the `OpencodeFailure` typedef and the
   moved OpenCode functions, keeping their names and exports (R1, R9)
-- [ ] Write `scripts/agentrite-harness.mjs` with `HARNESS_CONTRACT`, the typedef `Harness`, `HARNESSES`,
+- [x] Write `scripts/agentrite-harness.mjs` with `HARNESS_CONTRACT`, the typedef `Harness`, `HARNESSES`,
   `HARNESS_NAMES`, `harnessNamed`, and `harnessesWithAgent`, `wrapperDirectories` and `plannedFiles` moved from the
   roles module, which go through the list and `harnessNamed` (R2, R3)
-- [ ] Remove from `scripts/agentrite-roles.mjs` `claudeFile`, `opencodeFile`, `HARNESSES`, `HARNESS_NAMES`,
+- [x] Remove from `scripts/agentrite-roles.mjs` `claudeFile`, `opencodeFile`, `HARNESSES`, `HARNESS_NAMES`,
   `harnessesWithAgent`, `wrapperDirectories` and `plannedFiles`; from `scripts/agentrite-headless.mjs` `HEADLESS`,
   the readers, followers and refusals of each harness and their tool names; and from
   `scripts/agentrite-instructions.mjs` the functions and constants that moved (R3)
-- [ ] In `scripts/agentrite-run.mjs`, remove `STARTS` and take `harnessNamed(harness).start` in `harnessCommand`, and
+- [x] In `scripts/agentrite-run.mjs`, remove `STARTS` and take `harnessNamed(harness).start` in `harnessCommand`, and
   import `HARNESS_NAMES` from the new module; leave `runUsage` as written (R3, R5)
-- [ ] In `scripts/agentrite-settings.mjs`, import `HARNESS_NAMES` and `harnessesWithAgent` from the new module (R3)
-- [ ] In `scripts/agentrite.mjs`, import from the new module; add `writeInstructionFiles` and call it where
+- [x] In `scripts/agentrite-settings.mjs`, import `HARNESS_NAMES` and `harnessesWithAgent` from the new module (R3)
+- [x] In `scripts/agentrite.mjs`, import from the new module; add `writeInstructionFiles` and call it where
   `writeOpencodeJson` is called today; remove `writeOpencodeJson`, `claudeInitNotices` and the check of `CLAUDE.md`
   in the loop of `init`; make `instructionNotices` go over `HARNESSES` and call `instructions.refresh`; make
   `runStep` take `harnessNamed(step.harness).headless`; reword the comments that named the two harnesses' files as
   the ones judged; leave `processFiles` and `readTemplates` writing `CLAUDE.md` (R3, R5)
-- [ ] Change the imports of the existing tests, and nothing else of them, as the approach says: `plannedFiles`,
+- [x] Change the imports of the existing tests, and nothing else of them, as the approach says: `plannedFiles`,
   `HARNESS_NAMES`, `harnessesWithAgent` and `wrapperDirectories` from `scripts/agentrite-harness.mjs`; the Claude Code
   and OpenCode functions from their modules; `HEADLESS.claude` and `HEADLESS.opencode` as `claudeHarness.headless`
   and `opencodeHarness.headless` in `tests/agentrite-outcome.test.mjs` and `tests/agentrite-orchestrate.test.mjs` (R5)
-- [ ] In `tests/sandbox-dev.test.mjs`, `tests/sandbox-project-dockerfile.test.mjs` and `tests/sandbox-wrapper.test.mjs`,
+- [x] In `tests/sandbox-dev.test.mjs`, `tests/sandbox-project-dockerfile.test.mjs` and `tests/sandbox-wrapper.test.mjs`,
   add to the list of copied scripts `agentrite-harness.mjs`, `agentrite-headless.mjs`, `agentrite-instructions.mjs`
   and `agentrite-json.mjs`, and copy `scripts/harnesses/` with `cpSync` and `recursive: true`, so that no test names a
   harness module and a new one is copied without a change; confirm by running them that the list is the whole
   closure of `agentrite-settings.mjs` and `agentrite-cleanup-period.mjs` (R5)
-- [ ] Add `scripts/agentrite-harness.mjs`, `scripts/harnesses/claude.mjs` and `scripts/harnesses/opencode.mjs` to
+- [x] In the test "no file under scripts/ has a shebang but the commands the package has" of
+  `tests/agentrite-roles.test.mjs`, read the files of `scripts/` and its subdirectories rather than every entry of
+  `scripts/`, which now holds the directory `harnesses/` and fails with `EISDIR`. Added by the implementer (R5, R10)
+- [x] Add `scripts/agentrite-harness.mjs`, `scripts/harnesses/claude.mjs` and `scripts/harnesses/opencode.mjs` to
   `files` of `package.json`, after `scripts/agentrite-roles.mjs`, and the same three to the list in the test
   "package.json keeps the one command and the files the package holds" of `tests/package-documents.test.mjs`. Listing
   each file keeps the test that every imported file is listed passing unchanged (R6)
-- [ ] Search `scripts/*.mjs` outside `scripts/harnesses/` for `'claude'`, `'opencode'`, `CLAUDE`, `OPENCODE`,
+- [x] Search `scripts/*.mjs` outside `scripts/harnesses/` for `'claude'`, `'opencode'`, `CLAUDE`, `OPENCODE`,
   `claude` and `opencode`, ignoring case, and confirm that what is left is the help text of `runUsage`, the
   `CLAUDE.md` of `processFiles` and `readTemplates`, the comments on that writing, and
   `scripts/agentrite-cleanup-period.mjs`, which the sandbox runs and the checklist names (R3)
-- [ ] Add the section "Adding a harness" to `CONTRIBUTING.md`, before "Releasing", with its line in the contents at
+- [x] Add the section "Adding a harness" to `CONTRIBUTING.md`, before "Releasing", with its line in the contents at
   the top. It opens with the contract: a module `scripts/harnesses/<name>.mjs` that exports an object implementing
   `HARNESS_CONTRACT` of `scripts/agentrite-harness.mjs`, its place in `HARNESSES` there, its file in `files` of
   `package.json` and in the test of the package's files, and `tests/agentrite-harness.test.mjs` as the check of that
@@ -236,9 +239,9 @@ now import as well. No assertion, input or expected value changes.
       `tests/agentrite-orchestrate.test.mjs` with its fake harnesses, `tests/agentrite-init.test.mjs`,
       `tests/agentrite-refresh.test.mjs`, `tests/harness-versions.test.mjs`,
       `tests/dockerfile-log-directories.test.mjs`, `tests/bell.test.mjs` and `tests/compose-allowlist.test.mjs`
-- [ ] In the table of the documents of `AGENTS.md`, add "what adding a harness takes" to what goes in
+- [x] In the table of the documents of `AGENTS.md`, add "what adding a harness takes" to what goes in
   `CONTRIBUTING.md`, which the new section makes true (R7)
-- [ ] Run `git grep -l -i -e claude -e opencode -- . ':!changes' ':!CHANGELOG.md' ':!scripts/harnesses'`, which
+- [x] Run `git grep -l -i -e claude -e opencode -- . ':!changes' ':!CHANGELOG.md' ':!scripts/harnesses'`, which
   leaves out `node_modules` and `.git` as untracked, and account for every file it lists against the checklist, or as
   one that names a harness only as a model's id, an example of a log entry or the author of a commit. Add an entry to
   the checklist for a place it misses. Log the result in `record.md` (R8)
@@ -246,22 +249,23 @@ now import as well. No assertion, input or expected value changes.
 ## Verification
 
 - [ ] `npm test` passes, the new `tests/agentrite-harness.test.mjs` among it
-- [ ] `git diff master -- tests/` shows, in the existing test files, only import lines, the `HEADLESS` identifiers,
-  the lists of copied scripts, and the list of the package's files (R5, R6)
-- [ ] A copy of `scripts/harnesses/claude.mjs` with `start.command` removed makes the contract test fail with
+- [x] `git diff master -- tests/` shows, in the existing test files, only import lines, the `HEADLESS` identifiers,
+  the lists of copied scripts, the list of the package's files, the shebang test of the task the implementer added,
+  and two lines of `tests/agentrite-outcome.test.mjs` wrapped to 120 characters after their identifier grew (R5, R6)
+- [x] A copy of `scripts/harnesses/claude.mjs` with `start.command` removed makes the contract test fail with
   `claude lacks start.command`, and a file `scripts/harnesses/extra.mjs` makes the directory test fail naming it;
   both undone afterwards (R4, R10)
-- [ ] `npm pack --dry-run` lists `scripts/agentrite-harness.mjs`, `scripts/harnesses/claude.mjs` and
+- [x] `npm pack --dry-run` lists `scripts/agentrite-harness.mjs`, `scripts/harnesses/claude.mjs` and
   `scripts/harnesses/opencode.mjs` (R6)
-- [ ] Every changed line is at most 120 characters, a Markdown table row excepted
-- [ ] `npm run check-changes` passes on the committed branch
+- [x] Every changed line is at most 120 characters, a Markdown table row excepted
+- [x] `npm run check-changes` passes on the committed branch
 
 ## Commit Points
 
-- [ ] `feature-0091 Plan the harness contract`: `plan.md` and the planner's entry in `record.md`
-- [ ] `feature-0091 Gather each harness into a module that implements one contract`: the new modules, the changed
+- [x] `feature-0091 Plan the harness contract`: `plan.md` and the planner's entry in `record.md`
+- [x] `feature-0091 Gather each harness into a module that implements one contract`: the new modules, the changed
   scripts, the new test file, the import changes of the existing tests, `package.json` and its test. The tree passes
   `npm test` at this commit
-- [ ] `feature-0091 Describe adding a harness in CONTRIBUTING.md`: the section, its line in the contents, and the row
+- [x] `feature-0091 Describe adding a harness in CONTRIBUTING.md`: the section, its line in the contents, and the row
   of `AGENTS.md`
-- [ ] `feature-0091 Record the implementation and the verification`: the implementer's entries in `record.md`
+- [x] `feature-0091 Record the implementation and the verification`: the implementer's entries in `record.md`
