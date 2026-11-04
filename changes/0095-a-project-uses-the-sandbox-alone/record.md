@@ -50,3 +50,12 @@ timestamp: 2026-11-04T11:55:47Z
   base image with an empty directory mounted at `/usr/local/lib/agentrite/no-hooks`; the last stage of the Dockerfile,
   which makes that directory, was not built. `npm test` reports 1369 tests, 1368 passing and the one failing test of
   `tests/repository-own-files.test.mjs` logged above. The status is `in-progress`
+- 2026-11-04T14:45:22Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave the wrapper the sandbox-only
+  mode, with its tests in the new `tests/sandbox-only.test.mjs`. Added to the plan, under "Files" and the tasks of the
+  wrapper: `find_branch` and `say_no_default_branch` in `container/unit-clone.sh`, since the exact lookup is made for a
+  run and for `--connect` and the plan has the message of a missing default branch shared, and the test of the
+  sandbox-only hooks directory moved from the part before. The message of a `--connect` name that is no branch is
+  written where the branch of the mode is found, which differs by mode, and not set with the other texts. The test that
+  no refusal says `unit` is made by the helper every refusal of the file goes through. `npm test` reports 1401 tests,
+  1400 passing and the one failing test of `tests/repository-own-files.test.mjs` logged above. The status is
+  `in-progress`

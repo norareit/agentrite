@@ -64,6 +64,11 @@ test('the wrapper names, for a project with the process, the directory the Docke
 });
 
 // Unit 0095, R21
+test('the wrapper names, for a sandbox-only project, the directory without a hook', () => {
+  assert.deepEqual(wrapperHooksDirectories().slice(1), [noHooksDirectory]);
+});
+
+// Unit 0095, R21
 test('the last stage of the Dockerfile makes the directory without a hook, and copies nothing into it', () => {
   const stage = lastStage();
   assert.match(stage, new RegExp(`mkdir (?:-p )?${noHooksDirectory.replaceAll('/', '\\/')}(?:\\s|$)`, 'm'));

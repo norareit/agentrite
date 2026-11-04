@@ -734,6 +734,18 @@ for (const [where, args] of [
   });
 }
 
+// Unit 0095, R12: the mode is the shim's, given before the project root, and is no option a developer gives.
+test('--sandbox-only given after the project root is refused as an option the wrapper does not take', (testContext) => {
+  const { root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {}, false);
+  rmSync(join(bin, 'claude'));
+  const result = run(root, '--sandbox-only', 'echo', 'hi');
+  assert.equal(result.status, 2);
+  assert.match(result.stderr, /^sandbox\.sh: there is no option --sandbox-only\.$/m);
+  assertFormsListed(result.stderr);
+  assert.deepEqual(dockerCalls(), []);
+  assert.deepEqual(npmCalls(), []);
+});
+
 for (const [option, what] of [
   ['--workdir', 'a directory'],
   ['--mount', 'a path'],

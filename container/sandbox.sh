@@ -19,7 +19,9 @@
 # directory, and not in the home volume. The agent writes them, so they are one more
 # place of the host that it writes besides /work.
 #
-# What is mounted at /work has no default, and there are two ways to run:
+# What is mounted at /work has no default, and there are two ways to run, of which the
+# first has a form of its own in a sandbox-only project, a project that uses the sandbox
+# without the change process and whose shim passes --sandbox-only before the root:
 #
 # * A unit run, given a unit. The wrapper makes a clone of the unit's branch in the
 #   developer's state directory, mounts that at /work, the host's .reviews at
@@ -37,12 +39,18 @@
 #   runs beside the unit's. A new clone that holds a package-lock.json has its
 #   dependencies installed with npm ci in the container before the command, by
 #   container/install-dependencies.sh of the image.
+#   In a sandbox-only project it is a run on a branch, given by its name. The local
+#   branch of that exact name is run, and a name that is no local branch gets a branch of
+#   that name, cut from the head of the default branch. No number is matched, nothing of
+#   changes/ is read, there is no --variant, and neither .reviews nor .orchestrator is
+#   mounted or made. The clone is made, named, brought back and resumed as a unit run's.
 # * In place, with --in-place or --workdir. The directory is mounted as it is, nothing
 #   is cloned, fetched or removed, and the wrapper ends in `docker compose run`.
 #
 # Besides the two, --connect runs a command in the container of a unit run that is
-# under way, beside what runs there. It starts and mounts nothing, builds nothing and
-# changes nothing on the host, and the wrapper ends in `docker exec`. The container is
+# under way, or in a sandbox-only project of a run on a branch, beside what runs there.
+# It starts and mounts nothing, builds nothing and changes nothing on the host, and the
+# wrapper ends in `docker exec`. The container is
 # confined as the unit run started it, and the wrapper sets nothing of that. The user of
 # a connected process is the wrapper's to name, though: Docker runs it as root, with the
 # capabilities the container is given, unless it is told the user, so the
@@ -80,6 +88,14 @@
 #   sandbox.sh PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
 #   sandbox.sh PROJECT_ROOT --connect UNIT [--variant NAME] [COMMAND...]
 #
+# In a sandbox-only project:
+#   sandbox.sh --sandbox-only PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... BRANCH [COMMAND...]
+#   sandbox.sh --sandbox-only PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]
+#   sandbox.sh --sandbox-only PROJECT_ROOT [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]
+#   sandbox.sh --sandbox-only PROJECT_ROOT --connect BRANCH [COMMAND...]
+#
+#   --sandbox-only   the mode of a sandbox-only project, which its shim passes before the
+#                    project root
 #   PROJECT_ROOT     the project's root, which the project's sandbox.sh shim passes
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
 #                    name, or by a unit's number that one branch name holds. A number
@@ -91,11 +107,16 @@
 #                    unit or right after it, optional, and not with --in-place or --workdir
 #   --in-place       mount the project root at /work, as it is
 #   --workdir DIR    mount DIR at /work, as it is
+#   BRANCH           in a sandbox-only project, mount a clone of the local branch of that
+#                    name at /work, cut from the head of the default branch when there
+#                    is none
 #   --connect UNIT   run the command in the container of the run that is under way for
 #                    the unit, as the agent, and start nothing. The unit is a local
 #                    branch, by its name or by a unit's number, and no branch is cut.
 #                    With --variant, the run of that variant of the unit. Takes none of
 #                    the options below
+#   --connect BRANCH in a sandbox-only project, the same for the run of the local branch
+#                    of that name
 #   --rebuild        build the image before running, even if it already exists and
 #                    holds the wanted harness versions, and the project's
 #                    sandbox/Dockerfile on it when there is one
@@ -109,6 +130,49 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The command of a run that is given none: the CMD of container/Dockerfile, which a test
 # in tests/sandbox-unit-run.test.mjs holds this against.
 default_command=bash
+
+# The mode, which the project's shim passes as the first argument, before the project
+# root: --sandbox-only for a project that uses the sandbox without the change process.
+# The shim of a project with the process passes none, as every shim before the mode did,
+# and the wrapper then runs as it always has. A developer who types --sandbox-only gives
+# it after the root, where it is an option the wrapper does not take. What differs by
+# mode is set here, once: git's hooks directory in the container, which compose.yml gives
+# git and which is exported before the first Compose call, since Compose refuses to read
+# the file without it, what the first argument of a run names, and the forms that name
+# it. A sandbox-only project's hooks directory is the image's empty one, so that no
+# commit message is checked there, and no hook of a mounted repository runs either.
+sandbox_only=0
+if [ "${1:-}" = --sandbox-only ]; then
+  sandbox_only=1
+  shift
+fi
+if [ "$sandbox_only" -eq 0 ]; then
+  export SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/hooks
+  run_target=unit
+  run_forms=(
+    "  sandbox.sh UNIT [--variant NAME] [COMMAND...]"
+    "                                       a clone of the unit's branch, named by its ID or its branch."
+    "                                       An ID with no branch gets one, cut from the default branch"
+    "                                       With --variant, a clone of the branch of that variant of the unit,"
+    "                                       cut from the unit's branch when it does not exist"
+  )
+  connect_forms=(
+    "Or run a command beside the one of a unit's run that is under way, which mounts nothing:"
+    "  sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]"
+  )
+else
+  export SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/no-hooks
+  run_target=branch
+  run_forms=(
+    "  sandbox.sh BRANCH [COMMAND...]"
+    "                                       a clone of the local branch BRANCH. A name that is no local"
+    "                                       branch gets a branch of that name, cut from the default branch"
+  )
+  connect_forms=(
+    "Or run a command beside the one of a branch's run that is under way, which mounts nothing:"
+    "  sandbox.sh --connect BRANCH [COMMAND...]"
+  )
+fi
 
 # The caller names the project root. The kit is an installed package, and how deep it
 # sits under node_modules depends on the scope, on hoisting and on the package manager,
@@ -144,25 +208,20 @@ case "$here" in
 esac
 export AGENTRITE_CONTAINER="${here#"$root"/}"
 
-# Git's hooks directory in the container, which container/compose.yml gives git: the
-# image's directory of the kit's commit-msg hook. Exported before the first Compose call,
-# since Compose refuses to read the file without it.
-export SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/hooks
-
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 
-# The forms the wrapper takes, by what each mounts at /work. They end with the one that
-# mounts nothing, --connect, for whoever wanted a second shell.
+# The forms the wrapper takes, by what each mounts at /work, those of the mode. They end
+# with the one that mounts nothing, --connect, for whoever wanted a second shell.
 list_forms() {
-  echo "  sandbox.sh UNIT [--variant NAME] [COMMAND...]" >&2
-  echo "                                       a clone of the unit's branch, named by its ID or its branch." >&2
-  echo "                                       An ID with no branch gets one, cut from the default branch" >&2
-  echo "                                       With --variant, a clone of the branch of that variant of the unit," >&2
-  echo "                                       cut from the unit's branch when it does not exist" >&2
+  local line
+  for line in "${run_forms[@]}"; do
+    echo "$line" >&2
+  done
   echo "  sandbox.sh --in-place [COMMAND...]     the project root as it is" >&2
   echo "  sandbox.sh --workdir DIR [COMMAND...]  DIR as it is" >&2
-  echo "Or run a command beside the one of a unit's run that is under way, which mounts nothing:" >&2
-  echo "  sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]" >&2
+  for line in "${connect_forms[@]}"; do
+    echo "$line" >&2
+  done
 }
 
 mount_forms() {
@@ -179,6 +238,12 @@ refuse_arguments() {
   echo "The forms it takes:" >&2
   list_forms
   exit 2
+}
+
+# Refuses --variant in a sandbox-only project, wherever it is given.
+refuse_variant() {
+  refuse_arguments "sandbox.sh: --variant is not taken in a project without the change process." \
+    "Variants belong to the change process. Give each run a branch of its own."
 }
 
 # The directories of --workdir and --mount are kept as they were given while the options
@@ -217,6 +282,7 @@ while [ $# -gt 0 ]; do
       shift
       ;;
     --variant | --variant=*)
+      [ "$sandbox_only" -eq 0 ] || refuse_variant
       if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
       variant_given=1
       if [ "$1" = --variant ]; then
@@ -239,7 +305,7 @@ while [ $# -gt 0 ]; do
       ;;
     -*)
       refuse_arguments "sandbox.sh: there is no option $1." \
-        "A unit or a command that opens with - goes after --."
+        "A $run_target or a command that opens with - goes after --."
       ;;
     *)
       break
@@ -262,7 +328,7 @@ if [ "$connect" -eq 1 ]; then
     done
     refuse_arguments "${refusal[@]}" "That is an option of a run, and --connect starts none."
   fi
-  [ $# -gt 0 ] || refuse_arguments "sandbox.sh: --connect needs a unit."
+  [ $# -gt 0 ] || refuse_arguments "sandbox.sh: --connect needs a $run_target."
 fi
 
 # A variant is of a unit, so --variant is refused where there is no unit. It is also given
@@ -277,6 +343,9 @@ is_variant_name() {
   [[ "$1" =~ $shape ]]
 }
 if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -ge 1 ]; then
+  case "${2:-}" in
+    --variant | --variant=*) [ "$sandbox_only" -eq 0 ] || refuse_variant ;;
+  esac
   case "${2:-}" in
     --variant)
       if [ "$variant_given" -eq 1 ]; then variant_twice=1; fi
@@ -376,7 +445,14 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   . "$here/unit-clone.sh"
   unit="$1"
   resolved=0
-  if [ "$connect" -eq 1 ]; then
+  if [ "$sandbox_only" -eq 1 ] && [ "$connect" -eq 1 ]; then
+    if ! branch="$(find_branch "$root" "$unit")"; then
+      echo "sandbox.sh: '$unit' is no local branch, so there is no run to connect to." >&2
+      exit 1
+    fi
+  elif [ "$sandbox_only" -eq 1 ]; then
+    branch="$(resolve_branch "$root" "$unit" "$here/../scripts/agentrite-settings.mjs")" || exit 1
+  elif [ "$connect" -eq 1 ]; then
     branch="$(find_unit_branch "$root" "$unit")" || resolved=$?
     if [ "$resolved" -eq 1 ]; then
       echo "sandbox.sh: '$unit' names no local branch, by its name or as a unit's number." >&2
@@ -984,6 +1060,8 @@ fi
 # The clone is made only now, so that a build that failed left none behind. The
 # .reviews and .orchestrator directories, of the root and of the clone, are made here
 # because Docker creates a mount's missing source and its missing mount point as root.
+# A sandbox-only project mounts neither, since both are the change process's, and gets
+# neither directory.
 # A stopped container that a crash left under the name is removed, and Docker refuses
 # to remove one that is running.
 new_clone=0
@@ -996,7 +1074,14 @@ if [ "$new_clone" -eq 1 ] && [ -f "$clone/package-lock.json" ]; then
   [ $# -gt 0 ] || set -- "$default_command"
   set -- /usr/local/bin/install-dependencies.sh "$@"
 fi
-mkdir -p "$root/.reviews" "$clone/.reviews" "$root/.orchestrator" "$clone/.orchestrator"
+process_mounts=()
+if [ "$sandbox_only" -eq 0 ]; then
+  mkdir -p "$root/.reviews" "$clone/.reviews" "$root/.orchestrator" "$clone/.orchestrator"
+  process_mounts=(
+    --volume "$root/.reviews:/work/.reviews"
+    --volume "$root/.orchestrator:/work/.orchestrator"
+  )
+fi
 docker rm "$container_name" >/dev/null 2>&1 || true
 
 # The wrapper sees the container out. An interrupt, a terminate and a hangup reach the
@@ -1009,8 +1094,7 @@ status=0
   ${terminal_environment[@]+"${terminal_environment[@]}"} \
   ${bell_environment[@]+"${bell_environment[@]}"} \
   --volume "$clone:/work" \
-  --volume "$root/.reviews:/work/.reviews" \
-  --volume "$root/.orchestrator:/work/.orchestrator" \
+  ${process_mounts[@]+"${process_mounts[@]}"} \
   ${mounts[@]+"${mounts[@]}"} \
   sandbox "$@" || status=$?
 

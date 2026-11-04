@@ -48,7 +48,7 @@ const sandboxRef = `refs/remotes/sandbox/${branch}`;
 // `node_modules`, `.reviews` and `.env`, and holds a file that is not committed, `draft.txt`. The home has a git
 // identity and nothing else, so the state directory is `.local/state` in it unless a run sets XDG_STATE_HOME. `run`
 // runs the wrapper with the project root and `args`, and `git` runs the real git in the repository.
-function setUp(testContext, { imageExists = true } = {}) {
+function setUp(testContext, { imageExists = true, recorded = ['AGENTRITE_CONTAINER'] } = {}) {
   const base = temporaryDirectory(testContext, 'sandbox-unit-run-');
   const root = join(base, 'project');
   const container = join(root, kitPath);
@@ -67,7 +67,7 @@ function setUp(testContext, { imageExists = true } = {}) {
   const home = join(base, 'home');
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
-  const host = fakeHost(base, ['AGENTRITE_CONTAINER']);
+  const host = fakeHost(base, recorded);
   if (!imageExists) rmSync(host.imageLabels);
 
   const git = (...args) =>
@@ -214,6 +214,38 @@ for (const [kind, prefix] of [
     },
   );
 }
+
+// Unit 0095, R12, R24: the shim of a project with the process passes the project root first and no mode, as every
+// shim before the sandbox-only mode did, and the wrapper runs as it did.
+test(
+  'a run started as a shim of today starts it, with no mode, finds a unit by its number, cuts it and gives the hook',
+  (testContext) => {
+    const host = setUp(testContext, { recorded: ['AGENTRITE_CONTAINER', 'SANDBOX_GIT_HOOKS_PATH'] });
+    rmSync(host.imageLabels);
+    const commit = commitUnit(host, 'kind: feature\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z');
+    const cut = `feature-${cutDirectory}`;
+
+    const result = host.run(['0031', 'echo', 'hi']);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(
+      result.stderr.includes(`sandbox.sh: cut ${cut} from master at ${commit}, for changes/${cutDirectory}.\n`),
+      result.stderr,
+    );
+    const calls = host.dockerCalls();
+    assert.ok(calls.some((call) => call.includes(' build')), calls.join('\n'));
+    const opening = `AGENTRITE_CONTAINER=${kitPath} SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/hooks docker `;
+    for (const call of calls) assert.ok(call.startsWith(opening), call);
+    const clone = join(host.state, 'agentrite', 'project-sandbox', cut);
+    assert.ok(
+      calls.at(-1).includes(
+        `--volume ${clone}:/work --volume ${host.root}/.reviews:/work/.reviews ` +
+          `--volume ${host.root}/.orchestrator:/work/.orchestrator `,
+      ),
+      calls.at(-1),
+    );
+  },
+);
 
 for (const status of ['draft', 'approved', 'in-progress', 'implemented']) {
   test(`the wrapper cuts feature-${cutDirectory} from master for a unit that is ${status} there`, (testContext) => {

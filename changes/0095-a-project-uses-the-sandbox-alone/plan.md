@@ -84,7 +84,9 @@ are checked as today, and nothing reads the content of the role files or the sta
   `COPY`
 - `container/sandbox.sh`: the mode, `SANDBOX_GIT_HOOKS_PATH`, the forms and words of the mode, the refusal of
   `--variant`, the branch of the mode, the mounts of a clone run, and the comments at the top, the usage among them
-- `container/unit-clone.sh`: `resolve_branch`, `cut_branch` and `is_branch_name`, and its opening comment
+- `container/unit-clone.sh`: `resolve_branch`, `cut_branch` and `is_branch_name`, `find_branch` for the exact lookup
+  that both `resolve_branch` and `--connect` make, `say_no_default_branch` for the message `cut_branch` shares with
+  `cut_unit_branch`, and its opening comment
 - `tests/installed-kit.mjs`: `kitSettingsText` takes `process`, `true` unless it is given
 - `tests/agentrite-settings.test.mjs`, `tests/agentrite-config.test.mjs`, `tests/agentrite-init.test.mjs`,
   `tests/agentrite-refresh.test.mjs`: the key, `init --sandbox-only` and `refresh` in a sandbox-only project
@@ -154,11 +156,11 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ### The wrapper
 
-- [ ] Create `tests/sandbox-only.test.mjs`, with a `setUp` like that of `tests/sandbox-unit-run.test.mjs` whose `run`
+- [x] Create `tests/sandbox-only.test.mjs`, with a `setUp` like that of `tests/sandbox-unit-run.test.mjs` whose `run`
   starts the wrapper with `--sandbox-only` and the project root, and whose `agentrite.json` has `process` false. It
   holds the tests of the next three tasks. Every process it starts has an environment from
   `withoutGitEnvironmentConfiguration`. (R32)
-- [ ] Add tests of the branch: a local branch of the exact name is run on a clone, and the recorded Compose run mounts
+- [x] Add tests of the branch: a local branch of the exact name is run on a clone, and the recorded Compose run mounts
   the clone at `/work` and neither `.reviews` nor `.orchestrator`, and neither directory exists in the root or the
   clone afterwards; a new name is cut from the head of the local default branch, the one `agentrite.json` names and
   not a branch `master`, and standard error names the branch, the default branch and the short commit; a name of
@@ -169,7 +171,7 @@ are checked as today, and nothing reads the content of the role files or the sta
   message that names it, cuts nothing and starts nothing; a run on the branch is fetched back as `sandbox/<branch>`
   and fast-forwards the host's branch, is resumed when its clone is kept, and its container is named after the
   Compose project and the branch. (R13, R14, R15, R16, R17)
-- [ ] Add tests of the arguments and messages: `--variant NAME`, `--variant=NAME`, before the branch, right after it
+- [x] Add tests of the arguments and messages: `--variant NAME`, `--variant=NAME`, before the branch, right after it
   and given twice, each refused with 2, by a message that says variants belong to the change process, and with
   nothing read, built or cut, as the tests of a refused start in `tests/sandbox-unit-run.test.mjs` find; the forms
   listed with a refusal of arguments and when nothing to mount was given name `BRANCH` and none of `UNIT`, `unit`,
@@ -179,17 +181,19 @@ are checked as today, and nothing reads the content of the role files or the sta
   and `--workdir` run as with the process; every recorded Compose call carries
   `SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/no-hooks`; and a check over the standard error of every refusal in
   the file that it holds no word `unit`. (R18, R19, R20, R21, R22)
-- [ ] Add a test to `tests/sandbox-unit-run.test.mjs` that a run started as a shim of today starts it, with the
+- [x] Add a test to `tests/sandbox-unit-run.test.mjs` that a run started as a shim of today starts it, with the
   project root first and no mode, finds a unit by its number and cuts its branch from `changes/` as before, mounts
   `.reviews` and `.orchestrator`, and carries `SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/hooks` on its Compose
   calls. Add one to `tests/sandbox-wrapper.test.mjs` that `--sandbox-only` given after the project root is refused as
-  an unknown option, with 2. (R12, R24)
-- [ ] In `container/unit-clone.sh`, add `is_branch_name`, `cut_branch` and `resolve_branch` as the approach
+  an unknown option, with 2. Add the test of `tests/sandbox-commit-msg.test.mjs` that the wrapper's sandbox-only value
+  of the hooks directory is `/usr/local/lib/agentrite/no-hooks`, moved here from "The image and the Compose file".
+  (R12, R21, R24)
+- [x] In `container/unit-clone.sh`, add `is_branch_name`, `cut_branch` and `resolve_branch` as the approach
   describes, the two that print a branch failing with 1 for a refusal of the name or the missing default branch, and
   say in the file's opening comment that it also holds the git work of a run on a branch of a sandbox-only project.
   `cut_branch` takes the message for the missing default branch from one place shared with `cut_unit_branch`, so the
   two cannot drift. (R13, R14, R15)
-- [ ] In `container/sandbox.sh`, read the mode from the first argument and shift it off before the project root is
+- [x] In `container/sandbox.sh`, read the mode from the first argument and shift it off before the project root is
   judged; set `SANDBOX_GIT_HOOKS_PATH` by the mode; set the texts that differ by mode, the forms of `list_forms`, the
   word for what the first argument names in the refusals of `--connect` and of an option that opens with `-`, and
   the message of a `--connect` name that is no branch; refuse `--variant` in the mode at the place the approach names;
@@ -198,7 +202,7 @@ are checked as today, and nothing reads the content of the role files or the sta
   top: the two ways to run name the run on a branch of a sandbox-only project, and the usage lists the sandbox-only
   forms. Keep every path of a project with the process as it is. (R12, R13, R14, R15, R16, R17, R18, R19, R20, R21,
   R22, R23, R24)
-- [ ] Run `npm test` and fix what fails, the tests of `bell`, the harness versions, the image builds, the status line,
+- [x] Run `npm test` and fix what fails, the tests of `bell`, the harness versions, the image builds, the status line,
   the logs and `cleanupPeriodDays` among them, which run with the process and hold the rest of the wrapper as it is.
   (R23, R24)
 
@@ -290,7 +294,7 @@ are checked as today, and nothing reads the content of the role files or the sta
 - [x] `feature-0095 Plan the unit`: this plan and its log entry
 - [x] `feature-0095 Add the key process to agentrite.json`: the tasks under "The key"
 - [x] `feature-0095 Have the wrapper name the hooks directory`: the tasks under "The image and the Compose file"
-- [ ] `feature-0095 Run the sandbox on a branch in a sandbox-only project`: the tasks under "The wrapper"
+- [x] `feature-0095 Run the sandbox on a branch in a sandbox-only project`: the tasks under "The wrapper"
 - [ ] `feature-0095 Set up a sandbox-only project with init and refresh`: the tasks under "`init`, `refresh` and the
   shim"
 - [ ] `feature-0095 Describe the sandbox-only setup`: the tasks under "The documents"

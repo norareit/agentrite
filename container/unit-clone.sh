@@ -1,7 +1,9 @@
 # The git work of a unit run: the functions container/sandbox.sh calls to find the unit's
-# branch, to make the clone it mounts at /work and to bring the work back. Sourced by
-# the wrapper when it is given a unit, and holds no top-level code: the wrapper orders
-# the steps and talks to Docker.
+# branch, to make the clone it mounts at /work and to bring the work back. It also holds
+# the git work of a run on a branch in a sandbox-only project, which finds or cuts the
+# branch by its name alone and makes and brings back its clone as a unit run's. Sourced
+# by the wrapper when it is given a unit or a branch, and holds no top-level code: the
+# wrapper orders the steps and talks to Docker.
 #
 # It runs git, and node once, for the default branch, when a branch is cut.
 #
@@ -26,8 +28,7 @@ cut_unit_branch() {
   local root="$1" unit="$2" default_branch="$3" directories directory record line kind="" status="" prefix name
   local base="refs/heads/$default_branch"
   if ! git -C "$root" show-ref --verify --quiet "$base"; then
-    echo "sandbox.sh: '$unit' names no local branch, and there is no local branch $default_branch to cut one from." >&2
-    echo "agentrite.json names $default_branch as the default branch." >&2
+    say_no_default_branch "$unit" "$default_branch"
     return 3
   fi
   directories="$(git -C "$root" ls-tree -d --name-only "$base" changes/ | grep -E "^changes/$unit-")" \
@@ -82,6 +83,71 @@ cut_unit_branch() {
   echo "sandbox.sh: cut $name from $default_branch at $(git -C "$root" rev-parse --short "$base")," \
     "for changes/$directory." >&2
   echo "$name"
+}
+
+# Says that the name names no local branch and that the default branch, from which one
+# would be cut, is no local branch either. It is the one wording of a missing default
+# branch, for a unit and for a branch of a sandbox-only project.
+say_no_default_branch() {
+  local name="$1" default_branch="$2"
+  echo "sandbox.sh: '$name' names no local branch, and there is no local branch $default_branch to cut one from." >&2
+  echo "agentrite.json names $default_branch as the default branch." >&2
+}
+
+# Whether git takes the name as the name of a branch: as the full name of its ref, which
+# refuses such as a space, '..', a part that ends in .lock and '@{', and as git branch
+# takes it, which also refuses HEAD and a name that opens with a dash.
+is_branch_name() {
+  local root="$1" name="$2"
+  git -C "$root" check-ref-format "refs/heads/$name" \
+    && git -C "$root" check-ref-format --branch "$name" >/dev/null 2>&1
+}
+
+# Prints the name when it is the name of a local branch, and fails with 1, saying
+# nothing, when it is not. Only that exact name is looked at: a sandbox-only project
+# matches no number, and nothing of changes/ is read.
+find_branch() {
+  local root="$1" name="$2"
+  git -C "$root" show-ref --verify --quiet "refs/heads/$name" 2>/dev/null || return 1
+  echo "$name"
+}
+
+# Cuts the branch of the name at the head of the local default branch, with nothing
+# checked out, as cut_unit_branch cuts, and prints its name. Says on standard error what
+# it cut, because standard output is the branch's name. Says why and fails with 1 when
+# there is no local default branch or the cut fails.
+cut_branch() {
+  local root="$1" name="$2" default_branch="$3"
+  local base="refs/heads/$default_branch"
+  if ! git -C "$root" show-ref --verify --quiet "$base"; then
+    say_no_default_branch "$name" "$default_branch"
+    return 1
+  fi
+  if ! git -C "$root" branch --quiet --no-track "$name" "$base"; then
+    echo "sandbox.sh: cutting $name from $default_branch failed." >&2
+    return 1
+  fi
+  echo "sandbox.sh: cut $name from $default_branch at $(git -C "$root" rev-parse --short "$base")." >&2
+  echo "$name"
+}
+
+# Prints the branch of a run in a sandbox-only project: the local branch of the name
+# when there is one, and otherwise a branch of that name, cut by cut_branch from the
+# default branch. The default branch is read only then, as resolve_unit_branch reads it,
+# by the reader given as the third argument. Says why and fails with 1 for a name git
+# takes for no branch, for a file the reader refuses, and for a cut that fails.
+resolve_branch() {
+  local root="$1" name="$2" reader="$3" default_branch
+  find_branch "$root" "$name" && return 0
+  if ! is_branch_name "$root" "$name"; then
+    echo "sandbox.sh: '$name' is not a name git takes for a branch, so no branch is cut." >&2
+    return 1
+  fi
+  if ! default_branch="$(node "$reader" "$root")"; then
+    echo "sandbox.sh: so no branch is cut for '$name'." >&2
+    return 1
+  fi
+  cut_branch "$root" "$name" "$default_branch"
 }
 
 # Whether a branch is a variant's: a branch whose name holds two hyphens in a row. A
