@@ -31,3 +31,11 @@ timestamp: 2026-11-02T21:36:55Z
 - 2026-11-04T14:21:30Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master`, on the human's
   decision to decline `BTR2`, `BTR3` and `BTR4`, which the spec now marks as declined. The status is `draft`
 - 2026-11-04T14:21:30Z [human] approved the spec. The status is `approved`
+- 2026-11-04T20:31:06Z [Claude Code, anthropic/claude-opus-5-5] as the planner, cut
+  `feature-0091-one-contract-per-harness` from `master` at `c582ebe` and wrote `plan.md`. Unit 0090 is implemented,
+  so requirement 9 holds and the plan makes the reading of refused calls a member of the contract. Requirement 5 is
+  read as letting an existing test change the identifier through which it reaches what it imports, `HEADLESS.claude`
+  becoming `claudeHarness.headless`, and three sandbox tests copy the scripts the wrapper's node now imports, since
+  both are what the tests import and the tests cannot pass otherwise. The checklist gets entries beyond the spec's
+  list for the session retention carried from the host, the default orchestrator and this repository's own sandbox
+  compose file, which the search of requirement 8 found. The status is `approved`
