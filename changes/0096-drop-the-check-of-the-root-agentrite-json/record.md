@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-04T23:09:30Z
 ---
 
@@ -41,5 +41,6 @@ of `package.json`, which the human declined.
   1447. Made the unit as a task: one test changed, with the one decision, dropping 0054's R24, made by the human.
   Numbered 0096: the highest number in `changes/` is 0095. Checked before writing: with `"process": true` taken out of
   the root `agentrite.json`, all 1447 tests passed; the file was put back. The status is `draft`
+- 2026-11-04T23:10:32Z [human] approved the record. The status is `approved`
 
 ## Amendments
