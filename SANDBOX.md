@@ -163,9 +163,10 @@ For a unit run that starts nothing, see "When something goes wrong".
 ```
 
 A sandbox-only project uses the sandbox without the change process in `changes/`, the roles or the orchestrator. It
-is set up with `npx agentrite init --sandbox-only`, as "Installing it into a project" in [`SETUP.md`](SETUP.md) says,
-and its `agentrite.json` holds `"process": false`. Its shim tells the sandbox so, and a run there is given a branch
-rather than a unit:
+is set up with `npx agentrite init --sandbox-only` and the harnesses it uses, as in
+`npx agentrite init --sandbox-only claude`, as "Installing it into a project" in [`SETUP.md`](SETUP.md) says, and its
+`agentrite.json` holds `"process": false`. Its shim tells the sandbox so, and a run there is given a branch rather than
+a unit:
 
 * The local branch of that exact name is run on a clone, as a unit run is. Only local branches are looked at
 * A name that is no local branch gets a branch of that name first, cut from the head of the local default branch that

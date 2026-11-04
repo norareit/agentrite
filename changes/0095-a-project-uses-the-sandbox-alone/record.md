@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-04T11:55:47Z
 ---
 
@@ -105,3 +105,14 @@ timestamp: 2026-11-04T11:55:47Z
   one failing, none skipped, matching the known failure the human decided above; the git-environment regression
   and Docker tests ran. `npm run check-changes` and `git diff --check` passed. Not verified: a build of the complete
   kit image or a sandbox-only run through the real wrapper and Compose into that image. The status is `in-progress`
+- 2026-11-04T15:55:39Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1 of the review, which the
+  human accepted: the setup command in "Running on a branch without the change process" of `SANDBOX.md` names a harness,
+  as `npx agentrite init --sandbox-only claude`. The status is `in-progress`
+- 2026-11-04T15:55:39Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision, replaced
+  the open first box of "Verification" in `plan.md` with one that has `npm test` pass apart from unit 0054's R24 test in
+  `tests/repository-own-files.test.mjs`, which the human decided to leave failing, since the box as it stood will not
+  hold until the project depends on a release that has `process`. The status is `in-progress`
+- 2026-11-04T15:55:39Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on the final tree:
+  `npm test` reports 1418 tests, 1417 passing, none skipped, the tests with Docker among them, and the one failing test
+  the human decided to leave, and `npm run check-changes` exits 0. The review returned no blocking finding, its one
+  finding C1 is applied, and every task of `plan.md` is ticked. On the human's approval, the status is `implemented`

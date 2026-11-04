@@ -286,7 +286,8 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ## Verification
 
-- [ ] `npm test` passes on the host, the tests that need Docker among them
+- [x] `npm test` passes on the host, the tests that need Docker among them, apart from unit 0054's R24 test in
+  `tests/repository-own-files.test.mjs`, which the human decided to leave failing
 - [x] `node --test tests/sandbox-git-environment.test.mjs` passes, and so the files it runs pass with the sandbox's git
   environment configuration
 - [x] `npm run check-changes` passes
