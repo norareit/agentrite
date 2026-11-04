@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-04T11:26:27Z
 ---
 
@@ -28,3 +28,5 @@ timestamp: 2026-11-04T11:26:27Z
   `CHANGELOG.md` keeps its references to sections of the README, which name the README as it was at each release
   and hold no link. The SVGs are generated on the host, as R17 requires, so a session in the sandbox leaves that
   task to the host. The status is `approved`
+- 2026-11-04T12:53:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `feature-0094-split-the-readme` at `c9f5eb1`, began the work. The status is `in-progress`
