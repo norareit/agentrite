@@ -275,7 +275,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The record
 
-- [ ] In `record.md`, a log entry with the map of the README as it was at `2a20348`: every heading of the list
+- [x] In `record.md`, a log entry with the map of the README as it was at `2a20348`: every heading of the list
   below, and where it went, by document and heading, with the statements of "Running a role" that the merge
   dropped and why, and the statements of "The sandbox" that `SANDBOX.md` already made and where (R11). The headings:
   "AgentRite" with its opening, "The name", "What is here", "How it works", "Commands" with "agentrite init",
@@ -284,7 +284,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
   "sandbox.sh", "Exit statuses", "Running a role", "The orchestrator" with its five subsections, "Installing it into
   a project" with its two, "Git hooks", "The project's settings", "Replacing a role or the standards", "Adding a
   role", "Updating a project to a newer kit" and "The sandbox"
-- [ ] Commit the record
+- [x] Commit the record
 
 ## Verification
 
@@ -313,4 +313,4 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Make the README a landing page`
 - [x] `feature-0094 Add the diagrams of the components and the workflow`
 - [x] `feature-0094 Say in AGENTS.md what goes in which document`
-- [ ] `feature-0094 Record where each section of the README went`
+- [x] `feature-0094 Record where each section of the README went`

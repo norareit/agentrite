@@ -79,3 +79,32 @@ timestamp: 2026-11-04T11:26:27Z
   `COMMANDS.md#exit-statuses` since the move of the commands. The rule "The three documents say what there is" now
   reads "The documents say", since its content is in six. `grep -rn -i 'lines' tests/*.mjs scripts/check-changes.mjs`
   shows no count of the lines of a document. `npm test` passes, 1358 tests
+- 2026-11-04T13:13:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded where each
+  section of the README at `2a20348` went:
+    * "AgentRite" and its opening: stay in `README.md`, its list of sections removed for "The documents" of R1
+    * "The name": stays in `README.md`
+    * "What is here": stays in `README.md`, with the rows of `COMMANDS.md`, `ORCHESTRATOR.md` and `SETUP.md`
+    * "How it works": stays in `README.md`, with the statuses and the workflow diagram added before the workflow list
+    * "Commands": the title and opening of `COMMANDS.md`; its twelve sections, "agentrite init", "agentrite
+      config", "agentrite refresh", "agentrite roles", "agentrite units", "agentrite approve", "agentrite run",
+      "agentrite orchestrate", "agentrite runs", "check-changes", "check-commit-message" and "sandbox.sh", are the
+      `##` sections of the same names in `COMMANDS.md`
+    * "Exit statuses": "Exit statuses" of `COMMANDS.md`
+    * "Running a role": merged into "agentrite run" of `COMMANDS.md`. Dropped, as the section already made them:
+      that the command waits for the harness and exits with its status, or 1 for a signal, which its paragraph of
+      exit statuses says; and the refusals of a project with no or a wrong `agentrite.json` or role file, and of a
+      role that `roles` does not name, which its opening paragraph says. Everything else was added to it in its
+      wording, and "See "Running a role"." was removed
+    * "The orchestrator" and "The definition", "The outcome of a step", "How a run ends", "What .orchestrator
+      holds" and "On the host and in the sandbox": `ORCHESTRATOR.md`, the first as its title and the five as its
+      `##` sections
+    * "Installing it into a project" with "How the kit's instructions reach an agent" and "On a fresh clone", "Git
+      hooks", "The project's settings", "Replacing a role or the standards", "Adding a role" and "Updating a project
+      to a newer kit": the sections of the same names and levels in `SETUP.md`, in that order
+    * "The sandbox": its opening paragraph stays in `README.md` as "The sandbox", and its first sentence opens
+      "Before the first run" of `SANDBOX.md` too. "What a run needs", the three files that configure a project's
+      sandbox and the bullets of the image and of `--rebuild` went to "Before the first run". "What it confines",
+      the table of what of the host is reachable and the sentence on `~/.gitconfig` went to the top of "What the
+      sandbox defends against". Dropped, as `SANDBOX.md` already made them: the unit run and the branch it gets,
+      in "Running a unit"; `--in-place`, in "Running on the tree as it is"; `--connect`, in "Two agents on one
+      unit"; `--variant`, in "Two implementations of one unit"; and the bell, in "The bell"
