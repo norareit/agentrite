@@ -48,7 +48,7 @@ test('the notice of a hook of the project names its path, what is then not check
   const text = notice.replaceAll('\n', ' ');
   assert.match(text, /^\.git\/hooks\/commit-msg /);
   assert.match(text, /commit messages are not checked for the trailers/i);
-  assert.match(text, /"Git hooks" in node_modules\/agentrite\/README\.md/);
+  assert.match(text, /"Git hooks" in node_modules\/agentrite\/SETUP\.md/);
   assert.ok(notice.endsWith('\n'));
   for (const line of notice.split('\n')) assert.ok(line.length <= 120, line);
 });

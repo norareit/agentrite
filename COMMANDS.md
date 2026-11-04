@@ -33,7 +33,7 @@ npx agentrite init
 Sets a project up, from its root: writes `agentrite.json`, the wrappers of every role `roles` names, the list of the
 instruction files in use, the project's agent instructions, the sandbox's files and the `commit-msg` hook, writes or
 amends `opencode.json` with `opencode`, and prints each file it wrote, changed or skipped. The hook is written as
-[Git hooks](README.md#git-hooks) says. The first form is for a project with no
+[Git hooks](SETUP.md#git-hooks) says. The first form is for a project with no
 `agentrite.json`, and writes that file from its arguments. The second is for a project that has one, and takes the
 harnesses and the sandbox setting from it.
 
@@ -75,7 +75,7 @@ The wrappers, the list `.agentrite/instructions.md`, `CLAUDE.md` and `opencode.j
 in `agentrite.json`. Below, the standards path is the one `standards` names, which in the default file is
 `node_modules/agentrite/standards.md`. Each role's wrappers carry the description of the role file `roles` gives and
 point at that file, and `init` refuses, writing nothing, a role file that does not open with the front matter that
-"Replacing a role or the standards" in `README.md` gives, naming the file and the form it must have.
+"Replacing a role or the standards" in `SETUP.md` gives, naming the file and the form it must have.
 
 With `opencode` among the harnesses, `init` writes `opencode.json` when nothing is at its path, naming OpenCode's
 schema `https://opencode.ai/config.json` and holding both paths in its `instructions` list, and prints
@@ -126,7 +126,7 @@ once. The form `--no-orchestrator=<value>` is not taken, and is refused as an un
 It exits with `0`, `1` when it refuses or fails, and `2` for wrong arguments, as [Exit statuses](#exit-statuses) says.
 
 See "Installing it into a project", "Git hooks", "How the kit's instructions reach an agent", "The project's
-settings" and "Replacing a role or the standards" in `README.md`.
+settings" and "Replacing a role or the standards" in `SETUP.md`.
 
 ## agentrite config
 
@@ -147,7 +147,7 @@ prints `skipped agentrite.json, which exists`, prints no content and no notice, 
 
 It exits with `0`, `1` when it fails, and `2` for an argument, as [Exit statuses](#exit-statuses) says.
 
-See "The project's settings" in `README.md`.
+See "The project's settings" in `SETUP.md`.
 
 ## agentrite refresh
 
@@ -163,13 +163,13 @@ from `agentrite.json`, which it never writes. Given any argument, it prints its 
 It refreshes the wrappers of every role `roles` names, the roles of the project's own included, for the harnesses that
 `harnesses` names, a pinned model that survives included. Each role's wrappers are written from the role file that
 `roles` gives: its description, and a body that says to read that file. A role file that does not open with the front
-matter "Replacing a role or the standards" in `README.md` gives is refused: `refresh` names the file and the form the
+matter "Replacing a role or the standards" in `SETUP.md` gives is refused: `refresh` names the file and the form the
 front matter must have, writes nothing and exits 1. It then writes the list `.agentrite/instructions.md` from
 `standards` and `roles`, whatever is at its path. With `sandbox` `true` it refreshes `sandbox.sh` too, and writes one
 that is missing. With `sandbox` `false`, `sandbox.sh` is not read or written and no line is printed for it: what is at
 its path, a symbolic link or a directory included, changes neither what `refresh` prints nor its exit status. After them
 it writes the `commit-msg` hook where there is none, and rewrites one that carries the kit's mark, as [Git
-hooks](README.md#git-hooks) says.
+hooks](SETUP.md#git-hooks) says.
 
 After the lines of the files and before the notices, `refresh` removes the wrapper of a role that `roles` no longer
 names, as a role taken out or renamed leaves one. In the wrapper directory of each harness that `harnesses` names, it
@@ -190,7 +190,7 @@ the notices `init` prints for a `CLAUDE.md` and an `opencode.json` that still lo
 
 It reads `AGENTS.md` too, whatever the harnesses, and never writes it. For one that is missing, or does not hold the
 text `.agentrite/instructions.md`, it prints a notice: that agents then do not learn from `AGENTS.md` which role and
-standards files the project uses, that `refresh` does not change `AGENTS.md`, and where the README says what it must
+standards files the project uses, that `refresh` does not change `AGENTS.md`, and where `SETUP.md` says what it must
 hold. The notices come in this order: the lines `CLAUDE.md` lacks, the kit's standards in it, what `opencode.json`
 lacks, the kit's standards in it, `AGENTS.md`, then the hook's: a hook of the project's own at its path, or none
 written outside a git repository. None of them changes what `refresh` writes or its exit status.
@@ -198,7 +198,7 @@ written outside a git repository. None of them changes what `refresh` writes or 
 It exits with `0`, `1` when it refuses or fails, and `2` for an argument, as [Exit statuses](#exit-statuses) says.
 
 See "Updating a project to a newer kit", "Git hooks", "How the kit's instructions reach an agent", "The project's
-settings" and "Replacing a role or the standards" in `README.md`.
+settings" and "Replacing a role or the standards" in `SETUP.md`.
 
 ## agentrite roles
 
@@ -215,7 +215,7 @@ project root. The text listing does not show the path.
 
 It reads `agentrite.json` and refuses as every command that reads it does, in a project that has none or whose file is
 not valid. It refuses a role file that does not open with the front matter "Replacing a role or the standards" in
-`README.md` gives too, and names the file and the form the front matter must have. Either way it prints nothing on
+`SETUP.md` gives too, and names the file and the form the front matter must have. Either way it prints nothing on
 standard output and exits 1.
 
 | Argument or option | What it is                                                                   |
@@ -458,7 +458,7 @@ The command starts nothing when:
 
   So a project that moved to a newer kit, or changed `roles`, runs `refresh` before `run`, and a key a project added
   to a wrapper by hand stops `run` until `refresh` has removed it. See "Updating a project to a newer kit" in
-  `README.md`
+  `SETUP.md`
 * the harness's own command is not on the `PATH`
 * `changes/` holds no directory for the unit, or more than one for its digits
 
@@ -637,7 +637,7 @@ local one gives no common ancestor. When neither gives one it fails, and names t
 It exits with `0`, `1` for units at fault or a check that failed, and `2` for more than one argument, which it
 refuses with its usage and without checking anything, as [Exit statuses](#exit-statuses) says.
 
-See "Installing it into a project" and "The project's settings" in `README.md`.
+See "Installing it into a project" and "The project's settings" in `SETUP.md`.
 
 ## check-commit-message
 
@@ -667,7 +667,7 @@ It exits with `0` for a message it does not refuse, `1` for one it refuses or a 
 path or more than one, which it refuses with what is wrong and its usage, reading nothing, as
 [Exit statuses](#exit-statuses) says.
 
-See "Git hooks" in `README.md`.
+See "Git hooks" in `SETUP.md`.
 
 ## sandbox.sh
 
@@ -686,7 +686,7 @@ cancelled there, which gets none. With `--variant` the run is of a variant of th
 Every form but `--connect` reads `bell` from the project's `agentrite.json` at each start, and with `true` has the
 harnesses ring the terminal's bell. It refuses a project with no `agentrite.json`, and a file that lacks `bell` or
 whose `bell` is neither `true` nor `false`, with a message that names the file, the key and what it must hold, and
-starts nothing. See "The project's settings" in `README.md`.
+starts nothing. See "The project's settings" in `SETUP.md`.
 
 | Argument or option | What it is                                                                                   |
 |--------------------|----------------------------------------------------------------------------------------------|

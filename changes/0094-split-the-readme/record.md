@@ -42,3 +42,10 @@ timestamp: 2026-11-04T11:26:27Z
   the entry above to that of its commit, `de5fc1d`. Merged "Running a role" into the section of `agentrite run` of
   `COMMANDS.md`, after its table and before its exit statuses; the statements it dropped are in the map of the
   README below. Corrected the two links to it in `README.md`. `npm test` passes, 1350 tests
+- 2026-11-04T13:04:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved the orchestrator into
+  `ORCHESTRATOR.md`, its heading the title as for `COMMANDS.md`, and the six sections of the installation and the
+  configuration into `SETUP.md`. `SETUP.md` gets a title of its own, "Setting up a project", and a line of what it
+  holds, and its sections keep their levels, in place of the plan's headings up one level: the six are siblings, and
+  up one level each would be a title of its own, in a document with no title. The sentence of `agentrite refresh`
+  that says where the README says what `AGENTS.md` must hold now names `SETUP.md`, since the notice it describes
+  names it. `npm test` passes, 1353 tests

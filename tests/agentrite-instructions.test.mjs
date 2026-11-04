@@ -32,7 +32,7 @@ const STANDARDS = 'node_modules/agentrite/standards.md';
 const IMPORT = `@${PROCESS}`;
 const STANDARDS_IMPORT = `@${STANDARDS}`;
 const LINES = [IMPORT, STANDARDS_IMPORT, '@AGENTS.md'];
-const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/README.md.';
+const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/SETUP.md.';
 // The file of R3 of unit 0048, R18 of unit 0052 and task 0063, byte for byte.
 const WRITTEN =
   '{\n  "$schema": "https://opencode.ai/config.json",\n  "instructions": [\n' +
@@ -410,13 +410,13 @@ test('the notice of AGENTS.md says it is missing or does not name the list, that
     agentsListNotice(true),
     'AGENTS.md is missing, so agents do not learn from it which role and standards files the project uses, which\n' +
       '.agentrite/instructions.md names. refresh does not change AGENTS.md. ' +
-      'See "How the kit\'s instructions reach an agent" in\nnode_modules/agentrite/README.md.\n',
+      'See "How the kit\'s instructions reach an agent" in\nnode_modules/agentrite/SETUP.md.\n',
   );
   assert.equal(
     agentsListNotice(false),
     'AGENTS.md does not name .agentrite/instructions.md, so agents do not learn from it which role and standards ' +
       'files the\nproject uses, which .agentrite/instructions.md names. refresh does not change AGENTS.md. ' +
-      'See "How the kit\'s instructions\nreach an agent" in node_modules/agentrite/README.md.\n',
+      'See "How the kit\'s instructions\nreach an agent" in node_modules/agentrite/SETUP.md.\n',
   );
   assertLinesFit(agentsListNotice(true));
   assertLinesFit(agentsListNotice(false));

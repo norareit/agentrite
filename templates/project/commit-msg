@@ -2,7 +2,7 @@
 # agentrite: commit-msg hook
 # Refuses a commit message that holds a trailer the standards forbid, by running the checker of the installed kit.
 # npx agentrite refresh rewrites this file while it holds the line above. See "Git hooks" in
-# node_modules/agentrite/README.md, which also says how to call the checker from a hook of the project's own.
+# node_modules/agentrite/SETUP.md, which also says how to call the checker from a hook of the project's own.
 
 top=$(git rev-parse --show-toplevel) || exit 1
 checker="$top/node_modules/agentrite/container/check-commit-message.mjs"

@@ -28,6 +28,7 @@
     "SANDBOX.md",
     "COMMANDS.md",
     "ORCHESTRATOR.md",
+    "SETUP.md",
     "roles",
     "templates",
     "scripts/check-changes.mjs",

@@ -148,21 +148,21 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The setup
 
-- [ ] In `tests/agentrite-hook.test.mjs` and `tests/agentrite-instructions.test.mjs`, the expected messages name
+- [x] In `tests/agentrite-hook.test.mjs` and `tests/agentrite-instructions.test.mjs`, the expected messages name
   `node_modules/agentrite/SETUP.md` in place of `README.md`, rewrapped as the notices wrap. In
   `tests/package-documents.test.mjs`, add `SETUP.md` to `files` and to the paths of the test of `planned`. They fail
   (R13, R19)
-- [ ] Create `SETUP.md` and move into it, as they are and in this order, "Installing it into a project" with "How
+- [x] Create `SETUP.md` and move into it, as they are and in this order, "Installing it into a project" with "How
   the kit's instructions reach an agent" and "On a fresh clone", "Git hooks", "The project's settings", "Replacing a
   role or the standards", "Adding a role" and "Updating a project to a newer kit", headings up one level. Add it to
   `files` after `ORCHESTRATOR.md` and to "What is here" (R8, R19)
-- [ ] The messages name `SETUP.md`: `SECTION` of `scripts/agentrite-hook.mjs` and of
+- [x] The messages name `SETUP.md`: `SECTION` of `scripts/agentrite-hook.mjs` and of
   `scripts/agentrite-instructions.mjs`, the message of `container/sandbox.sh` at "Installing it into a project", and
   the comment of `templates/project/commit-msg`. Run the two test files (R13)
-- [ ] Correct the references that now cross a document, in every document: the README's intro and "How it works"
+- [x] Correct the references that now cross a document, in every document: the README's intro and "How it works"
   link "Replacing a role or the standards" and "Adding a role" in `SETUP.md`; `COMMANDS.md` and `ORCHESTRATOR.md`
   name `SETUP.md` for these sections; `SANDBOX.md`'s "Git hooks" in `README.md` links `SETUP.md` (R6, R10, R12)
-- [ ] Run `npm test` and commit (R8, R10, R12, R13, R19)
+- [x] Run `npm test` and commit (R8, R10, R12, R13, R19)
 
 ### The sandbox
 
@@ -308,7 +308,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Merge Running a role into agentrite run`
 - [x] `feature-0094 Open COMMANDS.md with a table of every command`
 - [x] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
-- [ ] `feature-0094 Move the installation and the configuration into SETUP.md`
+- [x] `feature-0094 Move the installation and the configuration into SETUP.md`
 - [ ] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
 - [ ] `feature-0094 Make the README a landing page`
 - [ ] `feature-0094 Add the diagrams of the components and the workflow`

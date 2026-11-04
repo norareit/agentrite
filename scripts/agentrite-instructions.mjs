@@ -36,7 +36,7 @@ export const OPENCODE_FILE = 'opencode.json';
 /** The schema of OpenCode's configuration, which OpenCode adds to `opencode.json` when it lacks it. */
 const OPENCODE_SCHEMA = 'https://opencode.ai/config.json';
 
-const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/README.md.';
+const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/SETUP.md.';
 
 // The longest line of a notice whose words are wrapped by the kit rather than by hand.
 const NOTICE_WIDTH = 120;

@@ -7,7 +7,7 @@ import { wrapWords } from './agentrite-roles.mjs';
  */
 export const HOOK_MARK = '# agentrite: commit-msg hook';
 
-const SECTION = 'See "Git hooks" in node_modules/agentrite/README.md';
+const SECTION = 'See "Git hooks" in node_modules/agentrite/SETUP.md';
 
 // The longest line of a notice whose words are wrapped by the kit rather than by hand.
 const NOTICE_WIDTH = 120;

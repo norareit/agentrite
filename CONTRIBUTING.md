@@ -166,7 +166,7 @@ The kit is also a devDependency of itself, installed from the npm registry at on
   rather than the working copy it may be changing
 * Changes are made at the repository root, never under `node_modules`
 * The installed copy moves to a newer release only by a deliberate update, as "Updating a project to a newer kit"
-  of `README.md` has it. A release makes that update as one of its own steps, which [`RELEASING.md`](RELEASING.md)
+  of `SETUP.md` has it. A release makes that update as one of its own steps, which [`RELEASING.md`](RELEASING.md)
   gives
 * The repository also runs the kit's sandbox, from the installed release, with `./sandbox.sh`, as any project does.
   Work on the sandbox itself is therefore done inside the sandbox the last release built, not the working copy's: a

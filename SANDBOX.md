@@ -280,7 +280,7 @@ The standards forbid the trailers Co-Authored-By and Claude-Session, so remove t
 ```
 
 The same commit without those lines is made. It is the rule of the project's own `commit-msg` hook on the host, run
-by the same checker, as "Git hooks" in [`README.md`](README.md) says.
+by the same checker, as "Git hooks" in [`SETUP.md`](SETUP.md) says.
 
 * The hook is the image's, and not the clone's: git in the container runs the hooks of a directory in the image,
   which the agent cannot write. It holds in a unit run, with `--in-place`, `--workdir` and `--mount`, and in a command
