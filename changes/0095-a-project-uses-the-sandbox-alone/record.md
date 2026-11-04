@@ -92,3 +92,9 @@ timestamp: 2026-11-04T11:55:47Z
   stage of the Dockerfile that makes `/usr/local/lib/agentrite/no-hooks` was not run, and a run of `./sandbox.sh` in a
   real container in a sandbox-only project. The unit is handed over for review at `in-progress`. The status is
   `in-progress`
+- 2026-11-04T15:07:31Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decisions: unit
+  0054's R24 test in `tests/repository-own-files.test.mjs` is left failing, as a known effect of a change to the
+  settings file until the project depends on a release that has `process`, so the first box of "Verification" stays open
+  for it; and the commit that wrapped the record's entry at 120 characters is folded into `feature-0095 Add the key
+  process to agentrite.json`. The branch was replayed for that with the same tree, so the commits after it have new
+  hashes: `fe8c305`, on which the verification was run, is now `9d7c6a6`. The status is `in-progress`
