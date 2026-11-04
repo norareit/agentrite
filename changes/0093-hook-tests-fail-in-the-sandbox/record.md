@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-11-03T15:56:34Z
 ---
 
@@ -14,3 +14,4 @@ timestamp: 2026-11-03T15:56:34Z
   Read the messages of the failing runs of `./sandbox-dev.sh --in-place npm test` on `680bae1` and on `e27280f`,
   `container/compose.yml`'s environment for git, `container/hooks/commit-msg` and the setup of
   `tests/commit-msg-hook.test.mjs`. Wrote `spec.md`. The status is `draft`
+- 2026-11-04T11:27:27Z [human] approved the spec. The status is `approved`
