@@ -165,3 +165,9 @@ timestamp: 2026-11-04T11:26:27Z
   source rather than by CSS, and the two of the components end in a non-breaking space: Mermaid measures a title
   before CSS applies, and the last letter was cut off otherwise. Both SVGs were rendered to PNG and looked at, with
   the fonts of this host, which has none of those the sources name. `npm test` passes, 1358 tests, none skipped
+- 2026-11-04T14:06:37Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, delta-reviewed 0094 at
+  `4be8b72aafe1c3c01a17c2cc2a45515b23d0bbcb` from `ec001025e57628d71df75f476f11b04090772607`.
+  Returned no new findings, in `.reviews/0094-split-the-readme/2026-11-04T140637Z-opencode.md`.
+  `npm test` passes, 1358 tests, none skipped; `npm run check-changes`, `npm pack --dry-run`, shell syntax and
+  diff whitespace checks pass. Did not regenerate the SVGs, independently inspect visual rendering or verify the
+  historical manual inspections or published images. The status remains `in-progress`
