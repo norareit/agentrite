@@ -2,7 +2,7 @@
 #
 # The sandbox is AgentRite's. This shim keeps it one command from the repository
 # root; it holds no configuration of its own. The command is described in the kit's
-# README.md and the sandbox in its SANDBOX.md, and this project's half of the
+# COMMANDS.md and the sandbox in its SANDBOX.md, and this project's half of the
 # configuration is in sandbox/compose.project.yml.
 set -euo pipefail
 
