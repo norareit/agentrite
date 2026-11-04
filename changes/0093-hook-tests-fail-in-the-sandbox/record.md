@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-11-03T15:56:34Z
 ---
 
@@ -55,3 +55,6 @@ timestamp: 2026-11-03T15:56:34Z
   1340 passing, 0 skipped; `./sandbox-dev.sh --in-place npm test`: 1307 passing, 33 skipped, 0 failing; and
   `npm run check-changes`, which passed. Historical test-first execution and task-box update timing could not be
   verified from the committed snapshots alone.
+- 2026-11-04T12:39:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the outcome of the
+  review: it returned no findings, so none blocks and none is open, and every task of `plan.md` is ticked. The
+  status is `implemented`
