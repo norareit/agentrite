@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-04T11:26:27Z
 ---
 
@@ -171,3 +171,10 @@ timestamp: 2026-11-04T11:26:27Z
   `npm test` passes, 1358 tests, none skipped; `npm run check-changes`, `npm pack --dry-run`, shell syntax and
   diff whitespace checks pass. Did not regenerate the SVGs, independently inspect visual rendering or verify the
   historical manual inspections or published images. The status remains `in-progress`
+- 2026-11-04T14:09:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the outcome of
+  the reviews: the first returned S1 and C1, blocking, which were applied and which the human accepted, and P1, not
+  blocking, which was applied; the delta review of `4be8b72`, in
+  `.reviews/0094-split-the-readme/2026-11-04T140637Z-opencode.md`, found S1 and C1 corrected and P1 addressed, and
+  returned no new findings. No finding is open, and every task of `plan.md` is ticked. The check that GitHub and
+  npmjs.com show the images stays outside the unit, as recorded above. On `aef8be6`, `npm test` passes, 1358 tests,
+  none skipped, and `npm run check-changes` passes. The status is `implemented`
