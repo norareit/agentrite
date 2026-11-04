@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-02T21:36:55Z
 ---
 
@@ -87,3 +87,7 @@ timestamp: 2026-11-02T21:36:55Z
   1447 tests, 1446 passing, one failing, none skipped; the failure is the root settings comparison already recorded
   as accepted for this unit. The change check, diff whitespace check and package dry run passed. No real harness
   was run; test-first timing and the implementer's temporary mutations could not be independently verified.
+- 2026-11-04T22:44:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted and applied C1 of the
+  review in `.reviews/0091-one-contract-per-harness/2026-11-04T224054Z-opencode.md`: the frontmatter kept
+  `status: approved` when the work began, while the log said `in-progress`. The frontmatter now says `in-progress`,
+  and the entries above are left as they are. The status is `in-progress`
