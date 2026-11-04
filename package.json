@@ -56,7 +56,8 @@
     "test": "node --test tests/*.test.mjs",
     "prepublishOnly": "node publish-check.mjs && npm test",
     "check-changes": "node node_modules/agentrite/scripts/check-changes.mjs",
-    "kit": "node node_modules/agentrite/scripts/agentrite.mjs"
+    "kit": "node node_modules/agentrite/scripts/agentrite.mjs",
+    "diagrams": "for source in diagrams/*.mmd; do npx --yes @mermaid-js/mermaid-cli@11.4.2 --input \"$source\" --output \"${source%.mmd}.svg\" --backgroundColor white || exit 1; done"
   },
   "devDependencies": {
     "agentrite": "8.2.0"

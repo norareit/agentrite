@@ -36,6 +36,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `package-lock.json`           | The lockfile, which pins the installed release of the kit                            |
 | `.dockerignore`, `.gitignore` | What the image build and git leave out                                               |
 | `.editorconfig`               | The formatting that editors apply                                                    |
+| `diagrams/`                   | The diagrams the README shows: each a Mermaid source and the SVG generated from it   |
 
 ## Commands
 
@@ -69,6 +70,21 @@ project that installs the kit is not affected. `npm run kit --` runs the install
 after `npm ci`, as for `npm run check-changes`.
 
 See "The kit's own copy of the kit".
+
+### npm run diagrams
+
+```sh
+npm run diagrams
+```
+
+Generates the SVG of every diagram in `diagrams/` from its Mermaid source, `<name>.svg` beside `<name>.mmd`, with a
+white background, and stops at the first that fails. It takes no argument. It runs a pinned version of Mermaid's
+command line, `@mermaid-js/mermaid-cli`, through `npx`, which is no dependency of the repository, so `npm ci` installs
+nothing for it. On its first run it downloads the command line and a headless Chrome that the command line renders
+in. Run it on the host: the sandbox cannot reach the host the browser is downloaded from.
+
+It exits with `0` when it generated every SVG, and with `1` when the Mermaid command line failed for one, by "Exit
+statuses" of [`COMMANDS.md`](COMMANDS.md#exit-statuses).
 
 ### sandbox-dev.sh
 

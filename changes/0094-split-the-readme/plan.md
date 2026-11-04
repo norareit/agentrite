@@ -210,7 +210,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The diagrams
 
-- [ ] In `tests/package-documents.test.mjs`, tests written before what they test:
+- [x] In `tests/package-documents.test.mjs`, tests written before what they test:
     * `diagrams/` holds, for each `<name>.mmd`, a `<name>.svg`, and no other file, and the sources are
       `components.mmd` and `workflow.mmd` (R14)
     * the root `<svg>` element of each SVG has a `style` whose `background-color` is `white` (R16)
@@ -220,34 +220,34 @@ the project's own README; `CHANGELOG.md`, as the approach says.
     * the script `diagrams` of `package.json` runs `npx` with `@mermaid-js/mermaid-cli` at an exact version, and
       `devDependencies` holds `agentrite` alone (R17)
     * `files` holds no `diagrams` (R18)
-- [ ] Add to `package.json` the script `diagrams`, which runs over every `diagrams/*.mmd` the pinned Mermaid command
+- [x] Add to `package.json` the script `diagrams`, which runs over every `diagrams/*.mmd` the pinned Mermaid command
   line and writes the SVG beside it with a white background, stopping at the first that fails:
   `for source in diagrams/*.mmd; do npx --yes @mermaid-js/mermaid-cli@11.4.2 --input "$source" --output
   "${source%.mmd}.svg" --backgroundColor white || exit 1; done`. Check with `npm view @mermaid-js/mermaid-cli
   versions` that 11.4.2 is published, and take the newest 11 release that is at least two weeks old if it is not
   (R16, R17)
-- [ ] Write `diagrams/components.mmd`, a flowchart of what R14 lists for the components: the process and the
+- [x] Write `diagrams/components.mmd`, a flowchart of what R14 lists for the components: the process and the
   standards, the kit's four roles and a project's own, the units in `changes/`, the role wrappers of the harnesses,
   `agentrite run`, the orchestrator and the sandbox. Its edges are labelled `reads`, `runs` or `starts`: a role reads
   the process and the standards; a wrapper reads its role; `agentrite run` starts a harness with a wrapper; the
   orchestrator runs `agentrite run`; the sandbox runs the harness, `agentrite run` and the orchestrator; a role reads
   and writes the units (R14)
-- [ ] Write `diagrams/workflow.mmd`, a flowchart of the workflow as R14 gives it: specifying with the human, the
+- [x] Write `diagrams/workflow.mmd`, a flowchart of the workflow as R14 gives it: specifying with the human, the
   human's approval, the sandbox, planning, implementing, the review and its fixes as a loop back to implementing,
   leaving the sandbox, and merging. The steps of the human and those of an agent are two classes with their own
   fill, and a legend of the two; the orchestrator is a path beside planning to the review's fixes, marked as the
   alternative (R14)
-- [ ] On the host, run `npm run diagrams` and look at both SVGs in a light and a dark viewer. In the sandbox, which
+- [x] On the host, run `npm run diagrams` and look at both SVGs in a light and a dark viewer. In the sandbox, which
   cannot download the browser, leave this task open, log in `record.md` that the SVGs await `npm run diagrams` on
   the host, and hand the unit over there (R16, R17)
-- [ ] Put the two images into the README where the tasks of the README placed them, each with alternative text
+- [x] Put the two images into the README where the tasks of the README placed them, each with alternative text
   that says what the diagram shows, as `![The components of the kit: ...](https://raw.githubusercontent.com/...)`
   (R15)
-- [ ] In `CONTRIBUTING.md`, describe `npm run diagrams` under "Commands", after `npm run kit`, as the other commands
+- [x] In `CONTRIBUTING.md`, describe `npm run diagrams` under "Commands", after `npm run kit`, as the other commands
   are: its block, what it does, that it takes no argument, that it runs a pinned Mermaid command line through `npx`,
   which downloads a browser on its first run, that it runs on the host, and how it exits. Add the row of
   `diagrams/` to "What the repository holds besides the package" (R17, R18)
-- [ ] Run `npm test` and commit, with the SVGs once they are generated (R14 to R18)
+- [x] Run `npm test` and commit, with the SVGs once they are generated (R14 to R18)
 
 ### The rules
 
@@ -311,6 +311,6 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Move the installation and the configuration into SETUP.md`
 - [x] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
 - [x] `feature-0094 Make the README a landing page`
-- [ ] `feature-0094 Add the diagrams of the components and the workflow`
+- [x] `feature-0094 Add the diagrams of the components and the workflow`
 - [ ] `feature-0094 Say in AGENTS.md what goes in which document`
 - [ ] `feature-0094 Record where each section of the README went`

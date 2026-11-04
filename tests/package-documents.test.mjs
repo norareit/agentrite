@@ -304,3 +304,45 @@ test('no text of the kit names the status planned, and the record template gives
 test('roles/planner.md gives the words a record holds for a unit that needs no plan', () => {
   assert.ok(readDocument('roles/planner.md').includes('needs no plan'));
 });
+
+// R14 of unit 0094: each diagram is its Mermaid source and the SVG generated from it, and nothing else.
+const DIAGRAMS = ['components', 'workflow'];
+
+test('diagrams/ holds, for each Mermaid source, its SVG, and no other file', () => {
+  const files = readdirSync(new URL('../diagrams/', import.meta.url)).sort();
+  const sources = files.filter((file) => file.endsWith('.mmd'));
+  assert.deepEqual(sources, DIAGRAMS.map((name) => `${name}.mmd`));
+  assert.deepEqual(files, DIAGRAMS.flatMap((name) => [`${name}.mmd`, `${name}.svg`]).sort());
+});
+
+// R16 of unit 0094: a solid background reads the same in a light and a dark theme.
+test('the root element of each SVG has a white background', () => {
+  for (const name of DIAGRAMS) {
+    const root = /<svg\b[^>]*>/.exec(readDocument(`diagrams/${name}.svg`))[0];
+    const style = /\sstyle="([^"]*)"/.exec(root)?.[1] ?? '';
+    assert.match(style, /(^|;)\s*background-color:\s*white\s*(;|$)/, `${name}.svg: ${root}`);
+  }
+});
+
+// R15 of unit 0094: npmjs.com resolves no relative image path, so each SVG is addressed on the default branch.
+test('README.md shows each diagram by its address on the default branch, with alternative text', () => {
+  const readme = readDocument('README.md');
+  for (const name of DIAGRAMS) {
+    const address = `https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/${name}.svg`;
+    const image = new RegExp(`!\\[([^\\]]*)\\]\\(${address.replaceAll('.', '\\.')}\\)`).exec(readme);
+    assert.ok(image, `README.md shows no image of ${address}`);
+    assert.ok(image[1].trim() !== '', `the image of ${name}.svg has no alternative text`);
+  }
+});
+
+// R17 of unit 0094: the Mermaid command line runs through npx at a pinned version, so that npm ci installs no browser.
+test('package.json generates the diagrams through npx with a pinned Mermaid command line, not a dependency', () => {
+  assert.match(packageJson.scripts.diagrams, /\bnpx (--yes )?@mermaid-js\/mermaid-cli@\d+\.\d+\.\d+ /);
+  assert.deepEqual(Object.keys(packageJson.devDependencies), ['agentrite']);
+});
+
+// R18 of unit 0094: the diagrams are the repository's, and the README reaches them by their address.
+test('the package does not ship diagrams/', () => {
+  const listed = packageJson.files.filter((path) => path.startsWith('diagrams'));
+  assert.deepEqual(listed, [], `files holds ${packageJson.files.join(', ')}`);
+});

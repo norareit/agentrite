@@ -1,0 +1,25 @@
+flowchart TB
+  subgraph rules["The rules"]
+    process["process.md: the process"]
+    standards["The standards: the kit's standards.md or the project's own"]
+  end
+  subgraph roles["The roles"]
+    kitRoles["The kit's four: specifier, planner, implementer, reviewer"]
+    ownRoles["A project's own roles"]
+  end
+  units[("changes/: the units, each a spec, a plan and a record")]
+  wrappers["The role wrappers of the harnesses: .claude/agents/ and .opencode/agents/"]
+  harness["A harness: Claude Code or OpenCode"]
+  run["npx agentrite run"]
+  orchestrator["npx agentrite orchestrate: the orchestrator"]
+  sandbox["./sandbox.sh: the sandbox"]
+
+  roles -->|reads| rules
+  roles -->|reads and writes| units
+  wrappers -->|reads| roles
+  harness -->|reads| wrappers
+  run -->|starts with a wrapper| harness
+  orchestrator -->|runs| run
+  sandbox -->|runs| harness
+  sandbox -->|runs| run
+  sandbox -->|runs| orchestrator

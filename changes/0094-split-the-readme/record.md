@@ -63,3 +63,13 @@ timestamp: 2026-11-04T11:26:27Z
   quick start uses for the specifier. In a unit run the quick start gives `agentrite orchestrate` with
   `--skip-permissions`, as `SANDBOX.md` does, since without it a headless step gets only what the harness's settings
   allow. `npm test` passes, 1353 tests
+- 2026-11-04T13:11:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the diagrams.
+  `npm view @mermaid-js/mermaid-cli versions` lists 11.4.2, which the script pins. On this host the first
+  `npm run diagrams` failed with "Could not find Chrome": puppeteer's install, run by `npx`, downloaded the zips of
+  Chrome and of its headless shell into `~/.cache/puppeteer` but unpacked only a few of their files, under node
+  26.9.0. Unpacking the two zips by hand with `unzip` into the directories puppeteer names made the command work;
+  this is the host's cache and changes nothing in the repository. The components diagram is laid out top to bottom,
+  since left to right made it 3130 pixels wide. Both SVGs were rendered to PNG on white and looked at; they were not
+  looked at in a dark viewer, and their root element has `background-color: white`, which the test checks.
+  `npm run diagrams` is described in `CONTRIBUTING.md` as exiting `1` when one diagram fails, as its `|| exit 1`
+  does. `npm test` passes, 1358 tests

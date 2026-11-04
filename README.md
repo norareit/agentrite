@@ -36,6 +36,13 @@ The sandbox is a Docker container that a harness is run in, with a clone of a un
 read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" of `COMMANDS.md` gives. The reference is
 [`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/agentrite/SANDBOX.md`.
 
+## The components
+
+![The components of the kit: the sandbox runs a harness, agentrite run and the orchestrator; the orchestrator runs
+agentrite run, which starts a harness with a role wrapper; the wrapper reads its role, and a role reads the process and
+the standards and reads and writes the units in
+changes/](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/components.svg)
+
 ## Quick start
 
 Install the kit into the project, and set the project up from its root, naming only the harnesses it uses:
@@ -117,6 +124,11 @@ A unit moves through these statuses, as `process.md` gives them:
 | `in-progress` | The implementer                         | It began the work                                                              |
 | `implemented` | The implementer, or the human           | The human decided every blocking finding, and every task of the plan is ticked |
 | `cancelled`   | The human                               | From `draft`, `approved` or `in-progress`, for a unit that will not be done    |
+
+![The workflow: the human specifies a unit with the specifier and approves it, starts the sandbox, in which agents plan,
+implement and review, looping back to implementing for the review's findings, or the orchestrator does all of that; the
+human then leaves the sandbox and merges the unit's
+branch](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
 
 The writers current workflow:
 

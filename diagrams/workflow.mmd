@@ -1,0 +1,31 @@
+flowchart TD
+  specify["Specify the unit with the human: the specifier, on the default branch"]
+  approve["Approve the spec: npx agentrite approve"]
+  sandbox["Start the sandbox on the unit: ./sandbox.sh"]
+  plan["Plan: the planner"]
+  implement["Implement: the implementer"]
+  review["Review: the reviewer"]
+  orchestrator["Or: npx agentrite orchestrate, from planning to the review's fixes"]
+  leave["Leave the sandbox: exit brings the branch back"]
+  merge["Merge the unit's branch on the default branch"]
+
+  specify --> approve --> sandbox
+  sandbox --> plan --> implement --> review
+  review -->|findings to fix| implement
+  review -->|no findings left| leave
+  sandbox -.->|the alternative| orchestrator
+  orchestrator -.-> leave
+  leave --> merge
+
+  subgraph legend["Legend"]
+    direction LR
+    humanStep["Needs the human"]
+    agentStep["Done by an agent"]
+  end
+
+  classDef human fill:#fde68a,stroke:#92400e,color:#1f2937
+  classDef agent fill:#bfdbfe,stroke:#1e3a8a,color:#1f2937
+  classDef alternative fill:#e5e7eb,stroke:#374151,color:#1f2937,stroke-dasharray:4 3
+  class specify,approve,sandbox,leave,merge,humanStep human
+  class plan,implement,review,agentStep agent
+  class orchestrator alternative
