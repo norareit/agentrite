@@ -81,3 +81,9 @@ timestamp: 2026-11-02T21:36:55Z
   0054's R24 test in `tests/repository-own-files.test.mjs` is left failing for this unit too, as a known issue until
   the next release. The first box of "Verification" now says so, and is ticked on the run on `273e406` logged above.
   Every box of `plan.md` is ticked. The status is `in-progress`
+- 2026-11-04T22:40:54Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of 0091 at
+  `e47241fe002184c8e152af9455a362e6282f2efe`, against merge base `c582ebe` with `master`, and returned C1. Saved
+  the findings in `.reviews/0091-one-contract-per-harness/2026-11-04T224054Z-opencode.md`. Ran `npm test`:
+  1447 tests, 1446 passing, one failing, none skipped; the failure is the root settings comparison already recorded
+  as accepted for this unit. The change check, diff whitespace check and package dry run passed. No real harness
+  was run; test-first timing and the implementer's temporary mutations could not be independently verified.
