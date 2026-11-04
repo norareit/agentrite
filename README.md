@@ -38,6 +38,12 @@ The name reads three ways, and all three are meant:
 
 The "rite" is also Ritenoar's, whose projects carry it.
 
+## The sandbox
+
+The sandbox is a Docker container that a harness is run in, with a clone of a unit's branch or the project mounted
+read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" of `COMMANDS.md` gives. The reference is
+[`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/agentrite/SANDBOX.md`.
+
 ## What is here
 
 | Path                 | What it holds                                                                             |
@@ -95,70 +101,3 @@ The writers current workflow:
 9. Exit the container. This will fast-forward the branch on the host to the one from the container (which was a
    separate checkout!). At this point it is up to you how to handle the rest. You can create a pull request and check
    the changes yourself, or you can simply mark the change `implemented` and merge it back to the default branch
-
-## The sandbox
-
-The sandbox is a Docker container that a harness is run in, with a clone of a unit's branch or the project mounted
-read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" of `COMMANDS.md` gives. The reference is
-[`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/agentrite/SANDBOX.md`.
-
-What a run needs:
-
-* The host needs Docker: Desktop on macOS, Engine on Linux
-* Never run it with `sudo`. The wrapper refuses to run with uid or gid 0, because the agent inside the sandbox would
-  then be root too. When Docker needs elevated permissions on the machine, add the user to the `docker` group instead
-* A run says what it mounts at `/work`, and there is no default. A command that names no unit, and gives no
-  `--in-place`, no `--workdir` and no `--connect` either, starts nothing and names the forms
-
-What a run does:
-
-* A unit run, as `./sandbox.sh 0029`, mounts a clone of that unit's branch. It is the way to implement and to review a
-  unit. A number that no branch holds and that is a unit on the default branch gets its branch first. See "Running
-  a unit" of `SANDBOX.md`
-* A run with `--in-place` mounts the project as it is on the host, so the agent works in the developer's own
-  checkout, `.git` and `node_modules` included. It is the way to run something on the tree as it is, such as the
-  suite
-* Either builds the image on first use and opens a shell in the container. A command appended to it runs instead of
-  the shell, as in `./sandbox.sh 0029 claude` and `./sandbox.sh --in-place npm test`
-* `./sandbox.sh --in-place --rebuild` builds the image again before running
-* `./sandbox.sh --connect 0029` mounts and starts nothing: it runs a command in the container of the unit run that is
-  under way for the unit, beside what runs there. See "Two agents on one unit" of `SANDBOX.md`
-* `./sandbox.sh 0029 --variant opus claude` is a variant of the unit: a unit run of the branch
-  `feature-0029-sandbox-clone-of-the-branch--opus`, in a container and on a clone of its own, beside the unit's run and
-  other variants. See "Two implementations of one unit" of `SANDBOX.md`
-* In a project whose `agentrite.json` holds `"bell": true`, Claude Code and OpenCode in the sandbox ring the
-  terminal's bell when they need the developer or stop, with nothing to set in the home volume or on the host. See
-  "The bell" of `SANDBOX.md`
-
-What it confines:
-
-* The container's root filesystem is read-only. The agent writes the working directory, its home volume, the
-  project's log directory on the host and `/tmp`
-* `/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
-  that runs what it writes to the temporary directory works as on the host
-* Egress is bounded by hostname: HTTPS on port 443 to the allowlisted hosts, and little else. See "Reaching more
-  hosts" of `SANDBOX.md`
-* Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`
-
-Nothing of the host is reachable but what is mounted at `/work`, with these exceptions:
-
-| Of the host                                       | Mounted    | In `SANDBOX.md`                     |
-|---------------------------------------------------|------------|-------------------------------------|
-| The developer's `~/.gitconfig`                    | Read-only  |                                     |
-| The developer's Claude Code status line           | Read-only  | "The status line"                   |
-| The project's log directory                       | Read-write | "Where things are kept on the host" |
-| The local model server's port                     |            | "The local model server"            |
-| The project's `.reviews`, in a unit run only      | Read-write | "Running a unit"                    |
-| The project's `.orchestrator`, in a unit run only | Read-write | "Running a unit"                    |
-
-The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
-
-A project configures the sandbox with two files, and may add a third:
-
-* `sandbox.sh` at the project root, a shim that execs `node_modules/agentrite/container/sandbox.sh` with the
-  project root as its first argument
-* `sandbox/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
-  allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
-* `sandbox/Dockerfile`, which the project may add for software it needs in the sandbox, such as a JDK, and which
-  the wrapper builds on the kit's image. `init` and `refresh` do not write it. See "Adding software to the sandbox"
-  in [`SANDBOX.md`](SANDBOX.md#adding-software-to-the-sandbox)

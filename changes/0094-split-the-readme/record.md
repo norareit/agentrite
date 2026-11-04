@@ -49,3 +49,11 @@ timestamp: 2026-11-04T11:26:27Z
   up one level each would be a title of its own, in a document with no title. The sentence of `agentrite refresh`
   that says where the README says what `AGENTS.md` must hold now names `SETUP.md`, since the notice it describes
   names it. `npm test` passes, 1353 tests
+- 2026-11-04T13:06:14Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved what "The sandbox"
+  of the README held and `SANDBOX.md` did not into "Before the first run", new and first in `SANDBOX.md`, and the top
+  of "What the sandbox defends against". Two changes of wording were needed beyond R10's and are made: the bullet that
+  opened "Either builds the image", whose "either" named the two bullets before it that `SANDBOX.md` already makes
+  and that were left out, opens "A unit run, or a run with `--in-place`, builds the image"; and the bullets of what a
+  run does that `SANDBOX.md` lacked stand under a new line, "What a run does, besides what the sections below say".
+  The README keeps the opening paragraph of the section, as a section "The sandbox" after "The name". `npm test`
+  passes, 1353 tests

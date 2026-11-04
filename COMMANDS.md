@@ -730,7 +730,7 @@ the sandbox" in [`SANDBOX.md`](SANDBOX.md).
 | `XDG_STATE_HOME`     | Where the clones of unit runs are kept, in place of `~/.local/state`                       |
 | `XDG_DATA_HOME`      | Where the project's log directory is, in place of `~/.local/share`                         |
 
-See "The sandbox" in `README.md`, and in `SANDBOX.md` "Running a unit", "Getting the work back", "Two agents on one
+See in `SANDBOX.md` "Before the first run", "Running a unit", "Getting the work back", "Two agents on one
 unit", "Two implementations of one unit", "Running on the tree as it is", "The bell" and "Where things are kept on the
 host".
 

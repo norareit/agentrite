@@ -38,7 +38,7 @@ It prints each file it wrote, changed or skipped. It writes:
 | `AGENTS.md`                   | The project's agent instructions, pointing at the list of the files in use                   |
 | `CLAUDE.md`                   | Imports the kit's `process.md`, the project's standards and `AGENTS.md`                      |
 | `opencode.json`               | For `opencode`: loads `process.md` and the standards. Amended if present                     |
-| `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "The sandbox" in `README.md` |
+| `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "Before the first run" in `SANDBOX.md` |
 | `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                              |
 | `.git/hooks/commit-msg`       | The hook that refuses a commit message the standards forbid. See "Git hooks"                 |
 

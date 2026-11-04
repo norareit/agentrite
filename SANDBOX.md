@@ -1,8 +1,10 @@
 # The sandbox
 
 How the agent sandbox is used, by what a reader does with it. The commands that start it, with every argument and
-option, are in "Commands" of [`COMMANDS.md`](COMMANDS.md), and what the sandbox confines is in "The sandbox" there.
+option, are in "Commands" of [`COMMANDS.md`](COMMANDS.md), and what the sandbox confines is in
+"What the sandbox defends against".
 
+* [Before the first run](#before-the-first-run)
 * [Running a unit](#running-a-unit)
 * [Getting the work back](#getting-the-work-back)
 * [Two agents on one unit](#two-agents-on-one-unit)
@@ -17,6 +19,34 @@ option, are in "Commands" of [`COMMANDS.md`](COMMANDS.md), and what the sandbox 
 * [Where things are kept on the host](#where-things-are-kept-on-the-host)
 * [What the sandbox defends against](#what-the-sandbox-defends-against)
 * [When something goes wrong](#when-something-goes-wrong)
+
+## Before the first run
+
+The sandbox is a Docker container that a harness is run in, with a clone of a unit's branch or the project mounted
+read-write at `/work`.
+
+What a run needs:
+
+* The host needs Docker: Desktop on macOS, Engine on Linux
+* Never run it with `sudo`. The wrapper refuses to run with uid or gid 0, because the agent inside the sandbox would
+  then be root too. When Docker needs elevated permissions on the machine, add the user to the `docker` group instead
+* A run says what it mounts at `/work`, and there is no default. A command that names no unit, and gives no
+  `--in-place`, no `--workdir` and no `--connect` either, starts nothing and names the forms
+
+A project configures the sandbox with two files, and may add a third:
+
+* `sandbox.sh` at the project root, a shim that execs `node_modules/agentrite/container/sandbox.sh` with the
+  project root as its first argument
+* `sandbox/compose.project.yml`, holding what varies per project: the Compose project name, the image name, the egress
+  allowlist, the resource limits and, for a project with Playwright, the `PLAYWRIGHT_VERSION` build argument
+* `sandbox/Dockerfile`, which the project may add for software it needs in the sandbox, such as a JDK, and which
+  the wrapper builds on the kit's image. `init` and `refresh` do not write it. See "Adding software to the sandbox"
+
+What a run does, besides what the sections below say:
+
+* A unit run, or a run with `--in-place`, builds the image on first use and opens a shell in the container. A command
+  appended to it runs instead of the shell, as in `./sandbox.sh 0029 claude` and `./sandbox.sh --in-place npm test`
+* `./sandbox.sh --in-place --rebuild` builds the image again before running
 
 ## Running a unit
 
@@ -645,6 +675,29 @@ docker image rm <image>-base
 The next start with a project's file builds it again, and the project's file on it.
 
 ## What the sandbox defends against
+
+What it confines:
+
+* The container's root filesystem is read-only. The agent writes the working directory, its home volume, the
+  project's log directory on the host and `/tmp`
+* `/tmp` is in memory and is emptied when the container stops, and files in it can be run, so a test suite or a tool
+  that runs what it writes to the temporary directory works as on the host
+* Egress is bounded by hostname: HTTPS on port 443 to the allowlisted hosts, and little else. See "Reaching more
+  hosts"
+* Everything that confines the container is in `container/compose.yml` and `container/entrypoint.sh`
+
+Nothing of the host is reachable but what is mounted at `/work`, with these exceptions:
+
+| Of the host                                       | Mounted    | In `SANDBOX.md`                     |
+|---------------------------------------------------|------------|-------------------------------------|
+| The developer's `~/.gitconfig`                    | Read-only  |                                     |
+| The developer's Claude Code status line           | Read-only  | "The status line"                   |
+| The project's log directory                       | Read-write | "Where things are kept on the host" |
+| The local model server's port                     |            | "The local model server"            |
+| The project's `.reviews`, in a unit run only      | Read-write | "Running a unit"                    |
+| The project's `.orchestrator`, in a unit run only | Read-write | "Running a unit"                    |
+
+The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
 
 A unit run defends the host's repository against an agent that was misled, for example by an instruction injected
 through a dependency, and that writes whatever it likes under `/work`, the clone's `.git` included. Against

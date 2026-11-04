@@ -166,7 +166,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The sandbox
 
-- [ ] Move what "The sandbox" of the README holds and `SANDBOX.md` does not into `SANDBOX.md`, by what the reader is
+- [x] Move what "The sandbox" of the README holds and `SANDBOX.md` does not into `SANDBOX.md`, by what the reader is
   doing (R9). Take each statement in turn and either name the place of `SANDBOX.md` that already makes it, or move
   it there, in its wording:
     * a new section "Before the first run", first after the list of sections and linked from it: what a run needs,
@@ -176,13 +176,13 @@ the project's own README; `CHANGELOG.md`, as the approach says.
       reachable besides `/work`, with the sentence on `~/.gitconfig`
     * the statements of what a run does that "Running a unit", "Running on the tree as it is", "Two agents on one
       unit", "Two implementations of one unit" and "The bell" already make stay there and are not repeated
-- [ ] Correct the opening of `SANDBOX.md`, which says the commands are in "Commands" of `README.md` and what the
+- [x] Correct the opening of `SANDBOX.md`, which says the commands are in "Commands" of `README.md` and what the
   sandbox confines is in "The sandbox" there: the commands are in "Commands" of `COMMANDS.md`, and what it confines
   is in "What the sandbox defends against" (R6, R10)
-- [ ] Replace "The sandbox" of the README by a paragraph of at most five lines that says what the sandbox is and
+- [x] Replace "The sandbox" of the README by a paragraph of at most five lines that says what the sandbox is and
   links `SANDBOX.md`, as the subsection "The sandbox" after "The name" (R2). Correct the references to the README's
   "The sandbox" in `COMMANDS.md`, as under `sandbox.sh`, to `SANDBOX.md` (R10)
-- [ ] Run `npm test` and commit (R2, R9, R10)
+- [x] Run `npm test` and commit (R2, R9, R10)
 
 ### The README
 
@@ -309,7 +309,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Open COMMANDS.md with a table of every command`
 - [x] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
 - [x] `feature-0094 Move the installation and the configuration into SETUP.md`
-- [ ] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
+- [x] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
 - [ ] `feature-0094 Make the README a landing page`
 - [ ] `feature-0094 Add the diagrams of the components and the workflow`
 - [ ] `feature-0094 Say in AGENTS.md what goes in which document`
