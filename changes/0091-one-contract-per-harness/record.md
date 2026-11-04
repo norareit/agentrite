@@ -77,3 +77,7 @@ timestamp: 2026-11-02T21:36:55Z
   `tests/release.test.mjs`. The search found the tests of the bell's wiring, the allowlist comment, the status line,
   the sessions kept, the trailers and the pointer package beyond the plan's list, and the checklist's entry on the
   tests names them. The status is `in-progress`
+- 2026-11-04T21:21:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision: unit
+  0054's R24 test in `tests/repository-own-files.test.mjs` is left failing for this unit too, as a known issue until
+  the next release. The first box of "Verification" now says so, and is ticked on the run on `273e406` logged above.
+  Every box of `plan.md` is ticked. The status is `in-progress`

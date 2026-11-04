@@ -248,7 +248,8 @@ now import as well. No assertion, input or expected value changes.
 
 ## Verification
 
-- [ ] `npm test` passes, the new `tests/agentrite-harness.test.mjs` among it
+- [x] `npm test` passes, the new `tests/agentrite-harness.test.mjs` among it, apart from unit 0054's R24 test in
+  `tests/repository-own-files.test.mjs`, which the human decided to leave failing until the next release
 - [x] `git diff master -- tests/` shows, in the existing test files, only import lines, the `HEADLESS` identifiers,
   the lists of copied scripts, the list of the package's files, the shebang test of the task the implementer added,
   and two lines of `tests/agentrite-outcome.test.mjs` wrapped to 120 characters after their identifier grew (R5, R6)
