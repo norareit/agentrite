@@ -55,7 +55,7 @@ How each harness makes a refusal known in headless mode was tried on the Linux h
    Tests of the command, with fake harnesses, show the part of requirement 3 for a stopping step of each harness;
    for a stopping ask again, the calls of the step it follows before its own; the part of requirement 4 with and
    without `--skip-permissions`; and the end reports of requirement 5 unchanged
-7. "How a run ends" of `README.md` says where in the end report the refused calls stand, what each line of them
+7. "How a run ends" of `ORCHESTRATOR.md` says where in the end report the refused calls stand, what each line of them
    holds, how each harness makes a refusal known, what is added for a run without `--skip-permissions`, and that a
    tool that the harness's settings deny outright, which OpenCode does not offer to the agent, is not reported
 
@@ -89,10 +89,15 @@ How each harness makes a refusal known in headless mode was tried on the Linux h
 * **The advice on `--skip-permissions` only when the run lacked it.** With the option Claude Code still refuses what
   a deny rule of its settings refuses, and the list is then still worth showing, but the option cannot help
 * **Both the sandbox and the host are named.** The command does not tell the two apart, and the option belongs in
-  the sandbox, as "The orchestrator" of `README.md` says. On the host the remedy is the harness's settings
+  the sandbox, as "On the host and in the sandbox" of `ORCHESTRATOR.md` says. On the host the remedy is the
+  harness's settings
 * **No entry in `SANDBOX.md`.** The report names both why the step was refused and what to do, which by this
   project's rule on refusals keeps it out of "When something goes wrong". `SANDBOX.md` already gives the command with
   `--skip-permissions`
+* **Only `ORCHESTRATOR.md` changes among the documents.** The end report is described in "How a run ends" there, since
+  unit 0094 moved the orchestrator out of `README.md`. The unit adds no command, argument, option or environment
+  variable, so `COMMANDS.md` does not change, and it changes neither what the kit is, the quick start, a component
+  nor the workflow, so `README.md` does not change, as "The documents" of `AGENTS.md` says
 
 ## Non-goals
 

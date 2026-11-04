@@ -23,3 +23,9 @@ timestamp: 2026-11-02T13:31:59Z
   and the turn ended with no final response; `deny` took the tool away, with no call to see. One run with `ask`
   printed nothing for 240 seconds, and was not reproduced. Added OpenCode to the requirements, the reporting of the
   refusals of the step an ask again follows, and the decisions and non-goals for them. The status is `draft`
+- 2026-11-04T14:14:51Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `f271638`, on the
+  human's request to bring the spec up to date with unit 0094, which split the README. Read the spec and record of 0094,
+  "The documents" of `AGENTS.md`, and `ORCHESTRATOR.md`, `COMMANDS.md` and `SANDBOX.md` for the end report and
+  `--skip-permissions`. Requirement 7 now names "How a run ends" of `ORCHESTRATOR.md`, the decision on naming the
+  sandbox and the host names "On the host and in the sandbox" of `ORCHESTRATOR.md`, and a decision says why
+  `COMMANDS.md` and `README.md` do not change. The status is `draft`
