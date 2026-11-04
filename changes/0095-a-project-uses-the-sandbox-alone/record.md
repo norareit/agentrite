@@ -30,3 +30,7 @@ timestamp: 2026-11-04T11:55:47Z
   taken from the shim alone, and a branch cut for any name that is no branch; `BTR1` to `BTR4` are declined; the spec
   is not reviewed by the spec-reviewer. The status is `draft`
 - 2026-11-04T12:44:17Z [human] approved the spec. The status is `approved`
+- 2026-11-04T14:27:13Z [Claude Code, anthropic/claude-opus-5-5] as the planner, cut
+  `feature-0095-a-project-uses-the-sandbox-alone` from `master` at `1c69134`, after units 0093 and 0094 were
+  implemented, and wrote `plan.md`. The shim passes the mode as the wrapper's first argument, `--sandbox-only`, before
+  the project root, which the spec left to the plan. The status is `approved`
