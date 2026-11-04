@@ -83,14 +83,14 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The commands
 
-- [ ] In `tests/package-documents.test.mjs`, the expected `files` hold `COMMANDS.md` after `SANDBOX.md`, and a test
+- [x] In `tests/package-documents.test.mjs`, the expected `files` hold `COMMANDS.md` after `SANDBOX.md`, and a test
   that each of `COMMANDS.md`, `ORCHESTRATOR.md` and `SETUP.md` is in `files` and is a file at the root. Add
   `COMMANDS.md` to the paths of the test that no text of the kit names the status `planned` (R13). They fail (R19)
-- [ ] Create `COMMANDS.md` with a heading `# Commands` and a line of what it holds, and move into it, as they are,
+- [x] Create `COMMANDS.md` with a heading `# Commands` and a line of what it holds, and move into it, as they are,
   "Commands" with each command's section, "Exit statuses" and "Running a role" of `README.md`. Their headings go up
   one level. `package.json` gets `COMMANDS.md` in `files` after `SANDBOX.md`, and "What is here" in the README a
   row for it (R3, R19)
-- [ ] Correct every reference that now crosses a document (R10):
+- [x] Correct every reference that now crosses a document (R10):
     * in `COMMANDS.md`, a link or a quoted name of a section that stays in the README or goes to another document,
       such as "See "The sandbox"" under `sandbox.sh`, "Replacing a role or the standards" under `agentrite run` and
       the sections of the orchestrator, names `README.md` for now. The moves below correct it again to the document
@@ -100,7 +100,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
       names the README, points to `COMMANDS.md` (R6). Find them with
       `grep -n -E 'Commands|Exit statuses|exit-statuses|#agentrite-|#check-|#sandbox' *.md`
     * the comment of `templates/project/sandbox.sh` names the kit's `COMMANDS.md` for the command (R13)
-- [ ] Run `npm test`, which runs the test of the links, and commit (R3, R6, R10, R13, R19)
+- [x] Run `npm test`, which runs the test of the links, and commit (R3, R6, R10, R13, R19)
 - [ ] Merge "Running a role" into the section of `agentrite run` and remove it as a section (R4). Take each
   statement of "Running a role" in turn. One that the section already makes is dropped; one that it does not make is
   added to the section, in its wording. These the section already makes, and are dropped:
@@ -304,7 +304,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 ## Commit Points
 
 - [x] `feature-0094 Test that the links between the documents resolve`
-- [ ] `feature-0094 Move the commands and the exit statuses into COMMANDS.md`
+- [x] `feature-0094 Move the commands and the exit statuses into COMMANDS.md`
 - [ ] `feature-0094 Merge Running a role into agentrite run`
 - [ ] `feature-0094 Open COMMANDS.md with a table of every command`
 - [ ] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`

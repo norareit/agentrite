@@ -26,6 +26,7 @@
     "orchestrator.json",
     "CHANGELOG.md",
     "SANDBOX.md",
+    "COMMANDS.md",
     "roles",
     "templates",
     "scripts/check-changes.mjs",

@@ -40,7 +40,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 ## Commands
 
 The commands that only this repository has. Those a project has too, `./sandbox.sh` and `npm run check-changes` among
-them, are in "Commands" of `README.md`.
+them, are in "Commands" of `COMMANDS.md`.
 
 ### npm test
 
@@ -59,7 +59,7 @@ npm run kit -- COMMAND [ARGUMENT...]
 ```
 
 Runs the `agentrite` command of the installed release, `node_modules/agentrite/scripts/agentrite.mjs`, with what
-follows `--`. That is a command and its arguments as "Commands" of `README.md` gives them for `npx agentrite`, for
+follows `--`. That is a command and its arguments as "Commands" of `COMMANDS.md` gives them for `npx agentrite`, for
 example `npm run kit -- refresh` or `npm run kit -- roles --json`. The script adds no argument, option or environment
 variable of its own.
 
@@ -81,16 +81,16 @@ See "The kit's own copy of the kit".
 
 Runs the sandbox from the working copy, in place of the installed release's. It runs on the host.
 
-| Argument or option          | What it is                                                                    |
-|-----------------------------|-------------------------------------------------------------------------------|
-| Every one of `./sandbox.sh` | As "Commands" of `README.md` gives them, its environment variables among them |
-| `--rebuild`                 | Changes nothing: the image is built on every start of a run without it        |
+| Argument or option          | What it is                                                                      |
+|-----------------------------|---------------------------------------------------------------------------------|
+| Every one of `./sandbox.sh` | As "Commands" of `COMMANDS.md` gives them, its environment variables among them |
+| `--rebuild`                 | Changes nothing: the image is built on every start of a run without it          |
 
 | Environment variable   | What it is                                                                                 |
 |------------------------|--------------------------------------------------------------------------------------------|
 | `SANDBOX_PROJECT_NAME` | Names the Compose project and the image. The command sets it, whatever the environment has |
 
-It exits as the working copy's `./sandbox.sh` does, by "Exit statuses" of [`README.md`](README.md#exit-statuses).
+It exits as the working copy's `./sandbox.sh` does, by "Exit statuses" of [`COMMANDS.md`](COMMANDS.md#exit-statuses).
 
 See "Trying the working copy's sandbox".
 

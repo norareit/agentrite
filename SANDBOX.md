@@ -1,7 +1,7 @@
 # The sandbox
 
 How the agent sandbox is used, by what a reader does with it. The commands that start it, with every argument and
-option, are in "Commands" of [`README.md`](README.md), and what the sandbox confines is in "The sandbox" there.
+option, are in "Commands" of [`COMMANDS.md`](COMMANDS.md), and what the sandbox confines is in "The sandbox" there.
 
 * [Running a unit](#running-a-unit)
 * [Getting the work back](#getting-the-work-back)

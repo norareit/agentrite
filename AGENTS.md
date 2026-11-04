@@ -58,7 +58,7 @@ rest is in "Commands" of [CONTRIBUTING.md](CONTRIBUTING.md#commands).
 ## Exit statuses
 
 Every command of the kit, and every command of this repository's own, follows "Exit statuses" of
-[README.md](README.md#exit-statuses). A unit that adds a command, or a status of one, does so by that section.
+[COMMANDS.md](COMMANDS.md#exit-statuses). A unit that adds a command, or a status of one, does so by that section.
 
 ## Ways of working
 
