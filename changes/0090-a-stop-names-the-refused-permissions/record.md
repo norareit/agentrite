@@ -57,3 +57,9 @@ timestamp: 2026-11-02T13:31:59Z
   0054's R24 test in `tests/repository-own-files.test.mjs` is left failing, as a known issue until the next release,
   as for unit 0095. The task that runs `npm test` after the command's tests and the first box of "Verification" now
   say so, and are ticked on the run on `e97d815` logged above. The status is `in-progress`
+- 2026-11-04T20:14:48Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0090 at
+  `f502281c966a3e11e3a207dc43fb7c38cee7c5ff`, against merge base `7af6531`. No findings on any of the three axes.
+  Saved the review in `.reviews/0090-a-stop-names-the-refused-permissions/2026-11-04T201448Z-review.md`.
+  Ran `npm test`: 1433 tests, 1432 passed, one failed, none skipped; the failure is the recorded and accepted R24
+  test in `tests/repository-own-files.test.mjs`. `npm run check-changes` and `git diff --check master...HEAD` passed.
+  Live harness output was not rechecked; command coverage uses fake harnesses. The status is `in-progress`
