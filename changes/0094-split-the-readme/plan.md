@@ -286,6 +286,21 @@ the project's own README; `CHANGELOG.md`, as the approach says.
   role", "Updating a project to a newer kit" and "The sandbox"
 - [x] Commit the record
 
+### The findings of the review
+
+Added after the review of `ec00102`, whose findings are in `.reviews/0094-split-the-readme/`.
+
+- [x] S1: in the quick start of `README.md`, between `init` and the first unit, commit what `npm install` and `init`
+  wrote on the default branch, after `git status`, since a unit run clones only what is committed (R1)
+- [x] C1: in `tests/package-documents.test.mjs`, the test of R17 judges a script `generate-diagrams.sh` at the root,
+  executable, that runs the pinned Mermaid command line through `npx`, and `npm run diagrams` that runs it. It fails
+- [x] C1: move the loop of `npm run diagrams` into `generate-diagrams.sh`, so that no line of `package.json` passes the
+  line limit; describe it in "npm run diagrams" and add its row to "What the repository holds besides the package"
+  of `CONTRIBUTING.md`. Run `npm run diagrams` and check that the SVGs do not change (R17, R18)
+- [x] P1: look at both SVGs on a dark page, which the task of `npm run diagrams` asked and the record said was not
+  done (R16)
+- [x] Run `npm test` and commit
+
 ## Verification
 
 - [x] `npm test` passes (R27)
@@ -312,3 +327,4 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Add the diagrams of the components and the workflow`
 - [x] `feature-0094 Say in AGENTS.md what goes in which document`
 - [x] `feature-0094 Record where each section of the README went`
+- [x] `feature-0094 Apply the findings of the review`

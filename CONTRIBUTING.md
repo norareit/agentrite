@@ -33,6 +33,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `sandbox.sh`                  | The shim that runs the sandbox of the installed release                              |
 | `sandbox/`                    | This repository's `compose.project.yml`                                              |
 | `sandbox-dev.sh`              | Runs the sandbox of the working copy                                                 |
+| `generate-diagrams.sh`        | Generates the SVGs of `diagrams/`, which `npm run diagrams` runs                     |
 | `package-lock.json`           | The lockfile, which pins the installed release of the kit                            |
 | `.dockerignore`, `.gitignore` | What the image build and git leave out                                               |
 | `.editorconfig`               | The formatting that editors apply                                                    |
@@ -78,10 +79,10 @@ npm run diagrams
 ```
 
 Generates the SVG of every diagram in `diagrams/` from its Mermaid source, `<name>.svg` beside `<name>.mmd`, with a
-white background, and stops at the first that fails. It takes no argument. It runs a pinned version of Mermaid's
-command line, `@mermaid-js/mermaid-cli`, through `npx`, which is no dependency of the repository, so `npm ci` installs
-nothing for it. On its first run it downloads the command line and a headless Chrome that the command line renders
-in. Run it on the host: the sandbox cannot reach the host the browser is downloaded from.
+white background, and stops at the first that fails, by running `generate-diagrams.sh`. It takes no argument. It runs a
+pinned version of Mermaid's command line, `@mermaid-js/mermaid-cli`, through `npx`, which is no dependency of the
+repository, so `npm ci` installs nothing for it. On its first run it downloads the command line and a headless Chrome
+that the command line renders in. Run it on the host: the sandbox cannot reach the host the browser is downloaded from.
 
 It exits with `0` when it generated every SVG, and with `1` when the Mermaid command line failed for one, by "Exit
 statuses" of [`COMMANDS.md`](COMMANDS.md#exit-statuses).

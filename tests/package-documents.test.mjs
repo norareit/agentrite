@@ -336,8 +336,11 @@ test('README.md shows each diagram by its address on the default branch, with al
 });
 
 // R17 of unit 0094: the Mermaid command line runs through npx at a pinned version, so that npm ci installs no browser.
-test('package.json generates the diagrams through npx with a pinned Mermaid command line, not a dependency', () => {
-  assert.match(packageJson.scripts.diagrams, /\bnpx (--yes )?@mermaid-js\/mermaid-cli@\d+\.\d+\.\d+ /);
+// The loop is in a file of its own, since a line of package.json cannot be wrapped at the line limit.
+test('npm run diagrams runs a pinned Mermaid command line through npx, which is not a dependency', () => {
+  assert.equal(packageJson.scripts.diagrams, './generate-diagrams.sh');
+  assert.ok(statSync(new URL('../generate-diagrams.sh', import.meta.url)).mode & 0o100, 'the script is executable');
+  assert.match(readDocument('generate-diagrams.sh'), /\bnpx (--yes )?@mermaid-js\/mermaid-cli@\d+\.\d+\.\d+ /);
   assert.deepEqual(Object.keys(packageJson.devDependencies), ['agentrite']);
 });
 

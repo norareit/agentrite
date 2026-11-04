@@ -52,6 +52,16 @@ npm install --save-dev agentrite
 npx agentrite init claude opencode
 ```
 
+Commit what the two wrote on the default branch, the dependency in `package.json` and `package-lock.json` and the
+files `init` wrote, once `git status` shows nothing else. The sandbox works on a clone of what is committed, and
+without them the clone has neither the kit nor the project's settings:
+
+```sh
+git status
+git add -A
+git commit -m "Install AgentRite"
+```
+
 Then take a first unit from its spec to the merge:
 
 1. Specify it on the default branch, in a session of the harness with the specifier as its agent, and ask for the

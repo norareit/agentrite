@@ -136,3 +136,16 @@ timestamp: 2026-11-04T11:26:27Z
   `npm run check-changes`, `npm pack --dry-run` and `git diff --check` pass. Did not regenerate the SVGs or
   independently verify visual rendering in light or dark viewers, or the earlier visual inspection claimed in the
   record. The status remains `in-progress`
+- 2026-11-04T13:39:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took up the findings of
+  `.reviews/0094-split-the-readme/2026-11-04T133119Z-opencode.md`, and added their tasks to `plan.md`:
+    * S1, blocking, accepted and applied: the quick start now commits what `npm install` and `init` wrote, on the
+      default branch after `git status`, before the first unit, since a unit run clones only what is committed
+    * C1, blocking, accepted and applied: the loop of `npm run diagrams` is in `generate-diagrams.sh` at the root,
+      a file of this repository only, as `sandbox-dev.sh` is, and the script of `package.json` runs it, so no line
+      of `package.json` passes the line limit. A JSON string cannot be wrapped, so a file of its own is the only
+      way within the rule short of an exception, which is the human's to grant. `CONTRIBUTING.md` describes it and
+      lists it. `npm run diagrams` through the script left both SVGs unchanged, which `git status` showed
+    * P1, not blocking, accepted and applied by doing the check rather than removing it: both SVGs were shown as
+      images on a page of background `#0d1117`, GitHub's dark one, in Chrome's headless shell with
+      `--force-dark-mode`, and the screenshot was looked at. Each reads as on white, on its own white background
+  `npm test` passes, 1358 tests, none skipped
