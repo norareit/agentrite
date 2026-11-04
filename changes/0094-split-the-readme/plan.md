@@ -186,7 +186,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The README
 
-- [ ] Order the README as R1 gives it and write its new parts (R1, R2):
+- [x] Order the README as R1 gives it and write its new parts (R1, R2):
     * what the kit is: the opening as it is, with its list of sections replaced by the map of the documents below,
       then "The name" and "The sandbox"
     * the components diagram, as the image of R15
@@ -205,7 +205,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
     * "The documents": a list of `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md`, `CHANGELOG.md` and
       `CONTRIBUTING.md`, each a link with the question its reader brings to it
     * "What is here", with the rows of the three documents
-- [ ] Check that the README holds no part of a section that R4, R7 and R8 moved, and that the test of the links
+- [x] Check that the README holds no part of a section that R4, R7 and R8 moved, and that the test of the links
   passes. Run `npm test` and commit (R1, R2, R12)
 
 ### The diagrams
@@ -310,7 +310,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
 - [x] `feature-0094 Move the installation and the configuration into SETUP.md`
 - [x] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
-- [ ] `feature-0094 Make the README a landing page`
+- [x] `feature-0094 Make the README a landing page`
 - [ ] `feature-0094 Add the diagrams of the components and the workflow`
 - [ ] `feature-0094 Say in AGENTS.md what goes in which document`
 - [ ] `feature-0094 Record where each section of the README went`

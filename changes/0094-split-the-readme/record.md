@@ -57,3 +57,9 @@ timestamp: 2026-11-04T11:26:27Z
   run does that `SANDBOX.md` lacked stand under a new line, "What a run does, besides what the sections below say".
   The README keeps the opening paragraph of the section, as a section "The sandbox" after "The name". `npm test`
   passes, 1353 tests
+- 2026-11-04T13:07:50Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the README a landing
+  page: what the kit is, "The name", "The sandbox", "Quick start", "How it works" with the statuses, "The documents"
+  and "What is here", 168 lines before the diagrams. `claude --help` on the host gives `--agent <agent>`, which the
+  quick start uses for the specifier. In a unit run the quick start gives `agentrite orchestrate` with
+  `--skip-permissions`, as `SANDBOX.md` does, since without it a headless step gets only what the harness's settings
+  allow. `npm test` passes, 1353 tests
