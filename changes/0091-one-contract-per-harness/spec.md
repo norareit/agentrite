@@ -170,20 +170,20 @@ step was refused, beside `HEADLESS`. It is another feature of the kind this unit
 
 ## Beyond the request
 
-1. Taken by the human, as requirement 10. **A test that every harness module is in the list.** A test that the
-   modules of the harnesses and the entries of the list of requirement 3 are the same set. It costs one small test.
-   Without it, a module that was written and not listed is unknown to the commands, which refuse its name at once, so
-   the mistake is seen on the first try
-2. **A test that the checklist is complete.** A test that searches the repository for the name of each harness and
-   fails for a file the checklist does not name, with a list of the files that name a harness only as an example. It
-   costs the test and that list, kept up to date by every unit that mentions a harness anywhere. Without it, a place
-   the checklist misses is found when the next harness is added, and the checklist is amended then
-3. **Behaviour tests of the contract run for every harness.** Tests written once against the contract, such as that
-   the headless arguments without a session give a session or none, and that the reading of an empty output gives no
-   response, run for each harness of the list. It costs a shared suite beside the per-harness tests that exist.
-   Without it, a new harness's module is held to having its members and not to how they behave, until its own cases
-   are written, which the standards ask of any new logic
-4. **Help texts built from the modules.** The model id and the meaning of `--skip-permissions` for each harness in
-   the usage of `agentrite run` taken from its module, with the text wrapped by the code. It costs a member of the
-   contract and a wrapping of the usage. Without it, the text is an entry of the checklist and is edited by hand when
-   a harness is added
+1. Taken by the human, as requirement 10. **A test that every harness module is in the list.** A test that the modules
+   of the harnesses and the entries of the list of requirement 3 are the same set. It costs one small test. Without it,
+   a module that was written and not listed is unknown to the commands, which refuse its name at once, so the mistake is
+   seen on the first try
+2. Declined by the human. **A test that the checklist is complete.** A test that searches the repository for the name of
+   each harness and fails for a file the checklist does not name, with a list of the files that name a harness only as
+   an example. It costs the test and that list, kept up to date by every unit that mentions a harness anywhere. Without
+   it, a place the checklist misses is found when the next harness is added, and the checklist is amended then
+3. Declined by the human. **Behaviour tests of the contract run for every harness.** Tests written once against the
+   contract, such as that the headless arguments without a session give a session or none, and that the reading of an
+   empty output gives no response, run for each harness of the list. It costs a shared suite beside the per-harness
+   tests that exist. Without it, a new harness's module is held to having its members and not to how they behave, until
+   its own cases are written, which the standards ask of any new logic
+4. Declined by the human. **Help texts built from the modules.** The model id and the meaning of `--skip-permissions`
+   for each harness in the usage of `agentrite run` taken from its module, with the text wrapped by the code. It costs a
+   member of the contract and a wrapping of the usage. Without it, the text is an entry of the checklist and is edited
+   by hand when a harness is added
