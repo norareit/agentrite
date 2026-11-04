@@ -163,36 +163,47 @@ function usage() {
   return lines.join('\n').replaceAll('\nusage: ', '\n       ');
 }
 
+const SANDBOX_ONLY = '--sandbox-only';
 const NO_SANDBOX = '--no-sandbox';
 const NO_ORCHESTRATOR = '--no-orchestrator';
 const DEFAULT_BRANCH = '--default-branch';
 
 // Its two forms: the one a project with no settings file is set up with, and the one that reads the file.
 const INIT_FORM =
-  `usage: agentrite init [${NO_SANDBOX}] [${NO_ORCHESTRATOR}] [${DEFAULT_BRANCH} <name>] ` +
+  `usage: agentrite init [${SANDBOX_ONLY}] [${NO_SANDBOX}] [${NO_ORCHESTRATOR}] [${DEFAULT_BRANCH} <name>] ` +
   `${HARNESS_NAMES.join(' | ')}\n` +
   '       agentrite init';
 
 /**
- * What `init` is given: the harnesses, each once, in the order they were given, whether the sandbox and the
- * orchestrator are wanted, the default branch when one was named, and whether any argument was given at all. The
- * options stand at any place among the harnesses and are told apart from one by an exact match, so `--no-sandbox=1`
- * is an unknown harness. The word after `--default-branch` is the name whatever it is, and the last name given counts.
+ * What `init` is given: the harnesses, each once, in the order they were given, whether the project uses the sandbox
+ * alone, whether the sandbox and the orchestrator are wanted, the default branch when one was named, and whether any
+ * argument was given at all. The options stand at any place among the harnesses and are told apart from one by an
+ * exact match, so `--no-sandbox=1` is an unknown harness. The word after `--default-branch` is the name whatever it
+ * is, and the last name given counts. A sandbox-only project has the sandbox, so `--sandbox-only` with
+ * `--no-sandbox` is refused.
  *
  * @param {string[]} args
  * @returns {{
- *   harnesses: string[], sandbox: boolean, orchestrator: boolean, defaultBranch: string | undefined, given: boolean
+ *   harnesses: string[],
+ *   sandboxOnly: boolean,
+ *   sandbox: boolean,
+ *   orchestrator: boolean,
+ *   defaultBranch: string | undefined,
+ *   given: boolean,
  * }}
  */
 function parseInit(args) {
   /** @type {string[]} */ const harnesses = [];
+  let sandboxOnly = false;
   let sandbox = true;
   let orchestrator = true;
   /** @type {string | undefined} */ let defaultBranch;
 
   for (let index = 0; index < args.length; index += 1) {
     const word = args[index];
-    if (word === NO_SANDBOX) {
+    if (word === SANDBOX_ONLY) {
+      sandboxOnly = true;
+    } else if (word === NO_SANDBOX) {
       sandbox = false;
     } else if (word === NO_ORCHESTRATOR) {
       orchestrator = false;
@@ -211,8 +222,21 @@ function parseInit(args) {
   if (unknown.length > 0) {
     throw new Error(`${unknown.map((name) => `unknown harness: ${name}`).join(', ')}\n${INIT_FORM}`);
   }
+  if (sandboxOnly && !sandbox) {
+    throw new Error(
+      `${SANDBOX_ONLY} cannot be given together with ${NO_SANDBOX}: a sandbox-only project has the sandbox\n` +
+        INIT_FORM,
+    );
+  }
 
-  return { harnesses: [...new Set(harnesses)], sandbox, orchestrator, defaultBranch, given: args.length > 0 };
+  return {
+    harnesses: [...new Set(harnesses)],
+    sandboxOnly,
+    sandbox,
+    orchestrator,
+    defaultBranch,
+    given: args.length > 0,
+  };
 }
 
 /**
@@ -340,20 +364,36 @@ function listFile(standards, roles) {
   return { path: INSTRUCTIONS_LIST, content: instructionsList({ standards, roles: files }) };
 }
 
+// What the shim passes the kit's wrapper before the project root, with the comment that says what it is for: nothing
+// in a project with the process, which keeps the shim every release before the mode wrote, and the mode in a
+// sandbox-only project.
+const SHIM_MODES = {
+  process: { mode: '', mode_comment: '' },
+  sandboxOnly: {
+    mode: '--sandbox-only ',
+    mode_comment:
+      '# Before it comes --sandbox-only, which tells the wrapper that this project uses the\n' +
+      '# sandbox without the change process.',
+  },
+};
+
 /**
- * The shim that runs the kit's sandbox from the project root.
+ * The shim that runs the kit's sandbox from the project root, in the mode of a sandbox-only project when
+ * `sandboxOnly` is true.
  *
  * @param {Record<string, string>} templates
+ * @param {boolean} sandboxOnly
  * @returns {{ path: string, content: string, executable: boolean }}
  */
-function shimFile(templates) {
-  return { path: 'sandbox.sh', content: fillTemplate(templates['sandbox.sh'], {}), executable: true };
+function shimFile(templates, sandboxOnly) {
+  const mode = sandboxOnly ? SHIM_MODES.sandboxOnly : SHIM_MODES.process;
+  return { path: 'sandbox.sh', content: fillTemplate(templates['sandbox.sh'], mode), executable: true };
 }
 
 /**
- * The generated files that hold nothing but what the kit put there, which refresh keeps as the release writes
- * them: the role wrappers, in which a project may have pinned a model, the list of the instruction files in use,
- * and the shim when the project has the sandbox.
+ * The generated files of a project with the process that hold nothing but what the kit put there, which refresh
+ * keeps as the release writes them: the role wrappers, in which a project may have pinned a model, the list of the
+ * instruction files in use, and the shim of a project with the process when the project has the sandbox.
  *
  * @param {{
  *   templates: Record<string, string>,
@@ -367,7 +407,7 @@ function shimFile(templates) {
 function kitOwnedFiles({ templates, harnesses, sandbox, standards, roles }) {
   const wrappers = plannedFiles(harnesses, roles).map((file) => ({ ...file, keepsModel: true }));
   const files = [...wrappers, listFile(standards, roles)];
-  return sandbox ? [...files, shimFile(templates)] : files;
+  return sandbox ? [...files, shimFile(templates, false)] : files;
 }
 
 /**
@@ -418,32 +458,35 @@ export function processFiles({ templates, harnesses, standards, roles }) {
 }
 
 /**
- * The files init creates that carry the sandbox, apart from `.dockerignore`: the shim and the compose file, which
- * names the Playwright version only when the project has one.
+ * The files init creates that carry the sandbox, apart from `.dockerignore`: the shim, in the mode of a sandbox-only
+ * project when `sandboxOnly` is true, and the compose file, which names the Playwright version only when the project
+ * has one.
  *
  * @param {{
  *   templates: Record<string, string>,
  *   packageName: string,
  *   playwrightVersion: string | undefined,
+ *   sandboxOnly: boolean,
  * }} project
  * @returns {{ path: string, content: string, executable?: boolean }[]}
  */
-function sandboxFiles({ templates, packageName, playwrightVersion }) {
+function sandboxFiles({ templates, packageName, playwrightVersion, sandboxOnly }) {
   const compose = fillTemplate(templates[COMPOSE_FILE], {
     sandbox_name: sandboxName(packageName),
     playwright_build: playwrightVersion === undefined ? '' : playwrightBuildBlock(playwrightVersion),
   });
-  return [shimFile(templates), { path: COMPOSE_FILE, content: compose }];
+  return [shimFile(templates, sandboxOnly), { path: COMPOSE_FILE, content: compose }];
 }
 
 /**
- * The files init creates, filled from the templates.
+ * The files init creates in a project with the process and the sandbox, filled from the templates.
  *
  * @param {ProcessProject & { packageName: string, playwrightVersion: string | undefined }} project
  * @returns {{ path: string, content: string, executable?: boolean }[]}
  */
 export function projectFiles({ packageName, playwrightVersion, ...process }) {
-  return [...processFiles(process), ...sandboxFiles({ templates: process.templates, packageName, playwrightVersion })];
+  const sandbox = { templates: process.templates, packageName, playwrightVersion, sandboxOnly: false };
+  return [...processFiles(process), ...sandboxFiles(sandbox)];
 }
 
 /**
@@ -715,23 +758,32 @@ function readTemplates() {
 }
 
 /**
- * The files init creates in the project at `root`: those of the process, and with the sandbox those of the sandbox.
+ * The files init creates in the project at `root`: those of the process when it has the process, and with the
+ * sandbox those of the sandbox. A sandbox-only project, which `process` is undefined for, has the sandbox.
  *
  * @param {string} root
  * @param {{ path: string, text: string, name: unknown }} manifest
- * @param {Omit<ProcessProject, 'templates'>} process
+ * @param {Omit<ProcessProject, 'templates'> | undefined} process
  * @param {boolean} sandbox
  * @returns {{ path: string, content: string, executable?: boolean }[]}
  */
 function plannedProjectFiles(root, manifest, process, sandbox) {
   const templates = readTemplates();
+  if (process === undefined) return sandboxFiles({ templates, ...sandboxProject(root, manifest), sandboxOnly: true });
   if (!sandbox) return processFiles({ templates, ...process });
-  return projectFiles({
-    templates,
-    ...process,
-    packageName: packageNameOf(manifest),
-    playwrightVersion: playwrightVersion(readLockfile(root)),
-  });
+  return projectFiles({ templates, ...process, ...sandboxProject(root, manifest) });
+}
+
+/**
+ * What the sandbox's files are filled from that the project at `root` gives: its package's name and the Playwright
+ * version of its lockfile.
+ *
+ * @param {string} root
+ * @param {{ path: string, text: string, name: unknown }} manifest
+ * @returns {{ packageName: string, playwrightVersion: string | undefined }}
+ */
+function sandboxProject(root, manifest) {
+  return { packageName: packageNameOf(manifest), playwrightVersion: playwrightVersion(readLockfile(root)) };
 }
 
 /**
@@ -868,21 +920,28 @@ const INIT_WITH_SETTINGS =
  * The settings `init` writes into a project that has none: the harnesses in the kit's order, so that one set of
  * harnesses gives one file however it was typed, the template's own branch when none was named, and the template's
  * bell, standards, orchestrator and roles, which name the kit's own files and ring in the sandbox. Without the
- * orchestrator, `orchestrator` is false.
+ * orchestrator, `orchestrator` is false. A sandbox-only project has no process, has the sandbox and does not use the
+ * orchestrator.
  *
- * @param {{ harnesses: string[], sandbox: boolean, orchestrator: boolean, defaultBranch: string | undefined }} given
+ * @param {{
+ *   harnesses: string[],
+ *   sandboxOnly: boolean,
+ *   sandbox: boolean,
+ *   orchestrator: boolean,
+ *   defaultBranch: string | undefined,
+ * }} given
  * @param {import('./agentrite-settings.mjs').Settings} template
  * @returns {import('./agentrite-settings.mjs').Settings}
  */
-function settingsToWrite({ harnesses, sandbox, orchestrator, defaultBranch }, template) {
+function settingsToWrite({ harnesses, sandboxOnly, sandbox, orchestrator, defaultBranch }, template) {
   return {
     defaultBranch: defaultBranch ?? template.defaultBranch,
     harnesses: HARNESS_NAMES.filter((name) => harnesses.includes(name)),
-    process: true,
-    sandbox,
+    process: !sandboxOnly,
+    sandbox: sandboxOnly || sandbox,
     bell: template.bell,
     standards: template.standards,
-    orchestrator: orchestrator ? template.orchestrator : false,
+    orchestrator: orchestrator && !sandboxOnly ? template.orchestrator : false,
     roles: template.roles,
   };
 }
@@ -908,7 +967,9 @@ function initSettings(root, hasSettings, given, template) {
  * Writes what is missing in the project at `root`, prints what it did, and returns the exit status. A project with
  * an `agentrite.json` gives the harnesses and the sandbox setting in it, and no argument. One without is given them
  * as arguments, and gets the file. Without the sandbox the files of the sandbox are left out and nothing is said of
- * them.
+ * them. A sandbox-only project gets the file, the files of the sandbox and `.dockerignore` alone: nothing of the
+ * process is read, written or said, no role file, no wrapper, no list, no `AGENTS.md`, `CLAUDE.md` or
+ * `opencode.json`, no script in `package.json` and no hook.
  *
  * @param {string} root
  * @param {ReturnType<typeof parseInit>} given
@@ -926,16 +987,18 @@ function init(root, given) {
   const settings = initSettings(root, hasSettings, given, template);
   // Every file but agentrite.json follows the order the harnesses were given in.
   const harnesses = hasSettings ? settings.harnesses : given.harnesses;
-  const roles = readRoles(root, settings.roles);
   const { standards } = settings;
+  const processProject = settings.process
+    ? { harnesses, standards, roles: readRoles(root, settings.roles) }
+    : undefined;
   const manifest = readPackageJson(root);
   // Planned before anything is written, the settings file among it: what init refuses on is read here.
   const files = [
     { path: SETTINGS_FILE, content: settingsText(settings) },
-    ...plannedProjectFiles(root, manifest, { harnesses, standards, roles }, settings.sandbox),
+    ...plannedProjectFiles(root, manifest, processProject, settings.sandbox),
   ];
   const ignore = settings.sandbox ? plannedDockerignore(root) : undefined;
-  const hook = hookPath(root);
+  const hook = settings.process ? hookPath(root) : undefined;
   /** @type {string[]} */ const notices = [];
 
   for (const file of files) {
@@ -957,19 +1020,21 @@ function init(root, given) {
     console.log(`wrote ${file.path}`);
   }
 
-  const amendedManifest = withCheckChangesScript(manifest.text);
-  if (amendedManifest === undefined) {
-    console.log('skipped package.json, which has a check-changes script');
-  } else {
-    writeFileSync(manifest.path, amendedManifest);
-    console.log('changed package.json');
+  if (settings.process) {
+    const amendedManifest = withCheckChangesScript(manifest.text);
+    if (amendedManifest === undefined) {
+      console.log('skipped package.json, which has a check-changes script');
+    } else {
+      writeFileSync(manifest.path, amendedManifest);
+      console.log('changed package.json');
+    }
   }
 
-  if (harnesses.includes('opencode')) notices.push(...writeOpencodeJson(root, standards));
+  if (settings.process && harnesses.includes('opencode')) notices.push(...writeOpencodeJson(root, standards));
 
   if (ignore !== undefined) writeDockerignore(ignore);
 
-  notices.push(...writeHook(root, hook));
+  if (hook !== undefined) notices.push(...writeHook(root, hook));
 
   for (const notice of notices) console.log(`\n${notice}`);
 
@@ -1048,16 +1113,21 @@ function instructionNotices(root, harnesses, standards) {
  * returns the exit status. The harnesses and the sandbox setting are those of the project's `agentrite.json`, which
  * is read and never written. With the sandbox setting false the shim is left out, so that nothing is read or
  * printed of it. After the files come the notices of `instructionNotices`, which change neither what is written
- * nor the status.
+ * nor the status. A sandbox-only project gets the shim of its mode alone: no role file is read, and no wrapper,
+ * list or hook is written, removed or noticed.
  *
  * @param {string} root
  * @returns {number}
  */
 function refresh(root) {
-  const { harnesses, sandbox, standards, roles: roleFiles } = readSettings(root);
-  const roles = readRoles(root, roleFiles);
+  const { harnesses, process: hasProcess, sandbox, standards, roles: roleFiles } = readSettings(root);
+  const templates = readTemplates();
+  const roles = hasProcess ? readRoles(root, roleFiles) : [];
+  const files = hasProcess
+    ? kitOwnedFiles({ templates, harnesses, sandbox, standards, roles })
+    : [shimFile(templates, true)];
   let status = 0;
-  for (const file of kitOwnedFiles({ templates: readTemplates(), harnesses, sandbox, standards, roles })) {
+  for (const file of files) {
     const absolute = resolve(root, file.path);
     const kind = kindOf(absolute);
     if (kind === 'other') {
@@ -1081,6 +1151,7 @@ function refresh(root) {
     if (file.executable) chmodSync(absolute, 0o755);
     console.log(`${kind === 'missing' ? 'wrote' : 'refreshed'} ${file.path}`);
   }
+  if (!hasProcess) return status;
   const hookNotices = refreshHook(root);
   removeStaleWrappers(root, harnesses, roles.map((role) => role.name));
   for (const notice of [...instructionNotices(root, harnesses, standards), ...hookNotices]) {

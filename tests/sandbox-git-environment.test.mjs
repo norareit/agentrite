@@ -8,7 +8,9 @@ const root = join(import.meta.dirname, '..');
 const FILES = [
   'agentrite-init.test.mjs',
   'agentrite-refresh.test.mjs',
+  'agentrite-run.test.mjs',
   'commit-msg-hook.test.mjs',
+  'sandbox-only-setup.test.mjs',
   'sandbox-update.test.mjs',
   'settings-update.test.mjs',
 ].map((name) => join(import.meta.dirname, name));

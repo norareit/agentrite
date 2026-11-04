@@ -99,7 +99,10 @@ are checked as today, and nothing reads the content of the role files or the sta
 - `tests/sandbox-commit-msg.test.mjs`: the test of the hooks directory reads it from the wrapper and the compose file
   together, and a test with Docker that a commit in the container with the sandbox-only directory is not checked
 - `tests/sandbox-git-environment.test.mjs`: the files of this unit that start `init` or `refresh`, and the value the
-  sandbox sets for `GIT_CONFIG_VALUE_1` in a project with the process
+  sandbox sets for `GIT_CONFIG_VALUE_1` in a project with the process. `tests/agentrite-run.test.mjs` is among them,
+  since its test of `process` and `sandbox` both `false` starts `refresh` through the file's `project`
+- `tests/agentrite-refresh.test.mjs`, `tests/agentrite-run.test.mjs`: the shim compared with the template filled for a
+  project with the process, and the usage of `init` with `--sandbox-only`
 - `tests/settings-update.test.mjs`, `tests/sandbox-update.test.mjs`: the shim compared with the template filled for a
   project with the process, and `process` where they write the file
 - Every other test that writes an `agentrite.json` by hand: `"process": true` after `harnesses`. Candidates found by
@@ -208,7 +211,7 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ### `init`, `refresh` and the shim
 
-- [ ] In `tests/agentrite-init.test.mjs`, add tests: `init --sandbox-only claude` writes `agentrite.json` with
+- [x] In `tests/agentrite-init.test.mjs`, add tests: `init --sandbox-only claude` writes `agentrite.json` with
   `process` false, `sandbox` true, `orchestrator` false and the other keys as without the option, `sandbox.sh` as the
   sandbox-only shim, executable, `sandbox/compose.project.yml` and `.dockerignore`, prints a line for each, the file's
   content and the notice on the default branch, and writes no role wrapper, no `.agentrite/instructions.md`, no
@@ -223,33 +226,33 @@ are checked as today, and nothing reads the content of the role files or the sta
   which a test proves with role files the file names that hold no description; without the option `init` writes
   `process` true and the shim of today. Every process started gets `withoutGitEnvironmentConfiguration`. (R6, R7, R8,
   R9, R10, R12, R3, R32)
-- [ ] In `tests/agentrite-refresh.test.mjs`, add tests: in a sandbox-only project `refresh` writes `sandbox.sh` as the
+- [x] In `tests/agentrite-refresh.test.mjs`, add tests: in a sandbox-only project `refresh` writes `sandbox.sh` as the
   sandbox-only shim, or reports it up to date, and prints no other line and no notice, leaves role wrappers, a stale
   wrapper, the list, a hook of the kit's and a missing `CLAUDE.md` as they are, and reads no role file; switching
   `process` from true to false and running `refresh` rewrites the shim to the sandbox-only one; switching back and
   running `init` with no argument writes the missing files of the process, and `refresh` then writes the shim of
   today. (R11, R12, R25, R3, R32)
-- [ ] Put the placeholder `{{mode}}` in the `exec` line of `templates/project/sandbox.sh`, and a comment line that
+- [x] Put the placeholder `{{mode}}` in the `exec` line of `templates/project/sandbox.sh`, and a comment line that
   says that a sandbox-only project's shim passes `--sandbox-only` to the wrapper. Fill it in `shimFile` from whether
   the project has the process, and pass that through `kitOwnedFiles`, `sandboxFiles`, `projectFiles` and
   `plannedProjectFiles`. Change `tests/settings-update.test.mjs` and `tests/sandbox-update.test.mjs` to compare a
   shim with the template filled for a project with the process. (R12)
-- [ ] Add `--sandbox-only` to `parseInit`, its refusal with `--no-sandbox`, and `INIT_FORM` as
+- [x] Add `--sandbox-only` to `parseInit`, its refusal with `--no-sandbox`, and `INIT_FORM` as
   `agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ...`; write
   `process`, `sandbox` and `orchestrator` from it in `settingsToWrite`. (R6, R7, R8, R9)
-- [ ] Split `init` so that the process's part, `readRoles`, the process's files, `package.json`, `opencode.json`, the
+- [x] Split `init` so that the process's part, `readRoles`, the process's files, `package.json`, `opencode.json`, the
   hook and their notices, runs only when `settings.process` is true, and the rest, the settings file, the sandbox's
   files and `.dockerignore`, the printed file and the notice on the default branch, runs in both. Do the same in
   `refresh`, so that in a sandbox-only project it writes the shim alone. Update the doc comments of both. (R3, R10,
   R11)
-- [ ] Create `tests/sandbox-only-setup.test.mjs`, end to end: a git repository with a `package.json` and the kit
+- [x] Create `tests/sandbox-only-setup.test.mjs`, end to end: a git repository with a `package.json` and the kit
   installed under its ignored `node_modules` as the wrapper tests install it, `init --sandbox-only claude` run in it
   and its result committed, then the written `./sandbox.sh` started on the fake host of `tests/wrapper-fixture.mjs`
   with a new branch name and a command. It asserts the branch is cut from the default branch, the run is a clone run
   without `.reviews` and `.orchestrator`, no `.reviews` or `.orchestrator` is in the root, and the Compose calls carry
   the sandbox-only hooks directory. Every process gets `withoutGitEnvironmentConfiguration`. Add the file to `FILES`
   in `tests/sandbox-git-environment.test.mjs`. (R10, R12, R13, R17, R21, R32, R33)
-- [ ] Run `npm test` and fix what fails. (R32, R33, R34)
+- [x] Run `npm test` and fix what fails. (R32, R33, R34)
 
 ### The documents
 
@@ -295,6 +298,6 @@ are checked as today, and nothing reads the content of the role files or the sta
 - [x] `feature-0095 Add the key process to agentrite.json`: the tasks under "The key"
 - [x] `feature-0095 Have the wrapper name the hooks directory`: the tasks under "The image and the Compose file"
 - [x] `feature-0095 Run the sandbox on a branch in a sandbox-only project`: the tasks under "The wrapper"
-- [ ] `feature-0095 Set up a sandbox-only project with init and refresh`: the tasks under "`init`, `refresh` and the
+- [x] `feature-0095 Set up a sandbox-only project with init and refresh`: the tasks under "`init`, `refresh` and the
   shim"
 - [ ] `feature-0095 Describe the sandbox-only setup`: the tasks under "The documents"

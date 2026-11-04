@@ -59,3 +59,14 @@ timestamp: 2026-11-04T11:55:47Z
   no refusal says `unit` is made by the helper every refusal of the file goes through. `npm test` reports 1401 tests,
   1400 passing and the one failing test of `tests/repository-own-files.test.mjs` logged above. The status is
   `in-progress`
+- 2026-11-04T14:52:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave `init` the option
+  `--sandbox-only` and had `init` and `refresh` write nothing of the process in a sandbox-only project, with their tests
+  and the new `tests/sandbox-only-setup.test.mjs`. The shim's comment line on `--sandbox-only` is a second placeholder,
+  `{{mode_comment}}`, alone on its line, which an empty value removes, so that the shim of a project with the process is
+  the shim of today byte for byte, as R12 has it; a comment line in the template itself would have changed that shim
+  too. `tests/sandbox-update.test.mjs` compares no shim with the template, so it needed no change;
+  `tests/agentrite-refresh.test.mjs` did, and `tests/agentrite-run.test.mjs` for the usage of `init`, both added to
+  "Files". `tests/agentrite-run.test.mjs` is added to the files the regression test of unit 0093 runs, as R33 has it,
+  and that test passes. The end-to-end test runs the shim on the fake host of `tests/wrapper-fixture.mjs`, and no
+  container. `npm test` reports 1418 tests, 1417 passing and the one failing test of
+  `tests/repository-own-files.test.mjs` logged above. The status is `in-progress`

@@ -908,7 +908,8 @@ test(
   (testContext) => {
     const { agentrite } = project(testContext);
     const usage =
-      'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
+      'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ' +
+      'claude | opencode\n' +
       '       agentrite init\n' +
       '       agentrite config\n' +
       '       agentrite refresh\n' +

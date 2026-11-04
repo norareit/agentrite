@@ -9,4 +9,5 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # The kit's wrapper takes the project root as its first argument, because where npm
 # installs the kit says nothing reliable about where the project is.
-exec "$here/node_modules/agentrite/container/sandbox.sh" "$here" "$@"
+{{mode_comment}}
+exec "$here/node_modules/agentrite/container/sandbox.sh" {{mode}}"$here" "$@"

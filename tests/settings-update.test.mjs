@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { agentsListNotice, claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { fillTemplate } from '../scripts/agentrite.mjs';
 import { copyKitInstructions, installKit, KIT_ROLES } from './installed-kit.mjs';
 import { fakeHost, installKitPackage } from './wrapper-fixture.mjs';
 import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
@@ -25,7 +26,11 @@ const kit = join(import.meta.dirname, '..');
 const agentrite = join(kit, 'scripts', 'agentrite.mjs');
 const checker = join(kit, 'scripts', 'check-changes.mjs');
 const TEMPLATE = readFileSync(join(kit, 'templates', 'project', 'agentrite.json'), 'utf-8');
-const SHIM = readFileSync(join(kit, 'templates', 'project', 'sandbox.sh'), 'utf-8');
+// The shim of a project with the process, the template filled as refresh fills it.
+const SHIM = fillTemplate(readFileSync(join(kit, 'templates', 'project', 'sandbox.sh'), 'utf-8'), {
+  mode: '',
+  mode_comment: '',
+});
 const LIST = '.agentrite/instructions.md';
 const NAMES_CONFIG = /the project has no agentrite\.json\. Run: npx agentrite config, which writes one/;
 

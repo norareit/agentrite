@@ -4,6 +4,7 @@ import {
   chmodSync,
   lstatSync,
   mkdirSync,
+  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -23,13 +24,16 @@ import {
 } from '../scripts/agentrite-instructions.mjs';
 import { foreignHookNotice, HOOK_MARK, noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
-import { refreshedWrapper } from '../scripts/agentrite.mjs';
+import { fillTemplate, refreshedWrapper } from '../scripts/agentrite.mjs';
 import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
-const SHIM = readFileSync(new URL('../templates/project/sandbox.sh', import.meta.url), 'utf-8');
+const SHIM_TEMPLATE = readFileSync(new URL('../templates/project/sandbox.sh', import.meta.url), 'utf-8');
+// The shim of a project with the process, and that of a sandbox-only project, as unit 0095 has them.
+const SHIM = fillTemplate(SHIM_TEMPLATE, { mode: '', mode_comment: '' });
+const SANDBOX_ONLY_EXEC = 'exec "$here/node_modules/agentrite/container/sandbox.sh" --sandbox-only "$here" "$@"';
 const HOOK_TEMPLATE = readFileSync(new URL('../templates/project/commit-msg', import.meta.url), 'utf-8');
 // The notice of R11 of unit 0078, which every project of the suite that is not a git repository gets.
 const NO_REPOSITORY = noRepositoryNotice('the project is not inside a git repository');
@@ -1409,4 +1413,113 @@ test('the hook changes not the status of a refresh that leaves a file which is n
     assert.equal(result.status, 1, `${repository}`);
     assert.match(result.stderr, /left \.agentrite\/instructions\.md, which is not a regular file/);
   }
+});
+
+// Unit 0095: refresh in a sandbox-only project writes the shim of the mode, and nothing of the process.
+
+// The agentrite.json of a sandbox-only project with both harnesses.
+const SANDBOX_ONLY_SETTINGS = kitSettingsText({
+  defaultBranch: 'master',
+  harnesses: ['claude', 'opencode'],
+  process: false,
+  sandbox: true,
+  orchestrator: false,
+});
+
+// Every path under `base`, node_modules apart, with what a file holds.
+function snapshot(base, directory = '') {
+  return readdirSync(join(base, directory), { withFileTypes: true }).flatMap((entry) => {
+    const path = join(directory, entry.name);
+    if (path === 'node_modules') return [];
+    if (entry.isDirectory()) return [[path, null], ...snapshot(base, path)];
+    return [[path, entry.isFile() ? readFileSync(join(base, path), 'utf-8') : null]];
+  });
+}
+
+// R11, R12
+test('refresh in a sandbox-only project writes the sandbox-only shim alone, and prints no notice', (testContext) => {
+  const { base, run, read, write } = repositoryProject(testContext);
+  write('agentrite.json', SANDBOX_ONLY_SETTINGS);
+  rmSync(join(base, 'AGENTS.md'));
+
+  const result = run('refresh');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.equal(result.stdout, 'wrote sandbox.sh\n');
+  assert.ok(read('sandbox.sh').split('\n').includes(SANDBOX_ONLY_EXEC), read('sandbox.sh'));
+  assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o100, 0);
+  assert.equal(exists(join(base, HOOK)), false);
+  assert.equal(exists(join(base, LIST)), false);
+  assert.equal(exists(join(base, '.claude')), false);
+  assert.equal(exists(join(base, '.opencode')), false);
+
+  const again = run('refresh');
+
+  assert.equal(again.status, 0, again.stderr);
+  assert.equal(again.stdout, 'up to date sandbox.sh\n');
+});
+
+// R3, R11
+test(
+  'refresh in a sandbox-only project leaves the files of the process as they are, and reads no role file',
+  (testContext) => {
+    const { base, run, write } = repositoryProject(testContext);
+    write('agentrite.json', SANDBOX_ONLY_SETTINGS);
+    for (const file of WRAPPERS) write(file.path, 'an old wrapper\n');
+    write('.claude/agents/gone.md', rendered('claude', 'planner'));
+    write(LIST, '# An old list\n');
+    write(HOOK, `#!/bin/sh\n# ${HOOK_MARK}\necho old\n`);
+    // Role files that hold no description, which readRoles refuses, so that a role that is read shows.
+    for (const name of ['specifier', 'planner', 'implementer', 'reviewer']) {
+      write(`node_modules/agentrite/roles/${name}.md`, '# no front matter\n');
+    }
+    const before = snapshot(base).filter(([path]) => path !== 'sandbox.sh');
+
+    const result = run('refresh');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, 'wrote sandbox.sh\n');
+    assert.deepEqual(
+      snapshot(base).filter(([path]) => path !== 'sandbox.sh'),
+      before,
+    );
+  },
+);
+
+// R25
+test('switching process to false and back rewrites the shim each way, init writing what is missing', (testContext) => {
+  const { base, run, read, write } = repositoryProject(testContext);
+  write('agentrite.json', kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }));
+  assert.equal(run('refresh').status, 0);
+  assert.equal(read('sandbox.sh'), SHIM);
+
+  const sandboxOnly = { defaultBranch: 'master', harnesses: ['claude'], process: false, sandbox: true };
+  write('agentrite.json', kitSettingsText(sandboxOnly));
+  const toSandboxOnly = run('refresh');
+
+  assert.equal(toSandboxOnly.status, 0, toSandboxOnly.stderr);
+  assert.equal(toSandboxOnly.stdout, 'refreshed sandbox.sh\n');
+  assert.ok(read('sandbox.sh').split('\n').includes(SANDBOX_ONLY_EXEC));
+
+  rmSync(join(base, '.claude'), { recursive: true });
+  rmSync(join(base, LIST));
+  rmSync(join(base, HOOK));
+  write('package.json', '{\n  "name": "my-app"\n}\n');
+  write('sandbox/compose.project.yml', 'name: my-app-sandbox\n');
+  write('.dockerignore', `node_modules\n!node_modules/agentrite/container/**\n`);
+  write('agentrite.json', kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }));
+  const init = run('init');
+
+  assert.equal(init.status, 0, init.stderr);
+  for (const file of plannedFiles(['claude'], KIT_ROLES)) assert.equal(read(file.path), file.content, file.path);
+  assert.equal(read(LIST), instructionsList(KIT_SETTINGS));
+  assert.equal(read(HOOK), HOOK_TEMPLATE);
+  assert.match(init.stdout, /^skipped sandbox\.sh, which exists$/m);
+
+  const toProcess = run('refresh');
+
+  assert.equal(toProcess.status, 0, toProcess.stderr);
+  assert.match(toProcess.stdout, /^refreshed sandbox\.sh$/m);
+  assert.equal(read('sandbox.sh'), SHIM);
 });

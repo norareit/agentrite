@@ -93,13 +93,14 @@ const OPTION = '--no-sandbox';
 const NO_ORCHESTRATOR = '--no-orchestrator';
 const BRANCH = '--default-branch';
 const INIT_USAGE =
-  'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
-  '       agentrite init';
+  'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ' +
+  'claude | opencode\n       agentrite init';
 
 function parsedInit(overrides) {
   return {
     command: 'init',
     harnesses: [],
+    sandboxOnly: false,
     sandbox: true,
     orchestrator: true,
     defaultBranch: undefined,
@@ -239,7 +240,8 @@ test('parseArgs gives roles and run what they print for an argument they do not 
 
 test('parseArgs gives the usage of every command for no command and for one that is none of them', () => {
   const usage =
-    'usage: agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] claude | opencode\n' +
+    'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ' +
+    'claude | opencode\n' +
     '       agentrite init\n' +
     '       agentrite config\n' +
     '       agentrite refresh\n' +
@@ -1939,4 +1941,254 @@ test('init --no-sandbox writes the hook too', (testContext) => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(read('.git/hooks/commit-msg'), HOOK_TEMPLATE);
   assert.match(result.stdout, /^wrote \.git\/hooks\/commit-msg$/m);
+});
+
+// Unit 0095: init --sandbox-only, for a project that uses the sandbox without the change process.
+
+const SANDBOX_ONLY = '--sandbox-only';
+const PROCESS_EXEC = 'exec "$here/node_modules/agentrite/container/sandbox.sh" "$here" "$@"';
+const SANDBOX_ONLY_EXEC = 'exec "$here/node_modules/agentrite/container/sandbox.sh" --sandbox-only "$here" "$@"';
+// The settings `init --sandbox-only` writes for `harnesses`, as `init` writes the other keys.
+function sandboxOnlySettings(harnesses, defaultBranch = 'master') {
+  return kitSettingsText({ defaultBranch, harnesses, process: false, sandbox: true, orchestrator: false });
+}
+
+// What a sandbox-only project's init prints of the files, in order.
+const SANDBOX_ONLY_LINES = [
+  'wrote agentrite.json',
+  'wrote sandbox.sh',
+  'wrote sandbox/compose.project.yml',
+  'wrote .dockerignore',
+];
+
+// Asserts that nothing of the process is in the project at `base`, and that `stdout` names none of it.
+function assertNoProcessFiles(base, stdout) {
+  for (const path of ['.claude', '.opencode', LIST, 'AGENTS.md', 'CLAUDE.md', 'opencode.json']) {
+    assert.equal(exists(join(base, path)), false, path);
+  }
+  assert.equal(JSON.parse(readFileSync(join(base, 'package.json'), 'utf-8')).scripts['check-changes'], undefined);
+  assert.doesNotMatch(
+    stdout,
+    /agents\/|instructions\.md|AGENTS\.md|CLAUDE\.md|opencode\.json|package\.json|commit-msg/,
+  );
+  assert.ok(!stdout.includes(NO_REPOSITORY), stdout);
+}
+
+// R6, R7
+test('parseArgs takes --sandbox-only before, between and after the harnesses, and more than once as once', () => {
+  for (const rest of [
+    [SANDBOX_ONLY, 'claude', 'opencode'],
+    ['claude', SANDBOX_ONLY, 'opencode'],
+    ['claude', 'opencode', SANDBOX_ONLY],
+    [SANDBOX_ONLY, 'claude', SANDBOX_ONLY, 'opencode', SANDBOX_ONLY],
+  ]) {
+    assert.deepEqual(
+      parseArgs(['init', ...rest]),
+      parsedInit({ harnesses: ['claude', 'opencode'], sandboxOnly: true }),
+      rest.join(' '),
+    );
+  }
+  assert.deepEqual(parseArgs(['init', 'claude']), parsedInit({ harnesses: ['claude'] }));
+});
+
+// R7
+test('parseArgs refuses --sandbox-only=1 as an unknown harness', () => {
+  assert.throws(() => parseArgs(['init', `${SANDBOX_ONLY}=1`, 'claude']), {
+    message: `unknown harness: ${SANDBOX_ONLY}=1\n${INIT_USAGE}`,
+  });
+});
+
+// R6, R10, R12
+test(
+  'init --sandbox-only claude writes the settings, the shim, the compose file and .dockerignore, and nothing else',
+  (testContext) => {
+    const { base, run, read } = repositoryProject(testContext);
+
+    const result = run('init', SANDBOX_ONLY, 'claude');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const settings = sandboxOnlySettings(['claude']);
+    assert.equal(read('agentrite.json'), settings);
+    assert.equal(
+      result.stdout,
+      [...SANDBOX_ONLY_LINES, '', settings, defaultBranchNotice('master')].join('\n'),
+    );
+    const shim = read('sandbox.sh');
+    assert.ok(shim.split('\n').includes(SANDBOX_ONLY_EXEC), shim);
+    assert.notEqual(statSync(join(base, 'sandbox.sh')).mode & 0o100, 0);
+    assert.match(read('sandbox/compose.project.yml'), /^name: my-app-sandbox$/m);
+    assert.equal(read('.dockerignore'), ignore(undefined));
+    assertNoProcessFiles(base, result.stdout);
+    assert.equal(exists(join(base, '.git', 'hooks', 'commit-msg')), false);
+  },
+);
+
+// R10
+test('init --sandbox-only with opencode too writes nothing of opencode.json', (testContext) => {
+  const { base, run } = project(testContext);
+
+  const result = run('init', 'claude', 'opencode', SANDBOX_ONLY);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(linesOf(result), SANDBOX_ONLY_LINES);
+  assertNoProcessFiles(base, result.stdout);
+});
+
+// R10
+test('init --sandbox-only leaves an AGENTS.md, a CLAUDE.md, an opencode.json and a hook that exist', (testContext) => {
+  const { base, run, read } = repositoryProject(testContext);
+  const present = {
+    'AGENTS.md': '# Our own instructions\n',
+    'CLAUDE.md': 'our own\n',
+    'opencode.json': 'not json\n',
+    '.git/hooks/commit-msg': '#!/bin/sh\nexit 0\n',
+  };
+  for (const [path, content] of Object.entries(present)) writeFileSync(join(base, path), content);
+
+  const result = run('init', SANDBOX_ONLY, 'claude', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  for (const [path, content] of Object.entries(present)) assert.equal(read(path), content, path);
+  assert.equal(
+    result.stdout,
+    [...SANDBOX_ONLY_LINES, '', sandboxOnlySettings(['claude', 'opencode']), defaultBranchNotice('master')].join('\n'),
+  );
+});
+
+// R7
+test('init --sandbox-only before, between and after the harnesses, and twice, writes the same file', (testContext) => {
+  for (const args of [
+    [SANDBOX_ONLY, 'claude', 'opencode'],
+    ['claude', SANDBOX_ONLY, 'opencode'],
+    ['opencode', 'claude', SANDBOX_ONLY],
+    [SANDBOX_ONLY, 'claude', SANDBOX_ONLY, 'opencode'],
+  ]) {
+    const { run, read } = project(testContext);
+    assert.equal(run('init', ...args).status, 0, args.join(' '));
+    assert.equal(read('agentrite.json'), sandboxOnlySettings(['claude', 'opencode']), args.join(' '));
+  }
+});
+
+// R7
+test('init --sandbox-only=1 claude is refused as an unknown harness, and writes nothing', (testContext) => {
+  const { base, run } = project(testContext);
+  const before = snapshot(base);
+
+  const result = run('init', `${SANDBOX_ONLY}=1`, 'claude');
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, `unknown harness: ${SANDBOX_ONLY}=1\n${INIT_USAGE}\n`);
+  assert.deepEqual(snapshot(base), before);
+});
+
+// R8
+test(
+  'init --sandbox-only with --no-sandbox, in either order, is refused with the usage, and writes nothing',
+  (testContext) => {
+    for (const args of [
+      [SANDBOX_ONLY, OPTION, 'claude'],
+      [OPTION, 'claude', SANDBOX_ONLY],
+    ]) {
+      const { base, run } = project(testContext);
+      const before = snapshot(base);
+
+      const result = run('init', ...args);
+
+      assert.equal(result.status, 2, args.join(' '));
+      assert.equal(result.stdout, '');
+      assert.equal(
+        result.stderr,
+        `${SANDBOX_ONLY} cannot be given together with ${OPTION}: a sandbox-only project has the sandbox\n` +
+          `${INIT_USAGE}\n`,
+        args.join(' '),
+      );
+      assert.deepEqual(snapshot(base), before);
+    }
+  },
+);
+
+// R8
+test('init --sandbox-only with --no-orchestrator writes what --sandbox-only writes alone', (testContext) => {
+  const alone = project(testContext);
+  const both = project(testContext);
+
+  const aloneResult = alone.run('init', SANDBOX_ONLY, 'claude');
+  const bothResult = both.run('init', NO_ORCHESTRATOR, 'claude', SANDBOX_ONLY);
+
+  assert.equal(bothResult.status, 0, bothResult.stderr);
+  assert.equal(bothResult.stdout, aloneResult.stdout);
+  assert.deepEqual(snapshot(both.base), snapshot(alone.base));
+  assert.equal(both.read('agentrite.json'), sandboxOnlySettings(['claude']));
+});
+
+// R7
+test('init --sandbox-only with no harness prints the usage and exits 2, and writes nothing', (testContext) => {
+  const { base, run } = project(testContext);
+  const before = snapshot(base);
+
+  const result = run('init', SANDBOX_ONLY);
+
+  assert.equal(result.status, 2);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, `${INIT_USAGE}\n`);
+  assert.deepEqual(snapshot(base), before);
+});
+
+// R9
+test('init --sandbox-only in a project with an agentrite.json is refused as other arguments are', (testContext) => {
+  const withProcess = kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true });
+  for (const settings of [sandboxOnlySettings(['claude']), withProcess]) {
+    const { base, run } = project(testContext);
+    writeFileSync(join(base, 'agentrite.json'), settings);
+    const before = snapshot(base);
+
+    const result = run('init', SANDBOX_ONLY, 'claude');
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, WITH_FILE_REFUSAL);
+    assert.deepEqual(snapshot(base), before);
+  }
+});
+
+// R3, R10
+test(
+  'init with no argument in a project whose process is false writes what --sandbox-only writes, reading no role',
+  (testContext) => {
+    const { base, run, read } = repositoryProject(testContext);
+    // Role files that hold no description, which readRoles refuses, so that a role that is read shows.
+    for (const name of ['specifier', 'planner', 'implementer', 'reviewer']) {
+      writeFileSync(join(base, 'node_modules', 'agentrite', 'roles', `${name}.md`), '# no front matter\n');
+    }
+    const settings = sandboxOnlySettings(['claude', 'opencode'], 'main');
+    writeFileSync(join(base, 'agentrite.json'), settings);
+
+    const result = run('init');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.equal(
+      result.stdout,
+      ['skipped agentrite.json, which exists', ...SANDBOX_ONLY_LINES.slice(1), ''].join('\n'),
+    );
+    assert.equal(read('agentrite.json'), settings);
+    assert.ok(read('sandbox.sh').split('\n').includes(SANDBOX_ONLY_EXEC));
+    assertNoProcessFiles(base, result.stdout);
+    assert.equal(exists(join(base, '.git', 'hooks', 'commit-msg')), false);
+  },
+);
+
+// R6, R12
+test('init without --sandbox-only writes process true and the shim of a project with the process', (testContext) => {
+  const { run, read } = project(testContext);
+
+  assert.equal(run('init', 'claude').status, 0);
+
+  assert.match(read('agentrite.json'), /^ {2}"process": true,$/m);
+  const shim = read('sandbox.sh');
+  assert.ok(shim.split('\n').includes(PROCESS_EXEC), shim);
+  assert.doesNotMatch(shim, /sandbox-only|\{\{/);
+  assert.equal(shim, fillTemplate(templates['sandbox.sh'], { mode: '', mode_comment: '' }));
 });
