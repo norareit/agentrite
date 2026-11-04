@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-04T11:55:47Z
 ---
 
@@ -29,3 +29,4 @@ timestamp: 2026-11-04T11:55:47Z
   accepted, the hooks directory of the image without a hook, a shim that passes no mode running as today, the mode
   taken from the shim alone, and a branch cut for any name that is no branch; `BTR1` to `BTR4` are declined; the spec
   is not reviewed by the spec-reviewer. The status is `draft`
+- 2026-11-04T12:44:17Z [human] approved the spec. The status is `approved`
