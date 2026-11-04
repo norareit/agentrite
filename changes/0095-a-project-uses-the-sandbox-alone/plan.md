@@ -134,7 +134,7 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ### The image and the Compose file
 
-- [ ] In `tests/sandbox-commit-msg.test.mjs`, change the test of the hooks directory: the compose file gives
+- [x] In `tests/sandbox-commit-msg.test.mjs`, change the test of the hooks directory: the compose file gives
   `safe.directory` and then `core.hooksPath` from `${SANDBOX_GIT_HOOKS_PATH:?...}`, and the wrapper's value for a
   project with the process is the directory the Dockerfile copies the hook to. Add a test that the last stage of the
   Dockerfile makes `/usr/local/lib/agentrite/no-hooks`, copies nothing into it, and that the wrapper's sandbox-only
@@ -142,14 +142,14 @@ are checked as today, and nothing reads the content of the role files or the sta
   commit in a container with `SANDBOX_GIT_HOOKS_PATH` set to the sandbox-only directory is made with a message that
   carries a `Co-Authored-By` trailer, and one in which a `commit-msg` hook in the repository's `.git/hooks` that
   fails is not run. (R21, R24)
-- [ ] In `container/compose.yml`, set `GIT_CONFIG_VALUE_1` from `SANDBOX_GIT_HOOKS_PATH` with the `:?` message the
+- [x] In `container/compose.yml`, set `GIT_CONFIG_VALUE_1` from `SANDBOX_GIT_HOOKS_PATH` with the `:?` message the
   other variables of the wrapper have, and rewrite the comment above it to say that the wrapper names the directory:
   the image's with the hook with the process, and the image's empty one without. (R21, R24)
-- [ ] In `container/Dockerfile`, make `/usr/local/lib/agentrite/no-hooks` in the `RUN` after the hook's `COPY`, and
+- [x] In `container/Dockerfile`, make `/usr/local/lib/agentrite/no-hooks` in the `RUN` after the hook's `COPY`, and
   say in the comment above that it is the hooks directory of a sandbox-only project, which holds no hook. (R21)
-- [ ] In `container/sandbox.sh`, export `SANDBOX_GIT_HOOKS_PATH` as `/usr/local/lib/agentrite/hooks` before the
+- [x] In `container/sandbox.sh`, export `SANDBOX_GIT_HOOKS_PATH` as `/usr/local/lib/agentrite/hooks` before the
   first Compose call, so that the tree passes with the process alone. (R24)
-- [ ] In `tests/sandbox-git-environment.test.mjs`, set `GIT_CONFIG_VALUE_1` to `/usr/local/lib/agentrite/hooks`, the
+- [x] In `tests/sandbox-git-environment.test.mjs`, set `GIT_CONFIG_VALUE_1` to `/usr/local/lib/agentrite/hooks`, the
   value the wrapper sets with the process, rather than the compose file's entry, which is now a variable. (R34)
 
 ### The wrapper
@@ -289,7 +289,7 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 - [x] `feature-0095 Plan the unit`: this plan and its log entry
 - [x] `feature-0095 Add the key process to agentrite.json`: the tasks under "The key"
-- [ ] `feature-0095 Have the wrapper name the hooks directory`: the tasks under "The image and the Compose file"
+- [x] `feature-0095 Have the wrapper name the hooks directory`: the tasks under "The image and the Compose file"
 - [ ] `feature-0095 Run the sandbox on a branch in a sandbox-only project`: the tasks under "The wrapper"
 - [ ] `feature-0095 Set up a sandbox-only project with init and refresh`: the tasks under "`init`, `refresh` and the
   shim"

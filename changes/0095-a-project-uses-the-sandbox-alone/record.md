@@ -43,3 +43,10 @@ timestamp: 2026-11-04T11:55:47Z
   test in `tests/repository-own-files.test.mjs`, which holds the root `agentrite.json` byte for byte against the
   template of the installed release 8.2.0, which has no `process`. R4 has the root file hold it, so the test fails until
   the project depends on a release that has the key, as it did in unit 0058. The status is `in-progress`
+- 2026-11-04T14:38:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved the hooks directory into the
+  wrapper as `SANDBOX_GIT_HOOKS_PATH`, with the empty directory `/usr/local/lib/agentrite/no-hooks` in the image. The
+  assertion that the wrapper's sandbox-only value is that directory is added with the mode, under "The wrapper", since
+  the wrapper names no sandbox-only value before it reads the mode. The Docker test of a sandbox-only commit runs the
+  base image with an empty directory mounted at `/usr/local/lib/agentrite/no-hooks`; the last stage of the Dockerfile,
+  which makes that directory, was not built. `npm test` reports 1369 tests, 1368 passing and the one failing test of
+  `tests/repository-own-files.test.mjs` logged above. The status is `in-progress`

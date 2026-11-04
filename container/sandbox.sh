@@ -144,6 +144,11 @@ case "$here" in
 esac
 export AGENTRITE_CONTAINER="${here#"$root"/}"
 
+# Git's hooks directory in the container, which container/compose.yml gives git: the
+# image's directory of the kit's commit-msg hook. Exported before the first Compose call,
+# since Compose refuses to read the file without it.
+export SANDBOX_GIT_HOOKS_PATH=/usr/local/lib/agentrite/hooks
+
 compose=(docker compose --project-directory "$root" -f "$here/compose.yml" -f "$project_compose")
 
 # The forms the wrapper takes, by what each mounts at /work. They end with the one that
