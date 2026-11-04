@@ -5,6 +5,97 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 8.3.0
+
+### What changed
+
+* A project can use the sandbox without the change process, the roles or the orchestrator.
+  `npx agentrite init --sandbox-only <harness>...` writes `agentrite.json` with `process` `false`, `sandbox` `true`
+  and `orchestrator` `false`, and of the other files only `sandbox.sh`, `sandbox/compose.project.yml` and
+  `.dockerignore`: no role wrappers, no `.agentrite/instructions.md`, `AGENTS.md`, `CLAUDE.md` or `opencode.json`, no
+  `check-changes` script and no `commit-msg` hook. `refresh` writes `sandbox.sh` alone there. In such a project
+  `./sandbox.sh <branch>` runs on a clone of the local branch of that name, or cuts it from the default branch when
+  there is none, and reads nothing of `changes/`; `--variant` is refused, the clone mounts no `.reviews` or
+  `.orchestrator`, and git in the container runs no `commit-msg` hook. `--sandbox-only` with `--no-sandbox` is
+  refused. A project switches by editing `process` and running `refresh`, and `init` with no argument when it moves
+  to the process. `SETUP.md`, `COMMANDS.md` and `SANDBOX.md` describe it (0095)
+* `agentrite.json` has a new required key, `process`, written after `harnesses`: `true` for a project with the
+  process, `false` for a sandbox-only one. A file without it, or with `process` and `sandbox` both `false`, is refused
+  by every command that reads the whole file. The default file holds `"process": true` (0095)
+* `npx agentrite orchestrate <unit> --resume` resumes the latest run of the unit on the variant of the checked-out
+  branch, when it stopped for the human with status `3`. It reruns the step that stopped the run, in its round and its
+  session, and goes on by the rerun's outcome, with the definition of the stopped run. `--prompt <text>` gives the
+  rerun step the human's words, and is taken only with `--resume`. A resume is a run of its own whose `state.json`
+  names the run it resumes under the new key `resumes`, which is `null` for a run that resumes none, and whose step
+  files go on from that run's numbers. A resume that stops can be resumed in turn. It refuses a unit with no run,
+  a latest run that has not ended or did not end with `3`, a run of another branch, a unit `implemented` or
+  `cancelled`, and `--definition` (0089)
+* A step whose harness exits 0 with a final response without a block marked `json`, or with none, is asked once
+  more for its outcome in its own session, as a step of its own, and the run goes on by that answer. It shows in the
+  step lines, the files of the run and the end report as an ask again. The request for the outcome in every step's
+  prompt now also says that the final response is the step's last and that a command started in the background must
+  have ended before it. The numbers of a run's step files leave room for an ask again after every step (0088)
+* When the step that stopped a run had tool calls refused for lack of permission, the end report says how many and
+  lists each with its tool and the label `--follow` gives it: for Claude Code from `permission_denials` of its
+  `result` events, for OpenCode from the calls rejected with OpenCode's own error text. For a run without
+  `--skip-permissions` it adds that a headless step had nobody to ask, the command that resumes the run with the
+  option in the sandbox, and that on the host the harness's settings are to allow the calls. A tool that OpenCode's
+  settings deny outright is not offered to the agent and is not reported (0090)
+* With `--follow`, the orchestrator's own lines and its end report stand in frames of plain `=` rules, 80 characters
+  wide, the opening one starting with `==== agentrite `, so that they stand out among the agent's messages. Without
+  `--follow` the output is unchanged (0085)
+* The sandbox keeps Claude Code's sessions as long as the host says: at each start but `--connect` the wrapper reads
+  `cleanupPeriodDays` from the host's `~/.claude/settings.json`, from no other file, and gives the sandbox only that
+  number, as managed settings that stand above the home volume's. A start is refused when that file cannot be read,
+  is not a JSON object, or holds a `cleanupPeriodDays` that is not a whole number of 1 or more. `SANDBOX.md` describes
+  it in place of the paragraph that said to set the key in the home volume (0092)
+* `README.md` is a landing page: what the kit is, a diagram of its components, a quick start, how it works with a
+  diagram of the workflow, and a map of the documents. Its reference moved, with its wording kept, into
+  `COMMANDS.md`, which opens with a table of every command, `ORCHESTRATOR.md` and `SETUP.md`, which ship in the
+  package; what it said of the sandbox is in `SANDBOX.md`. "Running a role" is merged into "agentrite run". The
+  kit's messages, the `commit-msg` hook it writes and the `sandbox.sh` shim now name the document a section is in
+  (0094)
+* What the kit's code knows of each harness is in one module per harness, `scripts/harnesses/claude.mjs` and
+  `scripts/harnesses/opencode.mjs`, each implementing one contract that `scripts/agentrite-harness.mjs` defines.
+  No command behaves differently (0091)
+* "When something goes wrong" of `SANDBOX.md` says that an image pasted into Claude Code in the sandbox with Ctrl+V
+  pastes nothing, and to save the image where the container sees it and name its path instead
+* Not in the package: the tests of the `commit-msg` hook now pass in the sandbox as on the host (0093); this
+  repository no longer checks its own `agentrite.json` against the installed release's default file (0096)
+
+### Worth knowing when you update
+
+* A project whose `agentrite.json` lacks `process` adds it before any command that reads the file runs again: until
+  then every such command refuses the file. A start of the sandbox that cuts no branch judges `bell` alone and is not
+  refused for it. The line, after `harnesses`:
+
+  ```json
+    "process": true,
+  ```
+
+* Run `npx agentrite refresh` and commit what it changes. It rewrites `sandbox.sh` and the `commit-msg` hook with the
+  kit's mark, in each of which one comment line now names `COMMANDS.md` or `SETUP.md` in place of `README.md`. The
+  role wrappers and `.agentrite/instructions.md` are as 8.2.0 wrote them. A `sandbox.sh` not yet refreshed still
+  starts the sandbox as before
+* The first start of the sandbox after the update builds its image again, which can take minutes, as after every
+  update of the kit. The image now also holds the empty hooks directory of a sandbox-only project
+* A developer whose host's `~/.claude/settings.json` holds `cleanupPeriodDays` now has it in the sandbox of every
+  project, above a value set in the home volume's settings. A number smaller than the one the sandbox kept sessions
+  by removes the older sessions at the next start, and removed sessions do not come back. A host file that is not
+  valid JSON, or a `cleanupPeriodDays` that is not a whole number of 1 or more, refuses every start but `--connect`
+  until it is corrected. The wrapper keeps `claude-cleanup-period-<n>.json` in the project's log directory on the
+  host, as "Where things are kept on the host" of `SANDBOX.md` says
+* A run of the orchestrator can take one step more than before for a step that gave no outcome, with its time and
+  cost. A run made before the update of a definition that can reach 51 to 100 steps, or 501 to 1000, numbered its
+  files narrower than now, and `npx agentrite runs` finds no followed file for it. The kit's default definition
+  reaches 7 steps and is not affected
+* A link of a project's own to a section of `node_modules/agentrite/README.md` that moved now lands at the top of
+  the README. The sections are in `COMMANDS.md`, `ORCHESTRATOR.md` and `SETUP.md`
+* Not tested: the ask again, the resume and the report of refused calls against real Claude Code or OpenCode
+  sessions, which the suite stands in for with fake harnesses; a resume through `./sandbox.sh`; a sandbox-only
+  project run in a real container. The reading of refused calls was built on what Claude Code 2.1.316 and OpenCode
+  1.19.3 printed, and a later OpenCode that changes its error text has its refused calls no longer reported
+
 ## 8.2.0
 
 ### What changed
