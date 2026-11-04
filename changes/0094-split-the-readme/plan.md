@@ -288,15 +288,15 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ## Verification
 
-- [ ] `npm test` passes (R27)
-- [ ] `npm run check-changes` passes (R27)
-- [ ] `git diff 2a20348 -- README.md COMMANDS.md ORCHESTRATOR.md SETUP.md SANDBOX.md` read section by section
+- [x] `npm test` passes (R27)
+- [x] `npm run check-changes` passes (R27)
+- [x] `git diff 2a20348 -- README.md COMMANDS.md ORCHESTRATOR.md SETUP.md SANDBOX.md` read section by section
   against the map of the record: every moved line is in its new place with its wording, but for the changes R10
   allows (R10, R11)
-- [ ] `grep -rn 'README' scripts container templates pointers tests` names no section that moved (R13)
-- [ ] Every line of the changed documents that is not a line of a table is at most 120 characters:
+- [x] `grep -rn 'README' scripts container templates pointers tests` names no section that moved (R13)
+- [x] Every line of the changed documents that is not a line of a table is at most 120 characters:
   `awk 'length > 120 && !/^\|/ {print FILENAME": "FNR}' *.md changes/0094-split-the-readme/*.md` prints nothing
-- [ ] `npm pack --dry-run` lists `COMMANDS.md`, `ORCHESTRATOR.md` and `SETUP.md`, and nothing under `diagrams/` (R18,
+- [x] `npm pack --dry-run` lists `COMMANDS.md`, `ORCHESTRATOR.md` and `SETUP.md`, and nothing under `diagrams/` (R18,
   R19)
 - [ ] The README on GitHub, once the branch is pushed, shows both images, and npmjs.com shows them after the next
   release; this is the human's to see (R15)

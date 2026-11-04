@@ -108,3 +108,13 @@ timestamp: 2026-11-04T11:26:27Z
       sandbox defends against". Dropped, as `SANDBOX.md` already made them: the unit run and the branch it gets,
       in "Running a unit"; `--in-place`, in "Running on the tree as it is"; `--connect`, in "Two agents on one
       unit"; `--variant`, in "Two implementations of one unit"; and the bell, in "The bell"
+- 2026-11-04T13:14:15Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification
+  on `6e4287b`: `npm test` passes, 1358 tests, none skipped; `npm run check-changes` exits 0; every line of the
+  README at `2a20348` that is not a line of a table is in `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`,
+  `SETUP.md` or `SANDBOX.md` as it was, but for the changed levels of headings, the corrected references, the
+  paragraphs rewrapped for them and the statements the map above says were dropped, which a script compared line by
+  line; `grep -rn 'README' scripts container templates pointers tests` names no section that moved; no line of
+  `*.md` or of the unit's documents but a line of a table passes 120 characters; `npm pack --dry-run` lists the
+  three documents and nothing under `diagrams/`. That GitHub and npmjs.com show the images is the human's to see,
+  once the branch is pushed and released, and its box stays open. The unit is handed over for review at
+  `in-progress`
