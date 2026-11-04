@@ -23,7 +23,8 @@ Outside code, what the kit knows of each harness is in the sandbox: its install 
 the choice of that version from the project's compose file, the host or the latest published, turning off its own
 updates, the directories of its logs, its login, the hosts the egress allowlist admits for it, the bell, the status
 line, and the trailers it adds to a commit message. It is also in the default settings, this repository's own
-configuration, the documents and the tests.
+configuration, the documents, the components diagram of `diagrams/` and the tests. Since unit 0094 the documents
+that name each harness are `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md` and `SANDBOX.md`.
 
 The human chose two fixes together. In code, one module per harness, each implementing one contract, with a test
 that every harness the kit knows implements all of it, so that a feature added to the contract fails the test for
@@ -85,8 +86,10 @@ step was refused, beside `HEADLESS`. It is another feature of the kind this unit
     * the default `harnesses` of the settings template, this repository's own `agentrite.json`, wrappers and
       instruction files, and the table of `CONTRIBUTING.md` that lists them
     * the help texts that name harnesses, in the usage of `agentrite run`
-    * the sections of `README.md` and `SANDBOX.md` that name each harness, the keywords of `package.json`, and the
-      text of the `agentrite-roles` pointer package
+    * the sections of `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md` and `SANDBOX.md` that name each
+      harness, the keywords of `package.json`, and the text of the `agentrite-roles` pointer package
+    * the components diagram, whose Mermaid source in `diagrams/` names each harness and the directory of its role
+      wrappers, and whose SVG is generated from it with `npm run diagrams` and committed with it
     * the tests that hold a case for each harness, such as those of the run command, of the orchestrator with fake
       harnesses, of `init` and `refresh`, of the harness versions, of the log directories, of the bell and of the
       allowlists

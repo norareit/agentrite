@@ -17,3 +17,9 @@ timestamp: 2026-11-02T21:36:55Z
   `HEADLESS` of `scripts/agentrite-headless.mjs`, `scripts/agentrite-instructions.mjs`, the harness branches of
   `init` and `refresh` in `scripts/agentrite.mjs`, the spec of 0090, and searched the tree for `claude` and
   `opencode` for the places outside code. Wrote `spec.md`. The status is `draft`
+- 2026-11-04T14:14:51Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `f271638`, on the
+  human's request to bring the spec up to date with unit 0094, which split the README and added `diagrams/`. Searched
+  `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md`, `CONTRIBUTING.md` and `diagrams/` for
+  `claude` and `opencode`, ignoring case: all five documents and the components diagram name the harnesses. The context
+  names them, and the checklist of requirement 7 names the four documents beside `SANDBOX.md` and has an entry for the
+  components diagram. The status is `draft`
