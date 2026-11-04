@@ -60,7 +60,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The test of the links
 
-- [ ] In `tests/document-links.test.mjs`, unit tests of the functions of `tests/document-links.mjs`, written before
+- [x] In `tests/document-links.test.mjs`, unit tests of the functions of `tests/document-links.mjs`, written before
   them (R26):
     * a heading's anchor as GitHub makes it: lower case, every character but a letter, a digit, a space, a hyphen
       and an underscore removed, each space a hyphen, so that `The project's settings` is `the-projects-settings`
@@ -73,13 +73,13 @@ the project's own README; `CHANGELOG.md`, as the approach says.
       bare `#anchor`, which names the document it is in. A link to any other file or to an address is not judged
     * a fault names the document the link is in, the link as it is written, and what is not found: the document,
       or the heading in the document named
-- [ ] Write `tests/document-links.mjs`, the pure functions the tests above call. They take texts and return data,
+- [x] Write `tests/document-links.mjs`, the pure functions the tests above call. They take texts and return data,
   and read no file
-- [ ] In the same test file, the test of R26: read `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`,
+- [x] In the same test file, the test of R26: read `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`,
   `SANDBOX.md` and `CONTRIBUTING.md` that exist, judge their links, and assert that there is no fault, with the
   faults as the message. A document of the six that does not exist yet is left out of the reading, so that a link
   to it is a fault, and the test passes at this commit. Run `npm test`
-- [ ] Commit (R26)
+- [x] Commit (R26)
 
 ### The commands
 
@@ -303,7 +303,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ## Commit Points
 
-- [ ] `feature-0094 Test that the links between the documents resolve`
+- [x] `feature-0094 Test that the links between the documents resolve`
 - [ ] `feature-0094 Move the commands and the exit statuses into COMMANDS.md`
 - [ ] `feature-0094 Merge Running a role into agentrite run`
 - [ ] `feature-0094 Open COMMANDS.md with a table of every command`
