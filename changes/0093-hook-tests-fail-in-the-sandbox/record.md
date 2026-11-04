@@ -45,3 +45,7 @@ timestamp: 2026-11-03T15:56:34Z
   those the regression test runs, saw the test fail on the host with that one test, then passed the cleared environment
   to the `command` of that file, after which it passes. The file's other starts, the `check-changes` script, the
   `sandbox.sh` and `git` with environments of their own, are left as they are
+- 2026-11-04T12:24:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the suites on `80e1cc7`. `npm
+  test` on the host reported 1340 tests, 1340 passing and 0 skipped (R2). `./sandbox-dev.sh --in-place npm test`
+  reported 1340 tests, 1307 passing, 33 skipped and 0 failing (R1). `npm run check-changes` passed. Every task of
+  `plan.md` is ticked. Handed over for review; the status is `in-progress`

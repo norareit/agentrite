@@ -84,11 +84,11 @@ behavior a developer meets in the sandbox changes.
 
 ## Verification
 
-- [ ] `npm test` passes on the host, with no test skipped that ran before this unit (R2)
-- [ ] `./sandbox-dev.sh --in-place npm test` passes, with none of the tests of `tests/agentrite-init.test.mjs`,
+- [x] `npm test` passes on the host, with no test skipped that ran before this unit (R2)
+- [x] `./sandbox-dev.sh --in-place npm test` passes, with none of the tests of `tests/agentrite-init.test.mjs`,
   `tests/agentrite-refresh.test.mjs`, `tests/commit-msg-hook.test.mjs` and `tests/sandbox-update.test.mjs` failing
   (R1)
-- [ ] `npm run check-changes` passes
+- [x] `npm run check-changes` passes
 
 ## Commit Points
 
