@@ -298,8 +298,6 @@ the project's own README; `CHANGELOG.md`, as the approach says.
   `awk 'length > 120 && !/^\|/ {print FILENAME": "FNR}' *.md changes/0094-split-the-readme/*.md` prints nothing
 - [x] `npm pack --dry-run` lists `COMMANDS.md`, `ORCHESTRATOR.md` and `SETUP.md`, and nothing under `diagrams/` (R18,
   R19)
-- [ ] The README on GitHub, once the branch is pushed, shows both images, and npmjs.com shows them after the next
-  release; this is the human's to see (R15)
 
 ## Commit Points
 

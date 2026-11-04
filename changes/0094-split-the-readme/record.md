@@ -39,7 +39,7 @@ timestamp: 2026-11-04T11:26:27Z
   `agentrite orchestrate` grew past the width of their column, and the table was realigned past 120 characters, which
   R25 allows. `npm test` passes, 1350 tests
 - 2026-11-04T12:59:50Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, corrected the time of
-  the entry above to that of its commit, `de5fc1d`. Merged "Running a role" into the section of `agentrite run` of
+  the entry above to that of its commit, `3e3e28c`. Merged "Running a role" into the section of `agentrite run` of
   `COMMANDS.md`, after its table and before its exit statuses; the statements it dropped are in the map of the
   README below. Corrected the two links to it in `README.md`. `npm test` passes, 1350 tests
 - 2026-11-04T13:04:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved the orchestrator into
@@ -109,7 +109,7 @@ timestamp: 2026-11-04T11:26:27Z
       in "Running a unit"; `--in-place`, in "Running on the tree as it is"; `--connect`, in "Two agents on one
       unit"; `--variant`, in "Two implementations of one unit"; and the bell, in "The bell"
 - 2026-11-04T13:14:15Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the verification
-  on `6e4287b`: `npm test` passes, 1358 tests, none skipped; `npm run check-changes` exits 0; every line of the
+  on `d0e43e9`: `npm test` passes, 1358 tests, none skipped; `npm run check-changes` exits 0; every line of the
   README at `2a20348` that is not a line of a table is in `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`,
   `SETUP.md` or `SANDBOX.md` as it was, but for the changed levels of headings, the corrected references, the
   paragraphs rewrapped for them and the statements the map above says were dropped, which a script compared line by
@@ -118,3 +118,15 @@ timestamp: 2026-11-04T11:26:27Z
   three documents and nothing under `diagrams/`. That GitHub and npmjs.com show the images is the human's to see,
   once the branch is pushed and released, and its box stays open. The unit is handed over for review at
   `in-progress`
+- 2026-11-04T13:17:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request,
+  folded `28931a0`, which wrapped a line of the test of the links, into the commit of that test, now `7f396bc`. The
+  rewrite left the tree as it was and gave the later commits new hashes, so the two entries above that named
+  `de5fc1d` and `6e4287b` now name `3e3e28c` and `d0e43e9`, the same commits after the fold
+- 2026-11-04T13:17:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, removed from the
+  verification of `plan.md` the check that GitHub and npmjs.com show the two images (R15). It is NOT checked
+  before the unit is set to `implemented`, and setting `implemented` does not wait for it: npmjs.com shows the
+  README of a release only, and the release comes after the unit is `implemented`. What this unit verified of R15
+  is that the README addresses each SVG at
+  `https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/<name>.svg` with alternative text, which a
+  test checks. The human looks at the images after the release, outside this unit, and a fault found then is a new
+  unit
