@@ -34,3 +34,14 @@ timestamp: 2026-11-03T15:56:34Z
   `tests/commit-msg-hook.test.mjs` and the `git` of `tests/wrapper-fixture.mjs` among them, which ask git nothing
   of the hooks or have an environment of their own, so the approach stands. `npm test` on the host reported 1340
   tests, 1340 passing and 0 skipped, against 1336 passing and 0 skipped on `master` at `46ee34e`
+- 2026-11-04T12:22:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `./sandbox-dev.sh --in-place npm
+  test` on `d225d18`: 1340 tests, 1306 passing, 33 skipped and 1 failing, none of them in the four files of the spec.
+  The failing one, `a project with the wrappers, the sandbox and no agentrite.json gets one in the four steps` of
+  `tests/settings-update.test.mjs`, starts `refresh` with the inherited environment and missed `wrote
+  .git/hooks/commit-msg`, the same cause as the 19. It fails on the host too with the five entries of
+  `container/compose.yml` set, and dates from unit 0078, so the spec's count of 19 in four files left it out. Clearing
+  the environment of that start as well is the only reading of the spec under which R1 holds, as its Fix covers every
+  test that starts such a process, so added it to `plan.md` as a task with a commit point and did it: added the file to
+  those the regression test runs, saw the test fail on the host with that one test, then passed the cleared environment
+  to the `command` of that file, after which it passes. The file's other starts, the `check-changes` script, the
+  `sandbox.sh` and `git` with environments of their own, are left as they are

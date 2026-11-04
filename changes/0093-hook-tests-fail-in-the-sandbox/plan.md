@@ -40,6 +40,7 @@ behavior a developer meets in the sandbox changes.
 - `tests/agentrite-refresh.test.mjs`: the `run` of `project`, and the test of the `node_modules/.bin` link
 - `tests/commit-msg-hook.test.mjs`: the `init` of `repository`
 - `tests/sandbox-update.test.mjs`: the `refresh` of `setUp`
+- `tests/settings-update.test.mjs`: the `command` of its project helper, added during the implementation
 
 ## Tasks
 
@@ -75,6 +76,11 @@ behavior a developer meets in the sandbox changes.
 - [x] Run `npm test` on the host, which passes, with the number of skipped tests that it reports on `master` (R2)
 - [x] Check every changed file for the line limit of 120 characters
 - [x] Commit: `bugfix-0093 Start init and refresh in the tests without git's environment configuration`
+- [x] Pass `env: withoutGitEnvironmentConfiguration(process.env)` to the `spawnSync` of `command` in
+  `tests/settings-update.test.mjs` as well, which starts `refresh` and failed in the sandbox for the same cause, and
+  add the file to those the regression test runs. Run the regression test on the host before the change, failing
+  with that test, and after it, passing (R1)
+- [x] Commit: `bugfix-0093 Start refresh in the settings update test without git's environment configuration`
 
 ## Verification
 
@@ -86,5 +92,7 @@ behavior a developer meets in the sandbox changes.
 
 ## Commit Points
 
-- [ ] `bugfix-0093 Start init and refresh in the tests without git's environment configuration`, after the
+- [x] `bugfix-0093 Start init and refresh in the tests without git's environment configuration`, after the
   regression test, the function, its tests and the four files
+- [x] `bugfix-0093 Start refresh in the settings update test without git's environment configuration`, after
+  the fifth file and the regression test

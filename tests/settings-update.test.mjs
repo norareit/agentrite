@@ -18,6 +18,7 @@ import { agentsListNotice, claudeRefreshNotice, opencodeRefreshNotice } from '..
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { copyKitInstructions, installKit, KIT_ROLES } from './installed-kit.mjs';
 import { fakeHost, installKitPackage } from './wrapper-fixture.mjs';
+import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const kit = join(import.meta.dirname, '..');
@@ -42,7 +43,12 @@ function project(testContext, harnesses) {
     writeFileSync(join(root, path), content);
   };
   for (const file of plannedFiles(harnesses, KIT_ROLES)) write(file.path, file.content);
-  const command = (...args) => spawnSync(process.execPath, [agentrite, ...args], { cwd: root, encoding: 'utf-8' });
+  const command = (...args) =>
+    spawnSync(process.execPath, [agentrite, ...args], {
+      cwd: root,
+      encoding: 'utf-8',
+      env: withoutGitEnvironmentConfiguration(process.env),
+    });
   const edit = (from, to) => {
     const settings = readFileSync(join(root, 'agentrite.json'), 'utf-8');
     assert.ok(settings.includes(from), `agentrite.json holds no ${from}`);

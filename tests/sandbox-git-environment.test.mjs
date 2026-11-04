@@ -10,6 +10,7 @@ const FILES = [
   'agentrite-refresh.test.mjs',
   'commit-msg-hook.test.mjs',
   'sandbox-update.test.mjs',
+  'settings-update.test.mjs',
 ].map((name) => join(import.meta.dirname, name));
 const ENTRIES = [
   'GIT_CONFIG_COUNT',
