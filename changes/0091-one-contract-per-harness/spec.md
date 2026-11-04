@@ -65,9 +65,9 @@ step was refused, beside `HEADLESS`. It is another feature of the kind this unit
 6. The package holds the harness modules and the module that defines the contract and lists the harnesses, so that
    the installed kit runs, and the test of the package's files names them
 7. `CONTRIBUTING.md` has a section "Adding a harness". It opens with the contract: a module that implements it and
-   its place in the list of requirement 3, with the test of requirement 4 as the check of that part. It then has one
-   entry for each place outside the harness modules where the kit holds knowledge of a harness, naming the file or
-   the section and saying what is to be done there for a new harness. It covers at the least:
+   its place in the list of requirement 3, with the tests of requirements 4 and 10 as the check of that part. It
+   then has one entry for each place outside the harness modules where the kit holds knowledge of a harness, naming
+   the file or the section and saying what is to be done there for a new harness. It covers at the least:
     * the image: installing the harness at the version a build argument without a default gives, and the label that
       records it
     * the wrapper's choice of that version, from the project's compose file, the host's `--version` or the latest
@@ -100,6 +100,9 @@ step was refused, beside `HEADLESS`. It is another feature of the kind this unit
 9. When this unit is built after unit 0090 is implemented, the reading of refused tool calls that 0090 adds is a
    member of the contract, in the headless run, and the error text by which OpenCode's refusal is known is in the
    OpenCode module
+10. The harness modules are in a directory of their own that holds nothing else, one file per harness. A test
+    compares the files of that directory with the list of requirement 3, and fails, naming the file or the entry,
+    for a harness module that the list does not hold and for an entry of the list that has no file there
 
 ## Decisions
 
@@ -126,6 +129,11 @@ step was refused, beside `HEADLESS`. It is another feature of the kind this unit
 * **What the harnesses share stays shared.** The helpers that the readings of both harnesses use, such as reading a
   JSON line or making a followed tool call from a call's input and the harness's tool names, are not per-harness
   knowledge and stay in a module both harness modules use
+* **The harness modules are found by their directory.** The human took the test that every harness module is in the
+  list. The test needs to know which modules are harness modules, and a directory that holds them and nothing else
+  tells that without a list of its own, which would be a second list of the harnesses for the test alone. The shared
+  helpers and the module that defines the contract therefore stay outside that directory. A naming convention of the
+  files, among the other modules, was rejected: it is a rule a reader has to know, where a directory shows it
 * **Help texts that name harnesses as examples stay as written.** The usage of `agentrite run` names a model id of
   each harness and what each flag of `--skip-permissions` does, wrapped by hand. Building that text from the modules
   while printing it unchanged would take a wrapping of its own for one text. It is an entry of the checklist instead
@@ -162,9 +170,10 @@ step was refused, beside `HEADLESS`. It is another feature of the kind this unit
 
 ## Beyond the request
 
-1. **A test that every harness module is in the list.** A test that the modules of the harnesses and the entries of
-   the list of requirement 3 are the same set. It costs one small test. Without it, a module that was written and not
-   listed is unknown to the commands, which refuse its name at once, so the mistake is seen on the first try
+1. Taken by the human, as requirement 10. **A test that every harness module is in the list.** A test that the
+   modules of the harnesses and the entries of the list of requirement 3 are the same set. It costs one small test.
+   Without it, a module that was written and not listed is unknown to the commands, which refuse its name at once, so
+   the mistake is seen on the first try
 2. **A test that the checklist is complete.** A test that searches the repository for the name of each harness and
    fails for a file the checklist does not name, with a list of the files that name a harness only as an example. It
    costs the test and that list, kept up to date by every unit that mentions a harness anywhere. Without it, a place

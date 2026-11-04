@@ -23,3 +23,8 @@ timestamp: 2026-11-02T21:36:55Z
   `claude` and `opencode`, ignoring case: all five documents and the components diagram name the harnesses. The context
   names them, and the checklist of requirement 7 names the four documents beside `SANDBOX.md` and has an entry for the
   components diagram. The status is `draft`
+- 2026-11-04T14:18:25Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master`, on the human's decision
+  to take `BTR1`, which became requirement 10: the harness modules are in a directory of their own, and a test compares
+  its files with the list of the harnesses. A decision says why the modules are found by their directory, and
+  requirement 7 names the test of requirement 10 beside that of requirement 4. `BTR2` to `BTR4` are undecided. The
+  status is `draft`
