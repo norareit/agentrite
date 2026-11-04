@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-04T23:09:30Z
 ---
 
@@ -42,5 +42,9 @@ of `package.json`, which the human declined.
   Numbered 0096: the highest number in `changes/` is 0095. Checked before writing: with `"process": true` taken out of
   the root `agentrite.json`, all 1447 tests passed; the file was put back. The status is `draft`
 - 2026-11-04T23:10:32Z [human] approved the record. The status is `approved`
+- 2026-11-04T23:13:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  began the work on `master` at `5b80d88`, and cut no branch: the human asked for the task to be built straight on
+  `master`, which is an exception to the rule of `process.md` that work after the approval is done on the unit's
+  branch. The change check compares nothing on `master`, so it does not check this unit. The status is `in-progress`
 
 ## Amendments
