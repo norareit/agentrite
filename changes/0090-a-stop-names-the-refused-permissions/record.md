@@ -39,3 +39,17 @@ timestamp: 2026-11-02T13:31:59Z
 - 2026-11-04T17:50:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
   the branch `feature-0090-a-stop-names-the-refused-permissions` at `239cb13`, began the work. The status is
   `in-progress`
+- 2026-11-04T18:02:14Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the plan's tasks in order, in
+  four commits: `callText` extracted from `followedText` (`1527a8e`), the member `refused` of each harness of
+  `HEADLESS` (`1a046db`), the refused calls on `Result` and their part of the end report (`dbae60f`), and "How a run
+  ends" of `ORCHESTRATOR.md` (`e97d815`). The tests of the report are written with literal lines rather than a helper
+  that counts, so that they do not repeat the rule they test. The test of a run that goes on after a refusal compares
+  its report from the line of the end with that of the same run without it, leaving out the line of the run's
+  directory, whose name is the instant the run started. On `e97d815`, `npm test` reports 1433 tests, 1432 passing,
+  none skipped, and 1 failing: unit 0054's R24 test in `tests/repository-own-files.test.mjs`, the known failure that
+  the human decided to leave for unit 0095 until the project depends on a release that has `process`. So the task that
+  runs `npm test` after the command's tests, and the first box of "Verification", are left open for the human to
+  decide for this unit. `npm run check-changes` exits 0, `git diff master -- scripts/agentrite-run.mjs COMMANDS.md
+  README.md SANDBOX.md` shows nothing, and no line of the changed files but a row of a Markdown table is longer than
+  120 characters. Not run: a real Claude Code or OpenCode, since the command's tests use the fake harnesses. The status
+  is `in-progress`

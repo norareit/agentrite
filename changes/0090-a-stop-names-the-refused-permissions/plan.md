@@ -146,7 +146,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
     * a run without `--skip-permissions` that stops with no refused call gives no line of the part, which the test
       of each stop already checks line by line after the end line, and a run whose planner has a refused call and
       goes on, and that ends complete, gives the report it gives without the refusal
-- [x] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
+- [ ] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
   `CONTRIBUTING.md` gives
 - [x] Write the paragraph and the example of the approach in "How a run ends" of `ORCHESTRATOR.md`, and the refused
   calls in its paragraph of what the end report holds, wrapped within 120 characters (R7)
@@ -154,10 +154,10 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
 ## Verification
 
 - [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] `git diff master -- scripts/agentrite-run.mjs COMMANDS.md README.md SANDBOX.md` shows nothing, so `agentrite
+- [x] `npm run check-changes` passes on the committed branch
+- [x] `git diff master -- scripts/agentrite-run.mjs COMMANDS.md README.md SANDBOX.md` shows nothing, so `agentrite
   run` outside the orchestrator and the documents the spec leaves alone are unchanged
-- [ ] No line of the changed files is longer than 120 characters, but a row of a Markdown table
+- [x] No line of the changed files is longer than 120 characters, but a row of a Markdown table
 
 ## Commit Points
 
