@@ -118,11 +118,11 @@ the project's own README; `CHANGELOG.md`, as the approach says.
   recorded in the section map of the record (R11)
 - [x] Correct every reference to "Running a role", in every document and in the shipped code, to the section of
   `agentrite run` of `COMMANDS.md`. Run `npm test` and commit (R4, R6)
-- [ ] Add to `tests/document-links.test.mjs` a test that the table has a row for each form that the first block of
+- [x] Add to `tests/document-links.test.mjs` a test that the table has a row for each form that the first block of
   each command's section under "Commands" gives, in that order, a line that continues a form, as the second of
   `agentrite run`, joined to it; that the second column is at most 60 characters; and that the third is a link to
   that section. It fails (R5)
-- [ ] Write the table at the top of `COMMANDS.md`, after its opening line and before "Commands" (R5). Its columns
+- [x] Write the table at the top of `COMMANDS.md`, after its opening line and before "Commands" (R5). Its columns
   are the synopsis, what the command does and the section. One row per form, in the order of the sections: the two
   forms of `agentrite init`, `config`, `refresh`, `roles`, `units`, `approve`, `run`, `orchestrate`, `runs`, the two
   forms of `check-changes`, `check-commit-message`, and the four forms of `sandbox.sh`
@@ -130,7 +130,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
       inline code, on one line; a `|` in it is written `\|`
     * what the command does is at most 60 characters, counted without the Markdown, and says what it does, not how
     * the section is a link to the command's section in `COMMANDS.md`
-- [ ] Run `npm test` and commit (R5)
+- [x] Run `npm test` and commit (R5)
 
 ### The orchestrator
 
@@ -306,7 +306,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Test that the links between the documents resolve`
 - [x] `feature-0094 Move the commands and the exit statuses into COMMANDS.md`
 - [x] `feature-0094 Merge Running a role into agentrite run`
-- [ ] `feature-0094 Open COMMANDS.md with a table of every command`
+- [x] `feature-0094 Open COMMANDS.md with a table of every command`
 - [ ] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
 - [ ] `feature-0094 Move the installation and the configuration into SETUP.md`
 - [ ] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`

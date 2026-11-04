@@ -87,3 +87,46 @@ test('every link between the documents, and to a section of one, resolves', () =
   const faults = linkFaults(documents, DOCUMENTS);
   assert.deepEqual(faults, [], faults.join('\n'));
 });
+
+// The forms of each command as the first block of its section in COMMANDS.md gives them, a line that continues a form
+// joined to it, with the anchor of the section.
+function commandForms(text) {
+  const sections = text.split(/^## /m).slice(1);
+  return sections
+    .filter((section) => !section.startsWith('Exit statuses'))
+    .flatMap((section) => {
+      const [heading] = section.split('\n');
+      const block = /^```sh\n([\s\S]*?)^```/m.exec(section)[1];
+      const forms = block
+        .replace(/\n[ \t]+/g, ' ')
+        .split('\n')
+        .filter((line) => line !== '');
+      return forms.map((form) => ({ form, anchor: headingAnchors(`## ${heading}`)[0] }));
+    });
+}
+
+// The rows of the first table of a text, each a list of its cells, the header and the separator left out.
+function firstTableRows(text) {
+  const lines = text.split('\n');
+  const start = lines.findIndex((line) => line.startsWith('|'));
+  const end = lines.findIndex((line, index) => index > start && !line.startsWith('|'));
+  return lines
+    .slice(start + 2, end)
+    .map((line) => line.split(/(?<!\\)\|/).slice(1, -1).map((cell) => cell.trim()));
+}
+
+// R5 of unit 0094: a short reference of every command, before the first command's section.
+test('COMMANDS.md opens with a table of every form of every command, in the order of the sections', () => {
+  const text = readFileSync(join(root, 'COMMANDS.md'), 'utf-8');
+  assert.ok(text.indexOf('\n| ') < text.indexOf('\n## '), 'the table stands before the first section');
+  const forms = commandForms(text);
+  const rows = firstTableRows(text);
+  assert.deepEqual(
+    rows.map(([synopsis]) => synopsis),
+    forms.map(({ form }) => `\`${form.replaceAll('|', '\\|')}\``),
+  );
+  rows.forEach(([, what, section], index) => {
+    assert.ok(what.replaceAll('`', '').length <= 60, `${what} is longer than 60 characters`);
+    assert.match(section, new RegExp(`^\\[[^\\]]+\\]\\(#${forms[index].anchor}\\)$`));
+  });
+});

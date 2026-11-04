@@ -3,6 +3,26 @@
 Every command a project that installed the kit runs, each with every argument, option and environment variable it
 takes.
 
+| Command                                                                                                                                    | What it does                                                   | Section                                         |
+|--------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|-------------------------------------------------|
+| `npx agentrite init [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...`                                             | Sets a project up, writing `agentrite.json` from its arguments | [agentrite init](#agentrite-init)               |
+| `npx agentrite init`                                                                                                                       | Sets a project up again from its `agentrite.json`              | [agentrite init](#agentrite-init)               |
+| `npx agentrite config`                                                                                                                     | Writes the default `agentrite.json` into a project             | [agentrite config](#agentrite-config)           |
+| `npx agentrite refresh`                                                                                                                    | Brings the kit's files in a project up to date                 | [agentrite refresh](#agentrite-refresh)         |
+| `npx agentrite roles [--json]`                                                                                                             | Lists the roles of the project                                 | [agentrite roles](#agentrite-roles)             |
+| `npx agentrite units [<number>] [--open \| --status <status>] [--kind <kind>] [--limit <count>] [--json]`                                  | Lists the units of `changes/`, with their status               | [agentrite units](#agentrite-units)             |
+| `npx agentrite approve <unit>`                                                                                                             | Approves a unit and commits its `record.md`                    | [agentrite approve](#agentrite-approve)         |
+| `npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions] [-- <harness arguments...>]` | Starts a harness as one of the roles, for one unit             | [agentrite run](#agentrite-run)                 |
+| `npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]`                      | Takes an approved unit through its roles                       | [agentrite orchestrate](#agentrite-orchestrate) |
+| `npx agentrite runs [<number>] [--limit <count>] [--json]`                                                                                 | Lists the runs of the orchestrator and their state             | [agentrite runs](#agentrite-runs)               |
+| `npm run check-changes`                                                                                                                    | Runs the change check, by the project's own command            | [check-changes](#check-changes)                 |
+| `node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]`                                                                | Runs the change check, on the repository root given            | [check-changes](#check-changes)                 |
+| `node node_modules/agentrite/container/check-commit-message.mjs <commit message file>`                                                     | Refuses a commit message with a trailer the standards forbid   | [check-commit-message](#check-commit-message)   |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]`                                                       | Starts the sandbox on a clone of a unit's branch               | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]`                                                                  | Starts the sandbox on the project root as it is                | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]`                                                               | Starts the sandbox on a directory as it is                     | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]`                                                                                | Runs a command beside a unit run that is under way             | [sandbox.sh](#sandboxsh)                        |
+
 ## agentrite init
 
 ```sh
