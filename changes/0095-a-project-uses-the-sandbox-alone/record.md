@@ -25,3 +25,7 @@ timestamp: 2026-11-04T11:55:47Z
   26 to 31, with one line of the README in the map of the documents, which the human decided, and added requirements
   32 to 34 on the tests, from the plan of 0093 at `ab7a8e5`. The context and the decisions say so. The status is
   `draft`
+- 2026-11-04T12:43:39Z [Claude Code, anthropic/claude-opus-5-5] on the human's decisions: the specifier's choices are
+  accepted, the hooks directory of the image without a hook, a shim that passes no mode running as today, the mode
+  taken from the shim alone, and a branch cut for any name that is no branch; `BTR1` to `BTR4` are declined; the spec
+  is not reviewed by the spec-reviewer. The status is `draft`
