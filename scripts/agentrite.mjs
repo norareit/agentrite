@@ -1797,10 +1797,11 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
 /**
  * Runs one step as `agentrite run` of this file, headless, in a process group of its own, with the step's prompt and
  * the request of its outcome, for the rerun of a resume with the human's `words` between them, or for an ask again
- * the request of an ask again alone, and gives how its harness ended, its final response, its session and whether it
- * ran past its time limit. The harness's standard error reaches the terminal, and its standard output is read.
- * `grouped` is given the group when the step starts, and `undefined` when it has ended. `follow` is given what the
- * harness makes known of the step in each line it prints, as it arrives.
+ * the request of an ask again alone, and gives how its harness ended, its final response, its session, whether it
+ * ran past its time limit and the tool calls its harness refused for lack of permission. The harness's standard
+ * error reaches the terminal, and its standard output is read. `grouped` is given the group when the step starts, and
+ * `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line it prints, as
+ * it arrives.
  *
  * @param {string} root
  * @param {string} directory
@@ -1837,7 +1838,12 @@ async function runStep(root, directory, skipPermissions, words, planned, grouped
   const line = (/** @type {string} */ text) => follow(headless.follow(text));
   const { stdout, ...ended } = await runGrouped(root, args, step.timeoutMinutes, grouped, line);
   const read = headless.read(stdout);
-  return { ...ended, response: read.response, session: read.session ?? start.session };
+  return {
+    ...ended,
+    response: read.response,
+    session: read.session ?? start.session,
+    refused: headless.refused(stdout),
+  };
 }
 
 /**
@@ -2091,7 +2097,9 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
     const status = exitStatus(end);
     stopHeartbeat();
     writeState({ status, line: endLine(end) });
-    output.report(endReport(ran, end, unfixed, { runDirectory, unitDirectory: directory, responsePath }));
+    output.report(
+      endReport(ran, end, unfixed, { runDirectory, unitDirectory: directory, responsePath, skipPermissions }),
+    );
     return status;
   } finally {
     stopHeartbeat();

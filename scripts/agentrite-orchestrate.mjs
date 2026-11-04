@@ -5,6 +5,7 @@ import { optionError } from './agentrite-run.mjs';
 /**
  * @typedef {import('./agentrite-definition.mjs').Definition} Definition
  * @typedef {import('./agentrite-definition.mjs').Step} Step
+ * @typedef {import('./agentrite-headless.mjs').Call} Call
  * @typedef {import('./agentrite-headless.mjs').Followed} Followed
  * @typedef {import('./agentrite-outcome.mjs').Finding} Finding
  * @typedef {import('./agentrite-outcome.mjs').Outcome} Outcome
@@ -37,8 +38,10 @@ import { optionError } from './agentrite-run.mjs';
  *   session: string | undefined,
  *   milliseconds: number,
  *   timedOut: boolean,
- * }} Result How the harness of a step ended, its final response, the id of its session, and whether the command ended
- *   it for running past its time limit
+ *   refused: Call[],
+ * }} Result How the harness of a step ended, its final response, the id of its session, whether the command ended
+ *   it for running past its time limit, and the tool calls the harness refused for lack of permission, in the order
+ *   it printed them
  * @typedef {'timeout'
  *   | 'harness'
  *   | 'none'
@@ -528,21 +531,59 @@ function afterwardsLines(ran) {
 }
 
 /**
- * What the command prints last, when a run ends: the steps that ran, how the run ended, what the last step's outcome
- * holds, the findings each repeat left open, the items for after the run of every step, and where the run and the
- * reviewer's findings are.
+ * The tool calls the harness refused for lack of permission of the step that stopped the run, and of an ask again
+ * the calls of the step it follows before its own, since its outcome stands for that step's. Each is given on a line
+ * of its own, under a line that counts them, and for a run without `--skip-permissions` followed by what to do. A
+ * run that ran every item, or whose stopping step had no call refused, gives none.
+ *
+ * @param {Ran[]} ran
+ * @param {End} end
+ * @param {string} unitDirectory
+ * @param {boolean} skipPermissions
+ * @returns {string[]}
+ */
+function refusedLines(ran, end, unitDirectory, skipPermissions) {
+  if (end.kind === 'complete') return [];
+  const followed = end.ran.planned.asked ? ran[ran.indexOf(end.ran) - 1] : undefined;
+  const refused = [...(followed?.result.refused ?? []), ...end.ran.result.refused];
+  if (refused.length === 0) return [];
+  const count = `${refused.length} tool ${refused.length === 1 ? 'call' : 'calls'}`;
+  const lines = [
+    `The harness refused ${count} for lack of permission:`,
+    ...refused.map((call) => `  ${callText(call)}`),
+  ];
+  if (skipPermissions) return lines;
+  const resume = `npx agentrite orchestrate ${unitDirectory} --resume --skip-permissions`;
+  return [
+    ...lines,
+    'The run was started without --skip-permissions, so a headless step had nobody to ask.',
+    `In the sandbox, resume the run with the option: ${resume}`,
+    "On the host, allow the refused calls in the harness's settings instead.",
+  ];
+}
+
+/**
+ * What the command prints last, when a run ends: the steps that ran, how the run ended, the tool calls the harness
+ * refused for lack of permission that stopped it, what the last step's outcome holds, the findings each repeat left
+ * open, the items for after the run of every step, and where the run and the reviewer's findings are.
  *
  * @param {Ran[]} ran
  * @param {End} end
  * @param {Ran[]} unfixed
- * @param {{ runDirectory: string, unitDirectory: string, responsePath: string | undefined }} where
+ * @param {{
+ *   runDirectory: string,
+ *   unitDirectory: string,
+ *   responsePath: string | undefined,
+ *   skipPermissions: boolean,
+ * }} where
  * @returns {string}
  */
-export function endReport(ran, end, unfixed, { runDirectory, unitDirectory, responsePath }) {
+export function endReport(ran, end, unfixed, { runDirectory, unitDirectory, responsePath, skipPermissions }) {
   return [
     ranTable(ran),
     '',
     endLine(end),
+    ...refusedLines(ran, end, unitDirectory, skipPermissions),
     ...lastStepLines(/** @type {Ran} */ (ran.at(-1)), end, responsePath),
     ...unfixedLines(unfixed),
     ...afterwardsLines(ran),

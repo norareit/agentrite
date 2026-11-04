@@ -109,7 +109,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
   none from the others. Run `npm test` and see these fail (R1, R6)
 - [x] Add `Call`, `OPENCODE_REFUSAL` and the member `refused` of each harness to `scripts/agentrite-headless.mjs`, with
   the doc comment of `HEADLESS`. Run `npm test` and see these pass (R1)
-- [ ] Add `refused: []` to the default result of `runWith` and `skipPermissions: false` to `WHERE` in
+- [x] Add `refused: []` to the default result of `runWith` and `skipPermissions: false` to `WHERE` in
   `tests/agentrite-orchestrate.test.mjs`, and add tests of the report through `reportOf`, with results that give
   `refused` lists of `call(...)` (R2, R3, R4, R5, R6):
     * a step that stops the run by `needs-human` with two refused calls, one without a label: directly after the line
@@ -126,11 +126,11 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
       run with no refused call at all
     * a run that ran every item, a step of which has a refused call: the report is the one of the same run with
       none
-- [ ] Run `npm test` and see the new tests of the report fail
-- [ ] Add `refused` to `Result`, `refusedLines`, and `skipPermissions` to `endReport` in
+- [x] Run `npm test` and see the new tests of the report fail
+- [x] Add `refused` to `Result`, `refusedLines`, and `skipPermissions` to `endReport` in
   `scripts/agentrite-orchestrate.mjs`, with their doc comments, and in `scripts/agentrite.mjs` set `refused` in
   `runStep` and pass `skipPermissions` in `runPrepared` (R1, R2, R3, R4, R5)
-- [ ] Add tests of the command to `tests/agentrite-orchestrate.test.mjs`, beside the test of each stop, with output
+- [x] Add tests of the command to `tests/agentrite-orchestrate.test.mjs`, beside the test of each stop, with output
   helpers of the fake next to `claudePrinted` and `opencodePrinted` that add refused calls (R1 to R6):
     * the implementer, on Claude Code, prints a needs-human outcome whose `result` event holds a `permission_denials`
       with a `Write` of `plan.md`: the run exits 3, and after `Step 1 stopped the run: its outcome is needs-human.`
@@ -146,7 +146,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
     * a run without `--skip-permissions` that stops with no refused call gives no line of the part, which the test
       of each stop already checks line by line after the end line, and a run whose planner has a refused call and
       goes on, and that ends complete, gives the report it gives without the refusal
-- [ ] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
+- [x] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
   `CONTRIBUTING.md` gives
 - [ ] Write the paragraph and the example of the approach in "How a run ends" of `ORCHESTRATOR.md`, and the refused
   calls in its paragraph of what the end report holds, wrapped within 120 characters (R7)
@@ -164,5 +164,5 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
 - [x] After `callText`, with its test and `followedText` using it: the first task alone, a refactoring
 - [x] After the reading of the refusals with its tests: the second to fourth tasks,
   `scripts/agentrite-headless.mjs` and `tests/agentrite-outcome.test.mjs` alone
-- [ ] After the report, the command and their tests, with `npm test` passing: the fifth to ninth tasks
+- [x] After the report, the command and their tests, with `npm test` passing: the fifth to ninth tasks
 - [ ] After `ORCHESTRATOR.md`

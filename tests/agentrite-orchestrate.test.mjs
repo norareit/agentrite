@@ -88,7 +88,7 @@ async function runWith(definition, results, from) {
       calls.push(['run', planned]);
       assert.ok(queue.length > 0, `step ${planned.number} ran, and no result was listed for it`);
       const result = { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 1000 };
-      return { ...result, timedOut: false, ...queue.shift() };
+      return { ...result, timedOut: false, refused: [], ...queue.shift() };
     },
     ended: (ran) => calls.push(['ended', ran]),
   };
@@ -832,6 +832,7 @@ const WHERE = {
   runDirectory: '.orchestrator/0029-x/2026-10-21T10:00:00Z',
   unitDirectory: '0029-x',
   responsePath: undefined,
+  skipPermissions: false,
 };
 const WHERE_LINES = [
   '',
@@ -1329,6 +1330,95 @@ test('followPrinter sets each text apart by one blank line, and the calls on lin
   );
 });
 
+// Unit 0090, R2 to R6: the tool calls the harness refused for lack of permission, in the end report.
+
+const WRITE_PLAN = call({ tool: 'Write', path: '/work/changes/0029-x/plan.md' }, undefined);
+const UNLABELLED = call({ tool: 'Agent' }, undefined);
+const RUN_TESTS = call({ command: 'npm test' }, undefined);
+const REFUSED_ONE = 'The harness refused 1 tool call for lack of permission:';
+const REFUSED_TWO = 'The harness refused 2 tool calls for lack of permission:';
+const WITHOUT_OPTION_LINES = [
+  'The run was started without --skip-permissions, so a headless step had nobody to ask.',
+  'In the sandbox, resume the run with the option: npx agentrite orchestrate 0029-x --resume --skip-permissions',
+  "On the host, allow the refused calls in the harness's settings instead.",
+];
+const stopsForHuman = (refused) => ({ ...done({ outcome: 'needs-human', summary: 'Stopped.' }), refused });
+
+test('the report gives the calls refused of the step that stopped the run after the line of the end', async () => {
+  assert.deepEqual((await reportOf([done(), stopsForHuman([WRITE_PLAN, UNLABELLED])])).slice(3), [
+    'Step 1 stopped the run: its outcome is needs-human.',
+    REFUSED_TWO,
+    '  Write /work/changes/0029-x/plan.md',
+    '  Agent',
+    ...WITHOUT_OPTION_LINES,
+    'Summary: Stopped.',
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('the report of a run with --skip-permissions gives the refused calls, without the lines on it', async () => {
+  const where = { ...WHERE, skipPermissions: true };
+  assert.deepEqual((await reportOf([done(), stopsForHuman([WRITE_PLAN, UNLABELLED])], DEFAULT, where)).slice(3), [
+    'Step 1 stopped the run: its outcome is needs-human.',
+    REFUSED_TWO,
+    '  Write /work/changes/0029-x/plan.md',
+    '  Agent',
+    'Summary: Stopped.',
+    ...WHERE_LINES,
+    '',
+  ]);
+});
+
+test('the report says 1 tool call for one refused call', async () => {
+  assert.deepEqual((await reportOf([done(), stopsForHuman([WRITE_PLAN])])).slice(4, 6), [
+    REFUSED_ONE,
+    '  Write /work/changes/0029-x/plan.md',
+  ]);
+});
+
+test('the report of a stopping ask again gives the calls of the step it follows before its own', async () => {
+  const noBlock = { response: 'No block.', session: 'abc', refused: [WRITE_PLAN] };
+  assert.deepEqual((await reportOf([done(), noBlock, stopsForHuman([RUN_TESTS])])).slice(4, 8), [
+    'Step 2 stopped the run: its outcome is needs-human.',
+    REFUSED_TWO,
+    '  Write /work/changes/0029-x/plan.md',
+    '  Bash npm test',
+  ]);
+});
+
+test('the report gives the refused calls of a step stopped by its harness or by running out of time', async () => {
+  const lines = await reportOf([done(), { status: 1, refused: [RUN_TESTS] }]);
+  assert.deepEqual(lines.slice(3, 6), [
+    'Step 1 stopped the run: its harness exited with 1.',
+    REFUSED_ONE,
+    '  Bash npm test',
+  ]);
+  const limited = { steps: [{ role: 'implementer', harness: 'claude', model: 'm', timeoutMinutes: 30 }] };
+  assert.deepEqual((await reportOf([{ ...TIMED_OUT, refused: [RUN_TESTS] }], limited)).slice(2, 5), [
+    'Step 0 stopped the run: it ran past its time limit of 30 minutes.',
+    REFUSED_ONE,
+    '  Bash npm test',
+  ]);
+});
+
+test('the report of a repeat that ran out gives the refused calls of its last review', async () => {
+  const last = { ...blocked(), refused: [RUN_TESTS] };
+  const lines = await reportOf([done(), done(), blocked(), done(), blocked(), done(), last]);
+  assert.deepEqual(lines.slice(8, 11), [
+    'Step 6 stopped the run: the repeat ran its 3 rounds, and its until did not hold after the last.',
+    REFUSED_ONE,
+    '  Bash npm test',
+  ]);
+});
+
+test('the report gives no refused call of a step that went on, nor of a run that ran every item', async () => {
+  const went = { ...done(), refused: [WRITE_PLAN] };
+  const asks = stopsForHuman([]);
+  assert.deepEqual(await reportOf([done(), went, asks]), await reportOf([done(), done(), asks]));
+  assert.deepEqual(await reportOf([done(), went, done()]), await reportOf([done(), done(), done()]));
+});
+
 // R5, R6
 
 function runThrough(output) {
@@ -1775,6 +1865,25 @@ function opencodePrinted(response) {
   ]
     .map((event) => `${JSON.stringify(event)}\n`)
     .join('');
+}
+
+// What Claude Code prints for a final response in a turn in which it refused the calls of `denials`, which its result
+// event lists in permission_denials.
+function claudeRefusing(response, denials) {
+  return claudePrinted(response)
+    .split('\n')
+    .filter((line) => line !== '')
+    .map((line) => JSON.parse(line))
+    .map((event) => (event.type === 'result' ? { ...event, permission_denials: denials } : event))
+    .map((event) => `${JSON.stringify(event)}\n`)
+    .join('');
+}
+
+// What OpenCode prints for a call of `tool` that it refused for lack of permission.
+function opencodeRefused(tool, input) {
+  const state = { status: 'error', input, error: 'The user rejected permission to use this specific tool call.' };
+  const part = { messageID: 'msg_1', sessionID: 'ses_test', id: 'prt_t', type: 'tool', tool, state };
+  return `${JSON.stringify({ type: 'tool_use', sessionID: 'ses_test', part })}\n`;
 }
 
 const PRINTED = { claude: claudePrinted, opencode: opencodePrinted };
@@ -2261,6 +2370,107 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
     }
     assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.status, 3);
   }
+});
+
+// Unit 0090, R1 to R6: the tool calls the harness refused for lack of permission, in the end report of the command.
+
+const PLAN_DENIAL = { tool_name: 'Write', tool_use_id: 'toolu_1', tool_input: { file_path: 'plan.md', content: 'x' } };
+const NEEDS_HUMAN = responseOf({ ...DONE, outcome: 'needs-human', summary: 'The write was refused.' });
+const RESUME_LINES = (unit) => [
+  'The run was started without --skip-permissions, so a headless step had nobody to ask.',
+  `In the sandbox, resume the run with the option: npx agentrite orchestrate ${unit} --resume --skip-permissions`,
+  "On the host, allow the refused calls in the harness's settings instead.",
+];
+
+// The end report from the line that says how the run ended, without the line of the run's directory, whose name is
+// the instant the run started.
+function reportFromEnd(stdout) {
+  const lines = stdout.split('\n');
+  const at = lines.findIndex((line) => /^(Step \d+ stopped the run|The run ran every item)/.test(line));
+  assert.notEqual(at, -1, stdout);
+  return lines.slice(at).filter((line) => !line.startsWith("The run's directory: "));
+}
+
+test('a stop with a call Claude Code refused names it and how to resume, and changes nothing else', (testContext) => {
+  const refusing = project(testContext);
+  refusing.answer(1, claudePrinted(responseOf(DONE)));
+  refusing.answer(2, claudeRefusing(NEEDS_HUMAN, [PLAN_DENIAL]));
+  const plain = project(testContext);
+  plain.answer(1, claudePrinted(responseOf(DONE)));
+  plain.answer(2, claudePrinted(NEEDS_HUMAN));
+
+  const result = refusing.agentrite('orchestrate', '0029');
+  const without = plain.agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.equal(without.status, 3, without.stderr);
+  assert.deepEqual(reportFromEnd(result.stdout).slice(0, 7), [
+    'Step 1 stopped the run: its outcome is needs-human.',
+    'The harness refused 1 tool call for lack of permission:',
+    '  Write plan.md',
+    ...RESUME_LINES(UNIT),
+    'Summary: The write was refused.',
+  ]);
+  assert.deepEqual(reportFromEnd(without.stdout).slice(0, 2), [
+    'Step 1 stopped the run: its outcome is needs-human.',
+    'Summary: The write was refused.',
+  ]);
+  const [run, other] = [runDirectoryOf(refusing.base), runDirectoryOf(plain.base)];
+  const state = (context, directory) => JSON.parse(context.read(`${directory.name}/state.json`));
+  assert.deepEqual(state(refusing, run).ended, state(plain, other).ended);
+  assert.deepEqual(readdirSync(run.path).sort(), readdirSync(other.path).sort());
+});
+
+test('a stop with a refused call of a run with --skip-permissions names it, without how to resume', (testContext) => {
+  const { agentrite, answer } = project(testContext);
+  answer(1, claudePrinted(responseOf(DONE)));
+  answer(2, claudeRefusing(NEEDS_HUMAN, [PLAN_DENIAL]));
+
+  const result = agentrite('orchestrate', '0029', '--skip-permissions');
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.deepEqual(reportFromEnd(result.stdout).slice(0, 4), [
+    'Step 1 stopped the run: its outcome is needs-human.',
+    'The harness refused 1 tool call for lack of permission:',
+    '  Write plan.md',
+    'Summary: The write was refused.',
+  ]);
+});
+
+test('a stopping ask again of OpenCode names the call refused before it, then its own', (testContext) => {
+  const { agentrite, answer, calls } = project(testContext);
+  answerDefault(answer, [{}, {}]);
+  const start = { type: 'step_start', sessionID: 'ses_test', part: { messageID: 'msg_1', id: 'prt_0' } };
+  answer(3, `${JSON.stringify(start)}\n${opencodeRefused('edit', { filePath: 'review.md' })}`);
+  answer(4, `${opencodeRefused('bash', { command: 'npm test' })}${opencodePrinted(NEEDS_HUMAN)}`);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.equal(calls().length, 4);
+  assert.deepEqual(reportFromEnd(result.stdout).slice(0, 4), [
+    'Step 3 stopped the run: its outcome is needs-human.',
+    'The harness refused 2 tool calls for lack of permission:',
+    '  edit review.md',
+    '  bash npm test',
+  ]);
+});
+
+test('a call refused of a step that went on is not named in the report of a run that ends', (testContext) => {
+  const outcomes = [{ summary: 'Planned.' }, { summary: 'Built.' }, { summary: 'Reviewed.' }];
+  const refusing = project(testContext);
+  answerDefault(refusing.answer, outcomes);
+  refusing.answer(1, claudeRefusing(responseOf({ ...DONE, summary: 'Planned.' }), [PLAN_DENIAL]));
+  const plain = project(testContext);
+  answerDefault(plain.answer, outcomes);
+
+  const result = refusing.agentrite('orchestrate', '0029');
+  const without = plain.agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(without.status, 0, without.stderr);
+  assert.deepEqual(reportFromEnd(result.stdout), reportFromEnd(without.stdout));
+  assert.ok(!result.stdout.includes('refused'), result.stdout);
 });
 
 test('--skip-permissions gives every call the flag of its harness', (testContext) => {
@@ -3345,6 +3555,23 @@ test('a resume after an ask again reruns the step asked, numbered as it, in its 
   const reviewerSession = { role: 'reviewer', harness: 'opencode', session: 'ses_test' };
   assert.deepEqual(after.sessions, [...before.sessions, reviewerSession]);
   assert.deepEqual(after.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
+});
+
+// Unit 0090, R4
+test('a resume without --skip-permissions whose rerun is refused a call names how to resume', (testContext) => {
+  const context = stoppedRun(testContext, NO_OUTCOME());
+  context.answer(4, claudeRefusing(NEEDS_HUMAN, [PLAN_DENIAL]));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.deepEqual(reportFromEnd(result.stdout).slice(0, 7), [
+    'Step 1 stopped the run: its outcome is needs-human.',
+    'The harness refused 1 tool call for lack of permission:',
+    '  Write plan.md',
+    ...RESUME_LINES(UNIT),
+    'Summary: The write was refused.',
+  ]);
 });
 
 // R2, R3, R4, R11: questions, with the human's words, and the rounds after the rerun.
