@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-02T21:36:55Z
 ---
 
@@ -91,3 +91,8 @@ timestamp: 2026-11-02T21:36:55Z
   review in `.reviews/0091-one-contract-per-harness/2026-11-04T224054Z-opencode.md`: the frontmatter kept
   `status: approved` when the work began, while the log said `in-progress`. The frontmatter now says `in-progress`,
   and the entries above are left as they are. The status is `in-progress`
+- 2026-11-04T22:47:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision that C1,
+  the review's one blocking finding, is settled by `8bc0bdb`, into which the human had the wrapping of its log entry
+  folded, set the unit to `implemented`. Verified on `8bc0bdb`: `npm test` reports 1447 tests, 1446 passing, none
+  skipped, and 1 failing, unit 0054's R24 test in `tests/repository-own-files.test.mjs`, which the human decided to
+  leave failing until the next release. Every box of `plan.md` is ticked. The status is `implemented`
