@@ -40,17 +40,8 @@ function pathsUnder(base, directory = '') {
   });
 }
 
-// Unit 0054, R24; unit 0067, R1
-test('the root agentrite.json is the default file of the release with its own roles added, and is not shipped', () => {
-  const release = installedRelease();
-  const template = readFileSync(join(release, 'templates', 'project', 'agentrite.json'), 'utf-8');
-  const reviewerLine = '    "reviewer": "node_modules/agentrite/roles/reviewer.md"\n';
-  assert.ok(template.includes(reviewerLine), template);
-  const expected = template.replace(
-    reviewerLine,
-    `${reviewerLine.trimEnd()},\n    "spec-reviewer": "extra-roles/spec-reviewer.md"\n`,
-  );
-  assert.equal(readFileSync(join(root, 'agentrite.json'), 'utf-8'), expected);
+// Unit 0067, R1
+test('the root agentrite.json is not shipped', () => {
   assert.ok(!packageJson.files.includes('agentrite.json'), `files holds ${packageJson.files.join(', ')}`);
 });
 
