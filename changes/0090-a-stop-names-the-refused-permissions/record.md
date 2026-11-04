@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-02T13:31:59Z
 ---
 
@@ -36,3 +36,6 @@ timestamp: 2026-11-02T13:31:59Z
   `scripts/agentrite-orchestrate.mjs`, `runStep` and `runPrepared` of `scripts/agentrite.mjs`, their tests, and "How a
   run ends" of `ORCHESTRATOR.md`. Wrote `plan.md`: a member `refused` of each harness of `HEADLESS`, the calls carried
   on `Result`, and their part of the end report after the line of the end. The status is `approved`
+- 2026-11-04T17:50:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  the branch `feature-0090-a-stop-names-the-refused-permissions` at `239cb13`, began the work. The status is
+  `in-progress`

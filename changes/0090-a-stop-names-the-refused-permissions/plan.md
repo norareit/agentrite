@@ -91,7 +91,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
 
 ## Tasks
 
-- [ ] Add a test of `callText` in `tests/agentrite-orchestrate.test.mjs`, beside the tests of `callLabel`: a call with
+- [x] Add a test of `callText` in `tests/agentrite-orchestrate.test.mjs`, beside the tests of `callLabel`: a call with
   a label gives the tool, a space and the label, and one with none, `call(NO_LABEL)`, gives `Bash` alone. Add
   `callText` to `scripts/agentrite-orchestrate.mjs` and make `followedText` use it, its output unchanged, which the
   tests of `followedText` and `followPrinter` keep. Run `npm test` and see every test pass (R3)
@@ -161,7 +161,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
 
 ## Commit Points
 
-- [ ] After `callText`, with its test and `followedText` using it: the first task alone, a refactoring
+- [x] After `callText`, with its test and `followedText` using it: the first task alone, a refactoring
 - [ ] After the reading of the refusals with its tests: the second to fourth tasks,
   `scripts/agentrite-headless.mjs` and `tests/agentrite-outcome.test.mjs` alone
 - [ ] After the report, the command and their tests, with `npm test` passing: the fifth to ninth tasks

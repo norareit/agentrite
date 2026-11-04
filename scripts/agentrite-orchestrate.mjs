@@ -581,6 +581,18 @@ export function callLabel({ description, path, pattern, command }) {
 }
 
 /**
+ * A tool call as one line of text: the tool's name, and its label after a space, or the name alone for a call
+ * without a label.
+ *
+ * @param {Extract<Followed, { kind: 'call' }>} call
+ * @returns {string}
+ */
+export function callText(call) {
+  const label = callLabel(call);
+  return `${call.tool}${label === undefined ? '' : ` ${label}`}`;
+}
+
+/**
  * A followed item as it is printed, with no line break after it: a text message in full after its time, and a tool
  * call as one dimmed line, so that the messages stand out.
  *
@@ -590,8 +602,7 @@ export function callLabel({ description, path, pattern, command }) {
  */
 export function followedText(item, time) {
   if (item.kind === 'text') return `${time} ${item.text.replace(/[\r\n]+$/, '')}`;
-  const label = callLabel(item);
-  return `\x1b[2m${time} → ${item.tool}${label === undefined ? '' : ` ${label}`}\x1b[22m`;
+  return `\x1b[2m${time} → ${callText(item)}\x1b[22m`;
 }
 
 /**

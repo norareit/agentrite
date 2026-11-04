@@ -21,6 +21,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 import { parseDefinition } from '../scripts/agentrite-definition.mjs';
 import {
   callLabel,
+  callText,
   clockTime,
   duration,
   endReport,
@@ -1191,6 +1192,12 @@ test('callLabel writes a line feed or a carriage return of a description, a path
   assert.equal(callLabel(call({ path: '/work/a\r.mjs', pattern: 'follow' })), '/work/a\\r.mjs');
   assert.equal(callLabel(call({ pattern: 'first\r\nsecond', command: 'grep' })), 'first\\r\\nsecond');
   assert.equal(callLabel(call({ command: 'cd /work\r\nnpm test' })), 'cd /work\\r');
+});
+
+// Unit 0090, R3
+test('callText gives the tool and its label after a space, or the tool alone for a call without a label', () => {
+  assert.equal(callText(call({ path: '/work/a.mjs' })), 'Bash /work/a.mjs');
+  assert.equal(callText(call(NO_LABEL)), 'Bash');
 });
 
 test('a call with a pattern of two lines is printed on one line, in each harness', () => {
