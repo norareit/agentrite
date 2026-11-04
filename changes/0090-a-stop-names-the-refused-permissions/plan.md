@@ -148,7 +148,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
       goes on, and that ends complete, gives the report it gives without the refusal
 - [x] Run `npm test` and see every test pass, or be skipped for what the host lacks as "The kit's own tests" of
   `CONTRIBUTING.md` gives
-- [ ] Write the paragraph and the example of the approach in "How a run ends" of `ORCHESTRATOR.md`, and the refused
+- [x] Write the paragraph and the example of the approach in "How a run ends" of `ORCHESTRATOR.md`, and the refused
   calls in its paragraph of what the end report holds, wrapped within 120 characters (R7)
 
 ## Verification
@@ -165,4 +165,4 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
 - [x] After the reading of the refusals with its tests: the second to fourth tasks,
   `scripts/agentrite-headless.mjs` and `tests/agentrite-outcome.test.mjs` alone
 - [x] After the report, the command and their tests, with `npm test` passing: the fifth to ninth tasks
-- [ ] After `ORCHESTRATOR.md`
+- [x] After `ORCHESTRATOR.md`

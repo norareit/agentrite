@@ -268,7 +268,8 @@ step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for it
 When the run ends, the command prints last: a list of every step that ran, with its number, role, harness, model and
 how long it took, and `asked again` after an ask again; how the run ended, and for a stop which step stopped it and
 why, with what is wrong with an outcome
-not of the form; then from the outcome of the step that ran last, when it is of the form, its summary, the blocking
+not of the form; then, for a stop, the tool calls the harness refused for lack of permission, as below; then from the
+outcome of the step that ran last, when it is of the form, its summary, the blocking
 findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
 then, for each repeat with `"no-findings"` that let the run go on with only non-blocking findings after its last
 round, in the order they ran and whatever ended the run, the line `Non-blocking findings still open after step
@@ -311,6 +312,31 @@ After the run:
 ```
 
 A step outside a repeat is named as `  step 0, planner:`.
+
+The tool calls the harness refused for lack of permission stand directly after the line that says how the run ended,
+and only for a run that stopped. They are those of the step that stopped it, and for an ask again first those of the
+step it asked, since its outcome stands for that step's. A refused call of a step that went on, and of a run that ran
+every item to its end, is not given. Claude Code makes a refused call known in `permission_denials` of the `result`
+event that ends each turn, and every turn of the step counts. OpenCode makes it known as a `tool_use` event whose
+status is `error` and whose error is `The user rejected permission to use this specific tool call.`. The line `The
+harness refused <n> tool calls for lack of permission:` counts them, and is followed by each call, in the order the
+harness printed them, on a line of its own: the name of the tool as the harness gives it, and the label `--follow`
+gives the call, or the name alone for a call without a label. For a run started, or resumed, without
+`--skip-permissions`, three lines follow: that a headless step had nobody to ask, the command that resumes the run with
+the option in the sandbox, and that on the host the harness's settings are to allow the refused calls instead. A step
+with no refused call adds nothing to the report. A tool that the harness's settings deny outright is not given, since
+no call of it is made: OpenCode does not offer such a tool to the agent. For a planner on Claude Code whose write of
+the plan was refused, in a run without the option:
+
+```
+Step 0 stopped the run: its outcome is needs-human.
+The harness refused 1 tool call for lack of permission:
+  Write /work/changes/0061-x/plan.md
+The run was started without --skip-permissions, so a headless step had nobody to ask.
+In the sandbox, resume the run with the option: npx agentrite orchestrate 0061-x --resume --skip-permissions
+On the host, allow the refused calls in the harness's settings instead.
+Summary: The write of plan.md was refused.
+```
 
 A run that ran every item to its end exits 0, and a run that stopped exits 3, which is the command's own status. A
 run that the command refused, and that started nothing, exits 1. See "agentrite orchestrate" in `COMMANDS.md`.
