@@ -98,3 +98,10 @@ timestamp: 2026-11-04T11:55:47Z
   for it; and the commit that wrapped the record's entry at 120 characters is folded into `feature-0095 Add the key
   process to agentrite.json`. The branch was replayed for that with the same tree, so the commits after it have new
   hashes: `fe8c305`, on which the verification was run, is now `9d7c6a6`. The status is `in-progress`
+- 2026-11-04T15:17:56Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0095 at
+  `c064a56de71f6c6cdabf53d3559e52ce09aa7e13`, against merge base `1c69134` with `master`, and returned C1,
+  non-blocking. The findings are in
+  `.reviews/0095-a-project-uses-the-sandbox-alone/2026-11-04T151756Z-opencode.md`. Ran `npm test`: 1417 passing,
+  one failing, none skipped, matching the known failure the human decided above; the git-environment regression
+  and Docker tests ran. `npm run check-changes` and `git diff --check` passed. Not verified: a build of the complete
+  kit image or a sandbox-only run through the real wrapper and Compose into that image. The status is `in-progress`
