@@ -114,21 +114,21 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ### The key
 
-- [ ] In `tests/agentrite-settings.test.mjs`, add tests: a file without `process` is refused naming the file, the
+- [x] In `tests/agentrite-settings.test.mjs`, add tests: a file without `process` is refused naming the file, the
   key, that it is missing, and `true or false`; `"process": "true"` and `"process": 1` are refused naming what they
   hold; `process` and `sandbox` both `false` is refused with a message that names both keys and says a project
   without the process has the sandbox; `process` false with `sandbox` true is taken; `settingsText` writes `process`
   right after `harnesses`; `parseBell` takes a file without `process`; `readSettings` judges the paths of `standards`,
   `orchestrator` and `roles` in a file whose `process` is `false` as it does with `true`. (R1, R2, R3, R5)
-- [ ] In `tests/agentrite-config.test.mjs`, add a test that `config` writes `"process": true` right after
+- [x] In `tests/agentrite-config.test.mjs`, add a test that `config` writes `"process": true` right after
   `harnesses`, and one that the template `templates/project/agentrite.json` holds it there. (R4, R5)
-- [ ] Add a test of the CLI, in `tests/agentrite-settings.test.mjs` or beside the other tests that start the command,
+- [x] Add a test of the CLI, in `tests/agentrite-settings.test.mjs` or beside the other tests that start the command,
   that `npx agentrite roles` on a file with `process` and `sandbox` both `false` prints the message, writes nothing and
   exits 1. (R2)
-- [ ] Add `process` to `KEYS` after `harnesses` and to the `Settings` type, return it from `parseSettings`, refuse the
+- [x] Add `process` to `KEYS` after `harnesses` and to the `Settings` type, return it from `parseSettings`, refuse the
   pair there after the keys are judged, and write it in `settingsText`. (R1, R2, R5)
-- [ ] Add `"process": true` after `harnesses` to `templates/project/agentrite.json` and to `agentrite.json`. (R4, R5)
-- [ ] Give `kitSettingsText` in `tests/installed-kit.mjs` the parameter `process`, `true` unless given, and add
+- [x] Add `"process": true` after `harnesses` to `templates/project/agentrite.json` and to `agentrite.json`. (R4, R5)
+- [x] Give `kitSettingsText` in `tests/installed-kit.mjs` the parameter `process`, `true` unless given, and add
   `"process": true` after `harnesses` to every `agentrite.json` a test writes by hand, in the files named under
   "Files". Run `npm test` and fix every test still failing for the missing key. (R1)
 
@@ -287,8 +287,8 @@ are checked as today, and nothing reads the content of the role files or the sta
 
 ## Commit Points
 
-- [ ] `feature-0095 Plan the unit`: this plan and its log entry
-- [ ] `feature-0095 Add the key process to agentrite.json`: the tasks under "The key"
+- [x] `feature-0095 Plan the unit`: this plan and its log entry
+- [x] `feature-0095 Add the key process to agentrite.json`: the tasks under "The key"
 - [ ] `feature-0095 Have the wrapper name the hooks directory`: the tasks under "The image and the Compose file"
 - [ ] `feature-0095 Run the sandbox on a branch in a sandbox-only project`: the tasks under "The wrapper"
 - [ ] `feature-0095 Set up a sandbox-only project with init and refresh`: the tasks under "`init`, `refresh` and the

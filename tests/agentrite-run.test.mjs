@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { HARNESS_NAMES, plannedFiles, ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
@@ -27,6 +27,15 @@ function wrapperDescription(wrapper) {
     .split('\n')
     .map((line) => line.slice(2))
     .join(' ');
+}
+
+// Every file under `root` with its content, so that a test can find that a command wrote nothing.
+function listTree(root) {
+  return readdirSync(root, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => join(entry.parentPath, entry.name))
+    .sort()
+    .map((path) => [path, readFileSync(path, 'utf-8')]);
 }
 
 function emptyDirectory(testContext) {
@@ -1123,6 +1132,32 @@ test('agentrite roles refuses a file that lacks bell, or whose bell is a string,
     assert.match(result.stderr, new RegExp(`agentrite\\.json: bell is ${found}\\. It must hold true or false`));
   }
 });
+
+// Unit 0095, R2
+test(
+  'agentrite roles refuses a file whose process and sandbox are both false, writes nothing and exits 1',
+  (testContext) => {
+    const { agentrite, base, write } = project(testContext);
+    const text = SETTINGS.replace('  "process": true,\n', '  "process": false,\n').replace(
+      '  "sandbox": true,\n',
+      '  "sandbox": false,\n',
+    );
+    assert.notEqual(text, SETTINGS);
+    write('agentrite.json', text);
+    const before = listTree(base);
+
+    const result = agentrite(['roles']);
+
+    assert.equal(result.status, 1);
+    assert.equal(result.stdout, '');
+    assert.equal(
+      result.stderr,
+      'agentrite: agentrite.json: process is false and sandbox is false. A project without the process has the ' +
+        'sandbox, so sandbox must hold true where process holds false\n',
+    );
+    assert.deepEqual(listTree(base), before);
+  },
+);
 
 // Unit 0065, R3
 test(

@@ -149,3 +149,20 @@ test('config skips an agentrite.json that lacks orchestrator, and leaves it byte
   assert.equal(result.stdout, 'skipped agentrite.json, which exists\n');
   assert.equal(readFileSync(path, 'utf-8'), text);
 });
+
+// Unit 0095, R4, R5
+test('config writes "process": true right after "harnesses"', (testContext) => {
+  const { base, run } = directory(testContext);
+
+  assert.equal(run('config').status, 0);
+
+  assert.match(
+    readFileSync(join(base, 'agentrite.json'), 'utf-8'),
+    /^ {2}"harnesses": \["claude", "opencode"\],\n {2}"process": true,\n {2}"sandbox": true,\n/m,
+  );
+});
+
+// Unit 0095, R4, R5
+test('the template holds "process": true right after "harnesses"', () => {
+  assert.match(TEMPLATE, /^ {2}"harnesses": \[[^\n]*\],\n {2}"process": true,\n {2}"sandbox": /m);
+});

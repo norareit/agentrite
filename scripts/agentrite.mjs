@@ -878,6 +878,7 @@ function settingsToWrite({ harnesses, sandbox, orchestrator, defaultBranch }, te
   return {
     defaultBranch: defaultBranch ?? template.defaultBranch,
     harnesses: HARNESS_NAMES.filter((name) => harnesses.includes(name)),
+    process: true,
     sandbox,
     bell: template.bell,
     standards: template.standards,

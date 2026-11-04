@@ -12,6 +12,7 @@ export const SETTINGS_FILE = 'agentrite.json';
  * @typedef {{
  *   defaultBranch: string,
  *   harnesses: string[],
+ *   process: boolean,
  *   sandbox: boolean,
  *   bell: boolean,
  *   standards: string,
@@ -55,6 +56,7 @@ const KEYS = [
       Array.isArray(value) && value.length > 0 && value.every((harness) => HARNESS_NAMES.includes(harness)),
     must: `a list of one or more of ${HARNESS_NAMES.map((name) => JSON.stringify(name)).join(' and ')}`,
   },
+  { name: 'process', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'sandbox', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'bell', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'standards', holds: isProjectPath, must: PATH_MUST },
@@ -81,6 +83,11 @@ const ROLE_NAME_FORM = /^[a-z]+(-[a-z]+)*$/;
 const MUST_HOLD_OBJECT = `The file must hold a JSON object with the keys ${KEYS.slice(0, -1)
   .map((key) => key.name)
   .join(', ')} and ${KEYS.at(-1)?.name}`;
+
+// A project without the process uses the kit for its sandbox alone, so the pair would leave nothing set up.
+const NEITHER_PROCESS_NOR_SANDBOX =
+  `${SETTINGS_FILE}: process is false and sandbox is false. A project without the process has the sandbox, so ` +
+  'sandbox must hold true where process holds false';
 
 /**
  * @param {unknown} error
@@ -112,9 +119,20 @@ export function parseSettings(text) {
   const values = /** @type {Record<string, unknown>} */ (parsed);
   for (const key of KEYS) checkKey(values, key);
 
-  const { defaultBranch, harnesses, sandbox, bell, standards, orchestrator } = /** @type {Settings} */ (parsed);
+  const settings = /** @type {Settings} */ (parsed);
+  const { defaultBranch, harnesses, process, sandbox, bell, standards, orchestrator } = settings;
   const roles = parseRoles(/** @type {Record<string, unknown>} */ (values.roles));
-  return { defaultBranch, harnesses: [...new Set(harnesses)], sandbox, bell, standards, orchestrator, roles };
+  if (!process && !sandbox) throw new Error(NEITHER_PROCESS_NOR_SANDBOX);
+  return {
+    defaultBranch,
+    harnesses: [...new Set(harnesses)],
+    process,
+    sandbox,
+    bell,
+    standards,
+    orchestrator,
+    roles,
+  };
 }
 
 /**
@@ -247,13 +265,14 @@ export function isRegularFile(path) {
  * @param {Settings} settings
  * @returns {string}
  */
-export function settingsText({ defaultBranch, harnesses, sandbox, bell, standards, orchestrator, roles }) {
+export function settingsText({ defaultBranch, harnesses, process, sandbox, bell, standards, orchestrator, roles }) {
   const list = harnesses.map((harness) => JSON.stringify(harness)).join(', ');
   const roleLines = Object.entries(roles).map(([name, path]) => `    ${JSON.stringify(name)}: ${JSON.stringify(path)}`);
   return [
     '{',
     `  "defaultBranch": ${JSON.stringify(defaultBranch)},`,
     `  "harnesses": [${list}],`,
+    `  "process": ${JSON.stringify(process)},`,
     `  "sandbox": ${JSON.stringify(sandbox)},`,
     `  "bell": ${JSON.stringify(bell)},`,
     `  "standards": ${JSON.stringify(standards)},`,

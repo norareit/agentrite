@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-04T11:55:47Z
 ---
 
@@ -34,3 +34,12 @@ timestamp: 2026-11-04T11:55:47Z
   `feature-0095-a-project-uses-the-sandbox-alone` from `master` at `1c69134`, after units 0093 and 0094 were
   implemented, and wrote `plan.md`. The shim passes the mode as the wrapper's first argument, `--sandbox-only`, before
   the project root, which the spec left to the plan. The status is `approved`
+- 2026-11-04T14:30:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
+  `feature-0095-a-project-uses-the-sandbox-alone` at `904cb06`. The status is `in-progress`
+- 2026-11-04T14:35:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the key `process` and its
+  tests. The test of the CLI for `process` and `sandbox` both `false` is in `tests/agentrite-run.test.mjs`, beside the
+  other tests that start `agentrite roles`. `settingsToWrite` writes `process` as `true` until `--sandbox-only` is added
+  under "`init`, `refresh` and the shim". `npm test` reports 1366 tests, 1365 passing and 1 failing: unit 0054's R24
+  test in `tests/repository-own-files.test.mjs`, which holds the root `agentrite.json` byte for byte against the
+  template of the installed release 8.2.0, which has no `process`. R4 has the root file hold it, so the test fails until
+  the project depends on a release that has the key, as it did in unit 0058. The status is `in-progress`

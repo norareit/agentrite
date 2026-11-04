@@ -429,7 +429,8 @@ const noCut = [
     unit: '0031',
     arrange: (host) => {
       commitUnit(host, 'kind: feature');
-      writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('true', '"yes"'));
+      const text = settingsFor('master').replace('"sandbox": true', '"sandbox": "yes"');
+      writeFileSync(join(host.root, 'agentrite.json'), text);
     },
     says: [
       /^agentrite: agentrite\.json: sandbox is "yes"\. It must hold true or false$/m,
