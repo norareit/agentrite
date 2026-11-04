@@ -30,3 +30,9 @@ timestamp: 2026-11-02T13:31:59Z
   sandbox and the host names "On the host and in the sandbox" of `ORCHESTRATOR.md`, and a decision says why
   `COMMANDS.md` and `README.md` do not change. The status is `draft`
 - 2026-11-04T14:15:25Z [human] approved the spec. The status is `approved`
+- 2026-11-04T16:12:07Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the branch
+  `feature-0090-a-stop-names-the-refused-permissions`, cut from `master` at `7af6531`. Read `HEADLESS` of
+  `scripts/agentrite-headless.mjs`, `Result`, `endReport` and the end report's helpers of
+  `scripts/agentrite-orchestrate.mjs`, `runStep` and `runPrepared` of `scripts/agentrite.mjs`, their tests, and "How a
+  run ends" of `ORCHESTRATOR.md`. Wrote `plan.md`: a member `refused` of each harness of `HEADLESS`, the calls carried
+  on `Result`, and their part of the end report after the line of the end. The status is `approved`
