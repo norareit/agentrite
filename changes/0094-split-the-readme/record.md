@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-04T11:26:27Z
 ---
 
@@ -20,3 +20,4 @@ timestamp: 2026-11-04T11:26:27Z
   of a Markdown table may pass the line limit in every document, which became requirement 25 and its decision and
   lifts the requirement that the tables of `SANDBOX.md` fit the limit; the diagrams are addressed on `master`, as
   the spec had it; `BTR1` is declined; `BTR2` is taken, as requirement 26. The status is `draft`
+- 2026-11-04T11:38:52Z [human] approved the spec. The status is `approved`
