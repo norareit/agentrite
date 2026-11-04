@@ -130,3 +130,9 @@ timestamp: 2026-11-04T11:26:27Z
   `https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/<name>.svg` with alternative text, which a
   test checks. The human looks at the images after the release, outside this unit, and a fault found then is a new
   unit
+- 2026-11-04T13:31:19Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, fully reviewed 0094 at
+  `ec001025e57628d71df75f476f11b04090772607` against merge base `2a20348`. Returned S1, P1 and C1 in
+  `.reviews/0094-split-the-readme/2026-11-04T133119Z-opencode.md`. `npm test` passes, 1358 tests, none skipped;
+  `npm run check-changes`, `npm pack --dry-run` and `git diff --check` pass. Did not regenerate the SVGs or
+  independently verify visual rendering in light or dark viewers, or the earlier visual inspection claimed in the
+  record. The status remains `in-progress`
