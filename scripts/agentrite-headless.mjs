@@ -3,13 +3,15 @@ import { randomUUID } from 'node:crypto';
 /**
  * How each harness runs a step headless for the orchestrator: the arguments that make it print JSON events, one per
  * line, and that start or continue a session, with the session's id where the command chooses it, and how its final
- * response and its session's id are read from what it printed, and what is followed of the step in each line it
- * prints. Keyed by the harness's name, so that the code that uses it names no harness.
+ * response and its session's id are read from what it printed, what is followed of the step in each line it
+ * prints, and the tool calls it refused for lack of permission, in the order it printed them. Keyed by the harness's
+ * name, so that the code that uses it names no harness.
  *
  * @type {Record<string, {
  *   arguments: (session: string | undefined) => { args: string[], session: string | undefined },
  *   read: (stdout: string) => { response: string | undefined, session: string | undefined },
  *   follow: (line: string) => Followed[],
+ *   refused: (stdout: string) => Call[],
  * }>}
  */
 export const HEADLESS = {
@@ -30,6 +32,7 @@ export const HEADLESS = {
       return { response: stringOrNone(printed?.result), session: stringOrNone(printed?.session_id) };
     },
     follow: followClaude,
+    refused: refusedClaude,
   },
   opencode: {
     arguments(session) {
@@ -37,6 +40,7 @@ export const HEADLESS = {
     },
     read: readOpencode,
     follow: followOpencode,
+    refused: refusedOpencode,
   },
 };
 
@@ -55,6 +59,12 @@ export const HEADLESS = {
  *       pattern: string | undefined,
  *       command: string | undefined,
  *     }} Followed
+ */
+
+/**
+ * A tool call of what is followed of a step.
+ *
+ * @typedef {Extract<Followed, { kind: 'call' }>} Call
  */
 
 /**
@@ -167,7 +177,7 @@ function textFollowed(time, text) {
  * @param {string} tool
  * @param {Record<string, unknown>} input
  * @param {{ shell: string, paths: string[] }} names the harness's shell tool, and the fields that name one file
- * @returns {Followed}
+ * @returns {Call}
  */
 function callFollowed(time, tool, input, { shell, paths }) {
   return {
@@ -182,6 +192,38 @@ function callFollowed(time, tool, input, { shell, paths }) {
 }
 
 const CLAUDE_TOOLS = { shell: 'Bash', paths: ['file_path', 'notebook_path'] };
+
+/**
+ * The JSON objects of the lines printed, in order, without the lines that hold none.
+ *
+ * @param {string} stdout
+ * @returns {Record<string, unknown>[]}
+ */
+function jsonRecords(stdout) {
+  return stdout.split('\n').flatMap((line) => {
+    const record = jsonRecord(line);
+    return record === undefined ? [] : [record];
+  });
+}
+
+/**
+ * The calls Claude Code refused for lack of permission: those of `permission_denials` of every `result` event, since
+ * a step can end several turns and each turn ends with a `result` event of its own. A refusal carries no instant.
+ *
+ * @param {string} stdout
+ * @returns {Call[]}
+ */
+function refusedClaude(stdout) {
+  return jsonRecords(stdout)
+    .filter((event) => event.type === 'result' && Array.isArray(event.permission_denials))
+    .flatMap((event) => /** @type {unknown[]} */ (event.permission_denials))
+    .filter(isRecord)
+    .flatMap((denial) => {
+      if (typeof denial.tool_name !== 'string') return [];
+      const input = isRecord(denial.tool_input) ? denial.tool_input : {};
+      return [callFollowed(undefined, denial.tool_name, input, CLAUDE_TOOLS)];
+    });
+}
 
 /**
  * What Claude Code makes known in one line of `stream-json`: the text blocks and tool calls of an event of the step's
@@ -207,6 +249,10 @@ function followClaude(line) {
 
 const OPENCODE_TOOLS = { shell: 'bash', paths: ['filePath'] };
 
+// The error OpenCode gives a call it refused for lack of permission. It has no field of its own for a refusal, so this
+// text is the only thing that tells a refused call from one that failed otherwise.
+const OPENCODE_REFUSAL = 'The user rejected permission to use this specific tool call.';
+
 /**
  * What OpenCode makes known in one line of its JSON events: a text, or a tool call, which it prints once the call
  * has ended.
@@ -223,4 +269,20 @@ function followOpencode(line) {
   if (event.type !== 'tool_use' || typeof part.tool !== 'string') return [];
   const input = isRecord(part.state) && isRecord(part.state.input) ? part.state.input : {};
   return [callFollowed(time, part.tool, input, OPENCODE_TOOLS)];
+}
+
+/**
+ * The calls OpenCode refused for lack of permission: every `tool_use` event whose call ended in an error, and whose
+ * error is the one of a refusal. A refusal carries no instant.
+ *
+ * @param {string} stdout
+ * @returns {Call[]}
+ */
+function refusedOpencode(stdout) {
+  return jsonRecords(stdout).flatMap((event) => {
+    if (event.type !== 'tool_use' || !isRecord(event.part) || typeof event.part.tool !== 'string') return [];
+    const { tool, state } = event.part;
+    if (!isRecord(state) || state.status !== 'error' || state.error !== OPENCODE_REFUSAL) return [];
+    return [callFollowed(undefined, tool, isRecord(state.input) ? state.input : {}, OPENCODE_TOOLS)];
+  });
 }

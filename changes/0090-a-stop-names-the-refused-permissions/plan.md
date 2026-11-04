@@ -95,19 +95,19 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
   a label gives the tool, a space and the label, and one with none, `call(NO_LABEL)`, gives `Bash` alone. Add
   `callText` to `scripts/agentrite-orchestrate.mjs` and make `followedText` use it, its output unchanged, which the
   tests of `followedText` and `followPrinter` keep. Run `npm test` and see every test pass (R3)
-- [ ] Add tests of `HEADLESS.claude.refused` to `tests/agentrite-outcome.test.mjs`. The output holds a `system` event,
+- [x] Add tests of `HEADLESS.claude.refused` to `tests/agentrite-outcome.test.mjs`. The output holds a `system` event,
   an `assistant` event with a `tool_use` block of `Write`, a `user` event, a line that is no JSON, a `result` event
   whose `permission_denials` holds a `Write` with `file_path` and a `Bash` with `command` and `description`, a
   `result` event with a `permission_denials` that is no array, one without it, and a last `result` event whose
   `permission_denials` holds a `Read` and a record without a `tool_name`. It gives the `Write`, the `Bash` and the
   `Read`, in that order, each with the fields `callFollowed` gives for that harness and `time` `undefined`, and output
   with no `result` event gives none (R1, R6)
-- [ ] Add tests of `HEADLESS.opencode.refused` to the same file. The output holds a `step_start`, a `text`, a line
+- [x] Add tests of `HEADLESS.opencode.refused` to the same file. The output holds a `step_start`, a `text`, a line
   that is no JSON, a `tool_use` of `edit` with `filePath` whose state is `error` with the refusal's text, a `tool_use`
   whose state is `completed`, a `tool_use` whose state is `error` with another error text, a `tool_use` of `bash` with
   `command` and `description` refused, and a `step_finish`. It gives the `edit` and the `bash`, in that order, and
   none from the others. Run `npm test` and see these fail (R1, R6)
-- [ ] Add `Call`, `OPENCODE_REFUSAL` and the member `refused` of each harness to `scripts/agentrite-headless.mjs`, with
+- [x] Add `Call`, `OPENCODE_REFUSAL` and the member `refused` of each harness to `scripts/agentrite-headless.mjs`, with
   the doc comment of `HEADLESS`. Run `npm test` and see these pass (R1)
 - [ ] Add `refused: []` to the default result of `runWith` and `skipPermissions: false` to `WHERE` in
   `tests/agentrite-orchestrate.test.mjs`, and add tests of the report through `reportOf`, with results that give
@@ -162,7 +162,7 @@ settings deny outright, which OpenCode does not offer to the agent, is not repor
 ## Commit Points
 
 - [x] After `callText`, with its test and `followedText` using it: the first task alone, a refactoring
-- [ ] After the reading of the refusals with its tests: the second to fourth tasks,
+- [x] After the reading of the refusals with its tests: the second to fourth tasks,
   `scripts/agentrite-headless.mjs` and `tests/agentrite-outcome.test.mjs` alone
 - [ ] After the report, the command and their tests, with `npm test` passing: the fifth to ninth tasks
 - [ ] After `ORCHESTRATOR.md`

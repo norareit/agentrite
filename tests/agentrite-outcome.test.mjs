@@ -579,3 +579,63 @@ test('opencode: reasoning, step events, a text event with no text and a line of 
     assert.deepEqual(HEADLESS.opencode.follow(line), [], line);
   }
 });
+
+// Unit 0090, R1 and R6: the tool calls each harness refused for lack of permission, read from what a step printed.
+
+const refusedCall = (tool, fields) => ({ kind: 'call', time: undefined, tool, ...NO_CALL, ...fields });
+
+test('claude: the refused calls are those of permission_denials of every result event, in order', () => {
+  const denial = (tool_name, tool_input) => ({ tool_name, tool_use_id: 'toolu_1', tool_input });
+  const printed = [
+    JSON.stringify({ type: 'system', subtype: 'init', session_id: 'abc' }),
+    assistant([toolUse('Write', { file_path: '/work/plan.md', content: 'Plan.' })]),
+    JSON.stringify({
+      type: 'user',
+      message: { content: [{ type: 'tool_result', tool_use_id: 'toolu_1', content: 'refused' }] },
+      parent_tool_use_id: null,
+    }),
+    'not json',
+    JSON.stringify({
+      type: 'result',
+      result: 'First.',
+      permission_denials: [
+        denial('Write', { file_path: '/work/plan.md', content: 'Plan.' }),
+        denial('Bash', { command: 'npm test', description: 'Run the tests' }),
+      ],
+    }),
+    JSON.stringify({ type: 'result', result: 'Second.', permission_denials: { tool_name: 'Edit' } }),
+    JSON.stringify({ type: 'result', result: 'Third.' }),
+    JSON.stringify({
+      type: 'result',
+      result: 'Last.',
+      permission_denials: [denial('Read', 'no record'), { tool_use_id: 'toolu_2', tool_input: {} }],
+    }),
+  ].join('\n');
+  assert.deepEqual(HEADLESS.claude.refused(`${printed}\n`), [
+    refusedCall('Write', { path: '/work/plan.md' }),
+    refusedCall('Bash', { description: 'Run the tests', command: 'npm test' }),
+    refusedCall('Read', {}),
+  ]);
+  assert.deepEqual(HEADLESS.claude.refused(printed.split('\n').slice(0, 4).join('\n')), []);
+  assert.deepEqual(HEADLESS.claude.refused(''), []);
+});
+
+test('opencode: the refused calls are the tool_use events that failed with the error of a rejected permission', () => {
+  const rejected = 'The user rejected permission to use this specific tool call.';
+  const used = (tool, state) => opencodeLine('tool_use', { type: 'tool', tool, state });
+  const printed = [
+    opencodeLine('step_start', { type: 'step-start' }),
+    opencodeLine('text', { type: 'text', text: 'I will write it.' }),
+    'not json',
+    used('edit', { status: 'error', input: { filePath: '/work/hello.txt' }, error: rejected }),
+    used('read', { status: 'completed', input: { filePath: '/work/a.mjs' } }),
+    used('read', { status: 'error', input: { filePath: '/work/b.mjs' }, error: 'File not found: /work/b.mjs' }),
+    used('bash', { status: 'error', input: { command: 'npm test', description: 'Run the tests' }, error: rejected }),
+    opencodeLine('step_finish', { type: 'step-finish', reason: 'stop' }),
+  ].join('\n');
+  assert.deepEqual(HEADLESS.opencode.refused(printed), [
+    refusedCall('edit', { path: '/work/hello.txt' }),
+    refusedCall('bash', { description: 'Run the tests', command: 'npm test' }),
+  ]);
+  assert.deepEqual(HEADLESS.opencode.refused(''), []);
+});
