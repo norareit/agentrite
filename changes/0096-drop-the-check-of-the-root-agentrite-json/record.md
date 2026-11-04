@@ -46,5 +46,12 @@ of `package.json`, which the human declined.
   began the work on `master` at `5b80d88`, and cut no branch: the human asked for the task to be built straight on
   `master`, which is an exception to the rule of `process.md` that work after the approval is done on the unit's
   branch. The change check compares nothing on `master`, so it does not check this unit. The status is `in-progress`
+- 2026-11-04T23:16:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the change in `5388709`.
+  The test in `tests/repository-own-files.test.mjs` is now `the root agentrite.json is not shipped`, under the comment
+  `Unit 0067, R1`, and holds only the assertion that `files` of `package.json` does not hold `agentrite.json`. The
+  comparison with the installed release's default file went with the line of `spec-reviewer` it built; the helper
+  `installedRelease` stays for the two tests that still use it, as its comment says, and no import went unused. On
+  `5388709`, `npm test` reports 1447 tests, 1447 passing, none skipped, and `npm run check-changes` exits 0. The
+  status is `in-progress`
 
 ## Amendments
