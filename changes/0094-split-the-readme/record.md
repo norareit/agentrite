@@ -158,3 +158,10 @@ timestamp: 2026-11-04T11:26:27Z
   the orchestrator a dashed alternative there. Both were rendered to PNG and looked at. On this host Arial is missing
   and the render fell back to another font; a viewer with Arial or Helvetica shows those. The alternative text of the
   two images in `README.md` says what they now show. `npm test` passes, 1358 tests, none skipped
+- 2026-11-04T14:04:39Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave both diagrams the
+  style the human chose, from five rendered in the scratchpad and not committed: hand-drawn, soft cards, dark and
+  bold, minimal monochrome, and soft cards with bold titles, the one taken. The theme, its colours and a few lines of
+  CSS are in the front matter of each source. The titles of the groups are written in capitals and bold in the
+  source rather than by CSS, and the two of the components end in a non-breaking space: Mermaid measures a title
+  before CSS applies, and the last letter was cut off otherwise. Both SVGs were rendered to PNG and looked at, with
+  the fonts of this host, which has none of those the sources name. `npm test` passes, 1358 tests, none skipped

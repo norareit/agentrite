@@ -312,6 +312,8 @@ Added at the human's request after the review, who found the diagrams plain and 
   (R14)
 - [x] Generate the SVGs with `npm run diagrams`, look at both, and correct the alternative text of the two images in
   `README.md` to what they now show (R15, R16, R17)
+- [x] Give both the style the human chose from five rendered in the scratchpad: white cards with rounded corners and
+  coloured borders on pale grey groups, with the titles of the groups in bold capitals (R14, R16)
 - [x] Run `npm test` and commit
 
 ## Verification

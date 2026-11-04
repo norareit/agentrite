@@ -2,22 +2,27 @@
 config:
   theme: base
   themeVariables:
-    fontFamily: Arial, Helvetica, sans-serif
+    fontFamily: "Inter, Segoe UI, Helvetica, Arial, sans-serif"
     fontSize: 15px
     lineColor: "#94a3b8"
-    clusterBkg: "#ffffff"
-    clusterBorder: "#e2e8f0"
-    edgeLabelBackground: "#ffffff"
-    titleColor: "#475569"
+    clusterBkg: "#f8fafc"
+    clusterBorder: "#f8fafc"
+    edgeLabelBackground: "#f8fafc"
+    titleColor: "#0f172a"
+  themeCSS: >
+    .node rect, .node path { rx: 12px; ry: 12px; filter: drop-shadow(0 2px 4px rgba(15,23,42,0.12)); }
+    .cluster rect { rx: 18px; ry: 18px; }
+    .flowchart-link { stroke-width: 2px; }
+    .edgeLabel { color: #475569; font-size: 13px; }
   flowchart:
     curve: basis
-    nodeSpacing: 36
-    rankSpacing: 56
-    padding: 14
+    nodeSpacing: 34
+    rankSpacing: 50
+    padding: 18
     wrappingWidth: 320
 ---
 flowchart LR
-  subgraph starting["Starting the work"]
+  subgraph starting["<b>STARTING THE WORK&nbsp;</b>"]
     direction TB
     sandbox["<b>./sandbox.sh</b>"]
     orchestrate["<b>agentrite orchestrate</b><br/>a unit through its roles"]
@@ -25,7 +30,7 @@ flowchart LR
     sandbox --> orchestrate --> run
   end
   harness(["<b>Harness</b><br/>Claude Code · OpenCode"])
-  subgraph instructions["What the agent follows"]
+  subgraph instructions["<b>WHAT THE AGENT FOLLOWS&nbsp;</b>"]
     direction TB
     wrappers["<b>Role wrappers</b><br/>.claude/agents · .opencode/agents"]
     roles["<b>Roles</b><br/>specifier · planner · implementer · reviewer<br/>and roles the project adds"]
@@ -38,9 +43,9 @@ flowchart LR
   harness -->|reads| wrappers
   harness -->|reads and writes| units
 
-  classDef start fill:#eff6ff,stroke:#60a5fa,color:#1e3a8a
-  classDef agent fill:#fef3c7,stroke:#f59e0b,color:#78350f
-  classDef text fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+  classDef start fill:#ffffff,stroke:#6366f1,stroke-width:3px,color:#0f172a
+  classDef agent fill:#ffffff,stroke:#f59e0b,stroke-width:3px,color:#0f172a
+  classDef text fill:#ffffff,stroke:#94a3b8,stroke-width:1.5px,color:#0f172a
   class sandbox,orchestrate,run start
   class harness agent
   class wrappers,roles,rules,units text

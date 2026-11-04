@@ -2,28 +2,33 @@
 config:
   theme: base
   themeVariables:
-    fontFamily: Arial, Helvetica, sans-serif
+    fontFamily: "Inter, Segoe UI, Helvetica, Arial, sans-serif"
     fontSize: 15px
     lineColor: "#94a3b8"
-    clusterBkg: "#ffffff"
-    clusterBorder: "#e2e8f0"
-    edgeLabelBackground: "#ffffff"
-    titleColor: "#475569"
+    clusterBkg: "#f8fafc"
+    clusterBorder: "#f8fafc"
+    edgeLabelBackground: "#f8fafc"
+    titleColor: "#0f172a"
+  themeCSS: >
+    .node rect, .node path { rx: 12px; ry: 12px; filter: drop-shadow(0 2px 4px rgba(15,23,42,0.12)); }
+    .cluster rect { rx: 18px; ry: 18px; }
+    .flowchart-link { stroke-width: 2px; }
+    .edgeLabel { color: #475569; font-size: 13px; }
   flowchart:
     curve: basis
-    nodeSpacing: 30
-    rankSpacing: 44
-    padding: 14
+    nodeSpacing: 34
+    rankSpacing: 50
+    padding: 18
     wrappingWidth: 320
 ---
 flowchart LR
-  subgraph defaultBranch["On the default branch"]
+  subgraph defaultBranch["<b>ON THE DEFAULT BRANCH</b>"]
     direction TB
     specify(["<b>Specify</b> the unit<br/>with the specifier"])
     approve(["<b>Approve</b> the unit"])
     specify --> approve
   end
-  subgraph inSandbox["In the sandbox, on the unit's branch"]
+  subgraph inSandbox["<b>IN THE SANDBOX, ON THE UNIT'S BRANCH</b>"]
     direction TB
     plan["<b>Planner</b><br/>creates the plan"]
     implement["<b>Implementer</b><br/>implements the changes"]
@@ -41,10 +46,9 @@ flowchart LR
   approve -.->|./sandbox.sh| orchestrate
   leave --> merge
 
-  classDef human fill:#fef3c7,stroke:#f59e0b,color:#78350f
-  classDef agent fill:#eff6ff,stroke:#60a5fa,color:#1e3a8a
-  classDef alternative fill:#ffffff,stroke:#60a5fa,color:#1e3a8a,stroke-dasharray:5 4
+  classDef human fill:#ffffff,stroke:#f59e0b,stroke-width:3px,color:#0f172a
+  classDef agent fill:#ffffff,stroke:#6366f1,stroke-width:3px,color:#0f172a
+  classDef alternative fill:#ffffff,stroke:#a5b4fc,color:#0f172a,stroke-dasharray:6 4
   class specify,approve,leave,merge human
   class plan,implement,review agent
   class orchestrate alternative
-  style inSandbox stroke:#cbd5e1
