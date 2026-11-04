@@ -287,11 +287,11 @@ are checked as today, and nothing reads the content of the role files or the sta
 ## Verification
 
 - [ ] `npm test` passes on the host, the tests that need Docker among them
-- [ ] `node --test tests/sandbox-git-environment.test.mjs` passes, and so the files it runs pass with the sandbox's git
+- [x] `node --test tests/sandbox-git-environment.test.mjs` passes, and so the files it runs pass with the sandbox's git
   environment configuration
-- [ ] `npm run check-changes` passes
-- [ ] Every changed line is within 120 characters, Markdown table rows apart
-- [ ] The trace holds both ways: each of R1 to R34 is named by a task above, and each task names a requirement
+- [x] `npm run check-changes` passes
+- [x] Every changed line is within 120 characters, Markdown table rows apart
+- [x] The trace holds both ways: each of R1 to R34 is named by a task above, and each task names a requirement
 
 ## Commit Points
 
