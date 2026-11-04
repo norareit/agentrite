@@ -21,7 +21,6 @@ A project can add roles of its own as well. See [Adding a role](#adding-a-role).
 * [What is here](#what-is-here)
 * [How it works](#how-it-works)
 * [Commands](COMMANDS.md#commands)
-* [Running a role](COMMANDS.md#running-a-role)
 * [The orchestrator](#the-orchestrator)
 * [Installing it into a project](#installing-it-into-a-project)
 * [Git hooks](#git-hooks)
@@ -564,8 +563,8 @@ To watch each step's messages and tool calls while it runs, as "How a run ends" 
 npx agentrite orchestrate 0029 --follow
 ```
 
-`--skip-permissions` is passed to the `agentrite run` of every step. What it does in each harness is in [Running a
-role](COMMANDS.md#running-a-role). Without it, a headless step gets only what the harness's settings allow, and a step
+`--skip-permissions` is passed to the `agentrite run` of every step. What it does in each harness is in [agentrite
+run](COMMANDS.md#agentrite-run). Without it, a headless step gets only what the harness's settings allow, and a step
 that needs more is refused it. The option belongs in the sandbox, where the run is in a unit run on the clone of the
 unit's branch:
 

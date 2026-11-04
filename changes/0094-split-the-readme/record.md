@@ -30,7 +30,7 @@ timestamp: 2026-11-04T11:26:27Z
   task to the host. The status is `approved`
 - 2026-11-04T12:53:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   on `feature-0094-split-the-readme` at `c9f5eb1`, began the work. The status is `in-progress`
-- 2026-11-04T13:24:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved "Commands", "Exit
+- 2026-11-04T12:58:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, moved "Commands", "Exit
   statuses" and "Running a role" into `COMMANDS.md`. One reading is the only one that works: the heading "Commands"
   becomes the document's title, `# Commands`, its opening line the line of what the document holds, and each
   command's section a `##` section, while "Exit statuses" and "Running a role" keep `##`, so that the document has one
@@ -38,3 +38,7 @@ timestamp: 2026-11-04T11:26:27Z
   README names `README.md` until the section moves. The cells "See "How a run ends"" of the table of the options of
   `agentrite orchestrate` grew past the width of their column, and the table was realigned past 120 characters, which
   R25 allows. `npm test` passes, 1350 tests
+- 2026-11-04T12:59:50Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, corrected the time of
+  the entry above to that of its commit, `de5fc1d`. Merged "Running a role" into the section of `agentrite run` of
+  `COMMANDS.md`, after its table and before its exit statuses; the statements it dropped are in the map of the
+  README below. Corrected the two links to it in `README.md`. `npm test` passes, 1350 tests

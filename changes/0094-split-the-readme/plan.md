@@ -101,7 +101,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
       `grep -n -E 'Commands|Exit statuses|exit-statuses|#agentrite-|#check-|#sandbox' *.md`
     * the comment of `templates/project/sandbox.sh` names the kit's `COMMANDS.md` for the command (R13)
 - [x] Run `npm test`, which runs the test of the links, and commit (R3, R6, R10, R13, R19)
-- [ ] Merge "Running a role" into the section of `agentrite run` and remove it as a section (R4). Take each
+- [x] Merge "Running a role" into the section of `agentrite run` and remove it as a section (R4). Take each
   statement of "Running a role" in turn. One that the section already makes is dropped; one that it does not make is
   added to the section, in its wording. These the section already makes, and are dropped:
     * the role not named by `roles` is refused, naming the role and the roles of the project, and the refusals of
@@ -116,7 +116,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
   options, what the harness is given, stopping a run, resuming a session, and the list of refusals with the refusals
   that the opening paragraph already gives removed from it. "See "Running a role"." is removed. Each change is
   recorded in the section map of the record (R11)
-- [ ] Correct every reference to "Running a role", in every document and in the shipped code, to the section of
+- [x] Correct every reference to "Running a role", in every document and in the shipped code, to the section of
   `agentrite run` of `COMMANDS.md`. Run `npm test` and commit (R4, R6)
 - [ ] Add to `tests/document-links.test.mjs` a test that the table has a row for each form that the first block of
   each command's section under "Commands" gives, in that order, a line that continues a form, as the second of
@@ -305,7 +305,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 - [x] `feature-0094 Test that the links between the documents resolve`
 - [x] `feature-0094 Move the commands and the exit statuses into COMMANDS.md`
-- [ ] `feature-0094 Merge Running a role into agentrite run`
+- [x] `feature-0094 Merge Running a role into agentrite run`
 - [ ] `feature-0094 Open COMMANDS.md with a table of every command`
 - [ ] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
 - [ ] `feature-0094 Move the installation and the configuration into SETUP.md`

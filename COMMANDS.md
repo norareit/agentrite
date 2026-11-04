@@ -352,11 +352,99 @@ the project has, starts nothing and exits 1.
 | `--skip-permissions`        | Ends the harness's questions about permissions. The option belongs in the sandbox   |
 | `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
 
+`agentrite run` starts the harness in the directory the command is run from, with the role as its agent and one
+prompt: `The unit is changes/<directory>/.` A unit run by its number, in each harness:
+
+```sh
+npx agentrite run implementer claude 0032
+npx agentrite run reviewer opencode 0032
+```
+
+* The unit is given by its directory's name, with or without `changes/` before it and a slash after it, or by the
+  four digits its name opens with
+* The command takes a unit that has a directory, so the specifier of a unit that does not exist yet is started in a
+  session of the harness, not with `run`
+* The command starts no sandbox: it starts the harness where it is run, on the host or inside the sandbox, and
+  `./sandbox.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there in the
+  clone, whose dependencies the run installs before the command, like the role files
+
+The options, which may stand anywhere among the arguments before a `--`:
+
+* The text of `--prompt` is added to the prompt after an empty line. The text is one argument, so a shell's quotes
+  go around it, and it may hold any word, one that opens with a dash among them. A text that itself opens with a
+  dash is given as `--prompt="<text>"`. The command takes no word after the unit that is not an option
+
+  ```sh
+  npx agentrite run reviewer opencode 0032 --prompt "start with the tests of the wrappers"
+  ```
+
+* `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
+  was run on, with the prompt as its first. With it the harness is run without a session
+* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code or `openai/gpt-6.1-sol` for OpenCode. The kit has
+  no names of its own for models. Without `--model` the harness gets no model and decides by itself, and
+  a model pinned in the role's wrapper is what such a run is expected to use
+* `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
+  check, and OpenCode gets `--auto`, which approves what is not explicitly denied, so the two do not do the same.
+  The command does not look where it runs, and on the host the flag does what its name says
+
+What the harness is given, in this order:
+
+1. The role, the model and the permission flag
+2. Every argument after the `--`, as it is written and in the order given
+3. The prompt, which is the last argument the harness gets. Where the harness takes it as an argument of its own,
+   the command puts a `--` in front of it
+
+The command reads none of the arguments it passes on: it does not look whether one repeats or undoes an argument of
+its own, such as a second `--model`, and what the harness makes of that is the harness's. With no `--`, or with
+nothing after it, the harness gets the role, the prompt and what the options give, and nothing else.
+
+Stopping a run:
+
+* The command does not pass a signal on. A signal sent to the command alone, as `kill <pid>` does, ends the command
+  and leaves the harness running, still at work on the unit
+* A caller that stops a run starts the command in a process group of its own and signals the group, as
+  `kill -- -<pgid>` does, which reaches the command and the harness alike
+* Ctrl-C on a terminal already goes to both
+
+A session is resumed with the harness's own options, after the `--`. In Claude Code, give the first run an id, which
+is a UUID, and resume it by that id:
+
+```sh
+npx agentrite run implementer claude 0032 --headless -- --session-id 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
+npx agentrite run implementer claude 0032 --headless --prompt "go on" -- --resume 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
+```
+
+In OpenCode, read the id of the session from `opencode session list` after the first run, and resume it by that:
+
+```sh
+npx agentrite run reviewer opencode 0032 --headless
+opencode session list
+npx agentrite run reviewer opencode 0032 --headless --prompt "go on" -- --session ses_ef35877c0ffefJvzVbIUZSXpWV
+```
+
+A resumed run gets the role as its agent again, and its prompt again: the unit, and the text when there is any.
+That holds with `--headless`. A session of OpenCode that is resumed so opens on what was said before and does not
+send the new prompt.
+
+The command starts nothing when:
+
+* the role's wrapper for the harness is missing, or holds anything but what `refresh` would write from the role file
+  that `roles` in `agentrite.json` gives, a pinned model aside. The command names the file and names the command that
+  repairs it, which writes the wrappers of the harnesses that `agentrite.json` names:
+
+  ```sh
+  npx agentrite refresh
+  ```
+
+  So a project that moved to a newer kit, or changed `roles`, runs `refresh` before `run`, and a key a project added
+  to a wrapper by hand stops `run` until `refresh` has removed it. See "Updating a project to a newer kit" in
+  `README.md`
+* the harness's own command is not on the `PATH`
+* `changes/` holds no directory for the unit, or more than one for its digits
+
 Before it starts the harness, it exits with `1` when it refuses or fails, and `2` for wrong arguments. Once the
 harness started, it passes on the harness's status, and exits with `1` when a signal ended the harness. See
 [Exit statuses](#exit-statuses).
-
-See "Running a role".
 
 ## agentrite orchestrate
 
@@ -654,101 +742,3 @@ a caller cannot tell it from the command's own. Before that program started, the
   brought back exits `1`. Before that, a Docker command it runs which fails, as Compose reading the configuration or
   the build of the image, passes on Docker's status
 * `./sandbox.sh --connect`, once the connected command started
-
-## Running a role
-
-`agentrite run` starts the harness in the directory the command is run from, with the role as its agent and one
-prompt: `The unit is changes/<directory>/.` A unit run by its number, in each harness:
-
-```sh
-npx agentrite run implementer claude 0032
-npx agentrite run reviewer opencode 0032
-```
-
-* The unit is given by its directory's name, with or without `changes/` before it and a slash after it, or by the
-  four digits its name opens with
-* The command takes a unit that has a directory, so the specifier of a unit that does not exist yet is started in a
-  session of the harness, not with `run`
-* The command waits for the harness, and exits with the status the harness exited with, or with 1 when a signal ended
-  the harness
-* The command starts no sandbox: it starts the harness where it is run, on the host or inside the sandbox, and
-  `./sandbox.sh` is still what starts the sandbox. In a unit run of the sandbox, `npx agentrite` is there in the
-  clone, whose dependencies the run installs before the command, like the role files
-
-The options, which may stand anywhere among the arguments before a `--`:
-
-* The text of `--prompt` is added to the prompt after an empty line. The text is one argument, so a shell's quotes
-  go around it, and it may hold any word, one that opens with a dash among them. A text that itself opens with a
-  dash is given as `--prompt="<text>"`. The command takes no word after the unit that is not an option
-
-  ```sh
-  npx agentrite run reviewer opencode 0032 --prompt "start with the tests of the wrappers"
-  ```
-
-* `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
-  was run on, with the prompt as its first. With it the harness is run without a session
-* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code or `openai/gpt-6.1-sol` for OpenCode. The kit has
-  no names of its own for models. Without `--model` the harness gets no model and decides by itself, and
-  a model pinned in the role's wrapper is what such a run is expected to use
-* `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
-  check, and OpenCode gets `--auto`, which approves what is not explicitly denied, so the two do not do the same.
-  The command does not look where it runs, and on the host the flag does what its name says
-
-What the harness is given, in this order:
-
-1. The role, the model and the permission flag
-2. Every argument after the `--`, as it is written and in the order given
-3. The prompt, which is the last argument the harness gets. Where the harness takes it as an argument of its own,
-   the command puts a `--` in front of it
-
-The command reads none of the arguments it passes on: it does not look whether one repeats or undoes an argument of
-its own, such as a second `--model`, and what the harness makes of that is the harness's. With no `--`, or with
-nothing after it, the harness gets the role, the prompt and what the options give, and nothing else.
-
-Stopping a run:
-
-* The command does not pass a signal on. A signal sent to the command alone, as `kill <pid>` does, ends the command
-  and leaves the harness running, still at work on the unit
-* A caller that stops a run starts the command in a process group of its own and signals the group, as
-  `kill -- -<pgid>` does, which reaches the command and the harness alike
-* Ctrl-C on a terminal already goes to both
-
-A session is resumed with the harness's own options, after the `--`. In Claude Code, give the first run an id, which
-is a UUID, and resume it by that id:
-
-```sh
-npx agentrite run implementer claude 0032 --headless -- --session-id 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
-npx agentrite run implementer claude 0032 --headless --prompt "go on" -- --resume 0b6f3c1e-58a4-4c0f-9d1b-2f1f6e3a7c55
-```
-
-In OpenCode, read the id of the session from `opencode session list` after the first run, and resume it by that:
-
-```sh
-npx agentrite run reviewer opencode 0032 --headless
-opencode session list
-npx agentrite run reviewer opencode 0032 --headless --prompt "go on" -- --session ses_ef35877c0ffefJvzVbIUZSXpWV
-```
-
-A resumed run gets the role as its agent again, and its prompt again: the unit, and the text when there is any.
-That holds with `--headless`. A session of OpenCode that is resumed so opens on what was said before and does not
-send the new prompt.
-
-The command starts nothing when:
-
-* the project has no `agentrite.json`, its file is not valid, or a role file it names does not open with the front
-  matter "Replacing a role or the standards" in `README.md` gives. The command says why, as "agentrite roles" in
-  "Commands" says
-* `roles` in `agentrite.json` does not name the role. The command names the role and the roles the project has
-* the role's wrapper for the harness is missing, or holds anything but what `refresh` would write from the role file
-  that `roles` in `agentrite.json` gives, a pinned model aside. The command names the file and names the command that
-  repairs it, which writes the wrappers of the harnesses that `agentrite.json` names:
-
-  ```sh
-  npx agentrite refresh
-  ```
-
-  So a project that moved to a newer kit, or changed `roles`, runs `refresh` before `run`, and a key a project added
-  to a wrapper by hand stops `run` until `refresh` has removed it. See "Updating a project to a newer kit" in
-  `README.md`
-* the harness's own command is not on the `PATH`
-* `changes/` holds no directory for the unit, or more than one for its digits
