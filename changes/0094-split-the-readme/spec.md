@@ -109,7 +109,15 @@ shortened in this unit. Shortening is left to a later unit.
     `npm run diagrams` and commits both in the same unit, and that a unit that changes a component or the workflow
     the diagrams show changes the diagram
 24. No rule, test or check limits the number of lines of a document
-25. `npm test` and `npm run check-changes` pass
+25. "Line limit" in `AGENTS.md` says that a line of a Markdown table may be longer than 120 characters, in every
+    document of the repository, and that every other line keeps the limit. The rule of "The documents" on tables in
+    `SANDBOX.md` keeps that a table there is a Markdown table and holds no HTML, and no longer requires its lines to
+    fit the line limit or what does not fit to be written as text
+26. A test of the kit's own checks that every link in `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`,
+    `SANDBOX.md` and `CONTRIBUTING.md` to another of these documents, or to a section of one of them or of itself,
+    names a document that exists and, where it names a section, a heading that the document holds. It fails naming
+    the document, the link and what it does not find
+27. `npm test` and `npm run check-changes` pass
 
 ## Decisions
 
@@ -130,11 +138,12 @@ shortened in this unit. Shortening is left to a later unit.
 - The README aims at about 250 lines, as a goal of this unit and not as a requirement. No document gets a limit on
   its length: a document is as long as what it must say, and the rules of "The documents" are what keeps the README
   short
-- The table at the top of `COMMANDS.md` is an exception to the line limit of 120 characters in `AGENTS.md`. A row
-  of Markdown cannot be wrapped, and synopses such as that of `agentrite run`, with every option, are longer than
-  the limit by themselves. The table is wanted with the options in it, so the exception is made for this table, and
-  every other line of `COMMANDS.md` keeps the limit. The alternative, a synopsis with the options shortened to
-  `[options]`, fits within the limit but leaves out what makes the table a reference
+- A line of a Markdown table may pass the line limit of 120 characters, in every document. A row of Markdown cannot
+  be wrapped, and a table such as the one at the top of `COMMANDS.md`, whose synopses with every option are longer
+  than the limit by themselves, could otherwise only be kept within it by leaving out what it is for. The human
+  chose to allow it for every table rather than for this one, so that no later table has to be cut down or turned
+  into text to fit. That removes the requirement of `SANDBOX.md` that its tables fit the limit as well. Rejected:
+  an exception for the table of `COMMANDS.md` alone, and a synopsis with its options shortened to `[options]`
 - The diagrams are written in Mermaid and committed as SVG too. GitHub renders Mermaid in Markdown, but npmjs.com
   does not and would show the source as a code block. An SVG shows on both, and the Mermaid source keeps the diagram
   a text that a diff shows
@@ -155,14 +164,16 @@ shortened in this unit. Shortening is left to a later unit.
 - Regenerating the SVGs in a hook, in the test suite or in the release
 - Diagrams in any document other than the README
 - Rewriting the numbered workflow list of the README. It is kept beside the workflow diagram as it is
+- Reflowing a table that exists now. Requirement 25 allows a longer line of a table and asks no table to change
 
 ## Beyond the request
 
-1. A test that an SVG is not older than its source. `npm run diagrams` would write a hash of the Mermaid source into
-   the SVG, and a test would compare the hash with the source, without rendering anything. Cost: a few lines in the
-   command and a short test. Without it, a source changed without regenerating leaves an outdated picture in the
-   README until someone notices, which is seen and fixed by running `npm run diagrams`
-2. A test that every link between the documents, and to a section of one, resolves, as requirement 12 asks of this
-   unit. Cost: a test that parses the Markdown links and headings of the shipped documents. Without it, a section
-   renamed by a later unit can leave a link that leads to the top of the page, which a reader sees and is fixed when
-   it is
+1. Declined by the human. A test that an SVG is not older than its source. `npm run diagrams` would write a hash
+   of the Mermaid source into the SVG, and a test would compare the hash with the source, without rendering
+   anything. Cost: a few lines in the command and a short test. Without it, a source changed without regenerating
+   leaves an outdated picture in the README until someone notices, which is seen and fixed by running
+   `npm run diagrams`
+2. Taken by the human, as requirement 26. A test that every link between the documents, and to a section of one,
+   resolves, as requirement 12 asks of this unit. Cost: a test that parses the Markdown links and headings of the
+   shipped documents. Without it, a section renamed by a later unit can leave a link that leads to the top of the
+   page, which a reader sees and is fixed when it is

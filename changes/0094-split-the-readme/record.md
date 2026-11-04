@@ -16,3 +16,7 @@ timestamp: 2026-11-04T11:26:27Z
   is 0093. Read the README, `SANDBOX.md`, `CONTRIBUTING.md`, "The documents" of `AGENTS.md`, `files` of
   `package.json`, and the pointers to the README in `scripts/`, `container/`, `templates/project/`, `pointers/` and
   `tests/`. Ran nothing in the sandbox. Wrote `spec.md`. The status is `draft`
+- 2026-11-04T11:35:49Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decisions: a line
+  of a Markdown table may pass the line limit in every document, which became requirement 25 and its decision and
+  lifts the requirement that the tables of `SANDBOX.md` fit the limit; the diagrams are addressed on `master`, as
+  the spec had it; `BTR1` is declined; `BTR2` is taken, as requirement 26. The status is `draft`
