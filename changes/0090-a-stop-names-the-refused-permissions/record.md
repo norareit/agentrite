@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-02T13:31:59Z
 ---
 
@@ -29,3 +29,4 @@ timestamp: 2026-11-02T13:31:59Z
   `--skip-permissions`. Requirement 7 now names "How a run ends" of `ORCHESTRATOR.md`, the decision on naming the
   sandbox and the host names "On the host and in the sandbox" of `ORCHESTRATOR.md`, and a decision says why
   `COMMANDS.md` and `README.md` do not change. The status is `draft`
+- 2026-11-04T14:15:25Z [human] approved the spec. The status is `approved`
