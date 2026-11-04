@@ -14,8 +14,10 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { agentsListNotice, claudeRefreshNotice, opencodeRefreshNotice } from '../scripts/agentrite-instructions.mjs';
-import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { agentsListNotice } from '../scripts/agentrite-instructions.mjs';
+import { claudeRefreshNotice } from '../scripts/harnesses/claude.mjs';
+import { opencodeRefreshNotice } from '../scripts/harnesses/opencode.mjs';
+import { plannedFiles } from '../scripts/agentrite-harness.mjs';
 import { fillTemplate } from '../scripts/agentrite.mjs';
 import { copyKitInstructions, installKit, KIT_ROLES } from './installed-kit.mjs';
 import { fakeHost, installKitPackage } from './wrapper-fixture.mjs';

@@ -1,18 +1,10 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { dirname, join, relative } from 'node:path';
 import { test } from 'node:test';
-import {
-  harnessesWithAgent,
-  isKitWrapper,
-  parseRoleDescription,
-  plannedFiles,
-  readRoles,
-  ROLE_NAMES,
-  wrapperDirectories,
-  wrapWords,
-} from '../scripts/agentrite-roles.mjs';
+import { harnessesWithAgent, plannedFiles, wrapperDirectories } from '../scripts/agentrite-harness.mjs';
+import { isKitWrapper, parseRoleDescription, readRoles, ROLE_NAMES, wrapWords } from '../scripts/agentrite-roles.mjs';
 import { installKit, KIT_SETTINGS } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -307,7 +299,9 @@ test('no file under scripts/ has a shebang but the commands the package has', ()
   const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf-8'));
   const commands = Object.values(manifest.bin).map((path) => path.replace(/^scripts\//, ''));
 
-  const withShebang = readdirSync(scripts)
+  const withShebang = readdirSync(scripts, { recursive: true, withFileTypes: true })
+    .filter((entry) => entry.isFile())
+    .map((entry) => relative(scripts, join(entry.parentPath, entry.name)))
     .filter((name) => readFileSync(join(scripts, name), 'utf-8').startsWith('#!'))
     .sort();
 

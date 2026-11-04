@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import {
   chmodSync,
   copyFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   readdirSync,
@@ -83,9 +84,18 @@ function setUp(
   installKitPackage(join(container, '..'));
   // The wrapper reads bell with the kit's reader of agentrite.json, in the kit's scripts/ beside its container/.
   mkdirSync(join(container, '..', 'scripts'));
-  for (const file of ['agentrite-settings.mjs', 'agentrite-cleanup-period.mjs', 'agentrite-roles.mjs']) {
+  for (const file of [
+    'agentrite-settings.mjs',
+    'agentrite-cleanup-period.mjs',
+    'agentrite-roles.mjs',
+    'agentrite-harness.mjs',
+    'agentrite-headless.mjs',
+    'agentrite-instructions.mjs',
+    'agentrite-json.mjs',
+  ]) {
     copyFileSync(join(kitScripts, file), join(container, '..', 'scripts', file));
   }
+  cpSync(join(kitScripts, 'harnesses'), join(container, '..', 'scripts', 'harnesses'), { recursive: true });
   writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
   const home = join(base, 'home');
   mkdirSync(home);

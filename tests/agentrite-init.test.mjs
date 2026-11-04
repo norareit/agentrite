@@ -14,18 +14,11 @@ import {
 } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import {
-  agentsListNotice,
-  claudeInitNotice,
-  claudeKitStandardsNotice,
-  claudeLacks,
-  instructionsList,
-  opencodeInitNotice,
-  opencodeKitStandardsNotice,
-  opencodeVerdict,
-} from '../scripts/agentrite-instructions.mjs';
+import { agentsListNotice, instructionsList } from '../scripts/agentrite-instructions.mjs';
+import { claudeInitNotice, claudeKitStandardsNotice, claudeLacks } from '../scripts/harnesses/claude.mjs';
+import { opencodeInitNotice, opencodeKitStandardsNotice, opencodeVerdict } from '../scripts/harnesses/opencode.mjs';
 import { noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
-import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { plannedFiles } from '../scripts/agentrite-harness.mjs';
 import {
   AGENTS_SECTIONS,
   sandboxName,

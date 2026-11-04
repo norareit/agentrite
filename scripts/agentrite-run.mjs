@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util';
-import { HARNESS_NAMES, wrapWords } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, harnessNamed } from './agentrite-harness.mjs';
+import { wrapWords } from './agentrite-roles.mjs';
 
 // The longest line the commands print, which is the width the kit wraps its own text at.
 const LINE_WIDTH = 120;
@@ -189,33 +190,6 @@ export function unitPrompt(directory, text) {
 }
 
 /**
- * How each harness is started as an agent: its command, the flag that ends its questions about permissions, and
- * how the prompt follows the options with a session and without one. The prompt is last. Where it is an argument
- * of its own, a `--` stands before it, so that no option before it takes it for a value.
- *
- * @type {Record<string, {
- *   command: string,
- *   skipPermissions: string,
- *   interactive: (options: string[], prompt: string) => string[],
- *   headless: (options: string[], prompt: string) => string[],
- * }>}
- */
-const STARTS = {
-  claude: {
-    command: 'claude',
-    skipPermissions: '--dangerously-skip-permissions',
-    interactive: (options, prompt) => [...options, '--', prompt],
-    headless: (options, prompt) => ['--print', ...options, '--', prompt],
-  },
-  opencode: {
-    command: 'opencode',
-    skipPermissions: '--auto',
-    interactive: (options, prompt) => [...options, '--prompt', prompt],
-    headless: (options, prompt) => ['run', ...options, '--', prompt],
-  },
-};
-
-/**
  * The command that starts `harness` as `role` on `prompt`, and its arguments. The caller's own arguments for the
  * harness stand after the command's and before the prompt.
  *
@@ -231,7 +205,7 @@ const STARTS = {
  * @returns {{ command: string, args: string[] }}
  */
 export function harnessCommand({ harness, role, model, headless, skipPermissions, prompt, harnessArguments }) {
-  const start = STARTS[harness];
+  const { start } = harnessNamed(harness);
   const options = [
     '--agent',
     role,

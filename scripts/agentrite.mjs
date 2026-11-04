@@ -20,20 +20,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import {
   agentsListNotice,
   agentsNamesList,
-  claudeInitNotice,
-  claudeKitStandardsNotice,
-  claudeLacks,
-  claudeLoadsKitStandards,
-  claudeRefreshNotice,
   INSTRUCTIONS_LIST,
-  instructionPaths,
   instructionsList,
-  OPENCODE_FILE,
-  opencodeInitNotice,
-  opencodeKitStandardsNotice,
-  opencodeLoadsKitStandards,
-  opencodeRefreshNotice,
-  opencodeVerdict,
   readProjectFile,
 } from './agentrite-instructions.mjs';
 import {
@@ -47,7 +35,7 @@ import {
   uncommittedRefusal,
 } from './agentrite-approve.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
-import { HEADLESS } from './agentrite-headless.mjs';
+import { HARNESS_NAMES, HARNESSES, harnessNamed, plannedFiles, wrapperDirectories } from './agentrite-harness.mjs';
 import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
 import { formattedLike } from './agentrite-json.mjs';
 import {
@@ -83,7 +71,7 @@ import {
   selectRuns,
   variantOfRun,
 } from './agentrite-runs.mjs';
-import { HARNESS_NAMES, isKitWrapper, plannedFiles, readRoles, wrapperDirectories } from './agentrite-roles.mjs';
+import { isKitWrapper, readRoles } from './agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -862,45 +850,24 @@ function writeHook(root, planned) {
 }
 
 /**
- * Writes the project's `opencode.json`, amends it, or leaves it, prints what it did, and returns the notices to
- * print: for one it cannot amend, and for one that lists the kit's standards beside the project's own, judged on
- * the file as it was read, since amending only adds.
+ * Writes, amends or leaves the instruction file of each harness of `harnesses`, in the kit's order, as its module
+ * says, prints the line it gives of the file, and returns the notices to print for it.
  *
  * @param {string} root
+ * @param {string[]} harnesses
  * @param {string} standards
  * @returns {string[]}
  */
-function writeOpencodeJson(root, standards) {
-  const read = readProjectFile(root, OPENCODE_FILE);
-  const kitStandards = opencodeLoadsKitStandards(read, standards) ? [opencodeKitStandardsNotice(standards)] : [];
-  const verdict = opencodeVerdict(read, standards);
-  if (verdict.loads) {
-    console.log(`skipped ${OPENCODE_FILE}, which loads ${instructionPaths(standards).join(' and ')}`);
-    return kitStandards;
-  }
-  if (verdict.content === undefined) {
-    console.log(`skipped ${OPENCODE_FILE}, which cannot be amended`);
-    return [opencodeInitNotice(verdict.problem, verdict.lacks), ...kitStandards];
-  }
-  writeFileSync(resolve(root, OPENCODE_FILE), verdict.content, read.found ? {} : { flag: 'wx' });
-  console.log(`${read.found ? 'changed' : 'wrote'} ${OPENCODE_FILE}`);
-  return kitStandards;
-}
-
-/**
- * The notices `init` prints for a `CLAUDE.md` that exists: the lines it lacks, and the kit's standards beside the
- * project's own.
- *
- * @param {import('./agentrite-instructions.mjs').ProjectFile} read
- * @param {string} standards
- * @returns {string[]}
- */
-function claudeInitNotices(read, standards) {
-  const lacks = claudeLacks(read, standards);
-  return [
-    ...(lacks.length > 0 ? [claudeInitNotice(lacks)] : []),
-    ...(claudeLoadsKitStandards(read, standards) ? [claudeKitStandardsNotice(standards)] : []),
-  ];
+function writeInstructionFiles(root, harnesses, standards) {
+  return HARNESSES.filter((harness) => harnesses.includes(harness.name)).flatMap(({ instructions }) => {
+    const read = readProjectFile(root, instructions.file);
+    const { content, line, notices } = instructions.init(read, standards);
+    if (content !== undefined) {
+      writeFileSync(resolve(root, instructions.file), content, read.found ? {} : { flag: 'wx' });
+    }
+    if (line !== undefined) console.log(line);
+    return notices;
+  });
 }
 
 /**
@@ -968,8 +935,8 @@ function initSettings(root, hasSettings, given, template) {
  * an `agentrite.json` gives the harnesses and the sandbox setting in it, and no argument. One without is given them
  * as arguments, and gets the file. Without the sandbox the files of the sandbox are left out and nothing is said of
  * them. A sandbox-only project gets the file, the files of the sandbox and `.dockerignore` alone: nothing of the
- * process is read, written or said, no role file, no wrapper, no list, no `AGENTS.md`, `CLAUDE.md` or
- * `opencode.json`, no script in `package.json` and no hook.
+ * process is read, written or said, no role file, no wrapper, no list, no `AGENTS.md`, `CLAUDE.md` or instruction
+ * file of a harness, no script in `package.json` and no hook.
  *
  * @param {string} root
  * @param {ReturnType<typeof parseInit>} given
@@ -1009,9 +976,6 @@ function init(root, given) {
         notices.push(agentsNotice(file.content));
         if (!agentsNamesList(readProjectFile(root, file.path))) notices.push(agentsListNotice(false));
       }
-      if (file.path === 'CLAUDE.md' && harnesses.includes('claude')) {
-        notices.push(...claudeInitNotices(readProjectFile(root, file.path), standards));
-      }
       continue;
     }
     mkdirSync(dirname(absolute), { recursive: true });
@@ -1030,7 +994,7 @@ function init(root, given) {
     }
   }
 
-  if (settings.process && harnesses.includes('opencode')) notices.push(...writeOpencodeJson(root, standards));
+  if (settings.process) notices.push(...writeInstructionFiles(root, harnesses, standards));
 
   if (ignore !== undefined) writeDockerignore(ignore);
 
@@ -1080,9 +1044,9 @@ function kindOf(path) {
 }
 
 /**
- * What to tell a project, with `harnesses` and `standards`, about the files `refresh` reads and never writes: a
- * `CLAUDE.md` or an `opencode.json` of a harness given that does not load the kit's instructions, or that loads the
- * kit's standards beside the project's own, and, whatever the harnesses, an `AGENTS.md` that does not name the list.
+ * What to tell a project, with `harnesses` and `standards`, about the files `refresh` reads and never writes: the
+ * instruction file of a harness given that does not load the kit's instructions, or that loads the kit's standards
+ * beside the project's own, and, whatever the harnesses, an `AGENTS.md` that does not name the list.
  *
  * @param {string} root
  * @param {string[]} harnesses
@@ -1091,17 +1055,9 @@ function kindOf(path) {
  */
 function instructionNotices(root, harnesses, standards) {
   /** @type {string[]} */ const notices = [];
-  if (harnesses.includes('claude')) {
-    const read = readProjectFile(root, 'CLAUDE.md');
-    const lacks = claudeLacks(read, standards);
-    if (lacks.length > 0) notices.push(claudeRefreshNotice(!read.found, lacks));
-    if (claudeLoadsKitStandards(read, standards)) notices.push(claudeKitStandardsNotice(standards));
-  }
-  if (harnesses.includes('opencode')) {
-    const read = readProjectFile(root, OPENCODE_FILE);
-    const verdict = opencodeVerdict(read, standards);
-    if (!verdict.loads) notices.push(opencodeRefreshNotice(verdict.problem, verdict.lacks));
-    if (opencodeLoadsKitStandards(read, standards)) notices.push(opencodeKitStandardsNotice(standards));
+  for (const { name, instructions } of HARNESSES) {
+    if (!harnesses.includes(name)) continue;
+    notices.push(...instructions.refresh(readProjectFile(root, instructions.file), standards));
   }
   const agents = readProjectFile(root, 'AGENTS.md');
   if (!agentsNamesList(agents)) notices.push(agentsListNotice(!agents.found));
@@ -1814,7 +1770,7 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
  */
 async function runStep(root, directory, skipPermissions, words, planned, grouped, follow) {
   const { step, round, session, asked, rerun } = planned;
-  const headless = HEADLESS[step.harness];
+  const { headless } = harnessNamed(step.harness);
   const start = headless.arguments(session);
   const own = step.prompt === undefined ? [] : [step.prompt];
   const resumed = rerun ? [resumeWords(words)] : [];

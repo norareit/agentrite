@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -40,9 +40,18 @@ function setUp(testContext) {
   installKitPackage(root);
   // The wrapper reads bell with the kit's reader of agentrite.json, in the checkout's scripts/.
   mkdirSync(join(root, 'scripts'));
-  for (const file of ['agentrite-settings.mjs', 'agentrite-cleanup-period.mjs', 'agentrite-roles.mjs']) {
+  for (const file of [
+    'agentrite-settings.mjs',
+    'agentrite-cleanup-period.mjs',
+    'agentrite-roles.mjs',
+    'agentrite-harness.mjs',
+    'agentrite-headless.mjs',
+    'agentrite-instructions.mjs',
+    'agentrite-json.mjs',
+  ]) {
     copyFileSync(join(kitScripts, file), join(root, 'scripts', file));
   }
+  cpSync(join(kitScripts, 'harnesses'), join(root, 'scripts', 'harnesses'), { recursive: true });
   writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
   const home = join(base, 'home');
   mkdirSync(home);

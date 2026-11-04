@@ -48,7 +48,8 @@ import {
   variantOf,
 } from '../scripts/agentrite-orchestrate.mjs';
 import { followedFile, heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
-import { HEADLESS } from '../scripts/agentrite-headless.mjs';
+import { harnessNamed } from '../scripts/agentrite-harness.mjs';
+import { opencode as opencodeHarness } from '../scripts/harnesses/opencode.mjs';
 import { askAgainRequest, outcomeRequest, readOutcome, RESUMED } from '../scripts/agentrite-outcome.mjs';
 import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -1218,7 +1219,7 @@ test('a call with a pattern of two lines is printed on one line, in each harness
     ['opencode', opencode, 'grep'],
   ]) {
     /** @type {string[]} */ const written = [];
-    followPrinter((text) => written.push(text))(timedItems(HEADLESS[harness].follow(line), Date.now));
+    followPrinter((text) => written.push(text))(timedItems(harnessNamed(harness).headless.follow(line), Date.now));
     assert.equal(written.join(''), `${dim(`14:03:27 → ${tool} first\\nsecond`)}\n`, harness);
   }
 });
@@ -1233,7 +1234,7 @@ test('calls OpenCode makes known in the reverse of the order made are printed as
   /** @type {string[]} */ const written = [];
   const print = followPrinter((text) => written.push(text));
   for (const line of [ended(7, 'true'), ended(9, 'sleep 2')]) {
-    print(timedItems(HEADLESS.opencode.follow(line), Date.now));
+    print(timedItems(opencodeHarness.headless.follow(line), Date.now));
   }
   assert.equal(written.join(''), `${dim('17:12:07 → bash true')}\n${dim('17:12:09 → bash sleep 2')}\n`);
 });

@@ -1,7 +1,8 @@
 import { lstatSync, readFileSync, realpathSync, statSync } from 'node:fs';
 import { isAbsolute, posix, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
-import { HARNESS_NAMES, harnessesWithAgent, ROLE_NAMES } from './agentrite-roles.mjs';
+import { HARNESS_NAMES, harnessesWithAgent } from './agentrite-harness.mjs';
+import { ROLE_NAMES } from './agentrite-roles.mjs';
 
 /** The file at a project's root that holds its settings. */
 export const SETTINGS_FILE = 'agentrite.json';

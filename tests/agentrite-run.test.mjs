@@ -3,7 +3,8 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { HARNESS_NAMES, plannedFiles, ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
+import { HARNESS_NAMES, plannedFiles } from '../scripts/agentrite-harness.mjs';
+import { ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,

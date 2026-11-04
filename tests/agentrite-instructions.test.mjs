@@ -5,25 +5,29 @@ import { test } from 'node:test';
 import {
   agentsListNotice,
   agentsNamesList,
+  INSTRUCTIONS_LIST,
+  instructionPaths,
+  instructionsList,
+  PROCESS_PATH,
+  readProjectFile,
+  STANDARDS_PATH,
+} from '../scripts/agentrite-instructions.mjs';
+import {
   claudeInitNotice,
   claudeKitStandardsNotice,
   claudeLacks,
   claudeLines,
   claudeLoadsKitStandards,
   claudeRefreshNotice,
-  INSTRUCTIONS_LIST,
-  instructionPaths,
-  instructionsList,
+} from '../scripts/harnesses/claude.mjs';
+import {
   OPENCODE_FILE,
   opencodeInitNotice,
   opencodeKitStandardsNotice,
   opencodeLoadsKitStandards,
   opencodeRefreshNotice,
   opencodeVerdict,
-  PROCESS_PATH,
-  readProjectFile,
-  STANDARDS_PATH,
-} from '../scripts/agentrite-instructions.mjs';
+} from '../scripts/harnesses/opencode.mjs';
 import { KIT_SETTINGS } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 

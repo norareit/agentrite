@@ -117,15 +117,17 @@ export function wrapWords(text, width, indent) {
  * @param {string} description
  * @returns {string}
  */
-function descriptionBlock(description) {
+export function descriptionBlock(description) {
   return `description: >-\n${wrapWords(description, LINE_WIDTH, '  ').join('\n')}\n`;
 }
 
 /**
+ * The body of a wrapper, which says to read the role's file at `path`.
+ *
  * @param {string} path
  * @returns {string}
  */
-function body(path) {
+export function wrapperBody(path) {
   return `${wrapWords(BODY_LINE.replace('{path}', path), LINE_WIDTH, '').join('\n')}\n`;
 }
 
@@ -148,89 +150,8 @@ export function isKitWrapper(text) {
   // A path may hold a backtick, so each backtick after the opening one is tried as the end of the path
   for (let closing = afterFrontMatter.indexOf('`', opening + 1); closing !== -1; ) {
     const path = afterFrontMatter.slice(opening + 1, closing).replaceAll('\n', ' ');
-    if (afterFrontMatter === `\n${body(path)}`) return true;
+    if (afterFrontMatter === `\n${wrapperBody(path)}`) return true;
     closing = afterFrontMatter.indexOf('`', closing + 1);
   }
   return false;
-}
-
-/**
- * @param {Role} role
- * @returns {string}
- */
-function claudeFile(role) {
-  return `---\nname: ${role.name}\n${descriptionBlock(role.description)}---\n\n${body(role.path)}`;
-}
-
-/**
- * @param {Role} role
- * @returns {string}
- */
-function opencodeFile(role) {
-  return `---\n${descriptionBlock(role.description)}mode: all\n---\n\n${body(role.path)}`;
-}
-
-// `ownAgents` are the names of the agents the harness has of its own, as its documentation writes them on
-// 2026-10-19: https://code.claude.com/docs/en/sub-agents and https://opencode.ai/docs/agents/
-const HARNESSES = {
-  claude: {
-    title: 'Claude Code',
-    directory: '.claude/agents',
-    render: claudeFile,
-    ownAgents: ['Explore', 'Plan', 'general-purpose', 'claude', 'statusline-setup', 'claude-code-guide', 'fork'],
-  },
-  opencode: {
-    title: 'OpenCode',
-    directory: '.opencode/agents',
-    render: opencodeFile,
-    ownAgents: ['build', 'plan', 'general', 'explore', 'scout', 'compaction', 'title', 'summary'],
-  },
-};
-
-/** The names of the harnesses the kit writes wrappers for, as the commands take them. */
-export const HARNESS_NAMES = Object.keys(HARNESSES);
-
-/**
- * The titles of the harnesses, in the order of `HARNESS_NAMES`, that have an agent of their own named `name`,
- * without regard to case, and an empty list when none does.
- *
- * @param {string} name
- * @returns {string[]}
- */
-export function harnessesWithAgent(name) {
-  const lowered = name.toLowerCase();
-  return Object.values(HARNESSES)
-    .filter((entry) => entry.ownAgents.some((agent) => agent.toLowerCase() === lowered))
-    .map((entry) => entry.title);
-}
-
-/**
- * The directory of each harness's wrappers, in the order the harnesses are given.
- *
- * @param {string[]} harnesses
- * @returns {string[]}
- */
-export function wrapperDirectories(harnesses) {
-  return harnesses.map((harness) => HARNESSES[harness].directory);
-}
-
-/**
- * The wrappers of each role for each harness, written from `roles`, as `readRoles` gives them: each with its role's
- * description, and a body that says to read its role's file.
- *
- * @param {string[]} harnesses
- * @param {Role[]} roles
- * @returns {{ path: string, content: string }[]}
- */
-export function plannedFiles(harnesses, roles) {
-  /** @type {{ path: string, content: string }[]} */ const files = [];
-  for (const harness of harnesses) {
-    for (const role of roles) {
-      files.push({
-        path: `${HARNESSES[harness].directory}/${role.name}.md`,
-        content: HARNESSES[harness].render(role),
-      });
-    }
-  }
-  return files;
 }

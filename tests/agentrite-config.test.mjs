@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { plannedFiles } from '../scripts/agentrite-harness.mjs';
 import { CONFIG_NOTICE } from '../scripts/agentrite.mjs';
 import { installKit, KIT_ROLES } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';

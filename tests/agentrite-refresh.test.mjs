@@ -14,16 +14,11 @@ import {
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import {
-  agentsListNotice,
-  claudeKitStandardsNotice,
-  claudeRefreshNotice,
-  instructionsList,
-  opencodeKitStandardsNotice,
-  opencodeRefreshNotice,
-} from '../scripts/agentrite-instructions.mjs';
+import { agentsListNotice, instructionsList } from '../scripts/agentrite-instructions.mjs';
+import { claudeKitStandardsNotice, claudeRefreshNotice } from '../scripts/harnesses/claude.mjs';
+import { opencodeKitStandardsNotice, opencodeRefreshNotice } from '../scripts/harnesses/opencode.mjs';
 import { foreignHookNotice, HOOK_MARK, noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
-import { plannedFiles } from '../scripts/agentrite-roles.mjs';
+import { plannedFiles } from '../scripts/agentrite-harness.mjs';
 import { fillTemplate, refreshedWrapper } from '../scripts/agentrite.mjs';
 import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';

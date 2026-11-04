@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { HEADLESS } from '../scripts/agentrite-headless.mjs';
+import { claude as claudeHarness } from '../scripts/harnesses/claude.mjs';
+import { opencode as opencodeHarness } from '../scripts/harnesses/opencode.mjs';
 import { askAgainRequest, outcomeRequest, readOutcome, RESUMED, resumeWords } from '../scripts/agentrite-outcome.mjs';
 
 // R15
@@ -361,14 +362,14 @@ test('a decline of a finding that is not among the findings is read, since it ma
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 
 test('claude: the first step is given a new session id, and a later one resumes the session given', () => {
-  const first = HEADLESS.claude.arguments(undefined);
+  const first = claudeHarness.headless.arguments(undefined);
   assert.equal(first.args.length, 5);
   assert.deepEqual(first.args.slice(0, 4), ['--output-format', 'stream-json', '--verbose', '--session-id']);
   assert.match(first.args[4], UUID);
   assert.equal(first.session, first.args[4]);
-  assert.notEqual(HEADLESS.claude.arguments(undefined).session, first.session);
+  assert.notEqual(claudeHarness.headless.arguments(undefined).session, first.session);
 
-  const later = HEADLESS.claude.arguments('4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a');
+  const later = claudeHarness.headless.arguments('4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a');
   assert.deepEqual(later, {
     args: ['--output-format', 'stream-json', '--verbose', '--resume', '4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a'],
     session: '4b0c6a62-0f43-4f3e-9d6c-1f6d3b1c9e2a',
@@ -383,7 +384,10 @@ test('claude: the result and the session_id of the one object printed are read',
     result: 'Done.\n\n```json\n{}\n```',
     session_id: 'abc',
   });
-  assert.deepEqual(HEADLESS.claude.read(`${printed}\n`), { response: 'Done.\n\n```json\n{}\n```', session: 'abc' });
+  assert.deepEqual(claudeHarness.headless.read(`${printed}\n`), {
+    response: 'Done.\n\n```json\n{}\n```',
+    session: 'abc',
+  });
 });
 
 test('claude: of the events printed one per line, the result and the session_id of the result are read', () => {
@@ -399,22 +403,22 @@ test('claude: of the events printed one per line, the result and the session_id 
     JSON.stringify({ type: 'result', subtype: 'success', result: 'Done.', session_id: 'abc' }),
     '',
   ].join('\n');
-  assert.deepEqual(HEADLESS.claude.read(printed), { response: 'Done.', session: 'abc' });
+  assert.deepEqual(claudeHarness.headless.read(printed), { response: 'Done.', session: 'abc' });
 });
 
 test('claude: no final response for output that is no JSON, without a string result, or empty', () => {
   for (const printed of ['not json', '', JSON.stringify({ type: 'result', session_id: 'abc' }), '{"result": 5}']) {
-    assert.equal(HEADLESS.claude.read(printed).response, undefined, printed);
+    assert.equal(claudeHarness.headless.read(printed).response, undefined, printed);
   }
-  assert.equal(HEADLESS.claude.read('{"result": "x"}').session, undefined);
-  assert.equal(HEADLESS.claude.read('{"result": "x", "session_id": 5}').session, undefined);
-  assert.equal(HEADLESS.claude.read('[1]').response, undefined);
-  assert.equal(HEADLESS.claude.read('null').response, undefined);
+  assert.equal(claudeHarness.headless.read('{"result": "x"}').session, undefined);
+  assert.equal(claudeHarness.headless.read('{"result": "x", "session_id": 5}').session, undefined);
+  assert.equal(claudeHarness.headless.read('[1]').response, undefined);
+  assert.equal(claudeHarness.headless.read('null').response, undefined);
 });
 
 test('opencode: the arguments ask for JSON, and give the session when there is one', () => {
-  assert.deepEqual(HEADLESS.opencode.arguments(undefined), { args: ['--format', 'json'], session: undefined });
-  assert.deepEqual(HEADLESS.opencode.arguments('ses_1'), {
+  assert.deepEqual(opencodeHarness.headless.arguments(undefined), { args: ['--format', 'json'], session: undefined });
+  assert.deepEqual(opencodeHarness.headless.arguments('ses_1'), {
     args: ['--format', 'json', '--session', 'ses_1'],
     session: 'ses_1',
   });
@@ -436,7 +440,7 @@ test('opencode: the final response is the text of the message the last step_fini
     event('text', { id: 'prt_6', messageID: 'msg_2', type: 'text', text: 'PELICAN OSPREY' }),
     event('step_finish', { id: 'prt_7', messageID: 'msg_2', type: 'step-finish', reason: 'stop' }),
   );
-  assert.deepEqual(HEADLESS.opencode.read(`${printed}\n`), { response: 'PELICAN OSPREY', session: 'ses_abc' });
+  assert.deepEqual(opencodeHarness.headless.read(`${printed}\n`), { response: 'PELICAN OSPREY', session: 'ses_abc' });
 });
 
 test('opencode: two text parts of one message are joined by an empty line, a part given twice as its last', () => {
@@ -446,7 +450,7 @@ test('opencode: two text parts of one message are joined by an empty line, a par
     event('text', { id: 'prt_1', messageID: 'msg_1', text: 'First.' }),
     event('step_finish', { id: 'prt_3', messageID: 'msg_1', reason: 'stop' }),
   );
-  assert.equal(HEADLESS.opencode.read(printed).response, 'First.\n\nSecond.');
+  assert.equal(opencodeHarness.headless.read(printed).response, 'First.\n\nSecond.');
 });
 
 test('opencode: a line that is not JSON is skipped, and the session is the first sessionID', () => {
@@ -460,15 +464,15 @@ test('opencode: a line that is not JSON is skipped, and the session is the first
     '',
     '{ broken',
   ].join('\n');
-  assert.deepEqual(HEADLESS.opencode.read(printed), { response: 'Done.', session: 'ses_abc' });
+  assert.deepEqual(opencodeHarness.headless.read(printed), { response: 'Done.', session: 'ses_abc' });
 });
 
 test('opencode: no final response without a step_finish, or with none of its message text', () => {
   const text = event('text', { id: 'prt_1', messageID: 'msg_1', text: 'Done.' });
-  assert.deepEqual(HEADLESS.opencode.read(events(text)), { response: undefined, session: 'ses_abc' });
+  assert.deepEqual(opencodeHarness.headless.read(events(text)), { response: undefined, session: 'ses_abc' });
   const otherMessage = events(text, event('step_finish', { id: 'prt_2', messageID: 'msg_2', reason: 'stop' }));
-  assert.equal(HEADLESS.opencode.read(otherMessage).response, undefined);
-  assert.deepEqual(HEADLESS.opencode.read(''), { response: undefined, session: undefined });
+  assert.equal(opencodeHarness.headless.read(otherMessage).response, undefined);
+  assert.deepEqual(opencodeHarness.headless.read(''), { response: undefined, session: undefined });
 });
 
 // Unit 0075, R4, R8, R9: what each harness makes known of a step as it runs, one line of its output at a time.
@@ -487,7 +491,7 @@ test('claude: an assistant event gives its text and its tool calls, in order, at
     { type: 'redacted_thinking', data: 'x' },
     toolUse('Bash', { command: 'npm test', description: 'Run the tests' }),
   ]);
-  assert.deepEqual(HEADLESS.claude.follow(line), [
+  assert.deepEqual(claudeHarness.headless.follow(line), [
     { kind: 'text', time: Date.parse(AT), text: 'I will run the tests.\n' },
     {
       kind: 'call',
@@ -501,7 +505,7 @@ test('claude: an assistant event gives its text and its tool calls, in order, at
 });
 
 test('claude: a call gives the path of the file it acts on and the pattern it searches for', () => {
-  const calls = (block) => HEADLESS.claude.follow(assistant([block]));
+  const calls = (block) => claudeHarness.headless.follow(assistant([block]));
   const call = (tool, fields) => [{ kind: 'call', time: Date.parse(AT), tool, ...NO_CALL, ...fields }];
   assert.deepEqual(calls(toolUse('Read', { file_path: '/work/a.mjs' })), call('Read', { path: '/work/a.mjs' }));
   assert.deepEqual(
@@ -530,13 +534,13 @@ test('claude: a subagent, system, user and result events, empty text and lines o
     '[1]',
     '',
   ]) {
-    assert.deepEqual(HEADLESS.claude.follow(line), [], line);
+    assert.deepEqual(claudeHarness.headless.follow(line), [], line);
   }
 });
 
 test('claude: an event with no timestamp, or one that does not parse, gives no time', () => {
   for (const timestamp of [undefined, 'yesterday', 5]) {
-    const [text] = HEADLESS.claude.follow(assistant([{ type: 'text', text: 'Hello.' }], { timestamp }));
+    const [text] = claudeHarness.headless.follow(assistant([{ type: 'text', text: 'Hello.' }], { timestamp }));
     assert.equal(text.time, undefined, String(timestamp));
   }
 });
@@ -547,23 +551,26 @@ const opencodeCall = (tool, input) =>
   opencodeLine('tool_use', { type: 'tool', tool, state: { status: 'completed', input } });
 
 test('opencode: a text event gives its text, and a tool_use event its call, at the event timestamp', () => {
-  assert.deepEqual(HEADLESS.opencode.follow(opencodeLine('text', { type: 'text', text: 'Done.' })), [
+  assert.deepEqual(opencodeHarness.headless.follow(opencodeLine('text', { type: 'text', text: 'Done.' })), [
     { kind: 'text', time: 1792687180271, text: 'Done.' },
   ]);
   const call = (tool, fields) => [{ kind: 'call', time: 1792687180271, tool, ...NO_CALL, ...fields }];
   assert.deepEqual(
-    HEADLESS.opencode.follow(opencodeCall('bash', { command: 'npm test', description: 'Run the tests' })),
+    opencodeHarness.headless.follow(opencodeCall('bash', { command: 'npm test', description: 'Run the tests' })),
     call('bash', { description: 'Run the tests', command: 'npm test' }),
   );
   assert.deepEqual(
-    HEADLESS.opencode.follow(opencodeCall('read', { filePath: '/work/a.mjs' })),
+    opencodeHarness.headless.follow(opencodeCall('read', { filePath: '/work/a.mjs' })),
     call('read', { path: '/work/a.mjs' }),
   );
   assert.deepEqual(
-    HEADLESS.opencode.follow(opencodeCall('grep', { pattern: 'follow', path: '/work' })),
+    opencodeHarness.headless.follow(opencodeCall('grep', { pattern: 'follow', path: '/work' })),
     call('grep', { pattern: 'follow' }),
   );
-  assert.deepEqual(HEADLESS.opencode.follow(opencodeCall('task', { description: 'Look around' })), call('task', {}));
+  assert.deepEqual(
+    opencodeHarness.headless.follow(opencodeCall('task', { description: 'Look around' })),
+    call('task', {}),
+  );
 });
 
 test('opencode: reasoning, step events, a text event with no text and a line of no JSON object give nothing', () => {
@@ -576,7 +583,7 @@ test('opencode: reasoning, step events, a text event with no text and a line of 
     'not json',
     '',
   ]) {
-    assert.deepEqual(HEADLESS.opencode.follow(line), [], line);
+    assert.deepEqual(opencodeHarness.headless.follow(line), [], line);
   }
 });
 
@@ -611,13 +618,13 @@ test('claude: the refused calls are those of permission_denials of every result 
       permission_denials: [denial('Read', 'no record'), { tool_use_id: 'toolu_2', tool_input: {} }],
     }),
   ].join('\n');
-  assert.deepEqual(HEADLESS.claude.refused(`${printed}\n`), [
+  assert.deepEqual(claudeHarness.headless.refused(`${printed}\n`), [
     refusedCall('Write', { path: '/work/plan.md' }),
     refusedCall('Bash', { description: 'Run the tests', command: 'npm test' }),
     refusedCall('Read', {}),
   ]);
-  assert.deepEqual(HEADLESS.claude.refused(printed.split('\n').slice(0, 4).join('\n')), []);
-  assert.deepEqual(HEADLESS.claude.refused(''), []);
+  assert.deepEqual(claudeHarness.headless.refused(printed.split('\n').slice(0, 4).join('\n')), []);
+  assert.deepEqual(claudeHarness.headless.refused(''), []);
 });
 
 test('opencode: the refused calls are the tool_use events that failed with the error of a rejected permission', () => {
@@ -633,9 +640,9 @@ test('opencode: the refused calls are the tool_use events that failed with the e
     used('bash', { status: 'error', input: { command: 'npm test', description: 'Run the tests' }, error: rejected }),
     opencodeLine('step_finish', { type: 'step-finish', reason: 'stop' }),
   ].join('\n');
-  assert.deepEqual(HEADLESS.opencode.refused(printed), [
+  assert.deepEqual(opencodeHarness.headless.refused(printed), [
     refusedCall('edit', { path: '/work/hello.txt' }),
     refusedCall('bash', { description: 'Run the tests', command: 'npm test' }),
   ]);
-  assert.deepEqual(HEADLESS.opencode.refused(''), []);
+  assert.deepEqual(opencodeHarness.headless.refused(''), []);
 });

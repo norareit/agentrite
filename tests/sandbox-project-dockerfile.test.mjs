@@ -3,7 +3,7 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { execFileSync, spawnSync } from 'node:child_process';
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
@@ -83,9 +83,18 @@ function setUp(testContext, layout = 'installed') {
     copyFileSync(from, to);
     chmodSync(to, 0o755);
   }
-  for (const file of ['agentrite-settings.mjs', 'agentrite-cleanup-period.mjs', 'agentrite-roles.mjs']) {
+  for (const file of [
+    'agentrite-settings.mjs',
+    'agentrite-cleanup-period.mjs',
+    'agentrite-roles.mjs',
+    'agentrite-harness.mjs',
+    'agentrite-headless.mjs',
+    'agentrite-instructions.mjs',
+    'agentrite-json.mjs',
+  ]) {
     copyFileSync(join(kitScripts, file), join(kit, 'scripts', file));
   }
+  cpSync(join(kitScripts, 'harnesses'), join(kit, 'scripts', 'harnesses'), { recursive: true });
   installKitPackage(kit);
   const home = join(base, 'home');
   mkdirSync(home);
