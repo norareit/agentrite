@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-02T21:36:55Z
 ---
 
@@ -30,3 +30,4 @@ timestamp: 2026-11-02T21:36:55Z
   status is `draft`
 - 2026-11-04T14:21:30Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master`, on the human's
   decision to decline `BTR2`, `BTR3` and `BTR4`, which the spec now marks as declined. The status is `draft`
+- 2026-11-04T14:21:30Z [human] approved the spec. The status is `approved`
