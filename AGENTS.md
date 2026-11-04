@@ -11,6 +11,9 @@ in both places.
 Read before making changes, each for what it is the source of truth on:
 
 * [README.md](README.md): what the kit is and how a project uses it
+* [COMMANDS.md](COMMANDS.md): every command a project runs, and the exit statuses
+* [ORCHESTRATOR.md](ORCHESTRATOR.md): what the orchestrator does
+* [SETUP.md](SETUP.md): how a project installs, configures and updates the kit
 * [SANDBOX.md](SANDBOX.md): what the sandbox does
 * [CONTRIBUTING.md](CONTRIBUTING.md): working on the kit itself
 
@@ -21,20 +24,40 @@ Read before making changes, each for what it is the source of truth on:
 The default line wrapping of IntelliJ is used: 120 characters. Make sure all code and text are wrapped at 120
 characters.
 
+A line of a Markdown table may be longer than 120 characters, in every document of the repository, since a row
+cannot be wrapped. Every other line keeps the limit.
+
 ## The documents
 
-`README.md`, `SANDBOX.md` and `CONTRIBUTING.md` are kept as follows.
+Each document answers the question its reader brings to it, and holds what answers it:
 
-* The commands are complete. Every command a project can run is described in `README.md`, with every argument,
-  option and environment variable, and a unit that adds, changes or removes one changes `README.md` in the same
-  unit. The same holds for `CONTRIBUTING.md` and this repository's own commands
+| Document          | The reader's question                                    | What goes in it                                                                                                                |
+|-------------------|----------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------|
+| `README.md`       | What is the kit, and how do I start?                     | What the kit is, its components, the quick start, how it works, the map of the documents, "What is here"                       |
+| `COMMANDS.md`     | What does a command take, do and exit with?              | The table of every command, each command's section with every argument, option and environment variable, and the exit statuses |
+| `ORCHESTRATOR.md` | How does the orchestrator take a unit through its roles? | Its definition, the outcome of a step, how a run ends, what `.orchestrator` holds, where it runs                               |
+| `SETUP.md`        | How do I install, configure and update the kit?          | Installing it, the git hooks, the project's settings, replacing and adding roles, updating                                     |
+| `SANDBOX.md`      | How do I run an agent in the sandbox?                    | What a developer does with the sandbox and meets in it, by what they are doing                                                 |
+| `CONTRIBUTING.md` | How do I work on the kit itself?                         | This repository's own commands, tests, copy of the kit and sandbox, and what it holds besides the package                      |
+
+They are kept as follows.
+
+* A unit changes `README.md` only when it changes what the kit is, the quick start, a component or the workflow.
+  Otherwise it changes `README.md` at most by a line of the map of the documents, "The documents"
+* The commands are complete. Every command a project can run is described in `COMMANDS.md`, with every argument,
+  option and environment variable, and a unit that adds, changes or removes one changes `COMMANDS.md` in the same
+  unit, its row in the table at the top of `COMMANDS.md` among it. The same holds for `CONTRIBUTING.md` and this
+  repository's own commands
 * The two tables are kept up to date: "What is here" in `README.md`, for what the package holds, and "What the
   repository holds besides the package" in `CONTRIBUTING.md`. A unit that adds, removes or renames a file or
   directory at the root of the repository, or changes whether it is in the package, changes the table it belongs
   in, in the same unit
-* The three documents say what there is and how to use it: what a command, a file or the sandbox does, what a
-  reader types, sees, must do or must not do, what is refused and how to recover. The rule on refusals below is
-  the exception for `SANDBOX.md`. The why of a change is written in its unit under `changes/` and not in them
+* The documents say what there is and how to use it: what a command, a file or the sandbox does, what a reader
+  types, sees, must do or must not do, what is refused and how to recover. The rule on refusals below is the
+  exception for `SANDBOX.md`. The why of a change is written in its unit under `changes/` and not in them
+* `diagrams/` holds each diagram of the README as its Mermaid source and the SVG generated from it. A unit that
+  changes a source generates its SVG with `npm run diagrams` and commits both in the same unit. A unit that changes
+  a component or the workflow the diagrams show changes the diagram
 * `SANDBOX.md` is kept complete for its reader, who uses the sandbox and wants to know how. A unit that adds,
   changes or removes something a developer does with the sandbox, or meets in it, changes `SANDBOX.md` in the same
   unit
@@ -46,8 +69,7 @@ characters.
   wrong" in `SANDBOX.md`, with what is seen, why and what to do, and is described nowhere else in it. "Where things
   are kept on the host" is kept up to date, its table and what it says of each place. A unit that changes either
   changes that section in the same unit
-* `SANDBOX.md` holds no HTML. A table in it is a Markdown table whose lines fit the line limit, and what does not
-  fit one is written as text
+* `SANDBOX.md` holds no HTML. A table in it is a Markdown table
 
 ## The kit's command
 

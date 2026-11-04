@@ -251,9 +251,9 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The rules
 
-- [ ] In "Line limit" of `AGENTS.md`, say that a line of a Markdown table may be longer than 120 characters, in
+- [x] In "Line limit" of `AGENTS.md`, say that a line of a Markdown table may be longer than 120 characters, in
   every document of the repository, and that every other line keeps the limit (R25)
-- [ ] Rewrite "The documents" of `AGENTS.md` (R20 to R25):
+- [x] Rewrite "The documents" of `AGENTS.md` (R20 to R25):
     * open with a table of `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md` and
       `CONTRIBUTING.md`, with the question each reader brings and what goes in each
     * a unit changes the README only when it changes what the kit is, the quick start, a component or the
@@ -267,11 +267,11 @@ the project's own README; `CHANGELOG.md`, as the approach says.
     * every other rule keeps its wording, its meaning and its strength, with the document it names corrected where
       the content moved: "The two tables" still names "What is here" of `README.md`, and the rules of `SANDBOX.md`
       stay as they are
-- [ ] Point "Exit statuses" of `AGENTS.md` to `COMMANDS.md#exit-statuses`, and add `COMMANDS.md`, `ORCHESTRATOR.md`
+- [x] Point "Exit statuses" of `AGENTS.md` to `COMMANDS.md#exit-statuses`, and add `COMMANDS.md`, `ORCHESTRATOR.md`
   and `SETUP.md` to its list of what to read, each with what it is the source of truth on (R6, R22)
-- [ ] Check that no test or check limits the number of lines of a document: `grep -rn -i 'lines' tests/*.mjs
+- [x] Check that no test or check limits the number of lines of a document: `grep -rn -i 'lines' tests/*.mjs
   scripts/check-changes.mjs` shows none that counts the lines of a document (R24)
-- [ ] Run `npm test` and commit (R20 to R25)
+- [x] Run `npm test` and commit (R20 to R25)
 
 ### The record
 
@@ -312,5 +312,5 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
 - [x] `feature-0094 Make the README a landing page`
 - [x] `feature-0094 Add the diagrams of the components and the workflow`
-- [ ] `feature-0094 Say in AGENTS.md what goes in which document`
+- [x] `feature-0094 Say in AGENTS.md what goes in which document`
 - [ ] `feature-0094 Record where each section of the README went`

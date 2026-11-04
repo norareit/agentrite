@@ -73,3 +73,9 @@ timestamp: 2026-11-04T11:26:27Z
   looked at in a dark viewer, and their root element has `background-color: white`, which the test checks.
   `npm run diagrams` is described in `CONTRIBUTING.md` as exiting `1` when one diagram fails, as its `|| exit 1`
   does. `npm test` passes, 1358 tests
+- 2026-11-04T13:12:57Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote the rules in
+  `AGENTS.md`: "Line limit" lets a line of a Markdown table pass 120 characters, and "The documents" opens with the
+  table of the six documents and holds the rules of R21 to R23 and R25. "Exit statuses" already linked
+  `COMMANDS.md#exit-statuses` since the move of the commands. The rule "The three documents say what there is" now
+  reads "The documents say", since its content is in six. `grep -rn -i 'lines' tests/*.mjs scripts/check-changes.mjs`
+  shows no count of the lines of a document. `npm test` passes, 1358 tests
