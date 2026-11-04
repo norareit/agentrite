@@ -13,7 +13,7 @@ test('the package ships the reference of the sandbox', () => {
 });
 
 // R19 of unit 0094: the references the README sends a reader to reach a project only while the package holds them.
-for (const document of ['COMMANDS.md']) {
+for (const document of ['COMMANDS.md', 'ORCHESTRATOR.md']) {
   test(`the package ships ${document}, as a file at the root`, () => {
     assert.ok(packageJson.files.includes(document), `files holds ${packageJson.files.join(', ')}`);
     assert.ok(existsSync(new URL(`../${document}`, import.meta.url)), `${document} is a file at the root`);
@@ -62,6 +62,7 @@ test('package.json keeps the one command and the files the package holds', () =>
     'CHANGELOG.md',
     'SANDBOX.md',
     'COMMANDS.md',
+    'ORCHESTRATOR.md',
     'roles',
     'templates',
     'scripts/check-changes.mjs',
@@ -138,9 +139,10 @@ test('the package ships the default definition of the orchestrator, as the spec 
   assert.equal(readDocument('orchestrator.json'), DEFAULT_DEFINITION);
 });
 
-// R26 of unit 0065: the README gives the default definition as its example, as it ships.
-test('README.md holds the default definition of the orchestrator in a block marked json', () => {
-  assert.ok(readDocument('README.md').includes(`\n\`\`\`json\n${DEFAULT_DEFINITION}\`\`\`\n`));
+// R26 of unit 0065: the reference of the orchestrator gives the default definition as its example, as it ships. It
+// moved from the README by R13 of unit 0094.
+test('ORCHESTRATOR.md holds the default definition of the orchestrator in a block marked json', () => {
+  assert.ok(readDocument('ORCHESTRATOR.md').includes(`\n\`\`\`json\n${DEFAULT_DEFINITION}\`\`\`\n`));
 });
 
 test('LICENSE is the MIT License at the root, with the copyright holder', () => {
@@ -280,6 +282,7 @@ test('no text of the kit names the status planned, and the record template gives
     'standards.md',
     'README.md',
     'COMMANDS.md',
+    'ORCHESTRATOR.md',
     ...filesUnder('roles'),
     ...filesUnder('templates'),
   ];

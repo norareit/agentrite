@@ -475,24 +475,24 @@ npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text
 Takes an approved unit through its roles, from the project root, by the definition that `orchestrator` in
 `agentrite.json` names: it runs each step as `agentrite run` with `--headless`, one at a time, and ends when every
 item of the definition has run or a step stops the run. With `--resume`, it resumes the latest run of the unit, which
-stopped for the human, as "How a run ends" in `README.md` gives. Run with no argument, it prints its usage.
+stopped for the human, as "How a run ends" in `ORCHESTRATOR.md` gives. Run with no argument, it prints its usage.
 
-| Argument or option    | What it is                                                                                           |
-|-----------------------|------------------------------------------------------------------------------------------------------|
-| `<unit>`              | A directory of `changes/`, by its name or by the four digits its name opens with                     |
-| `--definition <file>` | Runs this definition, relative to the project root or absolute. Also `--definition=<file>`           |
-| `--resume`            | Resumes the latest run of the unit, which stopped for the human. See "How a run ends" in `README.md` |
-| `--prompt <text>`     | With `--resume`, the human's words to the step it reruns. Also `--prompt="<text>"`                   |
-| `--skip-permissions`  | Passed to the `agentrite run` of every step. The option belongs in the sandbox                       |
-| `--follow`            | Prints each step's messages and tool calls while it runs. See "How a run ends" in `README.md`        |
+| Argument or option    | What it is                                                                                                 |
+|-----------------------|------------------------------------------------------------------------------------------------------------|
+| `<unit>`              | A directory of `changes/`, by its name or by the four digits its name opens with                           |
+| `--definition <file>` | Runs this definition, relative to the project root or absolute. Also `--definition=<file>`                 |
+| `--resume`            | Resumes the latest run of the unit, which stopped for the human. See "How a run ends" in `ORCHESTRATOR.md` |
+| `--prompt <text>`     | With `--resume`, the human's words to the step it reruns. Also `--prompt="<text>"`                         |
+| `--skip-permissions`  | Passed to the `agentrite run` of every step. The option belongs in the sandbox                             |
+| `--follow`            | Prints each step's messages and tool calls while it runs. See "How a run ends" in `ORCHESTRATOR.md`        |
 
 It refuses, starts nothing, writes nothing and exits 1 when:
 
 * the project has no `agentrite.json`, or its file is not valid, as every command that reads the file refuses
 * `orchestrator` is `false`, also with `--definition`. It says that the project opted out, and which key to change
 * the path of `--definition` names no file. It names the path
-* the definition is not of the form "The orchestrator" in `README.md` gives. It names the definition's path, where in
-  it the fault is, what is wrong and what it must hold
+* the definition is not of the form "The orchestrator" in `ORCHESTRATOR.md` gives. It names the definition's path, where
+  in it the fault is, what is wrong and what it must hold
 * `changes/` holds no directory for the unit, or more than one for its digits
 * the unit's status is not `approved`. It names the status, and says that a run starts the work of an approved unit.
   A `record.md` that is missing, or holds no status, is refused as one that is missing a status field
@@ -528,7 +528,7 @@ It exits with `0` for a run that ran every item of the definition to its end, `1
 wrong arguments or none, which it refuses with its usage, and `3`, its own status, for a run that a step or a
 repeat stopped, which waits for the human. A resume exits as a run does. See [Exit statuses](#exit-statuses).
 
-See "The orchestrator" in `README.md`.
+See "The orchestrator" in `ORCHESTRATOR.md`.
 
 ## agentrite runs
 
@@ -548,8 +548,8 @@ of one unit in the order of their directories' names. The options may stand at a
 Each run is one line: the instant it started, the four digits of its unit followed by `--` and its variant for a run on
 a variant's branch, its state, and what the state gives. The first three are padded to the widest value of their column
 among the lines listed, the columns separated by two spaces. The variant is the one the directory's name gives. The
-state is judged by the rule of "What .orchestrator holds" in `README.md`, on the clock of the machine the command runs
-on:
+state is judged by the rule of "What .orchestrator holds" in `ORCHESTRATOR.md`, on the clock of the machine the command
+runs on:
 
 * `running`: the run has no end and a sign of life in the last 60 seconds. The line gives the step the run is at, as the
   line the orchestrator prints before a step names it, without `: started`, or `before its first step`

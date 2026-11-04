@@ -134,17 +134,17 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 
 ### The orchestrator
 
-- [ ] Point the test of the default definition in `tests/package-documents.test.mjs` at `ORCHESTRATOR.md`, add
+- [x] Point the test of the default definition in `tests/package-documents.test.mjs` at `ORCHESTRATOR.md`, add
   `ORCHESTRATOR.md` to `files` there and to the paths of the test of the status `planned`. They fail (R13, R19)
-- [ ] Create `ORCHESTRATOR.md` and move into it "The orchestrator" with "The definition", "The outcome of a step",
+- [x] Create `ORCHESTRATOR.md` and move into it "The orchestrator" with "The definition", "The outcome of a step",
   "How a run ends", "What .orchestrator holds" and "On the host and in the sandbox", as they are, headings up one
   level. Add it to `files` after `COMMANDS.md` and to "What is here" (R7, R19)
-- [ ] Correct the references that now cross a document: from `ORCHESTRATOR.md` to the commands, to the setup and
+- [x] Correct the references that now cross a document: from `ORCHESTRATOR.md` to the commands, to the setup and
   to the sandbox; from `COMMANDS.md`, as the section of `agentrite orchestrate` and of `agentrite runs`; from
   `SANDBOX.md`, whose "See "The orchestrator" of `README.md`" names `ORCHESTRATOR.md`; and in the code and templates,
   found with `grep -rn -E '"(The orchestrator|The definition|The outcome of a step|How a run ends|What .orchestrator
   holds|On the host and in the sandbox)"' scripts container templates pointers` (R10, R13)
-- [ ] Run `npm test` and commit (R7, R10, R13, R19)
+- [x] Run `npm test` and commit (R7, R10, R13, R19)
 
 ### The setup
 
@@ -307,7 +307,7 @@ the project's own README; `CHANGELOG.md`, as the approach says.
 - [x] `feature-0094 Move the commands and the exit statuses into COMMANDS.md`
 - [x] `feature-0094 Merge Running a role into agentrite run`
 - [x] `feature-0094 Open COMMANDS.md with a table of every command`
-- [ ] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
+- [x] `feature-0094 Move the orchestrator into ORCHESTRATOR.md`
 - [ ] `feature-0094 Move the installation and the configuration into SETUP.md`
 - [ ] `feature-0094 Move what the README says of the sandbox into SANDBOX.md`
 - [ ] `feature-0094 Make the README a landing page`

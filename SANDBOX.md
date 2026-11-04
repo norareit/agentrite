@@ -100,7 +100,7 @@ own program may be, is `xterm-256color` in the sandbox, with the host's `COLORTE
 sandbox shows which it is.
 
 The orchestrator, which takes a unit through its roles, runs in a unit run as any command does, and passes
-`--skip-permissions` to every step. See "The orchestrator" of `README.md`:
+`--skip-permissions` to every step. See "The orchestrator" of `ORCHESTRATOR.md`:
 
 ```sh
 ./sandbox.sh 0029 npx agentrite orchestrate 0029 --skip-permissions

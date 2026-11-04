@@ -27,6 +27,7 @@
     "CHANGELOG.md",
     "SANDBOX.md",
     "COMMANDS.md",
+    "ORCHESTRATOR.md",
     "roles",
     "templates",
     "scripts/check-changes.mjs",
