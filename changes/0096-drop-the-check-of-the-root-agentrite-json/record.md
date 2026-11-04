@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-11-04T23:09:30Z
 ---
 
@@ -53,5 +53,7 @@ of `package.json`, which the human declined.
   `installedRelease` stays for the two tests that still use it, as its comment says, and no import went unused. On
   `5388709`, `npm test` reports 1447 tests, 1447 passing, none skipped, and `npm run check-changes` exits 0. The
   status is `in-progress`
+- 2026-11-04T23:20:00Z [human] checked the change, decided that it needs no review by another model, and decided
+  that the task is done. The status is `implemented`
 
 ## Amendments
