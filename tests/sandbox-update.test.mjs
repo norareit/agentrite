@@ -16,6 +16,7 @@ import { test } from 'node:test';
 import { agentsListNotice } from '../scripts/agentrite-instructions.mjs';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { fakeHost, installKitPackage } from './wrapper-fixture.mjs';
+import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 // R7: a project that release 4.2.0 set up starts its sandbox after the four steps of the release notes and no
@@ -105,7 +106,12 @@ function setUp(testContext) {
   git('add', '.');
   git('commit', '--quiet', '--message', 'the project');
   git('branch', branch);
-  const refresh = () => spawnSync(process.execPath, [script, 'refresh'], { cwd: root, encoding: 'utf-8' });
+  const refresh = () =>
+    spawnSync(process.execPath, [script, 'refresh'], {
+      cwd: root,
+      encoding: 'utf-8',
+      env: withoutGitEnvironmentConfiguration(process.env),
+    });
   const sandbox = (...args) => spawnSync(join(root, 'sandbox.sh'), args, { cwd: root, encoding: 'utf-8', env });
   return { base, root, home, refresh, sandbox, ...host };
 }

@@ -43,7 +43,7 @@ behavior a developer meets in the sandbox changes.
 
 ## Tasks
 
-- [ ] Write `tests/sandbox-git-environment.test.mjs`. One test, named for what it shows: that the tests which start
+- [x] Write `tests/sandbox-git-environment.test.mjs`. One test, named for what it shows: that the tests which start
   `init` and `refresh` pass with git's environment configuration of the sandbox. It spawns `process.execPath` with
   `--test` and the paths of `tests/agentrite-init.test.mjs`, `tests/agentrite-refresh.test.mjs`,
   `tests/commit-msg-hook.test.mjs` and `tests/sandbox-update.test.mjs`, resolved from `import.meta.dirname`, with
@@ -52,29 +52,29 @@ behavior a developer meets in the sandbox changes.
   to their values of `environmentEntry`. Comment why `NODE_TEST_CONTEXT` is removed. Assert status 0 with the
   child's standard output and error as the message. Run it on the host and see it fail, with 19 failing tests in the
   child's output (R4)
-- [ ] Write `tests/git-environment.test.mjs` against the function below, before it. An environment of
+- [x] Write `tests/git-environment.test.mjs` against the function below, before it. An environment of
   `GIT_CONFIG_COUNT: '2'`, `GIT_CONFIG_KEY_0`, `GIT_CONFIG_VALUE_0`, `GIT_CONFIG_KEY_1`, `GIT_CONFIG_VALUE_1`,
   `GIT_CONFIG_KEY_12`, `GIT_CONFIG_VALUE_12`, `GIT_CONFIG_NOSYSTEM: '1'`, `GIT_CONFIG_GLOBAL`,
   `GIT_CONFIG_PARAMETERS`, `HOME` and `PATH` gives an object deep equal to the last five alone. An environment
   without any of the entries gives one deep equal to it. The argument is deep equal, after the call, to a copy made
   before it, and the result is not the same object as the argument (R3)
-- [ ] Write `tests/git-environment.mjs`: `withoutGitEnvironmentConfiguration(environment)` returns
+- [x] Write `tests/git-environment.mjs`: `withoutGitEnvironmentConfiguration(environment)` returns
   `Object.fromEntries` of the entries of the argument whose name does not match
   `/^GIT_CONFIG_(?:COUNT|KEY_\d+|VALUE_\d+)$/`. A comment says what the entries are and that the sandbox sets them
   in `container/compose.yml`, where they point git at the image's hooks. Run its tests (R3)
-- [ ] Pass `env: withoutGitEnvironmentConfiguration(process.env)` to the `spawnSync` of the `run` of `project` and
+- [x] Pass `env: withoutGitEnvironmentConfiguration(process.env)` to the `spawnSync` of the `run` of `project` and
   of the test `the command runs through a node_modules bin symlink the way npx does` in
   `tests/agentrite-init.test.mjs`; of the `run` of `project` and of the test
   `refresh runs through a node_modules bin symlink the way npx does` in `tests/agentrite-refresh.test.mjs`; of the
   `init` of `repository` in `tests/commit-msg-hook.test.mjs`; and of the `refresh` of `setUp` in
   `tests/sandbox-update.test.mjs`. Import the function in each file. Run the regression test, which passes (R1, R3,
   R4)
-- [ ] Search the four files for every other `spawnSync`, `execFileSync` and `execSync`, and confirm each is one of
+- [x] Search the four files for every other `spawnSync`, `execFileSync` and `execSync`, and confirm each is one of
   those the approach leaves as they are. A process that asks git where the hooks are, and is not listed there, gets
   the same environment, and the approach of this plan is corrected in `record.md` (R3)
-- [ ] Run `npm test` on the host, which passes, with the number of skipped tests that it reports on `master` (R2)
-- [ ] Check every changed file for the line limit of 120 characters
-- [ ] Commit: `bugfix-0093 Start init and refresh in the tests without git's environment configuration`
+- [x] Run `npm test` on the host, which passes, with the number of skipped tests that it reports on `master` (R2)
+- [x] Check every changed file for the line limit of 120 characters
+- [x] Commit: `bugfix-0093 Start init and refresh in the tests without git's environment configuration`
 
 ## Verification
 

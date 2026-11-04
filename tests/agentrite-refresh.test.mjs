@@ -24,6 +24,7 @@ import {
 import { foreignHookNotice, HOOK_MARK, noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-roles.mjs';
 import { refreshedWrapper } from '../scripts/agentrite.mjs';
+import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -190,7 +191,12 @@ function project(testContext) {
   const base = temporaryDirectory(testContext, 'agentrite-refresh-');
   installKit(base);
   writeFileSync(join(base, 'AGENTS.md'), AGENTS_NAMING_LIST);
-  const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
+  const run = (...args) =>
+    spawnSync(process.execPath, [script, ...args], {
+      cwd: base,
+      encoding: 'utf-8',
+      env: withoutGitEnvironmentConfiguration(process.env),
+    });
   const read = (path) => readFileSync(join(base, path), 'utf-8');
   const write = (path, content) => {
     mkdirSync(dirname(join(base, path)), { recursive: true });
@@ -629,7 +635,11 @@ test('refresh runs through a node_modules bin symlink the way npx does', (testCo
 
   write('agentrite.json', kitSettingsText({ defaultBranch: 'master', harnesses: ['claude'], sandbox: true }));
 
-  const result = spawnSync(process.execPath, [bin, 'refresh'], { cwd: base, encoding: 'utf-8' });
+  const result = spawnSync(process.execPath, [bin, 'refresh'], {
+    cwd: base,
+    encoding: 'utf-8',
+    env: withoutGitEnvironmentConfiguration(process.env),
+  });
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(read('.claude/agents/planner.md'), rendered('claude', 'planner'));

@@ -4,6 +4,7 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { chmodSync, copyFileSync, mkdirSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { delimiter, dirname, join } from 'node:path';
 import { test } from 'node:test';
+import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -36,6 +37,7 @@ function repository(testContext) {
   const initialized = spawnSync(process.execPath, [agentrite, 'init', '--no-sandbox', 'claude'], {
     cwd: root,
     encoding: 'utf-8',
+    env: withoutGitEnvironmentConfiguration(process.env),
   });
   assert.equal(initialized.status, 0, initialized.stderr);
   assert.match(initialized.stdout, /^wrote \.git\/hooks\/commit-msg$/m);

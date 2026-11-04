@@ -38,6 +38,7 @@ import {
   projectFiles,
   withCheckChangesScript,
 } from '../scripts/agentrite.mjs';
+import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -617,7 +618,12 @@ function project(testContext, { lockfile = LOCKFILE } = {}) {
   );
   if (lockfile !== null) writeFileSync(join(base, 'package-lock.json'), lockfile);
   installKit(base);
-  const run = (...args) => spawnSync(process.execPath, [script, ...args], { cwd: base, encoding: 'utf-8' });
+  const run = (...args) =>
+    spawnSync(process.execPath, [script, ...args], {
+      cwd: base,
+      encoding: 'utf-8',
+      env: withoutGitEnvironmentConfiguration(process.env),
+    });
   const read = (path) => readFileSync(join(base, path), 'utf-8');
   return { base, run, read };
 }
@@ -771,7 +777,11 @@ test('the command runs through a node_modules bin symlink the way npx does', (te
   mkdirSync(join(base, 'node_modules', '.bin'), { recursive: true });
   const bin = join(base, 'node_modules', '.bin', 'agentrite');
   symlinkSync(script, bin);
-  const result = spawnSync(process.execPath, [bin, 'init', 'claude'], { cwd: base, encoding: 'utf-8' });
+  const result = spawnSync(process.execPath, [bin, 'init', 'claude'], {
+    cwd: base,
+    encoding: 'utf-8',
+    env: withoutGitEnvironmentConfiguration(process.env),
+  });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(read('CLAUDE.md'), fillTemplate(templates['CLAUDE.md'], { standards: STANDARDS }));
 });

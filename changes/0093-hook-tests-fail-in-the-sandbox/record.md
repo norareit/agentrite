@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-11-03T15:56:34Z
 ---
 
@@ -22,3 +22,15 @@ timestamp: 2026-11-03T15:56:34Z
   sandbox. Wrote `plan.md`: a pure function of the suite that removes git's environment configuration from a copy
   of the environment, passed to every start of `init` and `refresh` in the four files, and a regression test that
   runs the four files with the compose file's entries added. The status is `approved`
+- 2026-11-04T12:16:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `bugfix-0093-hook-tests-fail-in-the-sandbox` at `ab895dd`, began the work. The status is `in-progress`
+- 2026-11-04T12:19:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrote
+  `tests/sandbox-git-environment.test.mjs` first and ran it on the host: it failed, with 182 tests in the child
+  run of the four files, 163 passing and the 19 of the spec failing. Wrote `tests/git-environment.test.mjs`, saw it
+  fail for the missing module, then `tests/git-environment.mjs`, whose three tests pass. Passed the cleared
+  environment to the six starts of `init` and `refresh` that the plan names, after which the regression test
+  passes. Searched the four files and the helpers they call for every other `spawnSync`, `execFileSync` and
+  `execSync`: each is one the plan leaves as it is, the `sh -c 'command -v git'` of
+  `tests/commit-msg-hook.test.mjs` and the `git` of `tests/wrapper-fixture.mjs` among them, which ask git nothing
+  of the hooks or have an environment of their own, so the approach stands. `npm test` on the host reported 1340
+  tests, 1340 passing and 0 skipped, against 1336 passing and 0 skipped on `master` at `46ee34e`
