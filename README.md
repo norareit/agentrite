@@ -38,9 +38,9 @@ read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" of `COM
 
 ## The components
 
-![The components of the kit: the sandbox runs a harness, agentrite run and the orchestrator; the orchestrator runs
-agentrite run, which starts a harness with a role wrapper; the wrapper reads its role, and a role reads the process and
-the standards and reads and writes the units in
+![The components of the kit: ./sandbox.sh runs agentrite orchestrate, which runs agentrite run, which starts a harness,
+Claude Code or OpenCode; the harness reads the role wrappers, which point at the roles, which follow process.md and the
+standards, the kit's or the project's own; and the harness reads and writes the units in
 changes/](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/components.svg)
 
 ## Quick start
@@ -135,10 +135,11 @@ A unit moves through these statuses, as `process.md` gives them:
 | `implemented` | The implementer, or the human           | The human decided every blocking finding, and every task of the plan is ticked |
 | `cancelled`   | The human                               | From `draft`, `approved` or `in-progress`, for a unit that will not be done    |
 
-![The workflow: the human specifies a unit with the specifier and approves it, starts the sandbox, in which agents plan,
-implement and review, looping back to implementing for the review's findings, or the orchestrator does all of that; the
-human then leaves the sandbox and merges the unit's
-branch](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
+![The workflow: on the default branch you specify the unit with the specifier and approve it; ./sandbox.sh starts the
+sandbox on the unit's branch, where the planner creates the plan, the implementer implements the changes and a reviewer
+of another model family reviews against the spec and the plan, back to the implementer for its findings, or agentrite
+orchestrate runs all three at once; you then exit the sandbox, which brings the branch back, and merge
+it](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
 
 The writers current workflow:
 

@@ -301,6 +301,19 @@ Added after the review of `ec00102`, whose findings are in `.reviews/0094-split-
   done (R16)
 - [x] Run `npm test` and commit
 
+### The restyle of the diagrams
+
+Added at the human's request after the review, who found the diagrams plain and clumsy.
+
+- [x] Restyle both Mermaid sources: the `base` theme with a few colours set in the front matter, so that no line of a
+  source passes the line limit; short labels; groups in place of edges; the workflow left to right. Keep what R14
+  asks: in the workflow, specifying, the approval, the sandbox, planning, implementing, the review and its loop,
+  leaving the sandbox and merging, the human's steps apart from the agents', and the orchestrator as the alternative
+  (R14)
+- [x] Generate the SVGs with `npm run diagrams`, look at both, and correct the alternative text of the two images in
+  `README.md` to what they now show (R15, R16, R17)
+- [x] Run `npm test` and commit
+
 ## Verification
 
 - [x] `npm test` passes (R27)
@@ -328,3 +341,4 @@ Added after the review of `ec00102`, whose findings are in `.reviews/0094-split-
 - [x] `feature-0094 Say in AGENTS.md what goes in which document`
 - [x] `feature-0094 Record where each section of the README went`
 - [x] `feature-0094 Apply the findings of the review`
+- [x] `feature-0094 Restyle the diagrams`

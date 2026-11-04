@@ -149,3 +149,12 @@ timestamp: 2026-11-04T11:26:27Z
       images on a page of background `#0d1117`, GitHub's dark one, in Chrome's headless shell with
       `--force-dark-mode`, and the screenshot was looked at. Each reads as on white, on its own white background
   `npm test` passes, 1358 tests, none skipped
+- 2026-11-04T13:48:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request,
+  restyled both diagrams, after a prototype the human commented on, and added the tasks to `plan.md`. The components
+  name `./sandbox.sh` alone, say that the standards are the kit's or the project's own, and show `changes/` as a
+  stack of documents, whose text Mermaid centres, unlike that of the cylinder. In the workflow each role says what it
+  does, the reviewer being of another model family, as the human asked, and the steps of the human are named for what
+  they act on, as approving the unit. Leaving the sandbox is a step of the human inside the box of the sandbox, and
+  the orchestrator a dashed alternative there. Both were rendered to PNG and looked at. On this host Arial is missing
+  and the render fell back to another font; a viewer with Arial or Helvetica shows those. The alternative text of the
+  two images in `README.md` says what they now show. `npm test` passes, 1358 tests, none skipped

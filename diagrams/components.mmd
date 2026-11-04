@@ -1,25 +1,46 @@
-flowchart TB
-  subgraph rules["The rules"]
-    process["process.md: the process"]
-    standards["The standards: the kit's standards.md or the project's own"]
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: Arial, Helvetica, sans-serif
+    fontSize: 15px
+    lineColor: "#94a3b8"
+    clusterBkg: "#ffffff"
+    clusterBorder: "#e2e8f0"
+    edgeLabelBackground: "#ffffff"
+    titleColor: "#475569"
+  flowchart:
+    curve: basis
+    nodeSpacing: 36
+    rankSpacing: 56
+    padding: 14
+    wrappingWidth: 320
+---
+flowchart LR
+  subgraph starting["Starting the work"]
+    direction TB
+    sandbox["<b>./sandbox.sh</b>"]
+    orchestrate["<b>agentrite orchestrate</b><br/>a unit through its roles"]
+    run["<b>agentrite run</b><br/>one role on one unit"]
+    sandbox --> orchestrate --> run
   end
-  subgraph roles["The roles"]
-    kitRoles["The kit's four: specifier, planner, implementer, reviewer"]
-    ownRoles["A project's own roles"]
+  harness(["<b>Harness</b><br/>Claude Code · OpenCode"])
+  subgraph instructions["What the agent follows"]
+    direction TB
+    wrappers["<b>Role wrappers</b><br/>.claude/agents · .opencode/agents"]
+    roles["<b>Roles</b><br/>specifier · planner · implementer · reviewer<br/>and roles the project adds"]
+    rules["<b>process.md</b> and <b>the standards</b><br/>the kit's standards or the project's own"]
+    wrappers --> roles --> rules
   end
-  units[("changes/: the units, each a spec, a plan and a record")]
-  wrappers["The role wrappers of the harnesses: .claude/agents/ and .opencode/agents/"]
-  harness["A harness: Claude Code or OpenCode"]
-  run["npx agentrite run"]
-  orchestrator["npx agentrite orchestrate: the orchestrator"]
-  sandbox["./sandbox.sh: the sandbox"]
+  units@{ shape: docs, label: "<b>changes/</b><br/>spec · plan · record" }
 
-  roles -->|reads| rules
-  roles -->|reads and writes| units
-  wrappers -->|reads| roles
+  run -->|starts| harness
   harness -->|reads| wrappers
-  run -->|starts with a wrapper| harness
-  orchestrator -->|runs| run
-  sandbox -->|runs| harness
-  sandbox -->|runs| run
-  sandbox -->|runs| orchestrator
+  harness -->|reads and writes| units
+
+  classDef start fill:#eff6ff,stroke:#60a5fa,color:#1e3a8a
+  classDef agent fill:#fef3c7,stroke:#f59e0b,color:#78350f
+  classDef text fill:#f8fafc,stroke:#94a3b8,color:#0f172a
+  class sandbox,orchestrate,run start
+  class harness agent
+  class wrappers,roles,rules,units text

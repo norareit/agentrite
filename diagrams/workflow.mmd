@@ -1,31 +1,50 @@
-flowchart TD
-  specify["Specify the unit with the human: the specifier, on the default branch"]
-  approve["Approve the spec: npx agentrite approve"]
-  sandbox["Start the sandbox on the unit: ./sandbox.sh"]
-  plan["Plan: the planner"]
-  implement["Implement: the implementer"]
-  review["Review: the reviewer"]
-  orchestrator["Or: npx agentrite orchestrate, from planning to the review's fixes"]
-  leave["Leave the sandbox: exit brings the branch back"]
-  merge["Merge the unit's branch on the default branch"]
+---
+config:
+  theme: base
+  themeVariables:
+    fontFamily: Arial, Helvetica, sans-serif
+    fontSize: 15px
+    lineColor: "#94a3b8"
+    clusterBkg: "#ffffff"
+    clusterBorder: "#e2e8f0"
+    edgeLabelBackground: "#ffffff"
+    titleColor: "#475569"
+  flowchart:
+    curve: basis
+    nodeSpacing: 30
+    rankSpacing: 44
+    padding: 14
+    wrappingWidth: 320
+---
+flowchart LR
+  subgraph defaultBranch["On the default branch"]
+    direction TB
+    specify(["<b>Specify</b> the unit<br/>with the specifier"])
+    approve(["<b>Approve</b> the unit"])
+    specify --> approve
+  end
+  subgraph inSandbox["In the sandbox, on the unit's branch"]
+    direction TB
+    plan["<b>Planner</b><br/>creates the plan"]
+    implement["<b>Implementer</b><br/>implements the changes"]
+    review["<b>Reviewer</b>, another model family<br/>reviews against the spec and the plan"]
+    orchestrate["or all three at once:<br/><b>agentrite orchestrate</b>"]
+    leave(["<b>Exit</b> the sandbox<br/>the branch comes back"])
+    plan --> implement --> review
+    review -->|findings| implement
+    review -->|no findings left| leave
+    orchestrate -.-> leave
+  end
+  merge(["<b>Merge</b> the unit's branch"])
 
-  specify --> approve --> sandbox
-  sandbox --> plan --> implement --> review
-  review -->|findings to fix| implement
-  review -->|no findings left| leave
-  sandbox -.->|the alternative| orchestrator
-  orchestrator -.-> leave
+  approve -->|./sandbox.sh| plan
+  approve -.->|./sandbox.sh| orchestrate
   leave --> merge
 
-  subgraph legend["Legend"]
-    direction LR
-    humanStep["Needs the human"]
-    agentStep["Done by an agent"]
-  end
-
-  classDef human fill:#fde68a,stroke:#92400e,color:#1f2937
-  classDef agent fill:#bfdbfe,stroke:#1e3a8a,color:#1f2937
-  classDef alternative fill:#e5e7eb,stroke:#374151,color:#1f2937,stroke-dasharray:4 3
-  class specify,approve,sandbox,leave,merge,humanStep human
-  class plan,implement,review,agentStep agent
-  class orchestrator alternative
+  classDef human fill:#fef3c7,stroke:#f59e0b,color:#78350f
+  classDef agent fill:#eff6ff,stroke:#60a5fa,color:#1e3a8a
+  classDef alternative fill:#ffffff,stroke:#60a5fa,color:#1e3a8a,stroke-dasharray:5 4
+  class specify,approve,leave,merge human
+  class plan,implement,review agent
+  class orchestrate alternative
+  style inSandbox stroke:#cbd5e1
