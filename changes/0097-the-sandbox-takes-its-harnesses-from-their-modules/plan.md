@@ -217,12 +217,13 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 ### The settings a start reads
 
-- [ ] In `tests/agentrite-settings.test.mjs`, replace the cases of `parseBell`, `readBell` and the `bell` form with
-  cases of `parseStart` and `readStart`: both values of a sound file, in the order of `HARNESSES` and without
+- [x] In `tests/agentrite-settings.test.mjs`, add cases of `parseStart` and `readStart`, to replace those of
+  `parseBell`, `readBell` and the `bell` form: both values of a sound file, in the order of `HARNESSES` and without
   repeats; each of today's refusals of `bell` with its message unchanged; `harnesses` missing, empty, not a list and
   naming an unknown harness, each refused with the message of `checkKey`; a file whose `defaultBranch`, `roles` or
-  `standards` is at fault read without a refusal. Then write `parseStart` and `readStart` and remove `readBell` and
-  the `bell` form (R18)
+  `standards` is at fault read without a refusal. Then write `parseStart` and `readStart` (R18)
+- [ ] Remove `parseBell`, `readBell`, the `bell` form and their cases, in the commit that changes the wrapper, which
+  until then runs the `bell` form, so that each commit passes `npm test` (R18)
 
 ### The contract and the modules
 

@@ -42,5 +42,10 @@ timestamp: 2026-11-06T10:15:15Z
   readings of requirement 16 in the entry above, which the plan keeps as written. The status stays `approved`
 - 2026-11-06T11:35:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on the unit's
   branch at `e532a0d`. The status is `in-progress`
+- 2026-11-06T11:52:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, split the first task of
+  `plan.md`: `parseBell`, `readBell` and the `bell` form of `scripts/agentrite-settings.mjs` are removed in the commit
+  that changes the wrapper rather than in the first, since the wrapper runs the `bell` form until then and the suite,
+  green on `456e229` with 1447 tests passed, fails 249 tests when the form is removed first. The status stays
+  `in-progress`
 
 ## Amendments

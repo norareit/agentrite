@@ -138,7 +138,8 @@ export function parseSettings(text) {
 
 /**
  * Throws, naming the key, what it holds or that it is missing, and what it must hold, for a key of `values` that
- * holds no value it may hold. It is the one wording of a key at fault, for the whole file and for `bell` alone.
+ * holds no value it may hold. It is the one wording of a key at fault, for the whole file, for `bell` alone and
+ * for a start's keys.
  *
  * @param {Record<string, unknown>} values
  * @param {(typeof KEYS)[number]} key
@@ -150,7 +151,17 @@ function checkKey(values, key) {
   throw new Error(`${SETTINGS_FILE}: ${key.name} is ${found}. It must hold ${key.must}`);
 }
 
-const BELL_KEY = /** @type {(typeof KEYS)[number]} */ (KEYS.find((key) => key.name === 'bell'));
+/**
+ * @param {keyof Settings} name
+ * @returns {(typeof KEYS)[number]}
+ */
+function keyNamed(name) {
+  return /** @type {(typeof KEYS)[number]} */ (KEYS.find((key) => key.name === name));
+}
+
+const BELL_KEY = keyNamed('bell');
+
+const HARNESSES_KEY = keyNamed('harnesses');
 
 const BELL_MUST_HOLD = `It must hold ${BELL_KEY.must}`;
 
@@ -176,6 +187,40 @@ export function parseBell(text) {
   const values = /** @type {Record<string, unknown>} */ (parsed);
   checkKey(values, BELL_KEY);
   return /** @type {boolean} */ (values.bell);
+}
+
+/**
+ * @typedef {{ bell: boolean, harnesses: string[] }} Start What a start of the sandbox reads of the file: `bell`, and
+ *   the harnesses of the project in the order of `HARNESS_NAMES`, each once.
+ */
+
+/**
+ * The values of `bell` and `harnesses` that the text of an `agentrite.json` holds, as a start of the sandbox reads
+ * them. `bell` is judged first, and no key but the two is judged, so a start is refused for these alone. Throws,
+ * naming the file, the key, what it holds or that it is missing, and what it must hold.
+ *
+ * @param {string} text
+ * @returns {Start}
+ */
+export function parseStart(text) {
+  /** @type {unknown} */ let parsed;
+  try {
+    parsed = JSON.parse(text);
+  } catch (error) {
+    throw new Error(`${SETTINGS_FILE} is not JSON: ${messageOf(error)}, so bell cannot be read. ${BELL_MUST_HOLD}`);
+  }
+  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+    const found = JSON.stringify(parsed);
+    throw new Error(`${SETTINGS_FILE} holds ${found}, which is no JSON object, so bell is missing. ${BELL_MUST_HOLD}`);
+  }
+  const values = /** @type {Record<string, unknown>} */ (parsed);
+  checkKey(values, BELL_KEY);
+  checkKey(values, HARNESSES_KEY);
+  const named = /** @type {string[]} */ (values.harnesses);
+  return {
+    bell: /** @type {boolean} */ (values.bell),
+    harnesses: HARNESS_NAMES.filter((name) => named.includes(name)),
+  };
 }
 
 /**
@@ -322,6 +367,30 @@ export function readSettings(root) {
   const settings = parseSettings(text);
   checkSettingsFiles(root, settings);
   return settings;
+}
+
+/**
+ * The values of `bell` and `harnesses` in the `agentrite.json` in the working tree of the project at `root`, read as
+ * `parseStart` reads them. Throws what to print for a project that has none and for a file that cannot be read.
+ *
+ * @param {string} root
+ * @returns {Start}
+ */
+export function readStart(root) {
+  const path = resolve(root, SETTINGS_FILE);
+  let text;
+  try {
+    text = readFileSync(path, 'utf-8');
+  } catch (error) {
+    if (isMissing(path)) {
+      throw new Error(
+        `the project has no ${SETTINGS_FILE}, so bell is missing. ${BELL_MUST_HOLD}. ` +
+          'Run: npx agentrite config, which writes one',
+      );
+    }
+    throw new Error(`cannot read ${SETTINGS_FILE}: ${messageOf(error)}, so bell cannot be read. ${BELL_MUST_HOLD}`);
+  }
+  return parseStart(text);
 }
 
 /**

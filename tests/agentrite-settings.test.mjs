@@ -4,11 +4,14 @@ import { mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
+import { HARNESS_NAMES } from '../scripts/agentrite-harness.mjs';
 import {
   parseBell,
   parseSettings,
+  parseStart,
   readBell,
   readSettings,
+  readStart,
   SETTINGS_FILE,
   settingsText,
 } from '../scripts/agentrite-settings.mjs';
@@ -730,6 +733,132 @@ test('imported, the module prints nothing', () => {
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout + result.stderr, '');
 });
+
+// R18 of 0097: bell and harnesses alone, as a start of the sandbox reads them.
+
+// A file of bell and harnesses alone, the start's two keys.
+function startText(bell, harnesses) {
+  return textOf({ bell, harnesses });
+}
+
+test('parseStart gives bell and harnesses, from a file of the two alone and from a whole file', () => {
+  assert.deepEqual(parseStart(startText(true, ['claude'])), { bell: true, harnesses: ['claude'] });
+  assert.deepEqual(parseStart(startText(false, ['opencode'])), { bell: false, harnesses: ['opencode'] });
+  assert.deepEqual(parseStart(settingsText(VALID)), { bell: true, harnesses: ['opencode'] });
+  assert.deepEqual(parseStart(settingsText({ ...VALID, bell: false })), { bell: false, harnesses: ['opencode'] });
+});
+
+test('parseStart gives the harnesses in the order of the list of harnesses, each once', () => {
+  const reversed = [...HARNESS_NAMES].reverse();
+  assert.deepEqual(parseStart(startText(true, reversed)).harnesses, HARNESS_NAMES);
+  assert.deepEqual(parseStart(startText(true, [...reversed, ...HARNESS_NAMES])).harnesses, HARNESS_NAMES);
+  for (const name of HARNESS_NAMES) {
+    assert.deepEqual(parseStart(startText(true, [name, name])).harnesses, [name]);
+  }
+});
+
+test('parseStart judges no other key: a file whose other keys are all wrong gives its bell and harnesses', () => {
+  const wrong = { defaultBranch: 5, process: 'no', sandbox: 'yes', standards: '/x', orchestrator: 7, roles: [] };
+  assert.deepEqual(parseStart(textOf({ ...wrong, bell: false, harnesses: ['claude'] })), {
+    bell: false,
+    harnesses: ['claude'],
+  });
+  for (const key of ['defaultBranch', 'roles', 'standards']) {
+    assert.deepEqual(parseStart(textOf(withKey(key, undefined))), { bell: true, harnesses: ['opencode'] }, key);
+  }
+  assert.deepEqual(parseStart(textOf(withRole('planner', undefined))), { bell: true, harnesses: ['opencode'] });
+  assert.deepEqual(parseStart(textOf({ ...VALID, process: false, sandbox: false })), {
+    bell: true,
+    harnesses: ['opencode'],
+  });
+});
+
+test('parseStart refuses a bell that is missing or holds anything but true or false, naming what it holds', () => {
+  assert.throws(() => parseStart('{}'), { message: `agentrite.json: bell is missing. ${BELL_MUST}` });
+  assert.throws(() => parseStart(textOf(withKey('bell', undefined))), {
+    message: `agentrite.json: bell is missing. ${BELL_MUST}`,
+  });
+  for (const value of [null, 0, 1, 'true', 'false', [], [true], {}, { on: true }]) {
+    assert.throws(
+      () => parseStart(textOf({ bell: value, harnesses: ['claude'] })),
+      { message: `agentrite.json: bell is ${JSON.stringify(value)}. ${BELL_MUST}` },
+      JSON.stringify(value),
+    );
+  }
+});
+
+test('parseStart judges bell before harnesses', () => {
+  assert.throws(() => parseStart(textOf({ bell: 'on', harnesses: [] })), {
+    message: `agentrite.json: bell is "on". ${BELL_MUST}`,
+  });
+});
+
+test('parseStart refuses harnesses missing, empty, not a list or naming an unknown harness', () => {
+  assert.throws(() => parseStart('{"bell": true}'), {
+    message: `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`,
+  });
+  for (const value of [[], 'claude', null, 5, { claude: true }, ['claude', 5], ['codex'], ['claude', 'toString']]) {
+    assert.throws(
+      () => parseStart(startText(true, value)),
+      { message: `agentrite.json: harnesses is ${JSON.stringify(value)}. ${HARNESSES_MUST}` },
+      JSON.stringify(value),
+    );
+  }
+});
+
+test('parseStart refuses a text that is not JSON with the parser own error, and that bell cannot be read', () => {
+  for (const text of ['', 'not json', '{ "bell": true, }']) {
+    let parserMessage;
+    try {
+      JSON.parse(text);
+    } catch (error) {
+      parserMessage = error.message;
+    }
+    assert.throws(() => parseStart(text), {
+      message: `agentrite.json is not JSON: ${parserMessage}, so bell cannot be read. ${BELL_MUST}`,
+    });
+  }
+});
+
+test('parseStart refuses JSON that is no object, naming what it holds and that bell is missing', () => {
+  for (const text of ['[]', 'null', 'true', '5', '"bell"']) {
+    assert.throws(() => parseStart(text), {
+      message:
+        `agentrite.json holds ${JSON.stringify(JSON.parse(text))}, which is no JSON object, so bell is missing. ` +
+        BELL_MUST,
+    });
+  }
+});
+
+test('readStart reads the agentrite.json at the root, with no file the paths name', (testContext) => {
+  const base = directory(testContext);
+  writeFileSync(join(base, 'agentrite.json'), settingsText({ ...VALID, bell: false }));
+  assert.deepEqual(readStart(base), { bell: false, harnesses: ['opencode'] });
+});
+
+test(
+  'readStart in a directory with no file says that bell is missing and names the command that writes one',
+  (testContext) => {
+    assert.throws(() => readStart(directory(testContext)), { message: NO_FILE_BELL });
+  },
+);
+
+test(
+  'readStart of a file that cannot be read names the file, the error and that bell cannot be read',
+  (testContext) => {
+    const base = directory(testContext);
+    mkdirSync(join(base, 'agentrite.json'));
+    assert.throws(
+      () => readStart(base),
+      (error) => {
+        assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
+        assert.match(error.message, /EISDIR/);
+        assert.ok(error.message.endsWith(`, so bell cannot be read. ${BELL_MUST}`), error.message);
+        return true;
+      },
+    );
+  },
+);
 
 // R6, R7, R11: bell alone, as a start of the sandbox reads it.
 
