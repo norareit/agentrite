@@ -11,9 +11,13 @@ specific to them.
 By default the kit holds:
 
 * the process, in `process.md`: how a change is specified, planned, built, reviewed, recorded and frozen
-* the standards, in `standards.md`: the rules on how text, documentation, commits, code and tests are written
 * four opinionated roles, the specifier, the planner, the implementer and the reviewer, each a file under `roles/`
+* the memory, the units under `changes/`: each change's spec, plan, decisions and record, committed, so that every
+  machine and every harness reads the same context
+* the orchestrator, `agentrite orchestrate`: it takes an approved unit through its roles, each step in a harness and
+  on a model of its own
 * the sandbox, a container that an agent runs in
+* the standards, in `standards.md`: the rules on how text, documentation, commits, code and tests are written
 
 The process is the same in every project. A project can replace the standards, and each of the roles, with a file of its
 own, named in its `agentrite.json`. See [Replacing a role or the standards](SETUP.md#replacing-a-role-or-the-standards).
