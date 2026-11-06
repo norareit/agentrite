@@ -60,6 +60,12 @@ which units are open, or in what status a unit is, runs it rather than reading t
 entry to `## Log`, and commits `record.md` alone on the default branch. An agent runs it only when the human has
 approved that unit and asked for the approval to be recorded, and never on its own judgement.
 
+`npx agentrite cancel <unit>` makes the cancellation of a unit on the branch checked out: it sets its `status` to
+`cancelled`, adds the human's entry to `## Log` with the reason and, with `--by`, the unit that did the work or made it
+moot, and commits `record.md` alone. An agent runs it only when the human has decided to cancel that unit, on that
+branch, and asked for the cancellation to be recorded, with the reason the human gave written in the agent's own
+words, and never on its own judgement.
+
 Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`. Start from the kit's
 `templates/changes/`.
 
@@ -148,19 +154,21 @@ the sandbox. The reviews of the runs are kept apart by the name of their file.
 The spec is written when the human wants the unit described, and any number of units may be `draft` or `approved`
 at one time. The plan is written when the unit is next to be built and not before.
 
-What is written before the approval, and the approval itself, are committed on the default branch: the unit's
-`spec.md` and `record.md`. Such a commit holds nothing but that unit's own documents. Everything after the approval is
-done on the unit's branch and never on the default branch: the plan, the implementation, the record's further
-entries, and a correction of the spec. The one exception is the cancellation. A unit with no branch is cancelled on
-the default branch, as its approval was. A unit that has a branch, which an `in-progress` unit always has and an
-`approved` one has once its planning began, is cancelled on the default branch too, and its branch is not merged.
-That commit holds the unit's documents as they stand at the head of its branch, `spec.md`, `plan.md` when there is
-one, and `record.md` with the entry that sets `cancelled`, and nothing of its implementation. The branch is cut from
-the head of the default branch when work on the unit starts after its approval: the planning of a feature or a bug,
-and the work itself of a task, and not earlier. Its name is the prefix of the unit's commits and its directory name,
-as `feature-0012-export-to-csv`, with `bugfix` for a bug and `task` for a task. A unit run of the sandbox cuts it,
-and a session on the host cuts it itself. Commit the change documents first, then the implementation. Work committed
-straight to the default branch skips the freeze check entirely, and that holds for the commits of the spec too.
+What is written before the approval, and the approval itself, are committed on the default branch: the unit's `spec.md`
+and `record.md`. Such a commit holds nothing but that unit's own documents. Everything after the approval is done on the
+unit's branch and never on the default branch: the plan, the implementation, the record's further entries, and a
+correction of the spec. The one exception is the cancellation: a unit is cancelled on the branch the developer is on,
+which is the unit's branch, the default branch, or both, and the cancellation may be committed on the default branch at
+any status a unit is cancelled from. Cancelling on the unit's branch and merging it keeps all that the branch holds.
+Cancelling on the unit's branch and on the default branch keeps the branch unmerged, with the documents it holds.
+Cancelling on the default branch and deleting the branch is for a branch of no further use, and what the branch alone
+holds is lost with it: the plan, the entries the record gained on it and the corrections of the spec. The developer
+merges or deletes the unit's branch with git, and the cancellation does neither. The branch is cut from the head of the
+default branch when work on the unit starts after its approval: the planning of a feature or a bug, and the work itself
+of a task, and not earlier. Its name is the prefix of the unit's commits and its directory name, as
+`feature-0012-export-to-csv`, with `bugfix` for a bug and `task` for a task. A unit run of the sandbox cuts it, and a
+session on the host cuts it itself. Commit the change documents first, then the implementation. Work committed straight
+to the default branch skips the freeze check entirely, and that holds for the commits of the spec too.
 
 ### Features
 

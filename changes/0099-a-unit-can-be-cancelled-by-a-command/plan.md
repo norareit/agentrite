@@ -212,23 +212,23 @@ The command, tests first:
 
 The documents:
 
-- [ ] In "Changes" of `process.md`, replace the sentences from `A unit with no branch is cancelled on the default
+- [x] In "Changes" of `process.md`, replace the sentences from `A unit with no branch is cancelled on the default
   branch` to `and nothing of its implementation.` with sentences that say: a unit is cancelled on the branch the
   developer is on, the unit's branch, the default branch, or both; a cancellation may be committed on the default
   branch at any status it is made from; cancelling on the unit's branch and merging it keeps what the branch holds;
   cancelling on the default branch as well keeps the branch unmerged; cancelling on the default branch and deleting
   the branch is for a branch of no further use; and the developer merges or deletes the unit's branch with git. Keep
   `The one exception is the cancellation.` and every other sentence of the paragraph as it is (R14, R15)
-- [ ] In "Changes" of `process.md`, after the paragraph on `npx agentrite approve <unit>`, add a paragraph that says
+- [x] In "Changes" of `process.md`, after the paragraph on `npx agentrite approve <unit>`, add a paragraph that says
   `npx agentrite cancel <unit>` makes the cancellation of a unit on the branch checked out: it sets its `status` to
   `cancelled`, adds the human's entry with the reason and, with `--by`, the unit that did the work or made it moot,
   and commits `record.md` alone; and that an agent runs it only when the human has decided to cancel that unit, on
   that branch, and asked for the cancellation to be recorded, with the reason the human gave written in the agent's
   own words, and never on its own judgement (R21)
-- [ ] Search `process.md`, `roles/`, `README.md`, `SETUP.md` and `COMMANDS.md` for `cancel`, `head of its branch` and
+- [x] Search `process.md`, `roles/`, `README.md`, `SETUP.md` and `COMMANDS.md` for `cancel`, `head of its branch` and
   `not merged`, and confirm that no statement of the old rule is left, and that the statement of `./sandbox.sh` in
   `COMMANDS.md` on a unit cancelled on the default branch is unchanged (R16)
-- [ ] In `COMMANDS.md`, add the row `npx agentrite cancel <unit> --reason <text> [--by <unit>]`, `Cancels a unit and
+- [x] In `COMMANDS.md`, add the row `npx agentrite cancel <unit> --reason <text> [--by <unit>]`, `Cancels a unit and
   commits its record.md`, after the row of `approve`, keeping the table's column widths; and after the section
   `agentrite approve`, add the section `agentrite cancel`, in the shape of that of `approve`: the form; that it works
   from the project root on the branch checked out, whichever it is, and reads, merges, deletes, moves, cuts and
@@ -236,11 +236,11 @@ The documents:
   message by kind; that a failed commit leaves `record.md` and the index as they were; the line printed, with an
   example; each refusal of R12; the wrong arguments of R13; a table of `<unit>`, `--reason <text>` and `--by <unit>`;
   and the exit statuses by "Exit statuses" (R17)
-- [ ] In `README.md`, make the cell "Who sets it" of the row of `cancelled` in the table of the statuses read `The
+- [x] In `README.md`, make the cell "Who sets it" of the row of `cancelled` in the table of the statuses read `The
   human, with `npx agentrite cancel``, keeping the table's column widths (R19)
-- [ ] In `SETUP.md`, add `by `agentrite cancel`` after `by `agentrite approve`` in the list of the commands that read
+- [x] In `SETUP.md`, add `by `agentrite cancel`` after `by `agentrite approve`` in the list of the commands that read
   `agentrite.json`, rewrapped at 120 characters, and leave the table of the settings as it is (R20)
-- [ ] Check every changed file for lines over 120 characters, a Markdown table row aside, and run `npm test` and `npm
+- [x] Check every changed file for lines over 120 characters, a Markdown table row aside, and run `npm test` and `npm
   run check-changes`, which pass
 
 ## Verification

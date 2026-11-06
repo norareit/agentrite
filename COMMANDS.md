@@ -12,6 +12,7 @@ takes.
 | `npx agentrite roles [--json]`                                                                                                             | Lists the roles of the project                                 | [agentrite roles](#agentrite-roles)             |
 | `npx agentrite units [<number>] [--open \| --status <status>] [--kind <kind>] [--limit <count>] [--json]`                                  | Lists the units of `changes/`, with their status               | [agentrite units](#agentrite-units)             |
 | `npx agentrite approve <unit>`                                                                                                             | Approves a unit and commits its `record.md`                    | [agentrite approve](#agentrite-approve)         |
+| `npx agentrite cancel <unit> --reason <text> [--by <unit>]`                                                                                | Cancels a unit and commits its `record.md`                     | [agentrite cancel](#agentrite-cancel)           |
 | `npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions] [-- <harness arguments...>]` | Starts a harness as one of the roles, for one unit             | [agentrite run](#agentrite-run)                 |
 | `npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]`                      | Takes an approved unit through its roles                       | [agentrite orchestrate](#agentrite-orchestrate) |
 | `npx agentrite runs [<number>] [--limit <count>] [--json]`                                                                                 | Lists the runs of the orchestrator and their state             | [agentrite runs](#agentrite-runs)               |
@@ -376,6 +377,84 @@ With no `<unit>`, a second one, or an option, it prints what is wrong, then its 
 | Argument | What it is                                                                                          |
 |----------|-----------------------------------------------------------------------------------------------------|
 | `<unit>` | A directory of `changes/`, by its name, with or without `changes/` before it, or by its four digits |
+
+It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
+says.
+
+## agentrite cancel
+
+```sh
+npx agentrite cancel <unit> --reason <text> [--by <unit>]
+```
+
+Cancels a unit, from the project root, on the branch checked out, whichever it is. It reads the unit's `record.md` in
+the working tree, writes there, and commits on that branch. It reads, merges, deletes, moves, cuts and checks out no
+other branch, and it does not compare the branch checked out with `defaultBranch`. Where the cancellation is recorded,
+and what is done with the unit's branch, are the developer's to choose with git: cancel on the unit's branch and merge
+it to keep what it holds, cancel on the default branch as well to keep it unmerged, or cancel on the default branch
+and delete the branch when it is of no further use.
+
+It writes in the unit's `record.md` and nowhere else. The `status` field of the front matter becomes `cancelled`, and
+nothing else of the front matter changes. An entry is added to `## Log`, directly after its last entry, with the
+instant the command runs, in UTC and the reason:
+
+```text
+- 2026-11-06T14:04:56Z [human] cancelled the unit: Not needed any more. The status is `cancelled`
+```
+
+With `--by`, the entry names the directory of the unit that did the work or made the cancelled one moot:
+
+```text
+- 2026-11-06T14:04:56Z [human] cancelled the unit: Done elsewhere. The unit `0042-a-unit` did the work or made it
+  moot. The status is `cancelled`
+```
+
+The reason is the text of `--reason` with its surrounding white space and one final full stop removed, since the
+entry adds its own. The entry is wrapped at 120 characters, at spaces, with each line after the first indented by two
+spaces. A word longer than a line is not broken. The entry names the human whoever runs the command.
+
+It then commits `record.md` alone, on the branch checked out, with the message `feature-<number> Cancel the unit`,
+`bugfix-<number> Cancel the unit` or `task-<number> Cancel the unit`, by the kind of the unit and the four digits of
+its directory. Whatever else the working tree or the index holds is left as it was, and is not in the commit. The
+commit is made as any `git commit` of the developer is, with their identity and the repository's hooks, the
+`commit-msg` hook of the kit among them. When the commit fails, as when a hook refuses it, `record.md` and the index
+are as they were before the command, what git printed goes to standard error, and the command exits 1.
+
+On success it prints one line, the unit's directory, the new status, the branch and the commit by its short hash and
+its message, and exits 0. It pushes nothing.
+
+```text
+changes/0098-fast-tests-by-default/ is cancelled on master, in b79f39c feature-0098 Cancel the unit
+```
+
+It prints nothing on standard output, writes nothing, commits nothing and exits 1 when:
+
+* `agentrite.json` is missing or is not valid
+* the project root is in no git repository, or no branch is checked out, as on a detached `HEAD`. The line says which,
+  and that a cancellation is committed on a branch
+* `changes/` holds no directory for the unit, or more than one for its digits
+* the unit's `record.md` is missing, or has no `status` field, no `kind` field or no `## Log` heading, or gives a kind
+  that is not `feature`, `bug` or `task`. The line names the file and what is wrong
+* the unit's status is `implemented`. The line says that an implemented unit is never cancelled, and that undoing its
+  work is a new unit that names it in `supersedes`
+* the unit's status is `cancelled`. The line says that the unit is cancelled already on the branch checked out
+* the unit's status is any other that is not `draft`, `approved` or `in-progress`. The line names the status and says
+  that a unit is cancelled from those three
+* `--by` names no directory of `changes/`, or more than one for its digits, or names the unit being cancelled. The
+  line names what `--by` was given and what is wrong
+* a file of the unit's directory differs from what the commit checked out holds: changed, staged, or not tracked. The
+  line names each file with its state, and says that the human cancels what is committed, so that the files are
+  committed or discarded first
+
+With no `<unit>`, a second one, no `--reason`, a `--reason` or a `--by` without its value or given twice, a `--reason`
+that is empty once its white space and final full stop are removed or that holds a line break, or an option it does not
+take, it prints what is wrong, then its usage, and exits 2.
+
+| Argument or option | What it is                                                                                          |
+|--------------------|-----------------------------------------------------------------------------------------------------|
+| `<unit>`           | A directory of `changes/`, by its name, with or without `changes/` before it, or by its four digits |
+| `--reason <text>`  | Required. The reason in words, one line. Also taken as `--reason=<text>`                            |
+| `--by <unit>`      | The unit that did the work or made this one moot, given as `<unit>` is. Also taken as `--by=<unit>` |
 
 It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
 says.

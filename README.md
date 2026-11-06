@@ -133,7 +133,7 @@ A unit moves through these statuses, as `process.md` gives them:
 | `approved`    | The human, with `npx agentrite approve` | The human approved the spec, or a task's record                                |
 | `in-progress` | The implementer                         | It began the work                                                              |
 | `implemented` | The implementer, or the human           | The human decided every blocking finding, and every task of the plan is ticked |
-| `cancelled`   | The human                               | From `draft`, `approved` or `in-progress`, for a unit that will not be done    |
+| `cancelled`   | The human, with `npx agentrite cancel`  | From `draft`, `approved` or `in-progress`, for a unit that will not be done    |
 
 ![The workflow: on the default branch you specify the unit with the specifier and approve it; ./sandbox.sh starts the
 sandbox on the unit's branch, where the planner creates the plan, the implementer implements the changes and a reviewer
