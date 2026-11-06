@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-06T14:12:53Z
 ---
 
@@ -18,5 +18,6 @@ timestamp: 2026-11-06T14:12:53Z
   only for a trusted project, and the project's `developer_instructions` replacing the user's; and runs of
   `codex exec` with no login, which showed `--`, an ignored stdin and both orders of `resume` accepted. Wrote
   `spec.md`. The status is `draft`
+- 2026-11-06T15:05:01Z [human] approved the spec. The status is `approved`
 
 ## Amendments
