@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-06T14:07:38Z
 ---
 
@@ -23,5 +23,6 @@ timestamp: 2026-11-06T14:07:38Z
   the wording of the entry with it, and declined items 1 to 3 of "Beyond the request" of 86eeac9. Items 1 and 2, on
   reading the unit's branch, are moot and dropped, and item 3, `--delete-branch`, is now item 1, declined. The status is
   `draft`
+- 2026-11-06T14:45:43Z [human] approved the spec. The status is `approved`
 
 ## Amendments
