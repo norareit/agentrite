@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { test } from 'node:test';
 import {
   APPROVE_FORM,
@@ -10,11 +10,9 @@ import {
   approvedLine,
   approvedRecord,
   parseApproveArgs,
-  recordFields,
-  uncommittedFiles,
-  uncommittedRefusal,
 } from '../scripts/agentrite-approve.mjs';
 import { installKit, kitSettingsText } from './installed-kit.mjs';
+import { commitRecord, environment, git, installHook, write } from './record-command.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const INSTANT = '2026-10-23T11:23:18Z';
@@ -51,25 +49,6 @@ const ENTRY = `- ${INSTANT} [human] approved the spec. The status is \`approved\
 function record({ log, after = [], lineEnd = '\n' }) {
   return [...RECORD, '', '# 0082 A title', '', '## Log', '', ...log, ...(after.length > 0 ? ['', ...after] : []), '']
     .join(lineEnd);
-}
-
-test('recordFields gives the status and the kind', () => {
-  assert.deepEqual(recordFields(record({ log: ['- one'] }), 'r.md'), { status: 'draft', kind: 'feature' });
-});
-
-for (const [name, text, message] of [
-  ['status', record({ log: ['- one'] }).replace('status: draft\n', ''), 'r.md is missing a status field'],
-  ['kind', record({ log: ['- one'] }).replace('kind: feature\n', ''), 'r.md is missing a kind field'],
-  ['## Log', record({ log: [] }).replace('## Log', '## Journal'), 'r.md is missing a ## Log heading'],
-  [
-    'a known kind',
-    record({ log: ['- one'] }).replace('kind: feature', 'kind: epic'),
-    'r.md gives the kind epic, and a unit is a feature, a bug or a task',
-  ],
-]) {
-  test(`recordFields refuses a record without ${name}`, () => {
-    assert.throws(() => recordFields(text, 'r.md'), { message });
-  });
 }
 
 test('approvalEntry and approvalMessage give the document and the prefix of each kind', () => {
@@ -121,29 +100,6 @@ test('approvedRecord ends the entry as the lines of the record end', () => {
   assert.equal(approved.replaceAll('\r\n', '').includes('\n'), false);
 });
 
-test('uncommittedFiles reads each state, with and without a prefix', () => {
-  const output = ['?? c/n.md', ' M c/s.md', 'A  c/a.md', 'MM c/b.md'].join('\0') + '\0';
-  const expected = [
-    { path: 'c/n.md', state: 'not tracked' },
-    { path: 'c/s.md', state: 'changed' },
-    { path: 'c/a.md', state: 'staged' },
-    { path: 'c/b.md', state: 'staged and changed' },
-  ];
-  assert.deepEqual(uncommittedFiles(output, ''), expected);
-  assert.deepEqual(uncommittedFiles(output.replaceAll('c/', 'sub/c/'), 'sub/'), expected);
-  assert.deepEqual(uncommittedFiles('', ''), []);
-});
-
-test('uncommittedRefusal names each file and what to do', () => {
-  assert.equal(
-    uncommittedRefusal('0010-x', [{ path: 'changes/0010-x/spec.md', state: 'changed' }]),
-    'changes/0010-x/ holds files that differ from the commit checked out:\n' +
-      '- changes/0010-x/spec.md: changed\n' +
-      'The human approves what is committed, so commit these files, or discard their changes, and run the command ' +
-      'again',
-  );
-});
-
 test('approvedLine names the directory, the commit and its message', () => {
   assert.equal(
     approvedLine('0010-x', 'abc1234', 'feature-0010 Approve the spec'),
@@ -160,21 +116,6 @@ const TASK = '0011-a-task';
 function recordText(kind, status = 'draft') {
   const front = `---\nkind: ${kind}\nstatus: ${status}\ntimestamp: 2026-10-23T10:00:00Z\n---\n`;
   return `${front}\n# A unit\n\n## Log\n\n- 2026-10-23T10:00:00Z [human] began\n`;
-}
-
-function write(project, path, text) {
-  mkdirSync(dirname(join(project, path)), { recursive: true });
-  writeFileSync(join(project, path), text);
-}
-
-function environment(base) {
-  return { HOME: join(base, 'home'), GIT_CONFIG_NOSYSTEM: '1', PATH: process.env.PATH };
-}
-
-function git(base, project, ...args) {
-  const result = spawnSync('git', args, { cwd: project, encoding: 'utf-8', env: environment(base) });
-  assert.equal(result.status, 0, result.stderr);
-  return result.stdout;
 }
 
 // A project made by `git init`, with a draft feature and a draft task committed on `master`.
@@ -212,12 +153,6 @@ function stateOf({ base, project }, directory = FEATURE) {
     staged: git(base, project, 'diff', '--cached'),
     record: readFileSync(join(project, 'changes', directory, 'record.md'), 'utf-8'),
   };
-}
-
-function installHook({ project }, script) {
-  const hook = join(project, '.git', 'hooks', 'commit-msg');
-  writeFileSync(hook, `#!/bin/sh\n${script}\n`);
-  chmodSync(hook, 0o755);
 }
 
 const INSTANT_FORM = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z/;
@@ -398,12 +333,6 @@ const REFUSALS = [
     listed(`changes/${FEATURE}/notes.md`, 'not tracked'),
   ],
 ];
-
-function commitRecord(given, directory, change) {
-  const path = join(given.project, 'changes', directory, 'record.md');
-  writeFileSync(path, change(readFileSync(path, 'utf-8')));
-  git(given.base, given.project, 'commit', '--quiet', '-am', 'Change the record');
-}
 
 for (const [name, arrange, args, message] of REFUSALS) {
   test(`approve refuses ${name}, writes nothing and exits 1`, (context) => {

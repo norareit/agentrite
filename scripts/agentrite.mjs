@@ -30,10 +30,8 @@ import {
   approvedLine,
   approvedRecord,
   parseApproveArgs,
-  recordFields,
-  uncommittedFiles,
-  uncommittedRefusal,
 } from './agentrite-approve.mjs';
+import { recordFields, uncommittedFiles, uncommittedRefusal } from './agentrite-record.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
 import { HARNESS_NAMES, HARNESSES, harnessNamed, plannedFiles, wrapperDirectories } from './agentrite-harness.mjs';
 import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
@@ -1300,8 +1298,9 @@ function approvableRecord(root, directory) {
  * @param {string} root
  * @param {string} directory
  * @param {string} prefix
+ * @param {'approves' | 'cancels'} act
  */
-function checkCommitted(root, directory, prefix) {
+function checkCommitted(root, directory, prefix, act) {
   const status = spawnSync(
     'git',
     ['status', '--porcelain=v1', '-z', '--untracked-files=all', '--no-renames', '--', `changes/${directory}/`],
@@ -1310,7 +1309,34 @@ function checkCommitted(root, directory, prefix) {
   if (status.error !== undefined) throw new Error(`git could not be run: ${status.error.message}`);
   if (status.status !== 0) throw new Error(`git could not be run: ${status.stderr.trim()}`);
   const files = uncommittedFiles(status.stdout, prefix);
-  if (files.length > 0) throw new Error(uncommittedRefusal(directory, files));
+  if (files.length > 0) throw new Error(uncommittedRefusal(directory, files, act));
+}
+
+/**
+ * Writes `changed` to the record and commits the record alone, and returns the short hash of the commit. When the
+ * commit fails, the record is put back as `original`, what git printed is written to standard error, and it throws.
+ *
+ * @param {string} root
+ * @param {string} recordFile
+ * @param {string} original
+ * @param {string} changed
+ * @param {string} message
+ * @returns {string}
+ */
+function commitRecordAlone(root, recordFile, original, changed, message) {
+  writeFileSync(resolve(root, recordFile), changed);
+  // The path after `--` makes git commit that file alone, and leave the index of every other file as it was.
+  const commit = spawnSync('git', ['commit', '--quiet', '--message', message, '--', recordFile], {
+    cwd: root,
+    encoding: 'utf-8',
+  });
+  if (commit.error !== undefined || commit.status !== 0) {
+    writeFileSync(resolve(root, recordFile), original);
+    process.stderr.write(commit.error === undefined ? `${commit.stdout}${commit.stderr}` : `${commit.error.message}\n`);
+    throw new Error(`the commit failed, and ${recordFile} is as it was`);
+  }
+  const hash = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf-8' });
+  return hash.stdout.trim();
 }
 
 /**
@@ -1326,23 +1352,18 @@ function approve(root, { unit }) {
   const prefix = approvalPrefix(root, defaultBranch);
   const directory = resolveUnit(unit, changeDirectories(root));
   const { text, kind } = approvableRecord(root, directory);
-  checkCommitted(root, directory, prefix);
+  checkCommitted(root, directory, prefix, 'approves');
 
   const recordFile = `changes/${directory}/record.md`;
   const message = approvalMessage(kind, directory);
-  writeFileSync(resolve(root, recordFile), approvedRecord(text, kind, instantOf(Date.now())));
-  // The path after `--` makes git commit that file alone, and leave the index of every other file as it was.
-  const commit = spawnSync('git', ['commit', '--quiet', '--message', message, '--', recordFile], {
-    cwd: root,
-    encoding: 'utf-8',
-  });
-  if (commit.error !== undefined || commit.status !== 0) {
-    writeFileSync(resolve(root, recordFile), text);
-    process.stderr.write(commit.error === undefined ? `${commit.stdout}${commit.stderr}` : `${commit.error.message}\n`);
-    throw new Error(`the commit failed, and ${recordFile} is as it was`);
-  }
-  const hash = spawnSync('git', ['rev-parse', '--short', 'HEAD'], { cwd: root, encoding: 'utf-8' });
-  console.log(approvedLine(directory, hash.stdout.trim(), message));
+  const hash = commitRecordAlone(
+    root,
+    recordFile,
+    text,
+    approvedRecord(text, kind, instantOf(Date.now())),
+    message,
+  );
+  console.log(approvedLine(directory, hash, message));
   return 0;
 }
 

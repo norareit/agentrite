@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-06T14:07:38Z
 ---
 
@@ -30,5 +30,7 @@ timestamp: 2026-11-06T14:07:38Z
   commit that changes no behavior, as the standards extract a decision the second time it appears. Read the
   requirement that `--reason` holding a line break is a wrong argument as of the value as it was given. The status
   is `approved`
+- 2026-11-06T15:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
+  branch at `aa4530d`. The status is `in-progress`
 
 ## Amendments

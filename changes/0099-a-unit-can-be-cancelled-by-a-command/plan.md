@@ -133,18 +133,18 @@ repeated before the commit of the documents.
 
 The refactoring, which changes no behavior:
 
-- [ ] Create `scripts/agentrite-record.mjs` with `PREFIXES`, `commitPrefix`, `recordFields`, `loggedRecord`,
+- [x] Create `scripts/agentrite-record.mjs` with `PREFIXES`, `commitPrefix`, `recordFields`, `loggedRecord`,
   `endedAt`, `uncommittedFiles`, `stateOf` and `uncommittedRefusal(directory, files, act)` as the approach says, and
   remove them from `scripts/agentrite-approve.mjs`, where `approvedRecord` calls `loggedRecord` and `approvalMessage`
   calls `commitPrefix`. Add the file to `files` in `package.json` and to the list of
   `tests/package-documents.test.mjs` (R5, R8, R12)
-- [ ] In `scripts/agentrite.mjs`, import the moved functions from `scripts/agentrite-record.mjs`, give
+- [x] In `scripts/agentrite.mjs`, import the moved functions from `scripts/agentrite-record.mjs`, give
   `checkCommitted` its `act`, and extract `commitRecordAlone` from `approve` as the approach says (R8, R9, R10)
-- [ ] Move the unit tests of the moved functions to `tests/agentrite-record.test.mjs`, add a case that
+- [x] Move the unit tests of the moved functions to `tests/agentrite-record.test.mjs`, add a case that
   `uncommittedRefusal` with `cancels` ends in `The human cancels what is committed, so commit these files, or discard
   their changes, and run the command again`, and add a case that `loggedRecord` joins an entry of two lines by
   `\r\n` in a record whose lines end in `\r\n` and puts both lines after the last entry (R6, R22)
-- [ ] Move `environment`, `git`, `write`, `installHook` and `commitRecord` of `tests/agentrite-approve.test.mjs` to
+- [x] Move `environment`, `git`, `write`, `installHook` and `commitRecord` of `tests/agentrite-approve.test.mjs` to
   `tests/record-command.mjs` and import them there. Run `npm test`, which passes with no test of `approve` changed
   in what it asserts (R22, R23)
 
