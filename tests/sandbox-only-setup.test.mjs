@@ -8,7 +8,14 @@ import { test } from 'node:test';
 import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { copyKitInstructions } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
-import { fakeHost, installKitPackage, logDirectory, logMounts } from './wrapper-fixture.mjs';
+import {
+  fakeHost,
+  hostVersions,
+  imageLabelsText,
+  installKitPackage,
+  logDirectory,
+  logMounts,
+} from './wrapper-fixture.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const kitContainer = join(import.meta.dirname, '..', 'container');
@@ -24,7 +31,7 @@ function setUp(testContext) {
   const root = join(base, 'project');
   const installed = join(root, 'node_modules', 'agentrite');
   mkdirSync(join(installed, 'container'), { recursive: true });
-  for (const file of ['sandbox.sh', 'unit-clone.sh']) {
+  for (const file of ['sandbox.sh', 'unit-clone.sh', 'compose.yml']) {
     copyFileSync(join(kitContainer, file), join(installed, 'container', file));
   }
   chmodSync(join(installed, 'container', 'sandbox.sh'), 0o755);
@@ -37,6 +44,8 @@ function setUp(testContext) {
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
   const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'SANDBOX_GIT_HOOKS_PATH']);
+  // The image holds Claude Code alone, the harness the test sets the project up with.
+  writeFileSync(host.imageLabels, imageLabelsText({ claude: hostVersions.claude }));
   const gitEnvironment = withoutGitEnvironmentConfiguration({ HOME: home, PATH: process.env.PATH });
   const git = (...args) => execFileSync('git', args, { cwd: root, encoding: 'utf-8', env: gitEnvironment }).trim();
   git('init', '--quiet', '--initial-branch', 'master');
@@ -83,7 +92,7 @@ test('init --sandbox-only sets up a project whose shim runs a new branch on a cl
   // The file init wrote rings the bell, whose mounts and environment stand among those of the run.
   assert.ok(run.startsWith(`${compose} run --rm --name my-app-sandbox-new-work `), run);
   assert.ok(run.includes(` --volume ${clone}:/work `), run);
-  assert.ok(run.endsWith(` ${logMounts(logs)}sandbox echo hi`), run);
+  assert.ok(run.endsWith(` ${logMounts(logs, ['claude'])}sandbox echo hi`), run);
   assert.doesNotMatch(run, /\.reviews|\.orchestrator/);
   assert.equal(existsSync(join(host.root, '.reviews')), false);
   assert.equal(existsSync(join(host.root, '.orchestrator')), false);

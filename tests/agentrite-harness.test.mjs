@@ -547,3 +547,61 @@ test('OpenCode is given nothing of the host', () => {
   });
   assert.deepEqual(opencode.sandbox.host(HOME, read), { environment: [], mounts: [], files: [] });
 });
+
+// 0097 R3: the files of a harness's own in the sandbox
+
+const KIT_HARNESSES = join(import.meta.dirname, '..', 'container', 'harnesses');
+
+/**
+ * The faults of the directory `container/harnesses/`, whose directories `directories` maps to the files each holds,
+ * against the `kit` mounts of the harnesses: a mount of a file that is not there, a file no mount of its harness
+ * names, and a directory of a name that is no harness of the list.
+ *
+ * @param {Map<string, string[]>} directories
+ * @param {import('../scripts/agentrite-harness.mjs').Harness[]} harnesses
+ * @returns {string[]}
+ */
+function kitFileFaults(directories, harnesses) {
+  const faults = [];
+  for (const name of directories.keys()) {
+    if (!harnesses.some((harness) => harness.name === name)) {
+      faults.push(`container/harnesses/${name}/ is of no harness of HARNESSES`);
+    }
+  }
+  for (const harness of harnesses) {
+    const { sandbox } = harness;
+    const kitMounts = [...sandbox.updates.mounts, ...sandbox.bell.mounts].filter((mount) => mount.from === 'kit');
+    const host = sandbox.host('/home/developer', () => ({ found: true, text: '{}' }));
+    kitMounts.push(...host.mounts.filter((mount) => mount.from === 'kit'));
+    const files = directories.get(harness.name) ?? [];
+    const named = kitMounts.map((mount) => mount.path);
+    for (const path of named.filter((file) => !files.includes(file))) {
+      faults.push(`${harness.name} mounts ${path}, which container/harnesses/${harness.name}/ lacks`);
+    }
+    for (const file of files.filter((entry) => !named.includes(entry))) {
+      faults.push(`container/harnesses/${harness.name}/${file} is named by no mount of ${harness.name}`);
+    }
+  }
+  return faults;
+}
+
+test('container/harnesses/ holds the files each harness mounts of its own, and nothing else', () => {
+  const directories = new Map(
+    readdirSync(KIT_HARNESSES).map((name) => [name, readdirSync(join(KIT_HARNESSES, name))]),
+  );
+  const faults = kitFileFaults(directories, HARNESSES);
+  assert.deepEqual(faults, [], faults.join('\n'));
+});
+
+test('a file no mount names, a mount of a file not there and a directory of no harness are named', () => {
+  const directories = new Map([
+    ['claude', ['managed-settings.json', 'bell-settings.json', 'extra.json']],
+    ['opencode', ['bell-plugin.js']],
+    ['codex', ['config.toml']],
+  ]);
+  assert.deepEqual(kitFileFaults(directories, HARNESSES), [
+    'container/harnesses/codex/ is of no harness of HARNESSES',
+    'container/harnesses/claude/extra.json is named by no mount of claude',
+    'opencode mounts opencode.json, which container/harnesses/opencode/ lacks',
+  ]);
+});

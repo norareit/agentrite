@@ -2,22 +2,28 @@
 #
 # Wrapper around `docker compose run`. Compose cannot take an ad-hoc mount per
 # invocation: the wrapper translates the working directory and any --mount flags into
-# `docker compose run --volume` options, adds the developer's Claude Code status line
-# when the host has one, the two directories of the host that hold the harnesses' logs,
-# and the harnesses' bell when the project's agentrite.json holds "bell": true, which it
-# reads at each start but --connect, gives Claude Code the cleanupPeriodDays of the
-# host's ~/.claude/settings.json when it holds one, which it also reads at each start but
-# --connect, gives the command the host's TERM and COLORTERM, and passes the rest
-# through.
+# `docker compose run --volume` options, and passes the rest through. It gives the
+# command the host's TERM and COLORTERM.
+#
+# The harnesses are those the project's agentrite.json names under harnesses, which it
+# reads at each start but --connect, with bell. It names none itself: what it knows of
+# each is in the kit's module of that harness, of scripts/harnesses/, which the kit's
+# scripts/agentrite-sandbox.mjs reads and prints for it. From that it builds the image
+# with the project's harnesses, admits the hosts they need, mounts the directories of
+# their logs, gives each run what turns off each harness's own updates, the harnesses'
+# bell when agentrite.json holds "bell": true, and what a harness's module takes from
+# the host, such as Claude Code's status line and the cleanupPeriodDays of the host's
+# ~/.claude/settings.json.
 # It sets nothing that confines the container; every such setting is in
 # container/compose.yml and the project's sandbox/compose.project.yml, and the firewall
 # is in container/entrypoint.sh.
 #
-# The logs are Claude Code's sessions and OpenCode's data directory. In every run they
-# are in the project's log directory on the host, <data>/agentrite/<name>, where <data>
-# is $XDG_DATA_HOME or ~/.local/share and <name> is the name of the project root's
-# directory, and not in the home volume. The agent writes them, so they are one more
-# place of the host that it writes besides /work.
+# The logs are the directories each harness's module names, such as Claude Code's
+# sessions and OpenCode's data directory. In every run they are in the project's log
+# directory on the host, <data>/agentrite/<name>, where <data> is $XDG_DATA_HOME or
+# ~/.local/share and <name> is the name of the project root's directory, and not in the
+# home volume. The agent writes them, so they are one more place of the host that it
+# writes besides /work.
 #
 # What is mounted at /work has no default, and there are two ways to run, of which the
 # first has a form of its own in a sandbox-only project, a project that uses the sandbox
@@ -57,12 +63,13 @@
 # wrapper names the agent, and gives the command the environment and the working
 # directory that the first command has, with the TERM and COLORTERM of its own shell.
 #
-# It also decides which versions of Claude Code and OpenCode the image holds. Each is
-# the first of: the version the project's compose file gives, and the version the host's
-# own command reports. When the image was built with another version than that, it
-# builds the image again before it runs, and says why. The kit names no version of its
-# own: a harness with neither keeps the version the image holds, and gets the latest
-# published one, which the wrapper asks npm for and names, whenever the image is built.
+# It also decides which version of each harness the image holds. Each is the first of:
+# the version the project's compose file gives under the harness's build argument, and
+# the version the host's own command reports. When the image was built with other
+# harnesses than the project's, or with another version than that, it builds the image
+# again before it runs, and says why. The kit names no version of its own: a harness
+# with neither keeps the version the image holds, and gets the latest published one,
+# which the wrapper asks npm for and names, whenever the image is built.
 # It builds the image again, too, when the image records a version of the kit other
 # than the installed kit's, or none, and says so: compose.yml, which is read from the
 # installed kit at every start, names files that the image holds.
@@ -404,28 +411,72 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   exit 2
 fi
 
-# Whether the harnesses ring the terminal's bell, as the project's agentrite.json says,
-# read at each start by the kit's reader of that file, which judges bell alone and
-# prints its own message for a file at fault. Read before the host's harnesses, Docker
-# or npm are asked anything and before a branch is cut, so that a refused start has done
-# nothing. --connect starts nothing and reads nothing: the command it connects has the
-# bell of the run it joins, whose mounts and environment docker exec inherits.
+# The project's harnesses, whether they ring the terminal's bell, and what the sandbox
+# gives them, as the kit's scripts/agentrite-sandbox.mjs prints them: it reads harnesses
+# and bell of the project's agentrite.json, judging those two alone and printing its own
+# message for a file at fault, and the kit's module of each harness the project names,
+# in the kit's order of them, with what that module takes from the host's home. One
+# line for each thing, its fields separated by a tab:
+#
+#   bell       true or false
+#   harness    the name, the title, the command, the npm package and the build argument
+#              of the version of one harness
+#   directory  a directory of a harness's logs, relative to the home
+#   allow      a host the egress allowlist admits for a harness, and why
+#   env        an entry NAME=value of the command's environment
+#   mount      kit or host, the path of the file, relative to this directory for kit, and
+#              where it is mounted read-only in the container
+#   file       the name, the content and the place in the container of a file that is
+#              written into the project's log directory and mounted read-only
+#
+# Read before the host's harnesses, Docker or npm are asked anything and before a branch
+# is cut, so that a refused start has done nothing. The files are written only with the
+# log directory below, so that a refused or failed start writes nothing. --connect starts
+# nothing and reads nothing: the command it connects has the harnesses, the bell and the
+# environment of the run it joins, whose mounts and environment docker exec inherits.
 bell=false
+harness_names=()
+harness_titles=()
+harness_commands=()
+harness_packages=()
+harness_arguments=()
+log_directories=()
+allowed_hosts=()
+allowed_reasons=()
+harness_environment=()
+file_names=()
+file_contents=()
+file_targets=()
 if [ "$connect" -eq 0 ]; then
-  bell="$(node "$here/../scripts/agentrite-settings.mjs" "$root" bell)" || exit 1
-fi
-
-# How long Claude Code in the sandbox keeps its sessions: the cleanupPeriodDays of the
-# host's ~/.claude/settings.json, and of no other file, read by the kit's reader of that
-# file, which prints the number alone, or nothing for a file without it, and its own
-# message for a value Claude Code would refuse. Nothing else of the file crosses, since it
-# can hold secrets. Read here, with bell and for the same reason, so that a refused start
-# has done nothing, and written only with the log directory below, so that a refused or
-# failed start writes nothing. --connect reads nothing: the command it connects has the
-# number of the run it joins.
-cleanup_period=""
-if [ "$connect" -eq 0 ] && [ -n "${HOME:-}" ]; then
-  cleanup_period="$(node "$here/../scripts/agentrite-cleanup-period.mjs" "$HOME")" || exit 1
+  start_lines="$(node "$here/../scripts/agentrite-sandbox.mjs" start "$root" "${HOME:-}")" || exit 1
+  while IFS=$'\t' read -r kind first second third fourth fifth; do
+    case "$kind" in
+      bell) bell="$first" ;;
+      harness)
+        harness_names+=("$first")
+        harness_titles+=("$second")
+        harness_commands+=("$third")
+        harness_packages+=("$fourth")
+        harness_arguments+=("$fifth")
+        ;;
+      directory) log_directories+=("$first") ;;
+      allow)
+        allowed_hosts+=("$first")
+        allowed_reasons+=("$second")
+        ;;
+      env) harness_environment+=(--env "$first") ;;
+      mount)
+        mount_source="$second"
+        [ "$first" != kit ] || mount_source="$here/$second"
+        mounts+=(--volume "$mount_source:$third:ro")
+        ;;
+      file)
+        file_names+=("$first")
+        file_contents+=("$second")
+        file_targets+=("$third")
+        ;;
+    esac
+  done <<< "$start_lines"
 fi
 
 # The unit's branch, found with git alone, or cut from the default branch for a unit
@@ -489,36 +540,6 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ]; then
   shift
 fi
 
-# The developer's own Claude Code status line, read-only: the script from the host, and
-# the kit's managed settings file, whose one setting runs it. Both or neither, and only
-# after looking, because Compose cannot make a mount conditional. Docker creates a
-# root-owned directory at a source that is not there, which here would be inside the
-# developer's ~/.claude, and a managed statusLine with no script to run would blank a
-# status line set inside the sandbox.
-statusline="${HOME:-}/.claude/statusline-command.sh"
-if [ -f "$statusline" ]; then
-  mounts+=(
-    --volume "$statusline:/etc/claude-code/statusline-command.sh:ro"
-    --volume "$here/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro"
-  )
-fi
-
-# The bell, when agentrite.json holds "bell": true: the kit's container/bell/, read-only,
-# with Claude Code's hooks in the drop-in directory of its managed settings, which holds
-# them beside the status line's managed-settings.json or without it, and OpenCode's
-# plugin named in a configuration that OpenCode merges over the others. Both add to what
-# the developer sets in the home volume, and with false nothing of them is given.
-bell_environment=()
-if [ "$bell" = true ]; then
-  mounts+=(
-    --volume "$here/bell:/etc/agentrite/bell:ro"
-    --volume "$here/bell/claude-managed-settings.json:/etc/claude-code/managed-settings.d/agentrite-bell.json:ro"
-  )
-  bell_environment+=(
-    --env 'OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}'
-  )
-fi
-
 export AGENT_UID AGENT_GID
 AGENT_UID="$(id -u)"
 AGENT_GID="$(id -g)"
@@ -536,8 +557,8 @@ if [ "$AGENT_UID" -eq 0 ] || [ "$AGENT_GID" -eq 0 ]; then
 fi
 
 # Whether a word has the shape of a version: three numbers separated by dots, optionally
-# followed by a hyphen and a pre-release part, which is accepted because OpenCode
-# publishes such versions. A version becomes part of an `npm install` that runs as root
+# followed by a hyphen and a pre-release part, which is accepted because a harness may
+# publish such versions, as OpenCode does. A version becomes part of an `npm install` that runs as root
 # in the build, so nothing of another shape is passed on.
 is_version() {
   local shape='^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'
@@ -546,8 +567,8 @@ is_version() {
   [[ "$1" =~ $shape ]]
 }
 
-# The first word of the first line of what a command printed, when that is a version.
-# Fails when it is not.
+# The first word of the first line of what npm printed, when that is a version. Fails
+# when it is not.
 version_printed() {
   local word
   # read takes the first line only.
@@ -556,22 +577,25 @@ version_printed() {
   echo "$word"
 }
 
-# What the host's command reports as its version, when the command exits 0. Prints
-# nothing for a command that is not on the PATH, and fails for one that is there and
-# gave no version.
+# What the host's command reports as its version, when the command exits 0, read from
+# what it printed by the harness's module, since harnesses print it in forms of their
+# own. Prints nothing for a command that is not on the PATH, and fails for one that is
+# there and gave no version.
 host_version() {
-  local harness_command="$1" output
+  local harness_command="$1" name="$2" output version
   type -P "$harness_command" >/dev/null || return 0
   output="$("$harness_command" --version </dev/null 2>/dev/null)" || return 1
-  version_printed "$output"
+  version="$(node "$here/../scripts/agentrite-sandbox.mjs" version "$name" <<< "$output")" || return 1
+  is_version "$version" || return 1
+  echo "$version"
 }
 
 # Prints the host's version of a harness, or nothing when the host does not have it. A
 # command that is there and gives no version counts as not installed, and is named: the
 # sandbox would otherwise be unaccountably not on the host's version.
 installed_version() {
-  local harness_command="$1" harness="$2" version
-  if ! version="$(host_version "$harness_command")"; then
+  local harness_command="$1" harness="$2" name="$3" version
+  if ! version="$(host_version "$harness_command" "$name")"; then
     echo "sandbox.sh: '$harness_command --version' printed no version," \
       "so $harness counts as not installed on the host." >&2
     return 0
@@ -633,26 +657,35 @@ unit_container_running() {
 }
 
 # Asks Compose for the configuration it merges from both files, and sets from it: the
-# image name, the Compose project's name, and the version of each harness that the
-# project's file gives, which stands above the host's. For this one question Compose is
-# handed a marker in place of the two versions: a marker that comes back says the project
-# gives none, and anything else is the project's own value, also when it equals the
-# host's. The kit's version, which Compose requires too and which nothing here reads, is
-# handed the marker as well, since --connect asks this before the version is read.
-# Captured first, so that a configuration Compose refuses stops here with Compose's own
-# error. node reads the result; the host has node for npm already.
+# image name, the Compose project's name, and, in project_versions, the version of each
+# harness of the project that the project's file gives under its build argument, which
+# stands above the host's. For this one question Compose is handed a marker in place of
+# every value it requires of the wrapper, the harnesses' and the kit's version, which
+# --connect asks before they are known. The base file gives no version of a harness, so
+# an argument that is there is the project's, also when it equals the host's, and the
+# marker is printed for one that is not. A value with a line break is printed as JSON,
+# so that no line is split and no shape of a version matches it. Captured first, so
+# that a configuration Compose refuses stops here with Compose's own error. node reads
+# the result; the host has node for npm already.
 #
 # A service named agent is looked for first, because the kit's file configures none: the
 # only one there is the project's, from before the sandbox was named. Compose merges it
 # beside the kit's service sandbox without an error, and sandbox then has none of the
 # image name, the limits, the allowlist and the harness versions the project gave, so the
 # sandbox would start without them and say nothing.
+#
+# The harnesses' build arguments and KIT_ALLOWLIST are the kit's to set, from the
+# harnesses' modules, so a project's file that sets one is refused: the merged value is
+# then not the marker, or for KIT_ALLOWLIST not the block the kit's file writes, read
+# from that file with the marker in place of the hosts of the harnesses.
 unheld="sandbox.sh/no-version-from-the-project"
 read_merged_configuration() {
-  local config merged
-  config="$(SANDBOX_CLAUDE_CODE_VERSION="$unheld" SANDBOX_OPENCODE_VERSION="$unheld" \
+  local config merged line
+  config="$(SANDBOX_HARNESS_PACKAGES="$unheld" SANDBOX_HARNESS_RECORD="$unheld" \
+    SANDBOX_HARNESS_DIRECTORIES="$unheld" SANDBOX_HARNESS_ALLOWLIST="$unheld" \
     SANDBOX_AGENTRITE_VERSION="$unheld" "${compose[@]}" config --format json)"
   merged="$(node -e '
+    const [baseFile, marker, ...versionArguments] = process.argv.slice(1);
     let json = "";
     process.stdin.on("data", (chunk) => (json += chunk));
     process.stdin.on("end", () => {
@@ -663,21 +696,52 @@ read_merged_configuration() {
       }
       const sandbox = merged.services.sandbox;
       const args = sandbox.build?.args ?? {};
-      const lines = ["merged", sandbox.image, args.CLAUDE_CODE_VERSION ?? "", args.OPENCODE_VERSION ?? "", merged.name];
-      console.log(lines.join("\n"));
+      const environment = sandbox.environment ?? {};
+      const builds = ["HARNESS_PACKAGES", "HARNESS_RECORD", "HARNESS_DIRECTORIES"];
+      const kitSet = builds.find((name) => args[name] !== marker);
+      if (kitSet !== undefined) {
+        console.log(`kit-set ${kitSet}`);
+        return;
+      }
+      const lines = require("fs").readFileSync(baseFile, "utf-8").split("\n");
+      const block = [];
+      for (const line of lines.slice(lines.indexOf("      KIT_ALLOWLIST: |") + 1)) {
+        if (line.trim() !== "" && !line.startsWith("        ")) break;
+        block.push(line.slice(8));
+      }
+      while (block.length > 0 && block.at(-1) === "") block.pop();
+      const kitAllowlist = `${block.join("\n").replace(/\$\{SANDBOX_HARNESS_ALLOWLIST:\?[^}]*\}/, marker)}\n`;
+      if (environment.KIT_ALLOWLIST !== kitAllowlist) {
+        console.log("kit-set KIT_ALLOWLIST");
+        return;
+      }
+      const versions = versionArguments.map((name) => {
+        if (args[name] === undefined) return marker;
+        const value = String(args[name] ?? "");
+        return /[\n\r]/.test(value) ? JSON.stringify(value) : value;
+      });
+      // The last line ends the versions, so that the shell keeps a version that is empty.
+      console.log(["merged", sandbox.image, merged.name, ...versions, "sandbox.sh/end-of-the-versions"].join("\n"));
     });
-  ' <<< "$config")"
+  ' "$here/compose.yml" "$unheld" ${harness_arguments[@]+"${harness_arguments[@]}"} <<< "$config")"
   if [ "$merged" = "refused" ]; then
     echo "sandbox.sh: $project_compose configures a service named agent." >&2
     echo "The service is named sandbox, so rename agent: under services: to sandbox: in that file." >&2
     exit 1
   fi
+  if [[ "$merged" == "kit-set "* ]]; then
+    echo "sandbox.sh: $project_compose sets ${merged#kit-set }, which is the kit's to set." >&2
+    echo "Remove it from that file." >&2
+    exit 1
+  fi
+  project_versions=()
   {
     read -r outcome
     read -r image
-    read -r claude_code_wanted
-    read -r opencode_wanted
     read -r project
+    while read -r line && [ "$line" != sandbox.sh/end-of-the-versions ]; do
+      project_versions+=("$line")
+    done
   } <<< "$merged"
 }
 
@@ -831,8 +895,11 @@ if ! is_version "$kit_version"; then
   exit 1
 fi
 
-claude_code_host="$(installed_version claude "Claude Code")"
-opencode_host="$(installed_version opencode "OpenCode")"
+harness_hosts=()
+for ((index = 0; index < ${#harness_names[@]}; index++)); do
+  harness_hosts+=("$(installed_version "${harness_commands[$index]}" "${harness_titles[$index]}" \
+    "${harness_names[$index]}")")
+done
 
 read_merged_configuration
 
@@ -874,41 +941,81 @@ if [ -f "$project_dockerfile" ]; then
 fi
 
 # The wanted version of each harness and where it comes from. An origin left empty says
-# that neither the project nor the host gives one.
-claude_code_origin="the project's compose file"
-if [ "$claude_code_wanted" = "$unheld" ]; then
-  claude_code_wanted="$claude_code_host"
-  claude_code_origin="${claude_code_host:+the host}"
-fi
-opencode_origin="the project's compose file"
-if [ "$opencode_wanted" = "$unheld" ]; then
-  opencode_wanted="$opencode_host"
-  opencode_origin="${opencode_host:+the host}"
-fi
+# that neither the project nor the host gives one. A version the project's file gives
+# becomes part of an `npm install` that runs as root in the build, so one of another
+# shape than a version is refused here, before anything is built.
+harness_wanted=()
+harness_origins=()
+for ((index = 0; index < ${#harness_names[@]}; index++)); do
+  wanted="${project_versions[$index]}"
+  origin="the project's compose file"
+  if [ "$wanted" = "$unheld" ]; then
+    wanted="${harness_hosts[$index]}"
+    origin="${wanted:+the host}"
+  elif ! is_version "$wanted"; then
+    echo "sandbox.sh: sandbox/compose.project.yml gives ${harness_arguments[$index]} as '$wanted'," \
+      "which is not a version." >&2
+    echo "Give an exact version, as 1.2.3." >&2
+    exit 1
+  fi
+  harness_wanted+=("$wanted")
+  harness_origins+=("$origin")
+done
 
-# Build the kit's image on --rebuild, when there is none, when a harness needs it, or
-# when the image was built from another kit than the installed one or records none,
-# which the three labels of the kit's image say, and, without a project's file, when
-# the image was built from one. A build that fails ends the wrapper: the image that
-# exists holds versions nobody asked for.
+# The names of a list of harnesses as a message writes them: claude, opencode and codex.
+names_joined() {
+  local joined="" index
+  for ((index = 1; index <= $#; index++)); do
+    if [ "$index" -eq 1 ]; then
+      joined="${!index}"
+    elif [ "$index" -eq $# ]; then
+      joined="$joined and ${!index}"
+    else
+      joined="$joined, ${!index}"
+    fi
+  done
+  echo "$joined"
+}
+
+# Build the kit's image on --rebuild, when there is none, when the harnesses it holds are
+# not the project's, when a harness needs it, or when the image was built from another
+# kit than the installed one or records none, which the two labels of the kit's image
+# say, and, without a project's file, when the image was built from one. The label of
+# the harnesses holds the words <name>@<version>, and a word whose version has another
+# shape counts as a harness not recorded. A build that fails ends the wrapper: the image
+# that exists holds versions nobody asked for.
 build="$rebuild"
-claude_code_held=""
-opencode_held=""
+harness_held=()
 if [ "$build" -eq 0 ]; then
-  labels='{{ index .Config.Labels "com.ritenoar.agentrite.claude-code-version" }}'
-  labels="$labels|"'{{ index .Config.Labels "com.ritenoar.agentrite.opencode-version" }}'
+  labels='{{ index .Config.Labels "com.ritenoar.agentrite.harnesses" }}'
   labels="$labels|"'{{ index .Config.Labels "com.ritenoar.agentrite.kit-version" }}'
   if held="$(docker image inspect --format "$labels" "$kit_image" 2>/dev/null)"; then
-    claude_code_held="${held%%|*}"
-    held="${held#*|}"
-    opencode_held="${held%%|*}"
-    kit_held="${held#*|}"
-    if needs_build "Claude Code" "$claude_code_held" "$claude_code_wanted" "$claude_code_origin"; then
+    kit_held="${held##*|}"
+    record_words=()
+    read -r -a record_words <<< "${held%|*}"
+    held_names=()
+    held_versions=()
+    for word in ${record_words[@]+"${record_words[@]}"}; do
+      [[ "$word" == *@* ]] && is_version "${word#*@}" || continue
+      held_names+=("${word%%@*}")
+      held_versions+=("${word#*@}")
+    done
+    if [ "${#held_names[@]}" -gt 0 ] && [ "${held_names[*]}" != "${harness_names[*]}" ]; then
+      echo "sandbox.sh: the image holds the harnesses $(names_joined "${held_names[@]}")," \
+        "and agentrite.json names $(names_joined "${harness_names[@]}"). Rebuilding." >&2
       build=1
     fi
-    if needs_build "OpenCode" "$opencode_held" "$opencode_wanted" "$opencode_origin"; then
-      build=1
-    fi
+    for ((index = 0; index < ${#harness_names[@]}; index++)); do
+      held_version=""
+      for ((record = 0; record < ${#held_names[@]}; record++)); do
+        [ "${held_names[$record]}" != "${harness_names[$index]}" ] || held_version="${held_versions[$record]}"
+      done
+      harness_held+=("$held_version")
+      if needs_build "${harness_titles[$index]}" "$held_version" "${harness_wanted[$index]}" \
+        "${harness_origins[$index]}"; then
+        build=1
+      fi
+    done
     if [ -z "$kit_held" ]; then
       echo "sandbox.sh: the image records no kit version and $kit_version is installed. Rebuilding." >&2
       build=1
@@ -943,41 +1050,53 @@ fi
 # holds, and gets the latest published one when a build is due. The registry is asked
 # only then: a start that builds nothing needs no network. When the latest cannot be
 # found the wrapper stops, rather than run the image that exists, which would be a build
-# that silently did not happen. Both are asked before either is named, so that no line
-# says what an image is built with that is then not built.
-claude_code_latest=""
-opencode_latest=""
-if [ -z "$claude_code_origin" ]; then
-  claude_code_wanted="$claude_code_held"
-  if [ "$build" -eq 1 ]; then
-    claude_code_latest="$(latest_published "Claude Code" @anthropic-ai/claude-code CLAUDE_CODE_VERSION)" || exit 1
-    claude_code_wanted="$claude_code_latest"
+# that silently did not happen. Every harness is asked before any is named, so that no
+# line says what an image is built with that is then not built.
+harness_latest=()
+for ((index = 0; index < ${#harness_names[@]}; index++)); do
+  latest=""
+  if [ -z "${harness_origins[$index]}" ]; then
+    harness_wanted[$index]="${harness_held[$index]:-}"
+    if [ "$build" -eq 1 ]; then
+      latest="$(latest_published "${harness_titles[$index]}" "${harness_packages[$index]}" \
+        "${harness_arguments[$index]}")" || exit 1
+      harness_wanted[$index]="$latest"
+    fi
   fi
-fi
-if [ -z "$opencode_origin" ]; then
-  opencode_wanted="$opencode_held"
-  if [ "$build" -eq 1 ]; then
-    opencode_latest="$(latest_published "OpenCode" opencode-ai OPENCODE_VERSION)" || exit 1
-    opencode_wanted="$opencode_latest"
+  harness_latest+=("$latest")
+done
+for ((index = 0; index < ${#harness_names[@]}; index++)); do
+  if [ -n "${harness_latest[$index]}" ]; then
+    echo "sandbox.sh: neither the project nor the host gives a version of ${harness_titles[$index]}," \
+      "so the image is built with the latest published, ${harness_latest[$index]}." >&2
   fi
-fi
-if [ -n "$claude_code_latest" ]; then
-  echo "sandbox.sh: neither the project nor the host gives a version of Claude Code," \
-    "so the image is built with the latest published, $claude_code_latest." >&2
-fi
-if [ -n "$opencode_latest" ]; then
-  echo "sandbox.sh: neither the project nor the host gives a version of OpenCode," \
-    "so the image is built with the latest published, $opencode_latest." >&2
-fi
+done
 
-# The versions the image is built with, for the base compose file's three build arguments.
-# Assigned whatever the caller's environment holds, so that nothing there is a source.
-# The names are the wrapper's own: Claude Code exports variables named CLAUDE_CODE_...
-# into the shells it starts, and agents run the wrapper from those. Where the project's
-# file gives the argument, Compose uses that and not the variable.
-export SANDBOX_CLAUDE_CODE_VERSION SANDBOX_OPENCODE_VERSION SANDBOX_AGENTRITE_VERSION
-SANDBOX_CLAUDE_CODE_VERSION="$claude_code_wanted"
-SANDBOX_OPENCODE_VERSION="$opencode_wanted"
+# What the base compose file takes from the wrapper for the harnesses and the kit: the
+# packages at their versions, the record of the harnesses and versions the image holds,
+# the directories of their logs, the hosts the allowlist admits for them, each after a
+# comment that says why, and the kit's version. Assigned whatever the caller's
+# environment holds, so that nothing there is a source. The names are the wrapper's own:
+# a harness may export variables of names of its own into the shells it starts, as
+# Claude Code does those named CLAUDE_CODE_..., and agents run the wrapper from those.
+harness_packages_wanted=()
+harness_record=()
+for ((index = 0; index < ${#harness_names[@]}; index++)); do
+  harness_packages_wanted+=("${harness_packages[$index]}@${harness_wanted[$index]}")
+  harness_record+=("${harness_names[$index]}@${harness_wanted[$index]}")
+done
+newline=$'\n'
+harness_allowlist=""
+for ((index = 0; index < ${#allowed_hosts[@]}; index++)); do
+  harness_allowlist="$harness_allowlist${harness_allowlist:+$newline}# ${allowed_reasons[$index]}"
+  harness_allowlist="$harness_allowlist$newline${allowed_hosts[$index]}"
+done
+export SANDBOX_HARNESS_PACKAGES SANDBOX_HARNESS_RECORD SANDBOX_HARNESS_DIRECTORIES SANDBOX_HARNESS_ALLOWLIST
+export SANDBOX_AGENTRITE_VERSION
+SANDBOX_HARNESS_PACKAGES="${harness_packages_wanted[*]}"
+SANDBOX_HARNESS_RECORD="${harness_record[*]}"
+SANDBOX_HARNESS_DIRECTORIES="${log_directories[*]}"
+SANDBOX_HARNESS_ALLOWLIST="$harness_allowlist"
 SANDBOX_AGENTRITE_VERSION="$kit_version"
 
 # Compose tags the kit's image with the image's name, and the project's file then takes
@@ -1001,46 +1120,44 @@ fi
 # is refused until its file is corrected, since an unchanged file builds nothing.
 [ -z "$project_dockerfile_digest" ] || refuse_changed_start
 
-# The harnesses' logs, on the host: Claude Code's sessions and OpenCode's data directory,
-# from the project's log directory, which is named after the project root's directory
-# and is the same whatever is mounted at /work. In it the two have the places they have
-# in a home, so a tool on the host reads it as a home that holds nothing else. Made
-# here, as the developer, because Docker creates a mount's missing source as root, and
-# only now, so that a run that was refused or whose build failed made none. The path is
-# taken through cd and pwd because Docker reads a source that is not absolute as the
-# name of a volume. Nothing above the two directories is mounted. OpenCode keeps its
-# login in its data directory, so that is a file of the host too.
+# The harnesses' logs, on the host: the directories each harness's module names, from the
+# project's log directory, which is named after the project root's directory and is the
+# same whatever is mounted at /work. In it each has the place it has in a home, so a tool
+# on the host reads it as a home that holds nothing else. Made here, as the developer,
+# because Docker creates a mount's missing source as root, and only now, so that a run
+# that was refused or whose build failed made none. The path is taken through cd and pwd
+# because Docker reads a source that is not absolute as the name of a volume. Nothing
+# above the directories is mounted. A harness that keeps its login in such a directory,
+# as OpenCode does in its data directory, has it as a file of the host too.
 logs="${XDG_DATA_HOME:-${HOME:?}/.local/share}/agentrite/$(basename "$root")"
-mkdir -p "$logs/.claude/projects" "$logs/.local/share/opencode"
+mkdir -p "$logs" "${log_directories[@]/#/$logs/}"
 logs="$(cd "$logs" && pwd)"
 
-# The number read above, as a drop-in of Claude Code's managed settings, which stand above
-# the home volume's, so the agent cannot change it. The file is in the log directory, of
-# which only the two directories below are mounted, so the container reaches it through
-# this read-only mount alone. Several runs of the project root may be under way or about
-# to mount their file, so each number has a file of its own, which no start changes or
-# removes: a later start cannot give another number to a run, and Docker never finds a
-# source gone, of which it would make a directory owned by root. The file is made by a
-# rename, so that no start mounts it half written, and two starts that make it at once
-# rename the same content. Readable by all, since mktemp makes it the developer's alone
-# and Claude Code reads it as the agent.
-if [ -n "$cleanup_period" ]; then
-  cleanup_period_file="$logs/claude-cleanup-period-$cleanup_period.json"
-  if [ ! -f "$cleanup_period_file" ]; then
-    cleanup_period_new="$(mktemp "$logs/claude-cleanup-period.XXXXXX")"
-    printf '{"cleanupPeriodDays": %s}\n' "$cleanup_period" >"$cleanup_period_new"
-    chmod 644 "$cleanup_period_new"
-    mv -f "$cleanup_period_new" "$cleanup_period_file"
+# The files a harness's module writes from the host, such as Claude Code's
+# cleanupPeriodDays as a drop-in of its managed settings, which stand above the home
+# volume's, so the agent cannot change it. Each is in the log directory, of which only
+# the directories above are mounted, so the container reaches it through its read-only
+# mount alone. Several runs of the project root may be under way or about to mount their
+# file, so each content has a file of its own, named by the module after it, which no
+# start changes or removes: a later start cannot give another content to a run, and
+# Docker never finds a source gone, of which it would make a directory owned by root. The
+# file is made by a rename, so that no start mounts it half written, and two starts that
+# make it at once rename the same content. Readable by all, since mktemp makes it the
+# developer's alone and the harness reads it as the agent.
+for ((index = 0; index < ${#file_names[@]}; index++)); do
+  harness_file="$logs/${file_names[$index]}"
+  if [ ! -f "$harness_file" ]; then
+    harness_file_new="$(mktemp "$harness_file.XXXXXX")"
+    printf '%s\n' "${file_contents[$index]}" >"$harness_file_new"
+    chmod 644 "$harness_file_new"
+    mv -f "$harness_file_new" "$harness_file"
   fi
-  mounts+=(
-    --volume "$cleanup_period_file:/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro"
-  )
-fi
+  mounts+=(--volume "$harness_file:${file_targets[$index]}:ro")
+done
 
-mounts+=(
-  --volume "$logs/.claude/projects:/home/agent/.claude/projects"
-  --volume "$logs/.local/share/opencode:/home/agent/.local/share/opencode"
-)
+for directory in "${log_directories[@]}"; do
+  mounts+=(--volume "$logs/$directory:/home/agent/$directory")
+done
 
 # The run's own terminal: each of the two that the wrapper's shell has, and nothing of
 # one it lacks, so that the command keeps what Docker gives it.
@@ -1051,7 +1168,7 @@ terminal_environment=()
 if [ -z "$branch" ]; then
   exec "${compose[@]}" run --rm \
     ${terminal_environment[@]+"${terminal_environment[@]}"} \
-    ${bell_environment[@]+"${bell_environment[@]}"} \
+    ${harness_environment[@]+"${harness_environment[@]}"} \
     --volume "$workdir:/work" \
     ${mounts[@]+"${mounts[@]}"} \
     sandbox "$@"
@@ -1092,7 +1209,7 @@ trap : INT TERM HUP
 status=0
 "${compose[@]}" run --rm --name "$container_name" \
   ${terminal_environment[@]+"${terminal_environment[@]}"} \
-  ${bell_environment[@]+"${bell_environment[@]}"} \
+  ${harness_environment[@]+"${harness_environment[@]}"} \
   --volume "$clone:/work" \
   ${process_mounts[@]+"${process_mounts[@]}"} \
   ${mounts[@]+"${mounts[@]}"} \

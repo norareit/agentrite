@@ -81,7 +81,9 @@ function setUp(testContext) {
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });
-  for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
+  for (const file of ['sandbox.sh', 'unit-clone.sh', 'compose.yml']) {
+    copyFileSync(join(kitContainer, file), join(container, file));
+  }
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   mkdirSync(join(root, 'agent'));
   writeFileSync(join(root, 'package.json'), '{\n  "name": "my-app"\n}\n');

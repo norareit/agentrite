@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
-import { logMounts } from './wrapper-fixture.mjs';
 
 const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.url), 'utf-8');
+const wrapper = readFileSync(new URL('../container/sandbox.sh', import.meta.url), 'utf-8');
 
 // The RUN instructions of the Dockerfile's last stage, which is the image, each on one line: a line that ends in a
 // backslash continues on the next.
@@ -15,24 +15,26 @@ function runsOfLastStage(text) {
     .filter((line) => line.startsWith('RUN '));
 }
 
-// Where the wrapper mounts the two log directories in the container, read from the flags it passes.
-const mountPoints = [...logMounts('/logs').matchAll(/:(\/home\/agent\/\S+) /g)].map((match) => match[1]);
-
-// The wrapper, the Dockerfile and the entrypoint each name the two directories, in a language of their own, and
-// nothing can be shared between them. Docker fills a new home volume from the image, ownership included, before it
-// mounts anything inside it, so a mount point the image holds as the agent's is found there. One the image lacks is
-// made by Docker as root, with every directory above it, and the entrypoint then refuses the volume.
-test("the image holds both log mount points, and they and all above them in the home are the agent's", () => {
-  assert.deepEqual(mountPoints, ['/home/agent/.claude/projects', '/home/agent/.local/share/opencode']);
+// 0097 R9: Docker fills a new home volume from the image, ownership included, before it mounts anything inside it,
+// so a mount point the image holds as the agent's is found there. One the image lacks is made by Docker as root,
+// with every directory above it, and the entrypoint then refuses the volume. The directories are those of the
+// project's harnesses, which the wrapper hands the build as HARNESS_DIRECTORIES.
+test("the image makes each log directory, and the directory of the home it is in, as the agent's", () => {
   const runs = runsOfLastStage(dockerfile);
   const account = runs.findIndex((run) => /\buseradd\b.* agent\b/.test(run) && !run.includes('egress-proxy'));
   assert.notEqual(account, -1, "a RUN of the last stage makes the agent's account");
-  const made = runs.findIndex((run) => mountPoints.every((mountPoint) => run.includes(mountPoint)));
-  assert.notEqual(made, -1, 'a RUN of the last stage names both mount points');
-  assert.ok(made > account, "the mount points are made after the agent's account");
-  assert.ok(runs[made].includes(`mkdir -p ${mountPoints.join(' ')} `), runs[made]);
-  assert.ok(
-    runs[made].endsWith('&& chown -R "${AGENT_UID}:${AGENT_GID}" /home/agent/.claude /home/agent/.local'),
-    runs[made],
-  );
+  const made = runs.findIndex((run) => run.includes('${HARNESS_DIRECTORIES}'));
+  assert.notEqual(made, -1, 'a RUN of the last stage goes over HARNESS_DIRECTORIES');
+  assert.ok(made > account, "the log directories are made after the agent's account");
+  const run = runs[made];
+  assert.match(run, /for directory in \$\{HARNESS_DIRECTORIES\}; do /);
+  assert.ok(run.includes('mkdir -p "/home/agent/$directory"'), run);
+  assert.ok(run.includes('chown -R "${AGENT_UID}:${AGENT_GID}" "/home/agent/${directory%%/*}"'), run);
+  assert.ok(run.includes('echo "$directory" >> /usr/local/lib/agentrite/log-directories'), run);
+});
+
+test('the wrapper hands the build the log directories of the project harnesses, from the helper', () => {
+  assert.match(wrapper, /^export .*\bSANDBOX_HARNESS_DIRECTORIES\b/m);
+  assert.match(wrapper, /^SANDBOX_HARNESS_DIRECTORIES="\$\{log_directories\[\*\]\}"$/m);
+  assert.match(wrapper, /^ {6}directory\) log_directories\+=\("\$first"\) ;;$/m);
 });

@@ -1,6 +1,8 @@
-// OpenCode's plugin of the bell. container/sandbox.sh names it in OPENCODE_CONFIG_CONTENT when the project's
-// agentrite.json holds "bell": true. It runs ring-bell.sh, which lies beside it, each time a session goes idle and
-// each time OpenCode asks for a permission, the moments Claude Code's hooks in claude-managed-settings.json ring at.
+// OpenCode's plugin of the bell. OpenCode's module, scripts/harnesses/opencode.mjs, names it in
+// OPENCODE_CONFIG_CONTENT, which container/sandbox.sh gives a run when the project's agentrite.json holds
+// "bell": true, and has it mounted beside ring-bell.sh, which it runs each time a session goes idle and each time
+// OpenCode asks for a permission, the moments Claude Code's hooks in container/harnesses/claude/bell-settings.json
+// ring at.
 //
 // The script is not detached, so that it has OpenCode's controlling terminal. The handler waits for it and resolves
 // whether it ran or not: OpenCode is given no rejected promise and nothing is printed. It imports nothing but node:

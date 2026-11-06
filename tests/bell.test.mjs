@@ -4,6 +4,8 @@ import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { HARNESS_NAMES } from '../scripts/agentrite-harness.mjs';
+import { opencode } from '../scripts/harnesses/opencode.mjs';
 import { listEntries } from './compose-entries.mjs';
 import { skipReason } from './skip-reason.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -73,7 +75,9 @@ const RING = 'sh /etc/agentrite/bell/ring-bell.sh';
 
 // R1
 test("Claude Code's managed settings of the bell hold the hooks of Notification and Stop, and nothing else", () => {
-  const settings = JSON.parse(readFileSync(new URL('../container/bell/claude-managed-settings.json', import.meta.url)));
+  const settings = JSON.parse(
+    readFileSync(new URL('../container/harnesses/claude/bell-settings.json', import.meta.url)),
+  );
   const hook = [{ hooks: [{ type: 'command', command: RING }] }];
   assert.deepEqual(settings, { hooks: { Notification: hook, Stop: hook } });
 });
@@ -84,7 +88,7 @@ function pluginBeside(testContext, status) {
   const base = temporaryDirectory(testContext, 'bell-plugin-');
   const plugin = join(base, 'opencode-plugin.js');
   const rang = join(base, 'rang');
-  copyFileSync(new URL('../container/bell/opencode-plugin.js', import.meta.url), plugin);
+  copyFileSync(new URL('../container/harnesses/opencode/bell-plugin.js', import.meta.url), plugin);
   writeFileSync(join(base, 'ring-bell.sh'), `echo rang >> '${rang}'\nexit ${status}\n`);
   const times = () => (existsSync(rang) ? readFileSync(rang, 'utf-8').split('\n').length - 1 : 0);
   return { plugin, times };
@@ -210,11 +214,32 @@ test(
   },
 );
 
-// R1
-test('the hooks and the plugin name the files where container/sandbox.sh mounts container/bell/', () => {
-  const wrapper = readFileSync(new URL('../container/sandbox.sh', import.meta.url), 'utf-8');
-  const mountPoint = /--volume "\$here\/bell:([^"]+):ro"/.exec(wrapper)?.[1];
-  assert.equal(mountPoint, '/etc/agentrite/bell');
-  assert.equal(RING, `sh ${mountPoint}/ring-bell.sh`);
-  assert.ok(wrapper.includes(`"plugin":["file://${mountPoint}/opencode-plugin.js"]`));
+// The mounts a start of the sandbox gives with "bell": true, as the helper prints them for a project of every
+// harness: each path of the kit's container/ by its target in the container.
+function bellMounts(testContext) {
+  const root = temporaryDirectory(testContext, 'bell-mounts-');
+  writeFileSync(join(root, 'agentrite.json'), JSON.stringify({ bell: true, harnesses: HARNESS_NAMES }));
+  const helper = fileURLToPath(new URL('../scripts/agentrite-sandbox.mjs', import.meta.url));
+  const result = spawnSync(process.execPath, [helper, 'start', root, ''], { encoding: 'utf-8' });
+  assert.equal(result.status, 0, result.stderr);
+  const mounts = result.stdout
+    .split('\n')
+    .map((line) => line.split('\t'))
+    .filter(([kind, from]) => kind === 'mount' && from === 'kit');
+  return new Map(mounts.map(([, , path, target]) => [target, path]));
+}
+
+// 0097 R3, R10
+test("the hooks run the script where the shared mount puts it, and the plugin's mount puts it beside it", (context) => {
+  const mounts = bellMounts(context);
+  assert.equal(RING, 'sh /etc/agentrite/bell/ring-bell.sh');
+  assert.equal(mounts.get('/etc/agentrite/bell/ring-bell.sh'), 'bell/ring-bell.sh');
+  assert.equal(mounts.get('/etc/agentrite/bell/opencode-plugin.js'), 'harnesses/opencode/bell-plugin.js');
+  assert.equal(
+    mounts.get('/etc/claude-code/managed-settings.d/agentrite-bell.json'),
+    'harnesses/claude/bell-settings.json',
+  );
+  assert.ok(opencode.sandbox.bell.environment.includes(
+    'OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}',
+  ));
 });

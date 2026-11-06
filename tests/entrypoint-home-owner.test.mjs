@@ -3,6 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { mkdirSync, writeFileSync, chmodSync, existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
+import { HARNESSES } from '../scripts/agentrite-harness.mjs';
 import { entrypointFunctions } from './entrypoint-function.mjs';
 import { skipReason } from './skip-reason.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -12,8 +13,9 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 // a real directory, owned by the user running the test. The real stat -c %u reports that
 // owner; the guard passes when it equals the agent uid under test and dies when it does not.
 //
-// `guard` is the check to run. The home holds the directories above the two mounted log directories, which are
-// what check_log_directory_owners compares, as real directories of the same user.
+// `guard` is the check to run. The home holds the directories above the mounted log directories of every harness,
+// which are what check_log_directory_owners compares, as real directories of the same user, and the guard is given
+// those directories, as the entrypoint gives it what log_directory_parents prints.
 //
 // check_log_directory_owners reads those as the agent, through setpriv. The suite is not root and has no account
 // named agent, so a stand-in for setpriv is first on the PATH: it records its arguments, one call to a line, and
@@ -23,8 +25,7 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 function runGuard(testContext, agentUid, guard = 'check_home_owner', prepare = () => {}) {
   const base = temporaryDirectory(testContext, 'entrypoint-home-');
   const home = join(base, 'home');
-  mkdirSync(join(home, '.claude'), { recursive: true });
-  mkdirSync(join(home, '.local', 'share'), { recursive: true });
+  for (const directory of PARENTS) mkdirSync(join(home, directory), { recursive: true });
   const bin = join(base, 'bin');
   const calls = join(base, 'setpriv-calls');
   mkdirSync(bin);
@@ -39,7 +40,7 @@ exec "$@"
   writeFileSync(script, `
     set -euo pipefail
     ${entrypointFunctions('die', 'home_volume_recovery', guard)}
-    ${guard} "${agentUid}" "${home}"
+    ${guard} "${agentUid}" "${home}" ${guard === 'check_log_directory_owners' ? PARENTS.join(' ') : ''}
   `);
   chmodSync(script, 0o755);
   prepare(home);
@@ -51,6 +52,23 @@ exec "$@"
   return { home, setprivCalls, ...result };
 }
 const realOwner = () => String(process.getuid());
+
+// Every directory above a log directory of a harness of the list, each once, in the order they are met, which is
+// what log_directory_parents prints for the list the image writes.
+const PARENTS = [
+  ...new Set(
+    HARNESSES.flatMap(({ sandbox }) =>
+      sandbox.logDirectories.flatMap((directory) =>
+        directory
+          .split('/')
+          .slice(0, -1)
+          .map((_, index, parts) => parts.slice(0, index + 1).join('/')),
+      ),
+    ),
+  ),
+];
+
+const RECOVERY = /which discards the harnesses' saved logins, such as Claude Code's,\nand starting again\./;
 
 // The guard reads the owner with GNU stat -c %u, which is what the Linux container provides.
 // On a BSD host (macOS) the same option is illegal, so run the guard only on Linux. A host that skips it says where
@@ -98,7 +116,7 @@ test('a home in which another uid owns a directory above a log mount is refused,
     stderr,
   );
   assert.match(stderr, /The home volume was made by an earlier release, in which that directory was never made/);
-  assert.match(stderr, /which discards Claude Code's saved login, and starting again\./);
+  assert.match(stderr, RECOVERY);
   assert.match(stderr, /^ {2}docker volume rm <project>_agent-home$/m);
   assert.doesNotMatch(stderr, /\.local/);
 });
@@ -116,7 +134,7 @@ test(
     assert.equal(status, 0, stderr);
     assert.deepEqual(
       setprivCalls,
-      ['.claude', '.local', '.local/share'].map(
+      PARENTS.map(
         (name) => `--reuid=agent --regid=agent --init-groups -- stat -c %u ${home}/${name}`,
       ),
     );
@@ -138,6 +156,48 @@ test('a directory above a log mount that cannot be examined is refused by the en
     stderr,
   );
   assert.match(stderr, /stat: cannot statx? '.*\/\.local\/share': Permission denied/);
-  assert.match(stderr, /which discards Claude Code's saved login, and starting again\./);
+  assert.match(stderr, RECOVERY);
   assert.equal(stderr.trimEnd().split('\n').at(-1), '  docker volume rm <project>_agent-home');
+});
+
+// 0097 R9: the directories above the log directories, from the list the image writes.
+
+function parentsOf(testContext, list) {
+  const base = temporaryDirectory(testContext, 'entrypoint-parents-');
+  const file = join(base, 'log-directories');
+  if (list !== undefined) writeFileSync(file, list);
+  const script = join(base, 'parents.sh');
+  writeFileSync(script, `
+    set -euo pipefail
+    ${entrypointFunctions('die', 'log_directory_parents')}
+    log_directory_parents "${file}"
+  `);
+  return { file, ...spawnSync('bash', [script], { encoding: 'utf-8' }) };
+}
+
+test('the directories above the log directories of the harnesses are each printed once, in order', (context) => {
+  const list = HARNESSES.flatMap(({ sandbox }) => sandbox.logDirectories).map((line) => `${line}\n`).join('');
+  const { status, stdout, stderr } = parentsOf(context, list);
+  assert.equal(status, 0, stderr);
+  assert.equal(stdout, PARENTS.map((directory) => `${directory}\n`).join(''));
+});
+
+test('the parents of today\'s two log directories are .claude, .local and .local/share', (testContext) => {
+  const { status, stdout } = parentsOf(testContext, '.claude/projects\n.local/share/opencode\n');
+  assert.equal(status, 0);
+  assert.equal(stdout, '.claude\n.local\n.local/share\n');
+});
+
+test('a parent shared by two log directories is printed once, where it is first met', (testContext) => {
+  const { status, stdout } = parentsOf(testContext, '.local/share/one\n.config/two\n.local/state/three\n');
+  assert.equal(status, 0);
+  assert.equal(stdout, '.local\n.local/share\n.config\n.local/state\n');
+});
+
+test('a list that the image lacks is refused, naming the file and saying to build again', (testContext) => {
+  const { file, status, stdout, stderr } = parentsOf(testContext, undefined);
+  assert.equal(status, 1);
+  assert.equal(stdout, '');
+  assert.ok(stderr.startsWith(`[entrypoint] FATAL: ${file} is not in the image`), stderr);
+  assert.match(stderr, /--rebuild/);
 });

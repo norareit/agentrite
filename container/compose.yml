@@ -4,11 +4,11 @@
 # in a network namespace that does not exist until the container runs. container/sandbox.sh
 # is a wrapper that adds only the per-run working directory, which for a unit run is a
 # clone of the unit's branch with the host's .reviews and .orchestrator mounted in it,
-# any extra mounts, the two directories of the host that hold the harnesses' logs, the
-# bell of the harnesses when the project's agentrite.json holds "bell": true, the
-# versions of the two harnesses the image is built with, and the build of the project's
-# own Dockerfile on the image this file builds; it sets nothing that confines the
-# container.
+# any extra mounts, the directories of the host that hold the harnesses' logs, the bell of
+# the harnesses when the project's agentrite.json holds "bell": true, the harnesses the
+# image is built with and their versions, the hosts the harnesses need, what each
+# harness is given besides from its module, and the build of the project's own
+# Dockerfile on the image this file builds; it sets nothing that confines the container.
 #
 # A project layers its own compose file over this one, at sandbox/compose.project.yml,
 # holding what varies per project: the Compose project name, the image name, the egress
@@ -34,12 +34,16 @@ services:
         KIT_CONTAINER: ${AGENTRITE_CONTAINER}
         AGENT_UID: ${AGENT_UID:-1000}
         AGENT_GID: ${AGENT_GID:-1000}
-        # The harness versions, which container/sandbox.sh works out at each start: the
-        # version the host has, or else the latest published when the image is built.
-        # A project that holds a version gives the same argument in its own compose
-        # file, which replaces the value here.
-        CLAUDE_CODE_VERSION: ${SANDBOX_CLAUDE_CODE_VERSION:?run the sandbox through the project's sandbox.sh}
-        OPENCODE_VERSION: ${SANDBOX_OPENCODE_VERSION:?run the sandbox through the project's sandbox.sh}
+        # The harnesses of the project, which container/sandbox.sh works out at each start
+        # from their modules and from the project's agentrite.json: their packages at the
+        # wanted versions, the record of the harnesses and versions the image holds, and
+        # the directories of their logs. A version is the one the project's compose file
+        # gives under the harness's own build argument, or else the one the host has, or
+        # else the latest published when the image is built. These three are the kit's to
+        # set, and the wrapper refuses a project's file that sets one.
+        HARNESS_PACKAGES: ${SANDBOX_HARNESS_PACKAGES:?run the sandbox through the project's sandbox.sh}
+        HARNESS_RECORD: ${SANDBOX_HARNESS_RECORD:?run the sandbox through the project's sandbox.sh}
+        HARNESS_DIRECTORIES: ${SANDBOX_HARNESS_DIRECTORIES:?run the sandbox through the project's sandbox.sh}
         # The version of the installed kit, which the image records, so that
         # container/sandbox.sh builds it again for another.
         AGENTRITE_VERSION: ${SANDBOX_AGENTRITE_VERSION:?run the sandbox through the project's sandbox.sh}
@@ -52,7 +56,7 @@ services:
     shm_size: 1gb
 
     # The root filesystem is read-only. The agent can write only the mounted working
-    # directory, its home volume, the two directories of the host that container/sandbox.sh
+    # directory, its home volume, the directories of the host that container/sandbox.sh
     # mounts in that home for the harnesses' logs, and the /tmp and /dev/shm scratch
     # tmpfs (/dev/shm is sized by shm_size above). /run is a tmpfs too but stays
     # root-owned.
@@ -96,20 +100,14 @@ services:
       # entrypoint refuses an address or a CIDR range. The hosts the kit itself needs
       # are here, so that a kit release that needs another adds it without a change to
       # any project, and a project's list holds only what the project needs besides,
-      # which is what varies most between them.
+      # which is what varies most between them. The kit's own host is written here, and
+      # the hosts of the project's harnesses follow it, each after a comment that says
+      # why, as container/sandbox.sh composes them from the harnesses' modules. They are
+      # the kit's to set, and the wrapper refuses a project's file that sets this list.
       KIT_ALLOWLIST: |
-        # FIREWALL_PROBE below, and the Anthropic API that Claude Code uses
-        api.anthropic.com
-        # Claude Code contacts it at start-up when it holds no saved login
-        platform.claude.com
-        # OpenCode fetches its model catalog from it
-        models.opencode.ai
-        # OpenCode's login with a ChatGPT account, and every refresh of its token
-        auth.openai.com
-        # OpenCode sends the prompts of a ChatGPT login here
-        chatgpt.com
-        # npm registry: npm ci inside the container
+        # FIREWALL_PROBE below, and the npm registry: npm ci inside the container
         registry.npmjs.org
+        ${SANDBOX_HARNESS_ALLOWLIST:?run the sandbox through the project's sandbox.sh}
       #
       # The local model server on the host, reached through the Docker gateway. Only
       # this host and port are allowed, nothing else on the host.
@@ -117,7 +115,7 @@ services:
       MODEL_SERVER_PORT: "11434"
       # The start-up self-check: this host must be blocked, that one must be reachable.
       FIREWALL_CANARY: example.com
-      FIREWALL_PROBE: api.anthropic.com
+      FIREWALL_PROBE: registry.npmjs.org
       # Git's ownership check, switched off for every process in the container. Git
       # refuses a repository whose top directory another user owns unless
       # safe.directory names it, and Docker Desktop for macOS shows the root of every
@@ -161,21 +159,21 @@ services:
       # volume here at /work would have every unit run work in the project root rather
       # than in its clone.
       #
-      # The agent's home, which survives a container. Holds Claude Code's login and
-      # settings, whatever else a harness keeps there and the npm cache, so
-      # authentication happens once. One volume rather than one per harness: the
-      # read-only root filesystem already requires the home to be a volume. Two
-      # directories in it are not of the volume: container/sandbox.sh mounts
-      # ~/.claude/projects and ~/.local/share/opencode from the project's log directory
-      # on the host. So both harnesses' sessions are not in the volume, and neither is
-      # OpenCode's login, which OpenCode keeps in its data directory.
+      # The agent's home, which survives a container. Holds the harnesses' logins and
+      # settings, such as Claude Code's, whatever else a harness keeps there and the npm
+      # cache, so authentication happens once. One volume rather than one per harness:
+      # the read-only root filesystem already requires the home to be a volume. The
+      # directories of the harnesses' logs in it are not of the volume: container/sandbox.sh
+      # mounts each, as the harness's module names it, from the project's log directory on
+      # the host. So the harnesses' sessions are not in the volume, and neither is a login
+      # that a harness keeps in such a directory, as OpenCode keeps its own.
       - agent-home:/home/agent
       # The developer's git identity, read-only, so commits from inside carry the same
       # name and email as on the host. Mounted as the system git config, the lowest
       # precedence, so the agent's own ~/.gitconfig stays writable. It is the only
-      # host dotfile this file mounts. container/sandbox.sh adds the developer's Claude
-      # Code status line script when the host has one, and in every run the two log
-      # directories named above, read-write.
+      # host dotfile this file mounts. container/sandbox.sh adds what a harness's module
+      # takes from the host, such as Claude Code's status line script when the host has
+      # one, and in every run the log directories named above, read-write.
       - ${HOME}/.gitconfig:/etc/gitconfig:ro
 
 volumes:

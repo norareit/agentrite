@@ -25,7 +25,7 @@ die() { printf '[entrypoint] FATAL: %s\n' "$*" >&2; exit 1; }
 MODEL_SERVER_HOST="${MODEL_SERVER_HOST:-host.docker.internal}"
 MODEL_SERVER_PORT="${MODEL_SERVER_PORT:-11434}"
 FIREWALL_CANARY="${FIREWALL_CANARY:-example.com}"
-FIREWALL_PROBE="${FIREWALL_PROBE:-api.anthropic.com}"
+FIREWALL_PROBE="${FIREWALL_PROBE:-registry.npmjs.org}"
 
 # The egress proxy: where it listens, the account it runs as, and where it logs one line
 # per decision. The log is readable by the agent, which is how a refused connection can
@@ -52,7 +52,8 @@ proxy_uid="$(id -u "$PROXY_USER")" || die "the $PROXY_USER account is missing fr
 # one ends in.
 home_volume_recovery() {
   cat <<'RECOVERY'
-Recover by removing the project's agent-home volume, which discards Claude Code's saved login, and starting again.
+Recover by removing the project's agent-home volume, which discards the harnesses' saved logins, such as Claude Code's,
+and starting again.
 The volume is named <project>_agent-home, where <project> is the Compose project's name, set as 'name:' in
 sandbox/compose.project.yml. Find the exact name with docker volume ls, then:
   docker volume rm <project>_agent-home
@@ -79,17 +80,39 @@ $(home_volume_recovery)"
 }
 check_home_owner "$agent_uid" /home/agent
 
-# container/sandbox.sh mounts two directories of the host inside the home, for the
-# harnesses' logs: .claude/projects and .local/share/opencode. The image holds both
-# mount points as the agent's, so a home volume filled from it has them. A volume that
-# an earlier release filled has them only when a harness made them, and where one is
-# missing Docker makes it, and every missing directory above it, as root, before this
-# script runs. The agent then cannot write beside the mount: Claude Code keeps its login
-# and its settings in .claude. As above, root here cannot change an owner, so the start
-# is refused, at the first such directory. The two mount points themselves are not
-# compared: Docker Desktop shows the top of every mounted directory as root's while the
-# agent writes it, so their owner says nothing.
+# container/sandbox.sh mounts directories of the host inside the home, for the
+# harnesses' logs, which the image lists, one to a line relative to the home, in
+# /usr/local/lib/agentrite/log-directories. The image holds every mount point as the
+# agent's, so a home volume filled from it has them. A volume that an earlier image
+# filled has them only when a harness made them, and where one is missing Docker makes
+# it, and every missing directory above it, as root, before this script runs. The agent
+# then cannot write beside the mount, where a harness may keep its login and its
+# settings, as Claude Code does in .claude. As above, root here cannot change an owner,
+# so the start is refused, at the first such directory. The mount points themselves are
+# not compared: Docker Desktop shows the top of every mounted directory as root's while
+# the agent writes it, so their owner says nothing.
 #
+# Prints every directory above each log directory of the list, relative to the home,
+# each once and in the order they are met. The list is the image's, which a home volume
+# cannot change. An image without it was built by a kit that wrote none.
+log_directory_parents() {
+  local list="$1" directory parent part seen=$'\n'
+  [ -f "$list" ] \
+    || die "$list is not in the image, so the directories of the harnesses' logs are not known.
+Start the sandbox again with --rebuild, which builds the image anew."
+  while IFS= read -r directory; do
+    parent=""
+    while [[ "$directory" == */* ]]; do
+      part="${directory%%/*}"
+      directory="${directory#*/}"
+      parent="${parent:+$parent/}$part"
+      [[ "$seen" != *$'\n'"$parent"$'\n'* ]] || continue
+      seen="$seen$parent"$'\n'
+      echo "$parent"
+    done
+  done < "$list"
+}
+
 # Each directory is read as the agent, not as root. Root here holds none of the
 # capabilities that let root pass a file's permissions, so it enters a directory only as
 # any other user would, and a tool that follows the XDG convention makes .local for its
@@ -97,10 +120,12 @@ check_home_owner "$agent_uid" /home/agent
 # agent is who has to use these directories, and this script can become the agent. A
 # directory that even the agent cannot read is refused too, in this script's words and
 # with what the read said, rather than the script ending on the bare error of stat.
+# The directories to check follow the agent's uid and the home, relative to the home.
 check_log_directory_owners() {
   local agent_uid="$1" home_path="$2"
+  shift 2
   local name directory owner
-  for name in .claude .local .local/share; do
+  for name in "$@"; do
     directory="$home_path/$name"
     owner="$(setpriv --reuid=agent --regid=agent --init-groups -- stat -c %u "$directory" 2>&1)" \
       || die "$directory could not be examined as the agent, so the agent cannot be shown to write it: $owner
@@ -112,7 +137,11 @@ when it mounted the harnesses' logs inside it.
 $(home_volume_recovery)"
   done
 }
-check_log_directory_owners "$agent_uid" /home/agent
+log_parents="$(log_directory_parents /usr/local/lib/agentrite/log-directories)"
+# The directories hold no space, which the kit's test of every harness's module checks, so the list is split by the
+# shell into one argument for each.
+# shellcheck disable=SC2086
+check_log_directory_owners "$agent_uid" /home/agent $log_parents
 
 # Every allowlist entry is a hostname, admitted by the proxy on 443 alone. A CIDR range
 # is refused rather than ignored: there is no longer a rule that could admit one, and

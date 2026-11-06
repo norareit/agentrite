@@ -7,11 +7,21 @@ import { chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, r
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { dockerHost, hostVersions, installKitPackage, standInLabel, writeCommand } from './wrapper-fixture.mjs';
+import { HARNESSES } from '../scripts/agentrite-harness.mjs';
+import {
+  dockerHost,
+  harnessRecord,
+  hostVersions,
+  installKitPackage,
+  standInLabel,
+  writeCommand,
+  writeStartSettings,
+} from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
 const unitClone = fileURLToPath(new URL('../container/unit-clone.sh', import.meta.url));
+const baseCompose = fileURLToPath(new URL('../container/compose.yml', import.meta.url));
 const shim = fileURLToPath(new URL('../sandbox-dev.sh', import.meta.url));
 const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 
@@ -21,16 +31,15 @@ const skip = dockerLacking
   : false;
 
 const projectLabel = 'com.ritenoar.agentrite.project-dockerfile';
-const claudeLabel = 'com.ritenoar.agentrite.claude-code-version';
-const opencodeLabel = 'com.ritenoar.agentrite.opencode-version';
+const harnessesLabel = 'com.ritenoar.agentrite.harnesses';
 
 // The two lines a project's file opens with, as SANDBOX.md gives them.
 const opening = 'ARG AGENTRITE_IMAGE\nFROM ${AGENTRITE_IMAGE}\n';
 // A project's file that adds the file `added` of the project root to the image, and `more` after it.
 const adding = (more = '') => `${opening}COPY added /added\n${more}`;
 
-// A version of Claude Code the host reports after an image was built, which no release has.
-const newClaude = '99.5.0';
+// A version a harness's command on the host reports after an image was built, which no release has.
+const newVersion = '99.5.0';
 
 let images = 0;
 
@@ -54,10 +63,11 @@ function holds(image, path) {
 const digest = (content) => `sha256:${createHash('sha256').update(content).digest('hex')}`;
 
 // A project whose kit is laid out as `layout` says, under the image name `image` unique to the test, on the host of
-// `dockerHost`, with an empty home of its own and an agentrite.json that holds `"bell": false` alone. The kit lies
-// at node_modules/agentrite/ with the wrapper and its git functions in its container/ and the readers of
-// agentrite.json in its scripts/, or, for `dev`, as in this repository, with the dev shim at the root. `start` runs
-// the wrapper, through the shim for `dev`, with `args`, and forgets the calls of earlier starts first. `builds`,
+// `dockerHost`, with an empty home of its own and an agentrite.json that holds `"bell": false` and every harness. The
+// kit lies at node_modules/agentrite/ with the wrapper, its git functions and the base Compose file in its container/
+// and the readers of agentrite.json and of the harnesses in its scripts/, or, for `dev`, as in this repository, with
+// the dev shim at the root. `start` runs the wrapper, through the shim for `dev`, with `args`, and forgets the calls
+// of earlier starts first. `builds`,
 // `tags` and `runs` read the calls of the last start. The images are removed when the test ends, and so are the
 // earlier builds of the test that later ones left without a name.
 function setUp(testContext, layout = 'installed') {
@@ -70,7 +80,7 @@ function setUp(testContext, layout = 'installed') {
   });
   mkdirSync(join(root, 'sandbox'), { recursive: true });
   writeFileSync(join(root, 'sandbox', 'compose.project.yml'), `name: ${image}\n`);
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+  writeStartSettings(root);
   writeFileSync(join(root, 'added'), 'the project\n');
   const kit = layout === 'dev' ? root : join(root, 'node_modules', 'agentrite');
   mkdirSync(join(kit, 'container'), { recursive: true });
@@ -78,6 +88,7 @@ function setUp(testContext, layout = 'installed') {
   for (const [from, to] of [
     [wrapper, join(kit, 'container', 'sandbox.sh')],
     [unitClone, join(kit, 'container', 'unit-clone.sh')],
+    [baseCompose, join(kit, 'container', 'compose.yml')],
     ...(layout === 'dev' ? [[shim, join(root, 'sandbox-dev.sh')]] : []),
   ]) {
     copyFileSync(from, to);
@@ -86,6 +97,7 @@ function setUp(testContext, layout = 'installed') {
   for (const file of [
     'agentrite-settings.mjs',
     'agentrite-cleanup-period.mjs',
+    'agentrite-sandbox.mjs',
     'agentrite-roles.mjs',
     'agentrite-harness.mjs',
     'agentrite-headless.mjs',
@@ -234,14 +246,15 @@ test(
   "a kit's image built anew for another harness version has the project's file built on it",
   { skip },
   (testContext) => {
+    const [{ name, title, start }] = HARNESSES;
     const project = setUp(testContext);
     project.writeProjectFile(adding());
     assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
-    writeCommand(project.bin, 'claude', `echo '${newClaude} (Claude Code)'`);
+    writeCommand(project.bin, start.command, `echo '${newVersion}'`);
     const result = project.start('--in-place', 'echo', 'hi');
     assertStarted(project, result, builtBoth);
-    assert.match(result.stderr, new RegExp(`the image holds Claude Code ${hostVersions.claude} and ${newClaude}`));
-    assert.equal(label(project.image, claudeLabel), newClaude);
+    assert.match(result.stderr, new RegExp(`the image holds ${title} ${hostVersions[name]} and ${newVersion}`));
+    assert.equal(label(project.image, harnessesLabel), harnessRecord({ ...hostVersions, [name]: newVersion }));
     assert.ok(holds(project.image, '/added'));
   },
 );
@@ -352,8 +365,7 @@ test(
 );
 
 for (const [name, labelled] of [
-  [claudeLabel, 'Claude Code'],
-  [opencodeLabel, 'OpenCode'],
+  [harnessesLabel, 'the harnesses'],
   [projectLabel, "a project's file"],
 ]) {
   test(
@@ -361,7 +373,7 @@ for (const [name, labelled] of [
     { skip },
     (testContext) => {
       const project = setUp(testContext);
-      const value = name === projectLabel ? `sha256:${'0'.repeat(64)}` : '1.0.0';
+      const value = name === projectLabel ? `sha256:${'0'.repeat(64)}` : `"${HARNESSES[0].name}@1.0.0"`;
       project.writeProjectFile(adding(`LABEL ${name}=${value}\n`));
       assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
       assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtNothing);
@@ -369,24 +381,21 @@ for (const [name, labelled] of [
   );
 }
 
-for (const [name, harness, command, printed] of [
-  [claudeLabel, 'Claude Code', 'claude', `${newClaude} (Claude Code)`],
-  [opencodeLabel, 'OpenCode', 'opencode', '98.5.0'],
-]) {
+for (const { name, title, start } of HARNESSES) {
   test(
-    `a label of ${harness} in a project's file that names the host's new version does not stop a build`,
+    `a label of the harnesses in a project's file that names the host's new ${name} does not stop a build`,
     { skip },
     (testContext) => {
       const project = setUp(testContext);
-      const version = printed.split(' ')[0];
-      project.writeProjectFile(adding(`LABEL ${name}=${version}\n`));
+      const record = harnessRecord({ ...hostVersions, [name]: newVersion });
+      project.writeProjectFile(adding(`LABEL ${harnessesLabel}="${record}"\n`));
       assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
-      writeCommand(project.bin, command, `echo '${printed}'`);
+      writeCommand(project.bin, start.command, `echo '${newVersion}'`);
       const result = project.start('--in-place', 'echo', 'hi');
       assertStarted(project, result, builtBoth);
-      const rebuilding = new RegExp(`the image holds ${harness} \\S+ and ${version.replaceAll('.', '\\.')} is wanted`);
+      const rebuilding = new RegExp(`the image holds ${title} \\S+ and ${newVersion.replaceAll('.', '\\.')} is wanted`);
       assert.match(result.stderr, rebuilding);
-      assert.equal(label(`${project.image}-base`, name), version);
+      assert.equal(label(`${project.image}-base`, harnessesLabel), record);
     },
   );
 }

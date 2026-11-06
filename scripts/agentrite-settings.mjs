@@ -138,8 +138,7 @@ export function parseSettings(text) {
 
 /**
  * Throws, naming the key, what it holds or that it is missing, and what it must hold, for a key of `values` that
- * holds no value it may hold. It is the one wording of a key at fault, for the whole file, for `bell` alone and
- * for a start's keys.
+ * holds no value it may hold. It is the one wording of a key at fault, for the whole file and for a start's keys.
  *
  * @param {Record<string, unknown>} values
  * @param {(typeof KEYS)[number]} key
@@ -164,30 +163,6 @@ const BELL_KEY = keyNamed('bell');
 const HARNESSES_KEY = keyNamed('harnesses');
 
 const BELL_MUST_HOLD = `It must hold ${BELL_KEY.must}`;
-
-/**
- * The value of `bell` that the text of an `agentrite.json` holds, as a start of the sandbox reads it. No other key is
- * judged, so a start is refused for `bell` alone. Throws, naming the file, the key, what it holds or that it is
- * missing, and what it must hold.
- *
- * @param {string} text
- * @returns {boolean}
- */
-export function parseBell(text) {
-  /** @type {unknown} */ let parsed;
-  try {
-    parsed = JSON.parse(text);
-  } catch (error) {
-    throw new Error(`${SETTINGS_FILE} is not JSON: ${messageOf(error)}, so bell cannot be read. ${BELL_MUST_HOLD}`);
-  }
-  if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-    const found = JSON.stringify(parsed);
-    throw new Error(`${SETTINGS_FILE} holds ${found}, which is no JSON object, so bell is missing. ${BELL_MUST_HOLD}`);
-  }
-  const values = /** @type {Record<string, unknown>} */ (parsed);
-  checkKey(values, BELL_KEY);
-  return /** @type {boolean} */ (values.bell);
-}
 
 /**
  * @typedef {{ bell: boolean, harnesses: string[] }} Start What a start of the sandbox reads of the file: `bell`, and
@@ -394,33 +369,8 @@ export function readStart(root) {
 }
 
 /**
- * The value of `bell` in the `agentrite.json` in the working tree of the project at `root`, read as `parseBell`
- * reads it. Throws what to print for a project that has none and for a file that cannot be read.
- *
- * @param {string} root
- * @returns {boolean}
- */
-export function readBell(root) {
-  const path = resolve(root, SETTINGS_FILE);
-  let text;
-  try {
-    text = readFileSync(path, 'utf-8');
-  } catch (error) {
-    if (isMissing(path)) {
-      throw new Error(
-        `the project has no ${SETTINGS_FILE}, so bell is missing. ${BELL_MUST_HOLD}. ` +
-          'Run: npx agentrite config, which writes one',
-      );
-    }
-    throw new Error(`cannot read ${SETTINGS_FILE}: ${messageOf(error)}, so bell cannot be read. ${BELL_MUST_HOLD}`);
-  }
-  return parseBell(text);
-}
-
-/**
  * True when this file is the entry point, which it is for the sandbox's wrapper: a shell script cannot import, so
- * it runs this file with `node` and reads the default branch, or with `bell` the value of `bell`, from what is
- * printed.
+ * it runs this file with `node` and reads the default branch from what is printed.
  *
  * @returns {boolean}
  */
@@ -433,15 +383,12 @@ function isMain() {
 
 if (isMain()) {
   const [root, ...rest] = process.argv.slice(2);
-  const wantsBell = rest.length === 1 && rest[0] === 'bell';
-  if (root === undefined || (rest.length > 0 && !wantsBell)) {
-    console.error('usage: node agentrite-settings.mjs <project root> [bell]');
+  if (root === undefined || rest.length > 0) {
+    console.error('usage: node agentrite-settings.mjs <project root>');
     process.exit(2);
   }
   try {
-    // As text, since console.log gives a boolean colour where the environment asks for it, and container/sandbox.sh
-    // takes nothing but the bare word for true.
-    console.log(wantsBell ? String(readBell(root)) : readSettings(root).defaultBranch);
+    console.log(readSettings(root).defaultBranch);
   } catch (error) {
     console.error(`agentrite: ${messageOf(error)}`);
     process.exit(1);

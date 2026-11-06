@@ -1,14 +1,15 @@
 # syntax=docker/dockerfile:1
 #
-# The agent sandbox image. Builds Claude Code and OpenCode into one Debian container
-# that can run the project's own suites. The kit's SANDBOX.md describes the sandbox; the
-# project's README.md describes how that project runs it.
+# The agent sandbox image. Builds the harnesses the project names in its agentrite.json
+# into one Debian container that can run the project's own suites. The kit's SANDBOX.md
+# describes the sandbox; the project's README.md describes how that project runs it.
 
-# Harness versions. The kit names none: the last stage's CLAUDE_CODE_VERSION and
-# OPENCODE_VERSION have no default, and container/sandbox.sh hands the build both. Each is
-# the version the project's compose file gives, or else the one the host has, or else
-# the latest published at the time of the build, which the wrapper asks the registry for
-# and hands over as an exact version.
+# The harnesses. The image names none: container/sandbox.sh reads them from the kit's
+# module of each harness, of scripts/harnesses/, and hands the last stage the three build
+# arguments HARNESS_PACKAGES, HARNESS_RECORD and HARNESS_DIRECTORIES, which have no
+# default. The version of each is the version the project's compose file gives, or else
+# the one the host has, or else the latest published at the time of the build, which the
+# wrapper asks the registry for and hands over as an exact version.
 
 # The browser is in the image only when the project's compose file gives this build
 # argument, as the playwright version resolved in the project's package-lock.json, so the
@@ -68,38 +69,28 @@ RUN cd /opt/pw \
 # neither the playwright stage nor base-with-browsers.
 FROM base${PLAYWRIGHT_VERSION:+-with-browsers}
 
-ARG CLAUDE_CODE_VERSION
-ARG OPENCODE_VERSION
-
 # The developer's uid and gid on the host, so a Linux bind mount of the working
 # directory stays writable from inside without changing ownership on the host.
 ARG AGENT_UID=1000
 ARG AGENT_GID=1000
 
-# Both harness CLIs, each at exactly the version of its build argument, installed
-# globally as root. Nothing self-updates, so a read-only root filesystem can protect the
-# install. Auto-update is disabled explicitly rather than left to fail against the
-# firewall.
-RUN npm install -g --no-audit --no-fund \
-      "@anthropic-ai/claude-code@${CLAUDE_CODE_VERSION}" \
-      "opencode-ai@${OPENCODE_VERSION}" \
+# The harnesses' npm packages, as the words <package>@<version>, each at exactly the
+# version the wrapper wants, installed globally as root in one install. The shell splits
+# the words: a package comes from a module of the kit and a version has the shape the
+# wrapper accepts, so no word holds a space. Nothing self-updates, so a read-only root
+# filesystem can protect the install. What turns off each harness's own updates is given
+# to every run by container/sandbox.sh, from the harness's module, rather than left to
+# fail against the firewall.
+ARG HARNESS_PACKAGES
+RUN npm install -g --no-audit --no-fund ${HARNESS_PACKAGES} \
     && rm -rf /root/.npm
 
-# The two versions this image was built with. container/sandbox.sh reads them at each
-# start and builds again when they are not the versions it wants. After the install, so
-# that they are no part of what decides whether the install runs again.
-LABEL com.ritenoar.agentrite.claude-code-version="${CLAUDE_CODE_VERSION}" \
-      com.ritenoar.agentrite.opencode-version="${OPENCODE_VERSION}"
-
-# DISABLE_AUTOUPDATER stops Claude Code's background check; DISABLE_UPDATES also blocks
-# `claude update`. OpenCode has no env switch, so point it at a config that sets
-# autoupdate false; its project opencode.json does not override that key.
-ENV DISABLE_AUTOUPDATER=1 \
-    DISABLE_UPDATES=1 \
-    OPENCODE_CONFIG=/etc/opencode/opencode.json
-RUN mkdir -p /etc/opencode \
-    && printf '{\n  "$schema": "https://opencode.ai/config.json",\n  "autoupdate": false\n}\n' \
-       > /etc/opencode/opencode.json
+# The harnesses and the versions this image was built with, as the words
+# <name>@<version>. container/sandbox.sh reads them at each start and builds again when
+# they are not the harnesses and the versions it wants. After the install, so that they
+# are no part of what decides whether the install runs again.
+ARG HARNESS_RECORD
+LABEL com.ritenoar.agentrite.harnesses="${HARNESS_RECORD}"
 
 # A non-root user owning the working directory and its own home. The node image already
 # holds uid 1000 as "node"; drop it so the developer's uid is free to reuse. The uid and
@@ -114,8 +105,8 @@ RUN mkdir -p /etc/opencode \
 # unprivileged, not one merely named "agent".
 #
 # The agent is a member of tty so that container/bell/ring-bell.sh can ring the bell
-# from a hook of Claude Code, which runs in a session of its own and reaches the
-# session's terminal only by its path. The terminal is root's, of the group tty with
+# from a hook of a harness, such as Claude Code's, which runs in a session of its own and
+# reaches the session's terminal only by its path. The terminal is root's, of the group tty with
 # mode 0620, so the group gives the agent the write to it and no read.
 RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
       echo "AGENT_UID/AGENT_GID must not be 0: the agent account would be root." >&2; \
@@ -128,15 +119,25 @@ RUN if [ "${AGENT_UID}" = "0" ] || [ "${AGENT_GID}" = "0" ]; then \
     && mkdir -p /work \
     && chown "${AGENT_UID}:${AGENT_GID}" /work /home/agent
 
-# The two directories that container/sandbox.sh mounts from the host for the harnesses'
-# logs, and every directory above them in the home, as the agent's. Docker fills a new
-# home volume from the image, ownership included, before it mounts anything inside it,
-# so the mount points are found there. A mount point that a volume lacks is made by
-# Docker as root, with every missing directory above it, and the agent then cannot write
-# ~/.claude, where Claude Code keeps its login and its settings. The entrypoint refuses
-# a volume that was made without these.
-RUN mkdir -p /home/agent/.claude/projects /home/agent/.local/share/opencode \
-    && chown -R "${AGENT_UID}:${AGENT_GID}" /home/agent/.claude /home/agent/.local
+# The directories that container/sandbox.sh mounts from the host for the harnesses'
+# logs, the words of HARNESS_DIRECTORIES, each relative to the home, and every directory
+# above them in the home, as the agent's. Docker fills a new home volume from the image,
+# ownership included, before it mounts anything inside it, so the mount points are found
+# there. A mount point that a volume lacks is made by Docker as root, with every missing
+# directory above it, and the agent then cannot write beside it, where a harness may keep
+# its login and its settings, as Claude Code does in ~/.claude. The entrypoint refuses a
+# volume that was made without these, and reads which they are from the list this writes,
+# one to a line: a variable of the compose file would also be in the environment of the
+# command.
+ARG HARNESS_DIRECTORIES
+RUN mkdir -p /usr/local/lib/agentrite \
+    && : > /usr/local/lib/agentrite/log-directories \
+    && for directory in ${HARNESS_DIRECTORIES}; do \
+         mkdir -p "/home/agent/$directory" \
+         && chown -R "${AGENT_UID}:${AGENT_GID}" "/home/agent/${directory%%/*}" \
+         && echo "$directory" >> /usr/local/lib/agentrite/log-directories \
+         || exit 1; \
+       done
 
 # The egress proxy's own account. The firewall exempts this uid from the redirect to the
 # proxy and lets it alone connect out on 443, so it must be distinct from the agent.

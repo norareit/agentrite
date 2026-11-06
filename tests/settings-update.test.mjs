@@ -74,7 +74,7 @@ test('a project with the wrappers, the sandbox and no agentrite.json gets one in
   write('changes/0001-a-unit/record.md', '---\nkind: feature\nstatus: approved\n---\n');
   const installed = join(root, 'node_modules', 'agentrite');
   mkdirSync(join(installed, 'container'), { recursive: true });
-  for (const file of ['sandbox.sh', 'unit-clone.sh', 'check-commit-message.mjs']) {
+  for (const file of ['sandbox.sh', 'unit-clone.sh', 'check-commit-message.mjs', 'compose.yml']) {
     copyFileSync(join(kit, 'container', file), join(installed, 'container', file));
   }
   chmodSync(join(installed, 'container', 'sandbox.sh'), 0o755);

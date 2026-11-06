@@ -6,10 +6,8 @@ import { test } from 'node:test';
 import { ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
 import { HARNESS_NAMES } from '../scripts/agentrite-harness.mjs';
 import {
-  parseBell,
   parseSettings,
   parseStart,
-  readBell,
   readSettings,
   readStart,
   SETTINGS_FILE,
@@ -717,13 +715,13 @@ test('run with no project root, or with more than one argument, it prints its us
   for (const args of [
     [],
     [directory(testContext), 'more'],
+    [directory(testContext), 'bell'],
     [directory(testContext), 'bell', 'more'],
-    [directory(testContext), 'Bell'],
   ]) {
     const result = entryPoint(...args);
     assert.equal(result.status, 2);
     assert.equal(result.stdout, '');
-    assert.equal(result.stderr, 'usage: node agentrite-settings.mjs <project root> [bell]\n');
+    assert.equal(result.stderr, 'usage: node agentrite-settings.mjs <project root>\n');
   }
 });
 
@@ -735,6 +733,8 @@ test('imported, the module prints nothing', () => {
 });
 
 // R18 of 0097: bell and harnesses alone, as a start of the sandbox reads them.
+
+const BELL_MUST = 'It must hold true or false';
 
 // A file of bell and harnesses alone, the start's two keys.
 function startText(bell, harnesses) {
@@ -836,6 +836,10 @@ test('readStart reads the agentrite.json at the root, with no file the paths nam
   assert.deepEqual(readStart(base), { bell: false, harnesses: ['opencode'] });
 });
 
+const NO_FILE_BELL =
+  'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
+  'Run: npx agentrite config, which writes one';
+
 test(
   'readStart in a directory with no file says that bell is missing and names the command that writes one',
   (testContext) => {
@@ -857,145 +861,5 @@ test(
         return true;
       },
     );
-  },
-);
-
-// R6, R7, R11: bell alone, as a start of the sandbox reads it.
-
-const BELL_MUST = 'It must hold true or false';
-
-test('parseBell gives true and false, from a file of bell alone and from a whole file', () => {
-  assert.equal(parseBell('{"bell": true}'), true);
-  assert.equal(parseBell('{"bell": false}'), false);
-  assert.equal(parseBell(settingsText(VALID)), true);
-  assert.equal(parseBell(settingsText({ ...VALID, bell: false })), false);
-  assert.equal(parseBell(textOf(withKey('orchestrator', undefined))), true);
-  assert.equal(parseBell(textOf(withKey('process', undefined))), true);
-});
-
-test('parseBell judges no other key: a file whose other keys are all wrong gives its bell', () => {
-  const wrong = { defaultBranch: 5, harnesses: [], sandbox: 'yes', standards: '/x', roles: [], bell: false };
-  assert.equal(parseBell(textOf(wrong)), false);
-  assert.equal(parseBell(textOf({ ...wrong, bell: true })), true);
-});
-
-test('parseBell refuses a bell that is missing or holds anything but true or false, naming what it holds', () => {
-  assert.throws(() => parseBell('{}'), { message: `agentrite.json: bell is missing. ${BELL_MUST}` });
-  assert.throws(() => parseBell(textOf(withKey('bell', undefined))), {
-    message: `agentrite.json: bell is missing. ${BELL_MUST}`,
-  });
-  for (const value of [null, 0, 1, 'true', 'false', [], [true], {}, { on: true }]) {
-    assert.throws(
-      () => parseBell(textOf({ bell: value })),
-      { message: `agentrite.json: bell is ${JSON.stringify(value)}. ${BELL_MUST}` },
-      JSON.stringify(value),
-    );
-  }
-});
-
-test('parseBell refuses a text that is not JSON with the parser own error, and that bell cannot be read', () => {
-  for (const text of ['', 'not json', '{ "bell": true, }']) {
-    let parserMessage;
-    try {
-      JSON.parse(text);
-    } catch (error) {
-      parserMessage = error.message;
-    }
-    assert.throws(() => parseBell(text), {
-      message: `agentrite.json is not JSON: ${parserMessage}, so bell cannot be read. ${BELL_MUST}`,
-    });
-  }
-});
-
-test('parseBell refuses JSON that is no object, naming what it holds and that bell is missing', () => {
-  for (const text of ['[]', 'null', 'true', '5', '"bell"']) {
-    assert.throws(() => parseBell(text), {
-      message:
-        `agentrite.json holds ${JSON.stringify(JSON.parse(text))}, which is no JSON object, so bell is missing. ` +
-        BELL_MUST,
-    });
-  }
-});
-
-test('readBell reads the bell of the agentrite.json at the root, with no file the paths name', (testContext) => {
-  const base = directory(testContext);
-  writeFileSync(join(base, 'agentrite.json'), settingsText({ ...VALID, bell: false }));
-  assert.equal(readBell(base), false);
-});
-
-const NO_FILE_BELL =
-  'the project has no agentrite.json, so bell is missing. It must hold true or false. ' +
-  'Run: npx agentrite config, which writes one';
-
-test(
-  'readBell in a directory with no file says that bell is missing and names the command that writes one',
-  (testContext) => {
-    assert.throws(() => readBell(directory(testContext)), { message: NO_FILE_BELL });
-  },
-);
-
-test('readBell of a file that cannot be read names the file, the error and that bell cannot be read', (testContext) => {
-  const base = directory(testContext);
-  mkdirSync(join(base, 'agentrite.json'));
-  assert.throws(
-    () => readBell(base),
-    (error) => {
-      assert.ok(error.message.startsWith('cannot read agentrite.json: '), error.message);
-      assert.match(error.message, /EISDIR/);
-      assert.ok(error.message.endsWith(`, so bell cannot be read. ${BELL_MUST}`), error.message);
-      return true;
-    },
-  );
-});
-
-test(
-  'run with a project root and bell, the module prints true or false and a line break, and exits 0',
-  (testContext) => {
-    for (const bell of [true, false]) {
-      const base = directory(testContext);
-      writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
-      const result = entryPoint(base, 'bell');
-      assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.stdout, `${bell}\n`);
-      assert.equal(result.stderr, '');
-    }
-  },
-);
-
-// A shell that sets FORCE_COLOR would give a value printed in colour to container/sandbox.sh, which takes nothing but
-// the bare word for true.
-test('run with bell, the module prints the bare word also where the environment asks for colour', (testContext) => {
-  for (const bell of [true, false]) {
-    const base = directory(testContext);
-    writeFileSync(join(base, 'agentrite.json'), textOf({ bell }));
-    const result = spawnSync(process.execPath, [script, base, 'bell'], {
-      encoding: 'utf-8',
-      env: { ...process.env, FORCE_COLOR: '1' },
-    });
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stdout, `${bell}\n`);
-  }
-});
-
-test(
-  'run with bell on a file at fault, or on no file, it prints why on standard error alone and exits 1',
-  (testContext) => {
-    const missing = entryPoint(directory(testContext), 'bell');
-    assert.equal(missing.status, 1);
-    assert.equal(missing.stdout, '');
-    assert.equal(missing.stderr, `agentrite: ${NO_FILE_BELL}\n`);
-
-    for (const [text, message] of [
-      ['{}', `agentrite.json: bell is missing. ${BELL_MUST}`],
-      ['{"bell": "true"}', `agentrite.json: bell is "true". ${BELL_MUST}`],
-      ['[]', `agentrite.json holds [], which is no JSON object, so bell is missing. ${BELL_MUST}`],
-    ]) {
-      const base = directory(testContext);
-      writeFileSync(join(base, 'agentrite.json'), text);
-      const result = entryPoint(base, 'bell');
-      assert.equal(result.status, 1, text);
-      assert.equal(result.stdout, '', text);
-      assert.equal(result.stderr, `agentrite: ${message}\n`, text);
-    }
   },
 );

@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { test } from 'node:test';
-import { cleanupPeriodOf, parseCleanupPeriod, readCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
-import { temporaryDirectory } from './temporary-directory.mjs';
+import { cleanupPeriodOf, parseCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
 
 const PATH = '/home/developer/.claude/settings.json';
 const CORRECT = 'Correct the file, or remove the key cleanupPeriodDays from it';
@@ -69,30 +66,4 @@ test('settings that could not be read are refused, naming the path and the error
   assert.throws(() => cleanupPeriodOf({ found: true, error }, PATH), {
     message: `cannot read ${PATH}: ${error}. ${CORRECT}`,
   });
-});
-
-test('a home without .claude gives nothing', (testContext) => {
-  const home = temporaryDirectory(testContext, 'cleanup-period');
-  assert.equal(readCleanupPeriod(home), undefined);
-});
-
-test("the number of the home's .claude/settings.json is given", (testContext) => {
-  const home = temporaryDirectory(testContext, 'cleanup-period');
-  mkdirSync(join(home, '.claude'));
-  writeFileSync(join(home, '.claude', 'settings.json'), '{"cleanupPeriodDays": 365}\n');
-  assert.equal(readCleanupPeriod(home), 365);
-});
-
-test('a settings.json that cannot be read is refused', (testContext) => {
-  const home = temporaryDirectory(testContext, 'cleanup-period');
-  const path = join(home, '.claude', 'settings.json');
-  mkdirSync(path, { recursive: true });
-  assert.throws(
-    () => readCleanupPeriod(home),
-    (error) => {
-      assert.ok(error.message.startsWith(`cannot read ${path}: `), error.message);
-      assert.ok(error.message.endsWith(CORRECT), error.message);
-      return true;
-    },
-  );
 });

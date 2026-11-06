@@ -17,18 +17,28 @@ import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import {
   assertFormsListed,
+  bellEnvironment,
+  bellMounts,
   fakeHost,
+  harnessPackages,
+  harnessRecord,
   hostVersions,
   imageLabelsText,
   installKitPackage,
+  kitAllowlist,
   kitVersion,
   latestVersions,
   logDirectories,
+  logDirectoriesOf,
   logDirectory,
   logMounts,
+  updateEnvironment,
+  updateMounts,
   writeCommand,
+  writeStartSettings,
 } from './wrapper-fixture.mjs';
 import { parseCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
+import { HARNESS_NAMES, HARNESSES } from '../scripts/agentrite-harness.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
@@ -36,15 +46,24 @@ const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const kitPath = 'project/node_modules/agentrite/container';
 
 // What an image built earlier holds, where a test needs it to differ from what the fake host has and from what
-// the fake `npm` gives as the latest.
-const builtBefore = { claude: '0.1.0', opencode: '0.2.0' };
+// the fake `npm` gives as the latest: a version of each harness of the list that no release has.
+const builtBefore = Object.fromEntries(HARNESSES.map(({ name }, index) => [name, `0.${index + 1}.0`]));
 
-// The calls the fake `docker` recorded for a wrapper that handed Compose `versions` and the installed kit's version:
-// each of `commands` after what every call opens with.
+// The harnesses of the list other than `harness`, which a test that varies one harness keeps as they are.
+const othersOf = (harness) => HARNESSES.filter((other) => other !== harness);
+
+// `versions` with the version of the harness named `name` replaced by `version`.
+const withVersion = (versions, name, version) => ({ ...versions, [name]: version });
+
+// The calls the fake `docker` recorded for a wrapper that handed Compose the harnesses of `versions`, a map of each
+// harness of the project to its version, and the installed kit's version: each of `commands` after what every call
+// opens with.
 function composeCalls(root, container, versions, ...commands) {
+  const names = HARNESS_NAMES.filter((name) => versions[name] !== undefined);
   const opening =
     'AGENTRITE_CONTAINER=node_modules/agentrite/container ' +
-    `SANDBOX_CLAUDE_CODE_VERSION=${versions.claude} SANDBOX_OPENCODE_VERSION=${versions.opencode} ` +
+    `SANDBOX_HARNESS_PACKAGES=${harnessPackages(versions)} SANDBOX_HARNESS_RECORD=${harnessRecord(versions)} ` +
+    `SANDBOX_HARNESS_DIRECTORIES=${logDirectoriesOf(names).join(' ')} ` +
     `SANDBOX_AGENTRITE_VERSION=${kitVersion} docker compose ` +
     `--project-directory ${root} -f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml`;
   return commands.map((command) => `${opening} ${command}`);
@@ -54,14 +73,28 @@ function composeCalls(root, container, versions, ...commands) {
 // that lies beside the project.
 const homeLogs = (root) => logDirectory(join(dirname(root), 'home', '.local', 'share'), root);
 
-// The `run` of a wrapper given `echo hi` for the project at `root`: the flags of the host's terminal in `terminal`,
-// then `mounted` at /work, then `mounts`, and last the two directories of `logs`.
-const runCommand = (root, mounted = root, mounts = '', logs = homeLogs(root), terminal = '') =>
-  `run --rm ${terminal}--volume ${mounted}:/work ${mounts}${logMounts(logs)}sandbox echo hi`;
+// The kit's container/ of the project at `root`, where `setUp` installs it.
+const containerOf = (root) => join(root, 'node_modules', 'agentrite', 'container');
 
-// A project with the kit's wrapper installed at `kitPath` under `root`, the kit's reader of agentrite.json beside it
-// and nothing else of the kit, an agentrite.json that holds `"bell": false` alone, and the host of `fakeHost`, whose
-// `docker` records each call with the AGENTRITE_CONTAINER and the two version variables it saw. The project's
+// The `run` of a wrapper given `echo hi` for the project at `root` and its harnesses `names`: the flags of the host's
+// terminal in `terminal`, then the environment that turns off the harnesses' updates, then `environment`, then
+// `mounted` at /work, then the files that turn off the updates, then `mounts`, and last the directories of `logs`.
+const runCommand = (
+  root,
+  mounted = root,
+  mounts = '',
+  logs = homeLogs(root),
+  terminal = '',
+  environment = '',
+  names = HARNESS_NAMES,
+) =>
+  `run --rm ${terminal}${updateEnvironment(names)}${environment}--volume ${mounted}:/work ` +
+  `${updateMounts(containerOf(root), names)}${mounts}${logMounts(logs, names)}sandbox echo hi`;
+
+// A project with the kit's wrapper installed at `kitPath` under `root`, the kit's readers of agentrite.json and of the
+// harnesses beside it and nothing else of the kit, an agentrite.json that holds `"bell": false` and every harness of
+// the list alone, and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER and the
+// variables of the harnesses and the kit's version it saw. The project's
 // Compose file gives the build arguments `buildArgs`, where `null` stands for a configuration Compose refuses, and
 // the image exists unless `imageExists` is false. The wrapper runs with a home of its own, `home`, which is empty
 // until a test fills it, so that no test depends on what the home of whoever runs the suite holds. `run` runs the
@@ -80,13 +113,17 @@ function setUp(
   const container = join(base, kitPath);
   mkdirSync(container, { recursive: true });
   copyFileSync(wrapper, join(container, 'sandbox.sh'));
+  // The wrapper reads the kit's KIT_ALLOWLIST from the base Compose file beside it.
+  copyFileSync(join(dirname(wrapper), 'compose.yml'), join(container, 'compose.yml'));
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   installKitPackage(join(container, '..'));
-  // The wrapper reads bell with the kit's reader of agentrite.json, in the kit's scripts/ beside its container/.
+  // The wrapper reads the start's settings and the harnesses with the kit's helper, in the kit's scripts/ beside its
+  // container/, and mounts files of the kit's container/harnesses/ and container/bell/.
   mkdirSync(join(container, '..', 'scripts'));
   for (const file of [
     'agentrite-settings.mjs',
     'agentrite-cleanup-period.mjs',
+    'agentrite-sandbox.mjs',
     'agentrite-roles.mjs',
     'agentrite-harness.mjs',
     'agentrite-headless.mjs',
@@ -96,13 +133,14 @@ function setUp(
     copyFileSync(join(kitScripts, file), join(container, '..', 'scripts', file));
   }
   cpSync(join(kitScripts, 'harnesses'), join(container, '..', 'scripts', 'harnesses'), { recursive: true });
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+  writeStartSettings(root);
   const home = join(base, 'home');
   mkdirSync(home);
   const host = fakeHost(base, [
     'AGENTRITE_CONTAINER',
-    'SANDBOX_CLAUDE_CODE_VERSION',
-    'SANDBOX_OPENCODE_VERSION',
+    'SANDBOX_HARNESS_PACKAGES',
+    'SANDBOX_HARNESS_RECORD',
+    'SANDBOX_HARNESS_DIRECTORIES',
     'SANDBOX_AGENTRITE_VERSION',
   ]);
   writeFileSync(host.projectBuildArgs, buildArgs === null ? '' : JSON.stringify(buildArgs));
@@ -211,8 +249,9 @@ for (const options of [['--in-place'], ['--rebuild', '--in-place']]) {
 
 // The harness versions. Each is the first of: what the project's Compose file gives, and what the host's command
 // reports. A harness with neither keeps the version the image's label records, and gets the latest published one,
-// which the wrapper asks `npm` for, when the image is built. The wrapper hands Compose the version the image is
-// built with in a variable of its own, and learns of the project's from the merged configuration.
+// which the wrapper asks `npm` for, when the image is built. The wrapper hands Compose the versions the image is
+// built with in variables of its own, and learns of the project's from the merged configuration. Every case that
+// varies one harness is made for each harness of the list.
 const runOnly = (root, container, versions) =>
   composeCalls(root, container, versions, runCommand(root));
 const buildAndRun = (root, container, versions) =>
@@ -226,13 +265,18 @@ const recordsNoneLine = (harness, wanted, source) =>
 const latestLine = (harness, version) =>
   `sandbox.sh: neither the project nor the host gives a version of ${harness}, so the image is built with the ` +
   `latest published, ${version}.\n`;
-const notFoundLines = (harness, npmPackage, argument) =>
-  `sandbox.sh: could not find the latest published version of ${harness}: 'npm view ${npmPackage} version' gave ` +
+const notFoundLines = ({ title, sandbox }) =>
+  `sandbox.sh: could not find the latest published version of ${title}: 'npm view ${sandbox.package} version' gave ` +
   'none.\n' +
-  `Give a version in sandbox/compose.project.yml, under services.sandbox.build.args as ${argument}, or install ` +
-  `${harness} on the host.\n`;
+  `Give a version in sandbox/compose.project.yml, under services.sandbox.build.args as ${sandbox.versionArgument}, ` +
+  `or install ${title} on the host.\n`;
 const askedOf = (npmPackage) => `npm view ${npmPackage} version --fetch-retries=0`;
-const askedOfBoth = [askedOf('@anthropic-ai/claude-code'), askedOf('opencode-ai')];
+const askedOfAll = HARNESSES.map(({ sandbox }) => askedOf(sandbox.package));
+
+// Removes the command of every harness of the list from the fake host.
+const removeAllHarnesses = (bin) => {
+  for (const { start } of HARNESSES) rmSync(join(bin, start.command));
+};
 
 test("the wrapper hands Compose the host's versions, in every call, and asks npm nothing", (testContext) => {
   const { root, container, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
@@ -244,11 +288,10 @@ test("the wrapper hands Compose the host's versions, in every call, and asks npm
 });
 
 test(
-  'the wrapper keeps the versions the image records with neither harness on the PATH, and says nothing',
+  'the wrapper keeps the versions the image records with no harness on the PATH, and says nothing',
   (testContext) => {
     const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-    rmSync(join(bin, 'claude'));
-    rmSync(join(bin, 'opencode'));
+    removeAllHarnesses(bin);
     writeFileSync(imageLabels, imageLabelsText(builtBefore));
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
@@ -258,135 +301,240 @@ test(
   },
 );
 
-test(
-  'the wrapper keeps a pre-release version the image records of a harness that is not on the PATH',
-  (testContext) => {
-    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-    rmSync(join(bin, 'opencode'));
-    writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' }));
+for (const harness of HARNESSES) {
+  const { name, title, start, sandbox } = harness;
+
+  test(`the wrapper keeps a pre-release version the image records of ${name}, which is not on the PATH`, (context) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(context, kitPath);
+    rmSync(join(bin, start.command));
+    const versions = withVersion(hostVersions, name, '0.0.0-dev-202610030456');
+    writeFileSync(imageLabels, imageLabelsText(versions));
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
-    const versions = { claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' };
     assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
     assert.deepEqual(npmCalls(), []);
-  },
-);
+  });
 
-for (const [present, absent, versions] of [
-  ['claude', 'opencode', { claude: hostVersions.claude, opencode: builtBefore.opencode }],
-  ['opencode', 'claude', { claude: builtBefore.claude, opencode: hostVersions.opencode }],
-]) {
-  test(
-    `the wrapper takes the host's version of ${present} and the image's of ${absent}, which is absent`,
-    (testContext) => {
+  test(`the wrapper takes the host's version of the others and the image's of ${name}, which is absent`, (context) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(context, kitPath);
+    rmSync(join(bin, start.command));
+    const versions = withVersion(hostVersions, name, builtBefore[name]);
+    writeFileSync(imageLabels, imageLabelsText(versions));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
+    assert.deepEqual(npmCalls(), []);
+  });
+
+  test(`the wrapper passes a pre-release version of ${name} on the host on`, (testContext) => {
+    const { root, container, bin, run, dockerCalls } = setUp(testContext, kitPath);
+    writeCommand(bin, start.command, 'echo 0.0.0-dev-202610030456');
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const versions = withVersion(hostVersions, name, '0.0.0-dev-202610030456');
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
+  });
+
+  for (const [what, script] of [
+    ['exits 1 after printing a version', 'echo 9.9.9; exit 1'],
+    ['prints nothing', ':'],
+    ['prints an error', "echo 'error: not a version'"],
+    ['prints two numbers', 'echo 1.2'],
+    ['prints a version with a command after it', "echo '1.2.3; rm -rf x'"],
+    ['prints a version on its second line only', "printf 'warning\\n9.9.9\\n'"],
+    ['prints a version on standard error only', 'echo 9.9.9 >&2'],
+  ]) {
+    test(`the wrapper counts ${name} on the host as not installed when it ${what}, and says so`, (testContext) => {
       const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-      rmSync(join(bin, absent));
+      writeCommand(bin, start.command, script);
+      const versions = withVersion(hostVersions, name, builtBefore[name]);
       writeFileSync(imageLabels, imageLabelsText(versions));
       const result = run(root, '--in-place', 'echo', 'hi');
       assert.equal(result.status, 0, result.stderr);
-      assert.equal(result.stderr, '');
+      assert.equal(result.stderr, noVersionLine(start.command, title));
       assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
       assert.deepEqual(npmCalls(), []);
-    },
-  );
-}
+    });
+  }
 
-test('the wrapper passes a pre-release version of the host on', (testContext) => {
-  const { root, container, bin, run, dockerCalls } = setUp(testContext, kitPath);
-  writeCommand(bin, 'opencode', 'echo 0.0.0-dev-202610030456');
-  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  const versions = { claude: hostVersions.claude, opencode: '0.0.0-dev-202610030456' };
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
-});
-
-for (const [what, script] of [
-  ['exits 1 after printing a version', 'echo 9.9.9; exit 1'],
-  ['prints nothing', ':'],
-  ['prints an error', "echo 'error: not a version'"],
-  ['prints two numbers', 'echo 1.2'],
-  ['prints a version with a command after it', "echo '1.2.3; rm -rf x'"],
-  ['prints a version on its second line only', "printf 'warning\\n9.9.9\\n'"],
-  ['prints a version on standard error only', 'echo 9.9.9 >&2'],
-]) {
-  test(`the wrapper counts a harness on the host that ${what} as not installed, and says so`, (testContext) => {
-    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-    writeCommand(bin, 'claude', script);
-    writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
-    const result = run(root, '--in-place', 'echo', 'hi');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, noVersionLine('claude', 'Claude Code'));
-    const versions = { claude: builtBefore.claude, opencode: hostVersions.opencode };
-    assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
-    assert.deepEqual(npmCalls(), []);
-  });
-}
-
-test("the wrapper names OpenCode's command when that is the one that prints no version", (testContext) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-  writeCommand(bin, 'opencode', 'exit 3');
-  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: builtBefore.opencode }));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, noVersionLine('opencode', 'OpenCode'));
-  const versions = { claude: hostVersions.claude, opencode: builtBefore.opencode };
-  assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
-  assert.deepEqual(npmCalls(), []);
-});
-
-test(
-  'the wrapper builds with the latest published version of a harness on the host that prints no version',
-  (testContext) => {
+  test(`the wrapper builds with the latest published ${name} when the host's prints no version`, (testContext) => {
     const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-    writeCommand(bin, 'claude', 'exit 1');
+    writeCommand(bin, start.command, 'exit 1');
     const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(
-      result.stderr,
-      noVersionLine('claude', 'Claude Code') + latestLine('Claude Code', latestVersions.claude),
-    );
-    const versions = { claude: latestVersions.claude, opencode: hostVersions.opencode };
+    assert.equal(result.stderr, noVersionLine(start.command, title) + latestLine(title, latestVersions[name]));
+    const versions = withVersion(hostVersions, name, latestVersions[name]);
     assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
-    assert.deepEqual(npmCalls(), [askedOf('@anthropic-ai/claude-code')]);
-  },
-);
+    assert.deepEqual(npmCalls(), [askedOf(sandbox.package)]);
+  });
 
-test("the wrapper gives the host's command no input", (testContext) => {
-  const { root, container, home, bin, dockerCalls } = setUp(testContext, kitPath);
-  writeCommand(bin, 'claude', `cat; echo ${hostVersions.claude}`);
-  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
+  test(`the wrapper gives the host's ${name} no input`, (testContext) => {
+    const { root, container, home, bin, dockerCalls } = setUp(testContext, kitPath);
+    writeCommand(bin, start.command, `cat; echo ${hostVersions[name]}`);
+    const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
+      encoding: 'utf-8',
+      env: { HOME: home, PATH: bin },
+      input: '7.7.7\n',
+    });
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
+  });
+
+  test(`the wrapper says that ${name} differs from the image, and builds before it runs`, (testContext) => {
+    const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
+    writeFileSync(imageLabels, imageLabelsText(withVersion(hostVersions, name, builtBefore[name])));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, holdsLine(title, builtBefore[name], hostVersions[name], 'the host'));
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+  });
+
+  test(`the wrapper builds nothing when the image holds the project's ${name} and the host's others`, (context) => {
+    const { root, container, imageLabels, run, dockerCalls } = setUp(context, kitPath, {
+      [sandbox.versionArgument]: '1.18.20',
+    });
+    const versions = withVersion(hostVersions, name, '1.18.20');
+    writeFileSync(imageLabels, imageLabelsText(versions));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), runOnly(root, container, versions));
+  });
+
+  test(`the wrapper rebuilds for the project's version of ${name}, whatever the host has`, (testContext) => {
+    const { root, container, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {
+      [sandbox.versionArgument]: '1.18.20',
+    });
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, holdsLine(title, hostVersions[name], '1.18.20', "the project's compose file"));
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, withVersion(hostVersions, name, '1.18.20')));
+    assert.deepEqual(npmCalls(), []);
+  });
+
+  // A project may hold the very version the host has. The value is the same and the source is not: the project's
+  // file stands first.
+  test(`the wrapper names the project's file for a version of ${name} it gives that equals the host's`, (context) => {
+    const { root, container, imageLabels, run, dockerCalls } = setUp(context, kitPath, {
+      [sandbox.versionArgument]: hostVersions[name],
+    });
+    writeFileSync(imageLabels, imageLabelsText(withVersion(hostVersions, name, builtBefore[name])));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, holdsLine(title, builtBefore[name], hostVersions[name], "the project's compose file"));
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+  });
+
+  // 0097 R6: a version of the project's file is installed as root, so one of another shape is refused first.
+  for (const value of ['latest', '1.2', '1.2.3; id', '', '1.2.3\nid']) {
+    test(`the wrapper refuses ${JSON.stringify(value)} as the project's version of ${name}`, (testContext) => {
+      const { root, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, { [sandbox.versionArgument]: value });
+      const result = run(root, '--in-place', 'echo', 'hi');
+      assert.equal(result.status, 1);
+      const shown = /\n/.test(value) ? JSON.stringify(value) : value;
+      assert.equal(
+        result.stderr,
+        `sandbox.sh: sandbox/compose.project.yml gives ${sandbox.versionArgument} as '${shown}', which is not a ` +
+          'version.\nGive an exact version, as 1.2.3.\n',
+      );
+      assert.deepEqual(dockerCalls(), []);
+      assert.deepEqual(npmCalls(), []);
+      assert.equal(existsSync(homeLogs(root)), false);
+    });
+  }
+
+  test(`the wrapper takes the latest of an absent ${name} when another differs from the image`, (testContext) => {
+    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    rmSync(join(bin, start.command));
+    writeFileSync(imageLabels, imageLabelsText(builtBefore));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    const lines = HARNESSES.map((each) =>
+      each === harness ? '' : holdsLine(each.title, builtBefore[each.name], hostVersions[each.name], 'the host'),
+    ).join('');
+    assert.equal(result.stderr, lines + latestLine(title, latestVersions[name]));
+    const versions = withVersion(hostVersions, name, latestVersions[name]);
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
+    assert.deepEqual(npmCalls(), [askedOf(sandbox.package)]);
+  });
+
+  for (const [what, label] of [
+    ['no version', ''],
+    ['a tag', 'latest'],
+    ['two numbers', '1.2'],
+  ]) {
+    test(`the wrapper builds when the image records ${what} of ${name}, which has no other source`, (context) => {
+      const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(context, kitPath);
+      rmSync(join(bin, start.command));
+      const record = harnessRecord(hostVersions).replace(`${name}@${hostVersions[name]}`, label && `${name}@${label}`);
+      writeFileSync(imageLabels, `${record}|${kitVersion}\n`);
+      const result = run(root, '--in-place', 'echo', 'hi');
+      assert.equal(result.status, 0, result.stderr);
+      // A harness the record does not hold is named among the image's harnesses, unless the record holds none.
+      const held = HARNESSES.filter((each) => each !== harness).map((each) => each.name);
+      const holds =
+        held.length > 0
+          ? `sandbox.sh: the image holds the harnesses ${held.join(', ')}, and agentrite.json names ` +
+            `${HARNESS_NAMES.join(', ').replace(/, ([^,]*)$/, ' and $1')}. Rebuilding.\n`
+          : '';
+      assert.equal(result.stderr, holds + latestLine(title, latestVersions[name]));
+      const versions = withVersion(hostVersions, name, latestVersions[name]);
+      assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
+      assert.deepEqual(npmCalls(), [askedOf(sandbox.package)]);
+    });
+  }
+
+  // The latest that cannot be found. The wrapper stops before the build, also when an image exists that it could
+  // have run.
+  test(`the wrapper says nothing of the latest of the others when that of ${name} cannot be found`, (context) => {
+    const { root, bin, run, dockerCalls } = setUp(context, kitPath);
+    removeAllHarnesses(bin);
+    const others = othersOf(harness)
+      .map((other) => `  ${other.sandbox.package}) echo '${latestVersions[other.name]}' ;;`)
+      .join('\n');
+    writeCommand(bin, 'npm', `case "$2" in\n${others}\n  *) exit 1 ;;\nesac`);
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 1);
+    assert.equal(result.stderr, notFoundLines(harness));
+    assert.deepEqual(dockerCalls(), []);
+  });
+}
+
+// The caller's environment is no source of the values the wrapper hands Compose for the harnesses.
+const callerEnvironment = {
+  SANDBOX_HARNESS_PACKAGES: 'evil@1.0.0',
+  SANDBOX_HARNESS_RECORD: 'evil@1.0.0',
+  SANDBOX_HARNESS_DIRECTORIES: '.evil',
+  SANDBOX_HARNESS_ALLOWLIST: 'evil.example',
+  ...Object.fromEntries(HARNESSES.map(({ sandbox }) => [`SANDBOX_${sandbox.versionArgument}`, '0.0.1'])),
+  ...Object.fromEntries(HARNESSES.map(({ sandbox }) => [sandbox.versionArgument, '0.0.2'])),
+};
+
+test("the wrapper does not use what the caller's environment holds for the harnesses", (testContext) => {
+  const { root, container, home, bin, dockerCalls, harnessAllowlist } = setUp(testContext, kitPath);
+  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', '--rebuild', 'echo', 'hi'], {
     encoding: 'utf-8',
-    env: { HOME: home, PATH: bin },
-    input: '7.7.7\n',
+    env: { HOME: home, PATH: bin, ...callerEnvironment },
   });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
-});
-
-test("the wrapper does not use a version the caller's environment holds", (testContext) => {
-  const { root, container, home, bin, dockerCalls } = setUp(testContext, kitPath);
-  const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
-    encoding: 'utf-8',
-    env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
-  });
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, '');
-  assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
+  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+  assert.doesNotMatch(harnessAllowlist(), /evil/);
 });
 
 test(
-  "the wrapper does not use a version the caller's environment holds for a harness with no other source",
+  "the wrapper does not use what the caller's environment holds for harnesses with no other source",
   (testContext) => {
     const { root, container, home, bin, imageLabels, dockerCalls } = setUp(testContext, kitPath);
-    rmSync(join(bin, 'claude'));
-    rmSync(join(bin, 'opencode'));
+    removeAllHarnesses(bin);
     writeFileSync(imageLabels, imageLabelsText(builtBefore));
     const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
       encoding: 'utf-8',
-      env: { HOME: home, PATH: bin, SANDBOX_CLAUDE_CODE_VERSION: '0.0.1', SANDBOX_OPENCODE_VERSION: '0.0.2' },
+      env: { HOME: home, PATH: bin, ...callerEnvironment },
     });
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
@@ -403,190 +551,77 @@ test('the wrapper builds nothing when the image holds the wanted versions', (tes
   assert.deepEqual(npmCalls(), []);
 });
 
-test('the wrapper says which harness differs from the image, and builds before it runs', (testContext) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
-  writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(result.stderr, holdsLine('Claude Code', builtBefore.claude, hostVersions.claude, 'the host'));
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
-});
-
-test('the wrapper says so for each harness when both differ from the image', (testContext) => {
+test('the wrapper says so for each harness when every one differs from the image', (testContext) => {
   const { root, container, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
   writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
     result.stderr,
-    holdsLine('Claude Code', builtBefore.claude, hostVersions.claude, 'the host') +
-      holdsLine('OpenCode', builtBefore.opencode, hostVersions.opencode, 'the host'),
+    HARNESSES.map(({ name, title }) => holdsLine(title, builtBefore[name], hostVersions[name], 'the host')).join(''),
   );
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
   assert.deepEqual(npmCalls(), []);
 });
 
-test('the wrapper rebuilds an image that records no versions, which one built before the labels is', (testContext) => {
-  const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
-  writeFileSync(imageLabels, imageLabelsText({ claude: '', opencode: '' }));
+test('the wrapper rebuilds an image that records no harnesses, which one built before the label is', (context) => {
+  const { root, container, imageLabels, run, dockerCalls } = setUp(context, kitPath);
+  writeFileSync(imageLabels, imageLabelsText({}));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
     result.stderr,
-    recordsNoneLine('Claude Code', hostVersions.claude, 'the host') +
-      recordsNoneLine('OpenCode', hostVersions.opencode, 'the host'),
+    HARNESSES.map(({ name, title }) => recordsNoneLine(title, hostVersions[name], 'the host')).join(''),
   );
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
 });
 
 test(
-  "the wrapper builds nothing when the image holds the project's version and the host's of the other",
+  'the wrapper asks npm nothing on --rebuild when the project gives every version and the host has none',
   (testContext) => {
-    const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath, {
-      OPENCODE_VERSION: '1.18.20',
-    });
-    writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: '1.18.20' }));
-    const result = run(root, '--in-place', 'echo', 'hi');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, '');
-    assert.deepEqual(dockerCalls(), runOnly(root, container, { claude: hostVersions.claude, opencode: '1.18.20' }));
-  },
-);
-
-test(
-  "the wrapper rebuilds for the project's version, whatever the host has, and names the project's file",
-  (testContext) => {
-    const { root, container, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, {
-      OPENCODE_VERSION: '1.18.20',
-    });
-    const result = run(root, '--in-place', 'echo', 'hi');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(
-      result.stderr,
-      holdsLine('OpenCode', hostVersions.opencode, '1.18.20', "the project's compose file"),
+    const buildArgs = Object.fromEntries(
+      HARNESSES.map(({ sandbox }, index) => [sandbox.versionArgument, `2.${index}.0`]),
     );
-    assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: hostVersions.claude, opencode: '1.18.20' }));
-    assert.deepEqual(npmCalls(), []);
-  },
-);
-
-// A project may hold the very version the host has. The value is the same and the source is not: the project's
-// file stands first.
-for (const [harness, argument, held, labels] of [
-  [
-    'Claude Code',
-    'CLAUDE_CODE_VERSION',
-    hostVersions.claude,
-    imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }),
-  ],
-  [
-    'OpenCode',
-    'OPENCODE_VERSION',
-    hostVersions.opencode,
-    imageLabelsText({ claude: hostVersions.claude, opencode: builtBefore.opencode }),
-  ],
-]) {
-  test(
-    `the wrapper names the project's file for a version of ${harness} it gives that equals the host's`,
-    (testContext) => {
-      const { root, container, imageLabels, run, dockerCalls } = setUp(testContext, kitPath, { [argument]: held });
-      writeFileSync(imageLabels, labels);
-      const result = run(root, '--in-place', 'echo', 'hi');
-      assert.equal(result.status, 0, result.stderr);
-      const inImage = harness === 'Claude Code' ? builtBefore.claude : builtBefore.opencode;
-      assert.equal(result.stderr, holdsLine(harness, inImage, held, "the project's compose file"));
-      assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
-    },
-  );
-}
-
-test(
-  "the wrapper asks npm nothing on --rebuild when the project gives both versions and the host has neither",
-  (testContext) => {
-    const buildArgs = { CLAUDE_CODE_VERSION: '2.1.200', OPENCODE_VERSION: '1.18.20' };
     const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, buildArgs);
-    rmSync(join(bin, 'claude'));
-    rmSync(join(bin, 'opencode'));
+    removeAllHarnesses(bin);
     const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
-    assert.deepEqual(dockerCalls(), buildAndRun(root, container, { claude: '2.1.200', opencode: '1.18.20' }));
+    const versions = Object.fromEntries(HARNESSES.map(({ name }, index) => [name, `2.${index}.0`]));
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
     assert.deepEqual(npmCalls(), []);
   },
 );
 
+const allLatestLines = HARNESSES.map(({ name, title }) => latestLine(title, latestVersions[name])).join('');
+
 test(
-  'the wrapper builds a missing image with the latest published versions when the host has neither harness',
+  'the wrapper builds a missing image with the latest published versions when the host has no harness',
   (testContext) => {
     const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, undefined, false);
-    rmSync(join(bin, 'claude'));
-    rmSync(join(bin, 'opencode'));
+    removeAllHarnesses(bin);
     const result = run(root, '--in-place', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(
-      result.stderr,
-      latestLine('Claude Code', latestVersions.claude) + latestLine('OpenCode', latestVersions.opencode),
-    );
+    assert.equal(result.stderr, allLatestLines);
     assert.deepEqual(dockerCalls(), buildAndRun(root, container, latestVersions));
-    assert.deepEqual(npmCalls(), askedOfBoth);
+    assert.deepEqual(npmCalls(), askedOfAll);
   },
 );
 
 test(
-  'the wrapper builds with the latest on --rebuild with neither harness, whatever the image records',
+  'the wrapper builds with the latest on --rebuild with no harness, whatever the image records',
   (testContext) => {
     const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-    rmSync(join(bin, 'claude'));
-    rmSync(join(bin, 'opencode'));
+    removeAllHarnesses(bin);
     writeFileSync(imageLabels, imageLabelsText(builtBefore));
     const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
-    assert.equal(
-      result.stderr,
-      latestLine('Claude Code', latestVersions.claude) + latestLine('OpenCode', latestVersions.opencode),
-    );
+    assert.equal(result.stderr, allLatestLines);
     assert.deepEqual(dockerCalls(), buildAndRun(root, container, latestVersions));
-    assert.deepEqual(npmCalls(), askedOfBoth);
+    assert.deepEqual(npmCalls(), askedOfAll);
   },
 );
 
-test('the wrapper takes the latest of an absent harness when the other differs from the image', (testContext) => {
-  const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-  rmSync(join(bin, 'opencode'));
-  writeFileSync(imageLabels, imageLabelsText(builtBefore));
-  const result = run(root, '--in-place', 'echo', 'hi');
-  assert.equal(result.status, 0, result.stderr);
-  assert.equal(
-    result.stderr,
-    holdsLine('Claude Code', builtBefore.claude, hostVersions.claude, 'the host') +
-      latestLine('OpenCode', latestVersions.opencode),
-  );
-  const versions = { claude: hostVersions.claude, opencode: latestVersions.opencode };
-  assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
-  assert.deepEqual(npmCalls(), [askedOf('opencode-ai')]);
-});
-
-for (const [what, label] of [
-  ['no version', ''],
-  ['a tag', 'latest'],
-  ['two numbers', '1.2'],
-]) {
-  test(`the wrapper builds when the image records ${what} of a harness that has no other source`, (testContext) => {
-    const { root, container, bin, imageLabels, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
-    rmSync(join(bin, 'claude'));
-    writeFileSync(imageLabels, imageLabelsText({ claude: label, opencode: hostVersions.opencode }));
-    const result = run(root, '--in-place', 'echo', 'hi');
-    assert.equal(result.status, 0, result.stderr);
-    assert.equal(result.stderr, latestLine('Claude Code', latestVersions.claude));
-    const versions = { claude: latestVersions.claude, opencode: hostVersions.opencode };
-    assert.deepEqual(dockerCalls(), buildAndRun(root, container, versions));
-    assert.deepEqual(npmCalls(), [askedOf('@anthropic-ai/claude-code')]);
-  });
-}
-
-// The latest that cannot be found. The wrapper stops before the build, also when an image exists that it could
-// have run.
-const claudeNotFound = notFoundLines('Claude Code', '@anthropic-ai/claude-code', 'CLAUDE_CODE_VERSION');
 for (const [what, arrange] of [
   ['npm fails', ({ npmFails }) => writeFileSync(npmFails, '')],
   ['npm prints nothing', ({ npmPrints }) => writeFileSync(npmPrints, '')],
@@ -596,36 +631,18 @@ for (const [what, arrange] of [
 ]) {
   test(`the wrapper stops, and builds and runs nothing, when the latest is needed and ${what}`, (testContext) => {
     const host = setUp(testContext, kitPath);
-    rmSync(join(host.bin, 'claude'));
-    rmSync(join(host.bin, 'opencode'));
+    removeAllHarnesses(host.bin);
     arrange(host);
     const result = host.run(host.root, '--in-place', '--rebuild', 'echo', 'hi');
     assert.equal(result.status, 1);
-    assert.equal(result.stderr, claudeNotFound);
+    assert.equal(result.stderr, notFoundLines(HARNESSES[0]));
     assert.deepEqual(host.dockerCalls(), []);
   });
 }
 
-test('the wrapper says nothing of the latest of one harness when that of the other cannot be found', (testContext) => {
-  const { root, bin, run, dockerCalls } = setUp(testContext, kitPath);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
-  writeCommand(
-    bin,
-    'npm',
-    `if [ "$2" = opencode-ai ]; then exit 1; fi
-echo '${latestVersions.claude}'`,
-  );
-  const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
-  assert.equal(result.status, 1);
-  assert.equal(result.stderr, notFoundLines('OpenCode', 'opencode-ai', 'OPENCODE_VERSION'));
-  assert.deepEqual(dockerCalls(), []);
-});
-
 test('the wrapper asks npm nothing, and so needs none, when no build is due', (testContext) => {
   const { root, container, bin, imageLabels, run, dockerCalls } = setUp(testContext, kitPath);
-  rmSync(join(bin, 'claude'));
-  rmSync(join(bin, 'opencode'));
+  removeAllHarnesses(bin);
   rmSync(join(bin, 'npm'));
   writeFileSync(imageLabels, imageLabelsText(builtBefore));
   const result = run(root, '--in-place', 'echo', 'hi');
@@ -647,7 +664,7 @@ test(
 
 test("the wrapper stops with the build's own error when the build fails, and runs and makes nothing", (testContext) => {
   const { root, container, imageLabels, buildFails, run, dockerCalls } = setUp(testContext, kitPath);
-  writeFileSync(imageLabels, imageLabelsText({ claude: builtBefore.claude, opencode: hostVersions.opencode }));
+  writeFileSync(imageLabels, imageLabelsText(builtBefore));
   writeFileSync(buildFails, '');
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 17);
@@ -658,15 +675,16 @@ test("the wrapper stops with the build's own error when the build fails, and run
 
 test('the wrapper runs with no Dockerfile beside it to read a version from', (testContext) => {
   const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
-  assert.deepEqual(readdirSync(container), ['sandbox.sh']);
+  assert.deepEqual(readdirSync(container).sort(), ['compose.yml', 'sandbox.sh']);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
 });
 
-// The developer's Claude Code status line. The wrapper mounts the host's script and the kit's managed settings
-// file that runs it, both or neither: Docker would create a root-owned directory at a script that is not there,
-// and the settings without a script would blank a status line set inside the sandbox.
+// The developer's Claude Code status line, which the module of Claude Code takes from the host. The wrapper mounts
+// the host's script and the kit's managed settings file that runs it, both or neither: Docker would create a
+// root-owned directory at a script that is not there, and the settings without a script would blank a status line
+// set inside the sandbox.
 const statusLinePath = (home) => join(home, '.claude', 'statusline-command.sh');
 
 function expectedRun(root, container, mounts = '') {
@@ -681,7 +699,7 @@ test("the wrapper mounts the host's status line script and the settings that run
   assert.equal(result.status, 0, result.stderr);
   const mounts =
     `--volume ${statusLinePath(home)}:/etc/claude-code/statusline-command.sh:ro ` +
-    `--volume ${container}/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
+    `--volume ${container}/harnesses/claude/managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
   assert.deepEqual(dockerCalls(), expectedRun(root, container, mounts));
 });
 
@@ -937,13 +955,8 @@ for (const [host, env, terminal] of [
   });
 }
 
-// Unit 0058: the bell. A start reads bell from the project's agentrite.json, judging no other key, and with true
-// mounts the kit's container/bell/ and its hooks of Claude Code, and names its plugin to OpenCode.
-const bellMounts = (container) =>
-  `--volume ${container}/bell:/etc/agentrite/bell:ro ` +
-  `--volume ${container}/bell/claude-managed-settings.json:/etc/claude-code/managed-settings.d/agentrite-bell.json:ro `;
-const bellEnvironment =
-  '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ';
+// Unit 0058: the bell. A start reads bell from the project's agentrite.json, with harnesses and judging no other key,
+// and with true mounts the kit's script of the bell and gives each harness what its module names for the bell.
 
 const startForms = [
   ['--in-place', () => ['--in-place']],
@@ -953,7 +966,12 @@ const startForms = [
 // The `run` of a start of `form` in the project at `root`, with `mounts` and `environment`.
 function startRun(root, container, form, workdir, mounts, environment) {
   const mounted = form === '--in-place' ? root : workdir;
-  return composeCalls(root, container, hostVersions, runCommand(root, mounted, mounts, homeLogs(root), environment));
+  return composeCalls(
+    root,
+    container,
+    hostVersions,
+    runCommand(root, mounted, mounts, homeLogs(root), '', environment),
+  );
 }
 
 for (const [form, formArgs] of startForms) {
@@ -963,7 +981,7 @@ for (const [form, formArgs] of startForms) {
       const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
       const workdir = join(base, 'elsewhere');
       mkdirSync(workdir);
-      writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+      writeStartSettings(root, { bell: true });
 
       const result = run(root, ...formArgs(workdir), 'echo', 'hi');
 
@@ -971,7 +989,7 @@ for (const [form, formArgs] of startForms) {
       assert.equal(result.stderr, '');
       assert.deepEqual(
         dockerCalls(),
-        startRun(root, container, form, workdir, bellMounts(container), bellEnvironment),
+        startRun(root, container, form, workdir, bellMounts(container), bellEnvironment()),
       );
       assert.equal(existsSync(join(home, '.claude')), false);
     },
@@ -981,7 +999,7 @@ for (const [form, formArgs] of startForms) {
     const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
-    writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+    writeStartSettings(root, { bell: true });
     mkdirSync(join(home, '.claude'));
     writeFileSync(statusLinePath(home), 'echo line\n');
 
@@ -990,10 +1008,10 @@ for (const [form, formArgs] of startForms) {
     assert.equal(result.status, 0, result.stderr);
     const statusLine =
       `--volume ${statusLinePath(home)}:/etc/claude-code/statusline-command.sh:ro ` +
-      `--volume ${container}/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
+      `--volume ${container}/harnesses/claude/managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
     assert.deepEqual(
       dockerCalls(),
-      startRun(root, container, form, workdir, statusLine + bellMounts(container), bellEnvironment),
+      startRun(root, container, form, workdir, statusLine + bellMounts(container), bellEnvironment()),
     );
   });
 
@@ -1001,7 +1019,7 @@ for (const [form, formArgs] of startForms) {
     const { base, root, container, run, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
-    writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+    writeStartSettings(root);
 
     const result = run(root, ...formArgs(workdir), 'echo', 'hi');
 
@@ -1051,16 +1069,16 @@ for (const [form, formArgs] of startForms) {
 
 test('a start reads bell again at each start, with no build in between', (testContext) => {
   const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+  writeStartSettings(root);
   assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+  writeStartSettings(root, { bell: true });
 
   const result = run(root, '--in-place', 'echo', 'hi');
 
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [
     ...startRun(root, container, '--in-place', root, '', ''),
-    ...startRun(root, container, '--in-place', root, bellMounts(container), bellEnvironment),
+    ...startRun(root, container, '--in-place', root, bellMounts(container), bellEnvironment()),
   ]);
 });
 
@@ -1103,7 +1121,7 @@ for (const [form, formArgs] of startForms) {
     const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
     const workdir = join(base, 'elsewhere');
     mkdirSync(workdir);
-    writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+    writeStartSettings(root, { bell: true });
     writeHostSettings(home, hostSettingsWithNumber(365));
     writeFileSync(statusLinePath(home), 'echo line\n');
 
@@ -1112,9 +1130,9 @@ for (const [form, formArgs] of startForms) {
     assert.equal(result.status, 0, result.stderr);
     const statusLine =
       `--volume ${statusLinePath(home)}:/etc/claude-code/statusline-command.sh:ro ` +
-      `--volume ${container}/claude-managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
+      `--volume ${container}/harnesses/claude/managed-settings.json:/etc/claude-code/managed-settings.json:ro `;
     const mounts = statusLine + bellMounts(container) + cleanupPeriodMount(root);
-    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, mounts, bellEnvironment));
+    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, mounts, bellEnvironment()));
     assert.equal(readFileSync(cleanupPeriodFile(root), 'utf-8'), '{"cleanupPeriodDays": 365}\n');
     assert.ok(dockerCalls().every((call) => !call.includes('secret')));
   });
@@ -1308,3 +1326,262 @@ for (const [what, content] of [
     assert.deepEqual(dockerCalls(), []);
   });
 }
+
+// 0097 R16: for a project of Claude Code and OpenCode, the whole run of an --in-place start, written out, as it was
+// before the harnesses' part of the sandbox came from their modules, but for what turns off their updates, which the
+// run is now given rather than the image, and the bell's script, which is mounted as a file of its own.
+test('the run of a project of claude and opencode, with everything a run can be given, is the one written here', (
+  testContext,
+) => {
+  const { root, container, home, runWith, dockerCalls, harnessAllowlist } = setUp(testContext, kitPath);
+  writeFileSync(join(root, 'agentrite.json'), '{"bell": true, "harnesses": ["opencode", "claude"]}\n');
+  mkdirSync(join(home, '.claude'));
+  writeFileSync(join(home, '.claude', 'statusline-command.sh'), 'echo line\n');
+  writeFileSync(join(home, '.claude', 'settings.json'), '{"cleanupPeriodDays": 365}');
+  const logs = homeLogs(root);
+
+  const result = runWith({ env: { TERM: 'xterm-256color' } }, root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(dockerCalls(), [
+    'AGENTRITE_CONTAINER=node_modules/agentrite/container ' +
+      'SANDBOX_HARNESS_PACKAGES=@anthropic-ai/claude-code@99.1.0 opencode-ai@98.2.0 ' +
+      'SANDBOX_HARNESS_RECORD=claude@99.1.0 opencode@98.2.0 ' +
+      'SANDBOX_HARNESS_DIRECTORIES=.claude/projects .local/share/opencode ' +
+      `SANDBOX_AGENTRITE_VERSION=${kitVersion} docker compose ` +
+      `--project-directory ${root} -f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml ` +
+      'run --rm --env TERM=xterm-256color ' +
+      '--env DISABLE_AUTOUPDATER=1 --env DISABLE_UPDATES=1 --env OPENCODE_CONFIG=/etc/opencode/opencode.json ' +
+      '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ' +
+      `--volume ${root}:/work ` +
+      `--volume ${container}/harnesses/opencode/opencode.json:/etc/opencode/opencode.json:ro ` +
+      `--volume ${home}/.claude/statusline-command.sh:/etc/claude-code/statusline-command.sh:ro ` +
+      `--volume ${container}/harnesses/claude/managed-settings.json:/etc/claude-code/managed-settings.json:ro ` +
+      `--volume ${container}/bell/ring-bell.sh:/etc/agentrite/bell/ring-bell.sh:ro ` +
+      `--volume ${container}/harnesses/claude/bell-settings.json:` +
+      '/etc/claude-code/managed-settings.d/agentrite-bell.json:ro ' +
+      `--volume ${container}/harnesses/opencode/bell-plugin.js:/etc/agentrite/bell/opencode-plugin.js:ro ` +
+      `--volume ${logs}/claude-cleanup-period-365.json:` +
+      '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json:ro ' +
+      `--volume ${logs}/.claude/projects:/home/agent/.claude/projects ` +
+      `--volume ${logs}/.local/share/opencode:/home/agent/.local/share/opencode ` +
+      'sandbox echo hi',
+  ]);
+  assert.equal(
+    harnessAllowlist(),
+    [
+      '# the Anthropic API that Claude Code uses',
+      'api.anthropic.com',
+      '# Claude Code contacts it at start-up when it holds no saved login',
+      'platform.claude.com',
+      '# OpenCode fetches its model catalog from it',
+      'models.opencode.ai',
+      "# OpenCode's login with a ChatGPT account, and every refresh of its token",
+      'auth.openai.com',
+      '# OpenCode sends the prompts of a ChatGPT login here',
+      'chatgpt.com',
+    ].join('\n'),
+  );
+});
+
+// 0097 R18: the image, the allowlist and a run hold only the harnesses the project's agentrite.json names.
+const joinedNames = (names) => names.join(', ').replace(/, ([^,]*)$/, ' and $1');
+const harnessesLine = (held, named) =>
+  `sandbox.sh: the image holds the harnesses ${joinedNames(held)}, and agentrite.json names ` +
+  `${joinedNames(named)}. Rebuilding.\n`;
+
+// The allowlist the wrapper composes for the harnesses `harnesses`: a comment with each host's reason, then the host.
+const allowlistOf = (harnesses) =>
+  harnesses.flatMap(({ sandbox }) => sandbox.hosts.flatMap(({ host, reason }) => [`# ${reason}`, host])).join('\n');
+
+for (const harness of HARNESSES) {
+  const { name, sandbox } = harness;
+  const versions = { [name]: hostVersions[name] };
+
+  test(`a project of ${name} alone gets only its package, directories, hosts, environment, mounts and bell`, (
+    testContext,
+  ) => {
+    const { base, root, container, bin, imageLabels, run, dockerCalls, npmCalls, harnessAllowlist } = setUp(
+      testContext,
+      kitPath,
+    );
+    writeStartSettings(root, { bell: true, harnesses: [name] });
+    writeFileSync(imageLabels, imageLabelsText(versions));
+    // Every other harness's command leaves a mark when it is asked anything.
+    const asked = join(base, 'others-asked');
+    for (const other of othersOf(harness)) writeCommand(bin, other.start.command, `echo asked >> "${asked}"`);
+
+    const result = run(root, '--in-place', 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const command = runCommand(root, root, bellMounts(container, [name]), homeLogs(root), '', bellEnvironment([name]), [
+      name,
+    ]);
+    assert.deepEqual(dockerCalls(), composeCalls(root, container, versions, command));
+    assert.equal(harnessAllowlist(), allowlistOf([harness]));
+    assert.deepEqual(npmCalls(), []);
+    assert.equal(existsSync(asked), false);
+    assert.deepEqual(readdirSync(homeLogs(root), { recursive: true }).sort(), [
+      ...new Set(sandbox.logDirectories.flatMap((directory) => directory.split('/').map((_, index, parts) =>
+        parts.slice(0, index + 1).join('/')))),
+    ].sort());
+  });
+
+  test(`a project of ${name} alone asks npm only of its package when a build is due`, (testContext) => {
+    const { root, container, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, undefined, false);
+    writeStartSettings(root, { harnesses: [name] });
+    rmSync(join(bin, harness.start.command));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, latestLine(harness.title, latestVersions[name]));
+    const latest = { [name]: latestVersions[name] };
+    assert.deepEqual(
+      dockerCalls(),
+      composeCalls(root, container, latest, 'build', runCommand(root, root, '', homeLogs(root), '', '', [name])),
+    );
+    assert.deepEqual(npmCalls(), [askedOf(sandbox.package)]);
+  });
+
+  if (HARNESSES.length > 1) {
+    test(`a project of ${name} alone is built when the image holds every harness, and says which`, (context) => {
+      const { root, container, run, dockerCalls } = setUp(context, kitPath);
+      writeStartSettings(root, { harnesses: [name] });
+      const result = run(root, '--in-place', 'echo', 'hi');
+      assert.equal(result.status, 0, result.stderr);
+      assert.equal(result.stderr, harnessesLine(HARNESS_NAMES, [name]));
+      const command = runCommand(root, root, '', homeLogs(root), '', '', [name]);
+      assert.deepEqual(dockerCalls(), composeCalls(root, container, versions, 'build', command));
+    });
+
+    test(`a project of every harness is built when the image holds ${name} alone, and says which`, (context) => {
+      const { root, container, imageLabels, run, dockerCalls } = setUp(context, kitPath);
+      writeFileSync(imageLabels, imageLabelsText(versions));
+      const result = run(root, '--in-place', 'echo', 'hi');
+      assert.equal(result.status, 0, result.stderr);
+      const others = othersOf(harness)
+        .map((other) => recordsNoneLine(other.title, hostVersions[other.name], 'the host'))
+        .join('');
+      assert.equal(result.stderr, harnessesLine([name], HARNESS_NAMES) + others);
+      assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+    });
+  }
+
+  test(`the version a project's file gives of ${name}, which the project does not name, is ignored`, (context) => {
+    const other = othersOf(harness)[0];
+    if (other === undefined) return;
+    const { root, container, imageLabels, run, dockerCalls } = setUp(context, kitPath, {
+      [sandbox.versionArgument]: 'not a version',
+    });
+    writeStartSettings(root, { harnesses: [other.name] });
+    const otherVersions = { [other.name]: hostVersions[other.name] };
+    writeFileSync(imageLabels, imageLabelsText(otherVersions));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    const command = runCommand(root, root, '', homeLogs(root), '', '', [other.name]);
+    assert.deepEqual(dockerCalls(), composeCalls(root, container, otherVersions, command));
+  });
+}
+
+test('a start reads harnesses again at each start, and builds when they changed', (testContext) => {
+  const { root, container, run, dockerCalls, imageLabels } = setUp(testContext, kitPath);
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  writeStartSettings(root, { harnesses: [HARNESS_NAMES[0]] });
+  const first = { [HARNESS_NAMES[0]]: hostVersions[HARNESS_NAMES[0]] };
+  writeFileSync(imageLabels, imageLabelsText(first));
+  const result = run(root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [
+    ...runOnly(root, container, hostVersions),
+    ...composeCalls(root, container, first, runCommand(root, root, '', homeLogs(root), '', '', [HARNESS_NAMES[0]])),
+  ]);
+});
+
+for (const [form, formArgs] of startForms) {
+  test(`a start with ${form} and harnesses at fault is refused with the reader's message, asking nothing`, (
+    testContext,
+  ) => {
+    const HARNESSES_MUST = `It must hold a list of one or more of ${HARNESS_NAMES.map((name) => `"${name}"`).join(
+      ' and ',
+    )}`;
+    for (const [text, message] of [
+      ['{"bell": false}', `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`],
+      ['{"bell": false, "harnesses": []}', `agentrite.json: harnesses is []. ${HARNESSES_MUST}`],
+      ['{"bell": false, "harnesses": "claude"}', `agentrite.json: harnesses is "claude". ${HARNESSES_MUST}`],
+      ['{"bell": false, "harnesses": ["nothing"]}', `agentrite.json: harnesses is ["nothing"]. ${HARNESSES_MUST}`],
+    ]) {
+      const { base, root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      writeFileSync(join(root, 'agentrite.json'), text);
+      const asked = join(base, 'harness-asked');
+      for (const { start } of HARNESSES) writeCommand(bin, start.command, `echo asked >> "${asked}"`);
+
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+      assert.equal(result.status, 1, text);
+      assert.equal(result.stdout, '', text);
+      assert.equal(result.stderr, `agentrite: ${message}\n`, text);
+      assert.deepEqual(dockerCalls(), [], text);
+      assert.deepEqual(npmCalls(), [], text);
+      assert.equal(existsSync(asked), false, text);
+    }
+  });
+}
+
+test('a start judges nothing of agentrite.json but bell and harnesses', (testContext) => {
+  const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
+  writeFileSync(
+    join(root, 'agentrite.json'),
+    JSON.stringify({ bell: false, harnesses: HARNESS_NAMES, defaultBranch: 5, roles: [], standards: '/x' }),
+  );
+  const result = run(root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
+});
+
+// 0097 R13: the harnesses' build arguments and KIT_ALLOWLIST are the kit's to set.
+for (const argument of ['HARNESS_PACKAGES', 'HARNESS_RECORD', 'HARNESS_DIRECTORIES']) {
+  test(`the wrapper refuses a project's file that sets ${argument}, before anything is built`, (testContext) => {
+    const { root, run, dockerCalls, npmCalls } = setUp(testContext, kitPath, { [argument]: 'evil@1.0.0' });
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 1);
+    assert.equal(
+      result.stderr,
+      `sandbox.sh: ${root}/sandbox/compose.project.yml sets ${argument}, which is the kit's to set.\n` +
+        'Remove it from that file.\n',
+    );
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+for (const [what, value] of [
+  ['a list of its own', 'evil.example\n'],
+  // As Compose gives the kit's variable in a project's value, which the wrapper hands its marker for this question.
+  ['the kit list with a host before it', `evil.example\n${kitAllowlist('sandbox.sh/no-version-from-the-project')}`],
+]) {
+  test(`the wrapper refuses a project's file that sets KIT_ALLOWLIST to ${what}`, (testContext) => {
+    const { root, projectEnvironment, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    writeFileSync(projectEnvironment, JSON.stringify({ KIT_ALLOWLIST: value }));
+    const result = run(root, '--in-place', 'echo', 'hi');
+    assert.equal(result.status, 1);
+    assert.equal(
+      result.stderr,
+      `sandbox.sh: ${root}/sandbox/compose.project.yml sets KIT_ALLOWLIST, which is the kit's to set.\n` +
+        'Remove it from that file.\n',
+    );
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+test("the wrapper takes the project's ALLOWLIST as it is", (testContext) => {
+  const { root, container, projectEnvironment, run, dockerCalls } = setUp(testContext, kitPath);
+  writeFileSync(projectEnvironment, JSON.stringify({ ALLOWLIST: 'api.openai.com\n' }));
+  const result = run(root, '--in-place', 'echo', 'hi');
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
+});

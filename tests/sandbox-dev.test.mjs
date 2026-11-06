@@ -4,21 +4,33 @@ import { chmodSync, copyFileSync, cpSync, mkdirSync, readFileSync, rmSync, write
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
-import { fakeHost, installKitPackage, logDirectory, logMounts } from './wrapper-fixture.mjs';
+import {
+  bellEnvironment,
+  bellMounts,
+  fakeHost,
+  installKitPackage,
+  logDirectory,
+  logMounts,
+  updateEnvironment,
+  updateMounts,
+  writeStartSettings,
+} from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const shim = fileURLToPath(new URL('../sandbox-dev.sh', import.meta.url));
 const wrapper = fileURLToPath(new URL('../container/sandbox.sh', import.meta.url));
 const unitClone = fileURLToPath(new URL('../container/unit-clone.sh', import.meta.url));
 const dockerfile = fileURLToPath(new URL('../container/Dockerfile', import.meta.url));
+const baseCompose = fileURLToPath(new URL('../container/compose.yml', import.meta.url));
 const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const projectCompose = readFileSync(new URL('../sandbox/compose.project.yml', import.meta.url), 'utf-8');
 
 const devName = 'ritenoar-agentrite-sandbox-dev';
 const nameFromVariable = '${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}';
 
-// A checkout holding copies of the shim, of the working copy's wrapper and Dockerfile and of its reader of
-// agentrite.json, an agentrite.json that holds `"bell": false` alone, and the host of
+// A checkout holding copies of the shim, of the working copy's wrapper, Dockerfile and base Compose file and of its
+// readers of agentrite.json and of the harnesses, an agentrite.json that holds `"bell": false` and every harness of
+// the list alone, and the host of
 // `fakeHost`, whose `docker` says the image exists and records each call with the SANDBOX_PROJECT_NAME and the
 // AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
 // home of whoever runs the suite holds.
@@ -36,13 +48,15 @@ function setUp(testContext) {
     chmodSync(to, 0o755);
   }
   copyFileSync(dockerfile, join(root, 'container', 'Dockerfile'));
+  copyFileSync(baseCompose, join(root, 'container', 'compose.yml'));
   // The checkout's own package.json, from which the wrapper reads the kit's version.
   installKitPackage(root);
-  // The wrapper reads bell with the kit's reader of agentrite.json, in the checkout's scripts/.
+  // The wrapper reads the start's settings and the harnesses with the kit's helper, in the checkout's scripts/.
   mkdirSync(join(root, 'scripts'));
   for (const file of [
     'agentrite-settings.mjs',
     'agentrite-cleanup-period.mjs',
+    'agentrite-sandbox.mjs',
     'agentrite-roles.mjs',
     'agentrite-harness.mjs',
     'agentrite-headless.mjs',
@@ -52,7 +66,7 @@ function setUp(testContext) {
     copyFileSync(join(kitScripts, file), join(root, 'scripts', file));
   }
   cpSync(join(kitScripts, 'harnesses'), join(root, 'scripts', 'harnesses'), { recursive: true });
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": false}\n');
+  writeStartSettings(root);
   const home = join(base, 'home');
   mkdirSync(home);
   const { bin, dockerCalls } = fakeHost(base, ['SANDBOX_PROJECT_NAME', 'AGENTRITE_CONTAINER']);
@@ -62,8 +76,9 @@ function setUp(testContext) {
   const prefix =
     `SANDBOX_PROJECT_NAME=${devName} AGENTRITE_CONTAINER=container docker compose ` +
     `--project-directory ${root} -f ${root}/container/compose.yml -f ${root}/sandbox/compose.project.yml`;
-  // The flags of the checkout's log directory, which is named after the checkout and not after the dev name.
-  const logs = logMounts(logDirectory(join(home, '.local', 'share'), root));
+  // The flags of the checkout's log directory, which is named after the checkout and not after the dev name, after
+  // those of the files that turn off the harnesses' updates.
+  const logs = updateMounts(join(root, 'container')) + logMounts(logDirectory(join(home, '.local', 'share'), root));
   return { base, root, run, dockerCalls, prefix, logs };
 }
 
@@ -73,7 +88,10 @@ test("the shim runs the checkout's own wrapper, and builds before it runs althou
   const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
   const result = run(['--in-place']);
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}sandbox`]);
+  assert.deepEqual(dockerCalls(), [
+    `${prefix} build`,
+    `${prefix} run --rm ${updateEnvironment()}--volume ${root}:/work ${logs}sandbox`,
+  ]);
 });
 
 // The release sandbox's image and home volume are safe only while the name is the shim's to set.
@@ -81,7 +99,10 @@ test('the shim sets the dev name over one the caller had set', (testContext) => 
   const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
   const result = run(['--in-place'], { SANDBOX_PROJECT_NAME: 'ritenoar-agentrite-sandbox' });
   assert.equal(result.status, 0, result.stderr);
-  assert.deepEqual(dockerCalls(), [`${prefix} build`, `${prefix} run --rm --volume ${root}:/work ${logs}sandbox`]);
+  assert.deepEqual(dockerCalls(), [
+    `${prefix} build`,
+    `${prefix} run --rm ${updateEnvironment()}--volume ${root}:/work ${logs}sandbox`,
+  ]);
 });
 
 test("the shim passes the wrapper's options and the command on", (testContext) => {
@@ -94,23 +115,23 @@ test("the shim passes the wrapper's options and the command on", (testContext) =
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), [
     `${prefix} build`,
-    `${prefix} run --rm --volume ${workdir}:/work --volume ${mounted}:/mnt/mounted:ro ${logs}sandbox echo hi`,
+    `${prefix} run --rm ${updateEnvironment()}--volume ${workdir}:/work --volume ${mounted}:/mnt/mounted:ro ` +
+      `${logs}sandbox echo hi`,
   ]);
 });
 
 // Unit 0058, R3: the bell rings in ./sandbox-dev.sh as in ./sandbox.sh, read from the checkout's agentrite.json.
 test("the shim with \"bell\": true has the checkout's wrapper mount the bell and name the plugin", (testContext) => {
   const { root, run, dockerCalls, prefix, logs } = setUp(testContext);
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": true}\n');
+  writeStartSettings(root, { bell: true });
   const result = run(['--in-place']);
   assert.equal(result.status, 0, result.stderr);
+  const container = join(root, 'container');
+  const [updates, logMountsOnly] = [updateMounts(container), logs.slice(updateMounts(container).length)];
   assert.deepEqual(dockerCalls(), [
     `${prefix} build`,
-    `${prefix} run --rm ` +
-      '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ' +
-      `--volume ${root}:/work --volume ${root}/container/bell:/etc/agentrite/bell:ro ` +
-      `--volume ${root}/container/bell/claude-managed-settings.json:` +
-      `/etc/claude-code/managed-settings.d/agentrite-bell.json:ro ${logs}sandbox`,
+    `${prefix} run --rm ${updateEnvironment()}${bellEnvironment()}--volume ${root}:/work ` +
+      `${updates}${bellMounts(container)}${logMountsOnly}sandbox`,
   ]);
 });
 
@@ -178,7 +199,7 @@ for (const [what, args, command] of [
     assert.equal(result.status, 0, result.stderr);
     assert.deepEqual(dockerCalls(), [
       `${prefix} build`,
-      `${prefix} run --rm --volume ${root}:/work ${logs}sandbox ${command}`,
+      `${prefix} run --rm ${updateEnvironment()}--volume ${root}:/work ${logs}sandbox ${command}`,
     ]);
   });
 }

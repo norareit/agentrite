@@ -222,7 +222,7 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
   repeats; each of today's refusals of `bell` with its message unchanged; `harnesses` missing, empty, not a list and
   naming an unknown harness, each refused with the message of `checkKey`; a file whose `defaultBranch`, `roles` or
   `standards` is at fault read without a refusal. Then write `parseStart` and `readStart` (R18)
-- [ ] Remove `parseBell`, `readBell`, the `bell` form and their cases, in the commit that changes the wrapper, which
+- [x] Remove `parseBell`, `readBell`, the `bell` form and their cases, in the commit that changes the wrapper, which
   until then runs the `bell` form, so that each commit passes `npm test` (R18)
 
 ### The contract and the modules
@@ -242,7 +242,7 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
   fault and unreadable, with today's messages; OpenCode's `host` giving nothing (R1, R11)
 - [x] In `tests/agentrite-cleanup-period.test.mjs`, add cases of `cleanupPeriodOf` with `ProjectFile` values, to
   replace those of `readCleanupPeriod`. Then write `cleanupPeriodOf` in `scripts/agentrite-cleanup-period.mjs` (R11)
-- [ ] Remove `readCleanupPeriod`, the command line of `scripts/agentrite-cleanup-period.mjs` and their cases, in the
+- [x] Remove `readCleanupPeriod`, the command line of `scripts/agentrite-cleanup-period.mjs` and their cases, in the
   commit that changes the wrapper, which until then runs that command line, so that each commit passes `npm test`
   (R11)
 
@@ -258,7 +258,7 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 ### The sandbox
 
-- [ ] Move the three files into `container/harnesses/` with `git mv` and write
+- [x] Move the three files into `container/harnesses/` with `git mv` and write
   `container/harnesses/opencode/opencode.json` with the content the Dockerfile writes today. Point
   `tests/bell.test.mjs` and `tests/claude-managed-settings.test.mjs` at their new places, and rewrite the test that
   the hooks and the plugin name the files where the wrapper mounts them: the hooks run
@@ -266,26 +266,26 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
   the script. Add to `tests/agentrite-harness.test.mjs`, going over `HARNESSES`, that every
   `kit` mount names a file of `container/harnesses/<name>/`, that every file there is named by a mount of its
   harness, and that `container/harnesses/` holds a directory only for a harness of the list (R3, R10)
-- [ ] Add `tests/sandbox-harness-names.test.mjs`: for `container/Dockerfile`, `container/compose.yml`,
+- [x] Add `tests/sandbox-harness-names.test.mjs`: for `container/Dockerfile`, `container/compose.yml`,
   `container/sandbox.sh`, `container/entrypoint.sh` and `templates/project/sandbox/compose.project.yml`, with the lines
   that are comments removed and, of the entrypoint, the text of `home_volume_recovery`, no line holds, without regard
   to case, the name, title, command, package, version argument, a host, a log directory, or a target or an
   environment name of a mount or an entry of any harness of `HARNESSES` (R2)
-- [ ] Rewrite `tests/harness-versions.test.mjs` over `HARNESSES`: the last stage declares the three arguments without
+- [x] Rewrite `tests/harness-versions.test.mjs` over `HARNESSES`: the last stage declares the three arguments without
   a default; the label `com.ritenoar.agentrite.harnesses` is set from `HARNESS_RECORD` after the install; the install
   takes `HARNESS_PACKAGES`; the base compose file gives the three from their `SANDBOX_HARNESS_` variables; and the
   search for a version of a harness is built from the names, titles, packages and arguments of the list, with its own
   cases kept (R4)
-- [ ] Rewrite `tests/dockerfile-log-directories.test.mjs`: the RUN that goes over `HARNESS_DIRECTORIES` follows the
+- [x] Rewrite `tests/dockerfile-log-directories.test.mjs`: the RUN that goes over `HARNESS_DIRECTORIES` follows the
   agent's account, makes each under `/home/agent`, owns the directory of the home it is in, and writes the list file;
   and the wrapper hands the build the log directories of the project's harnesses (R9)
-- [ ] Rewrite `tests/compose-allowlist.test.mjs`: the literal hosts of `KIT_ALLOWLIST` are `registry.npmjs.org`
+- [x] Rewrite `tests/compose-allowlist.test.mjs`: the literal hosts of `KIT_ALLOWLIST` are `registry.npmjs.org`
   alone, the block ends with the line of `SANDBOX_HARNESS_ALLOWLIST`, `FIREWALL_PROBE` is one of the literal hosts,
   and the set of those and the hosts of `claude` and `opencode` is today's six (R7, R8)
-- [ ] Extend `tests/entrypoint-home-owner.test.mjs` with `log_directory_parents` over the log directories of
+- [x] Extend `tests/entrypoint-home-owner.test.mjs` with `log_directory_parents` over the log directories of
   `HARNESSES` and of a list that shares a parent, and with the refusal of a missing list; make the guard's cases pass
   the directories it gives (R9)
-- [ ] In `tests/wrapper-fixture.mjs`, build `hostVersions` and `latestVersions` from `HARNESSES`, with versions no
+- [x] In `tests/wrapper-fixture.mjs`, build `hostVersions` and `latestVersions` from `HARNESSES`, with versions no
   release has; give each fake harness a `--version` that prints the first of the bare version, `<name> <version>`
   and `<command> <version>` that its `readVersion` reads as the version, and fail naming the harness when none is;
   answer `npm view` for each package of the list; answer `image inspect` with the record and the kit's label;
@@ -294,7 +294,7 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
   list; give `dockerHost`'s stand-in Dockerfile the argument and the label of the record; add a writer of an
   `agentrite.json` with `bell` and `harnesses`, by default every name of the list, which each test that writes
   `{"bell": ...}` today uses (R14)
-- [ ] In `tests/sandbox-wrapper.test.mjs`, turn every case that names a harness into a loop over `HARNESSES`: the
+- [x] In `tests/sandbox-wrapper.test.mjs`, turn every case that names a harness into a loop over `HARNESSES`: the
   host's versions, the not-installed message, a pre-release, the differing image, the latest published, the
   caller's environment, the status line and the bell. Add, for a project of `claude` and `opencode`, one case that
   holds the whole `docker compose run` of an `--in-place` start against its flags written out, to pin R16. Add the
@@ -304,14 +304,14 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
   `docker`, `npm` or a harness; `--connect` with an `agentrite.json` at fault still connects; a version from the
   project's file that is not a version refused before a build; a project's file that sets `HARNESS_PACKAGES` or
   `KIT_ALLOWLIST` refused (R4 to R7, R10 to R13, R16, R18)
-- [ ] Update the expected calls of `tests/sandbox-unit-run.test.mjs`, `tests/sandbox-update.test.mjs`,
+- [x] Update the expected calls of `tests/sandbox-unit-run.test.mjs`, `tests/sandbox-update.test.mjs`,
   `tests/sandbox-project-dockerfile.test.mjs`, `tests/sandbox-dev.test.mjs` and every other test the change of the
   run's flags or of `agentrite.json` touches, through the fixture where they share it (R14, R16)
-- [ ] Change `container/Dockerfile`, `container/compose.yml`, `container/entrypoint.sh` and
+- [x] Change `container/Dockerfile`, `container/compose.yml`, `container/entrypoint.sh` and
   `templates/project/sandbox/compose.project.yml` as above, with their comments (R2, R4, R7, R8, R9)
-- [ ] Change `container/sandbox.sh` as above, and its opening comment, so that it names no harness but as an
+- [x] Change `container/sandbox.sh` as above, and its opening comment, so that it names no harness but as an
   example (R2, R4 to R6, R10 to R13, R18)
-- [ ] Run `npm test` and correct until it passes (R14, R16)
+- [x] Run `npm test` and correct until it passes (R14, R16)
 
 ### The documents
 
@@ -351,7 +351,7 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 - [x] `feature-0097 Give each harness module what the sandbox knows of it`: the contract, the modules, the cleanup
   period's reader, the helper, `package.json` and their tests. The wrapper does not use them yet, and the tree passes
   `npm test`
-- [ ] `feature-0097 Take the harnesses of the sandbox from their modules`: the moved files, the Dockerfile, the compose
+- [x] `feature-0097 Take the harnesses of the sandbox from their modules`: the moved files, the Dockerfile, the compose
   files, the wrapper, the entrypoint and the sandbox's tests. The tree passes `npm test`
 - [ ] `feature-0097 Describe the sandbox's harness modules`: `CONTRIBUTING.md`, `SANDBOX.md` and `SETUP.md`
 - [ ] `feature-0097 Record the implementation and the verification`: the implementer's entries in `record.md`

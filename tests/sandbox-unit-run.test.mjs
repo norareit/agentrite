@@ -19,11 +19,17 @@ import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { skipReason } from './skip-reason.mjs';
 import {
   assertFormsListed,
+  bellEnvironment,
+  bellMounts,
   fakeHost,
+  hostVersions,
+  imageLabelsText,
   installKitPackage,
-  logDirectories,
+  logDirectoriesOf,
   logDirectory,
   logMounts,
+  updateEnvironment,
+  updateMounts,
   writeCommand,
 } from './wrapper-fixture.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -32,9 +38,15 @@ const kitContainer = fileURLToPath(new URL('../container/', import.meta.url));
 const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const kitPath = 'node_modules/agentrite/container';
 
+// The harnesses of the project, which its agentrite.json names and its image holds.
+const PROJECT_HARNESSES = ['claude'];
+
+// The directories of the logs of the project's harnesses.
+const logDirectories = logDirectoriesOf(PROJECT_HARNESSES);
+
 // An agentrite.json that names `defaultBranch`, and in which the bell does not ring.
 function settingsFor(defaultBranch) {
-  return kitSettingsText({ defaultBranch, harnesses: ['claude'], sandbox: true, bell: false });
+  return kitSettingsText({ defaultBranch, harnesses: PROJECT_HARNESSES, sandbox: true, bell: false });
 }
 
 const branch = 'task-0026-doc';
@@ -53,7 +65,9 @@ function setUp(testContext, { imageExists = true, recorded = ['AGENTRITE_CONTAIN
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });
-  for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
+  for (const file of ['sandbox.sh', 'unit-clone.sh', 'compose.yml']) {
+    copyFileSync(join(kitContainer, file), join(container, file));
+  }
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   // The wrapper runs the reader of agentrite.json from the kit's scripts/, beside its container/.
   cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
@@ -68,6 +82,7 @@ function setUp(testContext, { imageExists = true, recorded = ['AGENTRITE_CONTAIN
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
   const host = fakeHost(base, recorded);
+  writeFileSync(host.imageLabels, imageLabelsText({ claude: hostVersions.claude }));
   if (!imageExists) rmSync(host.imageLabels);
 
   const git = (...args) =>
@@ -99,12 +114,16 @@ function setUp(testContext, { imageExists = true, recorded = ['AGENTRITE_CONTAIN
   // sets XDG_DATA_HOME.
   const logs = logDirectory(join(home, '.local', 'share'), root);
   // The calls of a unit run that mounts `mounted` at /work, with the flags of the host's terminal in `terminal`
-  // before the mounts, `mounts` after the three of the unit run and the two directories of `logDirectory` last.
-  const unitRun = (mounted, mounts = '', logDirectory = logs, terminal = '') => [
+  // and then the environment of the project's harnesses and `environment` before the mounts, the files that turn
+  // off the harnesses' updates and `mounts` after the three of the unit run, and the directories of `logDirectory`
+  // last.
+  const unitRun = (mounted, mounts = '', logDirectory = logs, terminal = '', environment = '') => [
     `AGENTRITE_CONTAINER=${kitPath} docker rm ${containerName}`,
-    `${compose} run --rm --name ${containerName} ${terminal}--volume ${mounted}:/work ` +
+    `${compose} run --rm --name ${containerName} ${terminal}${updateEnvironment(PROJECT_HARNESSES)}${environment}` +
+      `--volume ${mounted}:/work ` +
       `--volume ${root}/.reviews:/work/.reviews --volume ${root}/.orchestrator:/work/.orchestrator ` +
-      `${mounts}${logMounts(logDirectory)}sandbox echo hi`,
+      `${updateMounts(container, PROJECT_HARNESSES)}${mounts}${logMounts(logDirectory, PROJECT_HARNESSES)}` +
+      'sandbox echo hi',
   ];
   // The script the stand-in `docker` runs as the agent, in the directory mounted at /work.
   const agent = (script) => writeFileSync(host.agentScript, `set -e\n${script}\n`);
@@ -588,10 +607,14 @@ test(
   },
 );
 
-// R7: the runs that cut no branch read nothing of the file but bell, which unit 0058 has every start read, and
-// --connect, which starts nothing, reads nothing of it.
+// R7: the runs that cut no branch read nothing of the file but bell and harnesses, which units 0058 and 0097 have
+// every start read, and --connect, which starts nothing, reads nothing of it.
 for (const [what, settings, forms] of [
-  ['an agentrite.json of bell alone', '{"bell": false}\n', ['unit', 'in place', 'connect']],
+  [
+    'an agentrite.json of bell and harnesses alone',
+    `${JSON.stringify({ bell: false, harnesses: PROJECT_HARNESSES })}\n`,
+    ['unit', 'in place', 'connect'],
+  ],
   ['no agentrite.json', null, ['connect']],
   ['an agentrite.json that is not valid', 'not json', ['connect']],
 ]) {
@@ -633,25 +656,34 @@ for (const [what, settings, forms] of [
 }
 
 // Unit 0058, R1, R7: a unit run reads bell at its start, and rings as it says.
-test('a unit run with "bell": true mounts the bell and names the plugin to OpenCode', (testContext) => {
+test("a unit run with \"bell\": true gives the bell of the project's harnesses", (testContext) => {
   const { root, container, clone, run, dockerCalls, unitRun } = setUp(testContext);
   writeFileSync(join(root, 'agentrite.json'), settingsFor('master').replace('"bell": false', '"bell": true'));
 
   const result = run([branch, 'echo', 'hi']);
 
   assert.equal(result.status, 0, result.stderr);
-  const bell =
-    `--volume ${container}/bell:/etc/agentrite/bell:ro ` +
-    `--volume ${container}/bell/claude-managed-settings.json:` +
-    '/etc/claude-code/managed-settings.d/agentrite-bell.json:ro ';
-  const plugin = '--env OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]} ';
-  assert.deepEqual(dockerCalls(), unitRun(clone, bell, undefined, plugin));
+  const bell = bellMounts(container, PROJECT_HARNESSES);
+  assert.deepEqual(dockerCalls(), unitRun(clone, bell, undefined, '', bellEnvironment(PROJECT_HARNESSES)));
 });
 
 // Unit 0058, R7: --connect starts nothing, so it reads no bell and connects whatever the file holds of it.
 test('--connect with an agentrite.json that lacks bell connects, reading nothing', (testContext) => {
   const host = setUp(testContext);
   writeFileSync(join(host.root, 'agentrite.json'), settingsFor('master').replace('  "bell": false,\n', ''));
+  markRunning(host);
+
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});
+
+// 0097 R18: --connect reads no harnesses either, and connects whatever the file holds of them.
+test('--connect with an agentrite.json that lacks harnesses connects, reading nothing', (testContext) => {
+  const host = setUp(testContext);
+  writeFileSync(join(host.root, 'agentrite.json'), '{"bell": false, "harnesses": []}\n');
   markRunning(host);
 
   const result = host.run(['--connect', branch, 'echo', 'hi']);

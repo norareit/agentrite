@@ -1,8 +1,9 @@
 #!/bin/sh
 #
 # Rings the bell of the terminal the session runs in: it writes the one byte BEL there
-# and nothing else. Claude Code's hooks and OpenCode's plugin in container/bell/ run it,
-# as the agent, when the harness waits for the developer or stops. A bell written to the
+# and nothing else. The bell of each harness runs it, as the agent, when the harness waits
+# for the developer or stops: Claude Code's hooks and OpenCode's plugin, which are in
+# container/harnesses/claude/ and container/harnesses/opencode/. A bell written to the
 # sandbox's terminal comes out on the host's terminal, where tmux marks the window.
 #
 # The terminal is /dev/tty when the script has a controlling terminal. A harness may

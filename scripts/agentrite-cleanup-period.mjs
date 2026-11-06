@@ -1,7 +1,3 @@
-import { readFileSync, realpathSync } from 'node:fs';
-import { join } from 'node:path';
-import { fileURLToPath, pathToFileURL } from 'node:url';
-
 /** @typedef {import('./agentrite-instructions.mjs').ProjectFile} ProjectFile */
 
 const KEY = 'cleanupPeriodDays';
@@ -56,51 +52,4 @@ export function cleanupPeriodOf(read, path) {
   if (!read.found) return undefined;
   if ('error' in read) throw new Error(`cannot read ${path}: ${read.error}. ${CORRECT}`);
   return parseCleanupPeriod(read.text, path);
-}
-
-/**
- * The `cleanupPeriodDays` of `.claude/settings.json` under `home`, read as `parseCleanupPeriod` reads it, or
- * `undefined` when there is no such file. Throws what to print for a file that cannot be read.
- *
- * @param {string} home
- * @returns {number | undefined}
- */
-export function readCleanupPeriod(home) {
-  const path = join(home, '.claude', 'settings.json');
-  let text;
-  try {
-    text = readFileSync(path, 'utf-8');
-  } catch (error) {
-    if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') return undefined;
-    throw new Error(`cannot read ${path}: ${messageOf(error)}. ${CORRECT}`);
-  }
-  return parseCleanupPeriod(text, path);
-}
-
-/**
- * True when this file is the entry point, which it is for the sandbox's wrapper: a shell script cannot import, so
- * it runs this file with `node` and reads the number from what is printed.
- *
- * @returns {boolean}
- */
-function isMain() {
-  if (process.argv[1] === undefined) return false;
-  const self = pathToFileURL(realpathSync(fileURLToPath(import.meta.url))).href;
-  const invoked = pathToFileURL(realpathSync(process.argv[1])).href;
-  return self === invoked;
-}
-
-if (isMain()) {
-  const args = process.argv.slice(2);
-  if (args.length !== 1) {
-    console.error('usage: node agentrite-cleanup-period.mjs <home>');
-    process.exit(2);
-  }
-  try {
-    // An empty line for a home without the number, which container/sandbox.sh reads as giving nothing.
-    console.log(String(readCleanupPeriod(args[0]) ?? ''));
-  } catch (error) {
-    console.error(`agentrite: ${messageOf(error)}`);
-    process.exit(1);
-  }
 }

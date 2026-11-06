@@ -9,18 +9,30 @@ import { fileURLToPath } from 'node:url';
 import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
-import { fakeHost, installKitPackage, logDirectory, logMounts } from './wrapper-fixture.mjs';
+import {
+  fakeHost,
+  hostVersions,
+  imageLabelsText,
+  installKitPackage,
+  logDirectory,
+  logMounts,
+  updateEnvironment,
+  updateMounts,
+} from './wrapper-fixture.mjs';
 
 const kitContainer = fileURLToPath(new URL('../container/', import.meta.url));
 const kitScripts = fileURLToPath(new URL('../scripts/', import.meta.url));
 const kitPath = 'node_modules/agentrite/container';
 const noHooks = '/usr/local/lib/agentrite/no-hooks';
 
+// The harnesses of the project, which its agentrite.json names and its image holds.
+const HARNESSES_OF_PROJECT = ['claude'];
+
 // The agentrite.json of a sandbox-only project that names `defaultBranch`, in which the bell does not ring.
 function settingsFor(defaultBranch) {
   return kitSettingsText({
     defaultBranch,
-    harnesses: ['claude'],
+    harnesses: HARNESSES_OF_PROJECT,
     process: false,
     sandbox: true,
     bell: false,
@@ -42,7 +54,9 @@ function setUp(testContext, { imageExists = true } = {}) {
   const root = join(base, 'project');
   const container = join(root, kitPath);
   mkdirSync(container, { recursive: true });
-  for (const file of ['sandbox.sh', 'unit-clone.sh']) copyFileSync(join(kitContainer, file), join(container, file));
+  for (const file of ['sandbox.sh', 'unit-clone.sh', 'compose.yml']) {
+    copyFileSync(join(kitContainer, file), join(container, file));
+  }
   chmodSync(join(container, 'sandbox.sh'), 0o755);
   cpSync(kitScripts, join(container, '..', 'scripts'), { recursive: true });
   copyKitInstructions(join(container, '..'));
@@ -55,6 +69,7 @@ function setUp(testContext, { imageExists = true } = {}) {
   mkdirSync(home);
   writeFileSync(join(home, '.gitconfig'), '[user]\n\tname = Tester\n\temail = tester@example.com\n');
   const host = fakeHost(base, ['AGENTRITE_CONTAINER', 'SANDBOX_GIT_HOOKS_PATH']);
+  writeFileSync(host.imageLabels, imageLabelsText({ claude: hostVersions.claude }));
   if (!imageExists) rmSync(host.imageLabels);
 
   const gitEnvironment = withoutGitEnvironmentConfiguration({ HOME: home, PATH: process.env.PATH });
@@ -82,15 +97,34 @@ function setUp(testContext, { imageExists = true } = {}) {
     `${recorded} docker compose --project-directory ${root} ` +
     `-f ${container}/compose.yml -f ${root}/sandbox/compose.project.yml`;
   const logs = logDirectory(join(home, '.local', 'share'), root);
+  // The flags of a run of the project's harnesses: the environment, and the mounts of `logs`, that every run gets.
+  const harnessFlags = updateEnvironment(HARNESSES_OF_PROJECT);
+  const runMounts = updateMounts(container, HARNESSES_OF_PROJECT) + logMounts(logs, HARNESSES_OF_PROJECT);
   // The calls of a run on the clone of the branch `name`, which mounts the clone at /work and nothing of the process.
   const branchRun = (name) => [
     `${recorded} docker rm project-sandbox-${name}`,
-    `${compose} run --rm --name project-sandbox-${name} --volume ${cloneOf(name)}:/work ` +
-      `${logMounts(logs)}sandbox echo hi`,
+    `${compose} run --rm --name project-sandbox-${name} ${harnessFlags}--volume ${cloneOf(name)}:/work ` +
+      `${runMounts}sandbox echo hi`,
   ];
   // The script the stand-in `docker` runs as the agent, in the directory mounted at /work.
   const agent = (script) => writeFileSync(host.agentScript, `set -e\n${script}\n`);
-  return { base, root, home, state, cloneOf, run, git, compose, recorded, logs, branchRun, agent, ...host };
+  return {
+    base,
+    root,
+    home,
+    state,
+    cloneOf,
+    run,
+    git,
+    compose,
+    recorded,
+    logs,
+    harnessFlags,
+    runMounts,
+    branchRun,
+    agent,
+    ...host,
+  };
 }
 
 // A host on which a build would be due and would need the registry, so that a refusal that comes too late shows
@@ -379,8 +413,8 @@ test('--in-place and --workdir run as they do in a project with the process', (t
   assert.equal(host.run(['--workdir', other, 'echo', 'hi']).status, 0);
 
   assert.deepEqual(host.dockerCalls(), [
-    `${host.compose} run --rm --volume ${host.root}:/work ${logMounts(host.logs)}sandbox echo hi`,
-    `${host.compose} run --rm --volume ${other}:/work ${logMounts(host.logs)}sandbox echo hi`,
+    `${host.compose} run --rm ${host.harnessFlags}--volume ${host.root}:/work ${host.runMounts}sandbox echo hi`,
+    `${host.compose} run --rm ${host.harnessFlags}--volume ${other}:/work ${host.runMounts}sandbox echo hi`,
   ]);
 });
 
