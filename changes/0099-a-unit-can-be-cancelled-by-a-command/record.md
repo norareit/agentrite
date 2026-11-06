@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-06T14:07:38Z
 ---
 
@@ -59,5 +59,9 @@ timestamp: 2026-11-06T14:07:38Z
   the review is `.reviews/0099-a-unit-can-be-cancelled-by-a-command/review-20261106T150617Z.md`. Independently ran
   `npm test`: 1591 passed, 0 failed and 33 Docker-dependent tests skipped. The change check passed. Docker checks
   and cancellation of a real project unit remain unverified. The status is `in-progress`
+- 2026-11-06T20:27:58Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, at the human's request, set the
+  status to `implemented`. The review of `cf2694c` returned S1, blocking, and P1, not blocking, both applied in
+  `8b7f3ee`; the human accepted the fix of S1 by asking for the unit to be closed. The delta review of `4a20b0d`
+  returned no findings, and every task of `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
