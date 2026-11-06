@@ -5,7 +5,8 @@
 The work is in two parts. First, without changing what any command does, the contract gains the four members that
 requirements 2 and 3 ask for, Claude Code's and OpenCode's modules implement them as the kit behaves today, and the
 code that assumed `--agent` and Markdown wrappers goes through them. Then the Codex module, its files of the
-sandbox, its tests and this repository's own files are added, and the documents describe it.
+sandbox and its tests are added, and the documents describe it. This repository's own files at its root are not
+touched.
 
 ### The start in a role
 
@@ -217,9 +218,17 @@ also holds for the one Codex adds.
 
 ### This repository
 
-`agentrite.json` names `["claude", "opencode", "codex"]`. `npx agentrite refresh` writes `.codex/agents/` for the
-five roles, and `.codex/config.toml` is written with the content `init` writes, which refresh then notices nothing
-of. `sandbox/compose.project.yml` keeps `api.openai.com`, which its comment gives for the reviewer under OpenCode.
+The root's own files stay as they are: `agentrite.json` names `claude` and `opencode`, and the root holds no
+`.codex/`. The root is a project of the installed release, which knows no `codex`, so the suite's checks of the root
+against it, `tests/repository-own-files.test.mjs` among them, hold unchanged. The repository adopts Codex when it
+moves to the release that holds this unit, which is no task of this plan.
+
+For the same reason `./sandbox-dev.sh` builds an image without Codex, since it takes the harnesses from the root's
+`agentrite.json`. The checks of the sandbox are therefore made in a scratch project outside the repository: a git
+repository with a `package.json` and a commit, into which the working tree's kit is installed from the tarball of
+`npm pack`, and which is set up with `npx agentrite init` naming `claude`, `opencode` and `codex` and the sandbox.
+Its `./sandbox.sh` then runs the working tree's `container/`. Each check below that says "in the sandbox" is made
+there, and the tarball is made again after any change to the kit.
 
 ## Files
 
@@ -236,13 +245,12 @@ of. `sandbox/compose.project.yml` keeps `api.openai.com`, which its comment give
 - `container/bell/ring-bell.sh`: its opening comment
 - `standards.md`: the rule on `Co-Authored-By`
 - `package.json`: `scripts/harnesses/codex.mjs` in `files`, `codex` in `keywords`
-- `agentrite.json`, `.codex/agents/*.toml`, `.codex/config.toml`: this repository's own
 - `tests/agentrite-harness.test.mjs`, `tests/agentrite-run.test.mjs`, `tests/agentrite-roles.test.mjs`,
   `tests/agentrite-refresh.test.mjs`, `tests/agentrite-init.test.mjs`, `tests/agentrite-instructions.test.mjs`,
   `tests/agentrite-outcome.test.mjs`, `tests/agentrite-orchestrate.test.mjs`, `tests/agentrite-settings.test.mjs`,
   `tests/bell.test.mjs`, `tests/check-commit-message.test.mjs`, `tests/package-documents.test.mjs`,
-  `tests/pointers.test.mjs`, `tests/repository-own-files.test.mjs`, and those that go over `HARNESSES` where a third
-  harness shows a gap
+  `tests/pointers.test.mjs`, and those that go over `HARNESSES` where a third harness shows a gap.
+  `tests/repository-own-files.test.mjs` is not changed
 - `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md`, `CONTRIBUTING.md`
 - `pointers/agentrite-roles/README.md`, `pointers/agentrite-roles/pointer.mjs`
 - `diagrams/components.mmd` and its SVG
@@ -327,12 +335,10 @@ of. `sandbox/compose.project.yml` keeps `api.openai.com`, which its comment give
 
 ### This repository's own files
 
-- [ ] Add `codex` to `harnesses` of `agentrite.json`, run `npx agentrite refresh`, write `.codex/config.toml` with
-  the content `init` writes for this repository's standards, and check that `refresh` then prints no notice for it.
-  Make `tests/repository-own-files.test.mjs` cover the Codex wrappers and `.codex/config.toml` if it does not by the
-  list (R17)
-- [ ] Add `.codex/` to the table "What the repository holds besides the package" of `CONTRIBUTING.md`, as the role
-  wrappers for Codex and the configuration that loads the kit's instructions into it (R17)
+- [ ] Leave the root's own files as they are: `git diff master -- agentrite.json .claude .opencode CLAUDE.md
+  opencode.json` shows nothing, the root holds no `.codex/`, the table "What the repository holds besides the
+  package" of `CONTRIBUTING.md` does not change, `tests/repository-own-files.test.mjs` passes unchanged, and
+  `npm run kit -- refresh` at the root prints `up to date` for every file (R17)
 
 ### The documents
 
@@ -358,8 +364,8 @@ of. `sandbox/compose.project.yml` keeps `api.openai.com`, which its comment give
 - [ ] Rewrite "Adding a harness" of `CONTRIBUTING.md`: `scripts/harnesses/codex.mjs` among the modules to follow;
   what `start.role` asks of a new harness, an option that starts it as an agent or words that open the prompt; what
   `wrappers.extension`, `wrappers.isKit` and `wrappers.refreshed` ask, the format of its wrappers and how a model
-  pinned in them is kept; `.codex/` among this repository's own files; and the tests of a harness's own, as the cases
-  this unit added. Read the rest of the section and change what is no longer true (R19)
+  pinned in them is kept; and the tests of a harness's own, as the cases this unit added. Read the rest of the
+  section and change what is no longer true (R19)
 - [ ] Check every changed line against the limit of 120 characters (R18, R19)
 
 ## Verification
@@ -368,8 +374,8 @@ of. `sandbox/compose.project.yml` keeps `api.openai.com`, which its comment give
 - [ ] `npm run check-changes` passes after the commits
 - [ ] For a project of `claude` and `opencode`, a scratch project initialized with the working tree's kit before and
   after this unit gets the same files, and `agentrite run` prints the same command line for each harness (R16)
-- [ ] `./sandbox-dev.sh --in-place --rebuild true` builds the image with `@openai/codex`, and in it
-  `codex --version` prints the version of the image's label (R9)
+- [ ] In the scratch project of the approach, `./sandbox.sh --in-place --rebuild true` builds the image with
+  `@openai/codex`, and in it `codex --version` prints the version of the image's label (R9)
 - [ ] In the sandbox, in `/work`, with no change to the home's configuration, `codex debug prompt-input` shows the
   `developer_instructions` of `/work/.codex/config.toml` and the Codex wrappers among the roles of the spawn tool, in
   an `--in-place` run, a `--workdir` run and a unit run. Where it does not, stop as the approach says (R11)
@@ -401,7 +407,5 @@ of. `sandbox/compose.project.yml` keeps `api.openai.com`, which its comment give
 - [ ] `feature-0100 Add Codex as a harness`: the module, its files of the sandbox, `ring-bell.sh`'s comment,
   `writeInstructionFiles`, the usage of `run`, `standards.md`, `package.json` and the tests. The tree passes
   `npm test`
-- [ ] `feature-0100 Run this repository's own work on Codex too`: `agentrite.json`, `.codex/` and the table of
-  `CONTRIBUTING.md`
 - [ ] `feature-0100 Describe Codex as a harness`: the documents, the pointer package and the diagram
 - [ ] `feature-0100 Record the implementation and the verification`: the implementer's entries in `record.md`

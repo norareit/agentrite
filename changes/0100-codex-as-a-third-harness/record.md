@@ -64,5 +64,13 @@ timestamp: 2026-11-06T14:12:53Z
 - 2026-11-06T15:46:56Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, recorded that the human agreed to the
   correction by F1: this repository adopts Codex when it updates to the release that holds this unit, and not in
   this unit. The status stays `approved`
+- 2026-11-06T15:50:17Z [Claude Code, anthropic/claude-opus-5-5] as the planner, brought `plan.md` in line with the
+  corrected spec. By F1, the plan no longer changes the root's own files: the section on this repository says they
+  stay as they are, the two tasks that added `codex` to `agentrite.json`, wrote `.codex/` and listed it in the table
+  of `CONTRIBUTING.md` are replaced by one task that checks the root is unchanged and its suite's checks hold
+  (R17), `.codex/` is gone from the rewrite of "Adding a harness", and the commit point of the repository's own
+  files is removed. Since `./sandbox-dev.sh` takes its harnesses from the root's `agentrite.json`, the checks of
+  the sandbox move to a scratch project into which the working tree's kit is installed from `npm pack`. F2 and F3
+  change nothing of the plan, which gives the files itself. The status stays `approved`
 
 ## Amendments
