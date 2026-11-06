@@ -719,10 +719,18 @@ With `--connect` it starts nothing, and runs beside a unit run that is under way
 branch holds gets its branch first, cut from the default branch that `agentrite.json` names, unless the unit is
 cancelled there, which gets none. With `--variant` the run is of a variant of the unit, on a branch of its own.
 
-Every form but `--connect` reads `bell` from the project's `agentrite.json` at each start, and with `true` has the
-harnesses ring the terminal's bell. It refuses a project with no `agentrite.json`, and a file that lacks `bell` or
-whose `bell` is neither `true` nor `false`, with a message that names the file, the key and what it must hold, and
-starts nothing. See "The project's settings" in `SETUP.md`.
+Every form but `--connect` reads `bell` and `harnesses` from the project's `agentrite.json` at each start, before
+it asks the host's harnesses, Docker or npm anything. The image holds the harnesses that `harnesses` names and no
+other, and is built again at the start after the list changed. With `"bell": true` those harnesses ring the
+terminal's bell. It refuses a project with no `agentrite.json`, a file that lacks `bell` or whose `bell` is neither
+`true` nor `false`, and a file that lacks `harnesses` or whose `harnesses` is not a list of one or more of the kit's
+harnesses, with a message that names the file, the key and what it must hold, and starts nothing. `bell` is judged
+first. See "The project's settings" in `SETUP.md`.
+
+Before it builds anything, it refuses a project's `sandbox/compose.project.yml` that gives a harness's version, such
+as `CLAUDE_CODE_VERSION`, that is not an exact version, and one that sets `HARNESS_PACKAGES`, `HARNESS_RECORD`,
+`HARNESS_DIRECTORIES` or `KIT_ALLOWLIST`, which are the kit's to set. The message names the file, the argument and
+what to do. See "Holding a harness version" and "Reaching more hosts" in `SANDBOX.md`.
 
 | Argument or option | What it is                                                                                   |
 |--------------------|----------------------------------------------------------------------------------------------|
@@ -771,7 +779,8 @@ after `--in-place COMMAND`, are the command's, and are passed on as they are.
 Before the command in the container starts, or the one of `--connect`, it exits with `2` for wrong arguments and with
 `1` for every other refusal or failure of its own: among them an `agentrite.json` at fault, a unit that names no
 branch, a unit given by a number that names no branch and that is cancelled on the default branch, a run under way
-for the branch or none to connect to, a clone not yet brought back, and Docker or npm that cannot be asked. A Docker
+for the branch or none to connect to, a clone not yet brought back, a project's compose file that gives a version
+of another shape or sets what is the kit's to set, and Docker or npm that cannot be asked. A Docker
 command it runs before that which fails, as Compose reading the configuration or the build of the image, ends it with
 Docker's status, which it passes on. Once the command started, it passes on the command's status, as
 [Exit statuses](#exit-statuses) says. A unit run of a new clone that holds a `package-lock.json` installs the clone's
@@ -792,7 +801,7 @@ the sandbox" in [`SANDBOX.md`](SANDBOX.md).
 
 See in `SANDBOX.md` "Before the first run", "Running a unit", "Running on a branch without the change process",
 "Getting the work back", "Two agents on one unit", "Two implementations of one unit", "Running on the tree as it is",
-"The bell" and "Where things are kept on the host".
+"Reaching more hosts", "Holding a harness version", "The bell" and "Where things are kept on the host".
 
 ## Exit statuses
 

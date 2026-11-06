@@ -361,19 +361,20 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   symbolic links followed, so a kit linked into `node_modules`, as `npm link` does, is taken
 * The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by
   `agentrite orchestrate`, by `agentrite approve`, by the change check, and by `./sandbox.sh`. Every form of
-  `./sandbox.sh` but `--connect` reads `bell` at each start, and judges no other key of the file, unless a unit run,
-  or a run on a branch in a sandbox-only project, cuts a branch, which reads the whole file. `--connect` does not read
-  it
+  `./sandbox.sh` but `--connect` reads `bell` and `harnesses` at each start, and judges no other key of the file,
+  unless a unit run, or a run on a branch in a sandbox-only project, cuts a branch, which reads the whole file.
+  `--connect` does not read it
 * A command that reads the file refuses in a project that has none, and names `npx agentrite config` as the command
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused
   so by every command that reads the file, also one that does not use it: the message names the key, the path and
   that there is no file at it. Either way it writes and changes nothing and exits with 1. No
   command takes a missing file for the default file, or a missing key for its default value
-* A start of `./sandbox.sh` that cuts no branch judges `bell` alone. It refuses a project with no file, a file that
-  is not a JSON object, one that lacks `bell` and one whose `bell` is neither `true` nor `false`, names the file, the
-  key, what it holds or that it is missing, and what it must hold, starts nothing and exits 1. Another key at fault
-  does not stop it
+* A start of `./sandbox.sh` that cuts no branch judges `bell` and `harnesses` alone, `bell` first. It refuses a
+  project with no file, a file that is not a JSON object, one that lacks `bell` and one whose `bell` is neither
+  `true` nor `false`, and one that lacks `harnesses` and one whose `harnesses` is not a list of one or more of the
+  kit's harnesses. It names the file, the key, what it holds or that it is missing, and what it must hold, starts
+  nothing and exits 1. Another key at fault does not stop it
 
 A setting is changed by editing the file by hand. What to run afterwards:
 
@@ -542,8 +543,8 @@ refused. The line, after `sandbox`, with `false` for a project that wants no bel
 ```
 
 A project whose `agentrite.json` lacks `process` adds it before any command that reads the file runs again: until then
-every such command refuses the file. A start of the sandbox that cuts no branch judges `bell` alone, and is not
-refused for it. The line, after `harnesses`:
+every such command refuses the file. A start of the sandbox that cuts no branch judges `bell` and `harnesses` alone,
+and is not refused for it. The line, after `harnesses`:
 
 ```json
   "process": true,
