@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-10-24T23:14:27Z
 ---
 
@@ -62,5 +62,6 @@ timestamp: 2026-10-24T23:14:27Z
   role file need not say which of the four roles it runs before or after, which "Adding a role" of `SETUP.md` asks of
   an extra role: whoever starts a review chooses its moment, and the kit reads no such line. The spec is unchanged.
   The status is `draft`
+- 2026-11-06T21:09:00Z [human] approved the spec. The status is `approved`
 
 ## Amendments
