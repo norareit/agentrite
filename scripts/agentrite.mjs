@@ -31,6 +31,16 @@ import {
   approvedRecord,
   parseApproveArgs,
 } from './agentrite-approve.mjs';
+import {
+  CANCEL_FORM,
+  cancelledLine,
+  cancelledRecord,
+  cancellationEntry,
+  cancellationMessage,
+  cancellationRefusal,
+  parseCancelArgs,
+  wrappedEntry,
+} from './agentrite-cancel.mjs';
 import { recordFields, uncommittedFiles, uncommittedRefusal } from './agentrite-record.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
 import { HARNESS_NAMES, HARNESSES, harnessNamed, plannedFiles, wrapperDirectories } from './agentrite-harness.mjs';
@@ -1368,6 +1378,86 @@ function approve(root, { unit }) {
 }
 
 /**
+ * Throws unless `root` is in a git repository with a branch checked out, and returns the prefix of `root` and the
+ * branch. No other branch is read.
+ *
+ * @param {string} root
+ * @returns {{ prefix: string, branch: string }}
+ */
+function cancellationBranch(root) {
+  const prefix = repositoryPrefix(root);
+  const committedOn = 'a cancellation is committed on a branch';
+  if (prefix === null) throw new Error(`${root} is in no git repository, and ${committedOn}`);
+  const branch = checkedOutBranch(root);
+  if (branch === null) throw new Error(`no branch is checked out, and ${committedOn}`);
+  return { prefix, branch };
+}
+
+/**
+ * Throws unless the unit's record can be cancelled, and returns its text and kind.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {{ text: string, kind: string }}
+ */
+function cancellableRecord(root, directory) {
+  const recordFile = `changes/${directory}/record.md`;
+  const path = resolve(root, recordFile);
+  if (!isRegularFile(path)) throw new Error(`${recordFile} does not exist`);
+  const text = readFileSync(path, 'utf-8');
+  const { status, kind } = recordFields(text, recordFile);
+  const refusal = cancellationRefusal(directory, status);
+  if (refusal !== undefined) throw new Error(refusal);
+  return { text, kind };
+}
+
+/**
+ * The directory of the unit `--by` names, refused when it names none, more than one, or the unit being cancelled.
+ *
+ * @param {string} by
+ * @param {string[]} directories the names of the directories in `changes/`
+ * @param {string} directory the unit being cancelled
+ * @returns {string}
+ */
+function byDirectory(by, directories, directory) {
+  let named;
+  try {
+    named = resolveUnit(by, directories);
+  } catch (error) {
+    throw new Error(`--by was given ${by}, and ${/** @type {Error} */ (error).message}`);
+  }
+  if (named === directory) {
+    throw new Error(`--by was given ${by}, which names the unit being cancelled, changes/${directory}/`);
+  }
+  return named;
+}
+
+/**
+ * Cancels a unit: sets its status to `cancelled`, logs the cancellation with its reason, and commits the record
+ * alone on the branch checked out. When the commit fails, the record is put back as it was.
+ *
+ * @param {string} root
+ * @param {{ unit: string, reason: string, by: string | undefined }} parsed
+ * @returns {number}
+ */
+function cancel(root, { unit, reason, by }) {
+  readSettings(root);
+  const { prefix, branch } = cancellationBranch(root);
+  const directories = changeDirectories(root);
+  const directory = resolveUnit(unit, directories);
+  const { text, kind } = cancellableRecord(root, directory);
+  const named = by === undefined ? undefined : byDirectory(by, directories, directory);
+  checkCommitted(root, directory, prefix, 'cancels');
+
+  const recordFile = `changes/${directory}/record.md`;
+  const message = cancellationMessage(kind, directory);
+  const entry = wrappedEntry(cancellationEntry(instantOf(Date.now()), reason, named));
+  const hash = commitRecordAlone(root, recordFile, text, cancelledRecord(text, entry), message);
+  console.log(cancelledLine(directory, branch, hash, message));
+  return 0;
+}
+
+/**
  * Throws unless the wrapper of `role` for `harness` is in the project at `root` as refresh would leave it, given
  * the project's `roles`. A harness that is given another wrapper may go on as its default agent, which never reads
  * the role's file, and say so in one line that is easy to miss.
@@ -2245,6 +2335,7 @@ const COMMANDS = {
   roles: { form: ROLES_FORM, parse: parseRoles, run: roles },
   units: { form: UNITS_FORM, parse: parseUnitsArgs, run: units },
   approve: { form: APPROVE_FORM, parse: parseApproveArgs, run: approve },
+  cancel: { form: CANCEL_FORM, parse: parseCancelArgs, run: cancel },
   run: { form: RUN_FORM, parse: parseRunArgs, run },
   orchestrate: { form: ORCHESTRATE_FORM, parse: parseOrchestrateArgs, run: orchestrateCommand },
   runs: { form: RUNS_FORM, parse: parseRunsArgs, run: runs },

@@ -171,7 +171,7 @@ The pure parts, tests first:
 
 The command, tests first:
 
-- [ ] In `tests/agentrite-cancel.test.mjs`, write a fixture: a project made by `git init` on `master`, with the kit
+- [x] In `tests/agentrite-cancel.test.mjs`, write a fixture: a project made by `git init` on `master`, with the kit
   installed, an `agentrite.json` whose `defaultBranch` is `master`, a draft feature `0010-a-feature`, an approved
   task `0011-a-task`, an implemented feature `0012-done` and a file `tracked.txt`, committed. Write the command tests
   of success, each asserting the line printed, the exit status 0, the message of the commit, its author, that the
@@ -184,31 +184,31 @@ The command, tests first:
       `changes/0011-a-task/ --reason=<a reason>`, after which `master` points at the commit it pointed at before
     * the draft feature cancelled by `0010 --reason <a reason of 150 characters> --by 0012`, whose entry names
       `` `0012-done` `` and is wrapped over lines within 120 characters
-- [ ] Write a command test that, with a branch `other` cut beside `master` and the task's branch, compares the output
+- [x] Write a command test that, with a branch `other` cut beside `master` and the task's branch, compares the output
   of `git for-each-ref refs/heads` before and after a cancellation on the task's branch and finds only that branch
   moved (R4, R23)
-- [ ] Write a command test that a file staged and a tracked file changed outside the unit are not in the commit and
+- [x] Write a command test that a file staged and a tracked file changed outside the unit are not in the commit and
   are staged and changed as before, as the test of `approve` does (R8, R23)
-- [ ] Write a command test that a `commit-msg` hook that exits 1 makes the command exit 1, with what the hook printed
+- [x] Write a command test that a `commit-msg` hook that exits 1 makes the command exit 1, with what the hook printed
   and `the commit failed, and changes/0010-a-feature/record.md is as it was` on standard error, and leaves `HEAD`,
   the status, the index and the record as they were (R10, R23)
-- [ ] Write a command test for each refusal, asserting exit status 1, nothing on standard output, the line on
+- [x] Write a command test for each refusal, asserting exit status 1, nothing on standard output, the line on
   standard error, and `HEAD`, the status and the record as they were: no `agentrite.json`; an `agentrite.json` that
   is not JSON; no git repository; a detached `HEAD`; the digits `0099`, which name no directory; digits that open two
   directories; no `record.md`; a record without `status`, without `kind`, without `## Log`; the kind `epic`; the
   status `implemented`, with `0012`; the status `cancelled`; the status `done`; `--by 0098`, which names no
   directory; `--by` digits that open two directories; `--by 0010` for the unit `0010`; and a file of the unit
   changed, staged, and not tracked, each named with its state and `The human cancels what is committed` (R12, R23)
-- [ ] Write command tests that each wrong argument of the unit tests of `parseCancelArgs` given to the command exits 2
+- [x] Write command tests that each wrong argument of the unit tests of `parseCancelArgs` given to the command exits 2
   with its line and `CANCEL_FORM` on standard error, nothing on standard output, and the project as it was (R13, R23)
-- [ ] Write `cancellationBranch`, `cancellableRecord`, `byDirectory` and `cancel` in `scripts/agentrite.mjs` as the
+- [x] Write `cancellationBranch`, `cancellableRecord`, `byDirectory` and `cancel` in `scripts/agentrite.mjs` as the
   approach says, and add `cancel: { form: CANCEL_FORM, parse: parseCancelArgs, run: cancel }` to `COMMANDS` directly
   after `approve`, until those tests pass (R1 to R13)
-- [ ] Add the line `       agentrite cancel <unit> --reason <text> [--by <unit>]` after that of `approve` to the
+- [x] Add the line `       agentrite cancel <unit> --reason <text> [--by <unit>]` after that of `approve` to the
   usage in `tests/agentrite-run.test.mjs` and `tests/agentrite-init.test.mjs`, and add to
   `tests/agentrite-cancel.test.mjs` a test that `agentrite` with no argument prints the form of `cancel` after that
   of `approve` (R18)
-- [ ] Run `npm test`, which passes (R22, R23)
+- [x] Run `npm test`, which passes (R22, R23)
 
 The documents:
 
