@@ -93,6 +93,19 @@ Every command of the kit, and every command of this repository's own, follows "E
 * Build a reading of a spec that is the only one that works, such as `package-lock.json` changing with
   `package.json`, and log it in one line of `record.md`. Do not put it to the human as a decision
 
+## Security findings
+
+A finding of the security reviewer, [`extra-roles/security-reviewer.md`](extra-roles/security-reviewer.md), is kept
+out of everything published, since everything committed in this repository is.
+
+* A security finding, the decision on it and its outcome are written in nothing committed. This is an exception to
+  the rule of `process.md` that the outcome of each finding is recorded in `record.md`
+* No role but the security reviewer reads a file of `.reviews` whose name begins with `security-`. The implementer
+  takes no findings from one, and the reviewer takes none as its last review, as exceptions to their role files
+* A finding the human hands to another role is given in the hand-over
+* A fix the human hands to a role is described by what it changes and not by the attack it stops, in a plan, a
+  record, a commit message and a code comment alike
+
 ## Releasing
 
 `CHANGELOG.md` holds one section per release and ships in the package. A section is written when a release is made,

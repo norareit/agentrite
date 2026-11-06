@@ -157,7 +157,7 @@ The role:
 
 The repository:
 
-- [ ] Add a section `## Security findings` to `AGENTS.md`, after "Ways of working" and before "Releasing", that says:
+- [x] Add a section `## Security findings` to `AGENTS.md`, after "Ways of working" and before "Releasing", that says:
   a security finding, the decision on it and its outcome are written in nothing committed, which is an exception to
   the rule of `process.md` that the outcome of each finding is recorded in `record.md`; no role but the security
   reviewer reads a file of `.reviews` whose name begins with `security-`, and the implementer takes no findings from
@@ -182,6 +182,6 @@ The repository:
 - [x] `feature-0086 Plan the unit`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0086 Add the security reviewer as a role of this repository`: the tasks of the test and of the role,
   which only pass together
-- [ ] `feature-0086 Keep security findings out of what is committed`: the task of the repository
+- [x] `feature-0086 Keep security findings out of what is committed`: the task of the repository
 - [ ] `feature-0086 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
   what was run on the committed work
