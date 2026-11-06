@@ -182,7 +182,8 @@ logs.
 With `--follow`, the command prints between a step's two lines, while the step runs, the text messages the step's
 agent writes and the tool calls it makes, each once the harness has made it known, in that order. Claude Code makes
 each known as the agent makes it. OpenCode makes a tool call known once the call has ended, so of calls it runs at
-the same time, the one that ended first is printed first:
+the same time, the one that ended first is printed first. Codex makes known its text messages alone, each once it is
+complete, and no tool call, so a step of Codex is followed by its messages alone:
 
 * a text message is printed in full after its time, with one blank line before and after it. The final response is
   printed as any other text message, the block of its outcome among it
@@ -192,12 +193,12 @@ the same time, the one that ended first is printed first:
   call runs, cut to its first 100 characters. A line break in the label is written as `\n`, and a carriage return
   as `\r`, so that the call stays on one line. A call that has none of them has no label
 
-The time is the instant the harness gives for the message or the call, or, where it gives none, the instant the
-command learns of it, as `HH:MM:SS` in UTC. No result of a tool call, no reasoning of the agent and no other event of
-the harness is printed, in Claude Code and in OpenCode alike. The end report stands last, as without the option. The
-option is chosen when the run starts: a run started without it prints none of the messages and tool calls, and one
-started with it cannot be stopped from printing them. The followed file of each step in the run's directory holds them
-in both cases, as "What .orchestrator holds" gives.
+The time is the instant the harness gives for the message or the call, or, where it gives none, the instant the command
+learns of it, as `HH:MM:SS` in UTC. No result of a tool call, no reasoning of the agent and no other event of the
+harness is printed, in Claude Code, OpenCode and Codex alike. Codex gives no instant for a message. The end report
+stands last, as without the option. The option is chosen when the run starts: a run started without it prints none of
+the messages and tool calls, and one started with it cannot be stopped from printing them. The followed file of each
+step in the run's directory holds them in both cases, as "What .orchestrator holds" gives.
 
 With `--follow`, the command's own lines and the end report stand in frames, so that they are found among the messages
 and calls. A frame is an opening rule, `==== agentrite ` followed by `=` up to 80 characters in all, on the line before
@@ -318,7 +319,9 @@ and only for a run that stopped. They are those of the step that stopped it, and
 step it asked, since its outcome stands for that step's. A refused call of a step that went on, and of a run that ran
 every item to its end, is not given. Claude Code makes a refused call known in `permission_denials` of the `result`
 event that ends each turn, and every turn of the step counts. OpenCode makes it known as a `tool_use` event whose
-status is `error` and whose error is `The user rejected permission to use this specific tool call.`. The line `The
+status is `error` and whose error is `The user rejected permission to use this specific tool call.`. Codex asks for
+no permission in a headless run, so a step of Codex never has a refused call, and never stops the run for one: a step
+that a refusal would have stopped goes on to its outcome. The line `The
 harness refused <n> tool calls for lack of permission:` counts them, and is followed by each call, in the order the
 harness printed them, on a line of its own: the name of the tool as the harness gives it, and the label `--follow`
 gives the call, or the name alone for a call without a label. For a run started, or resumed, without

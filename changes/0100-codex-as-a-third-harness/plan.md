@@ -339,38 +339,38 @@ there, and the tarball is made again after any change to the kit.
 
 ### This repository's own files
 
-- [ ] Leave the root's own files as they are: `git diff master -- agentrite.json .claude .opencode CLAUDE.md
+- [x] Leave the root's own files as they are: `git diff master -- agentrite.json .claude .opencode CLAUDE.md
   opencode.json` shows nothing, the root holds no `.codex/`, the table "What the repository holds besides the
   package" of `CONTRIBUTING.md` does not change, `tests/repository-own-files.test.mjs` passes unchanged, and
   `npm run kit -- refresh` at the root prints `up to date` for every file (R17)
 
 ### The documents
 
-- [ ] `README.md`: name Codex wherever the harnesses are named, by the line of the map of the documents at most if
+- [x] `README.md`: name Codex wherever the harnesses are named, by the line of the map of the documents at most if
   nothing else names them, as the rule on `README.md` of `AGENTS.md` allows; and update `diagrams/components.mmd`
   with Codex and `.codex/agents/`, and generate its SVG with `npm run diagrams` (R18)
-- [ ] `COMMANDS.md`: the harnesses `run` and the orchestrator take, the row of `run` in the table if it names them,
+- [x] `COMMANDS.md`: the harnesses `run` and the orchestrator take, the row of `run` in the table if it names them,
   `--skip-permissions` for codex, and every other sentence that lists the harnesses (R18)
-- [ ] `ORCHESTRATOR.md`: a step of Codex is followed by its messages alone, and never stops for a refused permission,
+- [x] `ORCHESTRATOR.md`: a step of Codex is followed by its messages alone, and never stops for a refused permission,
   since Codex asks for none in a headless run (R18)
-- [ ] `SETUP.md`: `codex` among the harnesses a project names; how the kit's instructions reach Codex, through
+- [x] `SETUP.md`: `codex` among the harnesses a project names; how the kit's instructions reach Codex, through
   `developer_instructions` of `.codex/config.toml`, which `init` writes where it is missing; that Codex loads it and
   `.codex/agents/` only in a project the developer marked trusted in their own configuration of Codex, as Codex asks
   at its first interactive start; that the project's `developer_instructions` replaces one the developer's own
   configuration sets; and that a Codex run is told its role in its prompt, the wrappers serving its subagents (R18)
-- [ ] `SANDBOX.md`, each in the section of what the reader is doing: "Logging in" says to log in to Codex with
+- [x] `SANDBOX.md`, each in the section of what the reader is doing: "Logging in" says to log in to Codex with
   `codex login --device-auth`, or with an API key by `codex login --with-api-key`, which reads the key from its
   standard input; the hosts admitted for Codex in the table of the allowlist; the bell of Codex rings when a turn
   ends; and "Where things are kept on the host" gives `.codex`, with its login, configuration, sessions and state, in
   the project's log directory (R18)
-- [ ] `pointers/agentrite-roles/README.md` and `pointer.mjs`: name Codex where they name the harnesses, and update
+- [x] `pointers/agentrite-roles/README.md` and `pointer.mjs`: name Codex where they name the harnesses, and update
   `tests/pointers.test.mjs` if it holds the text (R18)
-- [ ] Rewrite "Adding a harness" of `CONTRIBUTING.md`: `scripts/harnesses/codex.mjs` among the modules to follow;
+- [x] Rewrite "Adding a harness" of `CONTRIBUTING.md`: `scripts/harnesses/codex.mjs` among the modules to follow;
   what `start.role` asks of a new harness, an option that starts it as an agent or words that open the prompt; what
   `wrappers.extension`, `wrappers.isKit` and `wrappers.refreshed` ask, the format of its wrappers and how a model
   pinned in them is kept; and the tests of a harness's own, as the cases this unit added. Read the rest of the
   section and change what is no longer true (R19)
-- [ ] Check every changed line against the limit of 120 characters (R18, R19)
+- [x] Check every changed line against the limit of 120 characters (R18, R19)
 
 ## Verification
 
@@ -411,5 +411,5 @@ there, and the tarball is made again after any change to the kit.
 - [x] `feature-0100 Add Codex as a harness`: the module, its files of the sandbox, `ring-bell.sh`'s comment,
   `writeInstructionFiles`, the usage of `run`, `standards.md`, `package.json` and the tests. The tree passes
   `npm test`
-- [ ] `feature-0100 Describe Codex as a harness`: the documents, the pointer package and the diagram
+- [x] `feature-0100 Describe Codex as a harness`: the documents, the pointer package and the diagram
 - [ ] `feature-0100 Record the implementation and the verification`: the implementer's entries in `record.md`

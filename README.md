@@ -39,8 +39,8 @@ read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" of `COM
 ## The components
 
 ![The components of the kit: ./sandbox.sh runs agentrite orchestrate, which runs agentrite run, which starts a harness,
-Claude Code or OpenCode; the harness reads the role wrappers, which point at the roles, which follow process.md and the
-standards, the kit's or the project's own; and the harness reads and writes the units in
+Claude Code, OpenCode or Codex; the harness reads the role wrappers, which point at the roles, which follow process.md
+and the standards, the kit's or the project's own; and the harness reads and writes the units in
 changes/](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/components.svg)
 
 ## Quick start

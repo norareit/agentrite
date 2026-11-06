@@ -29,10 +29,10 @@ flowchart LR
     run["<b>agentrite run</b><br/>one role on one unit"]
     sandbox --> orchestrate --> run
   end
-  harness(["<b>Harness</b><br/>Claude Code · OpenCode"])
+  harness(["<b>Harness</b><br/>Claude Code · OpenCode · Codex"])
   subgraph instructions["<b>WHAT THE AGENT FOLLOWS&nbsp;</b>"]
     direction TB
-    wrappers["<b>Role wrappers</b><br/>.claude/agents · .opencode/agents"]
+    wrappers["<b>Role wrappers</b><br/>.claude/agents · .opencode/agents · .codex/agents"]
     roles["<b>Roles</b><br/>specifier · planner · implementer · reviewer<br/>and roles the project adds"]
     rules["<b>process.md</b> and <b>the standards</b><br/>the kit's standards or the project's own"]
     wrappers --> roles --> rules

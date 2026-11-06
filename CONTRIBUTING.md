@@ -235,13 +235,31 @@ the harness contract. Add:
 * A module `scripts/harnesses/<name>.mjs` that exports an object implementing `HARNESS_CONTRACT` of
   `scripts/agentrite-harness.mjs`: its name and title, its role wrappers, its start, its headless run, how the
   kit's instructions reach it, and what the sandbox knows of it. The JSDoc type `Harness` beside the contract says
-  what each member takes and returns, and `scripts/harnesses/claude.mjs` and `scripts/harnesses/opencode.mjs` are the
-  two to follow
+  what each member takes and returns, and `scripts/harnesses/claude.mjs`, `scripts/harnesses/opencode.mjs` and
+  `scripts/harnesses/codex.mjs` are the three to follow
 * Its place in `HARNESSES` of `scripts/agentrite-harness.mjs`, the kit's only list of its harnesses. Every command
   that goes over the harnesses takes them from it, in its order, and so does the sandbox, through
   `scripts/agentrite-sandbox.mjs`, which the wrapper runs at each start
 * Its file in `files` of `package.json`, and in the list of the test of the package's files in
   `tests/package-documents.test.mjs`
+
+How a run starts in a role, and the format of the role wrappers, are the module's too. Of a new harness they ask:
+
+* `start.role`: how a run starts in a role, given the role's name and the path of its file. It gives either options,
+  as `--agent <role>` for Claude Code and OpenCode, or words that the prompt opens with, before an empty line, as
+  Codex, which has no option that starts a session as an agent, is told its role and the file to read. The command
+  that starts the harness names no option of its own for the role
+* `wrappers.extension`: what the name of a wrapper ends with after the role's name, as `.md`, or `.toml` for Codex
+* `wrappers.render`: the wrapper of a role, in the harness's format, holding the role file's description and the body
+  that every wrapper holds, `wrapperBody` of `scripts/agentrite-roles.mjs`, which says to read the role's file
+* `wrappers.isKit`: whether a file is a wrapper the kit wrote, whatever role, path or pinned model it holds, by which
+  `refresh` removes the wrapper of a role the project no longer has and leaves an agent of the project's own.
+  `isWrapperBody` of `scripts/agentrite-roles.mjs` recognizes the body between a fixed opening and a fixed closing,
+  in either format
+* `wrappers.refreshed`: what `refresh` writes over an existing wrapper, the rendered one with the model a project
+  pinned in it kept, as written. The Markdown wrappers keep a `model:` line of the front matter, and Codex's a line
+  before its instructions that opens with the key `model`. `agentrite run` refuses a wrapper that is not what this
+  would leave
 
 The member group `sandbox` asks of a new harness:
 
@@ -285,7 +303,8 @@ list. Each says what a new harness takes there.
 * **This repository's own files**: the default `harnesses` of `templates/project/agentrite.json`, this repository's
   `agentrite.json`, its wrappers and instruction files (`CLAUDE.md`, `opencode.json`, `.claude/`, `.opencode/`), its
   `sandbox/compose.project.yml`, and the table "What the repository holds besides the package" above, which lists
-  them
+  them. The root is a project of the installed release, so it names a new harness, and holds its files, only once
+  the repository moves to the release that holds the harness, as "The kit's own copy of the kit" says
 * **The `CLAUDE.md` that `init` writes into every project**, from `templates/project/CLAUDE.md` in `processFiles` of
   `scripts/agentrite.mjs`, whatever the harnesses. A new harness's instruction file is written only by its module's
   `instructions.init`
@@ -303,7 +322,12 @@ list. Each says what a new harness takes there.
   `tests/sandbox-wrapper.test.mjs` with `tests/wrapper-fixture.mjs` and `tests/sandbox-project-dockerfile.test.mjs`
   for the versions, `tests/dockerfile-log-directories.test.mjs` and `tests/entrypoint-home-owner.test.mjs` for the
   log directories, and `tests/compose-allowlist.test.mjs` for the allowlist. A harness gets cases of its own in:
-    * `tests/agentrite-harness.test.mjs`, for what its module reads of its own, as its `readVersion` and its `host`
+    * `tests/agentrite-harness.test.mjs`, for what its module reads of its own, as its `readVersion` and its `host`,
+      its start in a role and its command lines, its wrapper as written, recognized and refreshed, and its
+      instruction file in `init` and `refresh`. Every harness of the list is checked there, without an edit, for a
+      wrapper it renders being one it recognizes and one that refreshing over itself leaves as it is
+    * `tests/wrapper-fixture.mjs`, whose fake harness prints a version in the forms the modules read. A harness whose
+      `readVersion` reads none of them fails the sandbox's tests, naming it, until a form of its own is added
     * the commands: `tests/agentrite-run.test.mjs`, `tests/agentrite-orchestrate.test.mjs` with its fake harnesses,
       `tests/agentrite-outcome.test.mjs` for the headless readings, `tests/agentrite-roles.test.mjs` for the
       wrappers and the harnesses' own agents, `tests/agentrite-settings.test.mjs`,
@@ -311,7 +335,8 @@ list. Each says what a new harness takes there.
       name
     * `init` and `refresh`: `tests/agentrite-init.test.mjs`, `tests/agentrite-refresh.test.mjs` and
       `tests/agentrite-instructions.test.mjs`
-    * the files of its own in the sandbox: `tests/bell.test.mjs` for the hooks and the plugin of the bell, and
+    * the files of its own in the sandbox: `tests/bell.test.mjs` for the hooks, the plugin and the notify command of
+      the bell, and
       `tests/claude-managed-settings.test.mjs` for Claude Code's status line
     * the trailers: `tests/check-commit-message.test.mjs`, `tests/commit-msg-hook.test.mjs` and
       `tests/sandbox-commit-msg.test.mjs`

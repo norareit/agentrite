@@ -48,7 +48,7 @@ test('the agentrite-roles pointer says there is no such command any more and wha
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
   assert.match(result.stderr, /AgentRite has no command named agentrite-roles any more/);
-  assert.match(result.stderr, /`npx agentrite init claude opencode`/);
+  assert.match(result.stderr, /`npx agentrite init claude opencode codex`/);
   assert.match(result.stderr, /`npx agentrite refresh`/);
   assertCommandsAsTheKitHasThem(result.stderr);
   // A `|` in a command to run starts another command in a shell.
@@ -65,7 +65,7 @@ test('the agentrite-roles pointer says which package the kit is, how to install 
 
 test('the agentrite-roles pointer README says what the message says', () => {
   assert.match(readme, /no command named `?agentrite-roles`? any more/);
-  assert.match(readme, /`npx agentrite init claude opencode`/);
+  assert.match(readme, /`npx agentrite init claude opencode codex`/);
   assert.match(readme, /`npx agentrite refresh`/);
   assertCommandsAsTheKitHasThem(readme);
   assert.doesNotMatch(readme, /\|/);

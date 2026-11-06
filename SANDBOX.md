@@ -370,6 +370,15 @@ A harness is logged in to its model provider from the sandbox's shell, and the l
 
 * Claude Code is logged in once per home volume
 * OpenCode is logged in once per log directory, so a new home volume of the project needs no new login of OpenCode
+* Codex is logged in once per log directory too. With a ChatGPT account, log in with a device code, which needs no
+  browser to reach the sandbox: run `codex login --device-auth`, open the address it prints on the host and enter the
+  code there. With an API key, run `codex login --with-api-key`, which reads the key from its standard input: paste
+  the key, press Enter and then Ctrl-D
+
+Codex loads the project's `.codex/config.toml` and `.codex/agents/` in every run of the sandbox, `--in-place`,
+`--workdir` and a unit run alike, with no need to mark the project trusted: the kit's configuration of Codex in the
+sandbox trusts `/work`. It also turns Codex's check for an update off, and neither the project nor the home can turn
+it back on.
 
 Where each harness keeps its login is in "Where things are kept on the host". For a login that cannot complete, and
 for a login or a prompt that fails, see "When something goes wrong".
@@ -399,6 +408,9 @@ A harness's hosts are admitted only in a project that names that harness:
 | `models.opencode.ai`  | When it names `opencode` | OpenCode fetches its model catalog from it                          |
 | `auth.openai.com`     | When it names `opencode` | OpenCode logged in with a ChatGPT account signs in there            |
 | `chatgpt.com`         | When it names `opencode` | OpenCode logged in with a ChatGPT account sends its prompts there   |
+| `api.openai.com`      | When it names `codex`    | Codex logged in with an API key sends its prompts there             |
+| `chatgpt.com`         | When it names `codex`    | Codex logged in with a ChatGPT account sends its prompts there      |
+| `auth.openai.com`     | When it names `codex`    | Codex logs in with a ChatGPT account there, by a device code too    |
 
 A project's `sandbox/compose.project.yml` does not set `KIT_ALLOWLIST`, nor the build arguments `HARNESS_PACKAGES`,
 `HARNESS_RECORD` and `HARNESS_DIRECTORIES`, which are the kit's to set, and a start refuses a file that sets one.
@@ -422,13 +434,14 @@ services:
       args:
         CLAUDE_CODE_VERSION: 2.1.288
         OPENCODE_VERSION: 1.18.33
+        CODEX_VERSION: 0.167.0
 ```
 
 A project holds a version by adding the build argument to its `sandbox/compose.project.yml`, for any of its
 harnesses. Give an exact version. The argument of a harness the project does not name is ignored.
 
-The image holds the harnesses the project's `agentrite.json` names under `harnesses`, and no other: of Claude Code
-and OpenCode, either or both. A harness the project does not name is not in the sandbox, and its command is not
+The image holds the harnesses the project's `agentrite.json` names under `harnesses`, and no other: of Claude Code,
+OpenCode and Codex, any one or more. A harness the project does not name is not in the sandbox, and its command is not
 found there. For each harness on its own, the version is the first of these that exists:
 
 1. the version the project's `sandbox/compose.project.yml` gives
@@ -438,8 +451,9 @@ With neither of the two, the image gets the latest published version at the time
 
 The host's version:
 
-* It is what `claude --version` and `opencode --version` print, for the command on the `PATH` of whoever runs
-  `./sandbox.sh`. Only the harnesses the project names are asked
+* It is what `claude --version`, `opencode --version` and `codex --version` print, for the command on the `PATH` of
+  whoever runs `./sandbox.sh`. Of what Codex prints, as `codex-cli 0.167.0`, the version is the word after
+  `codex-cli`. Only the harnesses the project names are asked
 * A harness that is not there, or that is reached only through a shell alias, counts as not installed
 * So does one whose command is there and prints no version, and the wrapper says so at each start
 
@@ -575,11 +589,14 @@ The harnesses in the sandbox ring the terminal's bell when they need the develop
 * Claude Code at each `Notification`, when it asks for a permission or waits for input, and at each `Stop`, when it
   ends a turn
 * OpenCode each time a session goes idle and each time it asks for a permission
+* Codex each time it ends a turn
 
 It rings in every project whose `agentrite.json` holds `"bell": true`, which the file `init` and `config` write
 holds. Nothing is set in the home volume or on the host: the wrapper mounts the kit's `container/bell/ring-bell.sh`
 read-only at each start, and for each harness the project names its file of `container/harnesses/<name>/`, Claude
-Code's hooks as managed settings and OpenCode's plugin named in its configuration.
+Code's hooks as managed settings, OpenCode's plugin named in its configuration and Codex's `notify` command in its
+system configuration, `/etc/codex/config.toml`. With `"bell": false` that file is not mounted. A `notify` the project's
+`.codex/config.toml` or the home sets stands above the kit's, and Codex then runs that one instead.
 
 * The bell is the one byte BEL, written to the session's terminal. It comes out on the terminal the sandbox was
   started from, and through it tmux, which marks the window whose pane rang
@@ -629,7 +646,7 @@ back".
 
 **The project's log directory**
 
-Claude Code and OpenCode each keep a log of every session on disk: what was asked, what was answered and how many
+Claude Code, OpenCode and Codex each keep a log of every session on disk: what was asked, what was answered and how many
 tokens it took. In the sandbox those logs are on the host and not in the home volume. In every run, whatever is
 mounted at `/work`, the wrapper mounts a directory of the host over each directory in the agent's home that holds
 the logs of a harness the project names.
@@ -650,6 +667,10 @@ It holds, of each harness the project names or named before:
   is started in `/work`, so Claude Code's sessions are under `.claude/projects/-work`
 * `<logs>/.local/share/opencode`, mounted at `/home/agent/.local/share/opencode`: OpenCode's data: its database,
   its login. OpenCode's login is `<logs>/.local/share/opencode/auth.json`, a file of the host
+* `<logs>/.codex`, mounted at `/home/agent/.codex`: the whole of Codex's home: its login, its configuration, its
+  sessions, the SQLite files that index them, which resuming a session needs, and its logs. Codex's login is
+  `<logs>/.codex/auth.json`, a file of the host. A session is resumed in a later container of the project, since
+  both its file and its index are there
 * `<logs>/claude-cleanup-period-<n>.json`, such as `claude-cleanup-period-365.json`, mounted read-only at
   `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`: the number `<n>` of "How long Claude Code's
   sessions are kept", alone. The wrapper writes the file of a number at a start when the host holds that number
@@ -659,8 +680,8 @@ The directories have the places they have in a home, so a tool on the host that 
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
-With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of both harnesses,
-OpenCode's login and the files of the numbers go with it. The next run makes the directory again, empty.
+With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of the harnesses, the logins
+of OpenCode and Codex and the files of the numbers go with it. The next run makes the directory again, empty.
 
 **How long Claude Code's sessions are kept**
 
@@ -689,7 +710,7 @@ beside what it already holds:
   that is not a whole number of 1 or more, such as `0`, `1.5`, `-1` or `"365"`
 * When the developer's organization delivers managed settings from the claude.ai console, Claude Code may ignore the
   number, as it does the status line, and then keeps sessions as that policy says
-* OpenCode's sessions are not affected
+* OpenCode's and Codex's sessions are not affected
 
 **The home volume**
 
@@ -705,7 +726,7 @@ It holds:
 * the npm cache
 
 The directories of the harnesses' logs in the home are not of the volume: the harnesses' sessions, and with them
-OpenCode's login, are in the project's log directory on the host.
+the logins of OpenCode and Codex, are in the project's log directory on the host.
 
 ```sh
 docker volume ls
@@ -795,7 +816,7 @@ The agent writes the project's log directory. It is a directory of the host that
 and what is in it was written by an agent that may have been misled: it can put anything there, a false record of
 usage and a link to a file elsewhere among it. So whatever reads the log directory treats what it finds as data. A
 container reaches its own project's log directory and no other project's, no directory above it, and none of the
-host's own `~/.claude` or OpenCode directories.
+host's own `~/.claude`, OpenCode or `~/.codex` directories.
 
 Docker's own command starts a process in a running container too, and that process is not what `--connect` gives.
 `docker exec <container> bash`, with no user named, is root and holds `NET_ADMIN`, `SETUID`, `SETGID` and `KILL`,

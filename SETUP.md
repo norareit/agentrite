@@ -35,10 +35,12 @@ of them:
 | `agentrite.json`              | The project's settings, which the kit's commands read. See "The project's settings"                    | Written                   |
 | `.claude/agents/*.md`         | For `claude`: a wrapper per role for Claude Code, pointing at the role's file                          | Not written               |
 | `.opencode/agents/*.md`       | For `opencode`: the same for OpenCode                                                                  | Not written               |
+| `.codex/agents/*.toml`        | For `codex`: the same for Codex, as its custom agents                                                  | Not written               |
 | `.agentrite/instructions.md`  | The list of the instruction files in use, which the kit writes from `agentrite.json`                   | Not written               |
 | `AGENTS.md`                   | The project's agent instructions, pointing at the list of the files in use                             | Not written               |
 | `CLAUDE.md`                   | Imports the kit's `process.md`, the project's standards and `AGENTS.md`                                | Not written               |
 | `opencode.json`               | For `opencode`: loads `process.md` and the standards. Amended if present                               | Not written               |
+| `.codex/config.toml`          | For `codex`: tells Codex to read `process.md` and the standards. Written only when missing             | Not written               |
 | `sandbox.sh`                  | The shim that runs the kit's sandbox from the project root. See "Before the first run" in `SANDBOX.md` | Written                   |
 | `sandbox/compose.project.yml` | The project's half of the sandbox configuration                                                        | Written                   |
 | `.git/hooks/commit-msg`       | The hook that refuses a commit message the standards forbid. See "Git hooks"                           | Not written               |
@@ -51,18 +53,21 @@ of them:
 * A project without the sandbox runs `npx agentrite init --no-sandbox claude opencode`, which leaves out `sandbox.sh`,
   `sandbox/compose.project.yml` and `.dockerignore`, as "agentrite init" in `COMMANDS.md` says, and writes `sandbox` as
   `false` in `agentrite.json`
-* A project that uses the sandbox alone, without the change process in `changes/`, the roles or the orchestrator, is
-  a sandbox-only project, and runs `npx agentrite init --sandbox-only claude opencode`. It gets `agentrite.json`,
-  `sandbox.sh`, `sandbox/compose.project.yml` and `.dockerignore`, and nothing of the process: no wrapper, no list,
-  no `AGENTS.md`, `CLAUDE.md` or `opencode.json`, no `check-changes` script in `package.json` and no hook. `init`
-  writes `process` as `false`, `sandbox` as `true` and `orchestrator` as `false` in `agentrite.json`, and the harnesses
-  as `harnesses`. Its sandbox runs on a branch given by its name, as "Running on a branch without the change process"
-  in `SANDBOX.md` says. The whole package is installed, the commands of the process among them
+* A project that uses the sandbox alone, without the change process in `changes/`, the roles or the orchestrator, is a
+  sandbox-only project, and runs `npx agentrite init --sandbox-only claude opencode`. It gets `agentrite.json`,
+  `sandbox.sh`, `sandbox/compose.project.yml` and `.dockerignore`, and nothing of the process: no wrapper, no list, no
+  `AGENTS.md`, `CLAUDE.md`, `opencode.json` or `.codex/config.toml`, no `check-changes` script in `package.json` and no
+  hook. `init` writes `process` as `false`, `sandbox` as `true` and `orchestrator` as `false` in `agentrite.json`, and
+  the harnesses as `harnesses`. Its sandbox runs on a branch given by its name, as "Running on a branch without the
+  change process" in `SANDBOX.md` says. The whole package is installed, the commands of the process among them
 * `init` never regenerates one: a file it would create that already exists is left as it is and reported as
   skipped, so running it again only adds what is missing. In a project that has its `agentrite.json`, that is
   `npx agentrite init` with no argument
 * The OpenCode wrappers are written with `mode: all`, which makes each role both a primary agent and a subagent.
   The roles are therefore also offered among the primary agents in OpenCode's own interface
+* The Codex wrappers are custom agents of Codex, which Codex only ever spawns as subagents: it has no option that
+  starts a session as one. `agentrite run` and the orchestrator therefore tell a run of Codex its role in its prompt,
+  which opens with the role and the path of its file, and the wrappers serve the subagents a session of Codex spawns
 * `init` refuses to run, writing nothing, when `package.json` has no `name`, unless the project is without the
   sandbox: `--no-sandbox`, or `sandbox` `false` in its `agentrite.json`
 
@@ -96,6 +101,9 @@ A file that already exists:
   agent"
 * When `opencode.json` already exists, with `opencode` among the harnesses, `init` amends it as said below, or leaves
   it with a notice when it cannot
+* When `.codex/config.toml` already exists, with `codex` among the harnesses, it is left untouched, and `init` prints
+  a notice when its text does not name `node_modules/agentrite/process.md` and the path of the project's standards.
+  See "How the kit's instructions reach an agent"
 * An existing `sandbox/compose.project.yml` is left as it is
 
 `init` also amends three files, adding only what is missing:
@@ -147,11 +155,11 @@ files, filling in each `{{placeholder}}` itself.
 ### How the kit's instructions reach an agent
 
 A harness loads the kit's `process.md` and the project's standards into every session, and an agent finds the role
-files from `AGENTS.md`, because of what three files of the project hold. The standards are the file that `standards`
+files from `AGENTS.md`, because of what four files of the project hold. The standards are the file that `standards`
 in `agentrite.json` names, which is `node_modules/agentrite/standards.md` unless the project replaced it, and the
 paths below are those of a project that did not. Each file, what it must hold, and the harness that reads it:
 
-* `AGENTS.md`, read by Claude Code and OpenCode: the sections Development Guidelines, Roles and Changes in this
+* `AGENTS.md`, read by Claude Code, OpenCode and Codex: the sections Development Guidelines, Roles and Changes in this
   project, as `init` writes them. They call the files that `.agentrite/instructions.md` names required reading, link
   that list, and name no role file and no standards file themselves. `init` and `refresh` print a notice for an
   `AGENTS.md` that is missing or does not hold the text `.agentrite/instructions.md`
@@ -165,6 +173,17 @@ paths below are those of a project that did not. Each file, what it must hold, a
   OpenCode loads `process.md` and the standards into every session, beside `AGENTS.md`, which it reads by itself. With
   standards of the project's own, their path stands in the place of the second, and the kit's is removed, as for
   `CLAUDE.md`
+* `.codex/config.toml`, read by Codex, and needed only with `codex` among the harnesses: a `developer_instructions`
+  that tells Codex to read `node_modules/agentrite/process.md` and `node_modules/agentrite/standards.md` before
+  anything else. Codex reads `AGENTS.md` by itself, and the developer instructions point at the files rather than
+  hold them, as the role wrappers point at the roles. With standards of the project's own, their path stands in the
+  place of the second, and the kit's is removed, as for `CLAUDE.md`. Two things of Codex's own hold for it:
+    * Codex loads `.codex/config.toml` and `.codex/agents/` only in a project the developer marked trusted in their
+      own configuration of Codex, as Codex asks at its first interactive start in the project. In a project that is
+      not trusted it reads `AGENTS.md` alone. The kit does not write the developer's configuration and does not check
+      the trust. In the sandbox the project is trusted for every run, as "Logging in" in `SANDBOX.md` says
+    * The project's `developer_instructions` replaces one that the developer's own configuration of Codex sets,
+      rather than adding to it
 
 The list `.agentrite/instructions.md`, which the kit writes from `agentrite.json` with `init` and `refresh`, names by
 their paths from the project root, each linked: the kit's `process.md`, the standards, and the file of each role, the
@@ -195,13 +214,25 @@ The `opencode.json` that `init` writes into a project that has none:
 }
 ```
 
-* `init` puts these into each of the three files it writes, and into an `opencode.json` it can amend. For an
-  `AGENTS.md` or a `CLAUDE.md` that exists, and for an `opencode.json` it cannot amend, it only prints a notice of
-  what is missing. The project then adds that by hand
-* Neither harness reports a file that lacks them. There is no error: a session starts without the kit's instructions in
+The `.codex/config.toml` that `init` writes into a project that has none:
+
+```toml
+developer_instructions = """
+Before anything else, read the files below in the project root and follow them. They hold the project's process \
+and its standards.
+
+- node_modules/agentrite/process.md
+- node_modules/agentrite/standards.md
+"""
+```
+
+* `init` puts these into each of the four files it writes, and into an `opencode.json` it can amend. For an
+  `AGENTS.md`, a `CLAUDE.md` or a `.codex/config.toml` that exists, and for an `opencode.json` it cannot amend, it
+  only prints a notice of what is missing. The project then adds that by hand
+* No harness reports a file that lacks them. There is no error: a session starts without the kit's instructions in
   its context, and reads them only if the model follows the link to the list in `AGENTS.md`, and from it to the files
-* `refresh` never adds them to `CLAUDE.md` or `opencode.json`. It prints a notice on each run for as long as one of
-  them lacks them, so a project that leaves them out on purpose gets that notice on every `refresh`
+* `refresh` never adds them to `CLAUDE.md`, `opencode.json` or `.codex/config.toml`. It prints a notice on each run for
+  as long as one of them lacks them, so a project that leaves them out on purpose gets that notice on every `refresh`
 
 ### On a fresh clone
 
@@ -320,8 +351,8 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   default branch is `master` unless `--default-branch` or an edit says otherwise
 * The file is committed
 * All eight keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
-  `claude` and `opencode`, in which a name given more than once counts once, and `process`, `sandbox` and `bell` are
-  each `true` or `false`, not a string. A key the kit does not know is ignored
+  `claude`, `opencode` and `codex`, in which a name given more than once counts once, and `process`, `sandbox` and
+  `bell` are each `true` or `false`, not a string. A key the kit does not know is ignored
 * `process` says whether the project uses the change process in `changes/`, with its roles and its orchestrator. It is
   `true` in the file `config` writes and in the one `init` writes without `--sandbox-only`, and `false` in a
   sandbox-only project, which `init --sandbox-only` writes. A file whose `process` and `sandbox` are both `false` is
@@ -352,6 +383,7 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   |-------------|-------------------------------------------------------------------------------------------------|
   | Claude Code | `Explore`, `Plan`, `general-purpose`, `claude`, `statusline-setup`, `claude-code-guide`, `fork` |
   | OpenCode    | `build`, `plan`, `general`, `explore`, `scout`, `compaction`, `title`, `summary`                |
+  | Codex       | `default`, `worker`, `explorer`                                                                 |
 
   The message names the name and the harness. `agentrite roles` and the list `.agentrite/instructions.md` give the
   four first and then the roles of the project's own, in the order of the file
@@ -396,8 +428,8 @@ A setting is changed by editing the file by hand. What to run afterwards:
 * `process` set to `true`: `npx agentrite init` with no argument writes the files of the process that are missing, and
   `npx agentrite refresh` then rewrites `sandbox.sh` as the shim of a project with the process
 * `standards` or a file in `roles` changed: `npx agentrite refresh` rewrites the wrappers and the list, and prints the
-  notices of "agentrite refresh" on a `CLAUDE.md` and an `opencode.json` that do not load the new standards, or still
-  load the kit's beside them. The project changes those two files by hand
+  notices of "agentrite refresh" on a `CLAUDE.md`, an `opencode.json` and a `.codex/config.toml` that do not load the
+  new standards, or still load the kit's beside them. The project changes those files by hand
 
 ## Replacing a role or the standards
 
@@ -568,13 +600,15 @@ copies stay as an older release wrote them, and nothing says so. In a project wh
 project it writes `sandbox.sh` alone.
 
 * A model pinned in a wrapper survives: a line in its frontmatter that opens with `model:` is kept, as written,
-  after the kit's own keys
+  after the kit's own keys. In a Codex wrapper, a line before its `developer_instructions` that opens with the key
+  `model` is kept, as written, before that line
 * Everything else in a wrapper, and all of the list and of `sandbox.sh`, is replaced, other keys a project added to
   the frontmatter among them. The wrappers are tracked files, so `git diff` shows what a refresh changed, and git has
   what it replaced
-* `AGENTS.md`, `CLAUDE.md`, `opencode.json`, `sandbox/compose.project.yml`, `package.json` and `.dockerignore` are
-  never written, and never created
-* It reads `CLAUDE.md` with `claude` among the harnesses, and `opencode.json` with `opencode`, and after its lines
+* `AGENTS.md`, `CLAUDE.md`, `opencode.json`, `.codex/config.toml`, `sandbox/compose.project.yml`, `package.json` and
+  `.dockerignore` are never written, and never created
+* It reads `CLAUDE.md` with `claude` among the harnesses, `opencode.json` with `opencode`, and `.codex/config.toml`
+  with `codex`, and after its lines
   prints a notice for each that does not load the kit's instructions, as "agentrite refresh" in `COMMANDS.md` says. A
   project set up before the release that loads them runs `npx agentrite init` with no argument, which writes or
   amends its `opencode.json`, and adds what the notices still name by hand. See "How the kit's instructions reach

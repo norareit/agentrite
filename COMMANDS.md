@@ -35,14 +35,15 @@ npx agentrite init
 
 Sets a project up, from its root: writes `agentrite.json`, the wrappers of every role `roles` names, the list of the
 instruction files in use, the project's agent instructions, the sandbox's files and the `commit-msg` hook, writes or
-amends `opencode.json` with `opencode`, and prints each file it wrote, changed or skipped. The hook is written as
+amends `opencode.json` with `opencode`, writes a missing `.codex/config.toml` with `codex`, and prints each file it
+wrote, changed or skipped. The hook is written as
 [Git hooks](SETUP.md#git-hooks) says. The first form is for a project with no
 `agentrite.json`, and writes that file from its arguments. The second is for a project that has one, and takes the
 harnesses and the sandbox setting from it.
 
 | Argument or option        | What it is                                                                              |
 |---------------------------|-----------------------------------------------------------------------------------------|
-| `<harness>...`            | `claude` or `opencode`, one or both, for the harnesses the project uses                 |
+| `<harness>...`            | `claude`, `opencode` or `codex`, one or more, for the harnesses the project uses        |
 | `--sandbox-only`          | For a project that uses the sandbox without the change process, as said below           |
 | `--no-sandbox`            | For a project without the sandbox. Leaves out what is only for it, as said below        |
 | `--no-orchestrator`       | For a project without the orchestrator. Writes `orchestrator` as `false`                |
@@ -50,11 +51,11 @@ harnesses and the sandbox setting from it.
 
 In a project with no `agentrite.json`:
 
-* `init` writes the file with the harnesses given, each once and in the order `claude`, `opencode` whatever order they
-  were given in, with `process` as `true`, with `sandbox` as `false` when `--no-sandbox` is given and `true` when it is
-  not, with `defaultBranch` as the name given, or `master`, with `orchestrator` as `false` when `--no-orchestrator` is
-  given and as the kit's default definition, `node_modules/agentrite/orchestrator.json`, when it is not, and with
-  `standards` and `roles` naming the kit's own files, as the default file does
+* `init` writes the file with the harnesses given, each once and in the order `claude`, `opencode`, `codex` whatever
+  order they were given in, with `process` as `true`, with `sandbox` as `false` when `--no-sandbox` is given and `true`
+  when it is not, with `defaultBranch` as the name given, or `master`, with `orchestrator` as `false` when
+  `--no-orchestrator` is given and as the kit's default definition, `node_modules/agentrite/orchestrator.json`, when it
+  is not, and with `standards` and `roles` naming the kit's own files, as the default file does
 * Before it writes anything, it checks that each path of `standards`, `orchestrator` and `roles` names a file. In a
   project where the kit is not installed under `node_modules`, it refuses as a command that reads an `agentrite.json`
   whose path names no file does, writes nothing and exits 1
@@ -75,11 +76,11 @@ In a project with an `agentrite.json`:
   says, it refuses: it writes nothing, exits 1, and says that the settings are read from the file, that a setting is
   changed by editing it, and that `npx agentrite init` with no argument then writes what is missing
 
-The wrappers, the list `.agentrite/instructions.md`, `CLAUDE.md` and `opencode.json` follow `standards` and `roles`
-in `agentrite.json`. Below, the standards path is the one `standards` names, which in the default file is
-`node_modules/agentrite/standards.md`. Each role's wrappers carry the description of the role file `roles` gives and
-point at that file, and `init` refuses, writing nothing, a role file that does not open with the front matter that
-"Replacing a role or the standards" in `SETUP.md` gives, naming the file and the form it must have.
+The wrappers, the list `.agentrite/instructions.md`, `CLAUDE.md`, `opencode.json` and `.codex/config.toml` follow
+`standards` and `roles` in `agentrite.json`. Below, the standards path is the one `standards` names, which in the
+default file is `node_modules/agentrite/standards.md`. Each role's wrappers carry the description of the role file
+`roles` gives and point at that file, and `init` refuses, writing nothing, a role file that does not open with the front
+matter that "Replacing a role or the standards" in `SETUP.md` gives, naming the file and the form it must have.
 
 With `opencode` among the harnesses, `init` writes `opencode.json` when nothing is at its path, naming OpenCode's
 schema `https://opencode.ai/config.json` and holding both paths in its `instructions` list, and prints
@@ -94,6 +95,15 @@ by hand: one that cannot be read, is not JSON, is not a JSON object, or has an `
 state of the file makes `init` refuse, and it writes everything else as it would have. Without `opencode`, `init`
 does not read `opencode.json` and prints nothing of it.
 
+With `codex` among the harnesses, `init` writes `.codex/config.toml` when nothing is at its path, with a
+`developer_instructions` that tells Codex to read `node_modules/agentrite/process.md` and the standards path before
+anything else, and prints `wrote .codex/config.toml`. One that exists it never changes, since it judges a TOML file by
+its text and does not amend it. When its text holds both paths it prints
+`skipped .codex/config.toml, which loads node_modules/agentrite/process.md and <standards path>`. Otherwise, also for
+one that cannot be read, it prints `skipped .codex/config.toml, which does not name the kit's instructions` and a
+notice that names the paths to add to its `developer_instructions` by hand. Without `codex`, `init` does not read
+`.codex/config.toml` and prints nothing of it.
+
 `CLAUDE.md` that exists is left as it is. With `claude` among the harnesses, and only when it lacks one of the lines
 `@node_modules/agentrite/process.md`, `@<standards path>` and `@AGENTS.md`, `init` prints a notice that names the
 lines it lacks. A line counts when it is exactly that text, ending in LF or CRLF.
@@ -101,7 +111,8 @@ lines it lacks. A line counts when it is exactly that text, ending in LF or CRLF
 When `standards` names another file than `node_modules/agentrite/standards.md`, `init` also prints a notice for a
 `CLAUDE.md` that still holds the line `@node_modules/agentrite/standards.md`, with `claude` among the harnesses, and
 for an `opencode.json` that still holds `node_modules/agentrite/standards.md` in its `instructions` list, or in quotes
-in a file that is not JSON, with `opencode`. The harness then loads both sets of rules. The notice names the line or
+in a file that is not JSON, with `opencode`, and for a `.codex/config.toml` whose text still holds it, with `codex`.
+The harness then loads both sets of rules. The notice names the line or
 the entry to remove, and `init` removes neither.
 
 An `AGENTS.md` that exists is left as it is, and `init` prints the sections it would have written, as "Installing it
@@ -112,11 +123,12 @@ agents then do not learn from it which role and standards files the project uses
 
 The notices come in this order: the sections of `AGENTS.md`, the notice of `AGENTS.md` and the list, the lines
 `CLAUDE.md` lacks, the kit's standards in `CLAUDE.md`, an `opencode.json` that cannot be amended, the kit's standards
-in `opencode.json`, and last that no hook was written, outside a git repository.
+in `opencode.json`, the paths `.codex/config.toml` lacks, the kit's standards in it, and last that no hook was
+written, outside a git repository.
 
 With `--no-sandbox`, or with `sandbox` `false` in the file, `init` writes the role wrappers, the list, `AGENTS.md`,
-`CLAUDE.md` and the hook, amends `package.json`, writes or amends `opencode.json` with `opencode`, and prints the same
-lines and notices for them. It does not write, change or
+`CLAUDE.md` and the hook, amends `package.json`, writes or amends `opencode.json` with `opencode`, writes a missing
+`.codex/config.toml` with `codex`, and prints the same lines and notices for them. It does not write, change or
 read `sandbox.sh`, `sandbox/compose.project.yml` or `.dockerignore`, prints no line for any of the three, and leaves
 one that exists as it is. It runs when `package.json` has no `name`, and does not read `package-lock.json`. It still
 refuses, writing nothing, when `package.json` is missing or cannot be read. The option goes at any place among the
@@ -197,35 +209,39 @@ it writes the `commit-msg` hook where there is none, and rewrites one that carri
 hooks](SETUP.md#git-hooks) says.
 
 In a sandbox-only project, one whose `agentrite.json` holds `"process": false`, `refresh` writes `sandbox.sh` as the
-shim of a sandbox-only project, which passes `--sandbox-only` to the kit's wrapper, and writes or reads nothing else.
-It reads no role file, writes no wrapper, no list and no hook, removes no wrapper, and prints no notice of `CLAUDE.md`,
-`opencode.json`, `AGENTS.md` or the hook. It prints the line of `sandbox.sh` alone. In a project with the process it
-writes `sandbox.sh` as the shim of a project with the process, so that a project that changes `process` runs `refresh`
-to have the shim of the other.
+shim of a sandbox-only project, which passes `--sandbox-only` to the kit's wrapper, and writes or reads nothing else. It
+reads no role file, writes no wrapper, no list and no hook, removes no wrapper, and prints no notice of `CLAUDE.md`,
+`opencode.json`, `.codex/config.toml`, `AGENTS.md` or the hook. It prints the line of `sandbox.sh` alone. In a project
+with the process it writes `sandbox.sh` as the shim of a project with the process, so that a project that changes
+`process` runs `refresh` to have the shim of the other.
 
 After the lines of the files and before the notices, `refresh` removes the wrapper of a role that `roles` no longer
 names, as a role taken out or renamed leaves one. In the wrapper directory of each harness that `harnesses` names, it
-removes a regular file `<name>.md` whose `<name>` is not a role `roles` names, when the text after its front matter is
-the body the kit writes in a wrapper: to read a file by its path from the project root and follow it, whatever the
-path. A model pinned in the front matter does not stop the removal. It prints `removed <path>` for each file it
+removes a regular file `<name>.md`, or `<name>.toml` for Codex, whose `<name>` is not a role `roles` names, when the
+text after its front matter, or after the line `developer_instructions = """` of a Codex wrapper, is the body the kit
+writes in a wrapper: to read a file by its path from the project root and follow it, whatever the path. A model
+pinned in the front matter, or before that line, does not stop the removal. It prints `removed <path>` for each file it
 removes. A file with another body, such as an agent of the project's own, a symbolic link and a directory are left as
 they are, and `refresh` says nothing of them. `init` removes nothing.
 
-It reads `CLAUDE.md` with `claude` among the harnesses, and `opencode.json` with `opencode`, and never writes or creates
-either. After the lines of the files, it prints a notice, after an empty line, for each that does not load the kit's
-instructions: a `CLAUDE.md` that is missing or lacks one of the lines `@node_modules/agentrite/process.md`, `@` and the
-path that `standards` names, and `@AGENTS.md`, and an `opencode.json` that is missing or does not hold both
-`node_modules/agentrite/process.md` and the path that `standards` names in its `instructions` list, judged as `init`
-judges it. The notice says why the file does not load them, names the lines or paths that are missing, and says that
-`refresh` does not add them. When `standards` names another file than `node_modules/agentrite/standards.md`, it prints
-the notices `init` prints for a `CLAUDE.md` and an `opencode.json` that still load the kit's `standards.md`.
+It reads `CLAUDE.md` with `claude` among the harnesses, `opencode.json` with `opencode`, and `.codex/config.toml` with
+`codex`, and never writes or creates any of them. After the lines of the files, it prints a notice, after an empty line,
+for each that does not load the kit's instructions: a `CLAUDE.md` that is missing or lacks one of the lines
+`@node_modules/agentrite/process.md`, `@` and the path that `standards` names, and `@AGENTS.md`, and an `opencode.json`
+that is missing or does not hold both `node_modules/agentrite/process.md` and the path that `standards` names in its
+`instructions` list, judged as `init` judges it, and a `.codex/config.toml` that is missing, cannot be read, or whose
+text does not hold both paths. The notice says why the file does not load them, names the lines or paths that are
+missing, and says that `refresh` does not add them. When `standards` names another file than
+`node_modules/agentrite/standards.md`, it prints the notices `init` prints for a `CLAUDE.md`, an `opencode.json` and a
+`.codex/config.toml` that still load the kit's `standards.md`.
 
 It reads `AGENTS.md` too, whatever the harnesses, and never writes it. For one that is missing, or does not hold the
 text `.agentrite/instructions.md`, it prints a notice: that agents then do not learn from `AGENTS.md` which role and
 standards files the project uses, that `refresh` does not change `AGENTS.md`, and where `SETUP.md` says what it must
 hold. The notices come in this order: the lines `CLAUDE.md` lacks, the kit's standards in it, what `opencode.json`
-lacks, the kit's standards in it, `AGENTS.md`, then the hook's: a hook of the project's own at its path, or none
-written outside a git repository. None of them changes what `refresh` writes or its exit status.
+lacks, the kit's standards in it, what `.codex/config.toml` lacks, the kit's standards in it, `AGENTS.md`, then the
+hook's: a hook of the project's own at its path, or none written outside a git repository. None of them changes what
+`refresh` writes or its exit status.
 
 It exits with `0`, `1` when it refuses or fails, and `2` for an argument, as [Exit statuses](#exit-statuses) says.
 
@@ -474,7 +490,7 @@ the project has, starts nothing and exits 1.
 | Argument or option          | What it is                                                                          |
 |-----------------------------|-------------------------------------------------------------------------------------|
 | `<role>`                    | A role that `agentrite.json` names, as `agentrite roles` lists them                 |
-| `<harness>`                 | `claude` or `opencode`                                                              |
+| `<harness>`                 | `claude`, `opencode` or `codex`                                                     |
 | `<unit>`                    | A directory of `changes/`, by its name or by the four digits its name opens with    |
 | `--prompt <text>`           | Adds its text to the prompt, as it is written. Also `--prompt="<text>"`             |
 | `--model <id>`              | The harness's own id of a model, passed on as it is written. Also `--model=<id>`    |
@@ -483,11 +499,15 @@ the project has, starts nothing and exits 1.
 | `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
 
 `agentrite run` starts the harness in the directory the command is run from, with the role as its agent and one
-prompt: `The unit is changes/<directory>/.` A unit run by its number, in each harness:
+prompt: `The unit is changes/<directory>/.` Codex has no option that starts it as an agent, so its prompt opens with
+`` You act as the <role>. Read `<role file>` in the project root and follow it: it is the instruction of your
+role. ``
+and an empty line, before the unit. A unit run by its number, in each harness:
 
 ```sh
 npx agentrite run implementer claude 0032
 npx agentrite run reviewer opencode 0032
+npx agentrite run reviewer codex 0032
 ```
 
 * The unit is given by its directory's name, with or without `changes/` before it and a slash after it, or by the
@@ -510,19 +530,22 @@ The options, which may stand anywhere among the arguments before a `--`:
 
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session
-* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code or `openai/gpt-6.1-sol` for OpenCode. The kit has
+* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code, `openai/gpt-6.1-sol` for OpenCode or
+  `gpt-6.1-sol` for Codex. The kit has
   no names of its own for models. Without `--model` the harness gets no model and decides by itself, and
   a model pinned in the role's wrapper is what such a run is expected to use
 * `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
-  check, and OpenCode gets `--auto`, which approves what is not explicitly denied, so the two do not do the same.
+  check, OpenCode gets `--auto`, which approves what is not explicitly denied, and Codex gets
+  `--dangerously-bypass-approvals-and-sandbox`, which skips every approval and Codex's own sandbox, so the three do
+  not do the same.
   The command does not look where it runs, and on the host the flag does what its name says
 
 What the harness is given, in this order:
 
-1. The role, the model and the permission flag
+1. The role, as an option for Claude Code and OpenCode, the model and the permission flag
 2. Every argument after the `--`, as it is written and in the order given
-3. The prompt, which is the last argument the harness gets. Where the harness takes it as an argument of its own,
-   the command puts a `--` in front of it
+3. The prompt, which is the last argument the harness gets, opening with the role for Codex. Where the harness takes
+   it as an argument of its own, the command puts a `--` in front of it
 
 The command reads none of the arguments it passes on: it does not look whether one repeats or undoes an argument of
 its own, such as a second `--model`, and what the harness makes of that is the harness's. With no `--`, or with
@@ -550,6 +573,14 @@ In OpenCode, read the id of the session from `opencode session list` after the f
 npx agentrite run reviewer opencode 0032 --headless
 opencode session list
 npx agentrite run reviewer opencode 0032 --headless --prompt "go on" -- --session ses_ef35877c0ffefJvzVbIUZSXpWV
+```
+
+In Codex, read the id of the thread from what `codex exec --json` prints, the `thread_id` of its `thread.started`
+event, and resume it by that. Codex takes `resume` and the id after its other options:
+
+```sh
+npx agentrite run reviewer codex 0032 --headless -- --json
+npx agentrite run reviewer codex 0032 --headless --prompt "go on" -- resume 01a1b16f-df1e-7c02-9266-33d818a31172
 ```
 
 A resumed run gets the role as its agent again, and its prompt again: the unit, and the text when there is any.
