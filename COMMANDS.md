@@ -531,9 +531,11 @@ The options, which may stand anywhere among the arguments before a `--`:
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session
 * `--model` takes an id such as `claude-sonnet-5-5` for Claude Code, `openai/gpt-6.1-sol` for OpenCode or
-  `gpt-6.1-sol` for Codex. The kit has
-  no names of its own for models. Without `--model` the harness gets no model and decides by itself, and
-  a model pinned in the role's wrapper is what such a run is expected to use
+  `gpt-6.1-sol` for Codex. The kit has no names of its own for models. Without `--model` the harness gets no model
+  and decides by itself. For Claude Code and OpenCode, a model pinned in the role's wrapper is what such a run is
+  expected to use. Codex does not start its run as the wrapper's agent, so a model pinned in a Codex wrapper holds
+  only for a subagent of that role that the run spawns, and the run itself uses `--model` or the model Codex chooses
+  by its own configuration
 * `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
   check, OpenCode gets `--auto`, which approves what is not explicitly denied, and Codex gets
   `--dangerously-bypass-approvals-and-sandbox`, which skips every approval and Codex's own sandbox, so the three do

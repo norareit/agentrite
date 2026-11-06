@@ -67,7 +67,8 @@ of them:
   The roles are therefore also offered among the primary agents in OpenCode's own interface
 * The Codex wrappers are custom agents of Codex, which Codex only ever spawns as subagents: it has no option that
   starts a session as one. `agentrite run` and the orchestrator therefore tell a run of Codex its role in its prompt,
-  which opens with the role and the path of its file, and the wrappers serve the subagents a session of Codex spawns
+  which opens with the role and the path of its file, and the wrappers serve the subagents a session of Codex spawns.
+  A model pinned in a Codex wrapper holds for such a subagent alone, and not for the run that `agentrite run` starts
 * `init` refuses to run, writing nothing, when `package.json` has no `name`, unless the project is without the
   sandbox: `--no-sandbox`, or `sandbox` `false` in its `agentrite.json`
 
