@@ -400,7 +400,7 @@ there, and the tarball is made again after any change to the kit.
 
 ## Commit Points
 
-- [ ] `feature-0100 Plan Codex as a third harness`: `plan.md` and the planner's entry in `record.md`
+- [x] `feature-0100 Plan Codex as a third harness`: `plan.md` and the planner's entry in `record.md`
 - [ ] `feature-0100 Give the harness contract how a run starts in a role and the format of its wrappers`: the four
   members for Claude Code and OpenCode, their consumers and tests. No command's behavior changes, and the tree passes
   `npm test`

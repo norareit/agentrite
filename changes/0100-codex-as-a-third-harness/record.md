@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-06T14:12:53Z
 ---
 
@@ -72,5 +72,8 @@ timestamp: 2026-11-06T14:12:53Z
   files is removed. Since `./sandbox-dev.sh` takes its harnesses from the root's `agentrite.json`, the checks of
   the sandbox move to a scratch project into which the working tree's kit is installed from `npm pack`. F2 and F3
   change nothing of the plan, which gives the files itself. The status stays `approved`
+- 2026-11-06T16:04:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on the unit's
+  branch at `537f73d`, where `npm test` passes its 1624 tests. Ticked the plan's first commit point, which the
+  planner's commits made. The status is `in-progress`
 
 ## Amendments
