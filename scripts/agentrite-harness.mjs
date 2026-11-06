@@ -43,12 +43,16 @@ import { opencode } from './harnesses/opencode.mjs';
  *     directory: string,
  *     render: (role: Role) => string,
  *     ownAgents: string[],
+ *     extension: string,
+ *     isKit: (text: string) => boolean,
+ *     refreshed: (existing: string, rendered: string) => string,
  *   },
  *   start: {
  *     command: string,
  *     skipPermissions: string,
  *     interactive: (options: string[], prompt: string) => string[],
  *     headless: (options: string[], prompt: string) => string[],
+ *     role: (role: string, file: string) => { options: string[], opening: string | undefined },
  *   },
  *   headless: {
  *     arguments: (session: string | undefined) => { args: string[], session: string | undefined },
@@ -96,6 +100,21 @@ export const HARNESS_CONTRACT = [
     kind: 'strings',
     purpose: 'the names of the agents the harness has of its own, which a role of the project cannot take',
   },
+  {
+    member: 'wrappers.extension',
+    kind: 'string',
+    purpose: "what the name of a role's wrapper in its directory ends with, after the role's name",
+  },
+  {
+    member: 'wrappers.isKit',
+    kind: 'function',
+    purpose: "whether a file's text is a wrapper the kit wrote, whatever role, path or pinned model it holds",
+  },
+  {
+    member: 'wrappers.refreshed',
+    kind: 'function',
+    purpose: 'what refresh writes over an existing wrapper: the rendered one, with the model pinned in it kept',
+  },
   { member: 'start.command', kind: 'string', purpose: 'the command that starts the harness' },
   {
     member: 'start.skipPermissions',
@@ -111,6 +130,11 @@ export const HARNESS_CONTRACT = [
     member: 'start.headless',
     kind: 'function',
     purpose: 'the arguments of a run without a session, from the options and the prompt',
+  },
+  {
+    member: 'start.role',
+    kind: 'function',
+    purpose: "the options and the opening words that start a run in a role, from the role's name and its file",
   },
   {
     member: 'headless.arguments',
@@ -234,19 +258,20 @@ export function wrapperDirectories(harnesses) {
 
 /**
  * The wrappers of each role for each harness, written from `roles`, as `readRoles` gives them: each with its role's
- * description, and a body that says to read its role's file.
+ * description, a body that says to read its role's file, and what refresh writes over an existing one, which is the
+ * harness's own.
  *
  * @param {string[]} harnesses
  * @param {Role[]} roles
- * @returns {{ path: string, content: string }[]}
+ * @returns {{ path: string, content: string, refreshed: (existing: string, rendered: string) => string }[]}
  */
 export function plannedFiles(harnesses, roles) {
-  /** @type {{ path: string, content: string }[]} */ const files = [];
-  for (const name of harnesses) {
+  return harnesses.flatMap((name) => {
     const { wrappers } = harnessNamed(name);
-    for (const role of roles) {
-      files.push({ path: `${wrappers.directory}/${role.name}.md`, content: wrappers.render(role) });
-    }
-  }
-  return files;
+    return roles.map((role) => ({
+      path: `${wrappers.directory}/${role.name}${wrappers.extension}`,
+      content: wrappers.render(role),
+      refreshed: wrappers.refreshed,
+    }));
+  });
 }

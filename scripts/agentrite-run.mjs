@@ -190,12 +190,14 @@ export function unitPrompt(directory, text) {
 }
 
 /**
- * The command that starts `harness` as `role` on `prompt`, and its arguments. The caller's own arguments for the
- * harness stand after the command's and before the prompt.
+ * The command that starts `harness` as `role`, whose file is `roleFile`, on `prompt`, and its arguments. The harness
+ * says how it starts in a role: by options, which stand first, or by words the prompt opens with, before an empty
+ * line. The caller's own arguments for the harness stand after the command's and before the prompt.
  *
  * @param {{
  *   harness: string,
  *   role: string,
+ *   roleFile: string,
  *   model: string | undefined,
  *   headless: boolean,
  *   skipPermissions: boolean,
@@ -204,14 +206,16 @@ export function unitPrompt(directory, text) {
  * }} run
  * @returns {{ command: string, args: string[] }}
  */
-export function harnessCommand({ harness, role, model, headless, skipPermissions, prompt, harnessArguments }) {
+export function harnessCommand(run) {
+  const { harness, role, roleFile, model, headless, skipPermissions, prompt, harnessArguments } = run;
   const { start } = harnessNamed(harness);
+  const started = start.role(role, roleFile);
   const options = [
-    '--agent',
-    role,
+    ...started.options,
     ...(model === undefined ? [] : ['--model', model]),
     ...(skipPermissions ? [start.skipPermissions] : []),
     ...harnessArguments,
   ];
-  return { command: start.command, args: (headless ? start.headless : start.interactive)(options, prompt) };
+  const opened = started.opening === undefined ? prompt : `${started.opening}\n\n${prompt}`;
+  return { command: start.command, args: (headless ? start.headless : start.interactive)(options, opened) };
 }

@@ -4,7 +4,15 @@ import { mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 import { test } from 'node:test';
 import { harnessesWithAgent, plannedFiles, wrapperDirectories } from '../scripts/agentrite-harness.mjs';
-import { isKitWrapper, parseRoleDescription, readRoles, ROLE_NAMES, wrapWords } from '../scripts/agentrite-roles.mjs';
+import {
+  isKitWrapper,
+  isWrapperBody,
+  parseRoleDescription,
+  readRoles,
+  ROLE_NAMES,
+  wrapperBody,
+  wrapWords,
+} from '../scripts/agentrite-roles.mjs';
 import { installKit, KIT_SETTINGS } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -204,7 +212,7 @@ function fixture(harness, name) {
 test('plannedFiles of both harnesses, from the kit role files, is the eight fixtures byte for byte', (testContext) => {
   const roles = readRoles(projectWith(testContext), KIT_SETTINGS.roles);
   assert.deepEqual(
-    plannedFiles(['claude', 'opencode'], roles),
+    plannedFiles(['claude', 'opencode'], roles).map(({ path, content }) => ({ path, content })),
     ['claude', 'opencode'].flatMap((harness) =>
       ROLE_NAMES.map((name) => ({ path: `.${harness}/agents/${name}.md`, content: fixture(harness, name) })),
     ),
@@ -374,5 +382,29 @@ test('isKitWrapper is false for a text that is not a wrapper of the kit', () => 
     '',
   ]) {
     assert.ok(!isKitWrapper(text), text);
+  }
+});
+
+// Unit 0100, R3: the body of a wrapper, between a fixed opening and a fixed closing, in either format.
+
+test('isWrapperBody is true for the body of any path between the opening and the closing it is given', () => {
+  for (const path of ['roles/planner.md', 'rules/our planner.md', 'rules/a`b.md', `rules/${'long '.repeat(24)}x.md`]) {
+    assert.ok(isWrapperBody(`\n${wrapperBody(path)}`, '\n', ''), path);
+    assert.ok(isWrapperBody(`${wrapperBody(path)}"""\n`, '', '"""\n'), path);
+  }
+});
+
+test('isWrapperBody is false for another opening, another closing, another body or no path', () => {
+  const body = wrapperBody('roles/planner.md');
+  for (const [text, opening, closing] of [
+    [body, '\n', ''],
+    [`\n${body}`, '', ''],
+    [`${body}"""\n`, '', ''],
+    [`${body}"""\nmodel = "x"\n`, '', '"""\n'],
+    [`\n${body.replace('follow it', 'follow it now')}`, '\n', ''],
+    ['\nRead the role file.\n', '\n', ''],
+    ['', '', ''],
+  ]) {
+    assert.ok(!isWrapperBody(text, opening, closing), JSON.stringify(text));
   }
 });

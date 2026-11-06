@@ -132,9 +132,29 @@ export function wrapperBody(path) {
 }
 
 /**
+ * True when `text` is `opening`, then the body the kit writes for the path its first backtick opens, then
+ * `closing`. A path that holds a space may be wrapped at it, so a line break in the path is read as a space.
+ *
+ * @param {string} text
+ * @param {string} opening
+ * @param {string} closing
+ * @returns {boolean}
+ */
+export function isWrapperBody(text, opening, closing) {
+  const start = text.indexOf('`');
+  if (start === -1) return false;
+  // A path may hold a backtick, so each backtick after the opening one is tried as the end of the path
+  for (let end = text.indexOf('`', start + 1); end !== -1; end = text.indexOf('`', end + 1)) {
+    const path = text.slice(start + 1, end).replaceAll('\n', ' ');
+    if (text === `${opening}${wrapperBody(path)}${closing}`) return true;
+  }
+  return false;
+}
+
+/**
  * True when `text` is a wrapper as the kit writes it, whatever role, harness or path it names: front matter that is
  * not looked into, so that a pinned model does not matter, then the body the kit writes for the path its first line
- * names. A path that holds a space may be wrapped at it, so a line break in the path is read as a space.
+ * names.
  *
  * @param {string} text
  * @returns {boolean}
@@ -144,14 +164,26 @@ export function isKitWrapper(text) {
   if (lines[0] !== '---') return false;
   const end = lines.indexOf('---', 1);
   if (end === -1) return false;
-  const afterFrontMatter = lines.slice(end + 1).join('\n');
-  const opening = afterFrontMatter.indexOf('`');
-  if (opening === -1) return false;
-  // A path may hold a backtick, so each backtick after the opening one is tried as the end of the path
-  for (let closing = afterFrontMatter.indexOf('`', opening + 1); closing !== -1; ) {
-    const path = afterFrontMatter.slice(opening + 1, closing).replaceAll('\n', ' ');
-    if (afterFrontMatter === `\n${wrapperBody(path)}`) return true;
-    closing = afterFrontMatter.indexOf('`', closing + 1);
-  }
-  return false;
+  return isWrapperBody(lines.slice(end + 1).join('\n'), '\n', '');
+}
+
+/**
+ * What to write over a wrapper a project already has: the wrapper as this release renders it, with the lines of
+ * the existing one's frontmatter that pin a model put in after the release's own keys. A pin is a line that opens
+ * with `model:` at the left margin, kept as it is written. Nothing else of the existing wrapper is kept, and no
+ * YAML is read to find it: the wrappers are tracked files, so whatever else a project added shows in its diff.
+ *
+ * @param {string} existing
+ * @param {string} rendered
+ * @returns {string}
+ */
+export function refreshedWrapper(existing, rendered) {
+  // A wrapper saved with CRLF is read as the same lines. What is written ends its lines in LF, as the release does.
+  const lines = existing.split(/\r?\n/);
+  const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
+  const pins = lines.slice(1, Math.max(end, 1)).filter((line) => line.startsWith('model:'));
+  if (pins.length === 0) return rendered;
+  // The rendered wrapper opens with `---`, so the first `---` after a line break is the one that closes it.
+  const closing = rendered.indexOf('\n---\n') + 1;
+  return `${rendered.slice(0, closing)}${pins.join('\n')}\n${rendered.slice(closing)}`;
 }

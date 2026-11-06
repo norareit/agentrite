@@ -260,21 +260,21 @@ there, and the tarball is made again after any change to the kit.
 
 ### The contract's new members, for the two harnesses there are
 
-- [ ] In `tests/agentrite-harness.test.mjs`, update the test of the members' list to the four new members, and add,
+- [x] In `tests/agentrite-harness.test.mjs`, update the test of the members' list to the four new members, and add,
   going over `HARNESSES`: `extension` opens with a dot and holds no slash; `isKit` accepts what `render` writes for
   a role, and `refreshed` of a rendered wrapper over itself is itself (R2, R3)
-- [ ] In `tests/agentrite-run.test.mjs`, make every case of `harnessCommand` give `roleFile`, keep their expected
+- [x] In `tests/agentrite-run.test.mjs`, make every case of `harnessCommand` give `roleFile`, keep their expected
   arguments as they are, and add for each of `claude` and `opencode` that `start.role` gives `--agent <role>` and no
   opening, and that the prompt is unchanged (R2, R16)
-- [ ] Add `start.role` to `Harness` and `HARNESS_CONTRACT`, implement it in both modules, and make `harnessCommand`
+- [x] Add `start.role` to `Harness` and `HARNESS_CONTRACT`, implement it in both modules, and make `harnessCommand`
   take `roleFile` and the options and the opening from it, and `run` pass the role's path (R2)
-- [ ] In `tests/agentrite-roles.test.mjs`, add cases of `isWrapperBody`, and move the cases of `refreshedWrapper` to
+- [x] In `tests/agentrite-roles.test.mjs`, add cases of `isWrapperBody`, and move the cases of `refreshedWrapper` to
   import it from `scripts/agentrite-roles.mjs`. Extract `isWrapperBody` from `isKitWrapper`, and move
   `refreshedWrapper` there unchanged (R3)
-- [ ] Add `wrappers.extension`, `wrappers.isKit` and `wrappers.refreshed` to `Harness` and `HARNESS_CONTRACT`,
+- [x] Add `wrappers.extension`, `wrappers.isKit` and `wrappers.refreshed` to `Harness` and `HARNESS_CONTRACT`,
   implement them in both modules, and make `plannedFiles`, `kitOwnedFiles`, `refresh`, `removeStaleWrappers` and
   `checkWrapper` go through them, as above (R3)
-- [ ] Run `npm test`, and check that no expected output of `tests/agentrite-refresh.test.mjs`,
+- [x] Run `npm test`, and check that no expected output of `tests/agentrite-refresh.test.mjs`,
   `tests/agentrite-init.test.mjs` or `tests/agentrite-run.test.mjs` changed in this commit (R3, R16)
 
 ### Codex's module
@@ -401,7 +401,7 @@ there, and the tarball is made again after any change to the kit.
 ## Commit Points
 
 - [x] `feature-0100 Plan Codex as a third harness`: `plan.md` and the planner's entry in `record.md`
-- [ ] `feature-0100 Give the harness contract how a run starts in a role and the format of its wrappers`: the four
+- [x] `feature-0100 Give the harness contract how a run starts in a role and the format of its wrappers`: the four
   members for Claude Code and OpenCode, their consumers and tests. No command's behavior changes, and the tree passes
   `npm test`
 - [ ] `feature-0100 Add Codex as a harness`: the module, its files of the sandbox, `ring-bell.sh`'s comment,

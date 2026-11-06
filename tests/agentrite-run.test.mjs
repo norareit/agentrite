@@ -3,7 +3,7 @@ import { spawnSync } from 'node:child_process';
 import { chmodSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
-import { HARNESS_NAMES, plannedFiles } from '../scripts/agentrite-harness.mjs';
+import { HARNESS_NAMES, harnessNamed, plannedFiles } from '../scripts/agentrite-harness.mjs';
 import { ROLE_NAMES } from '../scripts/agentrite-roles.mjs';
 import {
   harnessCommand,
@@ -448,7 +448,8 @@ const ROWS = {
   },
 };
 const EXTRA = ['--resume', 'an id', '--allowedTools', 'Read', 'Grep'];
-const START = { model: undefined, headless: false, skipPermissions: false, harnessArguments: [] };
+const ROLE_FILE = 'node_modules/agentrite/roles/reviewer.md';
+const START = { model: undefined, headless: false, skipPermissions: false, harnessArguments: [], roleFile: ROLE_FILE };
 
 test('every harness the kit has holds a row for each mode', () => {
   assert.deepEqual(Object.keys(ROWS).sort(), [...HARNESS_NAMES].sort());
@@ -477,6 +478,7 @@ test('the argument list of each harness in each mode is the row of the table, op
               harnessCommand({
                 harness,
                 role: 'reviewer',
+                roleFile: ROLE_FILE,
                 model,
                 headless: mode === 'headless',
                 skipPermissions,
@@ -499,6 +501,7 @@ test('the prompt is last in every row, and what the caller gave stands in front 
       const { args } = harnessCommand({
         harness,
         role: 'reviewer',
+        roleFile: ROLE_FILE,
         model: 'm',
         headless,
         skipPermissions: true,
@@ -515,7 +518,14 @@ test('the prompt is last in every row, and what the caller gave stands in front 
 });
 
 test('the four rows with nothing of the caller, written out', () => {
-  const all = { role: 'implementer', model: 'm', skipPermissions: true, prompt: PROMPT, harnessArguments: [] };
+  const all = {
+    role: 'implementer',
+    roleFile: 'node_modules/agentrite/roles/implementer.md',
+    model: 'm',
+    skipPermissions: true,
+    prompt: PROMPT,
+    harnessArguments: [],
+  };
   assert.deepEqual(harnessCommand({ ...all, harness: 'claude', headless: false }).args, [
     '--agent',
     'implementer',
@@ -555,6 +565,22 @@ test('the four rows with nothing of the caller, written out', () => {
     PROMPT,
   ]);
 });
+
+// 0100 R2, R16: how each harness starts in a role
+
+for (const name of ['claude', 'opencode']) {
+  test(`${name} starts in a role by --agent, with no opening words, and its prompt is unchanged`, () => {
+    assert.deepEqual(harnessNamed(name).start.role('reviewer', ROLE_FILE), {
+      options: ['--agent', 'reviewer'],
+      opening: undefined,
+    });
+    for (const headless of [false, true]) {
+      const { args } = harnessCommand({ ...START, harness: name, role: 'reviewer', headless, prompt: PROMPT });
+      assert.equal(args.at(-1), PROMPT);
+      assert.equal(args.filter((argument) => argument === PROMPT).length, 1);
+    }
+  });
+}
 
 // `run` as a command, in a project with the wrappers refresh writes, one unit, and a PATH that holds nothing but a
 // fake of each harness.

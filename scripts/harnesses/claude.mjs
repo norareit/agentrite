@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { cleanupPeriodOf } from '../agentrite-cleanup-period.mjs';
 import { callFollowed, isRecord, jsonRecord, jsonRecords, stringOrNone, textFollowed } from '../agentrite-headless.mjs';
 import { INSTRUCTIONS_SECTION, instructionPaths, isOwnStandards, STANDARDS_PATH } from '../agentrite-instructions.mjs';
-import { descriptionBlock, wrapperBody } from '../agentrite-roles.mjs';
+import { descriptionBlock, isKitWrapper, refreshedWrapper, wrapperBody } from '../agentrite-roles.mjs';
 
 /**
  * @typedef {import('../agentrite-headless.mjs').Call} Call
@@ -234,12 +234,16 @@ export const claude = {
     // The names of the agents Claude Code has of its own, as its documentation writes them on 2026-10-19:
     // https://code.claude.com/docs/en/sub-agents
     ownAgents: ['Explore', 'Plan', 'general-purpose', 'claude', 'statusline-setup', 'claude-code-guide', 'fork'],
+    extension: '.md',
+    isKit: isKitWrapper,
+    refreshed: refreshedWrapper,
   },
   start: {
     command: 'claude',
     skipPermissions: '--dangerously-skip-permissions',
     interactive: (options, prompt) => [...options, '--', prompt],
     headless: (options, prompt) => ['--print', ...options, '--', prompt],
+    role: (role) => ({ options: ['--agent', role], opening: undefined }),
   },
   headless: {
     arguments(session) {

@@ -7,7 +7,7 @@ import {
   STANDARDS_PATH,
 } from '../agentrite-instructions.mjs';
 import { formattedLike } from '../agentrite-json.mjs';
-import { descriptionBlock, wrapperBody } from '../agentrite-roles.mjs';
+import { descriptionBlock, isKitWrapper, refreshedWrapper, wrapperBody } from '../agentrite-roles.mjs';
 
 /**
  * @typedef {import('../agentrite-headless.mjs').Call} Call
@@ -280,12 +280,16 @@ export const opencode = {
     // The names of the agents OpenCode has of its own, as its documentation writes them on 2026-10-19:
     // https://opencode.ai/docs/agents/
     ownAgents: ['build', 'plan', 'general', 'explore', 'scout', 'compaction', 'title', 'summary'],
+    extension: '.md',
+    isKit: isKitWrapper,
+    refreshed: refreshedWrapper,
   },
   start: {
     command: 'opencode',
     skipPermissions: '--auto',
     interactive: (options, prompt) => [...options, '--prompt', prompt],
     headless: (options, prompt) => ['run', ...options, '--', prompt],
+    role: (role) => ({ options: ['--agent', role], opening: undefined }),
   },
   headless: {
     arguments(session) {

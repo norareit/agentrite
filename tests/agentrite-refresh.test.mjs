@@ -19,7 +19,8 @@ import { claudeKitStandardsNotice, claudeRefreshNotice } from '../scripts/harnes
 import { opencodeKitStandardsNotice, opencodeRefreshNotice } from '../scripts/harnesses/opencode.mjs';
 import { foreignHookNotice, HOOK_MARK, noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-harness.mjs';
-import { fillTemplate, refreshedWrapper } from '../scripts/agentrite.mjs';
+import { refreshedWrapper } from '../scripts/agentrite-roles.mjs';
+import { fillTemplate } from '../scripts/agentrite.mjs';
 import { withoutGitEnvironmentConfiguration } from './git-environment.mjs';
 import { installKit, KIT_ROLES, KIT_SETTINGS, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';

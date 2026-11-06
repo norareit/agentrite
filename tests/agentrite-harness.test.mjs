@@ -183,7 +183,7 @@ test('a harness that lacks a member, or has one of another kind, is named with t
 
 // R2
 
-test('the contract holds its twenty-six members, each with a kind and a purpose', () => {
+test('the contract holds its thirty members, each with a kind and a purpose', () => {
   assert.deepEqual(
     HARNESS_CONTRACT.map(({ member }) => member),
     [
@@ -192,10 +192,14 @@ test('the contract holds its twenty-six members, each with a kind and a purpose'
       'wrappers.directory',
       'wrappers.render',
       'wrappers.ownAgents',
+      'wrappers.extension',
+      'wrappers.isKit',
+      'wrappers.refreshed',
       'start.command',
       'start.skipPermissions',
       'start.interactive',
       'start.headless',
+      'start.role',
       'headless.arguments',
       'headless.read',
       'headless.follow',
@@ -226,6 +230,22 @@ test('the contract holds its twenty-six members, each with a kind and a purpose'
     }
   }
 });
+
+// 0100 R3: the format of each harness's wrappers
+
+const ROLE = { name: 'planner', path: 'node_modules/agentrite/roles/planner.md', description: 'Writes the plan.' };
+
+for (const harness of HARNESSES) {
+  test(`${harness.name}: the extension of a wrapper opens with a dot and holds no slash`, () => {
+    assert.match(harness.wrappers.extension, /^\.[^/]+$/);
+  });
+
+  test(`${harness.name}: a wrapper it renders is the kit's, and refreshing it over itself leaves it`, () => {
+    const rendered = harness.wrappers.render(ROLE);
+    assert.equal(harness.wrappers.isKit(rendered), true);
+    assert.equal(harness.wrappers.refreshed(rendered, rendered), rendered);
+  });
+}
 
 // R10
 

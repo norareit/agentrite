@@ -79,7 +79,7 @@ import {
   selectRuns,
   variantOfRun,
 } from './agentrite-runs.mjs';
-import { isKitWrapper, readRoles } from './agentrite-roles.mjs';
+import { readRoles } from './agentrite-roles.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -398,11 +398,15 @@ function shimFile(templates, sandboxOnly) {
  *   standards: string,
  *   roles: import('./agentrite-roles.mjs').Role[],
  * }} project
- * @returns {{ path: string, content: string, executable?: boolean, keepsModel?: boolean }[]}
+ * @returns {{
+ *   path: string,
+ *   content: string,
+ *   executable?: boolean,
+ *   refreshed?: (existing: string, rendered: string) => string,
+ * }[]}
  */
 function kitOwnedFiles({ templates, harnesses, sandbox, standards, roles }) {
-  const wrappers = plannedFiles(harnesses, roles).map((file) => ({ ...file, keepsModel: true }));
-  const files = [...wrappers, listFile(standards, roles)];
+  const files = [...plannedFiles(harnesses, roles), listFile(standards, roles)];
   return sandbox ? [...files, shimFile(templates, false)] : files;
 }
 
@@ -483,27 +487,6 @@ function sandboxFiles({ templates, packageName, playwrightVersion, sandboxOnly }
 export function projectFiles({ packageName, playwrightVersion, ...process }) {
   const sandbox = { templates: process.templates, packageName, playwrightVersion, sandboxOnly: false };
   return [...processFiles(process), ...sandboxFiles(sandbox)];
-}
-
-/**
- * What to write over a wrapper a project already has: the wrapper as this release renders it, with the lines of
- * the existing one's frontmatter that pin a model put in after the release's own keys. A pin is a line that opens
- * with `model:` at the left margin, kept as it is written. Nothing else of the existing wrapper is kept, and no
- * YAML is read to find it: the wrappers are tracked files, so whatever else a project added shows in its diff.
- *
- * @param {string} existing
- * @param {string} rendered
- * @returns {string}
- */
-export function refreshedWrapper(existing, rendered) {
-  // A wrapper saved with CRLF is read as the same lines. What is written ends its lines in LF, as the release does.
-  const lines = existing.split(/\r?\n/);
-  const end = lines[0] === '---' ? lines.indexOf('---', 1) : -1;
-  const pins = lines.slice(1, Math.max(end, 1)).filter((line) => line.startsWith('model:'));
-  if (pins.length === 0) return rendered;
-  // The rendered wrapper opens with `---`, so the first `---` after a line break is the one that closes it.
-  const closing = rendered.indexOf('\n---\n') + 1;
-  return `${rendered.slice(0, closing)}${pins.join('\n')}\n${rendered.slice(closing)}`;
 }
 
 /**
@@ -1102,7 +1085,7 @@ function refresh(root) {
 
     const existing = kind === 'file' ? readFileSync(absolute, 'utf-8') : undefined;
     const content =
-      existing !== undefined && file.keepsModel ? refreshedWrapper(existing, file.content) : file.content;
+      existing !== undefined && file.refreshed !== undefined ? file.refreshed(existing, file.content) : file.content;
     // The owner's bit, which is the one that lets the project run its own shim and the one git records.
     const executable = !file.executable || (kind === 'file' && (lstatSync(absolute).mode & 0o100) !== 0);
     if (existing === content && executable) {
@@ -1153,24 +1136,26 @@ function refreshHook(root) {
 }
 
 /**
- * Removes, from the wrapper directory of each of `harnesses`, the regular file `<name>.md` that holds the kit's
- * wrapper body for a `<name>` that is not in `roleNames`, and prints `removed <path>` for each. A symbolic link, a
- * directory and a file with another body, such as an agent of the project's own, are left and not mentioned.
+ * Removes, from the wrapper directory of each of `harnesses`, the regular file `<name><extension>`, with the
+ * harness's extension, that its harness takes for a wrapper the kit wrote, for a `<name>` that is not in
+ * `roleNames`, and prints `removed <path>` for each. A symbolic link, a directory and a file the harness does not take
+ * for the kit's, such as an agent of the project's own, are left and not mentioned.
  *
  * @param {string} root
  * @param {string[]} harnesses
  * @param {string[]} roleNames
  */
 function removeStaleWrappers(root, harnesses, roleNames) {
-  for (const directory of wrapperDirectories(harnesses)) {
-    const absoluteDirectory = resolve(root, directory);
+  for (const { wrappers } of harnesses.map((name) => harnessNamed(name))) {
+    const absoluteDirectory = resolve(root, wrappers.directory);
     if (!exists(absoluteDirectory)) continue;
     for (const entry of readdirSync(absoluteDirectory).sort()) {
-      if (!entry.endsWith('.md') || roleNames.includes(entry.slice(0, -'.md'.length))) continue;
+      if (!entry.endsWith(wrappers.extension)) continue;
+      if (roleNames.includes(entry.slice(0, -wrappers.extension.length))) continue;
       const absolute = resolve(absoluteDirectory, entry);
-      if (kindOf(absolute) !== 'file' || !isKitWrapper(readFileSync(absolute, 'utf-8'))) continue;
+      if (kindOf(absolute) !== 'file' || !wrappers.isKit(readFileSync(absolute, 'utf-8'))) continue;
       rmSync(absolute);
-      console.log(`removed ${directory}/${entry}`);
+      console.log(`removed ${wrappers.directory}/${entry}`);
     }
   }
 }
@@ -1468,28 +1453,31 @@ function cancel(root, { unit, reason, by }) {
  * @param {string} role
  */
 function checkWrapper(root, roles, harness, role) {
-  const wrapper = plannedFiles([harness], roles).find((file) => basename(file.path) === `${role}.md`);
+  const { extension } = harnessNamed(harness).wrappers;
+  const wrapper = plannedFiles([harness], roles).find((file) => basename(file.path) === `${role}${extension}`);
   if (wrapper === undefined) throw new Error(`the kit writes no wrapper of ${role} for ${harness}`);
   const absolute = resolve(root, wrapper.path);
   const remedy =
     `Run: npx agentrite refresh, which writes the wrappers of the harnesses that ${SETTINGS_FILE} names`;
   if (kindOf(absolute) !== 'file') throw new Error(`the project has no file ${wrapper.path}. ${remedy}`);
   const existing = readFileSync(absolute, 'utf-8');
-  if (existing !== refreshedWrapper(existing, wrapper.content)) {
+  if (existing !== wrapper.refreshed(existing, wrapper.content)) {
     throw new Error(`${wrapper.path} is not the file refresh would leave there. ${remedy}`);
   }
 }
 
 /**
- * Throws unless `role` is the name of one of `roles`. The comparison is with the names of the list, so that a word
- * such as `toString` is refused.
+ * The one of `roles` named `role`, and throws when none is. The comparison is with the names of the list, so that a
+ * word such as `toString` is refused.
  *
  * @param {import('./agentrite-roles.mjs').Role[]} roles
  * @param {string} role
+ * @returns {import('./agentrite-roles.mjs').Role}
  */
 function checkRoleNamed(roles, role) {
+  const named = roles.find((listed) => listed.name === role);
+  if (named !== undefined) return named;
   const names = roles.map((listed) => listed.name);
-  if (names.includes(role)) return;
   const list = `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
   throw new Error(`the project has no role ${role}. The roles ${SETTINGS_FILE} names are ${list}`);
 }
@@ -1504,10 +1492,11 @@ function checkRoleNamed(roles, role) {
  */
 function run(root, { role, harness, unit, text, ...start }) {
   const roles = projectRoles(root);
-  checkRoleNamed(roles, role);
+  const { path: roleFile } = checkRoleNamed(roles, role);
   const directory = resolveUnit(unit, changeDirectories(root));
   checkWrapper(root, roles, harness, role);
-  const { command, args } = harnessCommand({ ...start, harness, role, prompt: unitPrompt(directory, text) });
+  const prompt = unitPrompt(directory, text);
+  const { command, args } = harnessCommand({ ...start, harness, role, roleFile, prompt });
 
   // The arguments go to the harness as they are, with no shell in between to read the prompt.
   const result = spawnSync(command, args, { cwd: root, stdio: 'inherit' });
