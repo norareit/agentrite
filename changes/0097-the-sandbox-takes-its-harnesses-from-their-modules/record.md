@@ -77,5 +77,12 @@ timestamp: 2026-11-06T10:15:15Z
   the plan showed only comments that name a harness as an example and the recovery message. Not checked: a project
   of one harness and a change of `harnesses` against a real image, a host without npm or with bash 3.2, and
   shellcheck, which the host lacks. The unit is handed over for review. The status stays `in-progress`
+- 2026-11-06T12:47:00Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, fully reviewed unit 0097 at
+  `68362af35476a3a22f5c79897797e5e94e0958b8`, against merge base `1486bf6`. Returned P1 and C1, saved in
+  `.reviews/0097-the-sandbox-takes-its-harnesses-from-their-modules/review-2026-11-06T124601Z.md`. Independently ran
+  `npm test`: 1548 passed, none failed, cancelled or skipped, with Docker reachable; `npm run check-changes` and
+  `git diff --check master...HEAD` passed. Not repeated: the live dev-sandbox smoke run, real single-harness builds
+  or transitions against an existing home volume, a host without npm, bash 3.2, or shellcheck. The status stays
+  `in-progress`
 
 ## Amendments
