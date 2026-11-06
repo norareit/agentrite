@@ -54,5 +54,10 @@ timestamp: 2026-11-06T14:07:38Z
   change check, the usage order and the line limit were run and the four commits exist. `npm test` reported 1591
   passing and 0 failing, and `npm run check-changes` passed, on the tree before this entry. The status is
   `in-progress`
+- 2026-11-06T15:06:17Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0099 at
+  `4a20b0d83eafcb1999d12520e2f527b716be0dcf`, from `cf2694c5e074ad758f596fad61179c0e02e7c99a`. Returned no findings;
+  the review is `.reviews/0099-a-unit-can-be-cancelled-by-a-command/review-20261106T150617Z.md`. Independently ran
+  `npm test`: 1591 passed, 0 failed and 33 Docker-dependent tests skipped. The change check passed. Docker checks
+  and cancellation of a real project unit remain unverified. The status is `in-progress`
 
 ## Amendments
