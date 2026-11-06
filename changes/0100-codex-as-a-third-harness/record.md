@@ -143,5 +143,9 @@ timestamp: 2026-11-06T14:12:53Z
       `task-0001 record verification`, with a body of none and no trailer, so the hook refused none. Its session holds
       `Co-authored-by` only in the rule of `standards.md` it read
     * R14: not checked. Whether the bell rings is seen on the human's terminal alone
+- 2026-11-06T18:59:27Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded that the human started an
+  interactive session of Codex in the scratch project's sandbox, `./sandbox.sh --in-place codex`, in their own terminal,
+  gave it a prompt, and that the bell rang when the turn ended (R14). The implementer's runs had no terminal, which
+  rings nothing
 
 ## Amendments

@@ -392,7 +392,7 @@ there, and the tarball is made again after any change to the kit.
   it showed. Where no account or key is available to the implementer, this is left to the human and recorded (R13)
 - [x] After that turn, start a new container of the same project and resume the session with
   `codex exec resume <thread>`: it finds the thread (R12)
-- [ ] With `"bell": true`, a turn's end rings the bell on the host's terminal, and with `false`, nothing of
+- [x] With `"bell": true`, a turn's end rings the bell on the host's terminal, and with `false`, nothing of
   `/etc/codex/config.toml` is in the container (R14)
 - [x] Run one step of the orchestrator on Codex in the sandbox and one that resumes it, with `--follow`: the step
   starts in its role, `--follow` shows its messages, its response and session are read, and the resumed run's
