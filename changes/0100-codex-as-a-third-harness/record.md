@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-06T14:12:53Z
 ---
 
@@ -172,5 +172,8 @@ timestamp: 2026-11-06T14:12:53Z
   code changed. `npm test` passes its 1720 tests and `npm run check-changes` passes on `da7e333`. The review
   returned no blocking finding, and the human decides the finding and whether the unit is `implemented`. The status
   stays `in-progress`
+- 2026-11-06T19:09:57Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, at the human's request, set the
+  status to `implemented`: the review returned no blocking finding, its one finding, C1, is applied, and every task of
+  `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
