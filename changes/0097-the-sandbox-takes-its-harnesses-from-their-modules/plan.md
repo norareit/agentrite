@@ -342,7 +342,7 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 ## Commit Points
 
-- [ ] `feature-0097 Plan the sandbox taking its harnesses from their modules`: `plan.md` and the planner's entry in
+- [x] `feature-0097 Plan the sandbox taking its harnesses from their modules`: `plan.md` and the planner's entry in
   `record.md`
 - [ ] `feature-0097 Read the harnesses of the project at the start of the sandbox`: the settings reader and its tests
 - [ ] `feature-0097 Give each harness module what the sandbox knows of it`: the contract, the modules, the cleanup

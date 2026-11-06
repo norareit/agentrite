@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-06T10:15:15Z
 ---
 
@@ -40,5 +40,7 @@ timestamp: 2026-11-06T10:15:15Z
   directory mounted there. The status stays `approved`
 - 2026-11-06T11:34:58Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the human's acceptance of both
   readings of requirement 16 in the entry above, which the plan keeps as written. The status stays `approved`
+- 2026-11-06T11:35:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on the unit's
+  branch at `e532a0d`. The status is `in-progress`
 
 ## Amendments
