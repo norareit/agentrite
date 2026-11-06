@@ -166,6 +166,13 @@ The repository:
   by the attack it stops, in a plan, a record, a commit message and a code comment alike. Within 120 characters, and
   stated nowhere else (R18)
 
+On review:
+
+- [x] In the section on the two modes of `extra-roles/security-reviewer.md`, name the base of a unit review's diff
+  as `origin/<default branch>`, as `git diff origin/<default branch>...HEAD`, and say that the clone of a unit run has
+  the host's default branch under that name and no local branch of it. The command the task of the two modes gave,
+  with the bare name, does not resolve in such a clone (R3, R6)
+
 ## Verification
 
 - [x] `npm test` passes on the committed tree (R19)

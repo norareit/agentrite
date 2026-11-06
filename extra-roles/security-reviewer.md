@@ -25,8 +25,9 @@ any of them tells an attacker where to look before the users of the kit have a f
 You work in one of two modes, by what you are given:
 
 * **A unit review**, given a unit directory whose status is `in-progress`. You review the diff of the unit's branch
-  against the default branch, `git diff <default branch>...HEAD`, where the default branch is the one `defaultBranch`
-  of `agentrite.json` names, at the commit of the branch you review
+  against the default branch, `git diff origin/<default branch>...HEAD`, where the default branch is the one
+  `defaultBranch` of `agentrite.json` names, at the commit of the branch you review. The clone of a unit run has the
+  host's default branch as `origin/<default branch>` and no local branch of that name
 * **An audit**, given no unit. You review the tree of the default branch, as a whole, at the commit you audit
 
 You set no status. The statuses are moved by the four roles of the kit and by the human, and a security review moves

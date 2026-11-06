@@ -90,5 +90,10 @@ timestamp: 2026-10-24T23:14:27Z
   `npm test` passed all 1720 tests with none skipped; `npm run check-changes`, `npm run kit -- roles` and
   `git diff --check master...HEAD` passed. No role session was launched to verify adherence to the new instructions;
   the historical failing-first test run could not be independently verified. The status remains `in-progress`
+- 2026-11-06T21:37:59Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted S1 of the review at
+  `5abc8d7`. A clone of the unit's branch made as a unit run makes it, with `git clone --no-hardlinks --branch`, failed
+  to resolve `master...HEAD` and resolved `origin/master...HEAD`. Added a task to `plan.md` for the correction, since
+  the task of the two modes gave the bare name, and in `extra-roles/security-reviewer.md` named the base of a unit
+  review's diff as `origin/<default branch>`. The status is `in-progress`
 
 ## Amendments
