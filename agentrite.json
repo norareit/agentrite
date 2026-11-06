@@ -11,6 +11,7 @@
     "planner": "node_modules/agentrite/roles/planner.md",
     "implementer": "node_modules/agentrite/roles/implementer.md",
     "reviewer": "node_modules/agentrite/roles/reviewer.md",
-    "spec-reviewer": "extra-roles/spec-reviewer.md"
+    "spec-reviewer": "extra-roles/spec-reviewer.md",
+    "security-reviewer": "extra-roles/security-reviewer.md"
   }
 }

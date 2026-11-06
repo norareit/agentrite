@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-10-24T23:14:27Z
 ---
 
@@ -71,5 +71,7 @@ timestamp: 2026-10-24T23:14:27Z
   R16 no other file under `.reviews` that names a finding, so R12's findings directory holds it as part of that file;
   and on a variant a unit review is started with `--variant <name>`, the only way to run on a variant's branch, which
   R13 supports. The status is `approved`
+- 2026-11-06T21:20:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `feature-0086-a-security-reviewer-for-this-repository` at `f4424d3`, began the work. The status is `in-progress`
 
 ## Amendments

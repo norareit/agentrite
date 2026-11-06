@@ -51,8 +51,8 @@ test('the package leaves extra-roles out', () => {
   assert.deepEqual(shipped, []);
 });
 
-// Unit 0067, R1 and R3
-test('the roles of the installed release lists the spec reviewer after the four', () => {
+// Unit 0067, R1 and R3; unit 0086, R2
+test('the roles of the installed release lists the spec reviewer and the security reviewer after the four', () => {
   const release = installedRelease();
   const output = execFileSync(process.execPath, [join(release, 'scripts', 'agentrite.mjs'), 'roles', '--json'], {
     cwd: root,
@@ -61,9 +61,11 @@ test('the roles of the installed release lists the spec reviewer after the four'
   const { roles } = JSON.parse(output);
   assert.deepEqual(
     roles.map((role) => role.name),
-    ['specifier', 'planner', 'implementer', 'reviewer', 'spec-reviewer'],
+    ['specifier', 'planner', 'implementer', 'reviewer', 'spec-reviewer', 'security-reviewer'],
   );
-  assert.equal(roles.at(-1).path, 'extra-roles/spec-reviewer.md');
+  assert.equal(roles[4].path, 'extra-roles/spec-reviewer.md');
+  assert.equal(roles.at(-1).path, 'extra-roles/security-reviewer.md');
+  assert.notEqual(roles.at(-1).description, '');
 });
 
 // Unit 0054, R25
