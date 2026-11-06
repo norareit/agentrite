@@ -30,5 +30,8 @@ timestamp: 2026-11-06T14:12:53Z
   `refresh` notices a missing `.codex/config.toml`, as it notices a missing `opencode.json`; and `chatgpt.com` and
   `auth.openai.com` stay in both modules, the entrypoint admitting a host listed twice once. The status stays
   `approved`
+- 2026-11-06T15:23:32Z [Claude Code, anthropic/claude-opus-5-5] as the planner, recorded that the human confirmed
+  the reading on Codex's own agents: a role named `default`, `worker` or `explorer` is refused in every project,
+  whatever harnesses it names, as the plan has it. The status stays `approved`
 
 ## Amendments
