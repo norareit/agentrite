@@ -2,6 +2,8 @@ import { readFileSync, realpathSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+/** @typedef {import('./agentrite-instructions.mjs').ProjectFile} ProjectFile */
+
 const KEY = 'cleanupPeriodDays';
 
 const CORRECT = `Correct the file, or remove the key ${KEY} from it`;
@@ -39,6 +41,21 @@ export function parseCleanupPeriod(text, path) {
   const value = values[KEY];
   if (typeof value === 'number' && Number.isInteger(value) && value >= 1) return value;
   throw new Error(`${path}: ${KEY} is ${JSON.stringify(value)}. It must be a whole number of 1 or more. ${CORRECT}`);
+}
+
+/**
+ * The `cleanupPeriodDays` of the host's Claude Code user settings as `read` gives them, read as `parseCleanupPeriod`
+ * reads it, or `undefined` when there is no such file. Throws, naming the file at `path`, what to print for a file
+ * that could not be read.
+ *
+ * @param {ProjectFile} read
+ * @param {string} path
+ * @returns {number | undefined}
+ */
+export function cleanupPeriodOf(read, path) {
+  if (!read.found) return undefined;
+  if ('error' in read) throw new Error(`cannot read ${path}: ${read.error}. ${CORRECT}`);
+  return parseCleanupPeriod(read.text, path);
 }
 
 /**

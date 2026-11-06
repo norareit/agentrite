@@ -9,6 +9,27 @@ import { opencode } from './harnesses/opencode.mjs';
  */
 
 /**
+ * A file the sandbox mounts read-only in the container: `from` is `kit` for a file of the harness's own directory
+ * `container/harnesses/<name>/`, whose `path` is relative to that directory, or `host` for a file of the host, whose
+ * `path` is absolute. `target` is the absolute path in the container.
+ *
+ * @typedef {{ from: 'kit' | 'host', path: string, target: string }} Mount
+ */
+
+/**
+ * A file the wrapper writes into the project's log directory under `name`, with `content` and a line break, and
+ * mounts read-only at `target`.
+ *
+ * @typedef {{ name: string, content: string, target: string }} SandboxFile
+ */
+
+/**
+ * What a run of the sandbox gives a harness: entries `NAME=value` of the command's environment, mounts and files.
+ *
+ * @typedef {{ environment: string[], mounts: Mount[], files: SandboxFile[] }} Given
+ */
+
+/**
  * What the kit knows of a harness, which each module of `scripts/harnesses/` implements. `HARNESS_CONTRACT` holds the
  * same members as a value, which the test that every harness implements them reads, so the two change together.
  *
@@ -43,14 +64,27 @@ import { opencode } from './harnesses/opencode.mjs';
  *     ) => { content: string | undefined, line: string | undefined, notices: string[] },
  *     refresh: (read: ProjectFile, standards: string) => string[],
  *   },
+ *   sandbox: {
+ *     package: string,
+ *     versionArgument: string,
+ *     readVersion: (printed: string) => string | undefined,
+ *     updates: { environment: string[], mounts: Mount[] },
+ *     logDirectories: string[],
+ *     hosts: { host: string, reason: string }[],
+ *     bell: { environment: string[], mounts: Mount[] },
+ *     host: (home: string, read: (path: string) => ProjectFile) => Given,
+ *   },
  * }} Harness
  */
 
+const MOUNT_FIELDS = ['from', 'path', 'target'];
+
 /**
- * The members of `Harness`, each by its path, its kind, and what it is for. A kind is `string`, `function`, or
- * `strings` for a list of strings.
+ * The members of `Harness`, each by its path, its kind, and what it is for. A kind is `string`, `function`,
+ * `strings` for a list of strings, or `records` for a list of objects that each hold exactly the string fields
+ * `fields`.
  *
- * @type {{ member: string, kind: 'string' | 'function' | 'strings', purpose: string }[]}
+ * @type {{ member: string, kind: 'string' | 'function' | 'strings' | 'records', purpose: string, fields?: string[] }[]}
  */
 export const HARNESS_CONTRACT = [
   { member: 'name', kind: 'string', purpose: 'the name the commands and agentrite.json take the harness by' },
@@ -101,6 +135,59 @@ export const HARNESS_CONTRACT = [
     purpose: 'what init writes of that file, the line it prints of it, and the notices it prints for it',
   },
   { member: 'instructions.refresh', kind: 'function', purpose: 'the notices refresh prints for that file' },
+  {
+    member: 'sandbox.package',
+    kind: 'string',
+    purpose: 'the npm package the image installs, and that the registry is asked the latest version of',
+  },
+  {
+    member: 'sandbox.versionArgument',
+    kind: 'string',
+    purpose: "the build argument by which a project's compose file gives the version the image holds",
+  },
+  {
+    member: 'sandbox.readVersion',
+    kind: 'function',
+    purpose: "the version read from what the host's command printed for --version, or none",
+  },
+  {
+    member: 'sandbox.updates.environment',
+    kind: 'strings',
+    purpose: 'the entries NAME=value of the environment of a run that turn off the harness updating itself',
+  },
+  {
+    member: 'sandbox.updates.mounts',
+    kind: 'records',
+    fields: MOUNT_FIELDS,
+    purpose: 'the files mounted in a run that turn off the harness updating itself',
+  },
+  {
+    member: 'sandbox.logDirectories',
+    kind: 'strings',
+    purpose: "the directories of its logs and its state, relative to the agent's home, mounted from the host",
+  },
+  {
+    member: 'sandbox.hosts',
+    kind: 'records',
+    fields: ['host', 'reason'],
+    purpose: 'the hosts the egress allowlist admits for the harness, each with why it is needed',
+  },
+  {
+    member: 'sandbox.bell.environment',
+    kind: 'strings',
+    purpose: 'the entries NAME=value of the environment of a run that ring the bell, with "bell": true',
+  },
+  {
+    member: 'sandbox.bell.mounts',
+    kind: 'records',
+    fields: MOUNT_FIELDS,
+    purpose: 'the files mounted in a run that ring the bell, with "bell": true',
+  },
+  {
+    member: 'sandbox.host',
+    kind: 'function',
+    purpose: "what a run gives the harness besides from the host's files, from the host's home and a reader of them",
+  },
 ];
 
 /** The harnesses the kit knows, in its order, which every listing of them follows. The kit's only list of them. */

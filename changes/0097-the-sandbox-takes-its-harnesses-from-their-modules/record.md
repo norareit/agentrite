@@ -47,5 +47,11 @@ timestamp: 2026-11-06T10:15:15Z
   that changes the wrapper rather than in the first, since the wrapper runs the `bell` form until then and the suite,
   green on `456e229` with 1447 tests passed, fails 249 tests when the form is removed first. The status stays
   `in-progress`
+- 2026-11-06T12:31:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, split the task of the cleanup
+  period's reader in `plan.md` the same way and for the same reason: `readCleanupPeriod` and the command line of
+  `scripts/agentrite-cleanup-period.mjs` go in the commit that changes the wrapper. The helper refuses an empty field
+  besides one that holds a tab or a line break, since the wrapper's `read` with a tab for its separator joins two
+  tabs into one and would take the next field for the empty one. `npm test` passes on the tree of the commit that
+  gives each module what the sandbox knows of it, with 1501 tests. The status stays `in-progress`
 
 ## Amendments

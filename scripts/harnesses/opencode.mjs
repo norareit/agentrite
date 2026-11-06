@@ -324,4 +324,33 @@ export const opencode = {
       ];
     },
   },
+  sandbox: {
+    package: 'opencode-ai',
+    versionArgument: 'OPENCODE_VERSION',
+    // `1.18.33`, or a pre-release as `0.0.0-dev-202610030456`: the version is the first word of the first line.
+    readVersion(printed) {
+      const word = printed.split('\n')[0].trim().split(/\s+/)[0];
+      return word === '' ? undefined : word;
+    },
+    // OpenCode has no switch in the environment, so it is pointed at a configuration that sets autoupdate false. Its
+    // project opencode.json does not override that key.
+    updates: {
+      environment: ['OPENCODE_CONFIG=/etc/opencode/opencode.json'],
+      mounts: [{ from: 'kit', path: 'opencode.json', target: '/etc/opencode/opencode.json' }],
+    },
+    // Its data directory, which holds its sessions and its login.
+    logDirectories: ['.local/share/opencode'],
+    hosts: [
+      { host: 'models.opencode.ai', reason: 'OpenCode fetches its model catalog from it' },
+      { host: 'auth.openai.com', reason: "OpenCode's login with a ChatGPT account, and every refresh of its token" },
+      { host: 'chatgpt.com', reason: 'OpenCode sends the prompts of a ChatGPT login here' },
+    ],
+    // Its plugin, named in a configuration that OpenCode merges over the others. The plugin runs ring-bell.sh, which
+    // the wrapper mounts beside it.
+    bell: {
+      environment: ['OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}'],
+      mounts: [{ from: 'kit', path: 'bell-plugin.js', target: '/etc/agentrite/bell/opencode-plugin.js' }],
+    },
+    host: () => ({ environment: [], mounts: [], files: [] }),
+  },
 };

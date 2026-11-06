@@ -83,6 +83,7 @@ test('package.json keeps the one command and the files the package holds', () =>
     'scripts/agentrite-run.mjs',
     'scripts/agentrite-settings.mjs',
     'scripts/agentrite-cleanup-period.mjs',
+    'scripts/agentrite-sandbox.mjs',
     'scripts/agentrite-hook.mjs',
     'scripts/agentrite.mjs',
     'container',

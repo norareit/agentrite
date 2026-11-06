@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { join } from 'node:path';
+import { cleanupPeriodOf } from '../agentrite-cleanup-period.mjs';
 import { callFollowed, isRecord, jsonRecord, jsonRecords, stringOrNone, textFollowed } from '../agentrite-headless.mjs';
 import { INSTRUCTIONS_SECTION, instructionPaths, isOwnStandards, STANDARDS_PATH } from '../agentrite-instructions.mjs';
 import { descriptionBlock, wrapperBody } from '../agentrite-roles.mjs';
@@ -8,6 +10,7 @@ import { descriptionBlock, wrapperBody } from '../agentrite-roles.mjs';
  * @typedef {import('../agentrite-headless.mjs').Followed} Followed
  * @typedef {import('../agentrite-instructions.mjs').ProjectFile} ProjectFile
  * @typedef {import('../agentrite-roles.mjs').Role} Role
+ * @typedef {import('../agentrite-harness.mjs').Given} Given
  */
 
 /** The file Claude Code reads the kit's instructions from, at the project root. */
@@ -176,6 +179,52 @@ function kitStandardsNotices(read, standards) {
  *
  * @type {import('../agentrite-harness.mjs').Harness}
  */
+/** The host's status line script, relative to the host's home, and where Claude Code in the sandbox runs it. */
+const STATUS_LINE_SCRIPT = '.claude/statusline-command.sh';
+
+/**
+ * What Claude Code in the sandbox is given of the host: the developer's own status line, and how long the host keeps
+ * its sessions. The status line is the host's script and the kit's managed settings, whose one setting runs it, both
+ * or neither, and only for a script that is a file that can be read: a managed status line with no script to run
+ * would blank one set inside the sandbox. The number of days is the `cleanupPeriodDays` of the host's
+ * `~/.claude/settings.json`, and nothing else of that file crosses, since it can hold secrets. It is a drop-in of the
+ * managed settings, which stand above the home volume's, so the agent cannot change it.
+ *
+ * @param {string} home
+ * @param {(path: string) => ProjectFile} read
+ * @returns {Given}
+ */
+function claudeHost(home, read) {
+  const script = read(STATUS_LINE_SCRIPT);
+  const statusLine =
+    'text' in script
+      ? [
+          /** @type {const} */ ({
+            from: 'host',
+            path: `${home}/${STATUS_LINE_SCRIPT}`,
+            target: '/etc/claude-code/statusline-command.sh',
+          }),
+          /** @type {const} */ ({
+            from: 'kit',
+            path: 'managed-settings.json',
+            target: '/etc/claude-code/managed-settings.json',
+          }),
+        ]
+      : [];
+  const days = cleanupPeriodOf(read('.claude/settings.json'), join(home, '.claude', 'settings.json'));
+  const cleanupPeriod =
+    days === undefined
+      ? []
+      : [
+          {
+            name: `claude-cleanup-period-${days}.json`,
+            content: `{"cleanupPeriodDays": ${days}}`,
+            target: '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json',
+          },
+        ];
+  return { environment: [], mounts: statusLine, files: cleanupPeriod };
+}
+
 export const claude = {
   name: 'claude',
   title: 'Claude Code',
@@ -231,5 +280,35 @@ export const claude = {
         ...kitStandardsNotices(read, standards),
       ];
     },
+  },
+  sandbox: {
+    package: '@anthropic-ai/claude-code',
+    versionArgument: 'CLAUDE_CODE_VERSION',
+    // `2.1.288 (Claude Code)`: the version is the first word of the first line.
+    readVersion(printed) {
+      const word = printed.split('\n')[0].trim().split(/\s+/)[0];
+      return word === '' ? undefined : word;
+    },
+    // DISABLE_AUTOUPDATER stops Claude Code's background check; DISABLE_UPDATES also blocks `claude update`.
+    updates: { environment: ['DISABLE_AUTOUPDATER=1', 'DISABLE_UPDATES=1'], mounts: [] },
+    // Its sessions. Its login and its settings stay in the home volume, in the .claude above them.
+    logDirectories: ['.claude/projects'],
+    hosts: [
+      { host: 'api.anthropic.com', reason: 'the Anthropic API that Claude Code uses' },
+      { host: 'platform.claude.com', reason: 'Claude Code contacts it at start-up when it holds no saved login' },
+    ],
+    // Its hooks of Notification and Stop, in the drop-in directory of its managed settings, which holds them beside
+    // the status line's managed-settings.json or without it.
+    bell: {
+      environment: [],
+      mounts: [
+        {
+          from: 'kit',
+          path: 'bell-settings.json',
+          target: '/etc/claude-code/managed-settings.d/agentrite-bell.json',
+        },
+      ],
+    },
+    host: claudeHost,
   },
 };

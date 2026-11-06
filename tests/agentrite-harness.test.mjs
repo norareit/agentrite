@@ -32,35 +32,77 @@ function found(text) {
 }
 
 /**
- * The kind of a value as the contract names kinds, or what it is otherwise, for the message of a fault.
+ * True for an object that holds exactly the fields `fields`, each a string.
+ *
+ * @param {unknown} item
+ * @param {string[]} fields
+ * @returns {boolean}
+ */
+function isRecordOf(item, fields) {
+  if (typeof item !== 'object' || item === null || Array.isArray(item)) return false;
+  const keys = Object.keys(item);
+  return keys.length === fields.length && fields.every((field) => typeof item[field] === 'string');
+}
+
+/**
+ * The kind of a value as the contract names kinds, or what it is otherwise, for the message of a fault. A list is
+ * `records` when `fields` is given and every item holds exactly those fields, each a string, so that an empty list
+ * is of either kind of list.
  *
  * @param {unknown} value
+ * @param {string[] | undefined} fields
  * @returns {string}
  */
-function kindOf(value) {
+function kindOf(value, fields) {
   if (typeof value === 'string') return 'string';
   if (typeof value === 'function') return 'function';
-  if (Array.isArray(value)) return value.every((item) => typeof item === 'string') ? 'strings' : 'array';
+  if (Array.isArray(value)) {
+    if (fields !== undefined && value.every((item) => isRecordOf(item, fields))) return 'records';
+    return value.every((item) => typeof item === 'string') ? 'strings' : 'array';
+  }
   return value === null ? 'null' : typeof value;
+}
+
+/**
+ * The kind of a member as a fault names it: `records` with its fields.
+ *
+ * @param {{ kind: string, fields?: string[] }} entry
+ * @returns {string}
+ */
+function kindNamed({ kind, fields }) {
+  if (fields === undefined) return kind;
+  return `${kind} of ${fields.slice(0, -1).join(', ')} and ${fields.at(-1)}`;
+}
+
+/**
+ * The value of the member at the path `member` of `harness`, or `undefined` for one it lacks.
+ *
+ * @param {Record<string, unknown>} harness
+ * @param {string} member
+ * @returns {unknown}
+ */
+function memberOf(harness, member) {
+  /** @type {unknown} */ let value = harness;
+  for (const key of member.split('.')) {
+    value = typeof value === 'object' && value !== null && Object.hasOwn(value, key) ? value[key] : undefined;
+  }
+  return value;
 }
 
 /**
  * The faults of one harness against the contract: a member it lacks, and a member it has of another kind.
  *
  * @param {Record<string, unknown>} harness
- * @param {{ member: string, kind: string }[]} contract
+ * @param {{ member: string, kind: string, fields?: string[] }[]} contract
  * @returns {string[]}
  */
 function contractFaults(harness, contract) {
-  return contract.flatMap(({ member, kind }) => {
-    /** @type {unknown} */ let value = harness;
-    for (const key of member.split('.')) {
-      value = typeof value === 'object' && value !== null && Object.hasOwn(value, key) ? value[key] : undefined;
-    }
-    if (value === undefined) return [`${harness.name} lacks ${member}`];
-    const found = kindOf(value);
-    if (found === kind) return [];
-    return [`${harness.name} has ${member} as ${found}, and the contract makes it ${kind}`];
+  return contract.flatMap((entry) => {
+    const value = memberOf(harness, entry.member);
+    if (value === undefined) return [`${harness.name} lacks ${entry.member}`];
+    const found = kindOf(value, entry.fields);
+    if (found === entry.kind) return [];
+    return [`${harness.name} has ${entry.member} as ${found}, and the contract makes it ${kindNamed(entry)}`];
   });
 }
 
@@ -100,6 +142,38 @@ test('a harness that lacks a member, or has one of another kind, is named with t
     'claude has wrappers.ownAgents as string, and the contract makes it strings',
   ]);
 
+  const hostWithoutReason = {
+    ...claude,
+    sandbox: { ...claude.sandbox, hosts: [{ host: 'api.anthropic.com' }] },
+  };
+  assert.deepEqual(contractFaults(hostWithoutReason, HARNESS_CONTRACT), [
+    'claude has sandbox.hosts as array, and the contract makes it records of host and reason',
+  ]);
+
+  const numberTarget = {
+    ...opencode,
+    sandbox: {
+      ...opencode.sandbox,
+      bell: { ...opencode.sandbox.bell, mounts: [{ from: 'kit', path: 'bell-plugin.js', target: 5 }] },
+    },
+  };
+  assert.deepEqual(contractFaults(numberTarget, HARNESS_CONTRACT), [
+    'opencode has sandbox.bell.mounts as array, and the contract makes it records of from, path and target',
+  ]);
+
+  const stringsForRecords = { ...claude, sandbox: { ...claude.sandbox, hosts: ['api.anthropic.com'] } };
+  assert.deepEqual(contractFaults(stringsForRecords, HARNESS_CONTRACT), [
+    'claude has sandbox.hosts as strings, and the contract makes it records of host and reason',
+  ]);
+
+  const extraField = {
+    ...claude,
+    sandbox: { ...claude.sandbox, hosts: [{ host: 'api.anthropic.com', reason: 'the API', port: '443' }] },
+  };
+  assert.deepEqual(contractFaults(extraField, HARNESS_CONTRACT), [
+    'claude has sandbox.hosts as array, and the contract makes it records of host and reason',
+  ]);
+
   const withoutHeadless = { ...opencode, headless: undefined };
   assert.deepEqual(
     contractFaults(withoutHeadless, HARNESS_CONTRACT).filter((fault) => fault.includes('headless')),
@@ -109,7 +183,7 @@ test('a harness that lacks a member, or has one of another kind, is named with t
 
 // R2
 
-test('the contract holds its sixteen members, each with a kind and a purpose', () => {
+test('the contract holds its twenty-six members, each with a kind and a purpose', () => {
   assert.deepEqual(
     HARNESS_CONTRACT.map(({ member }) => member),
     [
@@ -129,12 +203,27 @@ test('the contract holds its sixteen members, each with a kind and a purpose', (
       'instructions.file',
       'instructions.init',
       'instructions.refresh',
+      'sandbox.package',
+      'sandbox.versionArgument',
+      'sandbox.readVersion',
+      'sandbox.updates.environment',
+      'sandbox.updates.mounts',
+      'sandbox.logDirectories',
+      'sandbox.hosts',
+      'sandbox.bell.environment',
+      'sandbox.bell.mounts',
+      'sandbox.host',
     ],
   );
-  for (const { member, kind, purpose } of HARNESS_CONTRACT) {
-    assert.ok(['string', 'function', 'strings'].includes(kind), `${member} has the kind ${kind}`);
+  for (const { member, kind, purpose, fields } of HARNESS_CONTRACT) {
+    assert.ok(['string', 'function', 'strings', 'records'].includes(kind), `${member} has the kind ${kind}`);
     assert.equal(typeof purpose, 'string', member);
     assert.notEqual(purpose.trim(), '', member);
+    if (kind === 'records') {
+      assert.ok(Array.isArray(fields) && fields.length > 0, `${member} names its fields`);
+    } else {
+      assert.equal(fields, undefined, `${member} has fields and is not of the kind records`);
+    }
   }
 });
 
@@ -262,4 +351,199 @@ test("OpenCode's refresh names an opencode.json that does not load the instructi
   ]);
   const both = found(`{ "instructions": ["${PROCESS}", "${HOUSE}", "${STANDARDS}"] }`);
   assert.deepEqual(opencode.instructions.refresh(both, HOUSE), [opencodeKitStandardsNotice(HOUSE)]);
+});
+
+// 0097 R1: what the sandbox knows of each harness, for every harness of the list
+
+/**
+ * Every value of the `sandbox` group of `harness` that is printed to the wrapper as a field, with where it is from.
+ * What `sandbox.host` gives is not among them, since it depends on the host; the helper's tests cover it.
+ *
+ * @param {import('../scripts/agentrite-harness.mjs').Harness} harness
+ * @returns {[string, string][]}
+ */
+function sandboxFields(harness) {
+  const { sandbox } = harness;
+  const mountFields = (group, mounts) =>
+    mounts.flatMap((mount, index) =>
+      Object.entries(mount).map(([field, value]) => [`${group}.mounts[${index}].${field}`, value]),
+    );
+  return [
+    ['package', sandbox.package],
+    ['versionArgument', sandbox.versionArgument],
+    ...sandbox.updates.environment.map((entry, index) => [`updates.environment[${index}]`, entry]),
+    ...mountFields('updates', sandbox.updates.mounts),
+    ...sandbox.logDirectories.map((directory, index) => [`logDirectories[${index}]`, directory]),
+    ...sandbox.hosts.flatMap(({ host, reason }, index) => [
+      [`hosts[${index}].host`, host],
+      [`hosts[${index}].reason`, reason],
+    ]),
+    ...sandbox.bell.environment.map((entry, index) => [`bell.environment[${index}]`, entry]),
+    ...mountFields('bell', sandbox.bell.mounts),
+  ];
+}
+
+const HOSTNAME = /^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/;
+
+for (const harness of HARNESSES) {
+  test(`${harness.name}: every log directory is relative, with no empty part, no .. and no space`, () => {
+    assert.ok(harness.sandbox.logDirectories.length > 0);
+    for (const directory of harness.sandbox.logDirectories) {
+      assert.ok(!directory.startsWith('/'), directory);
+      for (const part of directory.split('/')) {
+        assert.notEqual(part, '', directory);
+        assert.notEqual(part, '..', directory);
+        assert.notEqual(part, '.', directory);
+      }
+      assert.doesNotMatch(directory, /\s/);
+    }
+  });
+
+  test(`${harness.name}: every host is a hostname, and every reason is said`, () => {
+    assert.ok(harness.sandbox.hosts.length > 0);
+    for (const { host, reason } of harness.sandbox.hosts) {
+      assert.match(host, HOSTNAME);
+      assert.notEqual(reason.trim(), '', host);
+    }
+  });
+
+  test(`${harness.name}: every environment entry is NAME=value`, () => {
+    for (const entry of [...harness.sandbox.updates.environment, ...harness.sandbox.bell.environment]) {
+      assert.match(entry, /^[A-Z_][A-Z0-9_]*=/);
+    }
+  });
+
+  test(`${harness.name}: every mount is of the kit or the host, and its target is absolute`, () => {
+    for (const mount of [...harness.sandbox.updates.mounts, ...harness.sandbox.bell.mounts]) {
+      assert.ok(['kit', 'host'].includes(mount.from), JSON.stringify(mount));
+      assert.ok(mount.target.startsWith('/'), JSON.stringify(mount));
+      if (mount.from === 'kit') {
+        assert.ok(!mount.path.startsWith('/') && !mount.path.split('/').includes('..'), JSON.stringify(mount));
+      }
+    }
+  });
+
+  test(`${harness.name}: no field the wrapper is given holds a tab or a line break, or is empty`, () => {
+    for (const [where, value] of sandboxFields(harness)) {
+      assert.doesNotMatch(value, /[\t\n\r]/, where);
+      assert.notEqual(value, '', where);
+    }
+  });
+
+  test(`${harness.name}: its package is an npm package, and its version argument a build argument's name`, () => {
+    assert.match(harness.sandbox.package, /^(@[a-z0-9-]+\/)?[a-z0-9][a-z0-9._-]*$/);
+    assert.match(harness.sandbox.versionArgument, /^[A-Z][A-Z0-9_]*_VERSION$/);
+  });
+
+  test(`${harness.name}: readVersion gives nothing for what printed nothing`, () => {
+    assert.equal(harness.sandbox.readVersion(''), undefined);
+    assert.equal(harness.sandbox.readVersion('\n'), undefined);
+  });
+}
+
+test('no two harnesses share a package, a version argument or a log directory', () => {
+  for (const pick of [
+    (harness) => [harness.sandbox.package],
+    (harness) => [harness.sandbox.versionArgument],
+    (harness) => harness.sandbox.logDirectories,
+  ]) {
+    const all = HARNESSES.flatMap(pick);
+    assert.deepEqual(all, [...new Set(all)]);
+  }
+});
+
+// 0097 R1, R11: what each harness reads of its own
+
+test("Claude Code's version is the first word of what it printed", () => {
+  assert.equal(claude.sandbox.readVersion('2.1.288 (Claude Code)\n'), '2.1.288');
+  assert.equal(claude.sandbox.readVersion('2.1.288 (Claude Code)\nmore\n'), '2.1.288');
+});
+
+test("OpenCode's version is the first word of what it printed", () => {
+  assert.equal(opencode.sandbox.readVersion('1.18.33\n'), '1.18.33');
+  assert.equal(opencode.sandbox.readVersion('0.0.0-dev-202610030456\n'), '0.0.0-dev-202610030456');
+});
+
+const HOME = '/home/developer';
+
+/**
+ * A reader of the host's files under `HOME`, from a map of the paths relative to it to what each read gives.
+ *
+ * @param {Record<string, import('../scripts/agentrite-instructions.mjs').ProjectFile>} files
+ */
+function hostReader(files) {
+  return (/** @type {string} */ path) => files[path] ?? MISSING;
+}
+
+const STATUS_LINE = {
+  environment: [],
+  mounts: [
+    { from: 'host', path: `${HOME}/.claude/statusline-command.sh`, target: '/etc/claude-code/statusline-command.sh' },
+    { from: 'kit', path: 'managed-settings.json', target: '/etc/claude-code/managed-settings.json' },
+  ],
+  files: [],
+};
+
+test("Claude Code is given the host's status line when the script is a file that can be read", () => {
+  const read = hostReader({ '.claude/statusline-command.sh': found('echo status\n') });
+  assert.deepEqual(claude.sandbox.host(HOME, read), STATUS_LINE);
+});
+
+test('Claude Code is given no status line for a script that is missing, a directory or unreadable', () => {
+  const nothing = { environment: [], mounts: [], files: [] };
+  assert.deepEqual(claude.sandbox.host(HOME, hostReader({})), nothing);
+  assert.deepEqual(claude.sandbox.host(HOME, hostReader({ '.claude/statusline-command.sh': UNREADABLE })), nothing);
+});
+
+const CORRECT = 'Correct the file, or remove the key cleanupPeriodDays from it';
+const SETTINGS = `${HOME}/.claude/settings.json`;
+
+test("Claude Code is given the host's cleanupPeriodDays as a file of managed settings", () => {
+  const read = hostReader({ '.claude/settings.json': found('{"cleanupPeriodDays": 365, "env": {"TOKEN": "x"}}') });
+  assert.deepEqual(claude.sandbox.host(HOME, read), {
+    environment: [],
+    mounts: [],
+    files: [
+      {
+        name: 'claude-cleanup-period-365.json',
+        content: '{"cleanupPeriodDays": 365}',
+        target: '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json',
+      },
+    ],
+  });
+});
+
+test('Claude Code is given no cleanup period for settings that are missing or lack the key', () => {
+  const nothing = { environment: [], mounts: [], files: [] };
+  assert.deepEqual(claude.sandbox.host(HOME, hostReader({})), nothing);
+  const withoutKey = hostReader({ '.claude/settings.json': found('{"model": "x"}') });
+  assert.deepEqual(claude.sandbox.host(HOME, withoutKey), nothing);
+});
+
+test("Claude Code's host refuses settings at fault and settings that cannot be read, with today's messages", () => {
+  const atFault = hostReader({ '.claude/settings.json': found('{"cleanupPeriodDays": 0}') });
+  assert.throws(() => claude.sandbox.host(HOME, atFault), {
+    message: `${SETTINGS}: cleanupPeriodDays is 0. It must be a whole number of 1 or more. ${CORRECT}`,
+  });
+  assert.throws(() => claude.sandbox.host(HOME, hostReader({ '.claude/settings.json': UNREADABLE })), {
+    message: `cannot read ${SETTINGS}: ${UNREADABLE.error}. ${CORRECT}`,
+  });
+});
+
+test('Claude Code is given the status line and the cleanup period together', () => {
+  const read = hostReader({
+    '.claude/statusline-command.sh': found('echo status\n'),
+    '.claude/settings.json': found('{"cleanupPeriodDays": 7}'),
+  });
+  const given = claude.sandbox.host(HOME, read);
+  assert.deepEqual(given.mounts, STATUS_LINE.mounts);
+  assert.deepEqual(given.files.map((file) => file.name), ['claude-cleanup-period-7.json']);
+});
+
+test('OpenCode is given nothing of the host', () => {
+  const read = hostReader({
+    '.claude/statusline-command.sh': found('echo status\n'),
+    '.claude/settings.json': found('{"cleanupPeriodDays": 7}'),
+  });
+  assert.deepEqual(opencode.sandbox.host(HOME, read), { environment: [], mounts: [], files: [] });
 });

@@ -227,31 +227,33 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 ### The contract and the modules
 
-- [ ] In `tests/agentrite-harness.test.mjs`, extend `kindOf` and `contractFaults` with the kind `records`, its
+- [x] In `tests/agentrite-harness.test.mjs`, extend `kindOf` and `contractFaults` with the kind `records`, its
   fields named in the fault, and a case of a record that lacks a field or holds a field of another kind; update the
   test of the members' list to the new count and names (R15)
-- [ ] Add the `sandbox` members to `Harness` and `HARNESS_CONTRACT`, each with its purpose, and implement them in
+- [x] Add the `sandbox` members to `Harness` and `HARNESS_CONTRACT`, each with its purpose, and implement them in
   both modules as the table above has them (R1)
-- [ ] Add to `tests/agentrite-harness.test.mjs`, going over `HARNESSES`: every log directory is relative, with no
+- [x] Add to `tests/agentrite-harness.test.mjs`, going over `HARNESSES`: every log directory is relative, with no
   empty part, no `..` and no space; every host is a hostname and every reason is not empty; every environment entry
   is `NAME=value`; every mount's `from` is `kit` or `host` and its target absolute; and no field of a member holds a
   tab or a line break (R1)
-- [ ] Add the cases of each harness's own: Claude Code's `readVersion` of `2.1.288 (Claude Code)` and OpenCode's of
+- [x] Add the cases of each harness's own: Claude Code's `readVersion` of `2.1.288 (Claude Code)` and OpenCode's of
   `1.18.33` and of `0.0.0-dev-202610030456`, and each of an empty output; Claude Code's `host` with a fake reader, for
   a status line script that is there, missing and a directory, and a `cleanupPeriodDays` that is there, missing, at
   fault and unreadable, with today's messages; OpenCode's `host` giving nothing (R1, R11)
-- [ ] In `tests/agentrite-cleanup-period.test.mjs`, turn the cases of `readCleanupPeriod` into cases of
-  `cleanupPeriodOf` with `ProjectFile` values, and remove any of the command line. Then make the change in
-  `scripts/agentrite-cleanup-period.mjs` (R11)
+- [x] In `tests/agentrite-cleanup-period.test.mjs`, add cases of `cleanupPeriodOf` with `ProjectFile` values, to
+  replace those of `readCleanupPeriod`. Then write `cleanupPeriodOf` in `scripts/agentrite-cleanup-period.mjs` (R11)
+- [ ] Remove `readCleanupPeriod`, the command line of `scripts/agentrite-cleanup-period.mjs` and their cases, in the
+  commit that changes the wrapper, which until then runs that command line, so that each commit passes `npm test`
+  (R11)
 
 ### The helper
 
-- [ ] Write `tests/agentrite-sandbox.test.mjs`, which runs the helper with node on temporary projects and homes and
+- [x] Write `tests/agentrite-sandbox.test.mjs`, which runs the helper with node on temporary projects and homes and
   builds what it expects from `HARNESSES`: `start` for each subset of the list that a setting can name, in the list's
   order whatever the setting's order, with `"bell": true` and `false`, with an empty home, and with the reader's
   refusals printed as `agentrite: ...` and exit 1; `version` for each harness; and a usage error with exit 2 (R1, R10,
   R14, R18)
-- [ ] Write `scripts/agentrite-sandbox.mjs` as above, with an `isMain` as the settings reader has, and add it to
+- [x] Write `scripts/agentrite-sandbox.mjs` as above, with an `isMain` as the settings reader has, and add it to
   `files` of `package.json` and to the list of `tests/package-documents.test.mjs` (R1, R18)
 
 ### The sandbox
@@ -345,8 +347,8 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 - [x] `feature-0097 Plan the sandbox taking its harnesses from their modules`: `plan.md` and the planner's entry in
   `record.md`
-- [ ] `feature-0097 Read the harnesses of the project at the start of the sandbox`: the settings reader and its tests
-- [ ] `feature-0097 Give each harness module what the sandbox knows of it`: the contract, the modules, the cleanup
+- [x] `feature-0097 Read the harnesses of the project at the start of the sandbox`: the settings reader and its tests
+- [x] `feature-0097 Give each harness module what the sandbox knows of it`: the contract, the modules, the cleanup
   period's reader, the helper, `package.json` and their tests. The wrapper does not use them yet, and the tree passes
   `npm test`
 - [ ] `feature-0097 Take the harnesses of the sandbox from their modules`: the moved files, the Dockerfile, the compose

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
-import { parseCleanupPeriod, readCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
+import { cleanupPeriodOf, parseCleanupPeriod, readCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const PATH = '/home/developer/.claude/settings.json';
@@ -48,6 +48,28 @@ for (const text of ['not json', '[]', '"x"', 'null']) {
     );
   });
 }
+
+test('settings that are missing give nothing', () => {
+  assert.equal(cleanupPeriodOf({ found: false }, PATH), undefined);
+});
+
+test('the number of the settings that were read is given', () => {
+  assert.equal(cleanupPeriodOf({ found: true, text: '{"cleanupPeriodDays": 365}\n' }, PATH), 365);
+  assert.equal(cleanupPeriodOf({ found: true, text: '{}' }, PATH), undefined);
+});
+
+test('settings at fault are refused as parseCleanupPeriod refuses them, naming the path', () => {
+  assert.throws(() => cleanupPeriodOf({ found: true, text: '{"cleanupPeriodDays": 0}' }, PATH), {
+    message: `${PATH}: cleanupPeriodDays is 0. It must be a whole number of 1 or more. ${CORRECT}`,
+  });
+});
+
+test('settings that could not be read are refused, naming the path and the error', () => {
+  const error = 'EISDIR: illegal operation on a directory, read';
+  assert.throws(() => cleanupPeriodOf({ found: true, error }, PATH), {
+    message: `cannot read ${PATH}: ${error}. ${CORRECT}`,
+  });
+});
 
 test('a home without .claude gives nothing', (testContext) => {
   const home = temporaryDirectory(testContext, 'cleanup-period');
