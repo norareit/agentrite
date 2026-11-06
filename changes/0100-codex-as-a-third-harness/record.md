@@ -163,5 +163,14 @@ timestamp: 2026-11-06T14:12:53Z
   text lines meet the line limit. Did not independently reproduce the recorded live Codex authentication, turns,
   cross-container resume, managed configuration precedence and trust, real orchestrator run, commits or terminal
   bell; the findings file distinguishes those limits and the recorded decisions. The status stays `in-progress`
+- 2026-11-06T19:08:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied finding C1 of the review in
+  `.reviews/0100-codex-as-a-third-harness/review-2026-11-06T190612Z.md`, which does not block, in `da7e333`. C1,
+  accepted: `--model` of `agentrite run` in `COMMANDS.md` said that without the option a run is expected to use the
+  model pinned in the role's wrapper, which does not hold for Codex, whose run is told its role in its prompt. It now
+  says so for Claude Code and OpenCode, and that a pin in a Codex wrapper holds only for a subagent of that role, the
+  run itself using `--model` or Codex's own choice. The bullet on the Codex wrappers in `SETUP.md` says the same. No
+  code changed. `npm test` passes its 1720 tests and `npm run check-changes` passes on `da7e333`. The review
+  returned no blocking finding, and the human decides the finding and whether the unit is `implemented`. The status
+  stays `in-progress`
 
 ## Amendments
