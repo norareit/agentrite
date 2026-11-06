@@ -24,5 +24,11 @@ timestamp: 2026-11-06T14:07:38Z
   reading the unit's branch, are moot and dropped, and item 3, `--delete-branch`, is now item 1, declined. The status is
   `draft`
 - 2026-11-06T14:45:43Z [human] approved the spec. The status is `approved`
+- 2026-11-06T14:51:20Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the unit's branch at `bac3134`, wrote
+  `plan.md` against the tree. What `approve` and `cancel` share, the reading and the writing of a record, the
+  commit of the record alone and the files that differ from the commit, is moved to a module of its own in a first
+  commit that changes no behavior, as the standards extract a decision the second time it appears. Read the
+  requirement that `--reason` holding a line break is a wrong argument as of the value as it was given. The status
+  is `approved`
 
 ## Amendments
