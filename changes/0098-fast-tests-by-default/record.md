@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: cancelled
 timestamp: 2026-11-06T13:18:57Z
 ---
 
@@ -17,5 +17,7 @@ timestamp: 2026-11-06T13:18:57Z
   the numbers and the list of the context. Read `standards.md`, `roles/implementer.md`, `roles/reviewer.md`,
   `package.json`, `CONTRIBUTING.md`, `tests/skip-reason.mjs` and `tests/temporary-directory.test.mjs`. Wrote
   `spec.md`. The status is `draft`
+- 2026-11-06T14:04:56Z [human] cancelled the unit: the human decided not to split the tests into fast and slow
+  ones for now, and no other unit does the work. The status is `cancelled`
 
 ## Amendments
