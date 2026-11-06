@@ -1,4 +1,6 @@
-# AgentRite
+![logo.svg](logo.svg)
+
+---
 
 A kit for running coding agents by a fixed process.
 
