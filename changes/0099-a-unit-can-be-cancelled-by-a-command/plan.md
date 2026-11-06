@@ -150,13 +150,13 @@ The refactoring, which changes no behavior:
 
 The pure parts, tests first:
 
-- [ ] In a new `tests/agentrite-cancel.test.mjs`, write unit tests of `parseCancelArgs`: `0099 --reason x` and
+- [x] In a new `tests/agentrite-cancel.test.mjs`, write unit tests of `parseCancelArgs`: `0099 --reason x` and
   `0099 --reason=x --by=0042` give the unit, the reason and `by`; the reason `  Done.  ` gives `Done`, and `Done..`
   gives `Done.`; and each wrong argument throws its line followed by `CANCEL_FORM`: no argument, `--reason x` alone,
   `0099` alone, `0099 0100 --reason x`, `0099 --reason`, `0099 --reason --by 0042`, `0099 --reason a --reason b`,
   `0099 --reason x --by`, `0099 --reason x --by a --by b`, `0099 --reason " . "`, `0099 --reason "a<line feed>b"`,
   `0099 --reason "a<carriage return>b"`, `0099 --reason x --json`, and `0099 --reason x --` (R1, R2, R3, R13, R22)
-- [ ] Write unit tests of `cancellationEntry` without and with `by`, of `wrappedEntry` on an entry that fits one
+- [x] Write unit tests of `cancellationEntry` without and with `by`, of `wrappedEntry` on an entry that fits one
   line, on one that takes three lines with each within 120 characters and each after the first opened by two
   spaces, on one whose line ends exactly at 120 characters, and on one that holds a word of 130 characters, which
   stands alone and unbroken; of `cancelledRecord`, that it changes the `status` line alone of the front matter, and
@@ -164,7 +164,7 @@ The pure parts, tests first:
   and before a section that follows, and after one blank line under a `## Log` with no entry, as the tests of
   `approvedRecord` do; of `cancellationRefusal` for each of the five statuses and for `done`; of
   `cancellationMessage` for each kind; and of `cancelledLine` (R5, R6, R7, R8, R11, R12, R22)
-- [ ] Create `scripts/agentrite-cancel.mjs` with `CANCEL_FORM`, `parseCancelArgs`, `reasonText`, `cancellationEntry`,
+- [x] Create `scripts/agentrite-cancel.mjs` with `CANCEL_FORM`, `parseCancelArgs`, `reasonText`, `cancellationEntry`,
   `wrappedEntry`, `cancellationRefusal`, `cancelledRecord`, `cancellationMessage` and `cancelledLine` as the
   approach says, until those tests pass. Add the file to `files` in `package.json` and to the list of
   `tests/package-documents.test.mjs` (R1 to R3, R5 to R8, R11 to R13)
