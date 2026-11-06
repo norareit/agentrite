@@ -108,7 +108,7 @@ the host, with the commands, what the step shows, and what of its output to brin
 
 ## Reporting
 
-Label each finding as `S1`, `S2` and on. Give each one:
+Label each finding as `SEC1`, `SEC2` and on. Give each one:
 
 * Where it is: the file and the line, or the command and the option
 * What is wrong

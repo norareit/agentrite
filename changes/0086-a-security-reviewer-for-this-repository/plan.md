@@ -173,6 +173,11 @@ On review:
   the host's default branch under that name and no local branch of it. The command the task of the two modes gave,
   with the bare name, does not resolve in such a clone (R3, R6)
 
+On the correction of R14:
+
+- [x] In the section on reporting of `extra-roles/security-reviewer.md`, label each finding `SEC1`, `SEC2` and on, in
+  place of the `S1`, `S2` the task of reporting gave (R14)
+
 ## Verification
 
 - [x] `npm test` passes on the committed tree (R19)
