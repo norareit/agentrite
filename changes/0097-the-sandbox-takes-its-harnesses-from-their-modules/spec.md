@@ -60,45 +60,58 @@ The host has node for the wrapper already, which reads the project's `agentrite.
    bell and its status line settings, and OpenCode's plugin of the bell, are in a directory of that harness's own
    under `container/harnesses/<name>/`, one per harness that has such files. `container/bell/ring-bell.sh`, which
    every harness's bell runs, stays shared
-4. The image holds every harness of the list, each at exactly the version wanted for it, and records the versions it
-   holds in a way that the wrapper reads for every harness of the list. A harness of the list that the image records
-   no version of makes a build due, as one does today
-5. The wanted version of each harness is chosen as today: the version the project's compose file gives under its
-   build argument, else the version the host's command reports, else the version the image holds, and the latest
-   published when a build is due. Every message the wrapper prints about the versions is the one it prints today, with
-   the harness's title, for each harness of the list in the order of the list
+4. The image holds every harness of the project, as requirement 18 defines them, each at exactly the version wanted
+   for it, and records the harnesses and the versions it holds in a way that the wrapper reads. A harness of the
+   project that the image records no version of makes a build due, as one does today
+5. The wanted version of each harness of the project is chosen as today: the version the project's compose file gives
+   under its build argument, else the version the host's command reports, else the version the image holds, and the
+   latest published when a build is due. Every message the wrapper prints about the versions is the one it prints
+   today, with the harness's title, for each harness of the project in the order of the list
 6. Each version handed to the build, and each read from the host, the project or the registry, is refused unless it
    has the shape of a version that the wrapper accepts today, before anything is installed with it
-7. The hosts the egress allowlist admits are the kit's own hosts, the hosts of every harness of the list, and the
-   project's `ALLOWLIST`, as today. The set of the kit's and the harnesses' hosts is the set `KIT_ALLOWLIST` holds today
+7. The hosts the egress allowlist admits are the kit's own hosts, the hosts of every harness of the project, and the
+   project's `ALLOWLIST`. For a project whose harnesses are `claude` and `opencode`, the set of the kit's and the
+   harnesses' hosts is the set `KIT_ALLOWLIST` holds today
 8. `FIREWALL_PROBE` is a host of the kit's own, and not a harness's
-9. The directories of every harness's logs are made on the host, mounted at the same places in the home as today,
-   made in the image as the agent's, and checked at the entrypoint with every directory above them, as the
-   directories of Claude Code and OpenCode are today
-10. With `"bell": true` each harness rings the bell at the moments it rings today, and with `false` nothing of any
-    harness's bell is given to a run
+9. The directories of the logs of every harness of the project are made on the host, mounted at the same places in
+   the home as today, made in the image as the agent's, and checked at the entrypoint with every directory above
+   them, as the directories of Claude Code and OpenCode are today
+10. With `"bell": true` each harness of the project rings the bell at the moments it rings today, and with `false`
+    nothing of any harness's bell is given to a run
 11. The status line, and the number of days Claude Code keeps its sessions, reach Claude Code in the sandbox as today,
     from the same files of the host, and through the same read-only managed settings in the container
 12. The values the wrapper hands Compose for the harnesses are assigned by the wrapper whatever the caller's
     environment holds, so that no variable of the caller's environment is a source of a version, a package or a host,
     as today
-13. The harnesses' part of the sandbox comes from the installed kit alone. Nothing of the project, of `/work` or of
-    the home volume chooses a package, a host of `KIT_ALLOWLIST`, a log directory or a mount of a harness
+13. The harnesses' part of the sandbox comes from the installed kit alone. The project's `agentrite.json` chooses
+    which of the kit's harnesses are the project's, by requirement 18, and nothing else. Nothing of the project, of
+    `/work` or of the home volume chooses a package, a host of `KIT_ALLOWLIST`, a log directory or a mount of a
+    harness
 14. The tests of the sandbox that hold a case for each harness, of the versions, the log directories, the allowlist
     and the bell, go over the list `HARNESSES`, so that a harness added to the list has those cases without a test
     being edited. A test that runs a harness's own file, such as the plugin of OpenCode's bell, stays that harness's
 15. The test of `tests/agentrite-harness.test.mjs` checks the members of `sandbox` as it checks every other member of
     the contract
-16. A run behaves as before this unit, but for requirement 8 and for one build of the image at the first start after
-    the kit is updated. The harnesses' versions, the image's contents, the mounts, the environment of the command, the
-    allowlist, the bell, the status line and what the wrapper prints are unchanged. A project's compose file that gives
-    `CLAUDE_CODE_VERSION` or `OPENCODE_VERSION` keeps working unchanged
+16. In a project whose harnesses are `claude` and `opencode`, a run behaves as before this unit, but for requirement 8
+    and for one build of the image at the first start after the kit is updated. The harnesses' versions, the image's
+    contents, the mounts, the environment of the command, the allowlist, the bell, the status line and what the
+    wrapper prints are unchanged. A project's compose file that gives `CLAUDE_CODE_VERSION` or `OPENCODE_VERSION`
+    keeps working unchanged, also for a harness that is not the project's, whose version it then ignores
 17. "Adding a harness" of `CONTRIBUTING.md` holds, under the contract, what the `sandbox` group asks of a new harness
     and the directory of requirement 3, and no longer has an entry for the image, the choice of its version, its own
     updates, the directories of its logs, the allowlist hosts, the bell or the status line. It keeps the entries
     for its login, the trailers it adds to a commit message and the terminal variables, which stay outside the
     module. `SANDBOX.md` and `SETUP.md` are changed where what they say of the image, the labels, the allowlist or the
-    probe is no longer true
+    probe is no longer true, and `SANDBOX.md` says that the image holds only the project's harnesses, what a change of
+    `harnesses` does at the next start, and that a harness the project does not name is not in the sandbox
+18. The harnesses of the project are the harnesses of the list `HARNESSES` that the `harnesses` setting of the
+    project's `agentrite.json` names, in the order of the list. Of a harness that is not the project's, the image
+    holds no package, the allowlist admits none of its hosts, and a run is given none of its directories, mounts,
+    environment or bell. The setting is read at each start but `--connect`, from the project root on the host, by the
+    kit's reader of `agentrite.json`, with `bell` and before the host's harnesses, Docker or npm are asked anything,
+    so that a file the reader refuses stops the start having done nothing. When the harnesses the image holds are not
+    the project's harnesses, a build is due, and the wrapper says so, naming the harnesses the image holds and those
+    the project names. `--connect` reads nothing, and the command it runs has the harnesses of the run it joins
 
 ## Decisions
 
@@ -142,12 +155,24 @@ The host has node for the wrapper already, which reads the project's `agentrite.
   callback into the sandbox is a fact to check by hand, not code. The trailers are a rule of the standards, which
   `container/check-commit-message.mjs` enforces from the kit alone inside the image. `TERM` and `COLORTERM` are given
   to every command, whatever harness it runs. Each stays an entry of the checklist
+* **The image holds the project's harnesses alone.** The human took `BTR1`: the kit's list of harnesses is meant to
+  grow, with Codex next, and an image that holds every harness of the kit grows with it, in its size, in the time a
+  build takes, and in the hosts the allowlist admits for harnesses the project never runs. The `harnesses` setting is
+  already required and judged in every project, sandbox-only ones among them, and the orchestrator already refuses a
+  step whose harness the setting does not name, so it is the one place that says which harnesses a project uses. It
+  is read from the project root on the host, as `bell` is, so that a unit run has the harnesses of the project and
+  not of its branch. A build for any difference between the harnesses the image holds and the project's, a harness
+  dropped as well as one added, was chosen over keeping a harness that is no longer named: the image then never
+  holds a harness, or admits a host, that the setting does not name
 * **The adversary is the agent in the container, as for the sandbox as a whole.** Nothing the agent writes, in `/work`,
   in its home or in the project's files, is read to choose what the image installs as root, what the allowlist
   admits, or what is mounted. The harness modules are the installed kit's, which the agent of a unit run cannot write,
-  since the kit is in the project's `node_modules` on the host and a unit run mounts a clone. This unit does not
-  defend against a developer who edits the installed kit, nor against a compromised npm package of a harness, which
-  is installed today as it will be after
+  since the kit is in the project's `node_modules` on the host and a unit run mounts a clone. The project's
+  `agentrite.json` chooses only among the kit's harnesses: an agent of an `--in-place` run, which can write the
+  project root, can at most name a harness of the kit at the next start, which admits that harness's hosts as every
+  image admits them today, and is seen as a change of a tracked file. This unit does not defend against a developer
+  who edits the installed kit, nor against a compromised npm package of a harness, which is installed today as it
+  will be after
 
 ## Non-goals
 
@@ -156,19 +181,19 @@ The host has node for the wrapper already, which reads the project's `agentrite.
 * Generating the documents, the components diagram, the help text of `agentrite run`, or the default orchestrator
   from the modules. They stay entries of the checklist
 * Making the trailer check, or the terminal variables, per harness
-* A choice of which harnesses the image holds by the project's `harnesses` setting. The image holds every harness of
-  the list, as it holds both today
+* A choice of the harnesses the image holds other than by the project's `harnesses` setting, such as per run or per
+  unit
 * Any change to the project's `ALLOWLIST`, to the firewall, or to what the egress proxy admits beyond requirement 8
 * Any change to `sandbox-dev.sh` or to this repository's own `sandbox/compose.project.yml` beyond what the change of
   the kit's files requires
 
 ## Beyond the request
 
-1. **The image holds only the harnesses the project uses.** The project's `harnesses` setting chooses which harnesses
-   the image installs, makes directories for and admits hosts of. It costs reading that setting at each start and a
-   build when it changes, and a run of a harness the project does not list then finds no command in the image.
-   Without it, every image holds every harness of the kit, as today, which with a third harness is one more package
-   and a few more hosts admitted that a project may not use
-2. **A test that `SANDBOX.md` lists every host of `KIT_ALLOWLIST`.** The table of the hosts the kit admits, in
-   `SANDBOX.md`, compared with the kit's and the harnesses' hosts. It costs a small test. Without it, a host added to a
-   module and not to the table is seen by a reader who compares the two, and corrected then
+1. Taken by the human, as requirement 18. **The image holds only the harnesses the project uses.** The project's
+   `harnesses` setting chooses which harnesses the image installs, makes directories for and admits hosts of. It
+   costs reading that setting at each start and a build when it changes, and a run of a harness the project does not
+   list then finds no command in the image. Without it, every image holds every harness of the kit, as today, which
+   with a third harness is one more package and a few more hosts admitted that a project may not use
+2. Declined by the human. **A test that `SANDBOX.md` lists every host of `KIT_ALLOWLIST`.** The table of the hosts
+   the kit admits, in `SANDBOX.md`, compared with the kit's and the harnesses' hosts. It costs a small test. Without
+   it, a host added to a module and not to the table is seen by a reader who compares the two, and corrected then
