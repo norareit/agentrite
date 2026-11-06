@@ -33,5 +33,12 @@ timestamp: 2026-11-06T14:12:53Z
 - 2026-11-06T15:23:32Z [Claude Code, anthropic/claude-opus-5-5] as the planner, recorded that the human confirmed
   the reading on Codex's own agents: a role named `default`, `worker` or `explorer` is refused in every project,
   whatever harnesses it names, as the plan has it. The status stays `approved`
+- 2026-11-06T15:26:05Z [OpenCode, openai/gpt-6.1-sol] as the spec-reviewer, fully reviewed `spec.md` and `record.md`
+  at `a7b8c68` on the unit's branch. The review came after approval at the human's request, as an exception to the
+  role's timing and default-branch rules. Findings F1, F2 and F3 are saved in
+  `.reviews/0100-codex-as-a-third-harness/spec-review-2026-11-06T152605Z.md`. Checked Codex 0.167.0's help texts;
+  could not independently verify the earlier prompt and execution experiments, live authentication and required
+  hosts, or protected sandbox configuration and precedence, as detailed in the findings file. The status stays
+  `approved`
 
 ## Amendments
