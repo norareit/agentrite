@@ -245,14 +245,14 @@ The documents:
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] `node scripts/agentrite.mjs` with no argument prints the line of `cancel` after that of `approve`
-- [ ] No line of a changed file is over 120 characters, a Markdown table row aside
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed branch
+- [x] `node scripts/agentrite.mjs` with no argument prints the line of `cancel` after that of `approve`
+- [x] No line of a changed file is over 120 characters, a Markdown table row aside
 
 ## Commit Points
 
-- [ ] `feature-0099 Share the record writing of approve`: the four tasks of the refactoring
-- [ ] `feature-0099 Add the pure parts of the cancellation`: the three tasks of the pure parts
-- [ ] `feature-0099 Cancel a unit by a command`: the tasks of the command
-- [ ] `feature-0099 Document the command cancel`: the tasks of the documents
+- [x] `feature-0099 Share the record writing of approve`: the four tasks of the refactoring
+- [x] `feature-0099 Add the pure parts of the cancellation`: the three tasks of the pure parts
+- [x] `feature-0099 Cancel a unit by a command`: the tasks of the command
+- [x] `feature-0099 Document the command cancel`: the tasks of the documents

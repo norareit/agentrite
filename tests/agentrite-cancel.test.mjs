@@ -231,7 +231,7 @@ const LONG_REASON = `${'a reason of many words '.repeat(6)}ends here`;
 for (const [name, branch, directory, status, args, message] of [
   ['draft feature on master', 'master', FEATURE, 'draft', ['0010', '--reason', 'Not needed.'],
     'feature-0010 Cancel the unit'],
-  ['approved task on its branch', 'task-0011-a-task', TASK, 'approved',
+  ['in-progress task on its branch', 'task-0011-a-task', TASK, 'in-progress',
     ['changes/0011-a-task/', '--reason=Out of date'], 'task-0011 Cancel the unit'],
 ]) {
   test(`cancel commits the cancellation of the ${name} and prints one line`, (context) => {
@@ -239,6 +239,7 @@ for (const [name, branch, directory, status, args, message] of [
     const { base, project } = given;
     if (branch !== 'master') {
       git(base, project, 'switch', '--quiet', '--create', branch);
+      commitRecord(given, directory, (text) => text.replace('status: approved', 'status: in-progress'));
     }
     const before = stateOf(given, directory);
     const masterBefore = git(base, project, 'rev-parse', 'master').trim();
@@ -289,6 +290,7 @@ test('cancel moves no branch but the one checked out', (context) => {
   const { base, project } = given;
   git(base, project, 'branch', 'other');
   git(base, project, 'switch', '--quiet', '--create', 'task-0011-a-task');
+  commitRecord(given, TASK, (text) => text.replace('status: approved', 'status: in-progress'));
   const heads = () => git(base, project, 'for-each-ref', 'refs/heads').split('\n');
   const before = heads();
 
