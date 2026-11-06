@@ -109,7 +109,11 @@ The host has node for the wrapper already, which reads the project's `agentrite.
     holds no package, the allowlist admits none of its hosts, and a run is given none of its directories, mounts,
     environment or bell. The setting is read at each start but `--connect`, from the project root on the host, by the
     kit's reader of `agentrite.json`, with `bell` and before the host's harnesses, Docker or npm are asked anything,
-    so that a file the reader refuses stops the start having done nothing. When the harnesses the image holds are not
+    so that a file the reader refuses stops the start having done nothing. That reading judges `bell` and
+    `harnesses` alone, as a start judges `bell` alone today: a start refuses a file whose `harnesses` is missing or
+    not a value the kit's settings accept, with a message that names the setting and what it must hold, and refuses
+    nothing else of the file that it does not refuse today. The whole file is judged, as today, only where a branch
+    is cut. When the harnesses the image holds are not
     the project's harnesses, a build is due, and the wrapper says so, naming the harnesses the image holds and those
     the project names. `--connect` reads nothing, and the command it runs has the harnesses of the run it joins
 
@@ -164,6 +168,11 @@ The host has node for the wrapper already, which reads the project's `agentrite.
   not of its branch. A build for any difference between the harnesses the image holds and the project's, a harness
   dropped as well as one added, was chosen over keeping a harness that is no longer named: the image then never
   holds a harness, or admits a host, that the setting does not name
+* **A start judges `bell` and `harnesses` alone.** The human chose it after the spec review's F2. A start reads only
+  what it uses, as it reads `bell` alone today, so that a role file that is missing or a `defaultBranch` at fault does
+  not stop an `--in-place` shell that has no use for either. Judging the whole file at every start was rejected: it
+  adds refusals that requirement 16 does not allow for, and protects nothing of the sandbox. The one new refusal is of
+  a file without a valid `harnesses`, which every other command of the kit refuses already
 * **The adversary is the agent in the container, as for the sandbox as a whole.** Nothing the agent writes, in `/work`,
   in its home or in the project's files, is read to choose what the image installs as root, what the allowlist
   admits, or what is mounted. The harness modules are the installed kit's, which the agent of a unit run cannot write,
@@ -183,7 +192,8 @@ The host has node for the wrapper already, which reads the project's `agentrite.
 * Making the trailer check, or the terminal variables, per harness
 * A choice of the harnesses the image holds other than by the project's `harnesses` setting, such as per run or per
   unit
-* Any change to the project's `ALLOWLIST`, to the firewall, or to what the egress proxy admits beyond requirement 8
+* Any change to the project's `ALLOWLIST`, to the firewall, or to what the egress proxy admits, beyond the probe of
+  requirement 8 and the hosts of the project's harnesses alone of requirements 7 and 18
 * Any change to `sandbox-dev.sh` or to this repository's own `sandbox/compose.project.yml` beyond what the change of
   the kit's files requires
 
