@@ -20,5 +20,10 @@ timestamp: 2026-11-06T10:15:15Z
   13, 16 and 17 now speak of the project's harnesses, a decision says why, the threat model covers the setting, and
   the non-goal that excluded it is narrowed. `BTR2` is declined, which the spec now marks. The status is `draft`
 - 2026-11-06T10:49:22Z [human] approved the spec. The status is `approved`
+- 2026-11-06T10:53:43Z [Codex, openai/gpt-6] as the spec-reviewer, on the human's explicit exception to the
+  draft-only restriction, fully reviewed `spec.md` and `record.md` at `d4e2314892c6c979a0f71e13066e550aa555dafc`.
+  Returned F1 and F2, saved in
+  `.reviews/0097-the-sandbox-takes-its-harnesses-from-their-modules/spec-review-2026-11-06T105343Z.md`.
+  Live harness behavior and Docker execution were not checked. The status stays `approved`.
 
 ## Amendments
