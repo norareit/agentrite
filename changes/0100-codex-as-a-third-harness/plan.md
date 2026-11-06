@@ -374,16 +374,16 @@ there, and the tarball is made again after any change to the kit.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes after the commits
-- [ ] For a project of `claude` and `opencode`, a scratch project initialized with the working tree's kit before and
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes after the commits
+- [x] For a project of `claude` and `opencode`, a scratch project initialized with the working tree's kit before and
   after this unit gets the same files, and `agentrite run` prints the same command line for each harness (R16)
-- [ ] In the scratch project of the approach, `./sandbox.sh --in-place --rebuild true` builds the image with
+- [x] In the scratch project of the approach, `./sandbox.sh --in-place --rebuild true` builds the image with
   `@openai/codex`, and in it `codex --version` prints the version of the image's label (R9)
-- [ ] In the sandbox, in `/work`, with no change to the home's configuration, `codex debug prompt-input` shows the
+- [x] In the sandbox, in `/work`, with no change to the home's configuration, `codex debug prompt-input` shows the
   `developer_instructions` of `/work/.codex/config.toml` and the Codex wrappers among the roles of the spawn tool, in
   an `--in-place` run, a `--workdir` run and a unit run. Where it does not, stop as the approach says (R11)
-- [ ] In the sandbox, with `check_for_update_on_startup = true` in `~/.codex/config.toml` and in
+- [x] In the sandbox, with `check_for_update_on_startup = true` in `~/.codex/config.toml` and in
   `/work/.codex/config.toml` in turn, an interactive start of `codex` neither writes `~/.codex/version.json` anew nor
   makes the egress proxy refuse a host of an update check. Where it does, stop as the approach says (R10)
 - [ ] Log in to Codex in the sandbox with a ChatGPT account by `codex login --device-auth`, and in another project's
@@ -412,4 +412,4 @@ there, and the tarball is made again after any change to the kit.
   `writeInstructionFiles`, the usage of `run`, `standards.md`, `package.json` and the tests. The tree passes
   `npm test`
 - [x] `feature-0100 Describe Codex as a harness`: the documents, the pointer package and the diagram
-- [ ] `feature-0100 Record the implementation and the verification`: the implementer's entries in `record.md`
+- [x] `feature-0100 Record the implementation and the verification`: the implementer's entries in `record.md`

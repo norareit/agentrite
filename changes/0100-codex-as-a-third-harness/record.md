@@ -84,5 +84,42 @@ timestamp: 2026-11-06T14:12:53Z
   an agent's name, since a role's name is in lowercase letters and such a name is refused by its form first; the
   test gives `default`, `worker` and `explorer` the refusal that names Codex, for a project of each harness, and the
   other cases the refusal of the form
+- 2026-11-06T16:37:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, implemented the plan in
+  `b7cb504`, `93e97c0` and `07e6eee`. On `07e6eee`, `npm test` passes its 1720 tests and `npm run check-changes`
+  passes. The root's own files are unchanged: `git diff master` of `agentrite.json`, `.claude`, `.opencode`,
+  `CLAUDE.md` and `opencode.json` is empty, the root holds no `.codex/`, `tests/repository-own-files.test.mjs` passes
+  unchanged and `npm run kit -- refresh` prints `up to date` for every file (R17). For R16, two scratch projects of
+  `claude` and `opencode` were set up with `npx agentrite init claude opencode` from the `npm pack` of `master` at
+  `41ad28c` and of `07e6eee`: their files, `init`'s output and the command lines that `agentrite run` gave a fake of
+  each harness, interactive and headless, with a model, `--skip-permissions` and arguments after `--`, are the same.
+  Checked with Codex 0.167.0 and no login, so with no paid call:
+    * On the host, with a `CODEX_HOME` that trusts a scratch project initialized with `claude`, `opencode` and `codex`,
+      `codex debug prompt-input` lists the four TOML wrappers among the roles of its spawn tool, each description read
+      as one line, and holds the `developer_instructions` of the project's `.codex/config.toml`
+    * In that project's sandbox, from the `npm pack` of the working tree, `./sandbox.sh --in-place --rebuild` built
+      an image labelled `claude@2.1.319 opencode@1.19.3 codex@0.167.0`, and `codex --version` in it printed
+      `codex-cli 0.167.0` (R9)
+    * With no configuration in the home, `codex debug prompt-input` in `/work` shows the project's
+      `developer_instructions` and the wrappers in an `--in-place` run, a `--workdir` run and a unit run of an
+      approved task (R11). The managed configuration cannot be written by the agent: an append to it fails with a
+      read-only file system
+    * Codex's update check is `GET https://api.github.com/repos/openai/codex/releases/latest`, as its log of an
+      interactive start on the host with the check on shows, and that start wrote `version.json`. In the sandbox,
+      an interactive start of 30 seconds with `check_for_update_on_startup = true` in `~/.codex/config.toml`, and
+      then in `/work/.codex/config.toml`, wrote no `version.json`, and Codex's log holds no request of the update
+      check (R10). The proxy refused `github.com`, `api.github.com` and `raw.githubusercontent.com`, which Codex's log
+      gives as its sync of curated plugins and its announcement tip, and `files.openai.com` and `ab.chatgpt.com`,
+      which its log does not name. None is needed for a turn, so none is admitted. Whether a turn needs another host
+      is not known until a turn has run
+    * With `"bell": true`, `/etc/codex/config.toml` holds `notify = ["sh", "/etc/agentrite/bell/ring-bell.sh"]` and
+      the script is at that path, and with `"bell": false` `/etc/codex/` holds the managed configuration alone. That
+      the bell rings at the end of a turn was not checked, since no turn ran (R14)
+- 2026-11-06T16:37:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, left to the human the checks that
+  need a login of Codex and paid turns, since the implementer has no account or key of its own: a turn with a
+  ChatGPT login by `codex login --device-auth` and one with an API key, watching the proxy's refusals (R13); the
+  resume of that session in a new container (R12); the bell ringing at the end of a turn (R14); a step of the
+  orchestrator on Codex and one that resumes it, with `--follow` (R2, R7, R8); and a commit made by Codex, with
+  whether its message held a trailer and the hook refused it (R15). Their boxes in `plan.md` stay open, and the
+  status stays `in-progress`
 
 ## Amendments
