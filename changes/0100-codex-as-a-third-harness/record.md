@@ -121,5 +121,27 @@ timestamp: 2026-11-06T14:12:53Z
   orchestrator on Codex and one that resumes it, with `--follow` (R2, R7, R8); and a commit made by Codex, with
   whether its message held a trailer and the hook refused it (R15). Their boxes in `plan.md` stay open, and the
   status stays `in-progress`
+- 2026-11-06T18:57:57Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran the checks that need a login in
+  the scratch project's sandbox, after the human logged in to Codex there with `codex login --device-auth`, a ChatGPT
+  login, and asked for them. A login made on the host is not seen in the sandbox, as `SANDBOX.md` says: a turn before
+  the login in the sandbox failed with a 401 that `api.openai.com` gave, so that host is reached through the proxy
+    * R13, the ChatGPT login: `codex exec --json` completed a turn and printed `thread.started`, an `agent_message`
+      and `turn.completed`. The proxy refused `example.com`, the entrypoint's canary, `ab.chatgpt.com`, which Codex's
+      debug log gives as its export of metrics to `/otlp/v1/metrics`, and hosts of `oaiusercontent.com` such as
+      `sdmntprsouthcentralus.oaiusercontent.com`, which its debug log gives as the downloads of the bundles of the
+      remote plugins installed in the account, eight of them, as `gmail` and `google-drive`. The turn needed none, so
+      none is admitted. A login with an API key was not checked: no key is available to the implementer
+    * R12: in a new container, `codex exec --json resume <thread>` found the thread, printed `thread.started` with its
+      id, and the model quoted its answer of the earlier turn
+    * R2, R7, R8: a unit run of an approved task with `npx agentrite orchestrate --skip-permissions --follow` on a
+      definition of two implementer steps of Codex on `gpt-6.1-sol` ran both and ended with exit 0. `--follow` showed
+      each `agent_message` with the instant the command learned of it, the outcome of each step was read from its
+      final response, `state.json` holds one session, the thread of the first step, which the second continued, and
+      Codex's session file of that thread records two turns, each of `gpt-6.1-sol`. Codex printed `Reading additional
+      input from stdin...` on its standard error at the start of each step, and went on
+    * R15: Codex made three commits, `task-0001 begin implementation`, `task-0001 add hello text file` and
+      `task-0001 record verification`, with a body of none and no trailer, so the hook refused none. Its session holds
+      `Co-authored-by` only in the rule of `standards.md` it read
+    * R14: not checked. Whether the bell rings is seen on the human's terminal alone
 
 ## Amendments

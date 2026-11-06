@@ -390,14 +390,14 @@ there, and the tarball is made again after any change to the kit.
   log directory with an API key, and complete a turn with each, watching the egress proxy's refusals. Admit a host a
   turn needs with its reason, admit none that a turn does not need, and record in `record.md` what was run and what
   it showed. Where no account or key is available to the implementer, this is left to the human and recorded (R13)
-- [ ] After that turn, start a new container of the same project and resume the session with
+- [x] After that turn, start a new container of the same project and resume the session with
   `codex exec resume <thread>`: it finds the thread (R12)
 - [ ] With `"bell": true`, a turn's end rings the bell on the host's terminal, and with `false`, nothing of
   `/etc/codex/config.toml` is in the container (R14)
-- [ ] Run one step of the orchestrator on Codex in the sandbox and one that resumes it, with `--follow`: the step
+- [x] Run one step of the orchestrator on Codex in the sandbox and one that resumes it, with `--follow`: the step
   starts in its role, `--follow` shows its messages, its response and session are read, and the resumed run's
   session file records the step's model (R2, R7, R8)
-- [ ] Have Codex make a commit in the sandbox, and record in `record.md` whether its message held a trailer and
+- [x] Have Codex make a commit in the sandbox, and record in `record.md` whether its message held a trailer and
   whether the hook refused it (R15)
 - [ ] Where Docker is not reachable from the implementer's shell, the record says so and the sandbox's checks are
   left to the human
