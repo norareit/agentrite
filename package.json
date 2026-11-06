@@ -7,6 +7,7 @@
     "coding-agents",
     "claude-code",
     "opencode",
+    "codex",
     "sandbox",
     "process"
   ],
@@ -42,6 +43,7 @@
     "scripts/agentrite-harness.mjs",
     "scripts/harnesses/claude.mjs",
     "scripts/harnesses/opencode.mjs",
+    "scripts/harnesses/codex.mjs",
     "scripts/agentrite-units.mjs",
     "scripts/agentrite-approve.mjs",
     "scripts/agentrite-record.mjs",

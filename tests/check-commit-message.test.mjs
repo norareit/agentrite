@@ -36,6 +36,12 @@ test('offendingLines numbers a trailer on a later line by its line in the file',
   assert.deepEqual(offendingLines(message), [{ number: 6, line: 'Co-Authored-By: Claude <noreply@anthropic.com>' }]);
 });
 
+// Unit 0100, R15: the trailer Codex 0.167.0 is told to end a commit message with.
+test('offendingLines refuses the trailer Codex adds to a commit message', () => {
+  const message = 'Add a thing\n\nThe body.\n\nCo-authored-by: Codex <noreply@openai.com>\n';
+  assert.deepEqual(offendingLines(message), [{ number: 5, line: 'Co-authored-by: Codex <noreply@openai.com>' }]);
+});
+
 // R3
 test('offendingLines does not read a line that starts with #', () => {
   assert.deepEqual(offendingLines('Add a thing\n\n#Co-Authored-By: someone\n# Claude-Session: abc\n'), []);

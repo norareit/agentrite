@@ -1,0 +1,11 @@
+# Codex's managed configuration in the sandbox, mounted read-only at /etc/codex/managed_config.toml. It stands above
+# the configuration in the agent's home and the project's .codex/config.toml, so neither the developer nor the agent
+# can change what it sets.
+
+# The image holds the version of Codex the project chose, and Codex is not to look for another.
+check_for_update_on_startup = false
+
+# Every run of the sandbox works in /work, which the developer cannot mark trusted from the host, and Codex loads the
+# project's .codex/config.toml and .codex/agents/ only for a trusted project.
+[projects."/work"]
+trust_level = "trusted"

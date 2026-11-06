@@ -34,6 +34,7 @@ import {
   logMounts,
   updateEnvironment,
   updateMounts,
+  versionPrinted,
   writeCommand,
   writeStartSettings,
 } from './wrapper-fixture.mjs';
@@ -330,7 +331,7 @@ for (const harness of HARNESSES) {
 
   test(`the wrapper passes a pre-release version of ${name} on the host on`, (testContext) => {
     const { root, container, bin, run, dockerCalls } = setUp(testContext, kitPath);
-    writeCommand(bin, start.command, 'echo 0.0.0-dev-202610030456');
+    writeCommand(bin, start.command, `echo ${versionPrinted(harness, '0.0.0-dev-202610030456')}`);
     const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
     assert.equal(result.status, 0, result.stderr);
     assert.equal(result.stderr, '');
@@ -373,7 +374,7 @@ for (const harness of HARNESSES) {
 
   test(`the wrapper gives the host's ${name} no input`, (testContext) => {
     const { root, container, home, bin, dockerCalls } = setUp(testContext, kitPath);
-    writeCommand(bin, start.command, `cat; echo ${hostVersions[name]}`);
+    writeCommand(bin, start.command, `cat; echo ${versionPrinted(harness, hostVersions[name])}`);
     const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', 'echo', 'hi'], {
       encoding: 'utf-8',
       env: { HOME: home, PATH: bin },
@@ -478,7 +479,8 @@ for (const harness of HARNESSES) {
       const held = HARNESSES.filter((each) => each !== harness).map((each) => each.name);
       const holds =
         held.length > 0
-          ? `sandbox.sh: the image holds the harnesses ${held.join(', ')}, and agentrite.json names ` +
+          ? `sandbox.sh: the image holds the harnesses ${held.join(', ').replace(/, ([^,]*)$/, ' and $1')}, ` +
+            'and agentrite.json names ' +
             `${HARNESS_NAMES.join(', ').replace(/, ([^,]*)$/, ' and $1')}. Rebuilding.\n`
           : '';
       assert.equal(result.stderr, holds + latestLine(title, latestVersions[name]));
@@ -842,7 +844,7 @@ test('the wrapper mounts the directory of --workdir, and makes no clone', (testC
 // root. The stand-in mounts nothing, so that what a harness writes there is the developer's is left to the check on
 // a host with Docker.
 const everythingIn = (directory) => readdirSync(directory, { recursive: true }).sort();
-const logDirectoryHolds = ['.claude', '.claude/projects', '.local', '.local/share', '.local/share/opencode'];
+const logDirectoryHolds = ['.claude', '.claude/projects', '.codex', '.local', '.local/share', '.local/share/opencode'];
 
 for (const [form, formArgs] of [
   ['--in-place', () => ['--in-place']],
@@ -1257,7 +1259,12 @@ test('the file of the number can be read by every user, which the agent of the s
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(statSync(cleanupPeriodFile(root)).mode & 0o777, 0o644);
-  assert.deepEqual(readdirSync(homeLogs(root)).sort(), ['.claude', '.local', 'claude-cleanup-period-365.json']);
+  assert.deepEqual(readdirSync(homeLogs(root)).sort(), [
+    '.claude',
+    '.codex',
+    '.local',
+    'claude-cleanup-period-365.json',
+  ]);
 });
 
 // Unit 0078: the kit's version. The image records the kit it was built from, and is built again for another.
@@ -1333,8 +1340,9 @@ for (const [what, content] of [
 test('the run of a project of claude and opencode, with everything a run can be given, is the one written here', (
   testContext,
 ) => {
-  const { root, container, home, runWith, dockerCalls, harnessAllowlist } = setUp(testContext, kitPath);
+  const { root, container, home, imageLabels, runWith, dockerCalls, harnessAllowlist } = setUp(testContext, kitPath);
   writeFileSync(join(root, 'agentrite.json'), '{"bell": true, "harnesses": ["opencode", "claude"]}\n');
+  writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: hostVersions.opencode }));
   mkdirSync(join(home, '.claude'));
   writeFileSync(join(home, '.claude', 'statusline-command.sh'), 'echo line\n');
   writeFileSync(join(home, '.claude', 'settings.json'), '{"cleanupPeriodDays": 365}');
@@ -1503,9 +1511,7 @@ for (const [form, formArgs] of startForms) {
   test(`a start with ${form} and harnesses at fault is refused with the reader's message, asking nothing`, (
     testContext,
   ) => {
-    const HARNESSES_MUST = `It must hold a list of one or more of ${HARNESS_NAMES.map((name) => `"${name}"`).join(
-      ' and ',
-    )}`;
+    const HARNESSES_MUST = 'It must hold a list of one or more of "claude", "opencode" and "codex"';
     for (const [text, message] of [
       ['{"bell": false}', `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`],
       ['{"bell": false, "harnesses": []}', `agentrite.json: harnesses is []. ${HARNESSES_MUST}`],

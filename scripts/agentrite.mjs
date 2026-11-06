@@ -164,10 +164,11 @@ const NO_SANDBOX = '--no-sandbox';
 const NO_ORCHESTRATOR = '--no-orchestrator';
 const DEFAULT_BRANCH = '--default-branch';
 
-// Its two forms: the one a project with no settings file is set up with, and the one that reads the file.
+// Its two forms: the one a project with no settings file is set up with, and the one that reads the file. The
+// harnesses stand on a line of their own, under the first option, so that no line is over 120 characters.
 const INIT_FORM =
-  `usage: agentrite init [${SANDBOX_ONLY}] [${NO_SANDBOX}] [${NO_ORCHESTRATOR}] [${DEFAULT_BRANCH} <name>] ` +
-  `${HARNESS_NAMES.join(' | ')}\n` +
+  `usage: agentrite init [${SANDBOX_ONLY}] [${NO_SANDBOX}] [${NO_ORCHESTRATOR}] [${DEFAULT_BRANCH} <name>]\n` +
+  `                      ${HARNESS_NAMES.join(' | ')}\n` +
   '       agentrite init';
 
 /**
@@ -854,7 +855,9 @@ function writeInstructionFiles(root, harnesses, standards) {
     const read = readProjectFile(root, instructions.file);
     const { content, line, notices } = instructions.init(read, standards);
     if (content !== undefined) {
-      writeFileSync(resolve(root, instructions.file), content, read.found ? {} : { flag: 'wx' });
+      const absolute = resolve(root, instructions.file);
+      mkdirSync(dirname(absolute), { recursive: true });
+      writeFileSync(absolute, content, read.found ? {} : { flag: 'wx' });
     }
     if (line !== undefined) console.log(line);
     return notices;

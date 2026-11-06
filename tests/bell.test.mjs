@@ -243,3 +243,22 @@ test("the hooks run the script where the shared mount puts it, and the plugin's 
     'OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}',
   ));
 });
+
+// 0100 R14
+test("Codex's system configuration runs the script at the end of a turn, where the shared mount puts it", (context) => {
+  const config = readFileSync(new URL('../container/harnesses/codex/bell-config.toml', import.meta.url), 'utf-8');
+  const settings = config.split('\n').filter((line) => line !== '' && !line.startsWith('#'));
+  assert.deepEqual(settings, ['notify = ["sh", "/etc/agentrite/bell/ring-bell.sh"]']);
+  const mounts = bellMounts(context);
+  assert.equal(mounts.get('/etc/agentrite/bell/ring-bell.sh'), 'bell/ring-bell.sh');
+  assert.equal(mounts.get('/etc/codex/config.toml'), 'harnesses/codex/bell-config.toml');
+});
+
+test('ring-bell.sh exits 0 and prints nothing with the JSON argument Codex gives its notify command', () => {
+  const result = spawnSync('sh', [ringBell, '{"type":"agent-turn-complete","turn-id":"1"}'], {
+    encoding: 'utf-8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  assert.equal(result.status, 0);
+  assert.equal(result.stdout, '');
+});

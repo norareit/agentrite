@@ -31,11 +31,13 @@ export const latestVersions = Object.fromEntries(
   HARNESSES.map(({ name }, index) => [name, `${97 - index}.${index + 3}.0`]),
 );
 
-// What a fake harness prints for --version: the first of the bare version, its name and the version, and its
-// command and the version, that its module reads as the version. A harness whose module reads none of them fails
-// here, naming it, so that a harness added to the list gets a fake of its own.
-function versionPrinted({ name, start, sandbox }, version) {
-  const printed = [version, `${name} ${version}`, `${start.command} ${version}`].find(
+// What a fake harness prints for --version: the first of the bare version, its name and the version, its command and
+// the version, and its command with -cli and the version, as Codex prints it, that its module reads as the version.
+// A harness whose module reads none of them fails here, naming it, so that a harness added to the list gets a fake
+// of its own.
+export function versionPrinted({ name, start, sandbox }, version) {
+  const candidates = [version, `${name} ${version}`, `${start.command} ${version}`, `${start.command}-cli ${version}`];
+  const printed = candidates.find(
     (candidate) => sandbox.readVersion(`${candidate}\n`) === version,
   );
   assert.ok(printed, `the fake ${name} prints no version that its readVersion reads`);

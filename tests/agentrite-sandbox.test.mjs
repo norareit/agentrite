@@ -139,9 +139,7 @@ test("start refuses with the reader's message, on standard error alone, and exit
     ['{"harnesses": ["claude"]}', 'agentrite.json: bell is missing. It must hold true or false'],
     [
       '{"bell": true}',
-      `agentrite.json: harnesses is missing. It must hold a list of one or more of ${HARNESS_NAMES.map((name) =>
-        JSON.stringify(name),
-      ).join(' and ')}`,
+      'agentrite.json: harnesses is missing. It must hold a list of one or more of "claude", "opencode" and "codex"',
     ],
     ['{"bell": true, "harnesses": ["nothing"]}', 'agentrite.json: harnesses is ["nothing"]. It must hold a list'],
   ]) {

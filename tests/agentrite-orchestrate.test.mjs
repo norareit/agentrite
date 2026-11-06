@@ -4043,3 +4043,51 @@ test('--prompt without --resume exits 2 with the usage, and starts nothing', (te
   assert.equal(calls().length, 0);
   assert.ok(!existsSync(join(base, '.orchestrator')));
 });
+
+// Unit 0100, R2, R7, R8: a step of Codex, which is told its role in its prompt and resumes its thread.
+
+const CODEX_THREAD = '01a1b16f-df1e-7c02-9266-33d818a31172';
+
+// What Codex prints for `exec --json` with a final response, after a message of its own on the way.
+function codexPrinted(response) {
+  const message = (id, text) => ({ type: 'item.completed', item: { id, type: 'agent_message', text } });
+  return [
+    { type: 'thread.started', thread_id: CODEX_THREAD },
+    { type: 'turn.started' },
+    message('item_0', 'I read the unit.'),
+    message('item_1', response),
+    { type: 'turn.completed', usage: { input_tokens: 1, cached_input_tokens: 0, output_tokens: 1 } },
+  ]
+    .map((event) => `${JSON.stringify(event)}\n`)
+    .join('');
+}
+
+test('a step of Codex starts in its role, is followed by its messages, and is asked again in its thread', (context) => {
+  const { base, agentrite, answer, calls, write, read } = project(context);
+  write('bin/codex', FAKE_HARNESS);
+  chmodSync(join(base, 'bin', 'codex'), 0o755);
+  write('agentrite.json', SETTINGS.replace('["claude", "opencode"]', '["claude", "opencode", "codex"]'));
+  assert.equal(agentrite('refresh').status, 0);
+  write('codex.json', JSON.stringify({ steps: [{ role: 'reviewer', harness: 'codex', model: 'gpt-6.1-sol' }] }));
+  answer(1, codexPrinted('No block.'));
+  answer(2, codexPrinted(responseOf({ ...DONE, summary: 'Reviewed.' })));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'codex.json', '--follow');
+
+  assert.equal(result.status, 0, result.stderr);
+  const opening =
+    'You act as the reviewer. Read `node_modules/agentrite/roles/reviewer.md` in the project root and follow it: ' +
+    'it is the instruction of your role.';
+  const [first, again] = calls();
+  assert.equal(calls().length, 2);
+  assert.equal(first.harness, 'codex');
+  assert.deepEqual(first.options, ['exec', '--model', 'gpt-6.1-sol', '--json']);
+  assert.ok(first.prompt.startsWith(`${opening}\n\nThe unit is changes/${UNIT}/.\n\n${REQUEST_LINE}`), first.prompt);
+  assert.deepEqual(again.options, ['exec', '--model', 'gpt-6.1-sol', '--json', 'resume', CODEX_THREAD]);
+  assert.equal(again.prompt, `${opening}\n\nThe unit is changes/${UNIT}/.\n\n${askAgainRequest(undefined)}`);
+  assert.ok(result.stdout.includes('I read the unit.'), result.stdout);
+  assert.ok(result.stdout.includes('No block.'), result.stdout);
+  assert.ok(result.stdout.includes('Summary: Reviewed.'), result.stdout);
+  const state = JSON.parse(read(`${runDirectoryOf(base).name}/state.json`));
+  assert.deepEqual(state.sessions, [{ role: 'reviewer', harness: 'codex', session: CODEX_THREAD }]);
+});

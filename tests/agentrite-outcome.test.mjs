@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 import { claude as claudeHarness } from '../scripts/harnesses/claude.mjs';
+import { codex as codexHarness } from '../scripts/harnesses/codex.mjs';
 import { opencode as opencodeHarness } from '../scripts/harnesses/opencode.mjs';
 import { askAgainRequest, outcomeRequest, readOutcome, RESUMED, resumeWords } from '../scripts/agentrite-outcome.mjs';
 
@@ -645,4 +646,72 @@ test('opencode: the refused calls are the tool_use events that failed with the e
     refusedCall('bash', { description: 'Run the tests', command: 'npm test' }),
   ]);
   assert.deepEqual(opencodeHarness.headless.refused(''), []);
+});
+
+// Unit 0100, R7, R8: what Codex 0.167.0 printed for `codex exec --json`, and the shapes of a response
+
+const THREAD = '01a1b16f-df1e-7c02-9266-33d818a31172';
+const CODEX_LINES = {
+  started: `{"type":"thread.started","thread_id":"${THREAD}"}`,
+  turn: '{"type":"turn.started"}',
+  error: '{"type":"error","message":"Reconnecting... 2/5 (unexpected status 401 Unauthorized: ...)"}',
+  errorItem:
+    '{"type":"item.completed","item":{"id":"item_0","type":"error","message":"Falling back from WebSockets to ..."}}',
+  message: (id, text) => JSON.stringify({ type: 'item.completed', item: { id, type: 'agent_message', text } }),
+  completed: '{"type":"turn.completed","usage":{"input_tokens":1,"cached_input_tokens":0,"output_tokens":1}}',
+  failed: '{"type":"turn.failed","error":{"message":"unexpected status 401 Unauthorized: ..."}}',
+};
+const FAILED_RUN = [
+  CODEX_LINES.started,
+  CODEX_LINES.turn,
+  CODEX_LINES.error,
+  CODEX_LINES.errorItem,
+  CODEX_LINES.failed,
+];
+const ANSWERED_RUN = [
+  CODEX_LINES.started,
+  CODEX_LINES.turn,
+  CODEX_LINES.message('item_0', 'First, I read the unit.'),
+  CODEX_LINES.message('item_1', 'Done.\n\n```json\n{}\n```'),
+  CODEX_LINES.completed,
+];
+
+test('codex: the arguments ask for JSON, choose no session, and resume the session given', () => {
+  assert.deepEqual(codexHarness.headless.arguments(undefined), { args: ['--json'], session: undefined });
+  assert.deepEqual(codexHarness.headless.arguments(THREAD), { args: ['--json', 'resume', THREAD], session: THREAD });
+});
+
+test('codex: the session is the thread_id of thread.started, and the response the last agent_message', () => {
+  assert.deepEqual(codexHarness.headless.read(`${ANSWERED_RUN.join('\n')}\n`), {
+    response: 'Done.\n\n```json\n{}\n```',
+    session: THREAD,
+  });
+});
+
+test('codex: no response with only error items, and no session without thread.started', () => {
+  assert.deepEqual(codexHarness.headless.read(`${FAILED_RUN.join('\n')}\n`), { response: undefined, session: THREAD });
+  assert.deepEqual(codexHarness.headless.read(ANSWERED_RUN.slice(1).join('\n')), {
+    response: 'Done.\n\n```json\n{}\n```',
+    session: undefined,
+  });
+  assert.deepEqual(codexHarness.headless.read(''), { response: undefined, session: undefined });
+  assert.deepEqual(codexHarness.headless.read('Reading prompt from stdin...\nnot json\n'), {
+    response: undefined,
+    session: undefined,
+  });
+});
+
+test('codex: follow gives the text of an agent_message with no time, and nothing for any other line', () => {
+  assert.deepEqual(codexHarness.headless.follow(CODEX_LINES.message('item_1', 'I read the unit.')), [
+    { kind: 'text', time: undefined, text: 'I read the unit.' },
+  ]);
+  for (const line of [...FAILED_RUN, CODEX_LINES.completed, CODEX_LINES.message('item_2', '\n'), 'not json', '']) {
+    assert.deepEqual(codexHarness.headless.follow(line), [], line);
+  }
+});
+
+test('codex: nothing is refused of any run', () => {
+  for (const run of [FAILED_RUN, ANSWERED_RUN, []]) {
+    assert.deepEqual(codexHarness.headless.refused(run.join('\n')), []);
+  }
 });

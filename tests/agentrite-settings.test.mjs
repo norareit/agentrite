@@ -142,7 +142,7 @@ test('JSON that is no object is refused with the file and what the file must hol
 });
 
 const BRANCH_MUST = 'It must hold the name of a branch, as a string that is not empty';
-const HARNESSES_MUST = 'It must hold a list of one or more of "claude" and "opencode"';
+const HARNESSES_MUST = 'It must hold a list of one or more of "claude", "opencode" and "codex"';
 const SANDBOX_MUST = 'It must hold true or false';
 
 const PATH_MUST =
@@ -185,7 +185,7 @@ test('a key that holds anything else is named with what it holds and what it mus
     ['harnesses', 'claude', HARNESSES_MUST],
     ['harnesses', [], HARNESSES_MUST],
     ['harnesses', ['claude', 5], HARNESSES_MUST],
-    ['harnesses', ['codex'], HARNESSES_MUST],
+    ['harnesses', ['aider'], HARNESSES_MUST],
     ['harnesses', ['claude', 'toString'], HARNESSES_MUST],
     ['process', 'true', SANDBOX_MUST],
     ['process', 1, SANDBOX_MUST],
@@ -355,14 +355,28 @@ test('the name of an agent that a harness has of its own is refused with the har
     ['compaction', 'OpenCode', 'has'],
     ['plan', 'Claude Code and OpenCode', 'have'],
     ['explore', 'Claude Code and OpenCode', 'have'],
+    ['default', 'Codex', 'has'],
+    ['worker', 'Codex', 'has'],
+    ['explorer', 'Codex', 'has'],
   ]) {
-    for (const harnesses of [['claude'], ['opencode']]) {
+    for (const harnesses of [['claude'], ['opencode'], ['codex']]) {
       assert.throws(() => parseSettings(textOf({ ...VALID, harnesses, roles: { ...VALID.roles, [name]: 'x.md' } })), {
         message:
           `agentrite.json: roles holds "${name}", which is the name of an agent that ${who} ${verb} of its own. ` +
           OWN_AGENT_REFUSAL,
       });
     }
+  }
+});
+
+// Unit 0100, R4: a role's name is in lowercase, so the name of one of Codex's agents in another case is refused by
+// its form before it is compared with the agents, without regard to case.
+test("Codex's own agents in another case are refused as no name of a role", () => {
+  for (const name of ['Default', 'EXPLORER', 'Worker']) {
+    const text = textOf({ ...VALID, harnesses: ['codex'], roles: { ...VALID.roles, [name]: 'x.md' } });
+    assert.throws(() => parseSettings(text), {
+      message: `agentrite.json: roles holds ${JSON.stringify(name)}, which is not the name of a role. ${NAME_FORM}`,
+    });
   }
 });
 
@@ -797,7 +811,7 @@ test('parseStart refuses harnesses missing, empty, not a list or naming an unkno
   assert.throws(() => parseStart('{"bell": true}'), {
     message: `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`,
   });
-  for (const value of [[], 'claude', null, 5, { claude: true }, ['claude', 5], ['codex'], ['claude', 'toString']]) {
+  for (const value of [[], 'claude', null, 5, { claude: true }, ['claude', 5], ['aider'], ['claude', 'toString']]) {
     assert.throws(
       () => parseStart(startText(true, value)),
       { message: `agentrite.json: harnesses is ${JSON.stringify(value)}. ${HARNESSES_MUST}` },

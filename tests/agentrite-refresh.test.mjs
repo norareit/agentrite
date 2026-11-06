@@ -16,6 +16,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { agentsListNotice, instructionsList } from '../scripts/agentrite-instructions.mjs';
 import { claudeKitStandardsNotice, claudeRefreshNotice } from '../scripts/harnesses/claude.mjs';
+import { codexRefreshNotice } from '../scripts/harnesses/codex.mjs';
 import { opencodeKitStandardsNotice, opencodeRefreshNotice } from '../scripts/harnesses/opencode.mjs';
 import { foreignHookNotice, HOOK_MARK, noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-harness.mjs';
@@ -1518,4 +1519,69 @@ test('switching process to false and back rewrites the shim each way, init writi
   assert.equal(toProcess.status, 0, toProcess.stderr);
   assert.match(toProcess.stdout, /^refreshed sandbox\.sh$/m);
   assert.equal(read('sandbox.sh'), SHIM);
+});
+
+// Unit 0100, R4, R5: the wrappers and the instruction file of Codex
+
+const CODEX_INSTRUCTIONS =
+  'developer_instructions = "Read node_modules/agentrite/process.md and node_modules/agentrite/standards.md."\n';
+
+test('refresh keeps a model key of a Codex wrapper, and leaves it up to date the next time', (testContext) => {
+  const { refresh, read, write } = project(testContext);
+  write('.codex/config.toml', CODEX_INSTRUCTIONS);
+  assert.equal(refresh(['codex']).status, 0);
+  const path = '.codex/agents/reviewer.toml';
+  const pinned = read(path).replace('\ndeveloper_instructions', '\nmodel = "gpt-6.1-sol"\ndeveloper_instructions');
+  write(path, pinned.replace('Reviews', 'Reviewed'));
+
+  const result = refresh(['codex']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, line('refreshed', path));
+  assert.equal(read(path), pinned);
+  assert.match(refresh(['codex']).stdout, line('up to date', path));
+});
+
+test('refresh removes a Codex wrapper the kit wrote for a role gone, and leaves one of its own', (context) => {
+  const { refresh, read, write, base } = project(context);
+  write('.codex/config.toml', CODEX_INSTRUCTIONS);
+  assert.equal(refresh(['codex']).status, 0);
+  write('.codex/agents/auditor.toml', read('.codex/agents/reviewer.toml').replace('"reviewer"', '"auditor"'));
+  write('.codex/agents/ours.toml', 'name = "ours"\ndescription = "Ours."\ndeveloper_instructions = "Do it."\n');
+  write('.codex/agents/notes.md', read('.codex/agents/reviewer.toml'));
+
+  const result = refresh(['codex']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /^removed \.codex\/agents\/auditor\.toml$/m);
+  assert.equal(exists(join(base, '.codex/agents/auditor.toml')), false);
+  assert.ok(exists(join(base, '.codex/agents/ours.toml')));
+  assert.ok(exists(join(base, '.codex/agents/notes.md')));
+});
+
+test('refresh gives the notice of a .codex/config.toml that lacks a path, and none for one naming both', (context) => {
+  const { refresh, write } = project(context);
+  write('.codex/config.toml', 'developer_instructions = "Read node_modules/agentrite/process.md."\n');
+
+  const lacking = refresh(['codex']);
+
+  assert.equal(lacking.status, 0, lacking.stderr);
+  const standards = 'node_modules/agentrite/standards.md';
+  assert.ok(noticesOf(lacking).includes(codexRefreshNotice(`it does not name ${standards}`, [standards])));
+  write('.codex/config.toml', CODEX_INSTRUCTIONS);
+  assert.doesNotMatch(noticesOf(refresh(['codex'])), /codex/);
+});
+
+test('refresh of a project of claude and opencode touches nothing of Codex', (testContext) => {
+  const { base, refresh } = project(testContext);
+
+  const result = refresh(['claude', 'opencode']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(exists(join(base, '.codex')), false);
+  assert.doesNotMatch(result.stdout, /codex/);
+  assert.deepEqual(
+    linesOf(result).filter((printed) => printed.startsWith('wrote ')),
+    [...WRAPPERS.map((file) => `wrote ${file.path}`), `wrote ${LIST}`, 'wrote sandbox.sh'],
+  );
 });

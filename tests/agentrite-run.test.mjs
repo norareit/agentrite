@@ -162,15 +162,16 @@ usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [-
                      [-- <harness arguments...>]
 
   <role>              a role that agentrite.json names, as agentrite roles lists them
-  <harness>           claude | opencode
+  <harness>           claude | opencode | codex
   <unit>              a directory of changes/, by its name or by the four digits its name opens with
   --prompt <text>     added to the prompt, after the unit, as it is written
-  --model <id>        the harness's own id of a model, such as claude-sonnet-5-5 or openai/gpt-6.1-sol.
-                      Without it the harness decides: the role's wrapper may pin one
+  --model <id>        the harness's own id of a model, such as claude-sonnet-5-5, openai/gpt-6.1-sol or
+                      gpt-6.1-sol. Without it the harness decides: the role's wrapper may pin one
   --headless          run without a session: the harness works on the prompt and ends
   --skip-permissions  the harness asks no permission: --dangerously-skip-permissions for claude, which
-                      bypasses every check, and --auto for opencode, which approves what is not denied.
-                      Meant for the sandbox
+                      bypasses every check, --auto for opencode, which approves what is not denied, and
+                      --dangerously-bypass-approvals-and-sandbox for codex, which skips every approval
+                      and Codex's own sandbox. Meant for the sandbox
   -- <harness arguments...>
                       given to the harness as written, before the prompt. The command reads none of
                       them`.slice(1);
@@ -335,7 +336,7 @@ test('each argument run does not take is named, followed by the usage of run', (
   const noText = '--prompt takes a text, and none was given';
   const noId = '--model takes an id, and none was given';
   for (const [args, named] of [
-    [['reviewer', 'codex', '0007'], 'unknown harness: codex'],
+    [['reviewer', 'aider', '0007'], 'unknown harness: aider'],
     [['reviewer', 'constructor', '0007'], 'unknown harness: constructor'],
     [['claude', 'reviewer', '0007'], 'unknown harness: reviewer'],
     [['reviewer', 'claude'], 'no unit given'],
@@ -433,6 +434,10 @@ test('the prompt holds the text after an empty line, as it is written', () => {
 // R5 to R9, R21: the harness's argument list, which is exactly the row of the plan's table.
 
 const PROMPT = 'The unit is changes/0007-run-a-role/.';
+// What Codex is told before the prompt for the reviewer, whose file is ROLE_FILE.
+const CODEX_OPENED = (role, file, prompt) =>
+  `You act as the ${role}. Read \`${file}\` in the project root and follow it: it is the instruction of your role.` +
+  `\n\n${prompt}`;
 const ROWS = {
   claude: {
     command: 'claude',
@@ -446,6 +451,13 @@ const ROWS = {
     interactive: (options, extra) => [...options, ...extra, '--prompt', PROMPT],
     headless: (options, extra) => ['run', ...options, ...extra, '--', PROMPT],
   },
+  codex: {
+    command: 'codex',
+    skip: '--dangerously-bypass-approvals-and-sandbox',
+    role: [],
+    interactive: (options, extra) => [...options, ...extra, '--', CODEX_OPENED('reviewer', ROLE_FILE, PROMPT)],
+    headless: (options, extra) => ['exec', ...options, ...extra, '--', CODEX_OPENED('reviewer', ROLE_FILE, PROMPT)],
+  },
 };
 const EXTRA = ['--resume', 'an id', '--allowedTools', 'Read', 'Grep'];
 const ROLE_FILE = 'node_modules/agentrite/roles/reviewer.md';
@@ -457,7 +469,7 @@ test('every harness the kit has holds a row for each mode', () => {
     for (const headless of [false, true]) {
       const started = harnessCommand({ ...START, harness, role: 'reviewer', headless, prompt: PROMPT });
       assert.equal(typeof started.command, 'string');
-      assert.equal(started.args.at(-1), PROMPT);
+      assert.ok(started.args.at(-1).endsWith(PROMPT));
     }
   }
 });
@@ -469,8 +481,7 @@ test('the argument list of each harness in each mode is the row of the table, op
         for (const skipPermissions of [false, true]) {
           for (const harnessArguments of [[], EXTRA]) {
             const options = [
-              '--agent',
-              'reviewer',
+              ...(row.role ?? ['--agent', 'reviewer']),
               ...(model === undefined ? [] : ['--model', model]),
               ...(skipPermissions ? [row.skip] : []),
             ];
@@ -509,7 +520,7 @@ test('the prompt is last in every row, and what the caller gave stands in front 
         harnessArguments: EXTRA,
       });
       const at = args.indexOf(EXTRA[0]);
-      assert.equal(args.at(-1), PROMPT, `${harness} ${headless}`);
+      assert.ok(args.at(-1).endsWith(PROMPT), `${harness} ${headless}`);
       assert.deepEqual(args.slice(at, at + EXTRA.length), EXTRA, `${harness} ${headless}`);
       assert.equal(args.length, at + EXTRA.length + 2, `${harness} ${headless}`);
       assert.ok(args.indexOf('m') < at && args.indexOf('--agent') < at, `${harness} ${headless}`);
@@ -600,7 +611,10 @@ const UNIT_PROMPT = `The unit is changes/${UNIT}/.`;
 const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const REMEDY = 'Run: npx agentrite refresh, which writes the wrappers of the harnesses that agentrite.json names';
 
-function project(testContext, harnesses = ['claude', 'opencode']) {
+// The settings of a project of every harness the kit has.
+const ALL_SETTINGS = SETTINGS.replace('["claude", "opencode"]', JSON.stringify(HARNESS_NAMES).replaceAll(',', ', '));
+
+function project(testContext, harnesses = HARNESS_NAMES) {
   const base = emptyDirectory(testContext);
   installKit(base);
   const write = (path, content) => {
@@ -620,7 +634,7 @@ function project(testContext, harnesses = ['claude', 'opencode']) {
       env: { PATH: join(base, 'bin'), ...options.env },
     });
   // Every harness has its wrappers, whichever of them has a command on the PATH.
-  write('agentrite.json', SETTINGS);
+  write('agentrite.json', ALL_SETTINGS);
   assert.equal(agentrite(['refresh']).status, 0);
   write(`changes/${UNIT}/record.md`, '# 0007\n');
   return { base, write, read, agentrite };
@@ -631,7 +645,13 @@ function started(command, args) {
   return `${[command, ...args].join('\n')}\n`;
 }
 
-const WRAPPER_DIRECTORIES = { claude: '.claude/agents', opencode: '.opencode/agents' };
+// The path of the wrapper of `role` for `harness`.
+function wrapperPath(harness, role) {
+  const { directory, extension } = harnessNamed(harness).wrappers;
+  return `${directory}/${role}${extension}`;
+}
+
+const REVIEWER_FILE = 'node_modules/agentrite/roles/reviewer.md';
 
 // The arguments each fake is expected to get, for the reviewer: what stands before the prompt, and the prompt.
 const STARTED = {
@@ -639,6 +659,8 @@ const STARTED = {
   'claude --headless': (before, prompt) => ['--print', '--agent', 'reviewer', ...before, '--', prompt],
   opencode: (before, prompt) => ['--agent', 'reviewer', ...before, '--prompt', prompt],
   'opencode --headless': (before, prompt) => ['run', '--agent', 'reviewer', ...before, '--', prompt],
+  codex: (before, prompt) => [...before, '--', CODEX_OPENED('reviewer', REVIEWER_FILE, prompt)],
+  'codex --headless': (before, prompt) => ['exec', ...before, '--', CODEX_OPENED('reviewer', REVIEWER_FILE, prompt)],
 };
 
 // The arguments of `run` for one of the keys of STARTED.
@@ -663,14 +685,19 @@ test(
 
 test('run specifier starts each harness as the specifier, in a project that has its wrapper', (testContext) => {
   const { agentrite, read } = project(testContext);
+  const expected = {
+    claude: ['--agent', 'specifier', '--', UNIT_PROMPT],
+    opencode: ['--agent', 'specifier', '--prompt', UNIT_PROMPT],
+    codex: ['--', CODEX_OPENED('specifier', 'node_modules/agentrite/roles/specifier.md', UNIT_PROMPT)],
+  };
+  assert.deepEqual(Object.keys(expected), HARNESS_NAMES);
   for (const harness of HARNESS_NAMES) {
-    assert.ok(read(`${WRAPPER_DIRECTORIES[harness]}/specifier.md`).includes('roles/specifier.md'), harness);
+    assert.ok(read(wrapperPath(harness, 'specifier')).includes('roles/specifier.md'), harness);
 
     const result = agentrite(['run', 'specifier', harness, '0007']);
 
     assert.equal(result.status, 0, result.stderr);
-    const prompt = harness === 'claude' ? '--' : '--prompt';
-    assert.equal(result.stdout, started(harness, ['--agent', 'specifier', prompt, UNIT_PROMPT]), harness);
+    assert.equal(result.stdout, started(harness, expected[harness]), harness);
   }
 });
 
@@ -782,11 +809,15 @@ test(
   'a wrapper that is missing, or is not what refresh would leave, stops the run before a harness starts',
   (testContext) => {
     for (const harness of HARNESS_NAMES) {
-      const path = `${WRAPPER_DIRECTORIES[harness]}/reviewer.md`;
+      const path = wrapperPath(harness, 'reviewer');
       const { base, agentrite, read, write } = project(testContext);
       const asWritten = read(path);
       const changed = {
         'a key of the project own': asWritten.replace('\n---\n', '\nsteps: 5\n---\n'),
+        'a key of the project own in TOML': asWritten.replace(
+          '\ndeveloper_instructions',
+          '\nsandbox_mode = "read-only"\ndeveloper_instructions',
+        ),
         'an earlier package name': asWritten.replace('node_modules/agentrite', 'node_modules/@ritenoar/agent-kit'),
         'no frontmatter': 'Review it.\n',
         // The wrappers of the other harness hold no mode, and this one is then left out below.
@@ -820,6 +851,7 @@ test(
 test('only the wrapper of the role and the harness that are run is looked at', (testContext) => {
   const { base, agentrite, write } = project(testContext);
   rmSync(join(base, '.opencode'), { recursive: true });
+  rmSync(join(base, '.codex'), { recursive: true });
   write('.claude/agents/planner.md', 'Ours.\n');
 
   const result = agentrite(['run', 'reviewer', 'claude', '0007']);
@@ -830,10 +862,13 @@ test('only the wrapper of the role and the harness that are run is looked at', (
 
 test('a wrapper with a pinned model does not stop the run, and the harness gets no model', (testContext) => {
   for (const harness of HARNESS_NAMES) {
-    const path = `${WRAPPER_DIRECTORIES[harness]}/reviewer.md`;
+    const path = wrapperPath(harness, 'reviewer');
     const { agentrite, read, write } = project(testContext);
-    // Where refresh puts a pin: at the end of the frontmatter.
-    const pinned = read(path).replace('\n---\n', '\nmodel: some/model\n---\n');
+    // Where refresh puts a pin: at the end of the frontmatter, and in TOML before the instructions.
+    const pinned = read(path)
+      .replace('\n---\n', '\nmodel: some/model\n---\n')
+      .replace('\ndeveloper_instructions', '\nmodel = "some/model"\ndeveloper_instructions');
+    assert.notEqual(pinned, read(path));
     write(path, pinned);
     assert.equal(agentrite(['refresh']).stdout.includes(`up to date ${path}`), true);
 
@@ -873,7 +908,7 @@ test('run with no argument prints its usage on standard error, exits 2 and start
 test('what run does not take is named before its usage, with exit 2 and nothing started', (testContext) => {
   const { agentrite } = project(testContext);
   for (const [args, named] of [
-    [['reviewer', 'codex', '0007'], 'unknown harness: codex'],
+    [['reviewer', 'aider', '0007'], 'unknown harness: aider'],
     [['reviewer', 'claude'], 'no unit given'],
     [['reviewer', 'claude', '0007', '--verbose'], 'unknown option: --verbose'],
     [['reviewer', 'claude', '0007', '--model'], '--model takes an id, and none was given'],
@@ -935,8 +970,8 @@ test(
   (testContext) => {
     const { agentrite } = project(testContext);
     const usage =
-      'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ' +
-      'claude | opencode\n' +
+      'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>]\n' +
+      '                      claude | opencode | codex\n' +
       '       agentrite init\n' +
       '       agentrite config\n' +
       '       agentrite refresh\n' +

@@ -46,6 +46,7 @@ test('package.json says what the package is, where it lives and under which lice
     'coding-agents',
     'claude-code',
     'opencode',
+    'codex',
     'sandbox',
     'process',
   ]);
@@ -77,6 +78,7 @@ test('package.json keeps the one command and the files the package holds', () =>
     'scripts/agentrite-harness.mjs',
     'scripts/harnesses/claude.mjs',
     'scripts/harnesses/opencode.mjs',
+    'scripts/harnesses/codex.mjs',
     'scripts/agentrite-units.mjs',
     'scripts/agentrite-approve.mjs',
     'scripts/agentrite-record.mjs',

@@ -10,6 +10,12 @@ import {
   claudeRefreshNotice,
 } from '../scripts/harnesses/claude.mjs';
 import {
+  codex,
+  codexInitNotice,
+  codexKitStandardsNotice,
+  codexRefreshNotice,
+} from '../scripts/harnesses/codex.mjs';
+import {
   opencode,
   opencodeInitNotice,
   opencodeKitStandardsNotice,
@@ -265,12 +271,14 @@ test('a module the list lacks, and an entry of the list without its module, are 
 
 // R3
 
-test('the list holds claude and then opencode, and each is found by its name', () => {
-  assert.deepEqual(HARNESS_NAMES, ['claude', 'opencode']);
-  assert.deepEqual(HARNESSES, [claude, opencode]);
+test('the list holds claude, opencode and then codex, and each is found by its name', () => {
+  assert.deepEqual(HARNESS_NAMES, ['claude', 'opencode', 'codex']);
+  assert.deepEqual(HARNESSES, [claude, opencode, codex]);
   assert.equal(harnessNamed('claude'), claude);
   assert.equal(harnessNamed('opencode'), opencode);
-  assert.throws(() => harnessNamed('codex'), { message: 'unknown harness: codex' });
+  assert.equal(harnessNamed('codex'), codex);
+  assert.equal(codex.title, 'Codex');
+  assert.throws(() => harnessNamed('aider'), { message: 'unknown harness: aider' });
 });
 
 // R1, R5: what init does with the instruction file of each harness
@@ -617,11 +625,239 @@ test('a file no mount names, a mount of a file not there and a directory of no h
   const directories = new Map([
     ['claude', ['managed-settings.json', 'bell-settings.json', 'extra.json']],
     ['opencode', ['bell-plugin.js']],
-    ['codex', ['config.toml']],
+    ['aider', ['config.toml']],
   ]);
-  assert.deepEqual(kitFileFaults(directories, HARNESSES), [
-    'container/harnesses/codex/ is of no harness of HARNESSES',
+  assert.deepEqual(kitFileFaults(directories, HARNESSES.slice(0, 2)), [
+    'container/harnesses/aider/ is of no harness of HARNESSES',
     'container/harnesses/claude/extra.json is named by no mount of claude',
     'opencode mounts opencode.json, which container/harnesses/opencode/ lacks',
   ]);
+});
+
+// 0100 R1, R2, R6, R9: what Codex reads and starts of its own
+
+test("Codex's version is the word after codex-cli on the first line of what it printed, and none otherwise", () => {
+  assert.equal(codex.sandbox.readVersion('codex-cli 0.167.0\n'), '0.167.0');
+  assert.equal(codex.sandbox.readVersion('codex-cli 0.167.0\nmore\n'), '0.167.0');
+  assert.equal(codex.sandbox.readVersion('codex 0.167.0\n'), undefined);
+  assert.equal(codex.sandbox.readVersion('codex-cli\n'), undefined);
+  assert.equal(codex.sandbox.readVersion(''), undefined);
+});
+
+test('Codex is given nothing of the host', () => {
+  const read = hostReader({ '.codex/config.toml': found('model = "x"\n') });
+  assert.deepEqual(codex.sandbox.host(HOME, read), { environment: [], mounts: [], files: [] });
+});
+
+test('Codex starts in a role by no option, and by words that name the role and its file', () => {
+  assert.deepEqual(codex.start.role('reviewer', 'rules/our reviewer.md'), {
+    options: [],
+    opening:
+      'You act as the reviewer. Read `rules/our reviewer.md` in the project root and follow it: it is the ' +
+      'instruction of your role.',
+  });
+});
+
+test("Codex's session and headless run put a -- before the prompt, and the headless run is exec", () => {
+  assert.equal(codex.start.command, 'codex');
+  assert.equal(codex.start.skipPermissions, '--dangerously-bypass-approvals-and-sandbox');
+  assert.deepEqual(codex.start.interactive(['--model', 'm'], 'the prompt'), ['--model', 'm', '--', 'the prompt']);
+  assert.deepEqual(codex.start.headless(['--model', 'm'], 'the prompt'), [
+    'exec',
+    '--model',
+    'm',
+    '--',
+    'the prompt',
+  ]);
+});
+
+// 0100 R4: the Codex wrapper
+
+const PLANNER = {
+  name: 'planner',
+  path: 'node_modules/agentrite/roles/planner.md',
+  description:
+    'Writes the plan of an approved change unit, against the tree the unit will be built on. Use once the human ' +
+    "has approved the unit's spec and the unit is next to be built, not before. Dispatch it with the unit directory.",
+};
+
+const PLANNER_WRAPPER = `name = "planner"
+description = """\\
+  Writes the plan of an approved change unit, against the tree the unit will be built on. Use once the human has \\
+  approved the unit's spec and the unit is next to be built, not before. Dispatch it with the unit directory."""
+developer_instructions = """
+Read \`node_modules/agentrite/roles/planner.md\` in the project root and follow it. It is your instruction; this file
+holds none of its own.
+"""
+`;
+
+/**
+ * The string a TOML reader reads from the wrapper's description: its lines after the opening one, each with the
+ * line-ending backslash and the indent it trims taken off, up to the closing quotes, and its escapes read.
+ *
+ * @param {string} wrapper
+ * @returns {string}
+ */
+function tomlDescription(wrapper) {
+  const block = wrapper.match(/^description = """\\\n([\s\S]*?)"""\n/m);
+  assert.ok(block, 'the wrapper has no description block');
+  const joined = block[1].replace(/\\\n\s*/g, '');
+  return JSON.parse(`"${joined.trimStart()}"`);
+}
+
+test('the Codex wrapper of planner is written exactly as the plan has it', () => {
+  assert.equal(codex.wrappers.directory, '.codex/agents');
+  assert.equal(codex.wrappers.extension, '.toml');
+  assert.equal(codex.wrappers.render(PLANNER), PLANNER_WRAPPER);
+  assert.equal(tomlDescription(PLANNER_WRAPPER), PLANNER.description);
+});
+
+test('a description with quotes and backslashes is escaped, wrapped, and read back as it was', () => {
+  const description = `Says "hello" and C:\\path\\to, ${'and more words '.repeat(12)}at the end.`;
+  const wrapper = codex.wrappers.render({ ...PLANNER, description });
+  assert.ok(wrapper.includes('\\"hello\\"'));
+  assert.ok(wrapper.includes('C:\\\\path'));
+  for (const line of wrapper.split('\n')) assert.ok(line.length <= 120, line);
+  assert.equal(tomlDescription(wrapper), description);
+});
+
+const ODD_PATHS = ['rules/our planner.md', 'rules/a"b.md', 'rules/a`b.md', 'rules/a\\b.md'];
+
+test('isKit is true for the wrapper of any path, with CRLF, and with a model line before the instructions', () => {
+  for (const path of [PLANNER.path, ...ODD_PATHS]) {
+    const wrapper = codex.wrappers.render({ ...PLANNER, path });
+    assert.ok(codex.wrappers.isKit(wrapper), wrapper);
+    assert.ok(codex.wrappers.isKit(wrapper.replaceAll('\n', '\r\n')), wrapper);
+    const pinned = wrapper.replace('developer_instructions', 'model = "gpt-6.1-sol"\ndeveloper_instructions');
+    assert.ok(codex.wrappers.isKit(pinned), pinned);
+  }
+  assert.ok(codex.wrappers.render({ ...PLANNER, path: 'rules/a"b.md' }).includes('`rules/a\\"b.md`'));
+});
+
+test('isKit is false for other instructions, a wrapper without its name line and a Markdown wrapper', () => {
+  for (const text of [
+    PLANNER_WRAPPER.replace('and follow it', 'and follow it now'),
+    PLANNER_WRAPPER.replace('name = "planner"\n', ''),
+    `${PLANNER_WRAPPER}model = "x"\n`,
+    PLANNER_WRAPPER.replace('developer_instructions = """\n', 'developer_instructions = """ \n'),
+    claude.wrappers.render(PLANNER),
+    opencode.wrappers.render(PLANNER),
+    '',
+  ]) {
+    assert.ok(!codex.wrappers.isKit(text), text);
+  }
+  assert.ok(!claude.wrappers.isKit(PLANNER_WRAPPER));
+});
+
+test('refreshed keeps one or two model lines before the instructions, in place and as they are written', () => {
+  const one = PLANNER_WRAPPER.replace('developer_instructions', 'model = "gpt-6.1-sol"\ndeveloper_instructions');
+  const stale = one.replace('Writes the plan', 'Wrote the plan');
+  assert.equal(codex.wrappers.refreshed(stale, PLANNER_WRAPPER), one);
+  const two = PLANNER_WRAPPER.replace(
+    'developer_instructions',
+    'model  =  "a"\nmodel_reasoning_effort = "high"\nmodel="b"\ndeveloper_instructions',
+  );
+  assert.equal(
+    codex.wrappers.refreshed(two.replaceAll('\n', '\r\n'), PLANNER_WRAPPER),
+    PLANNER_WRAPPER.replace('developer_instructions', 'model  =  "a"\nmodel="b"\ndeveloper_instructions'),
+  );
+});
+
+test('refreshed ignores a model line after the instructions and gives the rendered wrapper without one', () => {
+  assert.equal(codex.wrappers.refreshed(`${PLANNER_WRAPPER}model = "x"\n`, PLANNER_WRAPPER), PLANNER_WRAPPER);
+  assert.equal(codex.wrappers.refreshed(PLANNER_WRAPPER, PLANNER_WRAPPER), PLANNER_WRAPPER);
+  assert.equal(codex.wrappers.refreshed('model = "x"\n', PLANNER_WRAPPER), PLANNER_WRAPPER);
+  assert.equal(codex.wrappers.refreshed('', PLANNER_WRAPPER), PLANNER_WRAPPER);
+});
+
+test("Codex's own agents are default, worker and explorer", () => {
+  assert.deepEqual(codex.wrappers.ownAgents, ['default', 'worker', 'explorer']);
+});
+
+// 0100 R5: Codex's instruction file
+
+const CODEX_FILE = (paths) =>
+  'developer_instructions = """\n' +
+  'Before anything else, read the files below in the project root and follow them. ' +
+  "They hold the project's process \\\n" +
+  'and its standards.\n\n' +
+  paths.map((path) => `- ${path}\n`).join('') +
+  '"""\n';
+
+test("Codex's init writes a missing .codex/config.toml that names the instructions", () => {
+  assert.equal(codex.instructions.file, '.codex/config.toml');
+  assert.deepEqual(codex.instructions.init(MISSING, STANDARDS), {
+    content: CODEX_FILE([PROCESS, STANDARDS]),
+    line: 'wrote .codex/config.toml',
+    notices: [],
+  });
+  assert.deepEqual(codex.instructions.init(MISSING, HOUSE), {
+    content: CODEX_FILE([PROCESS, HOUSE]),
+    line: 'wrote .codex/config.toml',
+    notices: [],
+  });
+});
+
+test("Codex's init leaves a .codex/config.toml that names both paths", () => {
+  const read = found(`model = "x"\ndeveloper_instructions = "Read ${PROCESS} and ${STANDARDS}."\n`);
+  assert.deepEqual(codex.instructions.init(read, STANDARDS), {
+    content: undefined,
+    line: `skipped .codex/config.toml, which loads ${PROCESS} and ${STANDARDS}`,
+    notices: [],
+  });
+});
+
+test("Codex's init leaves a .codex/config.toml that lacks a path, or is unreadable, with its notice", () => {
+  const skipped = "skipped .codex/config.toml, which does not name the kit's instructions";
+  assert.deepEqual(codex.instructions.init(found(`# ${PROCESS}\n`), STANDARDS), {
+    content: undefined,
+    line: skipped,
+    notices: [codexInitNotice([STANDARDS])],
+  });
+  assert.deepEqual(codex.instructions.init(found('model = "x"\n'), STANDARDS), {
+    content: undefined,
+    line: skipped,
+    notices: [codexInitNotice([PROCESS, STANDARDS])],
+  });
+  assert.deepEqual(codex.instructions.init(UNREADABLE, STANDARDS), {
+    content: undefined,
+    line: skipped,
+    notices: [codexInitNotice([PROCESS, STANDARDS])],
+  });
+});
+
+test("Codex's init and refresh add the notice of the kit's standards named beside the project's own", () => {
+  const both = found(CODEX_FILE([PROCESS, HOUSE, STANDARDS]));
+  assert.deepEqual(codex.instructions.init(both, HOUSE), {
+    content: undefined,
+    line: `skipped .codex/config.toml, which loads ${PROCESS} and ${HOUSE}`,
+    notices: [codexKitStandardsNotice(HOUSE)],
+  });
+  assert.deepEqual(codex.instructions.refresh(both, HOUSE), [codexKitStandardsNotice(HOUSE)]);
+  assert.deepEqual(codex.instructions.refresh(found(CODEX_FILE([PROCESS, STANDARDS])), STANDARDS), []);
+});
+
+test("Codex's refresh names a .codex/config.toml that is missing, unreadable or lacks paths", () => {
+  assert.deepEqual(codex.instructions.refresh(found(CODEX_FILE([PROCESS, STANDARDS])), STANDARDS), []);
+  assert.deepEqual(codex.instructions.refresh(MISSING, STANDARDS), [
+    codexRefreshNotice('it is missing', [PROCESS, STANDARDS]),
+  ]);
+  assert.deepEqual(codex.instructions.refresh(UNREADABLE, STANDARDS), [
+    codexRefreshNotice(`it cannot be read: ${UNREADABLE.error}`, [PROCESS, STANDARDS]),
+  ]);
+  assert.deepEqual(codex.instructions.refresh(found(CODEX_FILE([PROCESS])), STANDARDS), [
+    codexRefreshNotice(`it does not name ${STANDARDS}`, [STANDARDS]),
+  ]);
+});
+
+test("every notice of Codex's instruction file ends with the line that names the section", () => {
+  const SECTION = 'See "How the kit\'s instructions reach an agent" in node_modules/agentrite/SETUP.md.\n';
+  for (const notice of [
+    codexInitNotice([PROCESS]),
+    codexRefreshNotice('it is missing', [PROCESS]),
+    codexKitStandardsNotice(HOUSE),
+  ]) {
+    assert.ok(notice.endsWith(`\n\n${SECTION}`), notice);
+    for (const line of notice.split('\n')) assert.ok(line.length <= 120, line);
+  }
 });

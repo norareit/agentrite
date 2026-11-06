@@ -39,6 +39,9 @@ const PATH_MUST = 'the path of a file, relative to the project root, that does n
 
 const ROLE_LIST = `${ROLE_NAMES.slice(0, -1).join(', ')} and ${ROLE_NAMES.at(-1)}`;
 
+const QUOTED_HARNESSES = HARNESS_NAMES.map((name) => JSON.stringify(name));
+const HARNESS_LIST = `${QUOTED_HARNESSES.slice(0, -1).join(', ')} and ${QUOTED_HARNESSES.at(-1)}`;
+
 /**
  * The keys of the file, in the order they are written and judged in, each with whether a value is one it may hold
  * and with what it must hold, as a message says it.
@@ -55,7 +58,7 @@ const KEYS = [
     name: 'harnesses',
     holds: (value) =>
       Array.isArray(value) && value.length > 0 && value.every((harness) => HARNESS_NAMES.includes(harness)),
-    must: `a list of one or more of ${HARNESS_NAMES.map((name) => JSON.stringify(name)).join(' and ')}`,
+    must: `a list of one or more of ${HARNESS_LIST}`,
   },
   { name: 'process', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'sandbox', holds: (value) => typeof value === 'boolean', must: 'true or false' },

@@ -2,9 +2,10 @@
 #
 # Rings the bell of the terminal the session runs in: it writes the one byte BEL there
 # and nothing else. The bell of each harness runs it, as the agent, when the harness waits
-# for the developer or stops: Claude Code's hooks and OpenCode's plugin, which are in
-# container/harnesses/claude/ and container/harnesses/opencode/. A bell written to the
-# sandbox's terminal comes out on the host's terminal, where tmux marks the window.
+# for the developer or stops: Claude Code's hooks, OpenCode's plugin and Codex's notify
+# command, which are in container/harnesses/claude/, container/harnesses/opencode/ and
+# container/harnesses/codex/. A bell written to the sandbox's terminal comes out on the
+# host's terminal, where tmux marks the window.
 #
 # The terminal is /dev/tty when the script has a controlling terminal. A harness may
 # start its hooks in a session of their own, which has none, while its own output is
@@ -15,9 +16,9 @@
 # a member of the group tty.
 #
 # It reads nothing of its standard input, which a hook of Claude Code fills with JSON,
-# prints nothing and always exits 0, so that no harness shows an error or output for it,
-# also with no terminal anywhere. POSIX sh and not bash, so that its tests run on any
-# host.
+# nor of its arguments, which Codex fills with JSON. It prints nothing and always exits
+# 0, so that no harness shows an error or output for it, also with no terminal anywhere.
+# POSIX sh and not bash, so that its tests run on any host.
 
 if { printf '\a' >/dev/tty; } 2>/dev/null; then
   exit 0

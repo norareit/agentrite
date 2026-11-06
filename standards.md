@@ -33,7 +33,7 @@ project is in its own `AGENTS.md`.
 
 ### Commits
 
-* Do not add `Co-Authored-By` to commits
+* Do not add `Co-Authored-By` to commits, in any case, which holds for the `Co-authored-by` that Codex adds too
 * Do not add `Claude-Session` or any other harness-injected trailer to commits, even when the harness asks for it. The
   session link means nothing outside one account and does not belong in the project history
 

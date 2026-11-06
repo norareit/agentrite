@@ -16,6 +16,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { agentsListNotice, instructionsList } from '../scripts/agentrite-instructions.mjs';
 import { claudeInitNotice, claudeKitStandardsNotice, claudeLacks } from '../scripts/harnesses/claude.mjs';
+import { codex, codexInitNotice } from '../scripts/harnesses/codex.mjs';
 import { opencodeInitNotice, opencodeKitStandardsNotice, opencodeVerdict } from '../scripts/harnesses/opencode.mjs';
 import { noRepositoryNotice } from '../scripts/agentrite-hook.mjs';
 import { plannedFiles } from '../scripts/agentrite-harness.mjs';
@@ -86,8 +87,8 @@ const OPTION = '--no-sandbox';
 const NO_ORCHESTRATOR = '--no-orchestrator';
 const BRANCH = '--default-branch';
 const INIT_USAGE =
-  'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ' +
-  'claude | opencode\n       agentrite init';
+  'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>]\n' +
+  '                      claude | opencode | codex\n       agentrite init';
 
 function parsedInit(overrides) {
   return {
@@ -191,9 +192,9 @@ test('parseArgs says why and gives the usage of init for --default-branch with n
 
 test('parseArgs gives the usage of init alone for an unknown harness', () => {
   for (const rest of [
-    ['codex'],
+    ['aider'],
     ['claude', 'toString'],
-    [OPTION, 'codex'],
+    [OPTION, 'aider'],
     ['claude', `${OPTION}=1`],
     ['claude', `${NO_ORCHESTRATOR}=1`],
   ]) {
@@ -203,7 +204,7 @@ test('parseArgs gives the usage of init alone for an unknown harness', () => {
       return true;
     });
   }
-  assert.throws(() => parseArgs(['init', 'codex']), /unknown harness: codex/);
+  assert.throws(() => parseArgs(['init', 'aider']), /unknown harness: aider/);
   assert.throws(() => parseArgs(['init', 'claude', `${OPTION}=1`]), /unknown harness: --no-sandbox=1/);
   assert.throws(() => parseArgs(['init', 'claude', `${NO_ORCHESTRATOR}=1`]), /unknown harness: --no-orchestrator=1/);
   assert.throws(() => parseArgs(['init', `${BRANCH}=main`]), /unknown harness: --default-branch=main/);
@@ -233,8 +234,8 @@ test('parseArgs gives roles and run what they print for an argument they do not 
 
 test('parseArgs gives the usage of every command for no command and for one that is none of them', () => {
   const usage =
-    'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] ' +
-    'claude | opencode\n' +
+    'usage: agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>]\n' +
+    '                      claude | opencode | codex\n' +
     '       agentrite init\n' +
     '       agentrite config\n' +
     '       agentrite refresh\n' +
@@ -746,7 +747,7 @@ test('a project without playwright whose compose file exists keeps it, and exits
 });
 
 test('a usage error writes nothing and exits non-zero', (testContext) => {
-  for (const args of [[], ['init'], ['init', 'codex'], ['setup', 'claude']]) {
+  for (const args of [[], ['init'], ['init', 'aider'], ['setup', 'claude']]) {
     const { base, run, read } = project(testContext);
     const result = run(...args);
     assert.notEqual(result.status, 0, args.join(' '));
@@ -2185,4 +2186,52 @@ test('init without --sandbox-only writes process true and the shim of a project 
   assert.ok(shim.split('\n').includes(PROCESS_EXEC), shim);
   assert.doesNotMatch(shim, /sandbox-only|\{\{/);
   assert.equal(shim, fillTemplate(templates['sandbox.sh'], { mode: '', mode_comment: '' }));
+});
+
+// Unit 0100, R4, R5, R16: a project that names Codex
+
+test('init of a project of codex writes its wrappers and .codex/config.toml, and prints their lines', (context) => {
+  const { run, read } = project(context);
+
+  const result = run('init', 'codex');
+
+  assert.equal(result.status, 0, result.stderr);
+  const wrappers = plannedFiles(['codex'], KIT_ROLES);
+  assert.deepEqual(
+    wrappers.map((file) => file.path),
+    ['specifier', 'planner', 'implementer', 'reviewer'].map((name) => `.codex/agents/${name}.toml`),
+  );
+  for (const file of wrappers) {
+    assert.equal(read(file.path), file.content, file.path);
+    assert.match(result.stdout, new RegExp(`^wrote ${file.path.replaceAll('.', '\\.')}$`, 'm'));
+  }
+  const { content } = codex.instructions.init({ found: false }, KIT_SETTINGS.standards);
+  assert.equal(read('.codex/config.toml'), content);
+  assert.match(result.stdout, /^wrote \.codex\/config\.toml$/m);
+  assert.match(read('AGENTS.md'), /\.codex\/agents/);
+  assert.equal(JSON.parse(read('agentrite.json')).harnesses.join(), 'codex');
+});
+
+test('init leaves a .codex/config.toml that exists, and prints its notice', (context) => {
+  const { base, run, read } = project(context);
+  mkdirSync(join(base, '.codex'));
+  writeFileSync(join(base, '.codex', 'config.toml'), 'model = "gpt-6.1-sol"\n');
+
+  const result = run('init', 'claude', 'codex');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(read('.codex/config.toml'), 'model = "gpt-6.1-sol"\n');
+  assert.match(result.stdout, /^skipped \.codex\/config\.toml, which does not name the kit's instructions$/m);
+  const lacks = ['node_modules/agentrite/process.md', KIT_SETTINGS.standards];
+  assert.ok(result.stdout.includes(codexInitNotice(lacks)), result.stdout);
+});
+
+test('init of a project of claude and opencode writes nothing of Codex', (context) => {
+  const { base, run } = project(context);
+
+  const result = run('init', 'claude', 'opencode');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(exists(join(base, '.codex')), false);
+  assert.doesNotMatch(result.stdout, /codex/);
 });

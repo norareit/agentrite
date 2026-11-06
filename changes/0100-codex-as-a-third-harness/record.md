@@ -75,5 +75,14 @@ timestamp: 2026-11-06T14:12:53Z
 - 2026-11-06T16:04:08Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on the unit's
   branch at `537f73d`, where `npm test` passes its 1624 tests. Ticked the plan's first commit point, which the
   planner's commits made. The status is `in-progress`
+- 2026-11-06T16:24:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added a task to `plan.md`
+  before doing it: with a third harness, the usage of `init` grew to 125 characters, over the limit the commands
+  print within, and the message of a `harnesses` at fault read `"claude" and "opencode" and "codex"`, so the usage
+  gives the harnesses on a line of their own and the message joins them as the other lists of the kit do. The fake
+  harness of the wrapper's tests printed no version Codex's `readVersion` reads, so it may print `codex-cli
+  <version>`. Took one reading: the plan's case of a role named `Default` or `EXPLORER` cannot reach the refusal of
+  an agent's name, since a role's name is in lowercase letters and such a name is refused by its form first; the
+  test gives `default`, `worker` and `explorer` the refusal that names Codex, for a project of each harness, and the
+  other cases the refusal of the form
 
 ## Amendments

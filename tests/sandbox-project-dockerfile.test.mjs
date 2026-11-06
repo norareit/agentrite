@@ -14,6 +14,7 @@ import {
   hostVersions,
   installKitPackage,
   standInLabel,
+  versionPrinted,
   writeCommand,
   writeStartSettings,
 } from './wrapper-fixture.mjs';
@@ -381,7 +382,8 @@ for (const [name, labelled] of [
   );
 }
 
-for (const { name, title, start } of HARNESSES) {
+for (const harness of HARNESSES) {
+  const { name, title, start } = harness;
   test(
     `a label of the harnesses in a project's file that names the host's new ${name} does not stop a build`,
     { skip },
@@ -390,7 +392,7 @@ for (const { name, title, start } of HARNESSES) {
       const record = harnessRecord({ ...hostVersions, [name]: newVersion });
       project.writeProjectFile(adding(`LABEL ${harnessesLabel}="${record}"\n`));
       assertStarted(project, project.start('--in-place', 'echo', 'hi'), builtBoth);
-      writeCommand(project.bin, start.command, `echo '${newVersion}'`);
+      writeCommand(project.bin, start.command, `echo '${versionPrinted(harness, newVersion)}'`);
       const result = project.start('--in-place', 'echo', 'hi');
       assertStarted(project, result, builtBoth);
       const rebuilding = new RegExp(`the image holds ${title} \\S+ and ${newVersion.replaceAll('.', '\\.')} is wanted`);

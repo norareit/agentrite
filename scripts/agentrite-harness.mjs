@@ -1,4 +1,5 @@
 import { claude } from './harnesses/claude.mjs';
+import { codex } from './harnesses/codex.mjs';
 import { opencode } from './harnesses/opencode.mjs';
 
 /**
@@ -215,7 +216,7 @@ export const HARNESS_CONTRACT = [
 ];
 
 /** The harnesses the kit knows, in its order, which every listing of them follows. The kit's only list of them. */
-export const HARNESSES = [claude, opencode];
+export const HARNESSES = [claude, opencode, codex];
 
 /** The names of the harnesses, as the commands take them. */
 export const HARNESS_NAMES = HARNESSES.map((harness) => harness.name);

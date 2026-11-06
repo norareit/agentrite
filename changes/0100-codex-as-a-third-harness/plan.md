@@ -279,55 +279,59 @@ there, and the tarball is made again after any change to the kit.
 
 ### Codex's module
 
-- [ ] Write the cases of Codex's own in `tests/agentrite-harness.test.mjs`: `readVersion` of `codex-cli 0.167.0`,
+- [x] Write the cases of Codex's own in `tests/agentrite-harness.test.mjs`: `readVersion` of `codex-cli 0.167.0`,
   of the same with a second line, of a first word other than `codex-cli`, of `codex-cli` alone and of an empty output;
   `host` giving nothing; `start.role` giving no option and the opening words with the role and its file; the four
   `start` members' command lines for a session and a headless run (R1, R2, R6, R9)
-- [ ] Write the cases of the Codex wrapper in `tests/agentrite-roles.test.mjs` or beside the module's other cases:
+- [x] Write the cases of the Codex wrapper in `tests/agentrite-roles.test.mjs` or beside the module's other cases:
   the wrapper of `planner` exactly as above; a description that holds `"` and `\` escaped and wrapped with no line
   over 120; a path that holds a space, a quote and a backtick; `isKit` true for each, with CRLF, and with a `model`
   line before the instructions, and false for a file whose instructions name another body, for one that lacks the
   `name` line, and for a Markdown wrapper; `refreshed` keeping one and two `model` lines in place and their text,
   ignoring a `model` line after the instructions' line, and giving the rendered wrapper when none is there (R4)
-- [ ] Write the cases of Codex's instruction file in `tests/agentrite-instructions.test.mjs`, or where the other two
+- [x] Write the cases of Codex's instruction file in `tests/agentrite-instructions.test.mjs`, or where the other two
   harnesses' `instructions.init` and `instructions.refresh` are tested: missing, written with the content above for
   the kit's standards and for the project's own; naming both paths; lacking one and both; unreadable; the standards
   the project's own with the kit's `standards.md` named; each with its line and notices, every notice ending with
   `INSTRUCTIONS_SECTION` (R5)
-- [ ] Write the cases of Codex's headless readings in `tests/agentrite-outcome.test.mjs`, from the fixture lines
+- [x] Write the cases of Codex's headless readings in `tests/agentrite-outcome.test.mjs`, from the fixture lines
   above: the arguments without and with a session; the session from `thread.started` and none without it; the
   response the last `agent_message`'s text with two of them, none with only `error` items, none for an empty output
   and for lines that are no JSON; `follow` giving the text of an `agent_message` and nothing for each other line;
   `refused` empty for every fixture (R7, R8)
-- [ ] Write `scripts/harnesses/codex.mjs` as above, add it to `HARNESSES` after `opencode`, add it to `files` of
+- [x] Write `scripts/harnesses/codex.mjs` as above, add it to `HARNESSES` after `opencode`, add it to `files` of
   `package.json` and to the list of `tests/package-documents.test.mjs`, and add `codex` to `keywords` (R1, R4 to R9,
   R12, R13, R18)
-- [ ] Write `container/harnesses/codex/managed_config.toml` and `container/harnesses/codex/bell-config.toml` as
+- [x] Write `container/harnesses/codex/managed_config.toml` and `container/harnesses/codex/bell-config.toml` as
   above, and change the opening comment of `container/bell/ring-bell.sh` (R10, R11, R14)
-- [ ] In `tests/bell.test.mjs`, add that Codex's bell configuration runs `/etc/agentrite/bell/ring-bell.sh` and that
+- [x] In `tests/bell.test.mjs`, add that Codex's bell configuration runs `/etc/agentrite/bell/ring-bell.sh` and that
   the shared mount puts the script there (R14)
-- [ ] Make `writeInstructionFiles` make the directory of the file before it writes it (R5)
-- [ ] In `tests/agentrite-init.test.mjs` and `tests/agentrite-refresh.test.mjs`, add a project that names `codex`:
+- [x] Make `writeInstructionFiles` make the directory of the file before it writes it (R5)
+- [x] In `tests/agentrite-init.test.mjs` and `tests/agentrite-refresh.test.mjs`, add a project that names `codex`:
   `init` writes the five wrappers into `.codex/agents/` and `.codex/config.toml`, and prints their lines; `init`
   leaves an existing `.codex/config.toml` and prints its notice; `refresh` keeps a `model` key of a Codex wrapper,
   removes a Codex wrapper the kit wrote for a role the project no longer has, leaves a `.toml` of the project's own
   in `.codex/agents/`, and prints the notice of a `.codex/config.toml` that lacks a path. Keep a case of a project of
   `claude` and `opencode` whose files and printed lines are today's (R4, R5, R16)
-- [ ] In `tests/agentrite-settings.test.mjs`, add that a role named `worker`, `Default` or `EXPLORER` is refused with
+- [x] In `tests/agentrite-settings.test.mjs`, add that a role named `worker`, `Default` or `EXPLORER` is refused with
   the message that names Codex (R4)
-- [ ] In `tests/agentrite-run.test.mjs`, add `agentrite run` on a fake `codex` for an interactive and a headless run
+- [x] In `tests/agentrite-run.test.mjs`, add `agentrite run` on a fake `codex` for an interactive and a headless run
   and for each `start` of the three harnesses: the arguments it was given, the opening words before the unit's
   prompt for Codex alone, and the refusal of a missing or changed Codex wrapper as for the other two (R2, R3, R6, R20)
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add a step of Codex with its fake harness printing the fixture lines,
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add a step of Codex with its fake harness printing the fixture lines,
   and a step that resumes its session: the arguments of each, its response and session read, and what `--follow`
   shows (R2, R7, R8, R20)
-- [ ] Change the usage of `run` in `scripts/agentrite-run.mjs`: `<harness>` lists the three from `HARNESS_NAMES` as
+- [x] Change the usage of `run` in `scripts/agentrite-run.mjs`: `<harness>` lists the three from `HARNESS_NAMES` as
   today, the model ids name one of Codex's, `gpt-6.1-sol`, and `--skip-permissions` says it gives
   `--dangerously-bypass-approvals-and-sandbox` for codex, which skips every approval and Codex's own sandbox. Update
   the expected usage in `tests/agentrite-run.test.mjs`, every line at most 120 characters (R18)
-- [ ] In `tests/check-commit-message.test.mjs`, add that `Co-authored-by: Codex <noreply@openai.com>` is refused,
+- [x] In `tests/check-commit-message.test.mjs`, add that `Co-authored-by: Codex <noreply@openai.com>` is refused,
   and change the rule of `standards.md` on `Co-Authored-By` to say that it holds for the one Codex adds too (R15)
-- [ ] Run `npm test` and correct until it passes, with the tests that go over `HARNESSES` now covering Codex, such as
+- [x] Make the texts that list the harnesses read right for three, and keep them within 120 characters: the usage
+  of `init` gives the harnesses on a line of their own, under its first option, the message of a `harnesses` at fault
+  lists them as `"claude", "opencode" and "codex"`, and the fake harness of `tests/wrapper-fixture.mjs` may print its
+  version as `<command>-cli <version>`, as Codex prints it (R1, R16)
+- [x] Run `npm test` and correct until it passes, with the tests that go over `HARNESSES` now covering Codex, such as
   `tests/agentrite-sandbox.test.mjs`, `tests/sandbox-harness-names.test.mjs`, `tests/harness-versions.test.mjs` and
   `tests/sandbox-wrapper.test.mjs`. Where one of them assumed two harnesses, make it go over the list. The case of
   `tests/sandbox-wrapper.test.mjs` that holds the whole `docker compose run` of a project of `claude` and `opencode`
@@ -404,7 +408,7 @@ there, and the tarball is made again after any change to the kit.
 - [x] `feature-0100 Give the harness contract how a run starts in a role and the format of its wrappers`: the four
   members for Claude Code and OpenCode, their consumers and tests. No command's behavior changes, and the tree passes
   `npm test`
-- [ ] `feature-0100 Add Codex as a harness`: the module, its files of the sandbox, `ring-bell.sh`'s comment,
+- [x] `feature-0100 Add Codex as a harness`: the module, its files of the sandbox, `ring-bell.sh`'s comment,
   `writeInstructionFiles`, the usage of `run`, `standards.md`, `package.json` and the tests. The tree passes
   `npm test`
 - [ ] `feature-0100 Describe Codex as a harness`: the documents, the pointer package and the diagram
