@@ -25,19 +25,19 @@ becoming public. They decided that:
 The role:
 
 1. The role is one of this repository's own roles, which are not in the package. Its file opens with the front matter
-   of a role file in a form "Replacing a role or the standards" of `README.md` gives, and then first with an
-   instruction to read `process.md` and the project's standards, as "Adding a role" of `README.md` requires of an
+   of a role file in a form "Replacing a role or the standards" of `SETUP.md` gives, and then first with an
+   instruction to read `process.md` and the project's standards, as "Adding a role" of `SETUP.md` requires of an
    extra role
 2. `agentrite.json` names it in `roles` as `security-reviewer`, after `spec-reviewer`. What `npx agentrite refresh`
-   writes for it, its wrappers for Claude Code and OpenCode and its line in the list of the instruction files in use,
-   is committed
+   writes for it, its wrappers for each harness that `harnesses` of `agentrite.json` names and its line in the list of
+   the instruction files in use, is committed
 3. The role file says that the role works in one of two modes, and what it is given in each:
     * a unit review, given a unit directory whose status is `in-progress`, of the diff of the unit's branch against
       the default branch, at the commit of the branch it reviews
     * an audit, given no unit, of the tree of the default branch at the commit it audits
 4. Given a unit whose status is not `in-progress`, the role says what the status is, writes nothing, and stops
 5. The role file says that the role sets no status, and that its findings do not block `implemented`, as "Adding a
-   role" of `README.md` says of an extra role
+   role" of `SETUP.md` says of an extra role
 
 Where it runs:
 
@@ -143,12 +143,12 @@ The repository:
   project's before removing the clone. The file is text that only the human reads, and is not run.
   `--in-place`, which would mount the project's `.reviews`, was rejected: it mounts the project root as it is, which
   the sandbox does not defend against either, and the root is worked in on the host
-* **One entry whose text does not depend on the outcome.** "Adding a role" of `README.md` requires an extra role to
+* **One entry whose text does not depend on the outcome.** "Adding a role" of `SETUP.md` requires an extra role to
   write an entry in `record.md` each time it works on a unit, which is what makes the reviewer read its file. An
   entry that named the findings, counted them or said that there were none would tell a reader of the public record
   whether the unit has a weakness. Unlike the reviewer's entry, it holds no labels. An audit has no unit, and so no
   record to write in
-* **Findings that do not block.** `README.md` says the findings of an extra role do not block `implemented`. The
+* **Findings that do not block.** `SETUP.md` says the findings of an extra role do not block `implemented`. The
   human decides each finding: to have it fixed on the unit's branch, described as requirement 18 says, or to fix it
   privately and disclose it after a release. A finding the human wants fixed before a merge holds the merge, since the
   human merges
@@ -162,7 +162,7 @@ The repository:
 * Running a security review or an audit. This unit adds the role; a review is run when the human starts one
 * The role in the package, for other projects. See item 1 of "Beyond the request"
 * The kit running the role at its moment, as a step of the orchestrator or otherwise. The human starts it, as
-  "Adding a role" of `README.md` says of every extra role
+  "Adding a role" of `SETUP.md` says of every extra role
 * How a weakness is fixed privately and disclosed, such as a GitHub security advisory or a `SECURITY.md`. See item 2
   of "Beyond the request"
 * Keeping a weakness secret once it is in a branch that is pushed or in a diff that is merged. The role keeps its

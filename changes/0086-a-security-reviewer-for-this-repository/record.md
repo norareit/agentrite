@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: draft
 timestamp: 2026-10-24T23:14:27Z
 ---
 
@@ -49,5 +49,14 @@ timestamp: 2026-10-24T23:14:27Z
   except the files whose name begins with `security-` from what the implementer and the reviewer take. The status is
   `draft`
 - 2026-10-25T14:06:11Z [human] approved the spec. The status is `approved`
+- 2026-11-06T20:46:01Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in a session on the Linux host, on
+  `master` at `867f9c4`, on the human's request to bring the spec up to date with the tree before it is planned.
+  Checked each part of the tree the spec relies on against `master`. Since 0094 "Adding a role" and "Replacing a role
+  or the standards" are in `SETUP.md`, so R1, R5, two decisions and a non-goal now name `SETUP.md` in place of
+  `README.md`. Since 0100 `refresh` writes the wrappers of every role for each harness `harnesses` names, so R2 says
+  that rather than naming Claude Code and OpenCode. Nothing the spec decides changes. On the human's decision the
+  status goes back from `approved` to `draft`, so that the correction is committed on the default branch before
+  the unit has a branch, as the spec's commits before an approval are, and the human approves it again. The status
+  is `draft`
 
 ## Amendments
