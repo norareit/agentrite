@@ -386,7 +386,7 @@ there, and the tarball is made again after any change to the kit.
 - [x] In the sandbox, with `check_for_update_on_startup = true` in `~/.codex/config.toml` and in
   `/work/.codex/config.toml` in turn, an interactive start of `codex` neither writes `~/.codex/version.json` anew nor
   makes the egress proxy refuse a host of an update check. Where it does, stop as the approach says (R10)
-- [ ] Log in to Codex in the sandbox with a ChatGPT account by `codex login --device-auth`, and in another project's
+- [x] Log in to Codex in the sandbox with a ChatGPT account by `codex login --device-auth`, and in another project's
   log directory with an API key, and complete a turn with each, watching the egress proxy's refusals. Admit a host a
   turn needs with its reason, admit none that a turn does not need, and record in `record.md` what was run and what
   it showed. Where no account or key is available to the implementer, this is left to the human and recorded (R13)
@@ -399,8 +399,6 @@ there, and the tarball is made again after any change to the kit.
   session file records the step's model (R2, R7, R8)
 - [x] Have Codex make a commit in the sandbox, and record in `record.md` whether its message held a trailer and
   whether the hook refused it (R15)
-- [ ] Where Docker is not reachable from the implementer's shell, the record says so and the sandbox's checks are
-  left to the human
 
 ## Commit Points
 

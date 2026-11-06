@@ -147,5 +147,14 @@ timestamp: 2026-11-06T14:12:53Z
   interactive session of Codex in the scratch project's sandbox, `./sandbox.sh --in-place codex`, in their own terminal,
   gave it a prompt, and that the bell rang when the turn ended (R14). The implementer's runs had no terminal, which
   rings nothing
+- 2026-11-06T19:00:34Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the human's decisions on
+  what the checks of R13 left open. The turn with a login by an API key is not checked: the human has a subscription of
+  OpenAI and no key, and decided to leave it so. What was shown of it is that `api.openai.com`, to which such a login
+  sends its prompts, is reached through the proxy, by the 401 it gave a turn with no login. The hosts of
+  `oaiusercontent.com` stay out of the allowlist, as the human decided: a turn completed without them, and one is added
+  with its reason if a later run shows it is needed. Ticked the task of the logins, whose ChatGPT login was checked and
+  whose API key is left by that decision. Removed the task for a shell that cannot reach Docker, since Docker was
+  reachable and the sandbox's checks were made. Every task of `plan.md` is ticked. The status stays `in-progress`, for
+  the review
 
 ## Amendments
