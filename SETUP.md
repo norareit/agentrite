@@ -288,7 +288,7 @@ A project's settings are in `agentrite.json` at the project root, a JSON object 
 | Key             | What it holds                                         | What reads it                        |
 |-----------------|-------------------------------------------------------|--------------------------------------|
 | `defaultBranch` | The branch that units are cut from and compared with  | Change check, unit run, `approve`    |
-| `harnesses`     | The harnesses the project uses, as a list             | `init` and `refresh`                 |
+| `harnesses`     | The harnesses the project uses, as a list             | `init`, `refresh` and `./sandbox.sh` |
 | `process`       | `true` with the change process, `false` without it    | `init` and `refresh`                 |
 | `sandbox`       | `true` with the sandbox, `false` without it           | `init` and `refresh`                 |
 | `bell`          | `true` for a sandbox that rings, `false` for none     | `./sandbox.sh`, at each start        |
@@ -381,12 +381,14 @@ A setting is changed by editing the file by hand. What to run afterwards:
 * `bell`: nothing. It holds from the next start of the sandbox
 * `orchestrator`: nothing. It holds from the next run of `agentrite orchestrate`
 * A harness added to `harnesses`: `npx agentrite refresh` writes its wrappers. The wrapper directories that the
-  project's `AGENTS.md` lists are the project's to bring up to date
+  project's `AGENTS.md` lists are the project's to bring up to date. The next start of the sandbox builds its image
+  again with the harness, as "Holding a harness version" in `SANDBOX.md` says
 * `sandbox` set to `true`: `npx agentrite init` writes the files of the sandbox that are missing
 * A role of the project's own added to `roles`: `npx agentrite refresh` writes its wrappers and the list
 * A role taken out of `roles`, or renamed: `npx agentrite refresh` removes the wrappers of the old name, as "agentrite
   refresh" in `COMMANDS.md` says, and writes those of the new one
-* A harness taken out, or `sandbox` set to `false`: no command removes a file, and what is left is removed by hand
+* A harness taken out, or `sandbox` set to `false`: no command removes a file, and what is left is removed by hand.
+  The next start of the sandbox builds its image again without a harness taken out
 * `process` set to `false`: `npx agentrite refresh` rewrites `sandbox.sh` as the shim of a sandbox-only project. No
   command removes a file of the process, and what is left, the wrappers, the list and the `commit-msg` hook among it,
   is removed by hand. Until `refresh` is run, the sandbox runs as the shim it has says

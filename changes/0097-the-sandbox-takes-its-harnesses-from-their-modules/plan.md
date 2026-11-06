@@ -315,20 +315,20 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 ### The documents
 
-- [ ] Rewrite "Adding a harness" of `CONTRIBUTING.md`: under the contract, the `sandbox` group, what each member asks
+- [x] Rewrite "Adding a harness" of `CONTRIBUTING.md`: under the contract, the `sandbox` group, what each member asks
   of a new harness, and its directory `container/harnesses/<name>/`; remove the entries of the image, the choice of
   its version, its own updates, the directories of its logs, the allowlist hosts, the bell, the status line and the
   session retention; keep those of the login, the trailers, the terminal variables and the rest; and name, among the
   tests, those that go over the list and those of a harness's own (R17)
-- [ ] Change `SANDBOX.md`: the probe host is the npm registry and the table of `KIT_ALLOWLIST` says which hosts are
+- [x] Change `SANDBOX.md`: the probe host is the npm registry and the table of `KIT_ALLOWLIST` says which hosts are
   admitted for which harness and only when the project names it; "Holding a harness version" says the image holds the
   project's harnesses only, records them in one label, and is built again at the next start after `harnesses`
   changes, naming both lists; a harness the project does not name is not in the sandbox; the image and the log
   directories of "Where things are kept on the host" say the same; and any other sentence the change makes untrue,
   such as the self-check's probe (R17)
-- [ ] Read `SETUP.md` for what it says of the image, the labels, the allowlist and the probe, and change what is no
+- [x] Read `SETUP.md` for what it says of the image, the labels, the allowlist and the probe, and change what is no
   longer true (R17)
-- [ ] Check every changed line against the limit of 120 characters (R17)
+- [x] Check every changed line against the limit of 120 characters (R17)
 
 ## Verification
 
@@ -353,5 +353,5 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
   `npm test`
 - [x] `feature-0097 Take the harnesses of the sandbox from their modules`: the moved files, the Dockerfile, the compose
   files, the wrapper, the entrypoint and the sandbox's tests. The tree passes `npm test`
-- [ ] `feature-0097 Describe the sandbox's harness modules`: `CONTRIBUTING.md`, `SANDBOX.md` and `SETUP.md`
+- [x] `feature-0097 Describe the sandbox's harness modules`: `CONTRIBUTING.md`, `SANDBOX.md` and `SETUP.md`
 - [ ] `feature-0097 Record the implementation and the verification`: the implementer's entries in `record.md`

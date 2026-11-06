@@ -385,17 +385,22 @@ Everything else is denied, whatever its port or address.
 
 The allowlist is two lists together. Both are checked the same way, and a host in both is admitted once.
 
-`KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit itself needs. They need no listing
-in a project, and a kit release that needs another host adds it there, with no change to any project:
+`KIT_ALLOWLIST`, in the kit's `container/compose.yml`, holds the hosts the kit itself needs: its own host, and the
+hosts of each harness the project's `agentrite.json` names under `harnesses`, which the wrapper adds at each start.
+They need no listing in a project, and a kit release that needs another host adds it, with no change to any project.
+A harness's hosts are admitted only in a project that names that harness:
 
-| Host                  | What it is for                                                    |
-|-----------------------|-------------------------------------------------------------------|
-| `api.anthropic.com`   | The probe host, and the API Claude Code uses                      |
-| `platform.claude.com` | Claude Code contacts it at start-up when it holds no saved login  |
-| `models.opencode.ai`  | OpenCode fetches its model catalog from it                        |
-| `auth.openai.com`     | OpenCode logged in with a ChatGPT account signs in there          |
-| `chatgpt.com`         | OpenCode logged in with a ChatGPT account sends its prompts there |
-| The npm registry      | `npm ci` and `npm install` inside the container                   |
+| Host                  | Admitted                 | What it is for                                                      |
+|-----------------------|--------------------------|---------------------------------------------------------------------|
+| The npm registry      | Always                   | The probe host, and `npm ci` and `npm install` inside the container |
+| `api.anthropic.com`   | When it names `claude`   | The API Claude Code uses                                            |
+| `platform.claude.com` | When it names `claude`   | Claude Code contacts it at start-up when it holds no saved login    |
+| `models.opencode.ai`  | When it names `opencode` | OpenCode fetches its model catalog from it                          |
+| `auth.openai.com`     | When it names `opencode` | OpenCode logged in with a ChatGPT account signs in there            |
+| `chatgpt.com`         | When it names `opencode` | OpenCode logged in with a ChatGPT account sends its prompts there   |
+
+A project's `sandbox/compose.project.yml` does not set `KIT_ALLOWLIST`, nor the build arguments `HARNESS_PACKAGES`,
+`HARNESS_RECORD` and `HARNESS_DIRECTORIES`, which are the kit's to set, and a start refuses a file that sets one.
 
 `ALLOWLIST`, in the project's `sandbox/compose.project.yml`, holds what the project needs besides, and may be empty
 or left out. Add the API host of any other model provider the project's agents use, and whatever its tools and
@@ -418,10 +423,12 @@ services:
         OPENCODE_VERSION: 1.18.33
 ```
 
-A project holds a version by adding the build argument to its `sandbox/compose.project.yml`, for either harness or
-for both. Give an exact version.
+A project holds a version by adding the build argument to its `sandbox/compose.project.yml`, for any of its
+harnesses. Give an exact version. The argument of a harness the project does not name is ignored.
 
-The image holds Claude Code and OpenCode. For each on its own, the version is the first of these that exists:
+The image holds the harnesses the project's `agentrite.json` names under `harnesses`, and no other: of Claude Code
+and OpenCode, either or both. A harness the project does not name is not in the sandbox, and its command is not
+found there. For each harness on its own, the version is the first of these that exists:
 
 1. the version the project's `sandbox/compose.project.yml` gives
 2. the version installed on the host
@@ -431,19 +438,30 @@ With neither of the two, the image gets the latest published version at the time
 The host's version:
 
 * It is what `claude --version` and `opencode --version` print, for the command on the `PATH` of whoever runs
-  `./sandbox.sh`
+  `./sandbox.sh`. Only the harnesses the project names are asked
 * A harness that is not there, or that is reached only through a shell alias, counts as not installed
 * So does one whose command is there and prints no version, and the wrapper says so at each start
 
 A newer version:
 
 * At each start the wrapper compares the versions it wants with those the image was built with, which the image
-  holds as two labels, and builds the image again by itself when they differ, saying which harness and why. So no
-  flag is needed after a harness is updated on the host
+  holds in one label, `com.ritenoar.agentrite.harnesses`, as words such as `claude@2.1.288 opencode@1.18.33`, and
+  builds the image again by itself when they differ, saying which harness and why. So no flag is needed after a
+  harness is updated on the host
 * A harness with neither source has the latest published version. The sandbox keeps that version until the image is
   built again, whatever is published in the meantime. `./sandbox.sh --in-place --rebuild` builds it again, and is how
-  such a sandbox gets a newer one. A build for another reason, such as an update of the other harness on the host,
+  such a sandbox gets a newer one. A build for another reason, such as an update of another harness on the host,
   brings the latest too
+
+Another set of harnesses:
+
+* `agentrite.json` is read at each start. When the harnesses the image holds are not those it names, a harness
+  added or one taken away, the wrapper builds the image again at the next start, saying which harnesses the image
+  holds and which the file names, as in `the image holds the harnesses claude and opencode, and agentrite.json names
+  claude`
+* The new image holds the harnesses the file names, and the allowlist and the mounts of a run are theirs alone. A
+  harness taken away keeps its sessions and its login in the project's log directory, where a later image that holds
+  it finds them again
 
 To see what an image holds, read its labels, where `<image>` is as "Where things are kept on the host" has it, or
 ask the harness in the sandbox:
@@ -520,20 +538,21 @@ What the file must not do besides, with what goes wrong and what to do instead:
   then, and the tool fails when it writes elsewhere. Point its cache and its settings into the home or `/tmp`, as
   with an environment variable the tool reads
 * Install or upgrade Claude Code or OpenCode. The image then holds another version than the kit takes it to hold.
-  Hold a version as "Holding a harness version" says
-* Set an environment variable the kit's image sets: `DISABLE_AUTOUPDATER`, `DISABLE_UPDATES` and `OPENCODE_CONFIG`,
-  which keep the harnesses from updating themselves, and `PLAYWRIGHT_BROWSERS_PATH`, where the browser tests find
-  the browser. Setting one anew changes how the harnesses or the browser tests behave. Leave them as the kit's image
-  sets them
+  Hold a version as "Holding a harness version" says, and name a harness in `agentrite.json` to have it installed
+* Set `PLAYWRIGHT_BROWSERS_PATH`, which the kit's image sets to where the browser tests find the browser. Setting it
+  anew changes how the browser tests behave. Leave it as the kit's image sets it. The variables that keep the
+  harnesses from updating themselves, `DISABLE_AUTOUPDATER` and `DISABLE_UPDATES` for Claude Code and
+  `OPENCODE_CONFIG` for OpenCode, are given to every run, and stand above what the file sets
 
 For a build of the file that fails, see "When something goes wrong".
 
 ## The status line
 
-A developer's own Claude Code status line is shown in the sandbox. When `~/.claude/statusline-command.sh` is a file
-on the host as the sandbox starts, the wrapper mounts it read-only at `/etc/claude-code/statusline-command.sh`,
-together with the kit's `container/claude-managed-settings.json` at `/etc/claude-code/managed-settings.json`, whose
-one setting runs the script with `bash`. With no such file on the host, neither is mounted.
+A developer's own Claude Code status line is shown in the sandbox of a project that names `claude`. When
+`~/.claude/statusline-command.sh` is a file on the host that can be read as the sandbox starts, the wrapper mounts it
+read-only at `/etc/claude-code/statusline-command.sh`, together with the kit's
+`container/harnesses/claude/managed-settings.json` at `/etc/claude-code/managed-settings.json`, whose one setting
+runs the script with `bash`. With no such file on the host, neither is mounted.
 
 * That script is the only file under the host's `~/.claude` the sandbox can read, and the agent cannot change it.
   The credentials, the settings and the history stay on the host, apart from the number of "How long Claude Code's
@@ -557,8 +576,9 @@ The harnesses in the sandbox ring the terminal's bell when they need the develop
 * OpenCode each time a session goes idle and each time it asks for a permission
 
 It rings in every project whose `agentrite.json` holds `"bell": true`, which the file `init` and `config` write
-holds. Nothing is set in the home volume or on the host: the wrapper mounts the kit's `container/bell/` read-only at
-each start, with Claude Code's hooks as managed settings and OpenCode's plugin named in its configuration.
+holds. Nothing is set in the home volume or on the host: the wrapper mounts the kit's `container/bell/ring-bell.sh`
+read-only at each start, and for each harness the project names its file of `container/harnesses/<name>/`, Claude
+Code's hooks as managed settings and OpenCode's plugin named in its configuration.
 
 * The bell is the one byte BEL, written to the session's terminal. It comes out on the terminal the sandbox was
   started from, and through it tmux, which marks the window whose pane rang
@@ -610,10 +630,12 @@ back".
 
 Claude Code and OpenCode each keep a log of every session on disk: what was asked, what was answered and how many
 tokens it took. In the sandbox those logs are on the host and not in the home volume. In every run, whatever is
-mounted at `/work`, the wrapper mounts two directories of the host over the two in the agent's home that hold them.
+mounted at `/work`, the wrapper mounts a directory of the host over each directory in the agent's home that holds
+the logs of a harness the project names.
 
 Every run of one project root uses that directory: a unit run of any branch, `--in-place` and `--workdir` alike.
-The wrapper makes it, with the two directories in it, as the developer, before the container starts.
+The wrapper makes it, with the directories of the project's harnesses in it, as the developer, before the container
+starts.
 
 `<logs>` is the project's log directory, `<data>/agentrite/<name>`:
 
@@ -621,7 +643,7 @@ The wrapper makes it, with the two directories in it, as the developer, before t
 * `<name>` is the name of the project root's directory, so a project at `~/projects/norareit` has
   `~/.local/share/agentrite/norareit/`
 
-It holds:
+It holds, of each harness the project names or named before:
 
 * `<logs>/.claude/projects`, mounted at `/home/agent/.claude/projects`: Claude Code's sessions. A sandboxed session
   is started in `/work`, so Claude Code's sessions are under `.claude/projects/-work`
@@ -632,7 +654,7 @@ It holds:
   sessions are kept", alone. The wrapper writes the file of a number at a start when the host holds that number
   and the file is not there yet, and changes or removes none, so one is left for each number the host has held
 
-The two directories have the places they have in a home, so a tool on the host that reads the harnesses' logs is
+The directories have the places they have in a home, so a tool on the host that reads the harnesses' logs is
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
@@ -681,20 +703,22 @@ It holds:
 * whatever else a harness keeps in its home
 * the npm cache
 
-Two directories in the home are not of the volume: the harnesses' sessions, and with them OpenCode's login, are in
-the project's log directory on the host.
+The directories of the harnesses' logs in the home are not of the volume: the harnesses' sessions, and with them
+OpenCode's login, are in the project's log directory on the host.
 
 ```sh
 docker volume ls
 docker volume rm <project>_agent-home
 ```
 
-Removing the volume discards Claude Code's saved login. The next start creates a new volume owned by the agent.
+Removing the volume discards the harnesses' saved logins, such as Claude Code's. The next start creates a new volume
+owned by the agent.
 
 **The image**
 
 What the wrapper builds for the project's sandbox. `<image>` is the `image:` of the project's
-`sandbox/compose.project.yml`. It holds Claude Code and OpenCode. For which versions, see "Holding a harness version".
+`sandbox/compose.project.yml`. It holds the harnesses the project's `agentrite.json` names. For which versions, and
+what a change of `harnesses` does, see "Holding a harness version".
 
 ```sh
 docker image rm <image>
@@ -979,7 +1003,7 @@ Why: the kit checks no version of either harness. What it promises for no versio
 * that both harnesses start with the kit's allowlist alone
 * that the login command for OpenCode in this section names a method that exists
 * that the developer's status line shows through the managed settings
-* that the environment variables and the configuration file the image sets do switch self-update off
+* that the environment variables and the configuration file a run is given do switch self-update off
 
 What to do, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that
 works in the project's `sandbox/compose.project.yml`.
