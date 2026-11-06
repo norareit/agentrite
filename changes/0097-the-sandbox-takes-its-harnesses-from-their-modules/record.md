@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-06T10:15:15Z
 ---
 
@@ -19,5 +19,6 @@ timestamp: 2026-11-06T10:15:15Z
   project's `harnesses` setting names, and a change of the setting makes a build due. Requirements 4, 5, 7, 9, 10,
   13, 16 and 17 now speak of the project's harnesses, a decision says why, the threat model covers the setting, and
   the non-goal that excluded it is narrowed. `BTR2` is declined, which the spec now marks. The status is `draft`
+- 2026-11-06T10:49:22Z [human] approved the spec. The status is `approved`
 
 ## Amendments
