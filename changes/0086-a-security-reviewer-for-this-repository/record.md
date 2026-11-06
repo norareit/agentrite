@@ -98,5 +98,8 @@ timestamp: 2026-10-24T23:14:27Z
 - 2026-11-06T21:39:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on `ad22633`, whose tree differs
   from this commit's only in `record.md`: `npm test` passed, 1720 tests with none failed, `npm run check-changes` exited
   `0`, and `npm run kit -- refresh` found every file up to date. The status is `in-progress`
+- 2026-11-06T21:47:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the human's decision that
+  S1 of the review at `5abc8d7` is settled by the correction in `ad22633`. On the human's decision the status is not yet
+  set to `implemented`. The status is `in-progress`
 
 ## Amendments
