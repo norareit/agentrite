@@ -58,5 +58,9 @@ timestamp: 2026-10-24T23:14:27Z
   status goes back from `approved` to `draft`, so that the correction is committed on the default branch before
   the unit has a branch, as the spec's commits before an approval are, and the human approves it again. The status
   is `draft`
+- 2026-11-06T21:08:52Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision that the
+  role file need not say which of the four roles it runs before or after, which "Adding a role" of `SETUP.md` asks of
+  an extra role: whoever starts a review chooses its moment, and the kit reads no such line. The spec is unchanged.
+  The status is `draft`
 
 ## Amendments
