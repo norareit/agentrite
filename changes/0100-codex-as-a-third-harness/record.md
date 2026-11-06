@@ -156,5 +156,12 @@ timestamp: 2026-11-06T14:12:53Z
   whose API key is left by that decision. Removed the task for a shell that cannot reach Docker, since Docker was
   reachable and the sandbox's checks were made. Every task of `plan.md` is ticked. The status stays `in-progress`, for
   the review
+- 2026-11-06T19:06:12Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, fully reviewed unit 0100 at
+  `f822c7ceb3235dbcde0affc1c375e3a74b557d05` against merge base `41ad28c`. Returned C1, saved in
+  `.reviews/0100-codex-as-a-third-harness/review-2026-11-06T190612Z.md`. Independently ran `npm test`: 1720 passed,
+  none failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` passed, and added source and
+  text lines meet the line limit. Did not independently reproduce the recorded live Codex authentication, turns,
+  cross-container resume, managed configuration precedence and trust, real orchestrator run, commits or terminal
+  bell; the findings file distinguishes those limits and the recorded decisions. The status stays `in-progress`
 
 ## Amendments
