@@ -84,5 +84,14 @@ timestamp: 2026-11-06T10:15:15Z
   `git diff --check master...HEAD` passed. Not repeated: the live dev-sandbox smoke run, real single-harness builds
   or transitions against an existing home volume, a host without npm, bash 3.2, or shellcheck. The status stays
   `in-progress`
+- 2026-11-06T12:52:39Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied the findings of
+  `.reviews/0097-the-sandbox-takes-its-harnesses-from-their-modules/review-2026-11-06T124601Z.md`. P1 is applied in
+  `cd702fc`: the helper's tests take every subset of `HARNESSES`, `claude` alone among them, and a test holds that they
+  are the 2^n - 1 subsets of one or more. C1 is applied in `6543967`: "sandbox.sh" of `COMMANDS.md` says that a start
+  reads and judges `harnesses` with `bell`, holds only the named harnesses and builds again after a change of the
+  list, and names the refusals of a version of another shape and of the kit's build arguments and `KIT_ALLOWLIST`;
+  `SETUP.md` and `SANDBOX.md` no longer say that such a start reads or judges `bell` alone. `node --test
+  --test-timeout=60000 tests/*.test.mjs` passed 1552 tests on `6543967`, none failed, cancelled or skipped. The status
+  stays `in-progress`
 
 ## Amendments
