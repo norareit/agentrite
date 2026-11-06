@@ -61,5 +61,8 @@ timestamp: 2026-11-06T14:12:53Z
       What each requires is unchanged. A new decision, "The spec names files a reader meets, and leaves the kit's
       own code to the plan", records which paths the spec keeps and why. For the plan: nothing changes but the
       references, since the plan already gives the files
+- 2026-11-06T15:46:56Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, recorded that the human agreed to the
+  correction by F1: this repository adopts Codex when it updates to the release that holds this unit, and not in
+  this unit. The status stays `approved`
 
 ## Amendments
