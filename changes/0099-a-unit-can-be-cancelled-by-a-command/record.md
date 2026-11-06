@@ -32,5 +32,15 @@ timestamp: 2026-11-06T14:07:38Z
   is `approved`
 - 2026-11-06T15:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
   branch at `aa4530d`. The status is `in-progress`
+- 2026-11-06T15:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the unit in four commits,
+  `e79d296` for the shared record module, then the pure parts, the command and the documents, the last being `8d1a7b3`
+  on the plan's commit points. Every task of `plan.md` is ticked. `npm test` reported 1591 passing and 0 failing, and
+  `npm run check-changes` passed, both on the tree of the documents commit, before this entry. `node
+  scripts/agentrite.mjs` prints the line of `cancel` after that of `approve`. A search of `process.md`, `roles/`,
+  `README.md`, `SETUP.md`, `COMMANDS.md` and `SANDBOX.md` found no statement of the old rule left, and the statement
+  of `./sandbox.sh` in `COMMANDS.md` is unchanged. The commit trailer the attribution reminder asks for was left out,
+  since the `commit-msg` hook refuses `Co-Authored-By`. The root `process.md` was changed, and the copy in
+  `node_modules/agentrite` was not, as it is installed. Not checked: a run of the command on a real unit. The status
+  is `in-progress`
 
 ## Amendments
