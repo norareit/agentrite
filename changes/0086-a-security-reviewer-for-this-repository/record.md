@@ -63,5 +63,13 @@ timestamp: 2026-10-24T23:14:27Z
   an extra role: whoever starts a review chooses its moment, and the kit reads no such line. The spec is unchanged.
   The status is `draft`
 - 2026-11-06T21:09:00Z [human] approved the spec. The status is `approved`
+- 2026-11-06T21:15:14Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `feature-0086-a-security-reviewer-for-this-repository` from `master` at `8be0853` and wrote `plan.md` against it.
+  A dry run of the installed release's `refresh` in a copy of the tree, with the role added, wrote its two wrappers
+  and its line in `.agentrite/instructions.md` and found every other file up to date. Two readings that are the only
+  ones that work: a proof of concept is saved inside the finding it confirms, since R13 allows one findings file and
+  R16 no other file under `.reviews` that names a finding, so R12's findings directory holds it as part of that file;
+  and on a variant a unit review is started with `--variant <name>`, the only way to run on a variant's branch, which
+  R13 supports. The status is `approved`
 
 ## Amendments
