@@ -51,9 +51,9 @@ read.
 
 ## Requirements
 
-1. `scripts/harnesses/codex.mjs` implements `HARNESS_CONTRACT` for Codex, named `codex` and titled `Codex`, and stands
-   in `HARNESSES` after `claude` and `opencode`. A project can name `codex` in `harnesses`, and every command that goes
-   over the harnesses takes it as it takes the other two
+1. A module of its own implements `HARNESS_CONTRACT` for Codex, beside the modules of the other two, named `codex`
+   and titled `Codex`, and stands in `HARNESSES` after `claude` and `opencode`. A project can name `codex` in
+   `harnesses`, and every command that goes over the harnesses takes it as it takes the other two
 2. The contract has a member of `start` through which a harness says how a run starts in a role, given the role's
    name and its file: the options it adds and the words the prompt opens with, if any. `harnessCommand` names no
    option of its own for the role. Claude Code and OpenCode are given `--agent <role>` as today, and their prompts are
@@ -99,17 +99,17 @@ read.
     key each complete a turn in the sandbox. A host Codex needs beyond these, found when the implementer runs it, is
     added with its reason, and a host it contacts that is not needed for a turn is not admitted. The implementer
     records in `record.md` what was run and what it showed
-14. With `"bell": true`, Codex in the sandbox rings the bell through `container/bell/ring-bell.sh` when a turn ends,
-    from a file of `container/harnesses/codex/` if it needs one. With `false`, nothing of its bell is given to a run
-15. The trailer check of `container/check-commit-message.mjs` refuses any trailer Codex adds of its own to a commit
+14. With `"bell": true`, Codex in the sandbox rings the bell through the sandbox's bell script, which the other two
+    harnesses ring it through, when a turn ends. With `false`, nothing of its bell is given to a run
+15. The sandbox's check of a commit message's trailers refuses any trailer Codex adds of its own to a commit
     message, if it adds one, and the rule on trailers in `standards.md` names it. The implementer records in
     `record.md` whether a commit Codex made in the sandbox held a trailer
 16. In a project whose harnesses are `claude` and `opencode`, nothing changes: the files `init` and `refresh` write,
     the commands `agentrite run` and the orchestrator start, the image, the allowlist and the mounts are as before
     this unit
-17. This repository names `codex` in its own `agentrite.json`, and holds its Codex wrappers and its
-    `.codex/config.toml` as `refresh` writes them. The table "What the repository holds besides the package" of
-    `CONTRIBUTING.md` lists `.codex/`
+17. This repository's own files at its root are as before this unit: its `agentrite.json` does not name `codex`, and
+    it holds no Codex wrappers and no `.codex/config.toml`. The suite's checks of the root against the installed
+    release hold as before
 18. The places of "Adding a harness" that are outside the module name Codex where they name each harness: the usage
     of `agentrite run`, the documents, the `keywords` of `package.json`, the pointer package's text and the
     components diagram, with its SVG generated. `SETUP.md` says how the kit's instructions reach Codex, that Codex
@@ -166,8 +166,23 @@ read.
   that a refusal would have stopped goes on to its outcome instead
 * **The default orchestrator and the project template are unchanged.** Codex is a harness a project chooses. Adding it
   to `templates/project/agentrite.json` would put a third package and its hosts into every new project's image, and
-  changing `orchestrator.json` is a choice of models, not of the kit's support of a harness. This repository names it,
-  so that the kit's own work runs on it and its files are dog-fooded
+  changing `orchestrator.json` is a choice of models, not of the kit's support of a harness
+* **This repository adopts Codex with the release that holds this unit, not in this unit.** The spec as approved had
+  this repository name `codex` and hold its Codex files in this unit, so that its files are dog-fooded. The review of
+  the spec after the approval found that this breaks "The kit's own copy of the kit" of `CONTRIBUTING.md`: the root is
+  a project of the installed release, its `agentrite.json` is that release's default file with this repository's
+  roles added, the installed release's `refresh` changes none of its files, the suite checks both, and the root
+  changes only when the repository moves to the release that holds the change. The installed release knows no
+  `codex` and would refuse the root's settings, so its `refresh`, its `roles` and its sandbox would stop working
+  here. Recording an exception to that rule was rejected because it would leave the repository unable to run its
+  own kit until the release; the dog-fooding comes when the repository updates to that release, as any project
+  that wants Codex would
+* **The spec names files a reader meets, and leaves the kit's own code to the plan.** `process.md` says a spec holds
+  no file paths. The spec names the files a project holds or Codex reads, as `.codex/config.toml`,
+  `.codex/agents/<role>.toml`, `~/.codex` and `agentrite.json`, since where they are is what Codex and a project
+  see, and the documents by their names, since the rules of `AGENTS.md` on the documents are given by name. Where
+  the kit's own code and the sandbox's files are, the module of Codex and its files among them, is the plan's. The
+  context names files as they are today, to say what exists
 * **The adversary is the agent in the container, as for the sandbox as a whole.** What makes Codex trust `/work`, and
   what turns its update check off, is the installed kit's, which a unit run's agent cannot write. Trusting `/work`
   gives the agent nothing it lacks: the project's `.codex/` that trust loads is a file the agent can write anyway.

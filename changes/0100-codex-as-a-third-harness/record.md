@@ -40,5 +40,26 @@ timestamp: 2026-11-06T14:12:53Z
   could not independently verify the earlier prompt and execution experiments, live authentication and required
   hosts, or protected sandbox configuration and precedence, as detailed in the findings file. The status stays
   `approved`
+- 2026-11-06T15:31:35Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the unit's branch at `badb251`,
+  at the human's request, checked the three findings of the spec review against the repository and corrected
+  `spec.md` by them. All three hold. The changes, for the planner to bring `plan.md` in line with:
+    * F1, accepted. Requirement 17 is replaced. It said this repository names `codex` in its own `agentrite.json`
+      and holds its Codex wrappers and `.codex/config.toml`, with `.codex/` in the table of `CONTRIBUTING.md`. It
+      now says the root's own files are as before this unit, with no `codex`, no Codex wrappers and no
+      `.codex/config.toml`, and the suite's checks of the root against the installed release hold as before.
+      Release 8.3.0, the installed one, knows no `codex`, and "The kit's own copy of the kit" of `CONTRIBUTING.md`
+      changes the root only when the repository moves to the release that holds the change. A new decision, "This
+      repository adopts Codex with the release that holds this unit, not in this unit", gives the reasons, and the
+      sentence on dog-fooding is gone from the decision on the default orchestrator and the project template. For
+      the plan: both tasks under "This repository's own files" go, and so does `.codex/` in the table of
+      `CONTRIBUTING.md`
+    * F2, moot by F1. It found that requirement 17 had `refresh` write `.codex/config.toml`, which by requirement 5
+      only `init` writes. The new requirement 17 names no command. Requirement 5 is unchanged
+    * F3, accepted. Requirements 1, 14 and 15 no longer name where the kit's code is: requirement 1 says a module of
+      its own beside the other two harnesses' modules, requirement 14 says the sandbox's bell script and drops the
+      file of Codex's own directory, and requirement 15 says the sandbox's check of a commit message's trailers.
+      What each requires is unchanged. A new decision, "The spec names files a reader meets, and leaves the kit's
+      own code to the plan", records which paths the spec keeps and why. For the plan: nothing changes but the
+      references, since the plan already gives the files
 
 ## Amendments
