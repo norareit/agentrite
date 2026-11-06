@@ -101,5 +101,11 @@ timestamp: 2026-10-24T23:14:27Z
 - 2026-11-06T21:47:06Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded the human's decision that
   S1 of the review at `5abc8d7` is settled by the correction in `ad22633`. On the human's decision the status is not yet
   set to `implemented`. The status is `in-progress`
+- 2026-11-06T21:51:21Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in a session on the Linux host, on the
+  unit's branch at `72087a6`, on the human's decision that a security finding is labelled `SEC1`, `SEC2` and on: the
+  kit's reviewer labels a finding of spec conformance `S1`, in the same directory of `.reviews` and in the public
+  record, so the two would be taken for each other. Corrected R14 and added the decision "Labels of their own". The
+  human decided the change in this session and asked for it to be implemented after it, so the status is not set back.
+  The status is `in-progress`
 
 ## Amendments

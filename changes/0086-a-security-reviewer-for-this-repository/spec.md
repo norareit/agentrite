@@ -79,8 +79,8 @@ Its findings:
     `.reviews/security-audit-<commit>.md`, with the commit reviewed, so that a later review does not overwrite an
     earlier one. On a variant's branch the name ends in `--<name>.md` with the variant's name, as `process.md` says of
     the reviews of a variant
-14. Each finding has a label, `S1`, `S2` and on, and gives: where it is; what is wrong; how it is exploited and from
-    what position of the adversary; whether a proof of concept confirmed it or it is plausible from reading; its
+14. Each finding has a label, `SEC1`, `SEC2` and on, and gives: where it is; what is wrong; how it is exploited and
+    from what position of the adversary; whether a proof of concept confirmed it or it is plausible from reading; its
     severity, one of `critical`, `high`, `medium` and `low`; a fix; and how weaknesses of its kind can be kept out in
     future, as a rule for the standards or `AGENTS.md`, a test or a check
 15. The role reports its findings in its response, and says in which file it saved them
@@ -154,6 +154,11 @@ The repository:
   human merges
 * **Prevention in each finding.** The human asked most for ways to keep weaknesses out in future, so each finding
   carries one, as a rule, a test or a check, which the human can make a unit of their own
+* **Labels of their own.** The kit's reviewer labels its findings by axis, as `S1` for spec conformance, `P1` for plan
+  fidelity and `C1` for code quality, and saves them in the same directory of `.reviews`, and its labels reach the
+  public record. A security finding labelled `S1` would be taken for a finding of spec conformance, and a reader of
+  the record would take each finding of spec conformance for a security finding. The human chose `SEC1`, which no
+  axis of the reviewer begins with
 * **A four-level severity.** `critical`, `high`, `medium` and `low` are common enough to need no definition in the
   role file beyond a line each, and let the human order the findings
 
