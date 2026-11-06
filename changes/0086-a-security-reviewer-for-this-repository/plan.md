@@ -168,14 +168,14 @@ The repository:
 
 ## Verification
 
-- [ ] `npm test` passes on the committed tree (R19)
-- [ ] `npm run check-changes` passes on the committed tree (R19)
-- [ ] `npm run kit -- refresh` at the root prints `up to date` for every file and changes nothing (R2)
-- [ ] Each of requirements 1 and 3 to 17 is checked against the text of `extra-roles/security-reviewer.md`, and
+- [x] `npm test` passes on the committed tree (R19)
+- [x] `npm run check-changes` passes on the committed tree (R19)
+- [x] `npm run kit -- refresh` at the root prints `up to date` for every file and changes nothing (R2)
+- [x] Each of requirements 1 and 3 to 17 is checked against the text of `extra-roles/security-reviewer.md`, and
   requirement 18 against `AGENTS.md`, and each link of the role file resolves from `extra-roles/`
-- [ ] Nothing committed by the unit names a weakness of the kit: the role file and `AGENTS.md` describe kinds of
+- [x] Nothing committed by the unit names a weakness of the kit: the role file and `AGENTS.md` describe kinds of
   weakness and how findings are kept, and name no finding (R16, R18)
-- [ ] Every line of the changed and new files is within 120 characters
+- [x] Every line of the changed and new files is within 120 characters
 
 ## Commit Points
 
@@ -183,5 +183,5 @@ The repository:
 - [x] `feature-0086 Add the security reviewer as a role of this repository`: the tasks of the test and of the role,
   which only pass together
 - [x] `feature-0086 Keep security findings out of what is committed`: the task of the repository
-- [ ] `feature-0086 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
+- [x] `feature-0086 Record the verification`: the ticks of "Verification" and the entry in `record.md` that says
   what was run on the committed work

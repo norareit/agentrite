@@ -73,5 +73,16 @@ timestamp: 2026-10-24T23:14:27Z
   R13 supports. The status is `approved`
 - 2026-11-06T21:20:56Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
   `feature-0086-a-security-reviewer-for-this-repository` at `f4424d3`, began the work. The status is `in-progress`
+- 2026-11-06T21:23:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, did every task of `plan.md` in
+  order, in `76fa6c3` and `0fb2225`. The changed test of the listing of `roles` failed before the role was added, on the
+  missing `security-reviewer`, and passed after. `npm run kit -- refresh` wrote the two wrappers, neither pinning a
+  model, and the role's line in `.agentrite/instructions.md`, and found every other file up to date; run again on
+  `0fb2225` it found every file up to date. `npm run kit -- roles` lists `security-reviewer` after `spec-reviewer` with
+  the description of the plan. On `0fb2225`, whose tree differs from this commit's only in `plan.md` and `record.md`,
+  `npm test` passed, 1720 tests with none failed, and `npm run check-changes` exited `0`. Read requirements 1 and 3 to
+  17 against `extra-roles/security-reviewer.md` and requirement 18 against `AGENTS.md`, and found each stated; both
+  links of the role file resolve from `extra-roles/`. Neither file names a finding. Every line of the changed and new
+  files is within 120 characters, the rows of the table of `AGENTS.md` excepted as it allows. Not checked: the role run
+  in a sandbox or a harness session. The status is `in-progress`
 
 ## Amendments
