@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-06T10:15:15Z
 ---
 
@@ -100,5 +100,9 @@ timestamp: 2026-11-06T10:15:15Z
   `npm test`: 1552 passed, none failed, cancelled or skipped, with Docker reachable; `npm run check-changes` and
   `git diff --check 68362af..HEAD` passed. The first review's limits on live sandbox and platform verification remain.
   The status stays `in-progress`
+- 2026-11-06T13:01:56Z [human] decided that C1 of
+  `.reviews/0097-the-sandbox-takes-its-harnesses-from-their-modules/review-2026-11-06T124601Z.md` is resolved by
+  `6543967`, as the review of `d09943d` found with no new findings, and that the unit is implemented. Every task of
+  `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
