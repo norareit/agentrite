@@ -93,5 +93,12 @@ timestamp: 2026-11-06T10:15:15Z
   `SETUP.md` and `SANDBOX.md` no longer say that such a start reads or judges `bell` alone. `node --test
   --test-timeout=60000 tests/*.test.mjs` passed 1552 tests on `6543967`, none failed, cancelled or skipped. The status
   stays `in-progress`
+- 2026-11-06T12:59:38Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0097 at
+  `d09943dfd3a5d4a2de3f084c62ed1a8cbdf91bf9` as a delta from `68362af35476a3a22f5c79897797e5e94e0958b8`.
+  Verified the corrections to P1 and C1 and returned no new findings, saved in
+  `.reviews/0097-the-sandbox-takes-its-harnesses-from-their-modules/review-2026-11-06T125938Z.md`. Independently ran
+  `npm test`: 1552 passed, none failed, cancelled or skipped, with Docker reachable; `npm run check-changes` and
+  `git diff --check 68362af..HEAD` passed. The first review's limits on live sandbox and platform verification remain.
+  The status stays `in-progress`
 
 ## Amendments
