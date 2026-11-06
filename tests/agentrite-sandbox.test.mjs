@@ -14,12 +14,24 @@ function helper(args, input = '') {
   return spawnSync(process.execPath, [script, ...args], { encoding: 'utf-8', input });
 }
 
-// Every list of one or more names of the list of harnesses, each in the list's order.
-function subsets(names) {
+// Every list of names of `names`, the empty one among them, each in the order of `names`.
+function allSubsets(names) {
   if (names.length === 0) return [[]];
-  const rest = subsets(names.slice(1));
-  return [...rest.map((subset) => [names[0], ...subset]), ...rest].filter((subset) => subset.length > 0);
+  const rest = allSubsets(names.slice(1));
+  return [...rest.map((subset) => [names[0], ...subset]), ...rest];
 }
+
+// Every list of one or more names of `names`, each in the order of `names`.
+function subsets(names) {
+  return allSubsets(names).filter((subset) => subset.length > 0);
+}
+
+test('the subsets of the harnesses are every list of one or more of them, each once', () => {
+  assert.deepEqual(subsets(['a', 'b']), [['a', 'b'], ['a'], ['b']]);
+  assert.deepEqual(subsets(['a', 'b', 'c']).length, 7);
+  assert.deepEqual(subsets(HARNESS_NAMES).length, 2 ** HARNESS_NAMES.length - 1);
+  for (const name of HARNESS_NAMES) assert.ok(subsets(HARNESS_NAMES).some((subset) => subset.join() === name), name);
+});
 
 // A project whose agentrite.json holds `bell` and `harnesses`, and a home that holds what `homeFiles` maps a path
 // relative to it to.
