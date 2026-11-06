@@ -53,5 +53,29 @@ timestamp: 2026-11-06T10:15:15Z
   besides one that holds a tab or a line break, since the wrapper's `read` with a tab for its separator joins two
   tabs into one and would take the next field for the empty one. `npm test` passes on the tree of the commit that
   gives each module what the sandbox knows of it, with 1501 tests. The status stays `in-progress`
+- 2026-11-06T12:41:21Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took the harnesses of the sandbox
+  from their modules in `48d3b43` and described it in `07eb9a2`. Three readings the plan left open, each the only one
+  found to work: the wrapper reads the kit's `KIT_ALLOWLIST` block from `container/compose.yml` to tell a project's
+  file that sets that list, since a value that merely holds the kit's variable would otherwise pass; the inline
+  script of `read_merged_configuration` ends the versions with a marker line, since the shell's command substitution
+  drops a last empty line and would leave a project's empty version unread; and the setups of the tests that
+  install the wrapper copy `container/compose.yml` beside it, which every installed kit holds. The repository's own
+  `sandbox/compose.project.yml` gets the comment of the template, whose list of the kit's hosts was no longer true.
+  While the sandbox's tests were first run, the fake `docker` of `containerHost` in `tests/wrapper-fixture.mjs`
+  looped without end on a `compose build`, which no test had asked it before, and left processes at full CPU on the
+  developer's host for about an hour until they were killed. The fake now ends a Compose call that is no run, its
+  loops stop at the end of the arguments, and its projects' images record their one harness. The status stays
+  `in-progress`
+- 2026-11-06T12:41:21Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, verified on `07eb9a2`: `node
+  --test --test-timeout=60000 tests/*.test.mjs`, the files of `npm test`, passed 1548 tests with none failed or
+  cancelled, Docker reachable so the tests that build images ran; `npm run check-changes` passed; `./sandbox-dev.sh
+  --in-place` built the image and started, the entrypoint's self-check passed with `registry.npmjs.org` as its
+  probe, `docker image inspect` showed `com.ritenoar.agentrite.harnesses` as `claude@2.1.319 opencode@1.19.3`, and in
+  the container `claude --version` and `opencode --version` printed those versions, `env` held
+  `DISABLE_AUTOUPDATER=1`, `DISABLE_UPDATES=1` and `OPENCODE_CONFIG=/etc/opencode/opencode.json`, and
+  `/usr/local/lib/agentrite/log-directories` listed `.claude/projects` and `.local/share/opencode`; the `git grep` of
+  the plan showed only comments that name a harness as an example and the recovery message. Not checked: a project
+  of one harness and a change of `harnesses` against a real image, a host without npm or with bash 3.2, and
+  shellcheck, which the host lacks. The unit is handed over for review. The status stays `in-progress`
 
 ## Amendments

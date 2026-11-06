@@ -332,14 +332,14 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes after the commits
-- [ ] `./sandbox-dev.sh --in-place --rebuild true` builds the image and starts, and `docker image inspect` shows the
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes after the commits
+- [x] `./sandbox-dev.sh --in-place --rebuild true` builds the image and starts, and `docker image inspect` shows the
   label `com.ritenoar.agentrite.harnesses` with both harnesses; in it, `claude --version` and `opencode --version`
   print the versions of the label, `env` holds `DISABLE_AUTOUPDATER=1`, `DISABLE_UPDATES=1` and `OPENCODE_CONFIG`, and
   the entrypoint's self-check passes with the npm registry as its probe. Where Docker is not reachable from the
   implementer's shell, the record says so and this is left to the human
-- [ ] `git grep -n -i -E 'claude|opencode|anthropic|openai' -- container/Dockerfile container/compose.yml
+- [x] `git grep -n -i -E 'claude|opencode|anthropic|openai' -- container/Dockerfile container/compose.yml
   container/sandbox.sh container/entrypoint.sh templates/project/sandbox/compose.project.yml` shows only comments
   that name a harness as an example, and the recovery message
 
@@ -354,4 +354,4 @@ discards the harnesses' saved logins, such as Claude Code's, and the comments th
 - [x] `feature-0097 Take the harnesses of the sandbox from their modules`: the moved files, the Dockerfile, the compose
   files, the wrapper, the entrypoint and the sandbox's tests. The tree passes `npm test`
 - [x] `feature-0097 Describe the sandbox's harness modules`: `CONTRIBUTING.md`, `SANDBOX.md` and `SETUP.md`
-- [ ] `feature-0097 Record the implementation and the verification`: the implementer's entries in `record.md`
+- [x] `feature-0097 Record the implementation and the verification`: the implementer's entries in `record.md`
