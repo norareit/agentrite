@@ -242,6 +242,7 @@ the harness contract. Add:
   `scripts/agentrite-sandbox.mjs`, which the wrapper runs at each start
 * Its file in `files` of `package.json`, and in the list of the test of the package's files in
   `tests/package-documents.test.mjs`
+* Its line in "The harnesses" of `README.md`, with its title and the name `init` takes for it
 
 How a run starts in a role, and the format of the role wrappers, are the module's too. Of a new harness they ask:
 

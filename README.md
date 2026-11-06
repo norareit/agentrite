@@ -42,6 +42,14 @@ The sandbox is a Docker container that a harness is run in, with a clone of a un
 read-write at `/work`. `./sandbox.sh` starts it, in the forms "Commands" of `COMMANDS.md` gives. The reference is
 [`SANDBOX.md`](SANDBOX.md), which in a project is at `node_modules/agentrite/SANDBOX.md`.
 
+## The harnesses
+
+The kit runs the agents in these harnesses, each named to `init` by the name beside it:
+
+* Claude Code, `claude`
+* OpenCode, `opencode`
+* Codex, `codex`
+
 ## The components
 
 ![The components of the kit: ./sandbox.sh runs agentrite orchestrate, which runs agentrite run, which starts a harness,
