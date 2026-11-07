@@ -5,6 +5,78 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 8.4.0
+
+### What changed
+
+* Codex is a third harness, named `codex`. A project can name it in `harnesses`, in `init` and in a step of the
+  orchestrator. Its role wrappers are Codex custom agents, `.codex/agents/<role>.toml`, which `refresh` writes and
+  keeps a pinned `model` key in. Since Codex cannot start a session as a custom agent, `agentrite run` and the
+  orchestrator tell a run of Codex its role in its prompt, and a model pinned in a Codex wrapper holds only for a
+  subagent Codex spawns. The kit's instructions reach Codex through `developer_instructions` in
+  `.codex/config.toml`, which `init` writes when it is missing and `init` and `refresh` otherwise only check, with a
+  notice for what it lacks. Codex loads that file and the wrappers only in a project the developer marked trusted in
+  their own Codex configuration, and the project's `developer_instructions` replaces the developer's own. A headless
+  run reads Codex's JSONL, resumes a session with `codex exec resume`, and is started with
+  `--dangerously-bypass-approvals-and-sandbox` under `--skip-permissions`. `--follow` shows Codex's messages and no
+  tool calls, and a step of Codex never reports a refused permission, since Codex prints neither. A role named
+  `default`, `worker` or `explorer` is refused in every project, as those are Codex's own agents. In the sandbox, the
+  image installs `@openai/codex`, whose version a project can hold with the build argument `CODEX_VERSION`; Codex
+  trusts `/work` in every run, its update check is off where neither the project nor the home can turn it on, the
+  whole of `~/.codex` is kept in the project's log directory on the host, its login among it, so a session resumes in
+  a later container, the allowlist admits `api.openai.com`, `chatgpt.com` and `auth.openai.com` for it, and with
+  `"bell": true` it rings the bell when a turn ends. `SANDBOX.md` says how to log in to Codex in the sandbox (0100)
+* `npx agentrite cancel <unit> --reason <text> [--by <unit>]` cancels a unit from `draft`, `approved` or
+  `in-progress` on the branch checked out: it sets `status` to `cancelled`, adds the human's entry with the reason
+  and, with `--by`, the unit that did the work or made it moot, and commits `record.md` alone. It touches no other
+  branch. `process.md` changes with it: a unit is cancelled on the branch the developer is on, the unit's branch, the
+  default branch or both, and the developer merges or deletes the unit's branch with git. The rule that a unit with
+  a branch is cancelled on the default branch with its documents copied from the branch, and its branch not merged,
+  is gone. `process.md` says an agent runs `cancel` only on the human's decision and request (0099)
+* The sandbox holds only the harnesses the project's `agentrite.json` names under `harnesses`: the image installs
+  those alone, the egress allowlist admits only their hosts besides the kit's and the project's, and a run gets only
+  their log directories, mounts and bell. A change of `harnesses` builds the image again at the next start, which
+  says which harnesses the image holds and which the file names. Every start but `--connect` now reads and judges
+  `harnesses` beside `bell`, and refuses a file without a valid one. The image records its harnesses in one label,
+  `com.ritenoar.agentrite.harnesses`, in place of a label per harness. The firewall's self-check probes the npm
+  registry rather than `api.anthropic.com`. A project's `sandbox/compose.project.yml` that sets `KIT_ALLOWLIST`, or
+  the build arguments `HARNESS_PACKAGES`, `HARNESS_RECORD` or `HARNESS_DIRECTORIES`, is refused. The variables that
+  keep the harnesses from updating themselves are given to every run and stand above what a project's file sets. What
+  the sandbox knows of each harness is in that harness's module, and the files it mounts for one are under
+  `container/harnesses/<name>/` (0097)
+* `standards.md` says that the rule against `Co-Authored-By` holds in any case, for the `Co-authored-by` that Codex
+  adds too, which the sandbox's check of a commit message already refused (0100)
+* `README.md` opens with the kit's logo, names the memory, the units under `changes/`, and the orchestrator among the
+  parts of the kit, and lists the harnesses the kit runs with the name `init` takes for each
+* Not in the package: a security reviewer, a role of this repository's own that reviews a unit's diff, or audits the
+  code base, for security in the sandbox, and keeps its findings out of everything committed (0086)
+
+### Worth knowing when you update
+
+* The first start of the sandbox after the update builds the image again, as after every update of the kit
+* The image now holds only the harnesses `harnesses` names. A project that names one harness and ran another in the
+  sandbox finds that harness's command missing there, and its hosts no longer admitted: a project that names only
+  `claude` no longer admits `models.opencode.ai`, `auth.openai.com` or `chatgpt.com`. Name the harness in
+  `agentrite.json`, or a host the project needs for itself in its `ALLOWLIST`
+* A project's `sandbox/compose.project.yml` that sets `KIT_ALLOWLIST` or one of the build arguments `HARNESS_PACKAGES`,
+  `HARNESS_RECORD` and `HARNESS_DIRECTORIES` stops the sandbox from starting. Move the project's own hosts to
+  `ALLOWLIST` and remove the setting. A file that gives `CLAUDE_CODE_VERSION` or `OPENCODE_VERSION` keeps working,
+  and the version of a harness the project does not name is ignored
+* Anything of the project's own that reads the image's labels `com.ritenoar.agentrite.claude-code-version` or
+  `com.ritenoar.agentrite.opencode-version` reads `com.ritenoar.agentrite.harnesses` instead
+* A project that adds `codex` to `harnesses` runs `npx agentrite refresh`, which writes the Codex wrappers, and
+  `npx agentrite init`, which writes a missing `.codex/config.toml`. On the host, Codex reads that file and the
+  wrappers only once the developer trusts the project in Codex, and the project's `developer_instructions` then
+  replace any the developer's own Codex configuration sets
+* Codex was tested with version 0.167.0 and a ChatGPT login: a turn, a session resumed in a new container, two
+  orchestrator steps with `--follow`, commits through the hook, and the bell. A login with an API key was not tested;
+  that `api.openai.com` is reached through the proxy was seen only by the 401 it gave a turn without a login. The
+  proxy refuses `ab.chatgpt.com`, which Codex sends metrics to, and the hosts of `oaiusercontent.com` it downloads an
+  account's remote plugins from; a turn needed neither. Codex prints `Reading additional input from stdin...` at the
+  start of each headless step and goes on
+* A project's own instructions or roles that state the old rule on cancelling a unit with a branch, on the default
+  branch with its documents copied from the branch, are out of date with `process.md`
+
 ## 8.3.0
 
 ### What changed
