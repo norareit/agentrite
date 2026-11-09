@@ -42,5 +42,11 @@ timestamp: 2026-11-09T13:08:29Z
   command writes and never of a file read back, and requirement 9 has a resume read each file once and compare
   and parse the same bytes. The status is `draft`
 - 2026-11-09T23:35:00Z [human] approved the spec. The status is `approved`
+- 2026-11-09T23:41:16Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0103-host-code-and-what-a-unit-run-brings-back` cut from `master` at `88de2df`, wrote `plan.md`. Confirmed,
+  as the decisions ask, that the session ids of Claude Code, OpenCode and Codex match the pattern of requirement 11,
+  and that Claude Code 2.1.321, OpenCode 1.19.3 and Codex 0.167.0 each take `--model=<model>`. Read the sentence of
+  requirement 13 that the wrapper runs no program but git as covering what reads the clone's files, so the scratch
+  directory of the comparison is still made with `mktemp` and removed with `rm`. The status is `approved`
 
 ## Amendments
