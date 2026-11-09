@@ -48,5 +48,10 @@ timestamp: 2026-11-09T13:08:29Z
   and that Claude Code 2.1.321, OpenCode 1.19.3 and Codex 0.167.0 each take `--model=<model>`. Read the sentence of
   requirement 13 that the wrapper runs no program but git as covering what reads the clone's files, so the scratch
   directory of the comparison is still made with `mktemp` and removed with `rm`. The status is `approved`
+- 2026-11-09T23:46:50Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on
+  `feature-0103-host-code-and-what-a-unit-run-brings-back` at `058902f`, corrected the spec as the human decided:
+  requirement 14 now lists a regular file whose executable bit differs from the commit, unless `core.fileMode` of the
+  host's repository is `false`, requirement 16 tests it, and a new decision says why. `plan.md` still says that a mode
+  change alone is not listed, and is the planner's to bring in line. The status is `approved`
 
 ## Amendments

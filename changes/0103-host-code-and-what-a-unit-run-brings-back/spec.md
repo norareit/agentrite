@@ -117,7 +117,9 @@ Landing a clone:
     host's configuration and attribute files name. It runs no program for it but git
 14. A file is listed as not committed when its bytes differ from those of the blob at its path in the commit, when it
     is in the commit and missing from the clone, or when it is in the clone, not in the commit and not ignored. Which
-    files are ignored is read as `--exclude-standard` reads it today
+    files are ignored is read as `--exclude-standard` reads it today. Unless `core.fileMode` of the host's repository
+    is `false`, a regular file is listed too when the commit holds it as executable, mode `100755`, and the clone's
+    file is not executable, or the commit holds it as `100644` and the clone's file is executable
 15. "When something goes wrong" of `SANDBOX.md` has an entry for a clone that is kept listing files the agent did not
     change, which are files git converts when it checks them out, as Git LFS and an end-of-line attribute make it do:
     what is seen, that the comparison takes the bytes as they are, and that such a clone is removed with `rm -rf`
@@ -136,6 +138,8 @@ Tests:
     * `agentrite run` gives each of the three harnesses the model as `--model=<model>`, one word
     * a clone whose `.gitattributes` names a filter that the host's configuration defines, with a command that leaves
       a mark when it runs, lands with no mark left, and a file the agent changed is still listed
+    * a clone with no change but a committed file made executable, or one committed as executable made not
+      executable, is kept and lists that file, and with `core.fileMode` set to `false` it is removed
 
 ## Decisions
 
@@ -187,6 +191,11 @@ Tests:
   attribute files select, over files the agent wrote. Setting `core.attributesFile` was rejected, since the
   attributes in the work tree outrank it. The cost falls on a project whose files git converts on checkout: those
   files are listed as differing and the clone is kept, which requirement 15 tells the developer how to recover from
+* **The comparison of a clone checks the executable bit beside the bytes.** The comparison it replaces lists a file
+  whose mode alone changed, and a clone is removed once nothing is listed, so leaving the mode out would remove a
+  clone whose one change is a file made executable, and lose that change without a word. Checking it reads no file's
+  content and runs no program, so it costs nothing of requirement 13. It follows `core.fileMode` of the host's
+  repository, as the comparison it replaces does, so that a project that tells git to ignore modes keeps doing so
 
 ## Non-goals
 
