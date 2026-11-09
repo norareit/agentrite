@@ -59,7 +59,9 @@ not kept in `sessions`, and the command says so on standard error. `harnessComma
 * a blob of mode `100644` or `100755` is listed when the clone has no regular file at its path, by `[ -L ]` and
   `[ -f ]`, and otherwise when `git hash-object --no-filters` of the file gives another id. The paths go to one
   `git hash-object --no-filters --stdin-paths`, except a path that holds a line break or opens with `"`, which that
-  form would split or unquote, and which is hashed by a call of its own
+  form would split or unquote, and which is hashed by a call of its own. Unless `git config --type=bool
+  core.fileMode` of the host's git directory gives `false`, such a file is listed too when bash's `[ -x ]` of it says
+  it is executable and the entry's mode is `100644`, or says it is not and the mode is `100755`
 * a blob of mode `120000` is listed when the clone has no link at its path, and otherwise when the id of the link
   differs. That id is read from a scratch index by `git update-index --add --info-only`, which takes a link's target
   as its content, runs no filter for a link, and writes no object. `hash-object` is not used for a link, since it
@@ -70,8 +72,7 @@ The files of the clone that are not in the commit come, as today, from `git ls-f
 against a scratch index read from the commit, which reads no file's content. Every git call of the comparison keeps
 the host's git directory, so that ignored files are read as `--exclude-standard` reads them today, and keeps
 `core.fsmonitor=false`. The scratch directory is made with `mktemp -d` and removed with `rm -rf` as today; neither
-reads a file of the clone, and no program but git reads one. A mode change alone is not listed, since requirement 14
-lists a file by its bytes.
+reads a file of the clone, and no program but git reads one. `core.fileMode` is read once, before the entries.
 
 ## Files
 
@@ -211,7 +212,9 @@ Comparing a clone:
 - [ ] Add tests that the clone is kept and lists a file whose bytes differ from the commit, a committed file the agent
   removed, a committed file under a directory the agent replaced by a link, a committed link whose target the agent
   changed, and a file that is not committed and not ignored; and that a clone with only an ignored file and no change
-  is removed (R14)
+  is removed. Add tests that a clone whose one change is a committed file made executable, and one whose one change is
+  a file committed as executable made not executable, is kept and lists that file, and that with `core.fileMode` set
+  to `false` in the host's repository each is removed (R14, R16)
 - [ ] Rewrite `clone_changed_files` in `container/unit-clone.sh` as the approach says, with its comment saying what it
   compares and that it runs no conversion of git (R13, R14)
 

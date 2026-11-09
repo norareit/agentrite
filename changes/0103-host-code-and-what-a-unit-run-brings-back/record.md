@@ -53,5 +53,9 @@ timestamp: 2026-11-09T13:08:29Z
   requirement 14 now lists a regular file whose executable bit differs from the commit, unless `core.fileMode` of the
   host's repository is `false`, requirement 16 tests it, and a new decision says why. `plan.md` still says that a mode
   change alone is not listed, and is the planner's to bring in line. The status is `approved`
+- 2026-11-09T23:48:53Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0103-host-code-and-what-a-unit-run-brings-back` at `db10ee8`, brought `plan.md` in line with the corrected
+  requirement 14: the comparison checks the executable bit of a regular file unless `core.fileMode` of the host's
+  repository is `false`, and the test task of requirement 14 covers it. The status is `approved`
 
 ## Amendments
