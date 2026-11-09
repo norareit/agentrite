@@ -96,7 +96,10 @@ Resuming:
     harness starts a session of its own, and the command says so on standard error
 12. The refusals of requirements 3, 9, 10 and 11 are listed in "agentrite orchestrate" of `COMMANDS.md`. The record,
     where it is, that the command writes it, that a resume takes only a run with its record, and that the developer
-    removes the directory with `rm -rf` when no run of any project is to be resumed, are in `ORCHESTRATOR.md`
+    removes the directory with `rm -rf` when no run of any project is to be resumed, are in `ORCHESTRATOR.md`. It
+    says there too that the record of a run made in a unit run is in the project's home volume, so that removing
+    the volume, as `docker volume rm <project>_agent-home` does, leaves no run that stopped in the sandbox before it
+    to resume. "The home volume" of "Where things are kept on the host" in `SANDBOX.md` says the same of what it holds
 
 Landing a clone:
 
