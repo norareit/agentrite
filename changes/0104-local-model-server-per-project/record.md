@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-09T17:28:29Z
 ---
 
@@ -14,5 +14,6 @@ timestamp: 2026-11-09T17:28:29Z
   against" and "When something goes wrong" of `SANDBOX.md`, "The project's settings" of `SETUP.md`, "sandbox.sh" of
   `COMMANDS.md`, how `bell` is read in `scripts/agentrite-settings.mjs` and `container/sandbox.sh`, and the admission
   of the port in `container/entrypoint.sh` and `container/compose.yml`. Wrote `spec.md`. The status is `draft`
+- 2026-11-09T17:41:48Z [human] approved the spec. The status is `approved`
 
 ## Amendments
