@@ -70,5 +70,11 @@ timestamp: 2026-11-08T23:43:58Z
   `record.md` and `plan.md`: `npm test` passed 1754 of 1754 on the host, and `./sandbox.sh --in-place npm test` passed
   1720 with 34 skipped and none failed. `npm run check-changes` exited `0`. The status stays `in-progress`, for the
   review
+- 2026-11-09T12:31:19Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0101 at
+  `01f9b48b480d567d4878acbe6d6df67f8d08afa1`, against merge base `81c0f005b945f025262081828f8ac01d470bd552`.
+  Returned S1 in `.reviews/0101-security-reviewer-network-controls-run-names-and-scope/review-01f9b48-20261109T123119Z.md`.
+  `npm test` passed 1754, and `./sandbox.sh --in-place npm test` passed 1720 with 34 Docker-dependent skips;
+  `npm run check-changes` and `git diff --check master...HEAD` exited 0. Could not independently verify that the
+  script tests failed before implementation; assessed the role instructions as text, without conducting an audit.
 
 ## Amendments
