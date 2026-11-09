@@ -35,6 +35,8 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `sandbox/`                    | This repository's `compose.project.yml`                                              |
 | `sandbox-dev.sh`              | Runs the sandbox of the working copy                                                 |
 | `generate-diagrams.sh`        | Generates the SVGs of `diagrams/`, which `npm run diagrams` runs                     |
+| `setup-security-audit.sh`     | Makes the clone that an audit of the security reviewer runs in                       |
+| `finish-security-audit.sh`    | Moves an audit's findings files into the project and removes its clone               |
 | `package-lock.json`           | The lockfile, which pins the installed release of the kit                            |
 | `.dockerignore`, `.gitignore` | What the image build and git leave out                                               |
 | `.editorconfig`               | The formatting that editors apply                                                    |
@@ -111,6 +113,64 @@ Runs the sandbox from the working copy, in place of the installed release's. It 
 It exits as the working copy's `./sandbox.sh` does, by "Exit statuses" of [`COMMANDS.md`](COMMANDS.md#exit-statuses).
 
 See "Trying the working copy's sandbox".
+
+### setup-security-audit.sh
+
+```sh
+./setup-security-audit.sh CLONE
+```
+
+Makes the clone that an audit of the security reviewer, `extra-roles/security-reviewer.md`, runs in. It runs on the
+host, from any directory, and starts no sandbox.
+
+| Argument | What it is                                                                                                                   |
+|----------|------------------------------------------------------------------------------------------------------------------------------|
+| `CLONE`  | The directory to make the clone in, which must not exist. A relative one is taken from the directory the command is run from |
+
+It clones the branch that `defaultBranch` of the repository's `agentrite.json` names, from this repository, into
+`CLONE`, and records the clone's absolute path as a line of the repository's `.reviews/security-audits/clones`. It
+makes `CLONE/.reviews/` and copies `.reviews/security-accepted.md`, the list of the accepted risks, into it when the
+repository has one, and says whether it did. It ends by printing the steps that follow: starting the sandbox with
+`./sandbox.sh --workdir CLONE <harness>`, dispatching the security reviewer in the session with no unit, and running
+`./finish-security-audit.sh CLONE` after the run.
+
+It refuses, and makes nothing, when `CLONE` exists, as a file, a directory or a link, empty or not, and when
+`agentrite.json` cannot be read.
+
+It exits with `0` when it made the clone, with `1` when it refused or the clone failed, saying why, and with `2` for
+wrong arguments, printing its usage, by "Exit statuses" of [`COMMANDS.md`](COMMANDS.md#exit-statuses).
+
+### finish-security-audit.sh
+
+```sh
+./finish-security-audit.sh CLONE
+```
+
+Ends an audit of the security reviewer: moves its findings files from its clone into the repository and removes the
+clone. It runs on the host, from any directory.
+
+| Argument | What it is                                                                                                          |
+|----------|---------------------------------------------------------------------------------------------------------------------|
+| `CLONE`  | The clone that `./setup-security-audit.sh` made. A relative one is taken from the directory the command is run from |
+
+It takes everything in the clone to be written by the agent of the audit: it runs no git command in the clone and no
+program from it, and reads nothing of it but the names and kinds of the files of `.reviews/security-audits/`. It
+moves each regular file directly in `CLONE/.reviews/security-audits/` whose name begins with `security-audit-` and
+ends in `.md` into the repository's `.reviews/security-audits/`, naming each. It names, and leaves, a file of such a
+name that is a link or not a regular file, and moves nothing else of the clone, `.reviews/security-accepted.md` among
+it. It then removes `CLONE`, following no link in it, and its line of `clones`. A clone with no findings file, as a
+run that was stopped leaves it, is removed too, and the command says that there was none.
+
+It refuses, and moves and removes nothing, when:
+
+* The absolute path of `CLONE` is not a line of the repository's `.reviews/security-audits/clones`, so that only a
+  clone the setup command made is removed
+* `CLONE/.reviews` or `CLONE/.reviews/security-audits` is a link or is not a directory
+* A file it would move has the name of a file in the repository's `.reviews/security-audits/`
+
+It exits with `0` when it removed the clone, having moved its findings files or found none, with `1` when it refused
+or failed, saying why, and with `2` for wrong arguments, printing its usage, by "Exit statuses" of
+[`COMMANDS.md`](COMMANDS.md#exit-statuses).
 
 ### npm publish
 
