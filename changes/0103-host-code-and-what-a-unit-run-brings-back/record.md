@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-09T13:08:29Z
 ---
 
@@ -57,5 +57,7 @@ timestamp: 2026-11-09T13:08:29Z
   `feature-0103-host-code-and-what-a-unit-run-brings-back` at `db10ee8`, brought `plan.md` in line with the corrected
   requirement 14: the comparison checks the executable bit of a regular file unless `core.fileMode` of the host's
   repository is `false`, and the test task of requirement 14 covers it. The status is `approved`
+- 2026-11-09T23:57:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
+  `feature-0103-host-code-and-what-a-unit-run-brings-back` at `bb80a57`. The status is `in-progress`
 
 ## Amendments
