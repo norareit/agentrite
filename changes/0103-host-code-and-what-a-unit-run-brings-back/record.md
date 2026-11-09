@@ -19,5 +19,9 @@ timestamp: 2026-11-09T13:08:29Z
   human's decision to keep the record of runs rather than rely on the form of a session alone, added to requirement
   12 that `ORCHESTRATOR.md` and "The home volume" of `SANDBOX.md` say that removing the project's home volume
   leaves no run that stopped in the sandbox before it to resume. The status is `draft`
+- 2026-11-09T17:38:51Z [OpenCode, openai/gpt-6.1-sol] as the spec-reviewer, fully reviewed `spec.md` and
+  `record.md` at `9153572b56a4eeca1554f51e1a79a43a19152863`. Findings: F1 and F2, saved in
+  `.reviews/0103-host-code-and-what-a-unit-run-brings-back/spec-review-2026-11-09T173851Z.md`.
+  Could not independently verify the session IDs emitted by live runs of all three harnesses against the pattern.
 
 ## Amendments
