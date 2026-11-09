@@ -211,6 +211,15 @@ refresh finds them up to date (R17).
 - [x] Check every changed and new file for the line limit of 120 characters and for em dashes, then run `npm test`
   and `npm run check-changes`
 
+### The review
+
+- [x] Add cases of a `<clone>` that begins with `-`, given relative to the directory the scripts are run from: the
+  setup script makes the clone with its `.reviews/`, copies the list and prints the steps, and the finish script
+  finishes it. See the setup case fail (S1 of the review of `01f9b48`)
+- [x] Pass the clone's path to `mkdir` in the setup script after `--`, as every other command of both scripts that is
+  given a path from `<clone>` has it, and run the cases until they pass. Run `npm test`,
+  `./sandbox.sh --in-place npm test` and `npm run check-changes`
+
 ## Commit Points
 
 - [x] `feature-0101 Plan the unit`: `plan.md` and the planner's entry in `record.md`
@@ -221,3 +230,5 @@ refresh finds them up to date (R17).
 - [x] `feature-0101 Describe the scripts of an audit`: `CONTRIBUTING.md`
 - [x] `feature-0101 Change how the security reviewer reports and is run`: the role file and its two wrappers
 - [x] `feature-0101 Record the implementation`: the implementer's entries in `record.md`
+- [x] `feature-0101 Take a clone whose name begins with a dash`: the fix of S1, its cases, `plan.md` and the
+  implementer's entries in `record.md`

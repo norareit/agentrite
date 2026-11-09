@@ -442,3 +442,23 @@ test('the finish script runs no hook and no configuration of the clone', (testCo
   assert.equal(kindOf(clone), 'missing');
   assert.equal(existsSync(marker), false);
 });
+
+// Review S1 of unit 0101: a relative <clone> that begins with `-` is a path to every command it reaches, and not an
+// option of one.
+test('a clone whose relative name begins with a dash is set up and finished', (testContext) => {
+  const host = setUp(testContext);
+  mkdirSync(join(host.repository, '.reviews'));
+  writeFileSync(join(host.repository, '.reviews', 'security-accepted.md'), '## A risk\n');
+  const setup = host.setup(['-clone']);
+  assert.equal(setup.status, 0, setup.stderr);
+  const clone = join(host.work, '-clone');
+  assert.equal(readFileSync(join(clone, '.reviews', 'security-accepted.md'), 'utf-8'), '## A risk\n');
+  assert.match(setup.stdout, /\.\/finish-security-audit\.sh -clone/);
+  assert.deepEqual(linesOf(host.clones), [realpathSync(clone)]);
+  writeFindings(clone, 'security-audit-one.md');
+  const finish = host.finish(['-clone']);
+  assert.equal(finish.status, 0, finish.stderr);
+  assert.equal(kindOf(clone), 'missing');
+  assert.equal(readFileSync(join(host.audits, 'security-audit-one.md'), 'utf-8'), 'security-audit-one.md\n');
+  assert.deepEqual(linesOf(host.clones), []);
+});

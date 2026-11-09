@@ -33,7 +33,7 @@ fi
 mkdir -p "$here/.reviews/security-audits"
 realpath -- "$clone" >>"$here/.reviews/security-audits/clones"
 
-mkdir -p "$clone/.reviews"
+mkdir -p -- "$clone/.reviews"
 if [ -f "$here/.reviews/security-accepted.md" ]; then
   cp -- "$here/.reviews/security-accepted.md" "$clone/.reviews/security-accepted.md"
   echo "setup-security-audit: copied the list of accepted risks, .reviews/security-accepted.md, into $clone"

@@ -76,5 +76,16 @@ timestamp: 2026-11-08T23:43:58Z
   `npm test` passed 1754, and `./sandbox.sh --in-place npm test` passed 1720 with 34 Docker-dependent skips;
   `npm run check-changes` and `git diff --check master...HEAD` exited 0. Could not independently verify that the
   script tests failed before implementation; assessed the role instructions as text, without conducting an audit.
+- 2026-11-09T12:34:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted S1 of the review of
+  `01f9b48`: the setup script passes a relative `<clone>` that begins with `-` to `mkdir` as an option, after the clone
+  is made and recorded, so that it ends before it makes `.reviews/`, copies the list and prints the steps. Added its fix
+  and cases to `plan.md` under "The review", with a commit point of their own
+- 2026-11-09T12:37:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S1: the setup script passes
+  the clone's path to `mkdir` after `--`. The new case sets up and finishes a `<clone>` named `-clone`, given relative
+  to the directory the scripts are run from, with a list of accepted risks; it failed before the fix with `mkdir:
+  invalid option -- 'c'` and passes after it. No other command of either script is given a path from `<clone>` without
+  `--`; the rest are given paths that begin with `/`. On the tree of this entry's commit, but for this entry and the
+  ticks of `plan.md`: `npm test` passed 1755 of 1755 on the host, and `./sandbox.sh --in-place npm test` passed 1721
+  with 34 skipped and none failed. The outcome of S1 is applied. The status stays `in-progress`
 
 ## Amendments
