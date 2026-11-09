@@ -56,5 +56,19 @@ timestamp: 2026-11-08T23:43:58Z
   there at all is no refusal, and the clone then holds no findings file, as a run stopped before it saved its file
   leaves it. Added it to step 4 of the finish script and to its case of no findings file in `plan.md`, before writing
   the script
+- 2026-11-09T11:43:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the unit by `plan.md` in the
+  commits `8270fdb`, `c5298fc` and `fce5e64`: `setup-security-audit.sh`, `finish-security-audit.sh` and their 34 cases
+  in `tests/security-audit-scripts.test.mjs`, their sections and rows in `CONTRIBUTING.md`, and the changed role file
+  with its two wrappers, which `npm run kit -- refresh` rewrote alone. Each case of the scripts was seen to fail before
+  its script was written. Beyond the cases the plan lists, the tests cover the setup script exiting `1` with the
+  reader's message for an `agentrite.json` at fault, and the finish script refusing when there is no list of clones. The
+  case of R34 plants four hooks, a `git status` alias and a `core.fsmonitor` program in the clone, where the plan named
+  a hook and an alias, since an alias runs only when it is called; that git does run the hook and the `core.fsmonitor`
+  program of such a clone was checked by hand with `git status` and `git checkout`. In the role file, "Accepted risks
+  seen again" is a subsection at the end of "Reporting". The search of R43 found the paths of a findings file only in
+  the role file, in the new form. The suites on the tree of `fce5e64`, which the commit of this entry changes only in
+  `record.md` and `plan.md`: `npm test` passed 1754 of 1754 on the host, and `./sandbox.sh --in-place npm test` passed
+  1720 with 34 skipped and none failed. `npm run check-changes` exited `0`. The status stays `in-progress`, for the
+  review
 
 ## Amendments

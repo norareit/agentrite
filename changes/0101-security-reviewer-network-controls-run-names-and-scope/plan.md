@@ -192,23 +192,23 @@ refresh finds them up to date (R17).
 
 ### The documents of the repository
 
-- [ ] In "Commands" of `CONTRIBUTING.md`, after `sandbox-dev.sh`, add a section `### setup-security-audit.sh` and a
+- [x] In "Commands" of `CONTRIBUTING.md`, after `sandbox-dev.sh`, add a section `### setup-security-audit.sh` and a
   section `### finish-security-audit.sh`, each with its form in a `sh` block, its argument, that it runs on the host
   from any directory, what it does, what it refuses, and its exit statuses by "Exit statuses" of `COMMANDS.md`, as
   the section of `sandbox-dev.sh` gives its own. The finish script's section says that a clone with no findings file
   is removed too (R42)
-- [ ] Add both scripts to the table of "What the repository holds besides the package", after `generate-diagrams.sh`,
+- [x] Add both scripts to the table of "What the repository holds besides the package", after `generate-diagrams.sh`,
   keeping the table's columns aligned (R42)
 
 ### The role
 
-- [ ] Change `extra-roles/security-reviewer.md` as "The role file" says (R1 to R25, R41)
-- [ ] Run `npm run kit -- refresh` and check that it rewrote only the two wrappers of the security reviewer, with the
+- [x] Change `extra-roles/security-reviewer.md` as "The role file" says (R1 to R25, R41)
+- [x] Run `npm run kit -- refresh` and check that it rewrote only the two wrappers of the security reviewer, with the
   new description (R17)
-- [ ] Search the repository outside `node_modules`, `.git` and `changes/` for `security-audit-<commit>.md`,
+- [x] Search the repository outside `node_modules`, `.git` and `changes/` for `security-audit-<commit>.md`,
   `security-review-<commit>.md` and `.reviews/security-audit-`: nothing but the role file and its wrappers names a
   findings file, and only in the new form (R43)
-- [ ] Check every changed and new file for the line limit of 120 characters and for em dashes, then run `npm test`
+- [x] Check every changed and new file for the line limit of 120 characters and for em dashes, then run `npm test`
   and `npm run check-changes`
 
 ## Commit Points
@@ -216,8 +216,8 @@ refresh finds them up to date (R17).
 - [x] `feature-0101 Plan the unit`: `plan.md` and the planner's entry in `record.md`
 - [x] `feature-0101 Begin the implementation`: the status, the reading of R35 in `plan.md` and the tasks ticked so far,
   with the implementer's entries in `record.md`
-- [ ] `feature-0101 Add the scripts that set up and finish an audit`: both scripts and their tests. The tree passes
+- [x] `feature-0101 Add the scripts that set up and finish an audit`: both scripts and their tests. The tree passes
   `npm test`
-- [ ] `feature-0101 Describe the scripts of an audit`: `CONTRIBUTING.md`
-- [ ] `feature-0101 Change how the security reviewer reports and is run`: the role file and its two wrappers
-- [ ] `feature-0101 Record the implementation`: the implementer's entries in `record.md`
+- [x] `feature-0101 Describe the scripts of an audit`: `CONTRIBUTING.md`
+- [x] `feature-0101 Change how the security reviewer reports and is run`: the role file and its two wrappers
+- [x] `feature-0101 Record the implementation`: the implementer's entries in `record.md`
