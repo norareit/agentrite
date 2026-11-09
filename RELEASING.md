@@ -12,10 +12,14 @@ A release is made on the host, on `master`, from the repository root, in this or
 5. What the human runs: `npm login`, `npm version` and `npm publish`
 6. The kit's own dependency: this repository moves to the release
 7. The push, which the human runs
+8. The advisories, which the human publishes, only in a release that ships the fix of a finding of the security
+   reviewer
 
 An agent runs steps 1 and 2, stops at step 3, and on the human's word runs step 4. It runs nothing of step 5: it
 ends step 4 by telling the human its three commands, and stops. On the human's word that `npm publish` succeeded it
-runs step 6, and ends by telling the human the command of step 7, which it does not run. An agent asked only for
+runs step 6, and ends by telling the human the command of step 7, which it does not run. When the human has said
+that the release ships the fix of a finding, it says, in ending step 7, that step 8 follows, and runs step 8, which
+it ends by telling the human its commands, which it does not run either. An agent asked only for
 the release notes runs step 2, stops at step 3, and on the human's word commits the section as step 4 gives it and
 nothing else. An agent asked only to move this repository to a release that is already made runs step 6 and nothing
 else.
@@ -65,6 +69,9 @@ enters the sandbox.
       "Nothing." when there is nothing
 * Write for a reader who has the package and not this repository: what changed and what it means for them, not how
   it was found
+* A unit that fixes a finding of the security reviewer is one the human says does. Its line in `### What changed`
+  opens with "Security fix:" and describes the fix by what it changes and not by the attack it stops, as "Security
+  findings" of `AGENTS.md` says of a plan, a record and a commit message. Read nothing of `.reviews` for it
 * A section of an earlier release may be corrected in place, for example for a consequence found later. The
   published version keeps what it shipped with
 
@@ -75,6 +82,8 @@ Stop there. Commit nothing before the human's word. In your answer:
 * Propose major, minor or patch, with the reason. Pick the part to bump as semver means it; there is no rule of
   the kit's own
 * Name every change in the shipped diff that has no unit, but for the one step 2 says not to name
+* Ask whether a unit of the release fixes a finding of the security reviewer, unless the human has said so already.
+  Step 2 names such a unit as a security fix, and step 8 follows the push
 
 The human reads the section, corrects it and picks the version, changing the heading when the pick differs from the
 proposal.
@@ -278,9 +287,52 @@ git push --follow-tags origin master
 
 The human runs it. An agent does not.
 
-The push comes last. `--follow-tags` pushes `master` and, with it, the annotated tag `npm version` made. A tag that
-is not pushed yet can still be moved, which is what a refusal by `npm publish` asks for.
+The push comes after the publish. `--follow-tags` pushes `master` and, with it, the annotated tag `npm version`
+made. A tag that is not pushed yet can still be moved, which is what a refusal by `npm publish` asks for.
 
 With step 6 done, `master` is one commit past the tag, and the one push carries the release's commits, the tag and
 the move. The push does not wait for step 6: when that step stopped, or is left for later, push all the same, and
 the move is pushed with whatever makes it.
+
+The push also carries the commits of a unit that fixes a finding of the security reviewer, which "Security
+findings" of `AGENTS.md` keeps unpushed until this push, so the fix becomes public as a release that users can move
+to.
+
+## 8. The advisories
+
+Only in a release that ships the fix of a finding of the security reviewer, and after the push of step 7. The human
+publishes the finding's draft security advisory on GitHub, with the version of the release as the patched version,
+so that the projects that depend on the kit are alerted to move to it.
+
+The agent asks the human, for each advisory the release fixes, for its ID, as `GHSA-xxxx-xxxx-xxxx`, and the range
+of versions the advisory names as affected, which the human reads from the advisory. For each it prints one
+command, with the ID, the range and the `version` in `package.json` filled in:
+
+```sh
+gh api -X PATCH repos/norareit/agentrite/security-advisories/<ID> --input - <<'EOF'
+{
+  "state": "published",
+  "vulnerabilities": [
+    {
+      "package": {"ecosystem": "npm", "name": "agentrite"},
+      "vulnerable_version_range": "<range>",
+      "patched_versions": "<version>"
+    }
+  ]
+}
+EOF
+```
+
+The command sets the advisory's state to `published`, and names as affected the package `agentrite` of the `npm`
+ecosystem, with that range and the release's version as the patched version. The agent runs none of the commands,
+and reads nothing of an advisory itself: what it puts in a command is what the human gave it and the version of the
+release. It ends step 8 by telling the human the commands, which the human runs with their own login of `gh`.
+
+The human may then mark the versions before the release as deprecated, so that each install of one of them warns,
+with the release's version as `X.Y.Z`:
+
+```sh
+npm deprecate 'agentrite@<X.Y.Z' '<message>'
+```
+
+That is the human's to take or leave, for each release. An agent does not run it.

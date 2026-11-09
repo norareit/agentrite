@@ -105,6 +105,14 @@ out of everything published, since everything committed in this repository is.
 * A finding the human hands to another role is given in the hand-over
 * A fix the human hands to a role is described by what it changes and not by the attack it stops, in a plan, a
   record, a commit message and a code comment alike
+* A finding the human decides to fix is specified as a feature or a task, and never as a bug. Its documents state
+  what will be true once it is done, as what the code does or refuses, and state no observed behavior, no steps to
+  reproduce and no root cause. This is an exception to the rule of `process.md` on the kinds of a unit, which a bug
+  would otherwise be
+* Nothing of the unit of such a fix is pushed before the release that ships it is published: not its documents on
+  `master`, not its branch, and not `master` once it holds either. Its commits are pushed by the push of that
+  release, step 7 of [`RELEASING.md`](RELEASING.md), which follows `npm publish`, so the fix becomes public as a
+  release that users can move to
 
 ## Releasing
 
