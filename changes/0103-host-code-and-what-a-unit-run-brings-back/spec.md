@@ -94,7 +94,8 @@ Resuming:
     role and harness and the form a session takes. A session that a step's harness gives during a run and that does
     not match is not kept among the run's sessions and is passed to no later step, so the next step of its role and
     harness starts a session of its own, and the command says so on standard error
-12. The refusals of requirements 3, 9, 10 and 11 are listed in "agentrite orchestrate" of `COMMANDS.md`. The record,
+12. The refusals of requirements 3, 9, 10 and 11 are listed in "agentrite orchestrate" of `COMMANDS.md`, and so is
+    `XDG_STATE_HOME`, as an environment variable the command reads for where it keeps the record. The record,
     where it is, that the command writes it, that a resume takes only a run with its record, and that the developer
     removes the directory with `rm -rf` when no run of any project is to be resumed, are in `ORCHESTRATOR.md`. It
     says there too that the record of a run made in a unit run is in the project's home volume, so that removing

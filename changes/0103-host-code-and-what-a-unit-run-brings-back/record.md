@@ -23,5 +23,8 @@ timestamp: 2026-11-09T13:08:29Z
   `record.md` at `9153572b56a4eeca1554f51e1a79a43a19152863`. Findings: F1 and F2, saved in
   `.reviews/0103-host-code-and-what-a-unit-run-brings-back/spec-review-2026-11-09T173851Z.md`.
   Could not independently verify the session IDs emitted by live runs of all three harnesses against the pattern.
+- 2026-11-09T17:41:42Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `ba8d32f`, took F2 of
+  the spec review: requirement 12 now has `COMMANDS.md` list `XDG_STATE_HOME` among what `agentrite orchestrate`
+  reads. F1 is put to the human. The status is `draft`
 
 ## Amendments
