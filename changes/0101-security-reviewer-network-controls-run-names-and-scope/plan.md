@@ -50,7 +50,9 @@ In this order, and before the first move nothing is changed:
 3. When `$here/.reviews/security-audits/clones` is not a file or `grep -Fxq -- "$absolute"` finds no line of it, it
    says the directory is not a clone the setup script made, and exits `1` (R33)
 4. For `$absolute/.reviews` and then `$absolute/.reviews/security-audits`: when it is a link (`-L`) or not a directory
-   (`! -d`), it names it and exits `1` (R35). The link test comes first, since `-d` follows a link
+   (`! -d`), it names it and exits `1` (R35). The link test comes first, since `-d` follows a link. One that is not
+   there at all, neither `-e` nor `-L`, is no refusal: the clone then holds no findings file, as a run stopped before
+   it saved its file leaves it, and step 7 says so (R38)
 5. With `nullglob`, it goes over `"$absolute/.reviews/security-audits"/security-audit-*.md`. A path that is a link or
    not a regular file (`-L` or `! -f`) is named as left in place; the rest are the files to move, held in an array
    (R36)
@@ -100,8 +102,8 @@ The finish script, on a clone made by the setup script unless the case says othe
   neither is the clone's `.reviews/security-accepted.md` (R36)
 * A findings file whose name is already in the repository's `.reviews/security-audits/` exits `1`, moves no file,
   the other findings file among them, and leaves the clone and `clones` as they were (R37)
-* A clone with no findings file: the output says so, the clone and its line are removed, and the exit status is `0`
-  (R38, R39, R40)
+* A clone with no findings file, one with no `.reviews/security-audits` and one with no `.reviews`: the output says
+  so, the clone and its line are removed, and the exit status is `0` (R38, R39, R40)
 * A link inside the clone to a directory outside it: after the finish the clone is gone and the outside directory and
   its file are still there (R39)
 * A `<clone>` given relative to another working directory, and one given as a link to the clone, finish the clone
@@ -179,14 +181,14 @@ refresh finds them up to date (R17).
 
 ### The scripts
 
-- [ ] Write the cases of the setup script in `tests/security-audit-scripts.test.mjs`, with the fixture above, and see
+- [x] Write the cases of the setup script in `tests/security-audit-scripts.test.mjs`, with the fixture above, and see
   them fail (R26 to R31, R40)
-- [ ] Write `setup-security-audit.sh` as "The setup script" says, make it executable, and run the cases until they
+- [x] Write `setup-security-audit.sh` as "The setup script" says, make it executable, and run the cases until they
   pass (R26 to R31, R40)
-- [ ] Write the cases of the finish script in the same file and see them fail (R12, R32 to R40)
-- [ ] Write `finish-security-audit.sh` as "The finish script" says, make it executable, and run the cases until they
+- [x] Write the cases of the finish script in the same file and see them fail (R12, R32 to R40)
+- [x] Write `finish-security-audit.sh` as "The finish script" says, make it executable, and run the cases until they
   pass (R12, R32 to R40)
-- [ ] Run `npm test`, and `./sandbox.sh --in-place npm test` for the tests a host skips, and correct until both pass
+- [x] Run `npm test`, and `./sandbox.sh --in-place npm test` for the tests a host skips, and correct until both pass
 
 ### The documents of the repository
 
@@ -211,7 +213,9 @@ refresh finds them up to date (R17).
 
 ## Commit Points
 
-- [ ] `feature-0101 Plan the unit`: `plan.md` and the planner's entry in `record.md`
+- [x] `feature-0101 Plan the unit`: `plan.md` and the planner's entry in `record.md`
+- [x] `feature-0101 Begin the implementation`: the status, the reading of R35 in `plan.md` and the tasks ticked so far,
+  with the implementer's entries in `record.md`
 - [ ] `feature-0101 Add the scripts that set up and finish an audit`: both scripts and their tests. The tree passes
   `npm test`
 - [ ] `feature-0101 Describe the scripts of an audit`: `CONTRIBUTING.md`

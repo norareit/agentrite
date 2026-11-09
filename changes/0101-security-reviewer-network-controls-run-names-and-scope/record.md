@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-08T23:43:58Z
 ---
 
@@ -49,5 +49,12 @@ timestamp: 2026-11-08T23:43:58Z
   from being read as an option; and it records the clone in `clones` right after making it, before copying the
   list, so that a clone a later step fails in can still be finished. The default branch is read with the settings
   reader the sandbox's wrapper uses. The status stays `approved`
+- 2026-11-09T11:30:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the unit's branch at
+  `f09bc37`, began the work. The status is `in-progress`
+- 2026-11-09T11:37:35Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took the one reading
+  of requirement 35 that keeps requirement 38: a `.reviews` or `.reviews/security-audits` of the clone that is not
+  there at all is no refusal, and the clone then holds no findings file, as a run stopped before it saved its file
+  leaves it. Added it to step 4 of the finish script and to its case of no findings file in `plan.md`, before writing
+  the script
 
 ## Amendments
