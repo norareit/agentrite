@@ -65,5 +65,14 @@ and an agent that runs the command itself was rejected, since it would read the 
 - 2026-11-09T10:21:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, cut the branch
   `task-0102-security-fixes-and-their-release` from `master` at `323afa6` and began the work. The status is
   `in-progress`
+- 2026-11-09T10:31:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in `bc0d81e`, added the two
+  rules to "Security findings" of `AGENTS.md`, and to `RELEASING.md` the line of a security fix in the section, the
+  step 8 that prints the command of `gh` for each advisory, and the optional `npm deprecate` in it. Built the only
+  readings that work: the agent knows a unit is a security fix only from the human, so step 3 asks when the human
+  has not said, and the command names `norareit/agentrite`, the repository of `origin`, for `<owner>/<repository>`.
+  The command passes its body as JSON on standard input, since the affected package is a nested array. Whether
+  GitHub accepts that body for a draft advisory was not checked, since no advisory was published
+- 2026-11-09T10:31:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm test` on `bc0d81e`:
+  1720 tests, 1720 passed. `npm run check-changes` exited 0. The status stays `in-progress` for the review
 
 ## Amendments
