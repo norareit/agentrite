@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-08T23:43:58Z
 ---
 
@@ -87,5 +87,8 @@ timestamp: 2026-11-08T23:43:58Z
   `--`; the rest are given paths that begin with `/`. On the tree of this entry's commit, but for this entry and the
   ticks of `plan.md`: `npm test` passed 1755 of 1755 on the host, and `./sandbox.sh --in-place npm test` passed 1721
   with 34 skipped and none failed. The outcome of S1 is applied. The status stays `in-progress`
+- 2026-11-09T12:51:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, at the human's request, set the
+  status to `implemented`. The review of `01f9b48` returned S1, blocking, applied in `e867a19`, and the human accepted
+  that fix as the decision on it. Every task of `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
