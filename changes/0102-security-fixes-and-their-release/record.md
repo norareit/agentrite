@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-09T00:32:25Z
 ---
 
@@ -61,5 +61,6 @@ and an agent that runs the command itself was rejected, since it would read the 
   human's request, added step 8 to the change of `RELEASING.md`: the agent prints the command of `gh` that publishes
   each advisory the release fixes, from the ID and the affected range the human gives it, and runs none. The status
   is `draft`
+- 2026-11-09T10:14:17Z [human] approved the record. The status is `approved`
 
 ## Amendments
