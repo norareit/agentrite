@@ -33,13 +33,23 @@ The change, to `RELEASING.md`:
   by what it changes, as the rule on fixes of "Security findings" says of a plan, a record and a commit message
 * After the push of such a release, the human publishes the finding's draft security advisory on GitHub, with the
   version of the release as the patched version, so that the projects that depend on the kit are alerted to move to
-  it
+  it. This is a step 8 of its own, taken only in a release that ships such a fix
+* In step 8 the agent asks the human for the ID of each advisory the release fixes, as `GHSA-xxxx-xxxx-xxxx`, and the
+  range of versions the advisory names as affected, which the human reads from the advisory. For each it prints one
+  `gh api -X PATCH repos/<owner>/<repository>/security-advisories/<ID>` command that sets the state to `published`
+  and the affected package `agentrite` of the `npm` ecosystem with that range and the release's version as the
+  patched version. It runs none of them, and it reads nothing of an advisory itself: what it puts in the command is
+  what the human gave it and the version of the release
+* The agent ends step 7 by saying that step 8 follows, when the human says the release ships such a fix, and step 8
+  by telling the human the commands, which the human runs with their own login of `gh`
 * The human may then mark the versions before it as deprecated, with `npm deprecate 'agentrite@<X.Y.Z' '<message>'`
   and the release's version as `X.Y.Z`, so that each install of one of them warns. The step is the human's to take
   or leave, for each release
 
-Nothing else changes: no command, no script and no role file. The steps of the advisory and of `npm deprecate` are
-the human's, as the other commands of steps 5 and 7 of `RELEASING.md` are.
+Nothing else changes: no command, no script and no role file. Publishing an advisory and `npm deprecate` are run by
+the human, as the commands of steps 5 and 7 of `RELEASING.md` are. A GitHub Action that publishes the advisories on
+the tag was rejected, since it needs a token that can publish advisories, kept as a secret of a public repository,
+and an agent that runs the command itself was rejected, since it would read the advisory to fill the command in.
 
 ## Log
 
@@ -47,5 +57,9 @@ the human's, as the other commands of steps 5 and 7 of `RELEASING.md` are.
   human's request to write down how a security fix is specified, kept unpushed and released. Read "Security findings" of
   `AGENTS.md`, `RELEASING.md` for the order of `npm publish` and the push, and the kinds of a unit in
   `process.md`. Wrote the record. The status is `draft`
+- 2026-11-09T00:35:22Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `d91960e`, on the
+  human's request, added step 8 to the change of `RELEASING.md`: the agent prints the command of `gh` that publishes
+  each advisory the release fixes, from the ID and the affected range the human gives it, and runs none. The status
+  is `draft`
 
 ## Amendments
