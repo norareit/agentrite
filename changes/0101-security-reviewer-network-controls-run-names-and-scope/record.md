@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-08T23:43:58Z
 ---
 
@@ -27,5 +27,6 @@ timestamp: 2026-11-08T23:43:58Z
   `AGENTS.md`, and worked from the empty layout the human gave. Rewrote requirement 19 to name the subsections,
   added to requirement 21 how the place is judged by the entry's commit, and added two decisions. The status is
   `draft`
+- 2026-11-09T10:56:58Z [human] approved the spec. The status is `approved`
 
 ## Amendments
