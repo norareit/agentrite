@@ -140,10 +140,10 @@ Setting up and finishing an audit:
     `.reviews/security-accepted.md` among it
 37. It refuses, and moves and removes nothing, when a file it would move has the name of a file in the repository's
     `.reviews/security-audits/`
-38. When there is no file to move, it says so and removes nothing, so that the clone of a run that was stopped is
-    left for the human to look at
-39. Once it has moved every file, it removes `<clone>`, following no link in it, and removes the clone's line from
-    `clones`
+38. When there is no file to move, it says so, moves nothing, and removes the clone as requirement 39 says. Such a run
+    did what it was asked and exits `0`
+39. Once it has moved every file, or found none to move, it removes `<clone>`, following no link in it, and removes
+    the clone's line from `clones`
 40. Both scripts exit by "Exit statuses" of `COMMANDS.md`: `0` when they did what they were asked, `1` when they
     refused or failed, saying why, and `2` for wrong arguments, printing their usage
 41. Where the role file says how the human starts and ends an audit, it names `./setup-security-audit.sh <clone>` in
@@ -242,8 +242,11 @@ Everywhere else:
   what it moves is a findings file of the clone and nothing it points to
 - **A name already in the project refuses the move.** Two runs are told apart by their instant, so a name that is
   there already means something unexpected, and overwriting would lose a findings file
-- **A clone with no findings file is kept.** That is the clone of a run that was stopped or failed, which the human
-  may want to look at before removing it
+- **A clone with no findings file is removed too.** That is the clone of a run that was stopped or failed, and it is of
+  no further use: the next audit is made in a new clone, by the setup script. Keeping such a clone for the human to
+  look at was weighed and declined by the human, who wants the finish script to clean up in every case. Removing it
+  is safe by the same checks as any other removal, since only a clone the setup script recorded is removed, and
+  nothing of it is run
 - **The setup script starts no sandbox.** The human picks the harness, and the scope of a limited audit, when starting
   it
 
@@ -289,6 +292,3 @@ Everywhere else:
 7. **Stale entries.** The role would name the entries of the list whose weakness it no longer finds, so that the human
    can remove them. It costs a sentence of the role file. Without it, the list keeps entries that no longer apply, and
    the human prunes it by hand
-8. **Discarding a stopped run.** The finish script would take an option, such as `--discard`, that removes a clone
-   with no findings file. It costs an option and its documentation. Without it, the human removes such a clone by
-   hand, after checking that it is the right one

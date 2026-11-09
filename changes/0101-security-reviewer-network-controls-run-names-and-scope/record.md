@@ -36,5 +36,12 @@ timestamp: 2026-11-08T23:43:58Z
   contradicts requirement 38, the decision that a clone with no findings file is kept, and item 8 of "Beyond the
   request", which the planner cannot change. The unit goes back to the specifier and the human. The status stays
   `approved`
+- 2026-11-09T11:04:06Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the unit's branch at `fe19e85`,
+  at the human's request, corrected `spec.md` so that the finish script removes the clone of an audit also when it
+  holds no findings file. Requirement 38 now says the script says so, moves nothing, removes the clone and exits
+  `0`, and requirement 39 removes the clone once every file is moved or none was found. The decision that such a
+  clone is kept is replaced by one that it is removed too, with the reason, and item 8 of "Beyond the request", an
+  option to discard such a clone, is gone as moot, being the last item so that no other is renumbered. No other
+  requirement changes. The status stays `approved`
 
 ## Amendments
