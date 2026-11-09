@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-09T00:32:25Z
 ---
 
@@ -62,5 +62,8 @@ and an agent that runs the command itself was rejected, since it would read the 
   each advisory the release fixes, from the ID and the affected range the human gives it, and runs none. The status
   is `draft`
 - 2026-11-09T10:14:17Z [human] approved the record. The status is `approved`
+- 2026-11-09T10:21:40Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, cut the branch
+  `task-0102-security-fixes-and-their-release` from `master` at `323afa6` and began the work. The status is
+  `in-progress`
 
 ## Amendments
