@@ -32,5 +32,10 @@ timestamp: 2026-11-09T13:08:29Z
   requirement 10 has `agentrite run` pass the model as `--model=<model>`, requirement 12 documents it, and
   requirement 16 tests it; a new decision says why the model and the prompt are not given a pattern, and the
   decision on reading the definition no longer claims to cover them. The status is `draft`
+- 2026-11-09T18:05:43Z [OpenCode, openai/gpt-6.1-sol] as the spec-reviewer, reviewed `spec.md` and `record.md`
+  at `f557abb5176d78cd3ab905aab07ca59ac7de8312` as a delta from `9153572b56a4eeca1554f51e1a79a43a19152863`.
+  No findings, saved in
+  `.reviews/0103-host-code-and-what-a-unit-run-brings-back/spec-review-2026-11-09T180543Z.md`.
+  Could not verify live model selection in every harness mode; model syntax was checked through help only.
 
 ## Amendments
