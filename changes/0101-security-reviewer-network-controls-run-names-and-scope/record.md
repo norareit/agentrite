@@ -43,5 +43,11 @@ timestamp: 2026-11-08T23:43:58Z
   clone is kept is replaced by one that it is removed too, with the reason, and item 8 of "Beyond the request", an
   option to discard such a clone, is gone as moot, being the last item so that no other is renumbered. No other
   requirement changes. The status stays `approved`
+- 2026-11-09T11:10:54Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the unit's branch at `59e79d8`,
+  wrote `plan.md` against the corrected spec. Took two readings: the setup script's clone is
+  `git clone --branch <default branch> -- <repository> <clone>`, the `--` keeping a `<clone>` that begins with `-`
+  from being read as an option; and it records the clone in `clones` right after making it, before copying the
+  list, so that a clone a later step fails in can still be finished. The default branch is read with the settings
+  reader the sandbox's wrapper uses. The status stays `approved`
 
 ## Amendments
