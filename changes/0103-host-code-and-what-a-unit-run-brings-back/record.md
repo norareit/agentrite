@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-09T13:08:29Z
 ---
 
@@ -41,5 +41,6 @@ timestamp: 2026-11-09T13:08:29Z
   human's request, made two points of the record explicit: requirement 8 takes each digest of the bytes the
   command writes and never of a file read back, and requirement 9 has a resume read each file once and compare
   and parse the same bytes. The status is `draft`
+- 2026-11-09T23:35:00Z [human] approved the spec. The status is `approved`
 
 ## Amendments
