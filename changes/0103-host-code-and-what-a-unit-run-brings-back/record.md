@@ -26,5 +26,11 @@ timestamp: 2026-11-09T13:08:29Z
 - 2026-11-09T17:41:42Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `ba8d32f`, took F2 of
   the spec review: requirement 12 now has `COMMANDS.md` list `XDG_STATE_HOME` among what `agentrite orchestrate`
   reads. F1 is put to the human. The status is `draft`
+- 2026-11-09T17:43:43Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `e1f979f`, took F1 of
+  the spec review as the human decided: requirement 1 now keeps a value from being an option by where it stands
+  or by an exact pattern, and lets a prompt reach a harness only out of a file the record vouches for;
+  requirement 10 has `agentrite run` pass the model as `--model=<model>`, requirement 12 documents it, and
+  requirement 16 tests it; a new decision says why the model and the prompt are not given a pattern, and the
+  decision on reading the definition no longer claims to cover them. The status is `draft`
 
 ## Amendments

@@ -44,10 +44,13 @@ The rule:
 
 1. `AGENTS.md` holds a rule that code of the kit that runs on the host treats what a unit run brings back as written by
    an adversary: the files of the clone, its `.git` among them, and everything under `.reviews` and `.orchestrator`.
-   By the rule, such code follows no symbolic link there, writes only inside the directory it means to write in,
-   passes a value read there into the arguments of a program only when the value matches an exact pattern, and runs
-   no program that such content selects. The content of the commits of the unit's branch is outside the rule, as it
-   is outside what the sandbox defends against
+   By the rule, such code follows no symbolic link there, writes only inside the directory it means to write in, and
+   runs no program that such content selects. It passes a value read there into the arguments of a program only
+   where the program cannot take it for an option: after `--`, joined to its option by `=`, or when the value matches
+   an exact pattern that rules out a leading `-`. Free text that a harness takes as an instruction, as the prompt of
+   a step, reaches a harness from there only out of a file that the kit's record shows the kit wrote, unchanged
+   since. The content of the commits of the unit's branch is outside the rule, as it is outside what the sandbox
+   defends against
 2. "What the sandbox defends against" of `SANDBOX.md` says, among what a unit run defends the host against, that the
    kit's commands on the host follow no link the agent made under `.orchestrator`, write under it only in the
    directory of their own run, resume only a run made where it is resumed whose files are as that run left them,
@@ -88,14 +91,17 @@ Resuming:
    run made where it is resumed whose files are as that run left them, and that `npx agentrite orchestrate <unit>`
    starts a new run
 10. A resume reads the run's `definition.json` with the project's roles and harnesses, as a run reads its definition,
-    and refuses a definition that names a role or a harness the project does not have, as a run refuses it
+    and refuses a definition that names a role or a harness the project does not have, as a run refuses it.
+    `agentrite run` passes the model to the harness joined to `--model` by `=`, as `--model=<model>`, in every run,
+    headless or not
 11. No session is passed to a harness unless it matches `^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$`. A resume refuses, starts
     nothing, writes nothing and exits `1` when the run's `state.json` holds a session that does not match, naming its
     role and harness and the form a session takes. A session that a step's harness gives during a run and that does
     not match is not kept among the run's sessions and is passed to no later step, so the next step of its role and
     harness starts a session of its own, and the command says so on standard error
 12. The refusals of requirements 3, 9, 10 and 11 are listed in "agentrite orchestrate" of `COMMANDS.md`, and so is
-    `XDG_STATE_HOME`, as an environment variable the command reads for where it keeps the record. The record,
+    `XDG_STATE_HOME`, as an environment variable the command reads for where it keeps the record. "agentrite run"
+    of `COMMANDS.md` says that the model reaches the harness as `--model=<id>`. The record,
     where it is, that the command writes it, that a resume takes only a run with its record, and that the developer
     removes the directory with `rm -rf` when no run of any project is to be resumed, are in `ORCHESTRATOR.md`. It
     says there too that the record of a run made in a unit run is in the project's home volume, so that removing
@@ -125,6 +131,7 @@ Tests:
     * a resume refuses a run with no record, a run whose `definition.json` differs from its record, and one whose
       `state.json` does
     * a resume refuses a session that opens with `-`, and a definition naming a role the project does not have
+    * `agentrite run` gives each of the three harnesses the model as `--model=<model>`, one word
     * a clone whose `.gitattributes` names a filter that the host's configuration defines, with a command that leaves
       a mark when it runs, lands with no mark left, and a file the agent changed is still listed
 
@@ -164,7 +171,14 @@ Tests:
   of an option
 * **A resume reads its definition with the project's roles and harnesses.** The record already makes the definition
   the one the command wrote. Reading it as a run does keeps the role and the harness passed to `agentrite run` to the
-  names the project has, as the rule of requirement 1 asks of every value passed into arguments
+  names the project has, which are of a form that rules out a leading `-`. It covers those two values alone
+* **The model and the prompt are kept from being options by where they stand, not by a pattern.** The prompt already
+  stands after `--` in the command of every harness, and its content is the step's instruction, which no pattern can
+  restrict: what keeps it the kit's is the record. The model is joined to its option by `=` for the same reason.
+  A pattern for the ids of models was rejected: a definition naming a model of another form would then be refused,
+  which is a new contract for every project's definition, where the `=` form changes nothing a project writes. The
+  planner confirms that Claude Code, OpenCode and Codex each take `--model=<model>`, and a harness that does not is
+  a correction of this spec
 * **The comparison of a clone takes bytes as they are.** A filter of git is a program the host's configuration names,
   and the attributes that select it are files the agent writes, so the comparison runs none. Reading attributes from
   an empty tree was rejected: it needs a newer git than the kit asks for, and still runs a filter that the host's own
