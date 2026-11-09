@@ -74,5 +74,11 @@ and an agent that runs the command itself was rejected, since it would read the 
   GitHub accepts that body for a draft advisory was not checked, since no advisory was published
 - 2026-11-09T10:31:05Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm test` on `bc0d81e`:
   1720 tests, 1720 passed. `npm run check-changes` exited 0. The status stays `in-progress` for the review
+- 2026-11-09T10:27:27Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0102 at
+  `ef2fc49`, against the merge base `323afa6` with `master`. Returned no findings on any axis. Saved the review in
+  `.reviews/0102-security-fixes-and-their-release/2026-11-09T10-27-27Z-review.md`. Ran `npm test`: 1720 passed,
+  none failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` exited 0. Checked the PATCH
+  fields against GitHub's public API documentation; live acceptance, advisory publication, downstream notifications
+  and npm deprecation were not verified. The status stays `in-progress`
 
 ## Amendments
