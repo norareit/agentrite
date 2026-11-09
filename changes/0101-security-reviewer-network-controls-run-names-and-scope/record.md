@@ -28,5 +28,13 @@ timestamp: 2026-11-08T23:43:58Z
   added to requirement 21 how the place is judged by the entry's commit, and added two decisions. The status is
   `draft`
 - 2026-11-09T10:56:58Z [human] approved the spec. The status is `approved`
+- 2026-11-09T11:01:02Z [Claude Code, anthropic/claude-opus-5-5] as the planner, cut
+  `feature-0101-security-reviewer-network-controls-run-names-and-scope` from `master` at `81c0f00` and stopped
+  before writing `plan.md`. Requirement 40 leaves open the exit status of `finish-security-audit.sh` when the clone
+  holds no findings file, so the planner asked the human. The human answered that the script should then remove the
+  clone as well, since a run that wrote nothing is of no use and a new clone is made for the next one. That
+  contradicts requirement 38, the decision that a clone with no findings file is kept, and item 8 of "Beyond the
+  request", which the planner cannot change. The unit goes back to the specifier and the human. The status stays
+  `approved`
 
 ## Amendments
