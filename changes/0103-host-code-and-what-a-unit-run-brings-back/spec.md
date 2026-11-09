@@ -84,12 +84,14 @@ Resuming:
    `<state>/agentrite/.orchestrator-runs/`, where `<state>` is `$XDG_STATE_HOME` when that is set and `~/.local/state`
    when it is not. The file is named by the SHA-256, in hexadecimal, of the absolute path of the run's directory with
    every link resolved, followed by `.json`, and holds the SHA-256 of the run's `definition.json` and of its
-   `state.json`, as the command last wrote each. The command writes the record whole, as it writes a file of a run,
-   each time it writes the run's `state.json`, and makes the directory when it is not there
+   `state.json`, as the command last wrote each. Each digest is of the bytes the command writes, as it holds them,
+   and never of a file read back from disk. The command writes the record whole, as it writes a file of a run, each
+   time it writes the run's `state.json`, and makes the directory when it is not there
 9. A resume refuses, starts nothing, writes nothing and exits `1` when the run it would resume has no record, or when
    its `definition.json` or `state.json` is not what the record holds. It names the run, says that a resume takes a
    run made where it is resumed whose files are as that run left them, and that `npx agentrite orchestrate <unit>`
-   starts a new run
+   starts a new run. A resume reads each of the two files once, and the bytes it compares with the record are the
+   bytes it then parses and runs, so that nothing it runs was read apart from what it compared
 10. A resume reads the run's `definition.json` with the project's roles and harnesses, as a run reads its definition,
     and refuses a definition that names a role or a harness the project does not have, as a run refuses it.
     `agentrite run` passes the model to the harness joined to `--model` by `=`, as `--model=<model>`, in every run,

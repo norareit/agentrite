@@ -37,5 +37,9 @@ timestamp: 2026-11-09T13:08:29Z
   No findings, saved in
   `.reviews/0103-host-code-and-what-a-unit-run-brings-back/spec-review-2026-11-09T180543Z.md`.
   Could not verify live model selection in every harness mode; model syntax was checked through help only.
+- 2026-11-09T23:34:53Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `f557abb`, on the
+  human's request, made two points of the record explicit: requirement 8 takes each digest of the bytes the
+  command writes and never of a file read back, and requirement 9 has a resume read each file once and compare
+  and parse the same bytes. The status is `draft`
 
 ## Amendments
