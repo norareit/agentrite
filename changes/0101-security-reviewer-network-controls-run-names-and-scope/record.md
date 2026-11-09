@@ -21,5 +21,11 @@ timestamp: 2026-11-08T23:43:58Z
   it. Read the role file again, the exit statuses of `COMMANDS.md`, the mounts of `SANDBOX.md` and "Commands" and
   the table of `CONTRIBUTING.md`. Added the two parts to `spec.md`, renumbering its last requirement, and retitled
   the unit, keeping its directory's name. The status is `draft`
+- 2026-11-09T10:51:22Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `1a94de0`, on the
+  human's request to fix the form of an entry of the list of accepted risks to the layout they use, with the commit
+  at which the entry's file and line hold. Did not read `.reviews/security-accepted.md`, by "Security findings" of
+  `AGENTS.md`, and worked from the empty layout the human gave. Rewrote requirement 19 to name the subsections,
+  added to requirement 21 how the place is judged by the entry's commit, and added two decisions. The status is
+  `draft`
 
 ## Amendments

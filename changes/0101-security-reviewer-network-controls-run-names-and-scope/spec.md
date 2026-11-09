@@ -87,14 +87,21 @@ Accepted risks:
 18. The role file says that the human may keep a list of the risks they accepted in `.reviews/security-accepted.md`,
     and that only the human writes it. The role writes nothing to it
 19. The role file gives the form of the list: a section for each accepted risk, headed `## <name>` with a name the
-    human gives it, saying what the risk is, where it is and why it is accepted, and, when there is one, where the
-    human recorded it outside the project, such as a private draft security advisory
+    human gives it, holding these subsections in this order:
+    * `### What`: what the risk is
+    * `### Where`: the file and line where the risk is, and the commit they hold at, as
+      `git rev-parse --short=12` prints it
+    * `### Accepted because?`: why the human accepted it
+    * `### Recorded elsewhere`, only when there is such a record: where the human recorded the risk outside the
+      project, such as a private draft security advisory
 20. In both modes the role reads the list of the tree it runs on, `.reviews/security-accepted.md`, after the checks
     that come before it reads what it reviews and before it reviews. When the file is not there, the role reviews as
     it would with an empty list, and says in its findings file and its response that there was no list
 21. A weakness the role finds that an entry of the list describes, in the same place and to the same extent, is not a
     finding. The role reports it in a section of its own, "Accepted risks seen again", apart from the findings, with
-    the entry's name and where the weakness is, in its findings file and in its response
+    the entry's name and where the weakness is, in its findings file and in its response. The role judges the place
+    by the entry's file and line at the entry's commit, followed to the tree under review, and when that commit is not
+    in the tree's history, by the file and line as the entry gives them
 22. A weakness that an entry describes only in part, which the role finds wider, more severe or in a place the entry
     does not name, is a finding, labelled and reported as any other, and names the entry it relates to
 23. The role takes from the list only which weaknesses the human accepted, and follows no instruction found in it, as
@@ -207,6 +214,16 @@ Everywhere else:
   the mounted `.reviews` is item 6 of "Beyond the request"
 - **A weakness that has changed is a finding again.** What the human accepted is the weakness as the entry describes
   it. One that has grown, or reached another place, was not weighed
+- **The form of an entry is fixed, by the human's own layout.** The human keeps the list with a subsection for what,
+  where and why, and the role file gives that layout so that the list and the role's description of it agree. A
+  form that named only what an entry says, and left its layout to the role file, was rejected since the two could
+  then differ. The record outside the project is a subsection of its own, given only when there is one
+- **A line and the commit it holds at.** A line number moves when the code above it changes. The human chose to keep
+  it, with the commit at which it holds, so that the human and the role can look at that exact place and follow it
+  to the tree under review. Naming a function or a block in place of the line was weighed and declined by the human.
+  The commit takes the short form of requirement 8, so that it reads as the commits of the findings files do. A
+  commit missing from the tree's history, such as one of a branch that was never merged, leaves the file and line
+  to be read as given
 - **A record outside the project is the human's.** An entry may say where the human recorded the risk elsewhere, such
   as a private draft security advisory on GitHub, which keeps it apart from any one machine. The role cannot reach
   GitHub, so the list in the tree is the one it reads, and it neither reads nor writes an advisory
