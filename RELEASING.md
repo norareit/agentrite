@@ -363,10 +363,12 @@ The second publishes it, with the ID the first printed:
 gh api -X PATCH repos/norareit/agentrite/security-advisories/<ID> -f state=published
 ```
 
-The text the human copies goes into the body as JSON strings, with its line breaks as `\n` and its double quotes as
-`\"`. What a draft created through the API is given as its state, and whether the API refuses to publish one that
-lacks a field the form asks for, was not established, and neither command has been run with the owner's login. The
-agent ends step 8 by telling the human what it gives and these commands, and runs none of them.
+The text the human copies goes into the body as JSON strings: first each backslash it holds as `\\`, and then its
+line breaks as `\n` and its double quotes as `\"`. When the finding names no CWE, the line of `cwe_ids` is left out,
+since the field is optional and takes identifiers alone. What a draft created through the API is given as its
+state, and whether the API refuses to publish one that lacks a field the form asks for, was not established, and
+neither command has been run with the owner's login. The agent ends step 8 by telling the human what it gives and
+these commands, and runs none of them.
 
 The human may then mark the versions before the release as deprecated, so that each install of one of them warns,
 with the release's version as `X.Y.Z`:
