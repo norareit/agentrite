@@ -1,19 +1,23 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
 import {
-  appendFileSync,
   chmodSync,
+  closeSync,
   existsSync,
+  ftruncateSync,
+  lstatSync,
   mkdirSync,
+  openSync,
   readdirSync,
   readFileSync,
+  readlinkSync,
   renameSync,
   rmSync,
   statSync,
   symlinkSync,
-  truncateSync,
   utimesSync,
   writeFileSync,
+  writeSync,
 } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { test } from 'node:test';
@@ -47,7 +51,14 @@ import {
   timedItems,
   variantOf,
 } from '../scripts/agentrite-orchestrate.mjs';
-import { followedFile, heartbeatText, instantOf, startHeartbeat, writeWhole } from '../scripts/agentrite.mjs';
+import {
+  createFile,
+  followedFile,
+  heartbeatText,
+  instantOf,
+  startHeartbeat,
+  writeWhole,
+} from '../scripts/agentrite.mjs';
 import { harnessNamed } from '../scripts/agentrite-harness.mjs';
 import { opencode as opencodeHarness } from '../scripts/harnesses/opencode.mjs';
 import { askAgainRequest, outcomeRequest, readOutcome, RESUMED } from '../scripts/agentrite-outcome.mjs';
@@ -1704,10 +1715,11 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
 // on standard error, and exits with the status in status-<n>, or 0. With wait-<n>, it writes its process id to
 // pid-<n> and becomes a sleep of that many seconds, ignoring SIGTERM with ignore-term-<n>. With linger-<n>, it leaves
 // a sleep of that many seconds in the background, holding its standard output, and exits. With seen-<n>, it writes to
-// seen-<n>.out, before it prints, a line for each followed file of the runs, its name and empty or holding. Nothing but
-// the builtins of sh and the sleep linked into the PATH, since it holds no other command. The sleep is exec'd, so that
-// the harness stays one process whose id the test knows: a job started in the background would ignore SIGINT, where
-// the harness would not.
+// seen-<n>.out, before it prints, a line for each followed file of the runs, its name and empty or holding. With
+// before-<n>, it reads that file as commands of sh before it prints. Nothing but the builtins of sh and the sleep
+// linked into the PATH, since it holds no other command, and what before-<n> runs by its absolute path. The sleep is
+// exec'd, so that the harness stays one process whose id the test knows: a job started in the background would
+// ignore SIGINT, where the harness would not.
 const FAKE_HARNESS = `#!/bin/sh
 count=0
 if [ -f "$FAKE_DIR/count" ]; then read -r count < "$FAKE_DIR/count"; fi
@@ -1723,6 +1735,7 @@ if [ -f "$FAKE_DIR/seen-$count" ]; then
     fi
   done > "$FAKE_DIR/seen-$count.out"
 fi
+if [ -f "$FAKE_DIR/before-$count" ]; then . "$FAKE_DIR/before-$count"; fi
 if [ -f "$FAKE_DIR/out-$count" ]; then
   while IFS= read -r line || [ -n "$line" ]; do printf '%s\\n' "$line"; done < "$FAKE_DIR/out-$count"
 fi
@@ -1747,6 +1760,9 @@ exit "$status"
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
 const SLEEP = spawnSync('sh', ['-c', 'command -v sleep'], { encoding: 'utf-8' }).stdout.trim();
 const GIT = spawnSync('sh', ['-c', 'command -v git'], { encoding: 'utf-8' }).stdout.trim();
+const [MV, LN] = ['mv', 'ln'].map((name) =>
+  spawnSync('sh', ['-c', `command -v ${name}`], { encoding: 'utf-8' }).stdout.trim(),
+);
 const SETTINGS = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const UNIT = '0029-try-the-orchestrator';
 const APPROVED = '---\nkind: feature\nstatus: approved\ntimestamp: 2026-10-21T10:00:00Z\n---\n\n# 0029\n';
@@ -1810,6 +1826,8 @@ function project(testContext) {
   const lingers = (number, seconds) => writeFileSync(join(fakes, `linger-${number}`), `${seconds}\n`);
   // That the fake at its call `number` records which followed files exist and whether they hold anything.
   const sees = (number) => writeFileSync(join(fakes, `seen-${number}`), '');
+  // That the fake at its call `number` runs the commands of sh `commands` before it prints.
+  const before = (number, commands) => writeFileSync(join(fakes, `before-${number}`), commands);
   // The process id of the fake at its call `number`, once it wrote it.
   const pidOf = async (number) => {
     const path = join(fakes, `pid-${number}`);
@@ -1821,7 +1839,22 @@ function project(testContext) {
       .filter((name) => name.startsWith('call-'))
       .sort((first, second) => Number(first.slice(5)) - Number(second.slice(5)))
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
-  return { base, write, read, agentrite, agentriteAt, started, answer, complains, waits, lingers, sees, pidOf, calls };
+  return {
+    base,
+    write,
+    read,
+    agentrite,
+    agentriteAt,
+    started,
+    answer,
+    complains,
+    waits,
+    lingers,
+    sees,
+    before,
+    pidOf,
+    calls,
+  };
 }
 
 // Checks out `branch` in the project at `base`, making it a git repository when it is none yet. The branch has no
@@ -3234,26 +3267,89 @@ test('instantOf gives an instant in UTC to the second', () => {
   assert.equal(instantOf(Date.UTC(2026, 0, 2, 3, 4, 5)), '2026-01-02T03:04:05Z');
 });
 
-const REAL_FILES = { writeFileSync, renameSync, rmSync };
+const REAL_FILES = { openSync, writeFileSync, closeSync, renameSync, rmSync };
 
-test('writeWhole writes the temporary file, renames it over the file, and removes nothing', (testContext) => {
+// R5, R16 of unit 0103: every file under `.orchestrator` is created anew, and a link at its name is replaced.
+
+test('createFile creates a file that is not there, open to write', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-create-');
+  const path = join(directory, 'state.json');
+
+  const descriptor = createFile(path, REAL_FILES);
+  writeSync(descriptor, 'made');
+  closeSync(descriptor);
+
+  assert.equal(readFileSync(path, 'utf-8'), 'made');
+});
+
+test('createFile removes a link at the name and leaves the file it named as it was', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-create-');
+  const elsewhere = temporaryDirectory(testContext, 'agentrite-elsewhere-');
+  writeFileSync(join(elsewhere, 'target'), 'kept');
+  const path = join(directory, 'state.json');
+  symlinkSync(join(elsewhere, 'target'), path);
+
+  closeSync(createFile(path, REAL_FILES));
+
+  assert.ok(lstatSync(path).isFile());
+  assert.equal(readFileSync(path, 'utf-8'), '');
+  assert.equal(readFileSync(join(elsewhere, 'target'), 'utf-8'), 'kept');
+});
+
+test('createFile removes a file or a directory at the name, and creates the file', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-create-');
+  const file = join(directory, 'file');
+  writeFileSync(file, 'old');
+  const held = join(directory, 'held');
+  mkdirSync(held);
+  writeFileSync(join(held, 'inside'), 'x');
+
+  closeSync(createFile(file, REAL_FILES));
+  closeSync(createFile(held, REAL_FILES));
+
+  assert.equal(readFileSync(file, 'utf-8'), '');
+  assert.ok(lstatSync(held).isFile());
+});
+
+test('createFile throws when the second creation fails too', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-create-');
+  const path = join(directory, 'state.json');
+  writeFileSync(path, 'old');
+  const opens = [];
+  const failing = (...args) => {
+    opens.push(args[0]);
+    const error = new Error('exists');
+    error.code = 'EEXIST';
+    throw error;
+  };
+
+  assert.throws(() => createFile(path, { ...REAL_FILES, openSync: failing }), /exists/);
+  assert.deepEqual(opens, [path, path]);
+});
+
+test('writeWhole creates its temporary file, writes it, renames it over the file, removing nothing', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-whole-');
   const calls = [];
   const recording = (name) => (...args) => {
-    calls.push([name, ...args]);
+    calls.push([name, ...args.filter((argument) => typeof argument === 'string')]);
     return REAL_FILES[name](...args);
   };
 
   writeWhole(join(directory, 'state.json'), '{}', {
+    openSync: recording('openSync'),
     writeFileSync: recording('writeFileSync'),
+    closeSync: recording('closeSync'),
     renameSync: recording('renameSync'),
     rmSync: recording('rmSync'),
   });
 
   assert.deepEqual(calls, [
-    ['writeFileSync', join(directory, '.state.json'), '{}'],
+    ['openSync', join(directory, '.state.json')],
+    ['writeFileSync', '{}'],
+    ['closeSync'],
     ['renameSync', join(directory, '.state.json'), join(directory, 'state.json')],
   ]);
+  assert.equal(readFileSync(join(directory, 'state.json'), 'utf-8'), '{}');
 });
 
 test('writeWhole replaces a file and leaves the file alone in its directory', (testContext) => {
@@ -3266,12 +3362,40 @@ test('writeWhole replaces a file and leaves the file alone in its directory', (t
   assert.deepEqual(readdirSync(directory), ['state.json']);
 });
 
+test('writeWhole writes in place of a link at its temporary name and at its name, leaving what each named', (t) => {
+  const directory = temporaryDirectory(t, 'agentrite-whole-');
+  const elsewhere = temporaryDirectory(t, 'agentrite-elsewhere-');
+  writeFileSync(join(elsewhere, 'first'), 'kept');
+  writeFileSync(join(elsewhere, 'second'), 'kept too');
+  symlinkSync(join(elsewhere, 'first'), join(directory, '.state.json'));
+  symlinkSync(join(elsewhere, 'second'), join(directory, 'state.json'));
+
+  writeWhole(join(directory, 'state.json'), 'written', REAL_FILES);
+
+  assert.ok(lstatSync(join(directory, 'state.json')).isFile());
+  assert.equal(readFileSync(join(directory, 'state.json'), 'utf-8'), 'written');
+  assert.deepEqual(readdirSync(directory), ['state.json']);
+  assert.equal(readFileSync(join(elsewhere, 'first'), 'utf-8'), 'kept');
+  assert.equal(readFileSync(join(elsewhere, 'second'), 'utf-8'), 'kept too');
+});
+
+test('writeWhole replaces a directory at its name', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-whole-');
+  mkdirSync(join(directory, 'heartbeat'));
+  writeFileSync(join(directory, 'heartbeat', 'held'), 'x');
+
+  writeWhole(join(directory, 'heartbeat'), 'text', REAL_FILES);
+
+  assert.equal(readFileSync(join(directory, 'heartbeat'), 'utf-8'), 'text');
+  assert.deepEqual(readdirSync(directory), ['heartbeat']);
+});
+
 test('writeWhole that fails while writing throws the error and leaves the file as it was', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-whole-');
   writeFileSync(join(directory, 'state.json'), 'first');
   const failure = new Error('disk full');
-  const failing = (path) => {
-    writeFileSync(path, 'par');
+  const failing = (descriptor) => {
+    writeFileSync(descriptor, 'par');
     throw failure;
   };
 
@@ -3286,12 +3410,13 @@ test('writeWhole that fails while writing throws the error and leaves the file a
 
 test('writeWhole that fails while renaming throws and leaves no temporary file', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-whole-');
-  mkdirSync(join(directory, 'heartbeat'));
-  writeFileSync(join(directory, 'heartbeat', 'held'), 'x');
+  const failing = () => {
+    throw new Error('read-only');
+  };
 
-  assert.throws(() => writeWhole(join(directory, 'heartbeat'), 'text', REAL_FILES));
+  assert.throws(() => writeWhole(join(directory, 'heartbeat'), 'text', { ...REAL_FILES, renameSync: failing }));
 
-  assert.deepEqual(readdirSync(directory), ['heartbeat']);
+  assert.deepEqual(readdirSync(directory), []);
 });
 
 test('heartbeatText is one instant followed by a line break, and nothing else', () => {
@@ -3384,46 +3509,79 @@ test('a run keeps a heartbeat that moves on while a step runs and is left at its
   assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.status, 0);
 });
 
-const FOLLOWED_FILES = { writeFileSync, appendFileSync, truncateSync };
+const FOLLOWED_FILES = { openSync, writeSync, ftruncateSync, closeSync, rmSync };
+
+// The functions of `files` that are given a path, which a followed file calls only while it is made.
+const byPath = (files, calls) =>
+  Object.fromEntries(
+    Object.entries(files).map(([name, call]) => [
+      name,
+      (...args) => {
+        if (typeof args[0] === 'string') calls.push(name);
+        return call(...args);
+      },
+    ]),
+  );
 
 test('followedFile makes the file empty and adds each line whole, in order, leaving no other file', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-followed-');
   const path = join(directory, '00-implementer.followed.jsonl');
+  const calls = [];
 
-  const add = followedFile(path, FOLLOWED_FILES);
+  const { add, close } = followedFile(path, byPath(FOLLOWED_FILES, calls));
   assert.equal(readFileSync(path, 'utf-8'), '');
+  const made = calls.length;
   add('{"a":1}\n');
-  add('{"b":2}\n');
+  add('{"é":2}\n');
+  close();
 
-  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"b":2}\n');
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"é":2}\n');
   assert.deepEqual(readdirSync(directory), ['00-implementer.followed.jsonl']);
+  assert.equal(calls.length, made, `calls by path after the file was made: ${calls.slice(made).join(', ')}`);
 });
 
-test('followedFile whose making throws does not throw, and writes the lines added after it', (testContext) => {
+test('followedFile replaces a link at its name and leaves what the link named as it was', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const elsewhere = temporaryDirectory(testContext, 'agentrite-elsewhere-');
+  writeFileSync(join(elsewhere, 'target'), 'kept');
+  const path = join(directory, 'followed.jsonl');
+  symlinkSync(join(elsewhere, 'target'), path);
+
+  const { add, close } = followedFile(path, FOLLOWED_FILES);
+  add('{"a":1}\n');
+  close();
+
+  assert.ok(lstatSync(path).isFile());
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n');
+  assert.equal(readFileSync(join(elsewhere, 'target'), 'utf-8'), 'kept');
+});
+
+test('followedFile whose making throws does not throw, and adds no line after it', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-followed-');
   const path = join(directory, 'followed.jsonl');
   const failing = () => {
     throw new Error('read-only');
   };
 
-  const add = followedFile(path, { ...FOLLOWED_FILES, writeFileSync: failing });
-  add('{"a":1}\n');
+  const { add, close } = followedFile(path, { ...FOLLOWED_FILES, openSync: failing });
+  assert.doesNotThrow(() => add('{"a":1}\n'));
+  assert.doesNotThrow(close);
 
-  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n');
+  assert.ok(!existsSync(path));
 });
 
-test('followedFile whose append wrote part of a line cuts the file back, and the next line is whole', (testContext) => {
+test('followedFile whose write wrote part of a line cuts the file back, and the next line is whole', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-followed-');
   const path = join(directory, 'followed.jsonl');
   let failNext = false;
-  const partial = (target, line) => {
-    if (!failNext) return appendFileSync(target, line);
+  const partial = (descriptor, line, position) => {
+    if (!failNext) return writeSync(descriptor, line, position);
     failNext = false;
-    appendFileSync(target, line.slice(0, 3));
+    writeSync(descriptor, line.slice(0, 3), position);
     throw new Error('disk full');
   };
 
-  const add = followedFile(path, { ...FOLLOWED_FILES, appendFileSync: partial });
+  const { add } = followedFile(path, { ...FOLLOWED_FILES, writeSync: partial });
   add('{"a":1}\n');
   failNext = true;
   assert.doesNotThrow(() => add('{"é":2}\n'));
@@ -3433,23 +3591,40 @@ test('followedFile whose append wrote part of a line cuts the file back, and the
   assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"c":3}\n');
 });
 
-test('followedFile whose append and cut back fail does not throw, and adds no line behind a part', (testContext) => {
+test('followedFile whose write returns fewer bytes than the line cuts it back', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const path = join(directory, 'followed.jsonl');
+  let short = false;
+  const shortened = (descriptor, line, position) =>
+    short ? writeSync(descriptor, line.slice(0, 3), position) : writeSync(descriptor, line, position);
+
+  const { add } = followedFile(path, { ...FOLLOWED_FILES, writeSync: shortened });
+  add('{"a":1}\n');
+  short = true;
+  add('{"b":2}\n');
+  short = false;
+  add('{"c":3}\n');
+
+  assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"c":3}\n');
+});
+
+test('followedFile whose write and cut back fail does not throw, and adds no line behind a part', (testContext) => {
   const directory = temporaryDirectory(testContext, 'agentrite-followed-');
   const path = join(directory, 'followed.jsonl');
   let broken = false;
   const failing = () => {
     throw new Error('gone');
   };
-  const partial = (target, line) => {
-    if (!broken) return appendFileSync(target, line);
-    appendFileSync(target, line.slice(0, 3));
+  const partial = (descriptor, line, position) => {
+    if (!broken) return writeSync(descriptor, line, position);
+    writeSync(descriptor, line.slice(0, 3), position);
     return failing();
   };
 
-  const add = followedFile(path, {
+  const { add } = followedFile(path, {
     ...FOLLOWED_FILES,
-    appendFileSync: partial,
-    truncateSync: (target, length) => (broken ? failing() : truncateSync(target, length)),
+    writeSync: partial,
+    ftruncateSync: (descriptor, length) => (broken ? failing() : ftruncateSync(descriptor, length)),
   });
   add('{"a":1}\n');
   broken = true;
@@ -3459,6 +3634,23 @@ test('followedFile whose append and cut back fail does not throw, and adds no li
   add('{"d":4}\n');
 
   assert.equal(readFileSync(path, 'utf-8'), '{"a":1}\n{"d":4}\n');
+});
+
+test('closing a followed file closes its descriptor', (testContext) => {
+  const directory = temporaryDirectory(testContext, 'agentrite-followed-');
+  const closed = [];
+
+  const { close } = followedFile(join(directory, 'followed.jsonl'), {
+    ...FOLLOWED_FILES,
+    closeSync: (descriptor) => {
+      closed.push(descriptor);
+      closeSync(descriptor);
+    },
+  });
+  close();
+
+  assert.equal(closed.length, 1);
+  assert.equal(typeof closed[0], 'number');
 });
 
 // Unit 0089: `agentrite orchestrate --resume`, of runs the command wrote, on the unit's branch unless a test checks out
@@ -4090,4 +4282,103 @@ test('a step of Codex starts in its role, is followed by its messages, and is as
   assert.ok(result.stdout.includes('Summary: Reviewed.'), result.stdout);
   const state = JSON.parse(read(`${runDirectoryOf(base).name}/state.json`));
   assert.deepEqual(state.sessions, [{ role: 'reviewer', harness: 'codex', session: CODEX_THREAD }]);
+});
+
+// Unit 0103, R3, R4, R7, R16: what `agentrite orchestrate` writes under `.orchestrator`, and where.
+
+// What stands at each path under `relative` of `base`, by `lstat`: a link by its target, a file by its text, and a
+// directory by null and then what it holds.
+function entriesOf(base, relative) {
+  const path = join(base, relative);
+  if (!existsSync(path) && !isLink(path)) return [];
+  const stats = lstatSync(path);
+  if (stats.isSymbolicLink()) return [[relative, `-> ${readlinkSync(path)}`]];
+  if (!stats.isDirectory()) return [[relative, readFileSync(path, 'utf-8')]];
+  return [[relative, null], ...readdirSync(path).flatMap((name) => entriesOf(base, join(relative, name)))];
+}
+
+function isLink(path) {
+  try {
+    return lstatSync(path).isSymbolicLink();
+  } catch {
+    return false;
+  }
+}
+
+const NOT_MADE = (path, found, kind) =>
+  `agentrite: ${path} is ${found}, which is not what the command makes there: a ${kind}. ` +
+  'Remove it, and run the command again\n';
+
+test('a run and a resume refuse an entry under .orchestrator that the command does not make, writing nothing', (t) => {
+  const unitPath = `.orchestrator/${UNIT}`;
+  const cases = [
+    [
+      ({ base }, outside) => symlinkSync(outside, join(base, '.orchestrator')),
+      NOT_MADE('.orchestrator', 'a symbolic link', 'directory'),
+    ],
+    [
+      ({ base, write }, outside) => {
+        write('.orchestrator/kept', 'x');
+        writeFileSync(join(outside, 'ignore'), '!*\n');
+        symlinkSync(join(outside, 'ignore'), join(base, '.orchestrator', '.gitignore'));
+      },
+      NOT_MADE('.orchestrator/.gitignore', 'a symbolic link', 'file'),
+    ],
+    [
+      ({ base, write }, outside) => {
+        write('.orchestrator/.gitignore', '*\n');
+        symlinkSync(outside, join(base, unitPath));
+      },
+      NOT_MADE(unitPath, 'a symbolic link', 'directory'),
+    ],
+    [({ write }) => write('.orchestrator', 'x'), NOT_MADE('.orchestrator', 'a file', 'directory')],
+    [({ write }) => write(unitPath, 'x'), NOT_MADE(unitPath, 'a file', 'directory')],
+    [
+      ({ write }) => write('.orchestrator/.gitignore/held', 'x'),
+      NOT_MADE('.orchestrator/.gitignore', 'a directory', 'file'),
+    ],
+  ];
+  for (const [index, [prepare, message]] of cases.entries()) {
+    for (const args of [['--definition', 'one.json'], ['--resume']]) {
+      const context = project(t);
+      const outside = temporaryDirectory(t, 'agentrite-outside-');
+      writeFileSync(join(outside, 'held'), 'kept');
+      context.write('one.json', JSON.stringify(ONE_STEP));
+      context.answer(1, claudePrinted(responseOf(DONE)));
+      prepare(context, outside);
+      const before = [entriesOf(context.base, '.orchestrator'), entriesOf(outside, '')];
+
+      const result = context.agentrite('orchestrate', '0029', ...args);
+
+      const label = `case ${index} ${args[0]}`;
+      assert.equal(result.status, 1, `${label}: ${result.stdout}${result.stderr}`);
+      assert.equal(result.stderr, message, label);
+      assert.equal(result.stdout, '', label);
+      assert.equal(context.calls().length, 0, label);
+      assert.deepEqual([entriesOf(context.base, '.orchestrator'), entriesOf(outside, '')], before, label);
+    }
+  }
+});
+
+test('a .orchestrator/.gitignore of * alone is not written, and one holding anything else is', (testContext) => {
+  const { base, write, agentriteAt, answer } = project(testContext);
+  write('one.json', JSON.stringify(ONE_STEP));
+  write('.orchestrator/.gitignore', '*\n');
+  const ignore = join(base, '.orchestrator', '.gitignore');
+  utimesSync(ignore, new Date(Date.UTC(2020, 0, 1)), new Date(Date.UTC(2020, 0, 1)));
+  const { ino, mtimeMs } = statSync(ignore);
+  // Each run at a minute of its own, so that no two make the same directory.
+  const runAt = (minutes) => agentriteAt(minutesLater(minutes), 'orchestrate', '0029', '--definition', 'one.json');
+  answer(1, claudePrinted(responseOf(DONE)));
+
+  assert.equal(runAt(0).status, 0);
+  assert.deepEqual([statSync(ignore).ino, statSync(ignore).mtimeMs], [ino, mtimeMs]);
+
+  for (const [index, held] of ['*', '*\n!x\n'].entries()) {
+    write('.orchestrator/.gitignore', held);
+    answer(index + 2, claudePrinted(responseOf(DONE)));
+    const result = runAt(index + 1);
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(readFileSync(ignore, 'utf-8'), '*\n', JSON.stringify(held));
+  }
 });

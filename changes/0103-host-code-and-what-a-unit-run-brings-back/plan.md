@@ -103,38 +103,38 @@ reads a file of the clone, and no program but git reads one. `core.fileMode` is 
 
 Writing under `.orchestrator`:
 
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, add a test that a run and a resume each exit `1`, print on standard
+- [x] In `tests/agentrite-orchestrate.test.mjs`, add a test that a run and a resume each exit `1`, print on standard
   error the path, that it is not what the command makes there and to remove it, start no harness and leave
   `.orchestrator` as it was, for a link at `.orchestrator`, at `.orchestrator/.gitignore` and at
   `.orchestrator/<unit-directory>`, for a file at `.orchestrator` and at `.orchestrator/<unit-directory>`, and for a
   directory at `.orchestrator/.gitignore`. A link's target is a directory or file outside the project, and the test
   asserts that it is unchanged (R3, R16)
-- [ ] In `scripts/agentrite.mjs`, add `checkOrchestratorPaths(root, directory)`, which `lstatSync`s the three paths and
+- [x] In `scripts/agentrite.mjs`, add `checkOrchestratorPaths(root, directory)`, which `lstatSync`s the three paths and
   throws the refusal of R3, and call it first in `prepareRun` after the unit is resolved and in `prepareResume`
   before `latestRunName`. Make `makeRunDirectory` make `.orchestrator` and the unit's directory each with `mkdirSync`
   without `recursive` when it is missing (R3)
-- [ ] Add a test that a `.orchestrator/.gitignore` holding `*\n` is not written, by its inode and its modification
+- [x] Add a test that a `.orchestrator/.gitignore` holding `*\n` is not written, by its inode and its modification
   time, and that one holding anything else, as `*` without a line break and `*\n!x\n`, holds `*\n` after a run (R4)
-- [ ] Make `makeRunDirectory` write `.gitignore` with `writeWhole` when it does not hold exactly `*\n`, and leave it
+- [x] Make `makeRunDirectory` write `.gitignore` with `writeWhole` when it does not hold exactly `*\n`, and leave it
   otherwise (R4)
-- [ ] Add unit tests of a new `createFile(path, files)`: it creates a file that is not there; with a link at the name
+- [x] Add unit tests of a new `createFile(path, files)`: it creates a file that is not there; with a link at the name
   to a file elsewhere, it removes the link, creates the file and leaves the file the link named as it was; with a
   file or a directory at the name, it removes it and creates the file; and when the second open fails too, it throws.
   Add unit tests that `writeWhole` with a link at its temporary name and at its name writes the file in place of the
   link and leaves what each link named unchanged, and, with a directory at its name, replaces it. Change the existing
   tests of `writeWhole` that record the order of its calls to the new calls (R5, R16)
-- [ ] Add `createFile`, which opens with `O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW`, on `EEXIST` or `ELOOP` removes the
+- [x] Add `createFile`, which opens with `O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW`, on `EEXIST` or `ELOOP` removes the
   entry with `rmSync(path, { recursive: true, force: true })` and opens once more, and returns the descriptor. Make
   `writeWhole` take `openSync`, `writeFileSync`, `closeSync`, `renameSync` and `rmSync` in `files`, create its
   temporary file by `createFile`, write it through the descriptor, close it, and rename it, removing an entry that
   makes the rename fail with `EISDIR` or `ENOTEMPTY` and renaming once more. A failure still removes the temporary
   file and throws (R5)
-- [ ] Add unit tests that `followedFile` creates its file by `createFile` when it is made, so a link at the name is
+- [x] Add unit tests that `followedFile` creates its file by `createFile` when it is made, so a link at the name is
   replaced and what it named is unchanged; that each line goes through the descriptor at the offset reached and the
   cut back through `ftruncateSync` of the descriptor, with no call that takes the path after the file is made; that
   its failures are still dropped as today; and that closing it closes the descriptor. Change its existing tests to
   the new calls (R5, R6, R16)
-- [ ] Make `followedFile(path, files)` take `openSync`, `writeSync`, `ftruncateSync`, `closeSync` and `rmSync`, create
+- [x] Make `followedFile(path, files)` take `openSync`, `writeSync`, `ftruncateSync`, `closeSync` and `rmSync`, create
   the file by `createFile`, write each line with `writeSync(descriptor, line, offset)`, cut back with
   `ftruncateSync(descriptor, length)`, and return `{ add, close }`. A creation that fails leaves `add` doing nothing,
   as a failed write is dropped today. In `runPrepared`, close the followed file when `runStep` settles, in a
@@ -263,8 +263,8 @@ Documents:
 
 ## Commit Points
 
-- [ ] `feature-0103` the plan and its record entry
-- [ ] `feature-0103` the check of the three paths, `.gitignore`, `createFile`, `writeWhole` and the followed file
+- [x] `feature-0103` the plan and its record entry
+- [x] `feature-0103` the check of the three paths, `.gitignore`, `createFile`, `writeWhole` and the followed file
 - [ ] `feature-0103` the check of the run's directory before each write
 - [ ] `feature-0103` the record of runs and the resume's judgement of it, the resume's definition read with the
   project's names

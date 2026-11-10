@@ -1,18 +1,21 @@
 #!/usr/bin/env node
 import { spawn, spawnSync } from 'node:child_process';
 import {
-  appendFileSync,
   chmodSync,
+  closeSync,
+  constants,
+  ftruncateSync,
   lstatSync,
   mkdirSync,
+  openSync,
   readdirSync,
   readFileSync,
   realpathSync,
   renameSync,
   rmSync,
   statSync,
-  truncateSync,
   writeFileSync,
+  writeSync,
 } from 'node:fs';
 import { basename, dirname, join, posix, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
@@ -1588,21 +1591,53 @@ export function instantOf(time) {
   return new Date(time).toISOString().replace(/\.\d+Z$/, 'Z');
 }
 
+/** The flags a file under `.orchestrator` is created with: anew, and never through a symbolic link at its name. */
+const CREATE_FLAGS = constants.O_WRONLY | constants.O_CREAT | constants.O_EXCL | constants.O_NOFOLLOW;
+
+/**
+ * Creates the file at `path` anew and returns its descriptor, open to write. When anything stands at `path`, a
+ * symbolic link among it, that entry is removed, never what a link names, and the file is created once more; when
+ * that fails too, the error is thrown. `files` holds the functions of `node:fs` it calls, so that a test can make one
+ * of them fail.
+ *
+ * @param {string} path
+ * @param {Pick<typeof import('node:fs'), 'openSync' | 'rmSync'>} files
+ * @returns {number}
+ */
+export function createFile(path, files) {
+  try {
+    return files.openSync(path, CREATE_FLAGS, 0o666);
+  } catch (error) {
+    const code = /** @type {NodeJS.ErrnoException} */ (error).code;
+    if (code !== 'EEXIST' && code !== 'ELOOP') throw error;
+  }
+  // `rmSync` takes a symbolic link away itself, and leaves what it names.
+  files.rmSync(path, { recursive: true, force: true });
+  return files.openSync(path, CREATE_FLAGS, 0o666);
+}
+
 /**
  * Writes `content` to `path` whole: a reader of `path` at any time reads what it held before or `content`, and never
- * part of either. The content goes to a file in the same directory whose name opens with `.`, which then replaces
- * `path` in one rename. When either step fails, that file is removed and the error thrown. `files` holds the
- * functions of `node:fs` it calls, so that a test can record their order and make one of them fail.
+ * part of either. The content goes to a file in the same directory whose name opens with `.`, created anew by
+ * `createFile`, which then replaces `path` in one rename. A rename onto a directory removes that directory and is made
+ * once more, and a rename onto a symbolic link replaces the link and not what it names. When a step fails, the
+ * temporary file is removed and the error thrown. `files` holds the functions of `node:fs` it calls, so that a test
+ * can record their order and make one of them fail.
  *
  * @param {string} path
  * @param {string} content
- * @param {Pick<typeof import('node:fs'), 'writeFileSync' | 'renameSync' | 'rmSync'>} files
+ * @param {Pick<typeof import('node:fs'), 'openSync' | 'writeFileSync' | 'closeSync' | 'renameSync' | 'rmSync'>} files
  */
 export function writeWhole(path, content, files) {
   const temporary = join(dirname(path), `.${basename(path)}`);
   try {
-    files.writeFileSync(temporary, content);
-    files.renameSync(temporary, path);
+    const descriptor = createFile(temporary, files);
+    try {
+      files.writeFileSync(descriptor, content);
+    } finally {
+      files.closeSync(descriptor);
+    }
+    renameOnto(temporary, path, files);
   } catch (error) {
     try {
       files.rmSync(temporary, { force: true });
@@ -1614,46 +1649,78 @@ export function writeWhole(path, content, files) {
 }
 
 /**
- * Makes the followed file of a step at `path`, empty, and returns the function that adds a line to its end. A line
- * is added whole or not at all: when an append throws, the file is cut back to the lines added before it, since a
- * part of the line may stand at its end, and a cut back that fails is tried again before the next line is added, which
- * is lost if it still fails. A failure of any of the three calls is dropped, since the file is for readers and not a
- * part of the run, as the heartbeat is, and the lines after it are added as if it had not failed.
- * `files` holds the functions of `node:fs` it calls, so that a test can make one of them fail.
+ * Renames `from` onto `to`, removing a directory that stands at `to` and renaming once more.
+ *
+ * @param {string} from
+ * @param {string} to
+ * @param {Pick<typeof import('node:fs'), 'renameSync' | 'rmSync'>} files
+ */
+function renameOnto(from, to, files) {
+  try {
+    files.renameSync(from, to);
+    return;
+  } catch (error) {
+    const code = /** @type {NodeJS.ErrnoException} */ (error).code;
+    if (code !== 'EISDIR' && code !== 'ENOTEMPTY') throw error;
+  }
+  files.rmSync(to, { recursive: true, force: true });
+  files.renameSync(from, to);
+}
+
+/**
+ * Makes the followed file of a step at `path`, empty and created anew by `createFile`, and returns the function that
+ * adds a line to its end and the one that closes it. Every line is written through the descriptor the file was
+ * created with, and the file is never opened again by its path. A line is added whole or not at all: when a write
+ * throws or writes part of the line, the file is cut back to the lines added before it, and a cut back that fails is
+ * tried again before the next line is added, which is lost if it still fails. A failure of any call is dropped, since
+ * the file is for readers and not a part of the run, as the heartbeat is, and the lines after it are added as if it
+ * had not failed. When the file cannot be created, no line is added. `files` holds the functions of `node:fs` it
+ * calls, so that a test can make one of them fail.
  *
  * @param {string} path
- * @param {Pick<typeof import('node:fs'), 'writeFileSync' | 'appendFileSync' | 'truncateSync'>} files
- * @returns {(line: string) => void}
+ * @param {Pick<typeof import('node:fs'), 'openSync' | 'writeSync' | 'ftruncateSync' | 'closeSync' | 'rmSync'>} files
+ * @returns {{ add: (line: string) => void, close: () => void }}
  */
 export function followedFile(path, files) {
-  let length = 0;
-  let cutBackPending = false;
+  /** @type {number} */ let descriptor;
   try {
-    files.writeFileSync(path, '');
+    descriptor = createFile(path, files);
   } catch {
     // The file is for readers, and the run goes on without it.
+    return { add: () => {}, close: () => {} };
   }
+  let length = 0;
+  let cutBackPending = false;
   const cutBack = () => {
     try {
-      files.truncateSync(path, length);
+      files.ftruncateSync(descriptor, length);
       cutBackPending = false;
     } catch {
       // The file is for readers, and the cut back is tried again before the next line.
       cutBackPending = true;
     }
   };
-  return (line) => {
-    // A part of an earlier line may still stand at the end, and appending behind it would corrupt this line too.
+  const add = (/** @type {string} */ line) => {
+    // A part of an earlier line may still stand at the end, and writing behind it would corrupt this line too.
     if (cutBackPending) cutBack();
     if (cutBackPending) return;
+    const bytes = Buffer.byteLength(line);
     try {
-      files.appendFileSync(path, line);
-      length += Buffer.byteLength(line);
+      if (files.writeSync(descriptor, line, length) !== bytes) throw new Error('a part of the line was written');
+      length += bytes;
     } catch {
       // The file is for readers, and what could not be written is lost.
       cutBack();
     }
   };
+  const close = () => {
+    try {
+      files.closeSync(descriptor);
+    } catch {
+      // The file is for readers, and the run goes on without it.
+    }
+  };
+  return { add, close };
 }
 
 /**
@@ -1711,11 +1778,53 @@ function checkedOutBranch(root) {
   throw new Error(`git could not be run: ${result.stderr.trim()}`);
 }
 
+/** The functions of `node:fs` that `writeWhole` calls. */
+const WRITE_FILES = { openSync, writeFileSync, closeSync, renameSync, rmSync };
+
+/** The functions of `node:fs` that `followedFile` calls. */
+const FOLLOWED_FILES = { openSync, writeSync, ftruncateSync, closeSync, rmSync };
+
 /**
- * Makes the directory of a new run of the unit, after making sure that `.orchestrator/.gitignore` holds `*` alone,
- * and returns its path from the root. It is named by the instant the run started, followed by `--` and the variant
- * for a run on a variant's branch, and made without `recursive`, so that a second run of one variant in the same
- * second fails rather than mixing with the first.
+ * Throws, naming the path, unless `.orchestrator` and `.orchestrator/<directory>` are each a directory or missing,
+ * and `.orchestrator/.gitignore` a regular file or missing. None of them may be a symbolic link, since the command
+ * makes none there. The paths are taken in that order, so that each is examined only below a directory.
+ *
+ * @param {string} root
+ * @param {string} directory
+ */
+function checkOrchestratorPaths(root, directory) {
+  for (const [path, kind] of [
+    [ORCHESTRATOR_DIRECTORY, 'directory'],
+    [join(ORCHESTRATOR_DIRECTORY, '.gitignore'), 'file'],
+    [join(ORCHESTRATOR_DIRECTORY, directory), 'directory'],
+  ]) {
+    /** @type {import('node:fs').Stats} */ let stats;
+    try {
+      stats = lstatSync(resolve(root, path));
+    } catch (error) {
+      if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') continue;
+      throw new Error(`${path} cannot be examined: ${messageOf(error)}`);
+    }
+    if (kind === 'directory' ? stats.isDirectory() : stats.isFile()) continue;
+    const found = stats.isSymbolicLink()
+      ? 'a symbolic link'
+      : stats.isDirectory()
+        ? 'a directory'
+        : stats.isFile()
+          ? 'a file'
+          : 'neither a file nor a directory';
+    throw new Error(
+      `${path} is ${found}, which is not what the command makes there: a ${kind}. Remove it, and run the command again`,
+    );
+  }
+}
+
+/**
+ * Makes the directory of a new run of the unit, after making `.orchestrator` and the unit's directory in it when they
+ * are missing and making sure that `.orchestrator/.gitignore` holds `*` alone, and returns its path from the root.
+ * `checkOrchestratorPaths` has ruled out a link and an entry of the wrong kind at each. It is named by the instant the
+ * run started, followed by `--` and the variant for a run on a variant's branch, and made without `recursive`, so that
+ * a second run of one variant in the same second fails rather than mixing with the first.
  *
  * @param {string} root
  * @param {string} directory
@@ -1723,11 +1832,12 @@ function checkedOutBranch(root) {
  * @returns {string}
  */
 function makeRunDirectory(root, directory, variant) {
-  const ignore = resolve(root, ORCHESTRATOR_DIRECTORY, '.gitignore');
-  mkdirSync(dirname(ignore), { recursive: true });
-  if (!isRegularFile(ignore) || readFileSync(ignore, 'utf-8') !== '*\n') writeFileSync(ignore, '*\n');
+  const orchestrator = resolve(root, ORCHESTRATOR_DIRECTORY);
+  if (!exists(orchestrator)) mkdirSync(orchestrator);
+  const ignore = join(orchestrator, '.gitignore');
+  if (!isRegularFile(ignore) || readFileSync(ignore, 'utf-8') !== '*\n') writeWhole(ignore, '*\n', WRITE_FILES);
   const unitDirectory = join(ORCHESTRATOR_DIRECTORY, directory);
-  mkdirSync(resolve(root, unitDirectory), { recursive: true });
+  if (!exists(resolve(root, unitDirectory))) mkdirSync(resolve(root, unitDirectory));
   const run = join(unitDirectory, runName(instantOf(Date.now()), variant));
   mkdirSync(resolve(root, run));
   return run;
@@ -1951,6 +2061,7 @@ function prepareRun(root, { unit, definition: given }) {
   const settings = readSettings(root);
   const { path, text, definition } = readDefinition(root, given, settings);
   const directory = resolveUnit(unit, changeDirectories(root));
+  checkOrchestratorPaths(root, directory);
   checkApproved(root, directory);
   // The branch is read once, before anything is written: the run's directory holds the variant in its name and
   // `state.json` the branch, and neither follows a branch checked out later.
@@ -2024,6 +2135,7 @@ function prepareResume(root, { unit, definition: given }) {
   const directory = resolveUnit(unit, changeDirectories(root));
   checkResumable(root, directory);
   const branch = checkedOutBranch(root);
+  checkOrchestratorPaths(root, directory);
   const name = latestRunName(root, directory, variantOf(branch));
   const run = join(ORCHESTRATOR_DIRECTORY, directory, name);
   const texts = runTexts(root, run);
@@ -2084,8 +2196,10 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
   const { directory, branch, path, text, definition, from, resumes, opening } = prepared;
   const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
   const output = (follow ? framedOutput : plainOutput)((text) => process.stdout.write(text));
-  const write = (/** @type {string} */ name, /** @type {string} */ content) =>
-    writeWhole(resolve(root, runDirectory, name), content, { writeFileSync, renameSync, rmSync });
+  /** @type {number | undefined} */ let group;
+  const write = (/** @type {string} */ name, /** @type {string} */ content) => {
+    writeWhole(resolve(root, runDirectory, name), content, WRITE_FILES);
+  };
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
     stepFileName(definition, planned.number, planned.step.role, kind);
   const sessions = prepared.sessions.map((session) => ({ ...session }));
@@ -2100,7 +2214,6 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
   try {
     write('definition.json', text);
     writeState(null);
-    /** @type {number | undefined} */ let group;
     passSignalsOn(() => group);
     /** @type {string | undefined} */ let responsePath;
     if (opening !== undefined) output.opening(opening);
@@ -2112,11 +2225,8 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
         output.started(stepLine(planned));
       },
       run: (planned) => {
-        const add = followedFile(resolve(root, runDirectory, fileOf(planned, 'followed.jsonl')), {
-          writeFileSync,
-          appendFileSync,
-          truncateSync,
-        });
+        const followed = followedFile(resolve(root, runDirectory, fileOf(planned, 'followed.jsonl')), FOLLOWED_FILES);
+        const { add } = followed;
         return runStep(
           root,
           directory,
@@ -2131,7 +2241,7 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
             output.items(timed);
             for (const item of timed) add(followedLine(item, instantOf(item.time)));
           },
-        );
+        ).finally(() => followed.close());
       },
       ended(entry) {
         const { planned, result, reading } = entry;
