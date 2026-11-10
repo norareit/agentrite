@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-10T16:10:06Z
 ---
 
@@ -157,5 +157,8 @@ something the form requires. The commands of `gh` were not run with the owner's 
   "Proofs of concept", "What needs the host" and "Reporting" of `extra-roles/security-reviewer.md`. The status is
   `draft`
 - 2026-11-10T17:24:06Z [human] approved the record. The status is `approved`
+- 2026-11-10T17:24:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, cut
+  `task-0107-the-advisories-are-created-at-the-release` from `master` at `031ccd6` and began the work. The status is
+  `in-progress`
 
 ## Amendments
