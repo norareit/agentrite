@@ -168,20 +168,36 @@ the host, with the commands, what the step shows, and what of its output to brin
 In an audit the human limited, your findings file opens by naming its scope, the files or areas the human named,
 before any finding, so that it is not taken for an audit of the whole tree.
 
-Label each finding as `SEC1`, `SEC2` and on. Give each one:
+Label each finding as `SEC1`, `SEC2` and on. A finding the human decides to fix is published, at the release that
+ships the fix, as a security advisory on GitHub, and the human copies its text from your finding into GitHub's form.
+So give each finding first the fields of that form, under these names, each one fit to be copied as it stands:
 
-* Where it is: the file and the line, or the command and the option
-* What is wrong
-* How it is exploited, and from what position of the adversary, such as an agent in the sandbox, a dependency or a
-  file brought back
-* Whether a proof of concept confirmed it, or it is plausible from reading
-* Its severity, one of:
+* **Summary**: one line that names the weakness, fit to be the advisory's title
+* **Details**: where it is, as the file and the line, or the command and the option, and what is wrong
+* **Proof of concept**: the proof of concept that confirmed it, with its full text, the command that ran it and what
+  it printed, as "Proofs of concept" says. For a finding about the network controls, against which you make no proof
+  of concept, the field holds the step for the human to run on the host that "Proofs of concept" asks for, and no
+  working way past them. For any other finding that is plausible from reading, the field says so and gives the check
+  that would confirm it
+* **Impact**: how it is exploited, from what position of the adversary, such as an agent in the sandbox, a dependency
+  or a file brought back, and which promise of the threat model it breaks
+* **Severity**: one of the following, which is also the severity suggested for the advisory. GitHub's form names the
+  third `moderate`
     * `critical`: breaks the boundary outright, such as code run on the host or the host reached, from the sandbox,
       with no step of the human's
     * `high`: breaks a promise of the threat model, but needs a condition that is common, such as a step the human
       takes in the course of the work
     * `medium`: breaks a promise of the threat model only under a condition that is uncommon or needs several steps
     * `low`: weakens a defence without breaking a promise on its own, such as one layer of several that fails
+* **CWE**: a suggested identifier of the CWE list, or that none fits
+* **Affected versions**: the suggested range of released versions that hold the weakness. Its lower bound is the first
+  release whose tag holds the commit that brought the weakness in, when the tree under review has the tags. When it
+  has none, name that commit and leave the lower bound to the human. A weakness in code that no release holds yet, as
+  in the diff of a unit not yet released, says that no release is affected. Leave the upper bound open, since the
+  patched version is the release that will ship the fix
+
+Then give each one:
+
 * A fix
 * How weaknesses of its kind can be kept out in future: as a rule for the standards or `AGENTS.md`, a test, or a check
 * The entry of the list of accepted risks it relates to, when there is one, as "Accepted risks seen again" says
