@@ -5,6 +5,72 @@ The numbers in parentheses are change units. Each is a directory under `changes/
 holds the reasoning and is not in the package. The changelog begins at 2.3.0, and first shipped in the release after
 it.
 
+## 8.5.0
+
+### What changed
+
+* Security fix: `agentrite.json` has a new required key, `modelServer`, `true` or `false`. The sandbox's firewall
+  admits the port of the local model server on the host only with `"modelServer": true`; with `false` nothing of the
+  host is reachable from the container, and the entrypoint logs that the server is not admitted. `config` and `init`
+  write `false`. Every start of the sandbox but `--connect` judges the key beside `bell` and `harnesses`, after
+  `bell` and before `harnesses`, and is read at each start, with no rebuild. A `sandbox/compose.project.yml` that
+  sets `MODEL_SERVER_ADMITTED` is refused. `SANDBOX.md` says that an admitted container reaches the server's whole
+  API, and its entry on a model server that cannot be reached now names a missing `"modelServer": true` first, and
+  gives the `ufw` rule for the networks Compose makes, `172.16.0.0/12` (0104)
+* Security fix: the kit's commands on the host treat what a unit run brings back as written by an adversary.
+  `agentrite orchestrate` refuses, with status 1, a `.orchestrator`, `.orchestrator/.gitignore` or
+  `.orchestrator/<unit-directory>` that is a symbolic link or not what it makes there; creates every file of a run
+  anew, removing what stands at its name and never what a link names; and stops a step, as its time limit does, when
+  the run's directory no longer resolves to its place. It keeps a record of each run outside `.orchestrator`, in
+  `<state>/agentrite/.orchestrator-runs/` with `<state>` from `XDG_STATE_HOME` or `~/.local/state`, holding the
+  digests of the run's `definition.json` and `state.json`, and a resume takes only a run whose files match its
+  record. A resume also checks the definition's roles and harnesses against the project's and refuses a session id
+  not of the form `^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$`; such an id given during a run is not passed to a later step.
+  `agentrite run` gives the harness the model as `--model=<model>`. When it lands a unit run, `./sandbox.sh` compares
+  the clone's files with the branch by their bytes, running no filter of git, and still lists a change of the
+  executable bit unless `core.fileMode` is `false` (0103)
+* With `"modelServer": true` and `opencode` among `harnesses`, each start but `--connect` reads the host's
+  `~/.config/opencode/opencode.json` or `opencode.jsonc` and gives OpenCode in the sandbox the local providers of it,
+  those whose `options.baseURL` is an `http` URL on `localhost`, `127.0.0.1` or `[::1]` at port `11434`, with the
+  host replaced by `host.docker.internal`. Of a provider only `npm`, `name`, `options.baseURL` and `models` cross,
+  and of each model only `name`, `limit`, `options` and `variants`; API keys, headers and every other key of the file
+  stay on the host. The providers are in the kit's `/etc/opencode/opencode.json`, which the agent cannot write, and a
+  start prints a line naming the providers it gave. A file that cannot be read, is not a JSON object, sits beside
+  the other name, or has a local provider whose `models` or a model of it is not an object refuses the start (0106)
+* Not in the package: the security reviewer of this repository forbids a proof of concept against the network
+  controls, names its findings files by commit and instant, names the scope of a limited audit, reads a list of
+  accepted risks, and gains `setup-security-audit.sh` and `finish-security-audit.sh` (0101); how a security fix is
+  specified, kept unpushed and released, with the step of the advisories in `RELEASING.md` (0102); and the rule in
+  `CONTRIBUTING.md` that a unit adding a required key adds it to the root's `agentrite.json` (0105)
+
+### Worth knowing when you update
+
+* The first start of the sandbox after the update builds the image again, as after every update of the kit
+* Every command that reads `agentrite.json` refuses a file without `modelServer`, and every start of the sandbox but
+  `--connect` is refused, until the project adds the key, after `bell`, as `SETUP.md` gives it:
+
+  ```json
+    "modelServer": false,
+  ```
+
+* A project that uses a local model server through the sandbox sets `"modelServer": true`. Until then the container
+  reaches nothing of the host, and a harness's request to the server hangs with no error. On a Linux host whose
+  firewall denies incoming traffic by default, the port also needs allowing to the networks Compose makes, as "When
+  something goes wrong" of `SANDBOX.md` says
+* With `"modelServer": true` and `opencode` among `harnesses`, a start is refused for a host OpenCode file at fault,
+  as above, or for both `opencode.json` and `opencode.jsonc` in `~/.config/opencode/`. A model's `options` and
+  `variants` cross whole, so a secret written there is readable by the agent. OpenCode reading the written
+  configuration in a running sandbox, and a request through it to a local model server, were not tested
+* A run of `agentrite orchestrate` that stopped before the update has no record and is not resumed; start it anew
+  with `npx agentrite orchestrate <unit>`. Neither is a run whose project root moved, nor one made in a unit run once
+  the project's home volume is removed. The records are never removed by the kit, and
+  `rm -rf ~/.local/state/agentrite/.orchestrator-runs` removes them when no run is to be resumed
+* A project whose files git converts on checkout, as Git LFS or an end-of-line attribute does, finds a landed unit
+  run's clone kept, listing files the agent did not change. Make sure nothing else is listed and remove the clone
+  with `rm -rf <clone>`
+* A run of a real harness with `--model=<model>`, and the landing of a clone on macOS with its bash 3.2, were not
+  tested
+
 ## 8.4.0
 
 ### What changed
