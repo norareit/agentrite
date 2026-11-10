@@ -80,5 +80,11 @@ timestamp: 2026-11-09T13:08:29Z
   1793 tests and none failing, and `npm run check-changes` passes there. No test wrote a record outside its own state
   directory. Not checked: a run of a real harness, and the wrapper on macOS and its bash 3.2, which the comparison
   avoids features beyond. Nothing of the unit is pushed. Handed over for review. The status is `in-progress`
+- 2026-11-10T00:33:42Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, fully reviewed unit 0103 at
+  `37a2593376ace41a2ef2f4cf4d35bca133e023c4` against merge base `88de2dfc3198758971a3ed8d351632f32e64602b`.
+  Returned S1, saved in
+  `.reviews/0103-host-code-and-what-a-unit-run-brings-back/review-2026-11-10T003342Z.md`.
+  Ran `npm test`, `npm run check-changes` and `git diff --check master...HEAD`; all passed. Could not independently
+  verify live model requests through the three harnesses or the wrapper on macOS and bash 3.2.
 
 ## Amendments
