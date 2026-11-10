@@ -57,5 +57,12 @@ timestamp: 2026-11-09T17:28:29Z
   `.reviews/0104-local-model-server-per-project/review-2026-11-10T111043Z.md`. `npm test` passed, 1815 tests with none
   failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` passed. Did not independently repeat
   the manual sandbox runs or verify connectivity to the host's actual model server.
+- 2026-11-10T11:13:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted C1 and C2 of the review of
+  `3db4250` and applied them in `e0d19e1`. C1: "Running a unit" of `SANDBOX.md` names `modelServer` among the keys a
+  run that cuts no branch reads, and "The local model server" among the sections that say so. C2: the refusal of a
+  project's Compose file that sets `MODEL_SERVER_ADMITTED` says to remove that variable from that file, naming it,
+  before it names `modelServer` in `agentrite.json` as the setting, in `container/sandbox.sh`, in its test in
+  `tests/sandbox-wrapper.test.mjs` and in the message in `plan.md`. On `e0d19e1`, `npm test` passes, 1815 tests with
+  none failed or skipped. The status stays `in-progress`
 
 ## Amendments
