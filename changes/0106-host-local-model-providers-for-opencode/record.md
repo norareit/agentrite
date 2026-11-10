@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-10T11:54:10Z
 ---
 
@@ -63,5 +63,13 @@ timestamp: 2026-11-10T11:54:10Z
   `.reviews/0106-host-local-model-providers-for-opencode/review-20261110T144559Z.md`. `npm test` passes, 1898 tests
   with none failed or skipped, and `npm run check-changes` passes. Not verified: OpenCode loading the generated
   configuration and listing models in a running sandbox, or a request through it to a local model server
+- 2026-11-10T14:48:46Z [human] decided that the unit is implemented, the delta review of the correction of S1 having
+  returned no findings
+- 2026-11-10T14:48:46Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the status on the human's
+  decision: S1, the one blocking finding, was accepted and corrected in `4c903db`, the review of `494efde` returned
+  none, and every task of `plan.md` is ticked. On `d8c407a`, `npm test` passes, 1898 tests with none failed or
+  skipped, and `npm run check-changes` exits 0. Still not verified: OpenCode loading the written configuration in a
+  running sandbox and listing the local provider's models, or a request through it to a local model server. The
+  status is `implemented`
 
 ## Amendments
