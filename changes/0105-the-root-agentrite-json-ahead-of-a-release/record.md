@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-10T10:31:21Z
 ---
 
@@ -62,5 +62,6 @@ change to `AGENTS.md`, which states nothing of the root's files.
   `process` to the root's file, and "npm run kit" of `CONTRIBUTING.md` on what `npx agentrite` runs here. Made the
   unit as a task: one bullet of one document, with the one decision made by the human. Numbered 0105: the highest
   number in `changes/` is 0104. Wrote `record.md`. The status is `draft`
+- 2026-11-10T14:51:47Z [human] approved the record. The status is `approved`
 
 ## Amendments
