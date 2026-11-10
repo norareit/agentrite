@@ -74,5 +74,11 @@ change to `AGENTS.md`, which states nothing of the root's files.
   run check-changes` exits 0; `npm run kit -- refresh` prints `up to date` for every file and leaves the tree clean.
   The root's `agentrite.json` holds `modelServer`, which the installed release's default file does not, as the
   rewritten bullet now allows. Handed over for review. The status stays `in-progress`
+- 2026-11-10T14:59:20Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0105 at `e7448f4` in a full
+  review against the merge base `0c9bdee` with `master`. No findings on any of the three axes. Saved the review in
+  `.reviews/0105-the-root-agentrite-json-ahead-of-a-release/review-2026-11-10T145920Z.md`. Ran `npm test`: 1898
+  passed, none failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` exited 0. Checked
+  every non-table line of `CONTRIBUTING.md` against the 120-character limit; none exceeds it. The status stays
+  `in-progress`
 
 ## Amendments
