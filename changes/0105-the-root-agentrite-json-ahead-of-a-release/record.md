@@ -66,5 +66,13 @@ change to `AGENTS.md`, which states nothing of the root's files.
 - 2026-11-10T14:52:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, cut
   `task-0105-the-root-agentrite-json-ahead-of-a-release` from `master` at `0c9bdee` and began the work. The status is
   `in-progress`
+- 2026-11-10T14:58:02Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, rewrote the bullet of "The kit's
+  own copy of the kit" in `CONTRIBUTING.md` that opens with "The root is a project of the installed release" in
+  `38217a5`, as the four points of the description say, and changed no other text. Kept the bullet as prose rather
+  than sub-bullets, since `CONTRIBUTING.md` has no nested list. On `38217a5`: no line of `CONTRIBUTING.md` outside a
+  table row is longer than 120 characters, checked with `awk`; `npm test` passes, 1898 tests and none failing; `npm
+  run check-changes` exits 0; `npm run kit -- refresh` prints `up to date` for every file and leaves the tree clean.
+  The root's `agentrite.json` holds `modelServer`, which the installed release's default file does not, as the
+  rewritten bullet now allows. Handed over for review. The status stays `in-progress`
 
 ## Amendments
