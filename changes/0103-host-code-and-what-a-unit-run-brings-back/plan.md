@@ -221,22 +221,22 @@ Comparing a clone:
 
 Documents:
 
-- [ ] Add to `AGENTS.md` a section "Code on the host and what a unit run brings back", after "Exit statuses", holding
+- [x] Add to `AGENTS.md` a section "Code on the host and what a unit run brings back", after "Exit statuses", holding
   the rule of requirement 1 as the spec states it: what counts as brought back, no link followed, writes only inside
   the directory meant, no program the content selects, a value in arguments only after `--`, joined by `=` or of an
   exact pattern that rules out a leading `-`, free text that a harness takes as an instruction only out of a file the
   kit's record shows it wrote, unchanged since, and the commits of the unit's branch outside the rule (R1)
-- [ ] In "What the sandbox defends against" of `SANDBOX.md`, add to the list of what a unit run defends the host
+- [x] In "What the sandbox defends against" of `SANDBOX.md`, add to the list of what a unit run defends the host
   against that the kit's commands on the host follow no link the agent made under `.orchestrator`, write under it
   only in the directory of their own run, resume only a run made where it is resumed whose files are as that run
   left them, and that the wrapper compares the clone's files with the branch without running any filter of git; and
   make its line on what a file under `.orchestrator` says read "to a human, or a program other than the kit's
   commands, that reads it on the host" (R2)
-- [ ] Add to "When something goes wrong" of `SANDBOX.md` the entry of a kept clone that lists files the agent did not
+- [x] Add to "When something goes wrong" of `SANDBOX.md` the entry of a kept clone that lists files the agent did not
   change: what is seen, that git converts such files when it checks them out, as Git LFS and an end-of-line
   attribute make it do, that the comparison takes the bytes as they are, and that the clone is removed with `rm -rf
   <clone>` once the developer has made sure that nothing else is listed (R15)
-- [ ] In `ORCHESTRATOR.md`, add to "What .orchestrator holds" the record of runs: where it is, `<state>` as
+- [x] In `ORCHESTRATOR.md`, add to "What .orchestrator holds" the record of runs: where it is, `<state>` as
   `$XDG_STATE_HOME` or `~/.local/state`, its name and what it holds, that the command writes it with each
   `state.json`, that a resume takes only a run with its record whose two files are as the record holds, and that the
   developer removes the directory with `rm -rf` when no run of any project is to be resumed. Add to "On the host and
@@ -244,10 +244,10 @@ Documents:
   volume, as `docker volume rm <project>_agent-home` does, leaves no run that stopped in the sandbox before it to
   resume. Change its sentence on `.gitignore` to say it is written whole when it holds anything but `*` and a line
   break (R4, R8, R12)
-- [ ] In "The home volume" of "Where things are kept on the host" in `SANDBOX.md`, say that it holds the record of the
+- [x] In "The home volume" of "Where things are kept on the host" in `SANDBOX.md`, say that it holds the record of the
   runs of the orchestrator made in a unit run, and that removing it leaves no run that stopped in the sandbox before
   it to resume (R12)
-- [ ] In "agentrite orchestrate" of `COMMANDS.md`, add the refusals of requirement 3 to those of a run and of a resume,
+- [x] In "agentrite orchestrate" of `COMMANDS.md`, add the refusals of requirement 3 to those of a run and of a resume,
   those of requirements 9, 10 and 11 to those of a resume, the note that a session a step gives that is not of the
   form is not kept, and `XDG_STATE_HOME` as an environment variable the command reads for where it keeps the record.
   In "agentrite run", say that the model reaches the harness as `--model=<id>`, and change the order of what the
@@ -271,4 +271,4 @@ Documents:
   project's names
 - [x] `feature-0103` the session pattern and `--model=<model>`
 - [x] `feature-0103` the comparison of a clone without conversions
-- [ ] `feature-0103` the documents and the rule in `AGENTS.md`
+- [x] `feature-0103` the documents and the rule in `AGENTS.md`

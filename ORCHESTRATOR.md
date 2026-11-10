@@ -449,7 +449,10 @@ has the next number, as in a run.
 Every file of a run's directory but the followed files is written whole. A file that is being written stands in the
 same directory under a name that opens with `.` until it takes its own name, so a program that reads one of the files
 reads what it held before a write or what the write gives it, and never part of either. Once a run ended, no file
-whose name opens with `.` is left in its directory.
+whose name opens with `.` is left in its directory. Each file of a run, the one whose name opens with `.` among them,
+is created anew: what stands at its name, a symbolic link among it, is removed first, and never what a link names.
+Before each write the command makes sure that the run's directory, with every link resolved, is still
+`.orchestrator/<unit-directory>/<run>/` of the project root, and stops the run with the status 1 when it is not.
 
 A followed file is added to and never rewritten. A line is added to it whole or not at all, so a program that reads it
 while the step runs takes the lines that end in a line break, and leaves a last line without one, which is being
@@ -472,8 +475,26 @@ process was killed, and the run then shows as stale.
 `npx agentrite runs` lists the runs and tells their state by this rule. See "agentrite runs" in `COMMANDS.md`.
 
 At the start of each run the command makes sure that `.orchestrator/.gitignore` holds `*` and nothing else, and
-writes it when it is missing or holds anything else. So git ignores the directory in every project, without a line in
-the project's own `.gitignore`.
+writes it whole when it is missing or holds anything but `*` and a line break. So git ignores the directory in every
+project, without a line in the project's own `.gitignore`.
+
+The command also keeps a record of each run it makes, a resume among them, outside `.orchestrator/`: one file per run
+in `<state>/agentrite/.orchestrator-runs/`, where `<state>` is `$XDG_STATE_HOME` when that is set and `~/.local/state`
+when it is not. The file is named by the SHA-256, in hexadecimal, of the absolute path of the run's directory with
+every link resolved, followed by `.json`. It holds the SHA-256 of the run's `definition.json` and of its `state.json`,
+as the command last wrote each. The command writes it whole each time it writes the run's `state.json`, and makes the
+directory when it is missing.
+
+A resume takes only a run that has its record and whose `definition.json` and `state.json` are as the record holds.
+A run made before the kit kept records has none, and neither has a run made on another machine, a run made in a unit
+run when it is resumed on the host, nor a run whose project root moved. `npx agentrite orchestrate <unit>` starts a
+new run of the unit instead.
+
+The command removes no record. When no run of any project is to be resumed, remove the directory:
+
+```sh
+rm -rf ~/.local/state/agentrite/.orchestrator-runs
+```
 
 ## On the host and in the sandbox
 
@@ -514,3 +535,8 @@ In the sandbox, in a unit run on the clone of the unit's branch:
 ```sh
 ./sandbox.sh 0029 npx agentrite orchestrate 0029 --resume --skip-permissions
 ```
+
+The record of a run made in a unit run, which a resume takes, is in the container's `~/.local/state`, in the project's
+home volume. So such a run is resumed in a later unit run of the project, and not on the host. Removing the volume, as
+`docker volume rm <project>_agent-home` does, leaves no run that stopped in the sandbox before it to resume. See "The
+home volume" of `SANDBOX.md`.

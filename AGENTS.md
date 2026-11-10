@@ -82,6 +82,21 @@ rest is in "Commands" of [CONTRIBUTING.md](CONTRIBUTING.md#commands).
 Every command of the kit, and every command of this repository's own, follows "Exit statuses" of
 [COMMANDS.md](COMMANDS.md#exit-statuses). A unit that adds a command, or a status of one, does so by that section.
 
+## Code on the host and what a unit run brings back
+
+Code of the kit that runs on the host treats what a unit run brings back as written by an adversary: the files of the
+clone, its `.git` among them, and everything under `.reviews` and `.orchestrator`. The agent of a unit run may have
+been misled, and may have written any file, directory or symbolic link there.
+
+* Such code follows no symbolic link there, and writes only inside the directory it means to write in
+* It runs no program that such content selects, as a filter or a hook that a file there names
+* It passes a value read there into the arguments of a program only where the program cannot take it for an option:
+  after `--`, joined to its option by `=`, or when the value matches an exact pattern that rules out a leading `-`
+* Free text that a harness takes as an instruction, as the prompt of a step, reaches a harness from there only out of
+  a file that the kit's record shows the kit wrote, unchanged since
+* The content of the commits of the unit's branch is outside the rule, as it is outside what the sandbox defends
+  against in "What the sandbox defends against" of [SANDBOX.md](SANDBOX.md)
+
 ## Ways of working
 
 * Rewrite no commit that exists, by an amend, a reset, a squash, a rebase or a replay, also when it is not pushed,

@@ -724,6 +724,8 @@ It holds:
 * Claude Code's login and settings, which are beside its projects directory and not in it
 * whatever else a harness keeps in its home
 * the npm cache
+* the records of the runs of the orchestrator made in a unit run, in `~/.local/state/agentrite/.orchestrator-runs`,
+  which a resume of such a run takes, as "What .orchestrator holds" of `ORCHESTRATOR.md` says
 
 The directories of the harnesses' logs in the home are not of the volume: the harnesses' sessions, and with them
 the logins of OpenCode and Codex, are in the project's log directory on the host.
@@ -733,8 +735,9 @@ docker volume ls
 docker volume rm <project>_agent-home
 ```
 
-Removing the volume discards the harnesses' saved logins, such as Claude Code's. The next start creates a new volume
-owned by the agent.
+Removing the volume discards the harnesses' saved logins, such as Claude Code's, and the records of the orchestrator's
+runs, so it leaves no run that stopped in the sandbox before it to resume. The next start creates a new volume owned
+by the agent.
 
 **The image**
 
@@ -797,13 +800,17 @@ that agent:
 * a git hook, a line in `.git/config` and a file in `node_modules` stay in the clone
 * a commit in the container runs the image's `commit-msg` hook, which the agent cannot write, and not a hook of the
   clone
+* the kit's commands on the host follow no link the agent made under `.orchestrator`, write under it only in the
+  directory of their own run, and resume only a run made where it is resumed whose files are as that run left them
+* the wrapper compares the clone's files with the branch without running any filter of git
 
 It does not defend against:
 
 * what a commit contains. A script in a commit runs on the host once the developer checks it out and runs it. The
   commit is in a diff the developer can read first
 * what a review file says, to a human or to an agent that reads it on the host
-* what a file under `.orchestrator` says, to a human or a program that reads it on the host
+* what a file under `.orchestrator` says, to a human, or a program other than the kit's commands, that reads it on the
+  host
 * a run with `--in-place` or `--workdir`, which mounts a directory as it is
 * a commit made with `git commit --no-verify`, which skips the hook, or by a command that sets `core.hooksPath`
   itself
@@ -902,6 +909,19 @@ What to do:
 
 ```sh
 git merge sandbox/<branch>
+```
+
+**The wrapper keeps the clone and lists among its files that are not committed files the agent did not change.**
+
+Why: git converts these files when it checks them out, as Git LFS and an end-of-line attribute make it do, so the
+clone holds them as git wrote them and not as they are committed. The wrapper compares the clone's files with the
+branch by their bytes as they are, without running any conversion of git, so such a file differs.
+
+What to do: make sure that nothing else is listed, which the agent did change and which would be lost, and then
+remove the clone:
+
+```sh
+rm -rf <clone>
 ```
 
 **The wrapper says that the removal of a clone failed, and where the remains are: beside the clone's place, as

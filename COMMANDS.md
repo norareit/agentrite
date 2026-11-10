@@ -493,7 +493,7 @@ the project has, starts nothing and exits 1.
 | `<harness>`                 | `claude`, `opencode` or `codex`                                                     |
 | `<unit>`                    | A directory of `changes/`, by its name or by the four digits its name opens with    |
 | `--prompt <text>`           | Adds its text to the prompt, as it is written. Also `--prompt="<text>"`             |
-| `--model <id>`              | The harness's own id of a model, passed on as it is written. Also `--model=<id>`    |
+| `--model <id>`              | The harness's own id of a model, passed on as `--model=<id>`. Also `--model=<id>`   |
 | `--headless`                | Runs the harness without a session, for a script: it works on the prompt and ends   |
 | `--skip-permissions`        | Ends the harness's questions about permissions. The option belongs in the sandbox   |
 | `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
@@ -530,12 +530,13 @@ The options, which may stand anywhere among the arguments before a `--`:
 
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session
-* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code, `openai/gpt-6.1-sol` for OpenCode or
-  `gpt-6.1-sol` for Codex. The kit has no names of its own for models. Without `--model` the harness gets no model
-  and decides by itself. For Claude Code and OpenCode, a model pinned in the role's wrapper is what such a run is
-  expected to use. Codex does not start its run as the wrapper's agent, so a model pinned in a Codex wrapper holds
-  only for a subagent of that role that the run spawns, and the run itself uses `--model` or the model Codex chooses
-  by its own configuration
+* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code, `openai/gpt-6.1-sol` for OpenCode or `gpt-6.1-sol`
+  for Codex. The kit has no names of its own for models. The harness gets the id as it is written, joined to its option
+  as one argument, `--model=<id>`, so an id that opens with a dash is not taken for an option of the harness. Without
+  `--model` the harness gets no model and decides by itself. For Claude Code and OpenCode, a model pinned in the role's
+  wrapper is what such a run is expected to use. Codex does not start its run as the wrapper's agent, so a model pinned
+  in a Codex wrapper holds only for a subagent of that role that the run spawns, and the run itself uses `--model` or
+  the model Codex chooses by its own configuration
 * `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
   check, OpenCode gets `--auto`, which approves what is not explicitly denied, and Codex gets
   `--dangerously-bypass-approvals-and-sandbox`, which skips every approval and Codex's own sandbox, so the three do
@@ -544,7 +545,7 @@ The options, which may stand anywhere among the arguments before a `--`:
 
 What the harness is given, in this order:
 
-1. The role, as an option for Claude Code and OpenCode, the model and the permission flag
+1. The role, as an option for Claude Code and OpenCode, the model as `--model=<id>` and the permission flag
 2. Every argument after the `--`, as it is written and in the order given
 3. The prompt, which is the last argument the harness gets, opening with the role for Codex. Where the harness takes
    it as an argument of its own, the command puts a `--` in front of it
@@ -642,12 +643,15 @@ It refuses, starts nothing, writes nothing and exits 1 when:
 * the branch checked out in the project root ends in `--` and a variant that is not one or more words of the lowercase
   letters `a` to `z` and the digits `0` to `9`, joined by single hyphens. It names the branch and the form a variant
   takes. A directory that is in no git repository, and a detached `HEAD`, are not refused
+* `.orchestrator`, `.orchestrator/.gitignore` or `.orchestrator/<unit-directory>` is a symbolic link, `.orchestrator`
+  or `.orchestrator/<unit-directory>` is there and is not a directory, or `.orchestrator/.gitignore` is there and is
+  not a regular file. It names the path, says that it is not what the command makes there, and says to remove it
 
-With `--resume`, it refuses as a run does for `agentrite.json`, for `orchestrator`, for the unit and for the form of
-the variant. It refuses `--definition`, saying that a resume runs the definition of the run it resumes, and in the
-place of the refusal of a unit that is not `approved`, it refuses a unit whose status is neither `approved` nor
-`in-progress`, naming the status and saying that a resume takes a unit that is approved or in progress. Beside these,
-it refuses, starts nothing, writes nothing and exits 1 when:
+With `--resume`, it refuses as a run does for `agentrite.json`, for `orchestrator`, for the unit, for the form of the
+variant and for the paths under `.orchestrator`. It refuses `--definition`, saying that a resume runs the definition of
+the run it resumes, and in the place of the refusal of a unit that is not `approved`, it refuses a unit whose status is
+neither `approved` nor `in-progress`, naming the status and saying that a resume takes a unit that is approved or in
+progress. Beside these, it refuses, starts nothing, writes nothing and exits 1 when:
 
 * the unit has no run on the variant of the branch checked out. It names the unit, and the variant or that the runs
   it looked for have none
@@ -655,13 +659,34 @@ it refuses, starts nothing, writes nothing and exits 1 when:
   `agentrite runs` gives after the state, and says that a resume takes a run that ended with 3, which a run does when
   it stops for the human
 * the latest run's `state.json` holds no `branch`, or one other than the branch checked out. It names both
-* the latest run's `state.json` or `definition.json` cannot be read or is not of the form the command writes, as
-  `agentrite runs` refuses them, or its `state.json` holds an end and no step it was at. It names the file and what is
-  wrong with it
+* the latest run has no record, its record is not of the form the command writes, or its `definition.json` or its
+  `state.json` is not as the record holds. It names the run, says that a resume takes a run made where it is resumed
+  whose files are as that run left them, and that `npx agentrite orchestrate <unit>` starts a new run. Where the
+  records are kept is in "What .orchestrator holds" in `ORCHESTRATOR.md`
+* the latest run's `state.json` or `definition.json` cannot be read, a symbolic link at its name among it, or is not
+  of the form the command writes, as `agentrite runs` refuses them, or its `state.json` holds an end and no step it
+  was at. It names the file and what is wrong with it
+* the latest run's `definition.json` names a role or a harness that `agentrite.json` does not, as a run refuses its
+  definition. It names the file, where in it the fault is, what is wrong and what it must hold
+* the latest run's `state.json` holds a session that is not a letter or a digit followed by up to 127 letters, digits,
+  `-` and `_`. It names the session's role and harness and the form a session takes
 
 `--prompt` without `--resume` is refused with the usage, as wrong arguments are.
 
 It takes no `--`: a step's harness gets the arguments the definition and the command give it, and no other.
+
+While it runs, a run or a resume:
+
+* passes a session to a step's harness only when it is of the form above. A session a harness gives that is not is
+  kept neither among the run's sessions nor for a later step: the command says so on standard error, and the next
+  step of its role on that harness starts a session of its own
+* makes sure, before each write in the run's directory, that the directory, with every link resolved, is
+  `.orchestrator/<unit-directory>/<run>/` of the project root. When it is not, the command writes nothing more, ends
+  the step that runs, names the directory it found where the run's directory should be, and exits 1
+
+| Environment variable | What it is                                                                                                 |
+|----------------------|------------------------------------------------------------------------------------------------------------|
+| `XDG_STATE_HOME`     | Where the record of each run is kept, `agentrite/.orchestrator-runs/` in it, in place of `~/.local/state`  |
 
 Every step runs in a process group of its own. `SIGINT`, `SIGTERM` and `SIGHUP` sent to the command, as Ctrl-C on
 the terminal and `kill <pid>` send them, are sent on to the step that runs, and the command then ends by the same
