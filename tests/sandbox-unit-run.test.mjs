@@ -608,12 +608,12 @@ test(
   },
 );
 
-// R7: the runs that cut no branch read nothing of the file but bell and harnesses, which units 0058 and 0097 have
-// every start read, and --connect, which starts nothing, reads nothing of it.
+// R7: the runs that cut no branch read nothing of the file but bell, modelServer and harnesses, which units 0058,
+// 0097 and 0104 have every start read, and --connect, which starts nothing, reads nothing of it.
 for (const [what, settings, forms] of [
   [
-    'an agentrite.json of bell and harnesses alone',
-    `${JSON.stringify({ bell: false, harnesses: PROJECT_HARNESSES })}\n`,
+    'an agentrite.json of bell, modelServer and harnesses alone',
+    `${JSON.stringify({ bell: false, modelServer: false, harnesses: PROJECT_HARNESSES })}\n`,
     ['unit', 'in place', 'connect'],
   ],
   ['no agentrite.json', null, ['connect']],

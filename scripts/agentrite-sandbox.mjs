@@ -49,17 +49,21 @@ function mountLine(name, { from, path, target }) {
 
 /**
  * The lines a start of the sandbox prints, each as its fields, for the harnesses `harnesses`: whether the bell
- * rings; each harness; the directories of their logs; the hosts the allowlist admits for them; and the environment,
- * the mounts and the files of a run, those that turn off each harness's updates, then those of the host, then, with
- * `bell`, those of the bell.
+ * rings; whether the local model server is admitted; each harness; the directories of their logs; the hosts the
+ * allowlist admits for them; and the environment, the mounts and the files of a run, those that turn off each
+ * harness's updates, then those of the host, then, with `bell`, those of the bell.
  *
  * @param {boolean} bell
+ * @param {boolean} modelServer
  * @param {Harness[]} harnesses
  * @param {(harness: Harness) => Given} given what each harness is given of the host
  * @returns {string[][]}
  */
-function startLines(bell, harnesses, given) {
-  /** @type {string[][]} */ const lines = [['bell', String(bell)]];
+function startLines(bell, modelServer, harnesses, given) {
+  /** @type {string[][]} */ const lines = [
+    ['bell', String(bell)],
+    ['modelServer', String(modelServer)],
+  ];
   for (const { name, title, start, sandbox } of harnesses) {
     lines.push(['harness', name, title, start.command, sandbox.package, sandbox.versionArgument]);
   }
@@ -103,19 +107,21 @@ function linesText(lines) {
 }
 
 /**
- * What a start of the sandbox prints for the project at `root`: its `bell` and its harnesses, read from its
- * `agentrite.json`, and what each harness is given of the host's home `home`, or nothing of it when `home` is empty.
+ * What a start of the sandbox prints for the project at `root`: its `bell`, its `modelServer` and its harnesses, read
+ * from its `agentrite.json`, and what each harness is given of the host's home `home`, or nothing of it when `home`
+ * is empty.
  *
  * @param {string} root
  * @param {string} home
  * @returns {string}
  */
 function startText(root, home) {
-  const { bell, harnesses } = readStart(root);
+  const { bell, modelServer, harnesses } = readStart(root);
   const chosen = HARNESSES.filter((harness) => harnesses.includes(harness.name));
   const nothing = { environment: [], mounts: [], files: [] };
   const read = hostReader(home);
-  return linesText(startLines(bell, chosen, (harness) => (home === '' ? nothing : harness.sandbox.host(home, read))));
+  const given = (/** @type {Harness} */ harness) => (home === '' ? nothing : harness.sandbox.host(home, read));
+  return linesText(startLines(bell, modelServer, chosen, given));
 }
 
 /**

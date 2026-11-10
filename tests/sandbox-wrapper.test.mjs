@@ -93,9 +93,9 @@ const runCommand = (
   `${updateMounts(containerOf(root), names)}${mounts}${logMounts(logs, names)}sandbox echo hi`;
 
 // A project with the kit's wrapper installed at `kitPath` under `root`, the kit's readers of agentrite.json and of the
-// harnesses beside it and nothing else of the kit, an agentrite.json that holds `"bell": false` and every harness of
-// the list alone, and the host of `fakeHost`, whose `docker` records each call with the AGENTRITE_CONTAINER and the
-// variables of the harnesses and the kit's version it saw. The project's
+// harnesses beside it and nothing else of the kit, an agentrite.json that holds `"bell": false`, `"modelServer":
+// false` and every harness of the list alone, and the host of `fakeHost`, whose `docker` records each call with the
+// AGENTRITE_CONTAINER and the variables of the harnesses and the kit's version it saw. The project's
 // Compose file gives the build arguments `buildArgs`, where `null` stands for a configuration Compose refuses, and
 // the image exists unless `imageExists` is false. The wrapper runs with a home of its own, `home`, which is empty
 // until a test fills it, so that no test depends on what the home of whoever runs the suite holds. `run` runs the
@@ -1341,7 +1341,8 @@ test('the run of a project of claude and opencode, with everything a run can be 
   testContext,
 ) => {
   const { root, container, home, imageLabels, runWith, dockerCalls, harnessAllowlist } = setUp(testContext, kitPath);
-  writeFileSync(join(root, 'agentrite.json'), '{"bell": true, "harnesses": ["opencode", "claude"]}\n');
+  const settings = '{"bell": true, "modelServer": false, "harnesses": ["opencode", "claude"]}\n';
+  writeFileSync(join(root, 'agentrite.json'), settings);
   writeFileSync(imageLabels, imageLabelsText({ claude: hostVersions.claude, opencode: hostVersions.opencode }));
   mkdirSync(join(home, '.claude'));
   writeFileSync(join(home, '.claude', 'statusline-command.sh'), 'echo line\n');
@@ -1513,10 +1514,16 @@ for (const [form, formArgs] of startForms) {
   ) => {
     const HARNESSES_MUST = 'It must hold a list of one or more of "claude", "opencode" and "codex"';
     for (const [text, message] of [
-      ['{"bell": false}', `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`],
-      ['{"bell": false, "harnesses": []}', `agentrite.json: harnesses is []. ${HARNESSES_MUST}`],
-      ['{"bell": false, "harnesses": "claude"}', `agentrite.json: harnesses is "claude". ${HARNESSES_MUST}`],
-      ['{"bell": false, "harnesses": ["nothing"]}', `agentrite.json: harnesses is ["nothing"]. ${HARNESSES_MUST}`],
+      ['{"bell": false, "modelServer": false}', `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`],
+      ['{"bell": false, "modelServer": false, "harnesses": []}', `agentrite.json: harnesses is []. ${HARNESSES_MUST}`],
+      [
+        '{"bell": false, "modelServer": false, "harnesses": "claude"}',
+        `agentrite.json: harnesses is "claude". ${HARNESSES_MUST}`,
+      ],
+      [
+        '{"bell": false, "modelServer": false, "harnesses": ["nothing"]}',
+        `agentrite.json: harnesses is ["nothing"]. ${HARNESSES_MUST}`,
+      ],
     ]) {
       const { base, root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
       const workdir = join(base, 'elsewhere');
@@ -1537,12 +1544,17 @@ for (const [form, formArgs] of startForms) {
   });
 }
 
-test('a start judges nothing of agentrite.json but bell and harnesses', (testContext) => {
+test('a start judges nothing of agentrite.json but bell, modelServer and harnesses', (testContext) => {
   const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
-  writeFileSync(
-    join(root, 'agentrite.json'),
-    JSON.stringify({ bell: false, harnesses: HARNESS_NAMES, defaultBranch: 5, roles: [], standards: '/x' }),
-  );
+  const settings = {
+    bell: false,
+    modelServer: false,
+    harnesses: HARNESS_NAMES,
+    defaultBranch: 5,
+    roles: [],
+    standards: '/x',
+  };
+  writeFileSync(join(root, 'agentrite.json'), JSON.stringify(settings));
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));

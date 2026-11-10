@@ -36,5 +36,10 @@ timestamp: 2026-11-09T17:28:29Z
   for `modelServer`, as it has for each required key. The status stays `approved`
 - 2026-11-10T10:44:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
   `feature-0104-local-model-server-per-project` at `74a46bf`. The status is `in-progress`
+- 2026-11-10T10:53:17Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave the files of a start that
+  `tests/wrapper-fixture.mjs`, `tests/bell.test.mjs`, `tests/sandbox-unit-run.test.mjs` and
+  `tests/sandbox-wrapper.test.mjs` write the key `modelServer` in the commit of the setting rather than in that of the
+  wrapper, since `parseStart` refuses a start without it once it judges the key, and the suite would fail between the
+  two commits. `writeStartSettings` takes `modelServer`, `false` unless given, as the plan has it under task 13
 
 ## Amendments

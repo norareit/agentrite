@@ -64,13 +64,12 @@ function holds(image, path) {
 const digest = (content) => `sha256:${createHash('sha256').update(content).digest('hex')}`;
 
 // A project whose kit is laid out as `layout` says, under the image name `image` unique to the test, on the host of
-// `dockerHost`, with an empty home of its own and an agentrite.json that holds `"bell": false` and every harness. The
-// kit lies at node_modules/agentrite/ with the wrapper, its git functions and the base Compose file in its container/
-// and the readers of agentrite.json and of the harnesses in its scripts/, or, for `dev`, as in this repository, with
-// the dev shim at the root. `start` runs the wrapper, through the shim for `dev`, with `args`, and forgets the calls
-// of earlier starts first. `builds`,
-// `tags` and `runs` read the calls of the last start. The images are removed when the test ends, and so are the
-// earlier builds of the test that later ones left without a name.
+// `dockerHost`, with an empty home of its own and an agentrite.json that holds `"bell": false`, `"modelServer": false`
+// and every harness. The kit lies at node_modules/agentrite/ with the wrapper, its git functions and the base Compose
+// file in its container/ and the readers of agentrite.json and of the harnesses in its scripts/, or, for `dev`, as in
+// this repository, with the dev shim at the root. `start` runs the wrapper, through the shim for `dev`, with `args`,
+// and forgets the calls of earlier starts first. `builds`, `tags` and `runs` read the calls of the last start. The
+// images are removed when the test ends, and so are the earlier builds of the test that later ones left without a name.
 function setUp(testContext, layout = 'installed') {
   const base = temporaryDirectory(testContext, 'sandbox-project-dockerfile-');
   const root = join(base, 'project');

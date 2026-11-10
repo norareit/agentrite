@@ -17,8 +17,8 @@ import { temporaryDirectory } from './temporary-directory.mjs';
 
 const TEMPLATE = readFileSync(new URL('../templates/project/agentrite.json', import.meta.url), 'utf-8');
 const OBJECT_SENTENCE =
-  'The file must hold a JSON object with the keys defaultBranch, harnesses, process, sandbox, bell, standards, ' +
-  'orchestrator and roles';
+  'The file must hold a JSON object with the keys defaultBranch, harnesses, process, sandbox, bell, modelServer, ' +
+  'standards, orchestrator and roles';
 const NO_FILE = 'the project has no agentrite.json. Run: npx agentrite config, which writes one';
 
 const VALID = {
@@ -27,6 +27,7 @@ const VALID = {
   process: true,
   sandbox: false,
   bell: true,
+  modelServer: false,
   standards: 'rules/house.md',
   orchestrator: 'rules/orchestrator.json',
   roles: {
@@ -68,7 +69,7 @@ test('the file is named agentrite.json', () => {
 
 // R1, R3
 
-test('a valid file gives the eight settings', () => {
+test('a valid file gives the nine settings', () => {
   assert.deepEqual(parseSettings(textOf(VALID)), VALID);
   const both = { ...VALID, defaultBranch: 'master', harnesses: ['claude', 'opencode'], sandbox: true };
   assert.deepEqual(parseSettings(textOf(both)), both);
@@ -102,7 +103,7 @@ test('a harness named more than once is there once, and the list keeps the order
   assert.deepEqual(settings.harnesses, ['opencode', 'claude']);
 });
 
-test('a key the kit does not know is ignored, beside the eight', () => {
+test('a key the kit does not know is ignored, beside the nine', () => {
   assert.deepEqual(parseSettings(textOf({ ...VALID, baseBranch: 'develop', $schema: 5 })), VALID);
 });
 
@@ -160,13 +161,14 @@ const NAME_FORM =
   "A role's name is one or more words of the lowercase letters a to z, joined by single hyphens, as security-reviewer";
 const OWN_AGENT_REFUSAL = 'A role cannot have the name of an agent of a harness the kit writes wrappers for';
 
-test('each of the eight keys, when missing, is named as missing, with what it must hold', () => {
+test('each of the nine keys, when missing, is named as missing, with what it must hold', () => {
   for (const [key, must] of [
     ['defaultBranch', BRANCH_MUST],
     ['harnesses', HARNESSES_MUST],
     ['process', SANDBOX_MUST],
     ['sandbox', SANDBOX_MUST],
     ['bell', SANDBOX_MUST],
+    ['modelServer', SANDBOX_MUST],
     ['standards', PATH_MUST],
     ['orchestrator', ORCHESTRATOR_MUST],
     ['roles', ROLES_OBJECT_MUST],
@@ -197,6 +199,11 @@ test('a key that holds anything else is named with what it holds and what it mus
     ['bell', 'true', SANDBOX_MUST],
     ['bell', [], SANDBOX_MUST],
     ['bell', {}, SANDBOX_MUST],
+    ['modelServer', null, SANDBOX_MUST],
+    ['modelServer', 0, SANDBOX_MUST],
+    ['modelServer', 'true', SANDBOX_MUST],
+    ['modelServer', [], SANDBOX_MUST],
+    ['modelServer', {}, SANDBOX_MUST],
     ['orchestrator', true, ORCHESTRATOR_MUST],
     ['orchestrator', null, ORCHESTRATOR_MUST],
     ['orchestrator', 0, ORCHESTRATOR_MUST],
@@ -226,6 +233,9 @@ test('the first key at fault, in the order of the keys as the file is written, i
   const { bell: _bell, ...noBell } = VALID;
   assert.throws(() => parseSettings(textOf({ ...noBell, standards: 5 })), {
     message: `agentrite.json: bell is missing. ${SANDBOX_MUST}`,
+  });
+  assert.throws(() => parseSettings(textOf({ ...withKey('modelServer', undefined), standards: 5 })), {
+    message: `agentrite.json: modelServer is missing. ${SANDBOX_MUST}`,
   });
   assert.throws(() => parseSettings(textOf({ ...withKey('orchestrator', undefined), roles: 5 })), {
     message: `agentrite.json: orchestrator is missing. ${ORCHESTRATOR_MUST}`,
@@ -270,6 +280,13 @@ test('a key at fault is named before the pair of process and sandbox', () => {
 test('bell gives true and false as they are written', () => {
   assert.equal(parseSettings(textOf(withKey('bell', true))).bell, true);
   assert.equal(parseSettings(textOf(withKey('bell', false))).bell, false);
+});
+
+// 0104 R1: modelServer, for each JSON type.
+
+test('modelServer gives true and false as they are written', () => {
+  assert.equal(parseSettings(textOf(withKey('modelServer', true))).modelServer, true);
+  assert.equal(parseSettings(textOf(withKey('modelServer', false))).modelServer, false);
 });
 
 test('a roles that is no JSON object is named with what it holds', () => {
@@ -444,13 +461,14 @@ const ROLES_TEXT = [
   '  }',
 ];
 
-test('settingsText writes the eight keys in order, indented by two spaces, the list on one line', () => {
+test('settingsText writes the nine keys in order, indented by two spaces, the list on one line', () => {
   const { roles, standards } = VALID;
   assert.equal(
     settingsText({
       roles,
       orchestrator: false,
       standards,
+      modelServer: true,
       bell: false,
       sandbox: true,
       process: false,
@@ -464,6 +482,7 @@ test('settingsText writes the eight keys in order, indented by two spaces, the l
       '  "process": false,',
       '  "sandbox": true,',
       '  "bell": false,',
+      '  "modelServer": true,',
       '  "standards": "rules/house.md",',
       '  "orchestrator": false,',
       ...ROLES_TEXT,
@@ -480,6 +499,7 @@ test('settingsText writes the eight keys in order, indented by two spaces, the l
       '  "process": true,',
       '  "sandbox": true,',
       '  "bell": true,',
+      '  "modelServer": false,',
       '  "standards": "rules/house.md",',
       '  "orchestrator": "rules/orchestrator.json",',
       ...ROLES_TEXT,
@@ -500,6 +520,8 @@ test('what settingsText writes is read back as the settings it was given', () =>
   const settings = { ...VALID, defaultBranch: 'release/"1"', harnesses: ['opencode', 'claude'], sandbox: false };
   assert.deepEqual(parseSettings(settingsText(settings)), settings);
   assert.deepEqual(parseSettings(settingsText({ ...settings, bell: false })), { ...settings, bell: false });
+  const admitted = { ...settings, modelServer: true };
+  assert.deepEqual(parseSettings(settingsText(admitted)), admitted);
   const optedOut = { ...settings, orchestrator: false };
   assert.deepEqual(parseSettings(settingsText(optedOut)), optedOut);
   const sandboxOnly = { ...settings, process: false, sandbox: true };
@@ -516,6 +538,7 @@ test('the template is the default file, and settingsText of its own values is th
       '  "process": true,',
       '  "sandbox": true,',
       '  "bell": true,',
+      '  "modelServer": false,',
       '  "standards": "node_modules/agentrite/standards.md",',
       '  "orchestrator": "node_modules/agentrite/orchestrator.json",',
       '  "roles": {',
@@ -746,20 +769,28 @@ test('imported, the module prints nothing', () => {
   assert.equal(result.stdout + result.stderr, '');
 });
 
-// R18 of 0097: bell and harnesses alone, as a start of the sandbox reads them.
+// R18 of 0097 and R4 of 0104: bell, modelServer and harnesses alone, as a start of the sandbox reads them.
 
 const BELL_MUST = 'It must hold true or false';
 
-// A file of bell and harnesses alone, the start's two keys.
-function startText(bell, harnesses) {
-  return textOf({ bell, harnesses });
+// A file of bell, modelServer and harnesses alone, the start's three keys.
+function startText(bell, harnesses, modelServer = false) {
+  return textOf({ bell, modelServer, harnesses });
 }
 
-test('parseStart gives bell and harnesses, from a file of the two alone and from a whole file', () => {
-  assert.deepEqual(parseStart(startText(true, ['claude'])), { bell: true, harnesses: ['claude'] });
-  assert.deepEqual(parseStart(startText(false, ['opencode'])), { bell: false, harnesses: ['opencode'] });
-  assert.deepEqual(parseStart(settingsText(VALID)), { bell: true, harnesses: ['opencode'] });
-  assert.deepEqual(parseStart(settingsText({ ...VALID, bell: false })), { bell: false, harnesses: ['opencode'] });
+test('parseStart gives bell, modelServer and harnesses, from a file of the three alone and from a whole file', () => {
+  assert.deepEqual(parseStart(startText(true, ['claude'])), { bell: true, modelServer: false, harnesses: ['claude'] });
+  assert.deepEqual(parseStart(startText(false, ['opencode'], true)), {
+    bell: false,
+    modelServer: true,
+    harnesses: ['opencode'],
+  });
+  assert.deepEqual(parseStart(settingsText(VALID)), { bell: true, modelServer: false, harnesses: ['opencode'] });
+  assert.deepEqual(parseStart(settingsText({ ...VALID, bell: false, modelServer: true })), {
+    bell: false,
+    modelServer: true,
+    harnesses: ['opencode'],
+  });
 });
 
 test('parseStart gives the harnesses in the order of the list of harnesses, each once', () => {
@@ -771,20 +802,19 @@ test('parseStart gives the harnesses in the order of the list of harnesses, each
   }
 });
 
-test('parseStart judges no other key: a file whose other keys are all wrong gives its bell and harnesses', () => {
+test('parseStart judges no other key: a file whose other keys are all wrong gives its three', () => {
   const wrong = { defaultBranch: 5, process: 'no', sandbox: 'yes', standards: '/x', orchestrator: 7, roles: [] };
-  assert.deepEqual(parseStart(textOf({ ...wrong, bell: false, harnesses: ['claude'] })), {
+  assert.deepEqual(parseStart(textOf({ ...wrong, bell: false, modelServer: true, harnesses: ['claude'] })), {
     bell: false,
+    modelServer: true,
     harnesses: ['claude'],
   });
+  const fromValid = { bell: true, modelServer: false, harnesses: ['opencode'] };
   for (const key of ['defaultBranch', 'roles', 'standards']) {
-    assert.deepEqual(parseStart(textOf(withKey(key, undefined))), { bell: true, harnesses: ['opencode'] }, key);
+    assert.deepEqual(parseStart(textOf(withKey(key, undefined))), fromValid, key);
   }
-  assert.deepEqual(parseStart(textOf(withRole('planner', undefined))), { bell: true, harnesses: ['opencode'] });
-  assert.deepEqual(parseStart(textOf({ ...VALID, process: false, sandbox: false })), {
-    bell: true,
-    harnesses: ['opencode'],
-  });
+  assert.deepEqual(parseStart(textOf(withRole('planner', undefined))), fromValid);
+  assert.deepEqual(parseStart(textOf({ ...VALID, process: false, sandbox: false })), fromValid);
 });
 
 test('parseStart refuses a bell that is missing or holds anything but true or false, naming what it holds', () => {
@@ -802,13 +832,38 @@ test('parseStart refuses a bell that is missing or holds anything but true or fa
 });
 
 test('parseStart judges bell before harnesses', () => {
-  assert.throws(() => parseStart(textOf({ bell: 'on', harnesses: [] })), {
+  assert.throws(() => parseStart(textOf({ bell: 'on', modelServer: false, harnesses: [] })), {
     message: `agentrite.json: bell is "on". ${BELL_MUST}`,
   });
 });
 
+test('parseStart refuses a modelServer that is missing or holds anything but true or false', () => {
+  assert.throws(() => parseStart(textOf(withKey('modelServer', undefined))), {
+    message: `agentrite.json: modelServer is missing. ${BELL_MUST}`,
+  });
+  for (const value of [null, 0, 'true', 'false', [], {}]) {
+    assert.throws(
+      () => parseStart(textOf({ bell: true, modelServer: value, harnesses: ['claude'] })),
+      { message: `agentrite.json: modelServer is ${JSON.stringify(value)}. ${BELL_MUST}` },
+      JSON.stringify(value),
+    );
+  }
+});
+
+test('parseStart judges bell before modelServer, and modelServer before harnesses', () => {
+  assert.throws(() => parseStart(textOf({ bell: 'on', modelServer: 'on', harnesses: ['claude'] })), {
+    message: `agentrite.json: bell is "on". ${BELL_MUST}`,
+  });
+  assert.throws(() => parseStart(textOf({ bell: true, modelServer: 'on', harnesses: [] })), {
+    message: `agentrite.json: modelServer is "on". ${BELL_MUST}`,
+  });
+  assert.throws(() => parseStart('{"bell": true, "harnesses": []}'), {
+    message: `agentrite.json: modelServer is missing. ${BELL_MUST}`,
+  });
+});
+
 test('parseStart refuses harnesses missing, empty, not a list or naming an unknown harness', () => {
-  assert.throws(() => parseStart('{"bell": true}'), {
+  assert.throws(() => parseStart('{"bell": true, "modelServer": false}'), {
     message: `agentrite.json: harnesses is missing. ${HARNESSES_MUST}`,
   });
   for (const value of [[], 'claude', null, 5, { claude: true }, ['claude', 5], ['aider'], ['claude', 'toString']]) {
@@ -846,8 +901,8 @@ test('parseStart refuses JSON that is no object, naming what it holds and that b
 
 test('readStart reads the agentrite.json at the root, with no file the paths name', (testContext) => {
   const base = directory(testContext);
-  writeFileSync(join(base, 'agentrite.json'), settingsText({ ...VALID, bell: false }));
-  assert.deepEqual(readStart(base), { bell: false, harnesses: ['opencode'] });
+  writeFileSync(join(base, 'agentrite.json'), settingsText({ ...VALID, bell: false, modelServer: true }));
+  assert.deepEqual(readStart(base), { bell: false, modelServer: true, harnesses: ['opencode'] });
 });
 
 const NO_FILE_BELL =

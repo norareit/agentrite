@@ -109,6 +109,15 @@ test('config writes "bell": true after "sandbox"', (testContext) => {
   assert.match(readFileSync(join(base, 'agentrite.json'), 'utf-8'), /^ {2}"sandbox": true,\n {2}"bell": true,\n/m);
 });
 
+// Unit 0104, R2
+test('config writes "modelServer": false after "bell"', (testContext) => {
+  const { base, run } = directory(testContext);
+
+  assert.equal(run('config').status, 0);
+
+  assert.match(readFileSync(join(base, 'agentrite.json'), 'utf-8'), /^ {2}"bell": true,\n {2}"modelServer": false,\n/m);
+});
+
 // Unit 0058, R9, R11
 test('config skips an agentrite.json that lacks bell, and leaves it byte for byte', (testContext) => {
   const { base, run } = directory(testContext);

@@ -133,10 +133,10 @@ export function bellMounts(container, names = HARNESS_NAMES) {
   ].join('');
 }
 
-// Writes the agentrite.json of a start of the sandbox into `root`: `bell`, and `harnesses`, every harness of the list
-// unless it is given, the two keys a start reads.
-export function writeStartSettings(root, { bell = false, harnesses = HARNESS_NAMES } = {}) {
-  writeFileSync(join(root, 'agentrite.json'), `${JSON.stringify({ bell, harnesses })}\n`);
+// Writes the agentrite.json of a start of the sandbox into `root`: `bell`, `modelServer`, false unless it is given,
+// and `harnesses`, every harness of the list unless it is given, the three keys a start reads.
+export function writeStartSettings(root, { bell = false, modelServer = false, harnesses = HARNESS_NAMES } = {}) {
+  writeFileSync(join(root, 'agentrite.json'), `${JSON.stringify({ bell, modelServer, harnesses })}\n`);
 }
 
 // Asserts that `stderr` lists the four forms of the wrapper, as it does with every refusal of its arguments.

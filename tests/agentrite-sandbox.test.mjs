@@ -33,15 +33,15 @@ test('the subsets of the harnesses are every list of one or more of them, each o
   for (const name of HARNESS_NAMES) assert.ok(subsets(HARNESS_NAMES).some((subset) => subset.join() === name), name);
 });
 
-// A project whose agentrite.json holds `bell` and `harnesses`, and a home that holds what `homeFiles` maps a path
-// relative to it to.
-function setUp(testContext, { bell, harnesses, homeFiles = {} }) {
+// A project whose agentrite.json holds `bell`, `modelServer` and `harnesses`, and a home that holds what `homeFiles`
+// maps a path relative to it to.
+function setUp(testContext, { bell, modelServer = false, harnesses, homeFiles = {} }) {
   const base = temporaryDirectory(testContext, 'agentrite-sandbox-');
   const root = join(base, 'project');
   const home = join(base, 'home');
   mkdirSync(root);
   mkdirSync(home);
-  writeFileSync(join(root, 'agentrite.json'), JSON.stringify({ bell, harnesses }));
+  writeFileSync(join(root, 'agentrite.json'), JSON.stringify({ bell, modelServer, harnesses }));
   for (const [path, content] of Object.entries(homeFiles)) {
     mkdirSync(join(home, path, '..'), { recursive: true });
     writeFileSync(join(home, path), content);
@@ -55,10 +55,10 @@ function mountLine(name, { from, path, target }) {
 }
 
 // What the helper prints for the harnesses named `names`, built from the list, with what each is given of a home
-// that is `given` of its name.
-function expected(names, bell, given = () => ({ environment: [], mounts: [], files: [] })) {
+// that is `given` of its name, and with `modelServer`.
+function expected(names, bell, given = () => ({ environment: [], mounts: [], files: [] }), modelServer = false) {
   const harnesses = HARNESSES.filter((harness) => names.includes(harness.name));
-  const lines = [`bell\t${bell}`];
+  const lines = [`bell\t${bell}`, `modelServer\t${modelServer}`];
   for (const { name, title, start, sandbox } of harnesses) {
     lines.push(['harness', name, title, start.command, sandbox.package, sandbox.versionArgument].join('\t'));
   }
@@ -105,6 +105,17 @@ for (const names of subsets(HARNESS_NAMES)) {
   });
 }
 
+// 0104 R4, R7
+for (const modelServer of [true, false]) {
+  test(`start prints "modelServer\\t${modelServer}" on the line after bell`, (testContext) => {
+    const { root, home } = setUp(testContext, { bell: true, modelServer, harnesses: ['claude'] });
+    const result = helper(['start', root, home]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(result.stdout.split('\n').slice(0, 2), ['bell\ttrue', `modelServer\t${modelServer}`]);
+    assert.equal(result.stdout, expected(['claude'], true, undefined, modelServer));
+  });
+}
+
 test('start gives a harness what its host member reads of the home', (testContext) => {
   const homeFiles = {
     '.claude/statusline-command.sh': 'echo status\n',
@@ -137,11 +148,15 @@ test('start with an empty home asks no harness of the host', (testContext) => {
 test("start refuses with the reader's message, on standard error alone, and exits 1", (testContext) => {
   for (const [text, message] of [
     ['{"harnesses": ["claude"]}', 'agentrite.json: bell is missing. It must hold true or false'],
+    ['{"bell": true, "harnesses": ["claude"]}', 'agentrite.json: modelServer is missing. It must hold true or false'],
     [
-      '{"bell": true}',
+      '{"bell": true, "modelServer": false}',
       'agentrite.json: harnesses is missing. It must hold a list of one or more of "claude", "opencode" and "codex"',
     ],
-    ['{"bell": true, "harnesses": ["nothing"]}', 'agentrite.json: harnesses is ["nothing"]. It must hold a list'],
+    [
+      '{"bell": true, "modelServer": false, "harnesses": ["nothing"]}',
+      'agentrite.json: harnesses is ["nothing"]. It must hold a list',
+    ],
   ]) {
     const { root, home } = setUp(testContext, { bell: true, harnesses: ['claude'] });
     writeFileSync(join(root, 'agentrite.json'), text);
@@ -171,7 +186,8 @@ test('start refuses a field that would hold a tab or a line break', (testContext
   const home = join(base, 'home\twith a tab');
   mkdirSync(root);
   mkdirSync(join(home, '.claude'), { recursive: true });
-  writeFileSync(join(root, 'agentrite.json'), JSON.stringify({ bell: false, harnesses: HARNESS_NAMES }));
+  const settings = { bell: false, modelServer: false, harnesses: HARNESS_NAMES };
+  writeFileSync(join(root, 'agentrite.json'), JSON.stringify(settings));
   writeFileSync(join(home, '.claude', 'statusline-command.sh'), 'echo status\n');
   const result = helper(['start', root, home]);
   assert.equal(result.status, 1);

@@ -1785,6 +1785,52 @@ test(
   },
 );
 
+// Unit 0104, R1, R2
+test(
+  'init given harnesses writes "modelServer": false after "bell", with and without --no-sandbox and --sandbox-only',
+  (testContext) => {
+    const argumentLists = [
+      ['claude'],
+      ['opencode', OPTION],
+      [OPTION, 'claude', 'opencode'],
+      ['--sandbox-only', 'claude'],
+    ];
+    for (const args of argumentLists) {
+      const { run, read } = project(testContext);
+
+      const result = run('init', ...args);
+
+      assert.equal(result.status, 0, `${args.join(' ')}: ${result.stderr}`);
+      assert.match(read('agentrite.json'), /^ {2}"bell": true,\n {2}"modelServer": false,\n/m, args.join(' '));
+    }
+  },
+);
+
+// Unit 0104, R1
+test(
+  'init with no argument in a project whose agentrite.json lacks modelServer, or holds a string, refuses it',
+  (testContext) => {
+    const settings = JSON.parse(kitSettingsText({ defaultBranch: 'main', harnesses: ['claude'], sandbox: false }));
+    for (const [modelServer, found] of [
+      [undefined, 'missing'],
+      ['false', '"false"'],
+    ]) {
+      const { base, run } = project(testContext);
+      const text = `${JSON.stringify({ ...settings, modelServer }, null, 2)}\n`;
+      writeFileSync(join(base, 'agentrite.json'), text);
+      const before = snapshot(base);
+
+      const result = run('init');
+
+      assert.equal(result.status, 1);
+      assert.equal(result.stdout, '');
+      assert.equal(result.stderr, `agentrite: agentrite.json: modelServer is ${found}. It must hold true or false\n`);
+      assert.deepEqual(snapshot(base), before);
+      assert.equal(readFileSync(join(base, 'agentrite.json'), 'utf-8'), text);
+    }
+  },
+);
+
 // Unit 0065, R2
 test(
   'init given harnesses writes the kit default definition as orchestrator, false with --no-orchestrator',

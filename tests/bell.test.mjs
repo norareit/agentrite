@@ -218,7 +218,8 @@ test(
 // harness: each path of the kit's container/ by its target in the container.
 function bellMounts(testContext) {
   const root = temporaryDirectory(testContext, 'bell-mounts-');
-  writeFileSync(join(root, 'agentrite.json'), JSON.stringify({ bell: true, harnesses: HARNESS_NAMES }));
+  const settings = { bell: true, modelServer: false, harnesses: HARNESS_NAMES };
+  writeFileSync(join(root, 'agentrite.json'), JSON.stringify(settings));
   const helper = fileURLToPath(new URL('../scripts/agentrite-sandbox.mjs', import.meta.url));
   const result = spawnSync(process.execPath, [helper, 'start', root, ''], { encoding: 'utf-8' });
   assert.equal(result.status, 0, result.stderr);

@@ -16,6 +16,7 @@ export const SETTINGS_FILE = 'agentrite.json';
  *   process: boolean,
  *   sandbox: boolean,
  *   bell: boolean,
+ *   modelServer: boolean,
  *   standards: string,
  *   orchestrator: string | false,
  *   roles: RoleFiles,
@@ -63,6 +64,7 @@ const KEYS = [
   { name: 'process', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'sandbox', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'bell', holds: (value) => typeof value === 'boolean', must: 'true or false' },
+  { name: 'modelServer', holds: (value) => typeof value === 'boolean', must: 'true or false' },
   { name: 'standards', holds: isProjectPath, must: PATH_MUST },
   {
     name: 'orchestrator',
@@ -124,7 +126,7 @@ export function parseSettings(text) {
   for (const key of KEYS) checkKey(values, key);
 
   const settings = /** @type {Settings} */ (parsed);
-  const { defaultBranch, harnesses, process, sandbox, bell, standards, orchestrator } = settings;
+  const { defaultBranch, harnesses, process, sandbox, bell, modelServer, standards, orchestrator } = settings;
   const roles = parseRoles(/** @type {Record<string, unknown>} */ (values.roles));
   if (!process && !sandbox) throw new Error(NEITHER_PROCESS_NOR_SANDBOX);
   return {
@@ -133,6 +135,7 @@ export function parseSettings(text) {
     process,
     sandbox,
     bell,
+    modelServer,
     standards,
     orchestrator,
     roles,
@@ -163,19 +166,21 @@ function keyNamed(name) {
 
 const BELL_KEY = keyNamed('bell');
 
+const MODEL_SERVER_KEY = keyNamed('modelServer');
+
 const HARNESSES_KEY = keyNamed('harnesses');
 
 const BELL_MUST_HOLD = `It must hold ${BELL_KEY.must}`;
 
 /**
- * @typedef {{ bell: boolean, harnesses: string[] }} Start What a start of the sandbox reads of the file: `bell`, and
- *   the harnesses of the project in the order of `HARNESS_NAMES`, each once.
+ * @typedef {{ bell: boolean, modelServer: boolean, harnesses: string[] }} Start What a start of the sandbox reads of
+ *   the file: `bell`, `modelServer`, and the harnesses of the project in the order of `HARNESS_NAMES`, each once.
  */
 
 /**
- * The values of `bell` and `harnesses` that the text of an `agentrite.json` holds, as a start of the sandbox reads
- * them. `bell` is judged first, and no key but the two is judged, so a start is refused for these alone. Throws,
- * naming the file, the key, what it holds or that it is missing, and what it must hold.
+ * The values of `bell`, `modelServer` and `harnesses` that the text of an `agentrite.json` holds, as a start of the
+ * sandbox reads them. They are judged in that order, and no key but the three is judged, so a start is refused for
+ * these alone. Throws, naming the file, the key, what it holds or that it is missing, and what it must hold.
  *
  * @param {string} text
  * @returns {Start}
@@ -193,10 +198,12 @@ export function parseStart(text) {
   }
   const values = /** @type {Record<string, unknown>} */ (parsed);
   checkKey(values, BELL_KEY);
+  checkKey(values, MODEL_SERVER_KEY);
   checkKey(values, HARNESSES_KEY);
   const named = /** @type {string[]} */ (values.harnesses);
   return {
     bell: /** @type {boolean} */ (values.bell),
+    modelServer: /** @type {boolean} */ (values.modelServer),
     harnesses: HARNESS_NAMES.filter((name) => named.includes(name)),
   };
 }
@@ -289,7 +296,17 @@ export function isRegularFile(path) {
  * @param {Settings} settings
  * @returns {string}
  */
-export function settingsText({ defaultBranch, harnesses, process, sandbox, bell, standards, orchestrator, roles }) {
+export function settingsText({
+  defaultBranch,
+  harnesses,
+  process,
+  sandbox,
+  bell,
+  modelServer,
+  standards,
+  orchestrator,
+  roles,
+}) {
   const list = harnesses.map((harness) => JSON.stringify(harness)).join(', ');
   const roleLines = Object.entries(roles).map(([name, path]) => `    ${JSON.stringify(name)}: ${JSON.stringify(path)}`);
   return [
@@ -299,6 +316,7 @@ export function settingsText({ defaultBranch, harnesses, process, sandbox, bell,
     `  "process": ${JSON.stringify(process)},`,
     `  "sandbox": ${JSON.stringify(sandbox)},`,
     `  "bell": ${JSON.stringify(bell)},`,
+    `  "modelServer": ${JSON.stringify(modelServer)},`,
     `  "standards": ${JSON.stringify(standards)},`,
     `  "orchestrator": ${JSON.stringify(orchestrator)},`,
     '  "roles": {',
@@ -348,8 +366,9 @@ export function readSettings(root) {
 }
 
 /**
- * The values of `bell` and `harnesses` in the `agentrite.json` in the working tree of the project at `root`, read as
- * `parseStart` reads them. Throws what to print for a project that has none and for a file that cannot be read.
+ * The values of `bell`, `modelServer` and `harnesses` in the `agentrite.json` in the working tree of the project at
+ * `root`, read as `parseStart` reads them. Throws what to print for a project that has none and for a file that cannot
+ * be read.
  *
  * @param {string} root
  * @returns {Start}

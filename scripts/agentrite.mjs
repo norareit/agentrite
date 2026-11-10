@@ -887,9 +887,9 @@ const INIT_WITH_SETTINGS =
 /**
  * The settings `init` writes into a project that has none: the harnesses in the kit's order, so that one set of
  * harnesses gives one file however it was typed, the template's own branch when none was named, and the template's
- * bell, standards, orchestrator and roles, which name the kit's own files and ring in the sandbox. Without the
- * orchestrator, `orchestrator` is false. A sandbox-only project has no process, has the sandbox and does not use the
- * orchestrator.
+ * bell, modelServer, standards, orchestrator and roles, which name the kit's own files, ring in the sandbox and admit
+ * no local model server there. Without the orchestrator, `orchestrator` is false. A sandbox-only project has no
+ * process, has the sandbox and does not use the orchestrator.
  *
  * @param {{
  *   harnesses: string[],
@@ -908,6 +908,7 @@ function settingsToWrite({ harnesses, sandboxOnly, sandbox, orchestrator, defaul
     process: !sandboxOnly,
     sandbox: sandboxOnly || sandbox,
     bell: template.bell,
+    modelServer: template.modelServer,
     standards: template.standards,
     orchestrator: orchestrator && !sandboxOnly ? template.orchestrator : false,
     roles: template.roles,

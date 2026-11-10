@@ -29,8 +29,8 @@ const devName = 'ritenoar-agentrite-sandbox-dev';
 const nameFromVariable = '${SANDBOX_PROJECT_NAME:-ritenoar-agentrite-sandbox}';
 
 // A checkout holding copies of the shim, of the working copy's wrapper, Dockerfile and base Compose file and of its
-// readers of agentrite.json and of the harnesses, an agentrite.json that holds `"bell": false` and every harness of
-// the list alone, and the host of
+// readers of agentrite.json and of the harnesses, an agentrite.json that holds `"bell": false`, `"modelServer": false`
+// and every harness of the list alone, and the host of
 // `fakeHost`, whose `docker` says the image exists and records each call with the SANDBOX_PROJECT_NAME and the
 // AGENTRITE_CONTAINER it saw. The shim runs with an empty home of its own, so that no test depends on what the
 // home of whoever runs the suite holds.

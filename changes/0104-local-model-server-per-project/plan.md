@@ -88,39 +88,39 @@ release notes are written at the release, as `AGENTS.md` says, and not in this u
 
 The setting:
 
-- [ ] In `tests/agentrite-settings.test.mjs`, add `modelServer` to the valid file and to the list of keys of the
+- [x] In `tests/agentrite-settings.test.mjs`, add `modelServer` to the valid file and to the list of keys of the
   message for a file that is no object, and cover: a file that lacks `modelServer` is refused with
   `agentrite.json: modelServer is missing. It must hold true or false`; `null`, `0`, `"true"`, `[]` and `{}` are
   each refused, naming what the key holds; `true` and `false` are given as written; `settingsText` writes
   `"modelServer"` on the line after `"bell"`, and `parseSettings` of its text gives the settings back (R1)
-- [ ] Add `modelServer` to `KEYS` after `bell`, to `Settings`, to what `parseSettings` returns and to `settingsText`
+- [x] Add `modelServer` to `KEYS` after `bell`, to `Settings`, to what `parseSettings` returns and to `settingsText`
   in `scripts/agentrite-settings.mjs`. Add `modelServer = false` to `kitSettingsText` of `tests/installed-kit.mjs`
   and the key to every whole file that the tests named under "Files" write, until the suite passes (R1)
-- [ ] In `tests/agentrite-config.test.mjs`, cover that `config` writes `"modelServer": false` on the line after
+- [x] In `tests/agentrite-config.test.mjs`, cover that `config` writes `"modelServer": false` on the line after
   `"bell"`. In `tests/agentrite-init.test.mjs`, cover that `init` writes it, with and without `--no-sandbox` and with
   `--sandbox-only`, and that `init` with no argument refuses a file that lacks `modelServer` or holds `"false"`,
   with the message of the key (R1, R2)
-- [ ] Add `"modelServer": false` after `"bell": true` in `templates/project/agentrite.json`, and
+- [x] Add `"modelServer": false` after `"bell": true` in `templates/project/agentrite.json`, and
   `modelServer: template.modelServer` to `settingsToWrite` of `scripts/agentrite.mjs`, with its doc comment (R2)
-- [ ] Add `"modelServer": false` after `"bell": true` in the root `agentrite.json`. Run `npx agentrite units` and
+- [x] Add `"modelServer": false` after `"bell": true` in the root `agentrite.json`. Run `npx agentrite units` and
   `npm run kit -- refresh` at the root: the first lists the units, the second prints `up to date` for every file
   (R3)
 
 The start:
 
-- [ ] In `tests/agentrite-settings.test.mjs`, cover that `parseStart` gives `modelServer`, from a file of `bell`,
+- [x] In `tests/agentrite-settings.test.mjs`, cover that `parseStart` gives `modelServer`, from a file of `bell`,
   `modelServer` and `harnesses` alone and from a whole file; that it refuses a file that lacks `modelServer` or whose
   `modelServer` is `"true"`, with the message of the key; that a file at fault in `bell` and `modelServer` is refused
   for `bell`, and one at fault in `modelServer` and `harnesses` for `modelServer`; and that another key at fault does
   not stop it (R4)
-- [ ] Add `modelServer` to `Start` and judge it in `parseStart` between `bell` and `harnesses`, updating the doc
+- [x] Add `modelServer` to `Start` and judge it in `parseStart` between `bell` and `harnesses`, updating the doc
   comments of `parseStart` and `readStart` (R4)
-- [ ] In `tests/agentrite-sandbox.test.mjs`, give `setUp` and `expected` the key, and cover that `start` prints
+- [x] In `tests/agentrite-sandbox.test.mjs`, give `setUp` and `expected` the key, and cover that `start` prints
   `modelServer\ttrue` and `modelServer\tfalse` on the line after `bell`, and that it refuses a file that lacks the
   key, with the message and exit 1 (R4, R7)
-- [ ] Print the line in `startLines` of `scripts/agentrite-sandbox.mjs`, taking `modelServer` from `readStart` in
+- [x] Print the line in `startLines` of `scripts/agentrite-sandbox.mjs`, taking `modelServer` from `readStart` in
   `startText`, with the doc comments (R4)
-- [ ] Commit point: the setting and its reading
+- [x] Commit point: the setting and its reading
 
 What carries the value:
 
@@ -200,7 +200,7 @@ The documents:
 
 ## Commit Points
 
-- [ ] The setting and its reading: `scripts/agentrite-settings.mjs`, `scripts/agentrite.mjs`,
+- [x] The setting and its reading: `scripts/agentrite-settings.mjs`, `scripts/agentrite.mjs`,
   `scripts/agentrite-sandbox.mjs`, the template, the root `agentrite.json` and their tests
 - [ ] The wrapper and the firewall: `container/compose.yml`, `container/sandbox.sh`, `container/entrypoint.sh` and
   their tests
