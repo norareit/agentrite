@@ -128,6 +128,9 @@ out of everything published, since everything committed in this repository is.
   `master`, not its branch, and not `master` once it holds either. Its commits are pushed by the push of that
   release, step 7 of [`RELEASING.md`](RELEASING.md), which follows `npm publish`, so the fix becomes public as a
   release that users can move to
+* The advisory of such a fix is created and published by the human at the release that ships the fix, in step 8 of
+  [`RELEASING.md`](RELEASING.md), from the fields of the security reviewer's finding. No role creates one on GitHub
+  before it
 
 ## Releasing
 

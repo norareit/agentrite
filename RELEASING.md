@@ -12,14 +12,15 @@ A release is made on the host, on `master`, from the repository root, in this or
 5. What the human runs: `npm login`, `npm version` and `npm publish`
 6. The kit's own dependency: this repository moves to the release
 7. The push, which the human runs
-8. The advisories, which the human publishes, only in a release that ships the fix of a finding of the security
-   reviewer
+8. The advisories, which the human creates and publishes in GitHub's form from the security reviewer's findings,
+   only in a release that ships the fix of a finding of the security reviewer
 
 An agent runs steps 1 and 2, stops at step 3, and on the human's word runs step 4. It runs nothing of step 5: it
 ends step 4 by telling the human its three commands, and stops. On the human's word that `npm publish` succeeded it
 runs step 6, and ends by telling the human the command of step 7, which it does not run. When the human has said
-that the release ships the fix of a finding, it says, in ending step 7, that step 8 follows, and runs step 8, which
-it ends by telling the human its commands, which it does not run either. An agent asked only for
+that the release ships the fix of a finding, it says, in ending step 7, that step 8 follows, and runs step 8: it
+gives the human the package, the patched version and the proposed lower bound of each advisory, and the commands of
+the alternative way, and runs nothing of it either. An agent asked only for
 the release notes runs step 2, stops at step 3, and on the human's word commits the section as step 4 gives it and
 nothing else. An agent asked only to move this repository to a release that is already made runs step 6 and nothing
 else.
@@ -83,7 +84,7 @@ Stop there. Commit nothing before the human's word. In your answer:
   the kit's own
 * Name every change in the shipped diff that has no unit, but for the one step 2 says not to name
 * Ask whether a unit of the release fixes a finding of the security reviewer, unless the human has said so already.
-  Step 2 names such a unit as a security fix, and step 8 follows the push
+  Step 2 names such a unit as a security fix, and step 8, which creates and publishes its advisory, follows the push
 
 The human reads the section, corrects it and picks the version, changing the heading when the pick differs from the
 proposal.
@@ -300,18 +301,51 @@ to.
 
 ## 8. The advisories
 
-Only in a release that ships the fix of a finding of the security reviewer, and after the push of step 7. The human
-publishes the finding's draft security advisory on GitHub, with the version of the release as the patched version,
-so that the projects that depend on the kit are alerted to move to it.
+Only in a release that ships the fix of a finding of the security reviewer, and after the push of step 7. For each
+unit of the release that fixes such a finding, the human creates and publishes one security advisory on GitHub, with
+the version of the release as the patched version, so that the projects that depend on the kit are alerted to move to
+it. Step 8 creates a new advisory for each such unit and changes no advisory that exists: a draft the human keeps for
+an accepted risk, the "Recorded elsewhere" of an entry in
+[`extra-roles/security-reviewer.md`](extra-roles/security-reviewer.md), is not touched by a release.
 
-The agent asks the human, for each advisory the release fixes, for its ID, as `GHSA-xxxx-xxxx-xxxx`, and the range
-of versions the advisory names as affected, which the human reads from the advisory. For each it prints one
-command, with the ID, the range and the `version` in `package.json` filled in:
+Only the owner of the repository can create and publish its advisories. `norareit/agentrite` is owned by the user
+account `norareit`, so the human does it logged in as `norareit`, on any device.
+
+The text of an advisory is in the security reviewer's finding, which gives the fields of GitHub's form. The agent
+reads no finding and nothing of `.reviews`, reads nothing of any advisory, and runs no command against GitHub. For
+each such unit it gives the human the rest, from what the release holds:
+
+* The ecosystem `npm` and the package `agentrite`
+* The patched version: the `version` in `package.json`
+* A proposed lower bound of the affected range: the first release whose tag holds the code that the unit's commits
+  change, as `git tag --contains <commit> --sort=v:refname` prints it first for the earliest commit that brought
+  that code in. The human compares it with the range of the finding and decides the range
+
+The human then, in GitHub's web form, on the repository's page of security advisories, with "New draft security
+advisory":
+
+1. Copies the Summary, as the title and the summary, the Details, the Proof of concept, the Impact, the severity and
+   the CWE from the finding
+2. Fills in the affected product: the ecosystem, the package, the range they decided and the patched version
+3. Creates the draft, and publishes it on its page: the green button reads "Request CVE", and "Publish advisory" is
+   in the dropdown of its arrow
+
+A CVE is optional. Requesting one has GitHub review the advisory and assign it before it is published, and one may be
+requested after the advisory is published as well. A published advisory reaches `npm audit` and Dependabot only once
+GitHub has reviewed it for its global advisory database, which is not at once.
+
+The alternative way is `gh`, for a login that may create and publish the repository's advisories. Another login is
+answered with 404 Not Found. The agent prints the two commands for each advisory, with the version and the proposed
+range filled in, and placeholders for what the human copies from the finding. The first creates the draft, with the
+Details, the Proof of concept and the Impact as sections of its `description`, and prints its ID:
 
 ```sh
-gh api -X PATCH repos/norareit/agentrite/security-advisories/<ID> --input - <<'EOF'
+gh api -X POST repos/norareit/agentrite/security-advisories --jq .ghsa_id --input - <<'EOF'
 {
-  "state": "published",
+  "summary": "<Summary>",
+  "description": "## Details\n\n<Details>\n\n## Proof of concept\n\n<Proof of concept>\n\n## Impact\n\n<Impact>",
+  "severity": "<severity>",
+  "cwe_ids": ["<CWE>"],
   "vulnerabilities": [
     {
       "package": {"ecosystem": "npm", "name": "agentrite"},
@@ -323,10 +357,16 @@ gh api -X PATCH repos/norareit/agentrite/security-advisories/<ID> --input - <<'E
 EOF
 ```
 
-The command sets the advisory's state to `published`, and names as affected the package `agentrite` of the `npm`
-ecosystem, with that range and the release's version as the patched version. The agent runs none of the commands,
-and reads nothing of an advisory itself: what it puts in a command is what the human gave it and the version of the
-release. It ends step 8 by telling the human the commands, which the human runs with their own login of `gh`.
+The second publishes it, with the ID the first printed:
+
+```sh
+gh api -X PATCH repos/norareit/agentrite/security-advisories/<ID> -f state=published
+```
+
+The text the human copies goes into the body as JSON strings, with its line breaks as `\n` and its double quotes as
+`\"`. What a draft created through the API is given as its state, and whether the API refuses to publish one that
+lacks a field the form asks for, was not established, and neither command has been run with the owner's login. The
+agent ends step 8 by telling the human what it gives and these commands, and runs none of them.
 
 The human may then mark the versions before the release as deprecated, so that each install of one of them warns,
 with the release's version as `X.Y.Z`:
