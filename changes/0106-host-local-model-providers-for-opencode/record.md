@@ -58,5 +58,10 @@ timestamp: 2026-11-10T11:54:10Z
   return as at a line feed, and a comma after `[`, `{` or another comma is refused rather than taken out, with tests
   of both through the configuration reader. On `4c903db`, `npm test` passes, 1898 tests with none failed or skipped,
   and the new tests fail on the parser before the fix. The status stays `in-progress`
+- 2026-11-10T14:45:59Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0106 at
+  `494efde17c4bfcca24ec6b616fba9e877975522f` in a delta review from `1dae517`. Returned no findings, saved in
+  `.reviews/0106-host-local-model-providers-for-opencode/review-20261110T144559Z.md`. `npm test` passes, 1898 tests
+  with none failed or skipped, and `npm run check-changes` passes. Not verified: OpenCode loading the generated
+  configuration and listing models in a running sandbox, or a request through it to a local model server
 
 ## Amendments
