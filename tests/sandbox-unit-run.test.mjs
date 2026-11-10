@@ -10,6 +10,7 @@ import {
   readFileSync,
   rmSync,
   statSync,
+  symlinkSync,
   writeFileSync,
 } from 'node:fs';
 import { delimiter, join } from 'node:path';
@@ -1030,6 +1031,111 @@ test('the wrapper removes a clone that holds only files the project ignores', (t
   assert.equal(result.status, 0, result.stderr);
   assert.equal(existsSync(clone), false);
 });
+
+// Unit 0103, R13, R14, R16: the comparison of the clone with the commit takes the bytes as they are.
+
+// The ln the agent runs by its path, since the PATH of the stand-in holds none.
+const LN = execFileSync('sh', ['-c', 'command -v ln'], { encoding: 'utf-8' }).trim();
+
+// The paths the wrapper listed as not committed, in its order.
+function listedFiles(stderr) {
+  const lines = stderr.split('\n');
+  const from = lines.indexOf(`Files that are not committed on ${branch}:`);
+  if (from === -1) return [];
+  const listed = [];
+  for (const line of lines.slice(from + 1)) {
+    if (!line.startsWith('  ')) break;
+    listed.push(line.slice(2));
+  }
+  return listed;
+}
+
+// Adds to the unit's branch a link, `link.md` to `unit.md`, and an executable file, `run.sh`, and checks out
+// `master` again.
+function commitLinkAndScript({ root, git }) {
+  git('checkout', '--quiet', branch);
+  symlinkSync('unit.md', join(root, 'link.md'));
+  writeFileSync(join(root, 'run.sh'), '#!/bin/sh\n');
+  chmodSync(join(root, 'run.sh'), 0o755);
+  git('add', 'link.md', 'run.sh');
+  git('commit', '--quiet', '--message', 'a link and a script');
+  git('checkout', '--quiet', 'master');
+}
+
+test('the wrapper runs no filter of git over the clone, whatever its attributes name', (testContext) => {
+  const host = setUp(testContext);
+  const { base, clone, run, git, agent } = host;
+  const mark = join(base, 'mark');
+  for (const direction of ['clean', 'smudge']) {
+    git('config', `filter.mark.${direction}`, `echo ran >> '${mark}'; cat`);
+  }
+  agent("printf '* filter=mark\\n* text eol=crlf\\n' > .gitattributes\necho changed >> unit.md");
+
+  const result = run([branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(!existsSync(mark), 'a filter ran');
+  assert.ok(existsSync(clone));
+  assert.deepEqual(listedFiles(result.stderr), ['unit.md', '.gitattributes']);
+});
+
+for (const [what, script, listed] of [
+  ['a file whose bytes differ', 'echo changed >> unit.md', ['unit.md']],
+  ['a committed file it removed', 'rm unit.md', ['unit.md']],
+  [
+    'a committed file under a directory replaced by a link',
+    // The directory the link names holds the file as it was committed, empty.
+    `mkdir "$HOME/../outside"\n: > "$HOME/../outside/compose.project.yml"\nrm -r sandbox\n` +
+      `"${LN}" -s "$HOME/../outside" sandbox`,
+    ['sandbox/compose.project.yml', 'sandbox'],
+  ],
+  ['a committed link whose target changed', `rm link.md\n"${LN}" -s run.sh link.md`, ['link.md']],
+  ['a committed link replaced by a file', 'rm link.md\necho the unit > link.md', ['link.md']],
+  ['a file that is not committed and not ignored', 'echo new > new.txt', ['new.txt']],
+  ['a committed file made executable', 'chmod +x unit.md', ['unit.md']],
+  ['a file committed as executable made not executable', 'chmod -x run.sh', ['run.sh']],
+]) {
+  test(`the wrapper keeps a clone that holds ${what}, and lists the file`, (testContext) => {
+    const host = setUp(testContext);
+    commitLinkAndScript(host);
+    host.agent(script);
+
+    const result = host.run([branch, 'echo', 'hi']);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(existsSync(host.clone), result.stderr);
+    assert.deepEqual(listedFiles(result.stderr), listed);
+  });
+}
+
+test('the wrapper removes a clone with a committed link and script left as they were and an ignored file', (t) => {
+  const host = setUp(t);
+  commitLinkAndScript(host);
+  host.agent('mkdir node_modules\necho installed > node_modules/package.txt');
+
+  const result = host.run([branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.ok(!existsSync(host.clone));
+});
+
+for (const [what, script] of [
+  ['a committed file made executable', 'chmod +x unit.md'],
+  ['a file committed as executable made not executable', 'chmod -x run.sh'],
+]) {
+  test(`the wrapper removes a clone whose one change is ${what} when core.fileMode is false`, (testContext) => {
+    const host = setUp(testContext);
+    commitLinkAndScript(host);
+    host.git('config', 'core.fileMode', 'false');
+    host.agent(script);
+
+    const result = host.run([branch, 'echo', 'hi']);
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.ok(!existsSync(host.clone), result.stderr);
+  });
+}
 
 test("the wrapper lands the commit and exits with the command's status when that is not 0", (testContext) => {
   const { clone, run, git, agent } = setUp(testContext);

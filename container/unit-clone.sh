@@ -299,21 +299,137 @@ fast_forward_branch() {
   git -C "$root" update-ref -d "$ref"
 }
 
-# Prints the files of the clone that differ from the commit, and those it has besides,
-# ignored files apart. Asked of the host's repository, with the clone as its work tree
-# and an index of its own read from the commit, so that only files of the clone are
-# read. The host's own file system monitor, if it has one, is not asked about a tree
-# that is not the host's.
+# Prints a path of the clone, on a line of its own. A path that holds a control
+# character is printed quoted, so that it can neither break the listing nor reach the
+# terminal as one.
+print_clone_path() {
+  if [[ "$1" == *[[:cntrl:]]* ]]; then printf '%q\n' "$1"; else printf '%s\n' "$1"; fi
+}
+
+# True when a directory above the path $2 of the clone at $1 is a symbolic link, or is
+# not a directory: the clone then has nothing at the path, and a file read through it
+# would be read outside the clone.
+clone_path_unreachable() {
+  local clone="$1" above="$2"
+  while [[ "$above" == */* ]]; do
+    above="${above%/*}"
+    if [ -L "$clone/$above" ] || [ ! -d "$clone/$above" ]; then return 0; fi
+  done
+  return 1
+}
+
+# Prints the files of the clone that are not committed: those whose bytes or whose
+# executable bit differ from the commit, those of the commit the clone lacks, and those
+# it has besides, ignored files apart. A file's bytes are compared as they are, and no
+# conversion or filter of git is run, whatever the attributes in the clone, its .git,
+# the commit or the host name: git would run a program the host's configuration names
+# over files the agent wrote. The executable bit is compared unless core.fileMode of the
+# host's repository is false. A link is compared by its target, which update-index takes
+# as its content, and a submodule by there being a directory at its path. Every git call
+# is asked of the host's repository with its own index in a scratch directory, so that
+# ignored files are read as the host reads them and only files of the clone are read,
+# and the host's own file system monitor, if it has one, is not asked about a tree that
+# is not the host's. The files of the clone are read by bash and by git alone.
 clone_changed_files() {
-  local root="$1" clone="$2" commit="$3" git_dir scratch status=0
+  local root="$1" clone="$2" commit="$3" git_dir scratch status=0 file_mode=true
   git_dir="$(git -C "$root" rev-parse --absolute-git-dir)" || return 1
+  if [ "$(git --git-dir="$git_dir" config --type=bool --get core.fileMode)" = false ]; then
+    file_mode=false
+  fi
   scratch="$(mktemp -d)" || return 1
-  GIT_INDEX_FILE="$scratch/index" git --git-dir="$git_dir" --work-tree="$clone" read-tree "$commit" \
-    && GIT_INDEX_FILE="$scratch/index" git -c core.fsmonitor=false --git-dir="$git_dir" --work-tree="$clone" \
-      ls-files --modified --deleted --others --exclude-standard \
-    || status=1
+  clone_compare "$git_dir" "$clone" "$commit" "$scratch" "$file_mode" || status=1
   rm -rf "$scratch"
   return "$status"
+}
+
+# The comparison of clone_changed_files, with the scratch directory $4 to keep its
+# indexes and listings in, and $5 false when the executable bit is not compared.
+clone_compare() {
+  local git_dir="$1" clone="$2" commit="$3" scratch="$4" file_mode="$5"
+  local entry meta path mode object file id index
+  local -a hashed=() hashed_ids=() links=() link_ids=()
+  local git=(git -c core.fsmonitor=false -c core.symlinks=true --git-dir="$git_dir")
+  "${git[@]}" ls-tree -r -z --full-tree "$commit" > "$scratch/tree" || return 1
+  while IFS= read -r -d '' entry; do
+    meta="${entry%%$'\t'*}" path="${entry#*$'\t'}"
+    mode="${meta%% *}" object="${meta##* }" file="$clone/$path"
+    if clone_path_unreachable "$clone" "$path"; then
+      print_clone_path "$path"
+      continue
+    fi
+    case "$mode" in
+      100644 | 100755)
+        if [ -L "$file" ] || [ ! -f "$file" ]; then
+          print_clone_path "$path"
+          continue
+        fi
+        if [ "$file_mode" = true ] && { { [ -x "$file" ] && [ "$mode" = 100644 ]; } ||
+          { [ ! -x "$file" ] && [ "$mode" = 100755 ]; }; }; then
+          print_clone_path "$path"
+          continue
+        fi
+        hashed+=("$path") hashed_ids+=("$object")
+        ;;
+      120000)
+        if [ ! -L "$file" ]; then
+          print_clone_path "$path"
+          continue
+        fi
+        links+=("$path") link_ids+=("$object")
+        ;;
+      160000)
+        if [ -L "$file" ] || [ ! -d "$file" ]; then print_clone_path "$path"; fi
+        ;;
+    esac
+  done < "$scratch/tree"
+
+  # The paths go to hash-object a line each, as absolute paths, which never open with
+  # the quote it would unquote. A path that holds a line break is hashed by itself.
+  : > "$scratch/paths"
+  for path in ${hashed[@]+"${hashed[@]}"}; do
+    if [[ "$path" != *$'\n'* ]]; then printf '%s\n' "$clone/$path" >> "$scratch/paths"; fi
+  done
+  "${git[@]}" hash-object --no-filters --stdin-paths < "$scratch/paths" > "$scratch/ids" || return 1
+  local -a ids=()
+  while IFS= read -r id; do ids+=("$id"); done < "$scratch/ids"
+  local next=0
+  for index in ${hashed[@]+"${!hashed[@]}"}; do
+    path="${hashed[$index]}"
+    if [[ "$path" == *$'\n'* ]]; then
+      id="$("${git[@]}" hash-object --no-filters -- "$clone/$path")" || return 1
+    else
+      id="${ids[$next]}" next=$((next + 1))
+    fi
+    if [ "$id" != "${hashed_ids[$index]}" ]; then print_clone_path "$path"; fi
+  done
+
+  # A link's id is read from an index of its own, which takes the link's target as its
+  # content, runs no filter for a link and writes no object.
+  if [ "${#links[@]}" -gt 0 ]; then
+    printf '%s\0' "${links[@]}" | GIT_INDEX_FILE="$scratch/links" "${git[@]}" --work-tree="$clone" \
+      update-index --add --info-only -z --stdin || return 1
+    GIT_INDEX_FILE="$scratch/links" "${git[@]}" --work-tree="$clone" ls-files --stage -z > "$scratch/link-ids" \
+      || return 1
+    local -a staged=()
+    local found
+    while IFS= read -r -d '' entry; do staged+=("$entry"); done < "$scratch/link-ids"
+    for index in "${!links[@]}"; do
+      found=
+      for entry in ${staged[@]+"${staged[@]}"}; do
+        if [ "${entry#*$'\t'}" = "${links[$index]}" ]; then
+          meta="${entry%%$'\t'*}" found="${meta#* }"
+          found="${found%% *}"
+          break
+        fi
+      done
+      if [ "$found" != "${link_ids[$index]}" ]; then print_clone_path "${links[$index]}"; fi
+    done
+  fi
+
+  GIT_INDEX_FILE="$scratch/index" "${git[@]}" --work-tree="$clone" read-tree "$commit" || return 1
+  GIT_INDEX_FILE="$scratch/index" "${git[@]}" --work-tree="$clone" ls-files --others --exclude-standard -z \
+    > "$scratch/others" || return 1
+  while IFS= read -r -d '' path; do print_clone_path "$path"; done < "$scratch/others"
 }
 
 # Prints the refs of the clone that name something the host's repository does not hold.

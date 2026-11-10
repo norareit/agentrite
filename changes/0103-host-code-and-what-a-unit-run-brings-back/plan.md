@@ -205,18 +205,18 @@ Sessions and the model:
 
 Comparing a clone:
 
-- [ ] In `tests/sandbox-unit-run.test.mjs`, add a test where the host's repository configures `filter.mark.clean` and
+- [x] In `tests/sandbox-unit-run.test.mjs`, add a test where the host's repository configures `filter.mark.clean` and
   `filter.mark.smudge` as commands that append to a mark file outside the clone and then pass their input on with
   `cat`, the agent writes `.gitattributes` with `* filter=mark` and `* text eol=crlf` and changes a committed file,
   and the run lands: the mark file is not there, and the changed file is listed while `.gitattributes` is listed as
   not committed (R13, R16)
-- [ ] Add tests that the clone is kept and lists a file whose bytes differ from the commit, a committed file the agent
+- [x] Add tests that the clone is kept and lists a file whose bytes differ from the commit, a committed file the agent
   removed, a committed file under a directory the agent replaced by a link, a committed link whose target the agent
   changed, and a file that is not committed and not ignored; and that a clone with only an ignored file and no change
   is removed. Add tests that a clone whose one change is a committed file made executable, and one whose one change is
   a file committed as executable made not executable, is kept and lists that file, and that with `core.fileMode` set
   to `false` in the host's repository each is removed (R14, R16)
-- [ ] Rewrite `clone_changed_files` in `container/unit-clone.sh` as the approach says, with its comment saying what it
+- [x] Rewrite `clone_changed_files` in `container/unit-clone.sh` as the approach says, with its comment saying what it
   compares and that it runs no conversion of git (R13, R14)
 
 Documents:
@@ -270,5 +270,5 @@ Documents:
 - [x] `feature-0103` the record of runs and the resume's judgement of it, the resume's definition read with the
   project's names
 - [x] `feature-0103` the session pattern and `--model=<model>`
-- [ ] `feature-0103` the comparison of a clone without conversions
+- [x] `feature-0103` the comparison of a clone without conversions
 - [ ] `feature-0103` the documents and the rule in `AGENTS.md`
