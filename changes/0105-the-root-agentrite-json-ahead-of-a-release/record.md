@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-10T10:31:21Z
 ---
 
@@ -63,5 +63,8 @@ change to `AGENTS.md`, which states nothing of the root's files.
   unit as a task: one bullet of one document, with the one decision made by the human. Numbered 0105: the highest
   number in `changes/` is 0104. Wrote `record.md`. The status is `draft`
 - 2026-11-10T14:51:47Z [human] approved the record. The status is `approved`
+- 2026-11-10T14:52:16Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, cut
+  `task-0105-the-root-agentrite-json-ahead-of-a-release` from `master` at `0c9bdee` and began the work. The status is
+  `in-progress`
 
 ## Amendments
