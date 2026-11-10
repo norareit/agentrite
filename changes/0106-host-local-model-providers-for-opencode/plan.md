@@ -111,31 +111,31 @@ lines of what it does.
 
 ### The reading of the host's file
 
-- [ ] In `tests/agentrite-opencode-providers.test.mjs`, test that `MODEL_SERVER` equals `MODEL_SERVER_HOST` and
+- [x] In `tests/agentrite-opencode-providers.test.mjs`, test that `MODEL_SERVER` equals `MODEL_SERVER_HOST` and
   `MODEL_SERVER_PORT` of `container/compose.yml`, through `environmentEntry` of `tests/compose-entries.mjs` (R4, R5)
-- [ ] Test the choice of the file: `opencode.json` alone and `opencode.jsonc` alone are read; neither is no file;
+- [x] Test the choice of the file: `opencode.json` alone and `opencode.jsonc` alone are read; neither is no file;
   both is refused with its message; one that cannot be read is refused with its message (R3, R8, R10, R16)
-- [ ] Test the parse: `opencode.jsonc` with comments and trailing commas is read; a text that is not JSON, and one
+- [x] Test the parse: `opencode.jsonc` with comments and trailing commas is read; a text that is not JSON, and one
   that is an array, a string or `null`, is refused with its message (R3, R10, R16)
-- [ ] Test the local providers: a provider at each of `http://localhost:11434/v1`, `http://127.0.0.1:11434/v1` and
+- [x] Test the local providers: a provider at each of `http://localhost:11434/v1`, `http://127.0.0.1:11434/v1` and
   `http://[::1]:11434/v1` crosses with `baseURL` at `http://host.docker.internal:11434/v1`; a `baseURL` without a
   path gains no `/`; one with user information keeps it; providers at another host, such as `192.168.1.2` and
   `api.openai.com`, at another port, at the default port, over `https`, with a `baseURL` that is no string or no URL,
   or with none, do not cross; a `provider` that is absent or not an object gives none (R4, R5, R16)
-- [ ] Test the kept keys, with a provider that holds every kept key and beside them `apiKey` and `headers` at its
+- [x] Test the kept keys, with a provider that holds every kept key and beside them `apiKey` and `headers` at its
   top and in its `options`, `id`, `env`, `whitelist` and an unknown key, and models that hold every kept key and
   beside them `id`, `apiKey`, `headers`, `reasoning` and an unknown key: the result holds the kept keys alone, each
   as written, `options` and `variants` of a model whole; a provider without `models` crosses without it (R5, R16)
-- [ ] Test the refusals of `models` that is an array, a string or `null`, and of a model that is not an object, each
+- [x] Test the refusals of `models` that is an array, a string or `null`, and of a model that is not an object, each
   with its message naming the file, the provider and the model (R11, R16)
-- [ ] Test the configuration for OpenCode: from a host file that holds `model`, `plugin`, `mcp`, `permission` and
+- [x] Test the configuration for OpenCode: from a host file that holds `model`, `plugin`, `mcp`, `permission` and
   `$schema` beside `provider`, it is the kit's configuration with the local providers as `provider` and nothing else
   of the host's file, holds `"autoupdate": false`, is one line with no tab, and its file's name is
   `opencode-configuration-<hash>.json` with the hash of the content, different for a different content (R2, R6, R7,
   R16)
-- [ ] Test the line of requirement 9 for one provider, for two, for three, for a file with no local provider, and
+- [x] Test the line of requirement 9 for one provider, for two, for three, for a file with no local provider, and
   for no file, each with the full path (R9, R16)
-- [ ] Write `scripts/agentrite-opencode-providers.mjs` to pass them, and add it to `files` of `package.json` and to
+- [x] Write `scripts/agentrite-opencode-providers.mjs` to pass them, and add it to `files` of `package.json` and to
   the expected files of `tests/package-documents.test.mjs` (R3, R4, R5, R9, R10, R11)
 
 ### OpenCode's host member and the helper
@@ -205,7 +205,7 @@ lines of what it does.
 
 - [x] `feature-0106 Plan giving OpenCode in the sandbox the host's local model providers`: this plan and its log entry
 - [x] `feature-0106 Read JSON with comments and trailing commas`: the tasks of "JSONC"
-- [ ] `feature-0106 Read the local providers of the host's OpenCode configuration`: the tasks of "The reading of the
+- [x] `feature-0106 Read the local providers of the host's OpenCode configuration`: the tasks of "The reading of the
   host's file"
 - [ ] `feature-0106 Give a harness's host member the start, and let it print a line`: the first task of "OpenCode's
   host member and the helper", which changes no behavior
