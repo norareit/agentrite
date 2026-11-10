@@ -315,7 +315,7 @@ not run there. See "Commit messages" in [`SANDBOX.md`](SANDBOX.md).
 
 ## The project's settings
 
-A project's settings are in `agentrite.json` at the project root, a JSON object with eight keys:
+A project's settings are in `agentrite.json` at the project root, a JSON object with nine keys:
 
 | Key             | What it holds                                         | What reads it                        |
 |-----------------|-------------------------------------------------------|--------------------------------------|
@@ -324,6 +324,7 @@ A project's settings are in `agentrite.json` at the project root, a JSON object 
 | `process`       | `true` with the change process, `false` without it    | `init` and `refresh`                 |
 | `sandbox`       | `true` with the sandbox, `false` without it           | `init` and `refresh`                 |
 | `bell`          | `true` for a sandbox that rings, `false` for none     | `./sandbox.sh`, at each start        |
+| `modelServer`   | `true` to admit the local model server, `false` not   | `./sandbox.sh`, at each start        |
 | `standards`     | The path of the standards file the project uses       | `init` and `refresh`                 |
 | `orchestrator`  | The path of the orchestrator's definition, or `false` | `orchestrate`                        |
 | `roles`         | Each role's name, with the path of its file in use    | `init`, `refresh`, `roles` and `run` |
@@ -337,6 +338,7 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   "process": true,
   "sandbox": true,
   "bell": true,
+  "modelServer": false,
   "standards": "node_modules/agentrite/standards.md",
   "orchestrator": "node_modules/agentrite/orchestrator.json",
   "roles": {
@@ -351,9 +353,9 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
 * `init` writes the file from its arguments in a project that has none, and `config` writes the default file. The
   default branch is `master` unless `--default-branch` or an edit says otherwise
 * The file is committed
-* All eight keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
-  `claude`, `opencode` and `codex`, in which a name given more than once counts once, and `process`, `sandbox` and
-  `bell` are each `true` or `false`, not a string. A key the kit does not know is ignored
+* All nine keys are required. `defaultBranch` is a string that is not empty, `harnesses` is a list of one or more of
+  `claude`, `opencode` and `codex`, in which a name given more than once counts once, and `process`, `sandbox`,
+  `bell` and `modelServer` are each `true` or `false`, not a string. A key the kit does not know is ignored
 * `process` says whether the project uses the change process in `changes/`, with its roles and its orchestrator. It is
   `true` in the file `config` writes and in the one `init` writes without `--sandbox-only`, and `false` in a
   sandbox-only project, which `init --sandbox-only` writes. A file whose `process` and `sandbox` are both `false` is
@@ -366,6 +368,10 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   "The bell" in `SANDBOX.md` says. It is read at each start of the sandbox, so a change holds from the next start. It
   has no effect outside the sandbox: the harnesses on the host are the developer's, and the kit changes nothing of
   their configuration
+* `modelServer` says whether the sandbox's firewall admits the port of the local model server on the host, as "The
+  local model server" in `SANDBOX.md` says. It is `false` in the file `config` and `init` write, and a project that
+  uses a local model server sets it to `true`. It is read at each start of the sandbox, so a change holds from the
+  next start, with no rebuild of the image. It has no effect outside the sandbox
 * `orchestrator` names the definition that `agentrite orchestrate` runs, or holds `false` for a project that does not
   use the orchestrator, which `init --no-orchestrator` writes. It is `false` or a path, not a string that says
   `false`. The file `config` and `init` write names the kit's default definition, and a project that wants another
@@ -394,25 +400,27 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   symbolic links followed, so a kit linked into `node_modules`, as `npm link` does, is taken
 * The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by
   `agentrite orchestrate`, by `agentrite approve`, by `agentrite cancel`, by the change check, and by `./sandbox.sh`.
-  Every form of `./sandbox.sh` but `--connect` reads `bell` and `harnesses` at each start, and judges no other key of
-  the file, unless a unit run, or a run on a branch in a sandbox-only project, cuts a branch, which reads the whole
-  file. `--connect` does not read it
+  Every form of `./sandbox.sh` but `--connect` reads `bell`, `modelServer` and `harnesses` at each start, and judges
+  no other key of the file, unless a unit run, or a run on a branch in a sandbox-only project, cuts a branch, which
+  reads the whole file. `--connect` does not read it
 * A command that reads the file refuses in a project that has none, and names `npx agentrite config` as the command
   that writes one. It refuses a file that is not valid too, also when what is wrong is a key the command does not
   use, and names the file, the key, what is wrong with it and what it must hold. A path that names no file is refused
   so by every command that reads the file, also one that does not use it: the message names the key, the path and
   that there is no file at it. Either way it writes and changes nothing and exits with 1. No
   command takes a missing file for the default file, or a missing key for its default value
-* A start of `./sandbox.sh` that cuts no branch judges `bell` and `harnesses` alone, `bell` first. It refuses a
-  project with no file, a file that is not a JSON object, one that lacks `bell` and one whose `bell` is neither
-  `true` nor `false`, and one that lacks `harnesses` and one whose `harnesses` is not a list of one or more of the
-  kit's harnesses. It names the file, the key, what it holds or that it is missing, and what it must hold, starts
-  nothing and exits 1. Another key at fault does not stop it
+* A start of `./sandbox.sh` that cuts no branch judges `bell`, `modelServer` and `harnesses` alone, in that order. It
+  refuses a project with no file, a file that is not a JSON object, one that lacks `bell` and one whose `bell` is
+  neither `true` nor `false`, one that lacks `modelServer` and one whose `modelServer` is neither `true` nor `false`,
+  and one that lacks `harnesses` and one whose `harnesses` is not a list of one or more of the kit's harnesses. It
+  names the file, the key, what it holds or that it is missing, and what it must hold, starts nothing and exits 1.
+  Another key at fault does not stop it
 
 A setting is changed by editing the file by hand. What to run afterwards:
 
 * `defaultBranch`: nothing
 * `bell`: nothing. It holds from the next start of the sandbox
+* `modelServer`: nothing. It holds from the next start of the sandbox
 * `orchestrator`: nothing. It holds from the next run of `agentrite orchestrate`
 * A harness added to `harnesses`: `npx agentrite refresh` writes its wrappers. The wrapper directories that the
   project's `AGENTS.md` lists are the project's to bring up to date. The next start of the sandbox builds its image
@@ -575,9 +583,17 @@ refused. The line, after `sandbox`, with `false` for a project that wants no bel
   "bell": true,
 ```
 
+A project whose `agentrite.json` lacks `modelServer` adds it before any command that reads the file runs again, and
+before the sandbox starts again: until then every such command refuses the file, and every start but `--connect` is
+refused. The line, after `bell`, with `true` for a project that uses a local model server:
+
+```json
+  "modelServer": false,
+```
+
 A project whose `agentrite.json` lacks `process` adds it before any command that reads the file runs again: until then
-every such command refuses the file. A start of the sandbox that cuts no branch judges `bell` and `harnesses` alone,
-and is not refused for it. The line, after `harnesses`:
+every such command refuses the file. A start of the sandbox that cuts no branch judges `bell`, `modelServer` and
+`harnesses` alone, and is not refused for it. The line, after `harnesses`:
 
 ```json
   "process": true,

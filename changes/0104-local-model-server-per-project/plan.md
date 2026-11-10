@@ -159,34 +159,34 @@ The firewall:
 
 The documents:
 
-- [ ] In "The project's settings" of `SETUP.md`: the row of `modelServer` after `bell` in the table, read by
+- [x] In "The project's settings" of `SETUP.md`: the row of `modelServer` after `bell` in the table, read by
   `./sandbox.sh` at each start; the key in the default file; nine keys, all nine required, and `modelServer` among
   the keys that are `true` or `false`; a bullet saying that it admits the local model server's port in the sandbox,
   that it is `false` in the file `config` and `init` write, that it is read at each start, so a change holds from
   the next start with no rebuild, and that it has no effect outside the sandbox; the start reading and judging
   `bell`, `modelServer` and `harnesses`, in that order; and `modelServer: nothing. It holds from the next start of
   the sandbox` among what to run afterwards (R10)
-- [ ] In "Updating a project to a newer kit" of `SETUP.md`, add the paragraph for a file that lacks `modelServer`:
+- [x] In "Updating a project to a newer kit" of `SETUP.md`, add the paragraph for a file that lacks `modelServer`:
   every command that reads the file and every start but `--connect` refuse it until it is added, and the line, after
   `bell`, is `"modelServer": false`, with `true` for a project that uses a local model server. Change the paragraph
   of `process` to name the three keys a start judges (R10)
-- [ ] In `COMMANDS.md`: under "agentrite init", that the file it writes holds `modelServer` as `false`; under
+- [x] In `COMMANDS.md`: under "agentrite init", that the file it writes holds `modelServer` as `false`; under
   "agentrite config", that the default file holds `"modelServer": false`; under "sandbox.sh", that every form but
   `--connect` reads `bell`, `modelServer` and `harnesses`, that with `"modelServer": true` the local model server's
   port is admitted, that a file lacking `modelServer` or holding anything but `true` or `false` is refused, `bell`
   first, then `modelServer`, then `harnesses`, and that a `sandbox/compose.project.yml` setting
   `MODEL_SERVER_ADMITTED` is refused, with what the message names (R11)
-- [ ] In "The local model server" of `SANDBOX.md`: the port is admitted only with `"modelServer": true` in the
+- [x] In "The local model server" of `SANDBOX.md`: the port is admitted only with `"modelServer": true` in the
   project's `agentrite.json`, from the next start; the container then reaches the server's whole API, as any program
   on the host does; and what the server does for a caller, such as pulling a model from a registry the caller names,
   it does from the host, beyond the allowlist and the firewall of the container (R12)
-- [ ] In "Reaching more hosts" of `SANDBOX.md`, the bullet of the model server says it is there only with
+- [x] In "Reaching more hosts" of `SANDBOX.md`, the bullet of the model server says it is there only with
   `"modelServer": true`. In "What the sandbox defends against", the row of the model server's port says the same
   (R13)
-- [ ] In "When something goes wrong" of `SANDBOX.md`, the entry "The container cannot reach the model of the local
+- [x] In "When something goes wrong" of `SANDBOX.md`, the entry "The container cannot reach the model of the local
   model server" gives first a project whose `agentrite.json` lacks `"modelServer": true`, with what to do, and then
   the host's firewall, as today (R14)
-- [ ] Commit point: the documents
+- [x] Commit point: the documents
 
 ## Verification
 
@@ -204,4 +204,4 @@ The documents:
   `scripts/agentrite-sandbox.mjs`, the template, the root `agentrite.json` and their tests
 - [x] The wrapper and the firewall: `container/compose.yml`, `container/sandbox.sh`, `container/entrypoint.sh` and
   their tests
-- [ ] The documents: `SETUP.md`, `COMMANDS.md` and `SANDBOX.md`
+- [x] The documents: `SETUP.md`, `COMMANDS.md` and `SANDBOX.md`

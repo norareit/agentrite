@@ -388,7 +388,8 @@ for a login or a prompt that fails, see "When something goes wrong".
 The sandbox's egress is bounded by hostname. What leaves the container is:
 
 * DNS to its resolvers
-* the local model server's host and port. See "The local model server"
+* the local model server's host and port, only in a project whose `agentrite.json` holds `"modelServer": true`. See
+  "The local model server"
 * HTTPS on port 443 to the allowlisted hosts
 
 Everything else is denied, whatever its port or address.
@@ -614,8 +615,18 @@ their terminal or in tmux.
 
 ## The local model server
 
-The sandbox reaches one host and port outside the allowlist: `MODEL_SERVER_HOST` on `MODEL_SERVER_PORT`, which
-`container/compose.yml` sets to `host.docker.internal` and `11434`, and nothing else on the host.
+The sandbox reaches the local model server only in a project whose `agentrite.json` holds `"modelServer": true`. It
+is then one host and port outside the allowlist: `MODEL_SERVER_HOST` on `MODEL_SERVER_PORT`, which
+`container/compose.yml` sets to `host.docker.internal` and `11434`, and nothing else on the host. The entrypoint logs
+the address it admitted.
+
+With `"modelServer": false`, which the file `npx agentrite config` and `npx agentrite init` write holds, nothing of
+the host is reachable, and the entrypoint logs that the local model server is not admitted. The file is read at each
+start, so a change holds from the next start, with no rebuild.
+
+With the port admitted, the container reaches the server's whole API, as any program on the host does, and not only
+what a harness uses of it. What the server does for a caller, such as pulling a model from a registry the caller
+names, it does from the host, beyond the allowlist and the firewall of the container.
 
 For a model that the container cannot reach, see "When something goes wrong".
 
@@ -779,14 +790,14 @@ What it confines:
 
 Nothing of the host is reachable but what is mounted at `/work`, with these exceptions:
 
-| Of the host                                       | Mounted    | In `SANDBOX.md`                     |
-|---------------------------------------------------|------------|-------------------------------------|
-| The developer's `~/.gitconfig`                    | Read-only  |                                     |
-| The developer's Claude Code status line           | Read-only  | "The status line"                   |
-| The project's log directory                       | Read-write | "Where things are kept on the host" |
-| The local model server's port                     |            | "The local model server"            |
-| The project's `.reviews`, in a unit run only      | Read-write | "Running a unit"                    |
-| The project's `.orchestrator`, in a unit run only | Read-write | "Running a unit"                    |
+| Of the host                                               | Mounted    | In `SANDBOX.md`                     |
+|-----------------------------------------------------------|------------|-------------------------------------|
+| The developer's `~/.gitconfig`                            | Read-only  |                                     |
+| The developer's Claude Code status line                   | Read-only  | "The status line"                   |
+| The project's log directory                               | Read-write | "Where things are kept on the host" |
+| The local model server's port, with `"modelServer": true` |            | "The local model server"            |
+| The project's `.reviews`, in a unit run only              | Read-write | "Running a unit"                    |
+| The project's `.orchestrator`, in a unit run only         | Read-write | "Running a unit"                    |
 
 The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
 
@@ -1052,9 +1063,13 @@ works in the project's `sandbox/compose.project.yml`.
 
 **The container cannot reach the model of the local model server.**
 
-Why: the host is a Linux host whose firewall denies incoming traffic by default, `ufw` for example.
+Why: the project's `agentrite.json` lacks `"modelServer": true`, so the firewall admits nothing of the host, and the
+entrypoint logs at the start that the local model server is not admitted. Or the server is admitted, and the host is a
+Linux host whose firewall denies incoming traffic by default, `ufw` for example.
 
-What to do: allow the Docker bridge subnets to `MODEL_SERVER_PORT` on the host.
+What to do: set `"modelServer": true` in the project's `agentrite.json`, and start the sandbox again. When the
+entrypoint logs the server admitted and the model is still not reached, allow the Docker bridge subnets to
+`MODEL_SERVER_PORT` on the host.
 
 **Either harness continues or lists another project's sessions, a reader cannot tell the two projects' sessions
 apart, and the two share one OpenCode login.**
