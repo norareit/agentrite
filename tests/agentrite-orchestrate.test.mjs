@@ -4602,3 +4602,40 @@ test('a session a step gives that is not of the form is not kept, and the next s
   const state = JSON.parse(read(`${runDirectoryOf(base).name}/state.json`));
   assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: second.options[8] }]);
 });
+
+test('a session not of the form puts aside the one an earlier step of its role and harness gave', (t) => {
+  const { base, read, write, agentrite, answer, calls } = project(t);
+  const thrice = { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' };
+  write('thrice.json', JSON.stringify({ steps: [thrice, thrice, thrice] }));
+  answer(1, claudePrinted(responseOf(DONE)));
+  answer(2, claudePrinted(responseOf(DONE), '-bad'));
+  answer(3, claudePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'thrice.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  const [first, second, third] = calls();
+  assert.deepEqual(second.options.slice(7, 9), ['--resume', first.options[8]]);
+  assert.equal(third.options[7], '--session-id');
+  assert.ok(![first.options[8], second.options[8]].includes(third.options[8]), third.options.join(' '));
+  const state = JSON.parse(read(`${runDirectoryOf(base).name}/state.json`));
+  assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: third.options[8] }]);
+});
+
+test('orchestrate forgets the session of a role and harness when a step gives null for it', async () => {
+  const step = { role: 'implementer', harness: 'claude', model: 'm' };
+  const definition = parseDefinition(JSON.stringify({ steps: [step, step, step] }), { path: 'd.json' });
+  const given = ['first', null, undefined];
+  const planned = [];
+  await orchestrate(definition, {
+    started: () => {},
+    run: async (entry) => {
+      planned.push(entry.session);
+      const ended = { status: 0, signal: null, milliseconds: 1, timedOut: false, refused: [] };
+      return { ...done(), ...ended, session: given.shift() };
+    },
+    ended: () => {},
+  });
+
+  assert.deepEqual(planned, [undefined, 'first', undefined]);
+});

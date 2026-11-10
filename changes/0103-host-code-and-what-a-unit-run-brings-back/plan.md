@@ -202,6 +202,11 @@ Sessions and the model:
   before `orchestrate` keeps it for later steps and the `ended` effect writes it, and otherwise write on standard
   error that the session the harness gave is not of the form, so it is not kept and the next step of the role on that
   harness starts a session of its own (R11)
+- [x] Add a test that a session not of the form puts aside the one an earlier step of its role and harness gave, so
+  the next step starts a session of its own, and a unit test that `orchestrate` forgets the session of a role and
+  harness for a result whose session is `null`. Make the `run` effect give `null` for a session not of the form,
+  `orchestrate` delete the session it held for the role and harness, and the `ended` effect remove it from
+  `sessions` (R11)
 
 Comparing a clone:
 

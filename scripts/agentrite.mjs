@@ -2041,9 +2041,10 @@ async function runStep(root, directory, skipPermissions, words, planned, grouped
 }
 
 /**
- * The result of the step `planned` with its session left out when the session is not of the form of a session, which
- * is then said on standard error. Left out here, it is neither kept among the run's sessions nor passed to a later
- * step, so the next step of its role on its harness starts a session of its own.
+ * The result of the step `planned` with its session `null` when the session is not of the form of a session, which
+ * is then said on standard error. So it is neither kept among the run's sessions nor passed to a later step, and an
+ * earlier session of its role and harness is put aside with it: the next step of its role on its harness starts a
+ * session of its own.
  *
  * @param {import('./agentrite-orchestrate.mjs').Planned} planned
  * @param {import('./agentrite-orchestrate.mjs').Result} result
@@ -2057,7 +2058,7 @@ function withSessionOfForm(planned, result) {
       `${SESSION_WORDS}. It is not kept, and the next step of the role ${role} on ${harness} starts a session of ` +
       'its own\n',
   );
-  return { ...result, session: undefined };
+  return { ...result, session: null };
 }
 
 /**
@@ -2342,7 +2343,10 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
       ended(entry) {
         const { planned, result, reading } = entry;
         const { role, harness } = planned.step;
-        if (result.session !== undefined) {
+        if (result.session === null) {
+          const index = sessions.findIndex((listed) => listed.role === role && listed.harness === harness);
+          if (index !== -1) sessions.splice(index, 1);
+        } else if (result.session !== undefined) {
           const known = sessions.find((listed) => listed.role === role && listed.harness === harness);
           if (known === undefined) sessions.push({ role, harness, session: result.session });
           else known.session = result.session;

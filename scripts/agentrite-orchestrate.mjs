@@ -35,11 +35,12 @@ import { optionError } from './agentrite-run.mjs';
  *   status: number | null,
  *   signal: string | null,
  *   response: string | undefined,
- *   session: string | undefined,
+ *   session: string | null | undefined,
  *   milliseconds: number,
  *   timedOut: boolean,
  *   refused: Call[],
- * }} Result How the harness of a step ended, its final response, the id of its session, whether the command ended
+ * }} Result How the harness of a step ended, its final response, the id of its session, or `null` when the session
+ *   it gave is not to be kept and none of its role and harness is to be continued, whether the command ended
  *   it for running past its time limit, and the tool calls the harness refused for lack of permission, in the order
  *   it printed them
  * @typedef {'timeout'
@@ -194,7 +195,8 @@ export async function orchestrate(definition, effects, from) {
     };
     effects.started(planned);
     const result = await effects.run(planned);
-    if (result.session !== undefined) sessions.set(key, result.session);
+    if (result.session === null) sessions.delete(key);
+    else if (result.session !== undefined) sessions.set(key, result.session);
     // A step the command ended did not finish, so what it printed is not its outcome, and is kept as its response.
     /** @type {Reading} */ const reading =
       result.response === undefined || result.timedOut ? { kind: 'none' } : readOutcome(result.response);
