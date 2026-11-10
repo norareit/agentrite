@@ -148,6 +148,12 @@ Writing under `.orchestrator`:
   followed file. Keep the first such error in a variable of `runPrepared`: the heartbeat and the followed line set it
   and send `SIGTERM` to the group that runs, `write` throws it when it is set, and `runPrepared` throws it when
   `orchestrate` returns with it set, so the command exits `1` with it (R7)
+- [x] By S1 of the review: add tests that a run whose directory is replaced by a link while its step runs exits `1` and
+  ends the step within the grace, when the step's harness ignores `SIGTERM` and when the harness has exited and a
+  process it left, which ignores `SIGTERM`, holds its output open. Make `runGrouped` give the caller, beside the
+  group, a function that ends the step as its time limit does, `SIGTERM` and then `SIGKILL` to the group after the
+  grace, waiting for the group to be gone, and make the failed check of the run's directory call it in the place of
+  the bare `SIGTERM` (R7)
 
 The record and the resume:
 

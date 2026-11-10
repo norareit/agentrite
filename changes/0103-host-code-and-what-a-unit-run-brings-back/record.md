@@ -86,5 +86,8 @@ timestamp: 2026-11-09T13:08:29Z
   `.reviews/0103-host-code-and-what-a-unit-run-brings-back/review-2026-11-10T003342Z.md`.
   Ran `npm test`, `npm run check-changes` and `git diff --check master...HEAD`; all passed. Could not independently
   verify live model requests through the three harnesses or the wrapper on macOS and bash 3.2.
+- 2026-11-10T00:43:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, reproduced S1 of the review: with a
+  harness that ignores `SIGTERM`, the test of requirement 7 ended only when the harness's 30 second sleep did. The
+  human accepted S1, and the fix is added to `plan.md` as a task. The status is `in-progress`
 
 ## Amendments

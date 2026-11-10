@@ -1717,8 +1717,9 @@ test('parseOrchestrateArgs names what it does not take, and gives the usage afte
 
 // Counts its calls in $FAKE_DIR, writes its name and arguments to call-<n>, prints out-<n>, then the lines of err-<n>
 // on standard error, and exits with the status in status-<n>, or 0. With wait-<n>, it writes its process id to
-// pid-<n> and becomes a sleep of that many seconds, ignoring SIGTERM with ignore-term-<n>. With linger-<n>, it leaves
-// a sleep of that many seconds in the background, holding its standard output, and exits. With seen-<n>, it writes to
+// pid-<n> and becomes a sleep of that many seconds. With linger-<n>, it leaves a sleep of that many seconds in the
+// background, holding its standard output, writes its process id to linger-pid-<n>, and exits. With ignore-term-<n>,
+// it ignores SIGTERM from its start, and so does the sleep it becomes or leaves. With seen-<n>, it writes to
 // seen-<n>.out, before it prints, a line for each followed file of the runs, its name and empty or holding. With
 // before-<n>, it reads that file as commands of sh before it prints. Nothing but the builtins of sh and the sleep
 // linked into the PATH, since it holds no other command, and what before-<n> runs by its absolute path. The sleep is
@@ -1729,6 +1730,7 @@ count=0
 if [ -f "$FAKE_DIR/count" ]; then read -r count < "$FAKE_DIR/count"; fi
 count=$((count + 1))
 printf '%s\\n' "$count" > "$FAKE_DIR/count"
+if [ -f "$FAKE_DIR/ignore-term-$count" ]; then trap '' TERM; fi
 printf '%s\\n' "\${0##*/}" "$@" > "$FAKE_DIR/call-$count"
 if [ -f "$FAKE_DIR/seen-$count" ]; then
   for file in .orchestrator/*/*/*.followed.jsonl; do
@@ -1749,10 +1751,10 @@ fi
 if [ -f "$FAKE_DIR/linger-$count" ]; then
   read -r seconds < "$FAKE_DIR/linger-$count"
   sleep "$seconds" &
+  printf '%s\\n' "$!" > "$FAKE_DIR/linger-pid-$count"
 fi
 if [ -f "$FAKE_DIR/wait-$count" ]; then
   read -r seconds < "$FAKE_DIR/wait-$count"
-  if [ -f "$FAKE_DIR/ignore-term-$count" ]; then trap '' TERM; fi
   printf '%s\\n' "$$" > "$FAKE_DIR/pid-$count"
   exec sleep "$seconds"
 fi
@@ -1828,8 +1830,12 @@ function project(testContext) {
     writeFileSync(join(fakes, `wait-${number}`), `${seconds}\n`);
     if (ignoreTerm) writeFileSync(join(fakes, `ignore-term-${number}`), '');
   };
-  // That the fake leaves a sleep of `seconds` holding its output at its call `number`, and exits.
-  const lingers = (number, seconds) => writeFileSync(join(fakes, `linger-${number}`), `${seconds}\n`);
+  // That the fake leaves a sleep of `seconds` holding its output at its call `number`, and exits, both ignoring
+  // SIGTERM with `ignoreTerm`.
+  const lingers = (number, seconds, ignoreTerm = false) => {
+    writeFileSync(join(fakes, `linger-${number}`), `${seconds}\n`);
+    if (ignoreTerm) writeFileSync(join(fakes, `ignore-term-${number}`), '');
+  };
   // That the fake at its call `number` records which followed files exist and whether they hold anything.
   const sees = (number) => writeFileSync(join(fakes, `seen-${number}`), '');
   // That the fake at its call `number` runs the commands of sh `commands` before it prints.
@@ -4439,6 +4445,41 @@ test('a run whose directory is replaced by a link while a step runs ends the ste
   assert.equal(calls().length, 1);
   assert.deepEqual(readdirSync(outside), []);
 });
+
+// S1 of the review of unit 0103: the step is ended within the grace, also when what it runs ignores SIGTERM.
+for (const [what, prepare, pidFile] of [
+  ['whose harness ignores SIGTERM', ({ waits }) => waits(1, 60, true), 'pid-1'],
+  [
+    'whose harness left a process that ignores SIGTERM and holds its output',
+    ({ lingers }) => lingers(1, 60, true),
+    'linger-pid-1',
+  ],
+]) {
+  test(`a run whose directory is replaced by a link while a step ${what} runs ends it and exits 1`, async (t) => {
+    const context = project(t);
+    const { base, write, started, answer, before, calls } = context;
+    const outside = temporaryDirectory(t, 'agentrite-outside-');
+    write('two.json', JSON.stringify(TWO_STEPS));
+    before(
+      1,
+      `for run in .orchestrator/*/*; do "${MV}" "$run" "$FAKE_DIR/away"; "${LN}" -s '${outside}' "$run"; done\n`,
+    );
+    answer(1, claudePrinted(responseOf(DONE)));
+    prepare(context);
+    const began = Date.now();
+    const { ended } = started('orchestrate', '0029', '--definition', 'two.json');
+
+    const result = await ended;
+
+    assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+    assert.ok(Date.now() - began < 30_000, `the run took ${Date.now() - began} ms`);
+    assert.match(result.stderr, /where the run's directory, .*, should be\. The run is stopped/);
+    const left = Number(readFileSync(join(base, 'fakes', pidFile), 'utf-8'));
+    assert.ok(await gone(left), `the process ${left} is left`);
+    assert.equal(calls().length, 1);
+    assert.deepEqual(readdirSync(outside), []);
+  });
+}
 
 
 // Unit 0103, R8, R9, R10, R16: the record of each run, outside `.orchestrator`, and what a resume takes by it.

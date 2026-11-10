@@ -452,7 +452,8 @@ reads what it held before a write or what the write gives it, and never part of 
 whose name opens with `.` is left in its directory. Each file of a run, the one whose name opens with `.` among them,
 is created anew: what stands at its name, a symbolic link among it, is removed first, and never what a link names.
 Before each write the command makes sure that the run's directory, with every link resolved, is still
-`.orchestrator/<unit-directory>/<run>/` of the project root, and stops the run with the status 1 when it is not.
+`.orchestrator/<unit-directory>/<run>/` of the project root. When it is not, it ends the step that runs as one that
+reached its time limit is ended, and stops the run with the status 1.
 
 A followed file is added to and never rewritten. A line is added to it whole or not at all, so a program that reads it
 while the step runs takes the lines that end in a line break, and leaves a last line without one, which is being

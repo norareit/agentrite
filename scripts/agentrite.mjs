@@ -1898,21 +1898,28 @@ function groupAlive(group) {
   }
 }
 
-/** How long a step that ran past its time limit is given to end after `SIGTERM`, before `SIGKILL` ends it. */
+/** How long a step that is ended is given to end after `SIGTERM`, before `SIGKILL` ends it. */
 const GRACE_MILLISECONDS = 10_000;
 
 /**
+ * The process group of a step that runs, and the function that ends it: `SIGTERM` to the group, and `SIGKILL` when
+ * the group still has a process after the grace. The step settles once the group is gone.
+ *
+ * @typedef {{ group: number, end: () => void }} Running
+ */
+
+/**
  * Runs `args` with this Node.js from `root` in a process group of its own, and gives how it ended, what it printed on
- * standard output, how long it ran until it exited and whether that reached `timeoutMinutes`. When it does, `SIGTERM`
- * is sent to the group, and `SIGKILL` when the group still has a process after the grace. `grouped` is given the
- * group when it starts, and `undefined` when the promise settles. `line` is given each line of standard
+ * standard output, how long it ran until it exited and whether that reached `timeoutMinutes`. When it does, the step
+ * is ended as `Running` says. `grouped` is given the group and the function that ends it when it starts, and
+ * `undefined` when the promise settles. `line` is given each line of standard
  * output as it arrives, without its line break, and what is left after the last line break when the output closes,
  * all before the promise settles.
  *
  * @param {string} root
  * @param {string[]} args
  * @param {number | undefined} timeoutMinutes
- * @param {(group: number | undefined) => void} grouped
+ * @param {(running: Running | undefined) => void} grouped
  * @param {(text: string) => void} line
  * @returns {Promise<{
  *   status: number | null,
@@ -1930,7 +1937,9 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
     // What arrived after the last line break, which the next chunk completes.
     let partial = '';
     let timedOut = false;
+    let ending = false;
     let graceOver = false;
+    let settled = false;
     /** @type {{ status: number | null, signal: string | null } | undefined} */ let closed;
     /** @type {NodeJS.Timeout | undefined} */ let limit;
     /** @type {NodeJS.Timeout | undefined} */ let grace;
@@ -1938,25 +1947,31 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
     // signal on to.
     const child = spawn(process.execPath, args, { cwd: root, stdio: ['ignore', 'pipe', 'inherit'], detached: true });
     const group = /** @type {number} */ (child.pid);
-    grouped(group);
     const settleWhenDone = () => {
       if (closed === undefined) return;
       // The output can close while a process of the group that does not hold it is left, which the grace still ends.
-      if (timedOut && !graceOver && groupAlive(group)) return;
+      if (ending && !graceOver && groupAlive(group)) return;
+      settled = true;
       clearTimeout(limit);
       clearTimeout(grace);
       grouped(undefined);
       settle({ ...closed, stdout, milliseconds, timedOut });
     };
+    const end = () => {
+      if (ending || settled) return;
+      ending = true;
+      signalGroup(group, 'SIGTERM');
+      grace = setTimeout(() => {
+        graceOver = true;
+        if (groupAlive(group)) signalGroup(group, 'SIGKILL');
+        settleWhenDone();
+      }, GRACE_MILLISECONDS);
+    };
+    grouped({ group, end });
     if (timeoutMinutes !== undefined) {
       limit = setTimeout(() => {
         timedOut = true;
-        signalGroup(group, 'SIGTERM');
-        grace = setTimeout(() => {
-          graceOver = true;
-          if (groupAlive(group)) signalGroup(group, 'SIGKILL');
-          settleWhenDone();
-        }, GRACE_MILLISECONDS);
+        end();
       }, timeoutMinutes * 60_000);
     }
     child.stdout.setEncoding('utf-8');
@@ -1993,16 +2008,16 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
  * the request of its outcome, for the rerun of a resume with the human's `words` between them, or for an ask again
  * the request of an ask again alone, and gives how its harness ended, its final response, its session, whether it
  * ran past its time limit and the tool calls its harness refused for lack of permission. The harness's standard
- * error reaches the terminal, and its standard output is read. `grouped` is given the group when the step starts, and
- * `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line it prints, as
- * it arrives.
+ * error reaches the terminal, and its standard output is read. `grouped` is given the step's `Running` when it
+ * starts, and `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line
+ * it prints, as it arrives.
  *
  * @param {string} root
  * @param {string} directory
  * @param {boolean} skipPermissions
  * @param {string | undefined} words
  * @param {import('./agentrite-orchestrate.mjs').Planned} planned
- * @param {(group: number | undefined) => void} grouped
+ * @param {(running: Running | undefined) => void} grouped
  * @param {(items: import('./agentrite-headless.mjs').Followed[]) => void} follow
  * @returns {Promise<import('./agentrite-orchestrate.mjs').Result>}
  */
@@ -2265,7 +2280,7 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
   const records = recordDirectory(process.env, homedir());
   const record = join(records, recordName(realpathSync(resolve(root, runDirectory))));
   const output = (follow ? framedOutput : plainOutput)((text) => process.stdout.write(text));
-  /** @type {number | undefined} */ let group;
+  /** @type {Running | undefined} */ let running;
   // The first check of the run's directory that failed. The heartbeat and the followed lines drop their own
   // failures, so a failure there is kept here, ends the step that runs, and is thrown by the next write.
   /** @type {Error | undefined} */ let failure;
@@ -2275,7 +2290,8 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
       checkRunDirectory(root, runDirectory);
     } catch (error) {
       failure = /** @type {Error} */ (error);
-      if (group !== undefined) signalGroup(group, 'SIGTERM');
+      // Ended as a step past its time limit is, so that a step that ignores SIGTERM is ended too.
+      running?.end();
       throw failure;
     }
   };
@@ -2300,7 +2316,7 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
   try {
     write('definition.json', text);
     writeState(null);
-    passSignalsOn(() => group);
+    passSignalsOn(() => running?.group);
     /** @type {string | undefined} */ let responsePath;
     if (opening !== undefined) output.opening(opening);
     /** @type {import('./agentrite-orchestrate.mjs').Effects} */ const effects = {
@@ -2328,8 +2344,8 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
           skipPermissions,
           words,
           planned,
-          (running) => {
-            group = running;
+          (started) => {
+            running = started;
           },
           (items) => {
             const timed = timedItems(items, Date.now);

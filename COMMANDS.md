@@ -682,7 +682,8 @@ While it runs, a run or a resume:
   step of its role on that harness starts a session of its own
 * makes sure, before each write in the run's directory, that the directory, with every link resolved, is
   `.orchestrator/<unit-directory>/<run>/` of the project root. When it is not, the command writes nothing more, ends
-  the step that runs, names the directory it found where the run's directory should be, and exits 1
+  the step that runs by `SIGTERM` to its process group and `SIGKILL` when a process of the group is left 10 seconds
+  later, names the directory it found where the run's directory should be, and exits 1
 
 | Environment variable | What it is                                                                                                 |
 |----------------------|------------------------------------------------------------------------------------------------------------|
