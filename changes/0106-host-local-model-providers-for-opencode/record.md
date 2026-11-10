@@ -16,5 +16,9 @@ timestamp: 2026-11-10T11:54:10Z
   `SANDBOX.md`, the sandbox members of `scripts/harnesses/opencode.mjs` and `scripts/harnesses/claude.mjs`, the host
   reader of `scripts/agentrite-sandbox.mjs`, and the precedence and file names of OpenCode's configuration in its
   documentation at https://opencode.ai/docs/config/. Wrote `spec.md`. The status is `draft`
+- 2026-11-10T12:07:05Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decision to take the
+  first item of "Beyond the request", the line a start prints of the providers it hands to OpenCode, made it requirement
+  9 and numbered the later requirements on from 10. The two items left of "Beyond the request" are numbered 1 and 2. The
+  human declined a review of the spec before approving it. The status is `draft`
 
 ## Amendments

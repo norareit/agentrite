@@ -63,40 +63,44 @@ What is read and what crosses:
    `"bell": true`. The agent's user cannot write that configuration
 8. With no file, or with a file that holds no local provider, the start goes on, and OpenCode in the container has
    no provider of the kit's
+9. A start that reads the file prints one line before the container starts: the file it read and the name of each
+   local provider handed to OpenCode, or that the file holds no local provider, or, with no file, that there is no
+   file at `~/.config/opencode/`
 
 What is refused:
 
-9. A start that reads the file refuses, starting nothing and before it asks Docker or npm anything, a file that
-   cannot be read, one that is not a JSON object once its comments and trailing commas are taken out, and a home
-   whose `~/.config/opencode/` holds both `opencode.json` and `opencode.jsonc`. The message names the file or the
-   two files, what is wrong, and what to do, and the start exits 1
-10. A local provider whose `models`, or a model of it, is not a JSON object is refused in the same way, with a message
+10. A start that reads the file refuses, starting nothing and before it asks Docker or npm anything, a file that
+    cannot be read, one that is not a JSON object once its comments and trailing commas are taken out, and a home
+    whose `~/.config/opencode/` holds both `opencode.json` and `opencode.jsonc`. The message names the file or the
+    two files, what is wrong, and what to do, and the start exits 1
+11. A local provider whose `models`, or a model of it, is not a JSON object is refused in the same way, with a message
     that names the file, the provider and the model
 
 The documents:
 
-11. "The local model server" of `SANDBOX.md` says that with `"modelServer": true` OpenCode in the sandbox is given the
+12. "The local model server" of `SANDBOX.md` says that with `"modelServer": true` OpenCode in the sandbox is given the
     host's local providers, read at each start; which providers are local; what crosses of them, with the host of
     `baseURL` replaced; that nothing else of the file crosses, API keys among it; that a secret written into a key
     that crosses, such as a model's `options`, crosses as written; and that what else of OpenCode the developer wants
     in the sandbox, an API key among it, they set in the home volume's `~/.config/opencode/opencode.json`, where it
     stays for the project, with a provider of the same name in the kit's configuration standing above it
-12. "What the sandbox defends against" of `SANDBOX.md` gives the host's OpenCode configuration among what crosses of
+13. "What the sandbox defends against" of `SANDBOX.md` gives the host's OpenCode configuration among what crosses of
     the host: not mounted, and of it the keys of the local providers alone
-13. When a start writes the local providers into a file of the project's log directory, "Where things are kept on
+14. When a start writes the local providers into a file of the project's log directory, "Where things are kept on
     the host" of `SANDBOX.md` names that file and where it is mounted, as it names the others there
-14. "sandbox.sh" of `COMMANDS.md` says what a start reads of the host's OpenCode configuration and when, and what it
-    refuses
+15. "sandbox.sh" of `COMMANDS.md` says what a start reads of the host's OpenCode configuration and when, the line it
+    prints of it, and what it refuses
 
 Tests:
 
-15. Tests show: that a start reads nothing of the host's file with `"modelServer": false`, or without `opencode`, also
+16. Tests show: that a start reads nothing of the host's file with `"modelServer": false`, or without `opencode`, also
     when the file is not valid; that a local provider crosses with its kept keys and the host of `baseURL` replaced,
     for each of `localhost`, `127.0.0.1` and `[::1]`, from `opencode.json` and from `opencode.jsonc` with comments and
     trailing commas; that a provider on another host or another port, and every key that is not kept, `apiKey` and
     `headers` of a local provider among them, do not cross; that the kit's configuration still holds
-    `"autoupdate": false`; that a start with no file or no local provider goes on; and that each refusal of
-    requirements 9 and 10 is made with its message, before Docker and npm are asked anything
+    `"autoupdate": false`; that a start with no file or no local provider goes on; that the line of requirement 9 names
+    the file and the providers handed, or that there are none, or that there is no file; and that each refusal of
+    requirements 10 and 11 is made with its message, before Docker and npm are asked anything
 
 ## Decisions
 
@@ -143,15 +147,11 @@ Tests:
 
 ## Beyond the request
 
-1. A line printed at each start that reads the file, naming the local providers handed to OpenCode, or that there
-   are none, and the file they came from. Cost: one line of output and its test. Without it, a provider that did not
-   cross, because its port or host is not the local model server's, shows only as a model missing from OpenCode's
-   list, which the developer finds by reading `SANDBOX.md`
-2. More keys of a model kept, such as `id`, `reasoning`, `tool_call`, `attachment` and `modalities`, which OpenCode
+1. More keys of a model kept, such as `id`, `reasoning`, `tool_call`, `attachment` and `modalities`, which OpenCode
    uses to name the model the server serves and what it can do. Cost: the list grows by those names and their tests,
    each one more open key the agent reads. Without it, a model that relies on `id` to name the server's model reaches
    the wrong model or none, which shows on the first request, and the developer sets that model in the home volume
-3. A file of the developer's own on the host, outside every project, that crosses whole into the sandbox at each
+2. A file of the developer's own on the host, outside every project, that crosses whole into the sandbox at each
    start, as a place for what the developer wants in every project's sandbox, an API key among it. Its being there is
    the consent, with nothing committed and no prompt. Cost: a new mount, its documentation and its tests. Without it,
    the developer sets those things in each project's home volume, once per project
