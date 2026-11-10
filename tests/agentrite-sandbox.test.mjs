@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import { HARNESS_NAMES, HARNESSES } from '../scripts/agentrite-harness.mjs';
@@ -54,9 +54,20 @@ function mountLine(name, { from, path, target }) {
   return ['mount', from, from === 'kit' ? `harnesses/${name}/${path}` : path, target].join('\t');
 }
 
+// What the start of a project with `modelServer` tells a harness's host member besides the home, with the reader
+// of the kit's own files of the harness named `name`.
+function startOf(name, modelServer) {
+  const directory = join(import.meta.dirname, '..', 'container', 'harnesses', name);
+  return { modelServer, readKit: (path) => ({ found: true, text: readFileSync(join(directory, path), 'utf-8') }) };
+}
+
+// What a harness is given of a home that gives it nothing.
+const NOTHING = () => ({ environment: [], mounts: [], files: [], notes: [] });
+
 // What the helper prints for the harnesses named `names`, built from the list, with what each is given of a home
-// that is `given` of its name, and with `modelServer`.
-function expected(names, bell, given = () => ({ environment: [], mounts: [], files: [], notes: [] }), modelServer = false) {
+// that is `given` of its name, and with `modelServer`. A mount of a harness's updates whose target a file it is given
+// has is left out, for the file.
+function expected(names, bell, given = NOTHING, modelServer = false) {
   const harnesses = HARNESSES.filter((harness) => names.includes(harness.name));
   const lines = [`bell\t${bell}`, `modelServer\t${modelServer}`];
   for (const { name, title, start, sandbox } of harnesses) {
@@ -66,9 +77,16 @@ function expected(names, bell, given = () => ({ environment: [], mounts: [], fil
   for (const { sandbox } of harnesses) {
     lines.push(...sandbox.hosts.map(({ host, reason }) => `allow\t${host}\t${reason}`));
   }
+  const hosts = harnesses.map(({ name }) => ({ name, ...given(name) }));
+  const fileTargets = (name) => hosts.find((host) => host.name === name).files.map(({ target }) => target);
+  const updates = harnesses.map(({ name, sandbox }) => ({
+    name,
+    ...sandbox.updates,
+    mounts: sandbox.updates.mounts.filter(({ target }) => !fileTargets(name).includes(target)),
+  }));
   const groups = [
-    ...harnesses.map(({ name, sandbox }) => ({ name, ...sandbox.updates })),
-    ...harnesses.map(({ name }) => ({ name, ...given(name) })),
+    ...updates,
+    ...hosts,
     ...(bell ? harnesses.map(({ name, sandbox }) => ({ name, ...sandbox.bell })) : []),
   ];
   for (const group of groups) lines.push(...group.environment.map((entry) => `env\t${entry}`));
@@ -81,6 +99,7 @@ function expected(names, bell, given = () => ({ environment: [], mounts: [], fil
   for (const group of groups) {
     lines.push(...(group.files ?? []).map(({ name, content, target }) => ['file', name, content, target].join('\t')));
   }
+  for (const group of hosts) lines.push(...group.notes.map((note) => `note\t${note}`));
   return `${lines.join('\n')}\n`;
 }
 
@@ -125,7 +144,8 @@ test('start gives a harness what its host member reads of the home', (testContex
   const read = (path) => ({ found: true, text: homeFiles[path] ?? '' });
   const given = (name) => {
     const harness = HARNESSES.find((entry) => entry.name === name);
-    return harness.sandbox.host(home, (path) => (path in homeFiles ? read(path) : { found: false }));
+    const reader = (path) => (path in homeFiles ? read(path) : { found: false });
+    return harness.sandbox.host(home, reader, startOf(name, false));
   };
   const result = helper(['start', root, home]);
   assert.equal(result.status, 0, result.stderr);
@@ -178,6 +198,159 @@ test("start refuses a home whose Claude Code settings are at fault, with the rea
     `agentrite: ${join(home, '.claude', 'settings.json')}: cleanupPeriodDays is 0. It must be a whole number of 1 ` +
       'or more. Correct the file, or remove the key cleanupPeriodDays from it\n',
   );
+});
+
+// 0106 R1, R7, R8, R9, R10, R11, R16: what a start gives OpenCode of the host's OpenCode configuration
+
+const LOCAL_PROVIDER = JSON.stringify({
+  model: 'ollama/qwen3:8b',
+  provider: { ollama: { apiKey: 'secret', options: { baseURL: 'http://localhost:11434/v1' } } },
+});
+
+// The lines of `stdout` of the kind `kind`, each without the kind.
+function linesOf(stdout, kind) {
+  return stdout
+    .split('\n')
+    .filter((line) => line.startsWith(`${kind}\t`))
+    .map((line) => line.slice(kind.length + 1));
+}
+
+test("start gives OpenCode the kit's configuration with the host's local providers, in the place of the kit's mount", (
+  testContext,
+) => {
+  const homeFiles = { '.config/opencode/opencode.json': LOCAL_PROVIDER };
+  const { root, home } = setUp(testContext, { bell: true, modelServer: true, harnesses: HARNESS_NAMES, homeFiles });
+  const result = helper(['start', root, home]);
+  assert.equal(result.stderr, '');
+  assert.equal(result.status, 0);
+  const given = (name) => {
+    const harness = HARNESSES.find((entry) => entry.name === name);
+    const reader = (path) => (path in homeFiles ? { found: true, text: homeFiles[path] } : { found: false });
+    return harness.sandbox.host(home, reader, startOf(name, true));
+  };
+  assert.equal(result.stdout, expected(HARNESS_NAMES, true, given, true));
+  const files = linesOf(result.stdout, 'file').map((line) => line.split('\t'));
+  const configuration = files.find(([, , target]) => target === '/etc/opencode/opencode.json');
+  assert.ok(configuration, result.stdout);
+  assert.match(configuration[0], /^opencode-configuration-[0-9a-f]{16}\.json$/);
+  assert.deepEqual(JSON.parse(configuration[1]), {
+    $schema: 'https://opencode.ai/config.json',
+    autoupdate: false,
+    provider: { ollama: { options: { baseURL: 'http://host.docker.internal:11434/v1' } } },
+  });
+  assert.ok(!linesOf(result.stdout, 'mount').some((line) => line.includes('harnesses/opencode/opencode.json')));
+  assert.ok(linesOf(result.stdout, 'env').includes('OPENCODE_CONFIG=/etc/opencode/opencode.json'));
+  assert.deepEqual(linesOf(result.stdout, 'note'), [
+    `OpenCode is given the local provider "ollama" of ${home}/.config/opencode/opencode.json`,
+  ]);
+  assert.doesNotMatch(result.stdout, /secret|qwen3/);
+});
+
+for (const [modelServer, harnesses] of [
+  [false, HARNESS_NAMES],
+  [true, ['claude', 'codex']],
+]) {
+  const named = harnesses.join(' and ');
+  test(`start with "modelServer": ${modelServer} and ${named} reads nothing of a host file that is not JSON`, (
+    testContext,
+  ) => {
+    const homeFiles = { '.config/opencode/opencode.json': 'not json' };
+    const { root, home } = setUp(testContext, { bell: false, modelServer, harnesses, homeFiles });
+    const result = helper(['start', root, home]);
+    assert.equal(result.stderr, '');
+    assert.equal(result.status, 0);
+    assert.equal(result.stdout, expected(harnesses, false, undefined, modelServer));
+  });
+}
+
+for (const [homeFiles, note] of [
+  [
+    {},
+    (home) =>
+      `there is no opencode.json or opencode.jsonc in ${home}/.config/opencode/, so OpenCode is given no local ` +
+      'provider',
+  ],
+  [
+    {
+      '.config/opencode/opencode.jsonc':
+        '{\n  // far\n  "provider": {"a": {"options": {"baseURL": "http://localhost:1"}}},\n}',
+    },
+    (home) =>
+      `${home}/.config/opencode/opencode.jsonc holds no local provider on port 11434, so OpenCode is given none`,
+  ],
+]) {
+  test(`start with ${Object.keys(homeFiles).join() || 'no file'} gives OpenCode the kit's mount and the line`, (
+    testContext,
+  ) => {
+    const { root, home } = setUp(testContext, { bell: false, modelServer: true, harnesses: ['opencode'], homeFiles });
+    const result = helper(['start', root, home]);
+    assert.equal(result.stderr, '');
+    assert.equal(result.status, 0);
+    assert.deepEqual(linesOf(result.stdout, 'mount'), [
+      'kit\tharnesses/opencode/opencode.json\t/etc/opencode/opencode.json',
+    ]);
+    assert.deepEqual(linesOf(result.stdout, 'file'), []);
+    assert.deepEqual(linesOf(result.stdout, 'note'), [note(home)]);
+  });
+}
+
+test("start refuses each fault of the host's OpenCode configuration, on standard error alone, and exits 1", (
+  testContext,
+) => {
+  const local = (models) =>
+    JSON.stringify({ provider: { ollama: { options: { baseURL: 'http://localhost:11434' }, models } } });
+  for (const [homeFiles, message] of [
+    [
+      { '.config/opencode/opencode.json': '{}', '.config/opencode/opencode.jsonc': '{}' },
+      (directory) =>
+        `${directory}/ holds both opencode.json and opencode.jsonc, and the sandbox reads one alone. Keep one, ` +
+        'with what the other holds moved into it, and start again',
+    ],
+    [
+      { '.config/opencode/opencode.json': 'null' },
+      (directory) =>
+        `${directory}/opencode.json is not a JSON object once its comments and trailing commas are taken out: it ` +
+        'holds null. Correct it as OpenCode reads it, and start again',
+    ],
+    [
+      { '.config/opencode/opencode.json': local('x') },
+      (directory) =>
+        `${directory}/opencode.json: the models of the local provider "ollama" are not a JSON object. Correct ` +
+        'them, and start again',
+    ],
+    [
+      { '.config/opencode/opencode.json': local({ m: [] }) },
+      (directory) =>
+        `${directory}/opencode.json: the model "m" of the local provider "ollama" is not a JSON object. Correct ` +
+        'it, and start again',
+    ],
+  ]) {
+    const { root, home } = setUp(testContext, { bell: false, modelServer: true, harnesses: HARNESS_NAMES, homeFiles });
+    const result = helper(['start', root, home]);
+    assert.equal(result.status, 1, result.stdout);
+    assert.equal(result.stdout, '');
+    assert.equal(result.stderr, `agentrite: ${message(join(home, '.config', 'opencode'))}\n`);
+  }
+});
+
+test('start refuses a host OpenCode configuration that cannot be read', (testContext) => {
+  const { root, home } = setUp(testContext, { bell: false, modelServer: true, harnesses: ['opencode'] });
+  mkdirSync(join(home, '.config', 'opencode', 'opencode.json'), { recursive: true });
+  const result = helper(['start', root, home]);
+  assert.equal(result.status, 1);
+  assert.equal(result.stdout, '');
+  assert.match(
+    result.stderr,
+    /^agentrite: cannot read .*\/\.config\/opencode\/opencode\.json: .*\. Make it readable, or remove it, and start/,
+  );
+});
+
+test('start with an empty home and "modelServer": true asks no harness of the host', (testContext) => {
+  const homeFiles = { '.config/opencode/opencode.json': 'not json' };
+  const { root } = setUp(testContext, { bell: false, modelServer: true, harnesses: HARNESS_NAMES, homeFiles });
+  const result = helper(['start', root, '']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout, expected(HARNESS_NAMES, false, undefined, true));
 });
 
 test('start refuses a field that would hold a tab or a line break', (testContext) => {

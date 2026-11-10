@@ -97,6 +97,7 @@ function setUp(testContext, layout = 'installed') {
   for (const file of [
     'agentrite-settings.mjs',
     'agentrite-cleanup-period.mjs',
+    'agentrite-opencode-providers.mjs',
     'agentrite-sandbox.mjs',
     'agentrite-roles.mjs',
     'agentrite-harness.mjs',

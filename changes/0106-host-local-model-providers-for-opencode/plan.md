@@ -144,30 +144,30 @@ lines of what it does.
   `sandbox.host`, and update its purpose in `HARNESS_CONTRACT`. Give `notes: []` in Claude Code's and Codex's `host`,
   and in the `nothing` of `startText`, and update the expected values of `tests/agentrite-harness.test.mjs`. The suite
   passes with no change of behavior (R9)
-- [ ] In `tests/agentrite-harness.test.mjs`, test OpenCode's `host`: with `modelServer` false it calls neither reader
+- [x] In `tests/agentrite-harness.test.mjs`, test OpenCode's `host`: with `modelServer` false it calls neither reader
   and gives nothing, also for a home whose file is not JSON; with `modelServer` true and a local provider it gives the
   file at `/etc/opencode/opencode.json` and the line; with no file, or no local provider, it gives no file and the
   line; each refusal of the module is thrown through it (R1, R7, R8, R9, R10, R11)
-- [ ] Write OpenCode's `host` member. Name the kit configuration's path, `opencode.json`, and target,
+- [x] Write OpenCode's `host` member. Name the kit configuration's path, `opencode.json`, and target,
   `/etc/opencode/opencode.json`, once in `scripts/harnesses/opencode.mjs`, for `updates` and for `host` (R1, R7, R8)
-- [ ] In `tests/agentrite-sandbox.test.mjs`, test the helper's start: with `"modelServer": true` and `opencode` and a
+- [x] In `tests/agentrite-sandbox.test.mjs`, test the helper's start: with `"modelServer": true` and `opencode` and a
   home with a local provider, it prints the `file` line of the configuration at `/etc/opencode/opencode.json`, no
   `mount` line of the kit's `opencode.json` and the `note` line, and still the `env` line of `OPENCODE_CONFIG`; with
   `"modelServer": false`, or without `opencode`, and a home whose `opencode.json` is not JSON, it prints what it
   prints today and exits 0; with no file or no local provider it prints the kit's mount and the `note` line; each
   refusal is on standard error alone as `agentrite: <message>`, with nothing on standard output, and exits 1; with
   an empty home it prints what it prints today (R1, R7, R8, R9, R10, R11, R16)
-- [ ] In `scripts/agentrite-sandbox.mjs`, pass `{ modelServer, readKit }` to each `host`, with `readKit` reading
+- [x] In `scripts/agentrite-sandbox.mjs`, pass `{ modelServer, readKit }` to each `host`, with `readKit` reading
   `container/harnesses/<name>/` of the kit; leave out an `updates` mount whose target a host file of the same harness
   has; print each note as `note\t<text>`; update the doc comments (R1, R7, R9)
-- [ ] Update `wordsOf` in `tests/sandbox-harness-names.test.mjs` as "Files" says, and run that suite (R7)
+- [x] Update `wordsOf` in `tests/sandbox-harness-names.test.mjs` as "Files" says, and run that suite (R7)
 
 ### The wrapper
 
-- [ ] In `tests/sandbox-wrapper.test.mjs`, copy the new module and `container/harnesses/opencode/opencode.json` into
+- [x] In `tests/sandbox-wrapper.test.mjs`, copy the new module and `container/harnesses/opencode/opencode.json` into
   the fixture's kit, and the new module into the fixtures of `tests/sandbox-dev.test.mjs` and
   `tests/sandbox-project-dockerfile.test.mjs`
-- [ ] In `tests/sandbox-wrapper.test.mjs`, for each start form, test: with `"modelServer": true`, `opencode` and a host
+- [x] In `tests/sandbox-wrapper.test.mjs`, for each start form, test: with `"modelServer": true`, `opencode` and a host
   `opencode.jsonc` with comments, a local provider and an `apiKey`, the run mounts
   `<logs>/opencode-configuration-<hash>.json` read-only at `/etc/opencode/opencode.json` and not the kit's file, the
   file holds `"autoupdate": false` and the provider with the host replaced and no `apiKey`, and standard error holds
@@ -176,8 +176,8 @@ lines of what it does.
   file is left; with `"modelServer": false` and a host file that is not JSON, the start goes on as today; with no file
   it goes on with the kit's mount and the line; each refusal exits 1 with its message on standard error and no call
   of Docker or npm (R1, R2, R6, R7, R8, R9, R10, R11, R16)
-- [ ] Test that `--connect` reads nothing of a host file that is not JSON and is not refused for it (R1)
-- [ ] In `container/sandbox.sh`, add the `note` kind to the comment of the helper's lines and to the reading loop,
+- [x] Test that `--connect` reads nothing of a host file that is not JSON and is not refused for it (R1)
+- [x] In `container/sandbox.sh`, add the `note` kind to the comment of the helper's lines and to the reading loop,
   echoing `sandbox.sh: <text>` to standard error (R9)
 
 ### The documents
@@ -209,6 +209,6 @@ lines of what it does.
   host's file"
 - [x] `feature-0106 Give a harness's host member the start, and let it print a line`: the first task of "OpenCode's
   host member and the helper", which changes no behavior
-- [ ] `feature-0106 Give OpenCode in the sandbox the host's local providers`: the rest of "OpenCode's host member and
+- [x] `feature-0106 Give OpenCode in the sandbox the host's local providers`: the rest of "OpenCode's host member and
   the helper" and "The wrapper"
 - [ ] `feature-0106 Document the host's local providers for OpenCode`: the tasks of "The documents"

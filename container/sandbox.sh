@@ -432,6 +432,8 @@ fi
 #                and where it is mounted read-only in the container
 #   file         the name, the content and the place in the container of a file that
 #                is written into the project's log directory and mounted read-only
+#   note         a line of what a harness was given of the host, which the wrapper
+#                prints to standard error
 #
 # Read before the host's harnesses, Docker or npm are asked anything and before a branch
 # is cut, so that a refused start has done nothing. The files are written only with the
@@ -482,6 +484,7 @@ if [ "$connect" -eq 0 ]; then
         file_contents+=("$second")
         file_targets+=("$third")
         ;;
+      note) echo "sandbox.sh: $first" >&2 ;;
     esac
   done <<< "$start_lines"
 fi

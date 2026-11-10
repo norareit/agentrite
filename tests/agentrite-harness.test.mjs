@@ -570,12 +570,122 @@ test('Claude Code is given the status line and the cleanup period together', () 
   assert.deepEqual(given.files.map((file) => file.name), ['claude-cleanup-period-7.json']);
 });
 
-test('OpenCode is given nothing of the host', () => {
+// 0106 R1, R7, R8, R9, R10, R11: what OpenCode is given of the host's OpenCode configuration
+
+const KIT_OPENCODE = '{\n  "$schema": "https://opencode.ai/config.json",\n  "autoupdate": false\n}\n';
+const OPENCODE_DIRECTORY = `${HOME}/.config/opencode`;
+const LOCAL_PROVIDER = JSON.stringify({
+  model: 'ollama/qwen3:8b',
+  provider: {
+    ollama: { apiKey: 'secret', options: { baseURL: 'http://localhost:11434/v1' }, models: { 'qwen3:8b': {} } },
+  },
+});
+
+/** The start of a project with `modelServer`, whose reader of the kit's files gives the kit's OpenCode file. */
+function opencodeStart(/** @type {boolean} */ modelServer) {
+  const readKit = (/** @type {string} */ path) => (path === 'opencode.json' ? found(KIT_OPENCODE) : MISSING);
+  return { modelServer, readKit };
+}
+
+/** A reader that fails the test when it is called. */
+function unread(/** @type {string} */ path) {
+  assert.fail(`${path} was read`);
+}
+
+test('with "modelServer": false OpenCode reads nothing of the host and is given nothing', () => {
+  const nothing = { environment: [], mounts: [], files: [], notes: [] };
+  assert.deepEqual(opencode.sandbox.host(HOME, unread, { modelServer: false, readKit: unread }), nothing);
+  const notJson = hostReader({ '.config/opencode/opencode.json': found('not json') });
+  assert.deepEqual(opencode.sandbox.host(HOME, notJson, opencodeStart(false)), nothing);
+});
+
+test("OpenCode is given the kit's configuration with the local providers, and the line of them", () => {
+  const read = hostReader({ '.config/opencode/opencode.json': found(LOCAL_PROVIDER) });
+  const given = opencode.sandbox.host(HOME, read, opencodeStart(true));
+  assert.deepEqual(given.environment, []);
+  assert.deepEqual(given.mounts, []);
+  assert.equal(given.files.length, 1);
+  const [file] = given.files;
+  assert.equal(file.target, '/etc/opencode/opencode.json');
+  assert.match(file.name, /^opencode-configuration-[0-9a-f]{16}\.json$/);
+  assert.deepEqual(JSON.parse(file.content), {
+    $schema: 'https://opencode.ai/config.json',
+    autoupdate: false,
+    provider: {
+      ollama: { options: { baseURL: 'http://host.docker.internal:11434/v1' }, models: { 'qwen3:8b': {} } },
+    },
+  });
+  assert.deepEqual(given.notes, [
+    `OpenCode is given the local provider "ollama" of ${OPENCODE_DIRECTORY}/opencode.json`,
+  ]);
+});
+
+test('OpenCode reads opencode.jsonc with comments and trailing commas', () => {
+  const text = '{\n  // mine\n  "provider": {"ollama": {"options": {"baseURL": "http://[::1]:11434",},},},\n}\n';
+  const read = hostReader({ '.config/opencode/opencode.jsonc': found(text) });
+  const given = opencode.sandbox.host(HOME, read, opencodeStart(true));
+  assert.deepEqual(JSON.parse(given.files[0].content).provider, {
+    ollama: { options: { baseURL: 'http://host.docker.internal:11434' } },
+  });
+  assert.deepEqual(given.notes, [
+    `OpenCode is given the local provider "ollama" of ${OPENCODE_DIRECTORY}/opencode.jsonc`,
+  ]);
+});
+
+test('with no file, or no local provider, OpenCode is given no file and the line', () => {
+  assert.deepEqual(opencode.sandbox.host(HOME, hostReader({}), opencodeStart(true)), {
+    environment: [],
+    mounts: [],
+    files: [],
+    notes: [
+      `there is no opencode.json or opencode.jsonc in ${OPENCODE_DIRECTORY}/, so OpenCode is given no local provider`,
+    ],
+  });
+  const far = JSON.stringify({ provider: { openai: { options: { baseURL: 'https://api.openai.com/v1' } } } });
+  const read = hostReader({ '.config/opencode/opencode.json': found(far) });
+  assert.deepEqual(opencode.sandbox.host(HOME, read, opencodeStart(true)), {
+    environment: [],
+    mounts: [],
+    files: [],
+    notes: [`${OPENCODE_DIRECTORY}/opencode.json holds no local provider on port 11434, so OpenCode is given none`],
+  });
+});
+
+test("OpenCode's host throws each refusal of the host's file", () => {
+  const local = (/** @type {unknown} */ models) =>
+    JSON.stringify({ provider: { ollama: { options: { baseURL: 'http://localhost:11434' }, models } } });
+  const json = `${OPENCODE_DIRECTORY}/opencode.json`;
+  for (const [files, message] of [
+    [{ '.config/opencode/opencode.json': UNREADABLE }, `cannot read ${json}: ${UNREADABLE.error}`],
+    [
+      { '.config/opencode/opencode.json': found('{}'), '.config/opencode/opencode.jsonc': found('{}') },
+      `${OPENCODE_DIRECTORY}/ holds both opencode.json and opencode.jsonc`,
+    ],
+    [{ '.config/opencode/opencode.json': found('[]') }, `${json} is not a JSON object once its comments`],
+    [{ '.config/opencode/opencode.json': found(local([])) }, `${json}: the models of the local provider "ollama"`],
+    [{ '.config/opencode/opencode.json': found(local({ m: 1 })) }, `${json}: the model "m" of the local provider`],
+  ]) {
+    assert.throws(
+      () => opencode.sandbox.host(HOME, hostReader(files), opencodeStart(true)),
+      (error) => {
+        assert.ok(error instanceof Error && error.message.startsWith(message), String(error));
+        return true;
+      },
+    );
+  }
+});
+
+test('OpenCode is given nothing of the files of other harnesses', () => {
   const read = hostReader({
     '.claude/statusline-command.sh': found('echo status\n'),
     '.claude/settings.json': found('{"cleanupPeriodDays": 7}'),
   });
-  assert.deepEqual(opencode.sandbox.host(HOME, read), { environment: [], mounts: [], files: [], notes: [] });
+  assert.deepEqual(opencode.sandbox.host(HOME, read, opencodeStart(false)), {
+    environment: [],
+    mounts: [],
+    files: [],
+    notes: [],
+  });
 });
 
 // 0097 R3: the files of a harness's own in the sandbox
@@ -601,7 +711,7 @@ function kitFileFaults(directories, harnesses) {
   for (const harness of harnesses) {
     const { sandbox } = harness;
     const kitMounts = [...sandbox.updates.mounts, ...sandbox.bell.mounts].filter((mount) => mount.from === 'kit');
-    const host = sandbox.host('/home/developer', () => ({ found: true, text: '{}' }));
+    const host = sandbox.host('/home/developer', () => ({ found: true, text: '{}' }), opencodeStart(false));
     kitMounts.push(...host.mounts.filter((mount) => mount.from === 'kit'));
     const files = directories.get(harness.name) ?? [];
     const named = kitMounts.map((mount) => mount.path);

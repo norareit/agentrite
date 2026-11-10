@@ -15,12 +15,15 @@ import { readStart } from './agentrite-settings.mjs';
 /** The file every harness's bell runs, relative to the kit's `container/`, and where it is in the container. */
 const RING_BELL = { path: 'bell/ring-bell.sh', target: '/etc/agentrite/bell/ring-bell.sh' };
 
+/** The directory of the harnesses' own files of the kit, `container/harnesses/`. */
+const KIT_HARNESSES = fileURLToPath(new URL('../container/harnesses/', import.meta.url));
+
 const USAGE = 'usage: node agentrite-sandbox.mjs start <project root> <home> | version <harness>';
 
 /**
- * A reader of the files of the host under `home`, by a path relative to it. A file that is not there is not found,
- * and any other error of reading it is given as the error, so that a directory or a file that cannot be read is
- * neither.
+ * A reader of the files under `home`, of the host or of the kit, by a path relative to it. A file that is not there
+ * is not found, and any other error of reading it is given as the error, so that a directory or a file that cannot
+ * be read is neither.
  *
  * @param {string} home
  * @returns {(path: string) => ProjectFile}
@@ -50,8 +53,10 @@ function mountLine(name, { from, path, target }) {
 /**
  * The lines a start of the sandbox prints, each as its fields, for the harnesses `harnesses`: whether the bell
  * rings; whether the local model server is admitted; each harness; the directories of their logs; the hosts the
- * allowlist admits for them; and the environment, the mounts and the files of a run, those that turn off each
- * harness's updates, then those of the host, then, with `bell`, those of the bell.
+ * allowlist admits for them; the environment, the mounts and the files of a run, those that turn off each
+ * harness's updates, then those of the host, then, with `bell`, those of the bell; and the notes of what the
+ * harnesses were given of the host. A file a harness is given of the host stands in the place of a mount of the same
+ * harness's updates at its target, since Docker takes one mount for each target.
  *
  * @param {boolean} bell
  * @param {boolean} modelServer
@@ -73,7 +78,11 @@ function startLines(bell, modelServer, harnesses, given) {
   }
 
   const hosts = harnesses.map((harness) => ({ name: harness.name, ...given(harness) }));
-  const updates = harnesses.map(({ name, sandbox }) => ({ name, ...sandbox.updates }));
+  const updates = harnesses.map(({ name, sandbox }, index) => {
+    const replaced = hosts[index].files.map(({ target }) => target);
+    const mounts = sandbox.updates.mounts.filter(({ target }) => !replaced.includes(target));
+    return { name, environment: sandbox.updates.environment, mounts };
+  });
   const bells = bell ? harnesses.map(({ name, sandbox }) => ({ name, ...sandbox.bell })) : [];
   for (const group of [...updates, ...hosts, ...bells]) {
     lines.push(...group.environment.map((entry) => ['env', entry]));
@@ -84,6 +93,7 @@ function startLines(bell, modelServer, harnesses, given) {
   for (const group of hosts) {
     lines.push(...group.files.map(({ name, content, target }) => ['file', name, content, target]));
   }
+  for (const group of hosts) lines.push(...group.notes.map((note) => ['note', note]));
   return lines;
 }
 
@@ -108,8 +118,8 @@ function linesText(lines) {
 
 /**
  * What a start of the sandbox prints for the project at `root`: its `bell`, its `modelServer` and its harnesses, read
- * from its `agentrite.json`, and what each harness is given of the host's home `home`, or nothing of it when `home`
- * is empty.
+ * from its `agentrite.json`, and what each harness is given of the host's home `home`, with the project's
+ * `modelServer` and a reader of the harness's own files of the kit, or nothing of it when `home` is empty.
  *
  * @param {string} root
  * @param {string} home
@@ -120,7 +130,11 @@ function startText(root, home) {
   const chosen = HARNESSES.filter((harness) => harnesses.includes(harness.name));
   const nothing = { environment: [], mounts: [], files: [], notes: [] };
   const read = hostReader(home);
-  const given = (/** @type {Harness} */ harness) => (home === '' ? nothing : harness.sandbox.host(home, read));
+  const given = (/** @type {Harness} */ harness) => {
+    if (home === '') return nothing;
+    const readKit = hostReader(join(KIT_HARNESSES, harness.name));
+    return harness.sandbox.host(home, read, { modelServer, readKit });
+  };
   return linesText(startLines(bell, modelServer, chosen, given));
 }
 

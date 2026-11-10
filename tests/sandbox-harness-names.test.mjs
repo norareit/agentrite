@@ -32,6 +32,36 @@ function codeLines(file, text) {
   return lines.filter((line) => !line.trim().startsWith('#'));
 }
 
+/** The files of a home that gives each harness something of the host. */
+const HOME_FILES = {
+  '.claude/statusline-command.sh': 'echo status\n',
+  '.claude/settings.json': '{"cleanupPeriodDays": 1}',
+  '.config/opencode/opencode.json': '{"provider": {"ollama": {"options": {"baseURL": "http://localhost:11434/v1"}}}}',
+};
+
+/**
+ * @param {string} path
+ * @returns {import('../scripts/agentrite-instructions.mjs').ProjectFile}
+ */
+function homeReader(path) {
+  return path in HOME_FILES ? { found: true, text: HOME_FILES[path] } : { found: false };
+}
+
+/**
+ * The start of a project that admits the local model server, with the reader of the kit's own files of `name`.
+ *
+ * @param {string} name
+ * @returns {import('../scripts/agentrite-harness.mjs').Start}
+ */
+function kitStart(name) {
+  const directory = new URL(`../container/harnesses/${name}/`, import.meta.url);
+  const readKit = (/** @type {string} */ path) => ({
+    found: true,
+    text: readFileSync(new URL(path, directory), 'utf-8'),
+  });
+  return { modelServer: true, readKit };
+}
+
 /**
  * Every word by which a file could name `harness`: its name, title, command, package and version argument, its
  * hosts and log directories, and the targets and environment names of what a run gives it, also of the host.
@@ -41,7 +71,7 @@ function codeLines(file, text) {
  */
 function wordsOf(harness) {
   const { sandbox } = harness;
-  const host = sandbox.host('/home/developer', () => ({ found: true, text: '{"cleanupPeriodDays": 1}' }));
+  const host = sandbox.host('/home/developer', homeReader, kitStart(harness.name));
   const mounts = [...sandbox.updates.mounts, ...sandbox.bell.mounts, ...host.mounts];
   const environment = [...sandbox.updates.environment, ...sandbox.bell.environment, ...host.environment];
   return [
@@ -87,6 +117,10 @@ test('the words searched for hold every kind of what the sandbox knows of a harn
   ]) {
     assert.ok(words.includes(word), word);
   }
+  const opencode = HARNESSES.find((harness) => harness.name === 'opencode');
+  const given = opencode.sandbox.host('/home/developer', homeReader, kitStart('opencode'));
+  assert.equal(given.files.length, 1, 'the home gives OpenCode its configuration with the local provider');
+  assert.ok(wordsOf(opencode).includes(given.files[0].target));
 });
 
 test('a line is searched unless it is a comment', () => {

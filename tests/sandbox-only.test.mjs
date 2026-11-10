@@ -378,6 +378,39 @@ test('--connect BRANCH runs the command in the container of the run of that bran
   assert.ok(call.endsWith(` project-sandbox-${branch} /usr/local/bin/known-terminal.sh echo hi`), call);
 });
 
+// 0106 R1: --connect reads nothing of the host's OpenCode configuration, in a project that admits the model server
+// and names OpenCode, and so is not refused for a file there that is not JSON.
+test("--connect reads nothing of the host's OpenCode configuration and is not refused for it", (testContext) => {
+  const host = setUp(testContext);
+  markRunning(host);
+  writeFileSync(
+    join(host.root, 'agentrite.json'),
+    kitSettingsText({
+      defaultBranch: 'master',
+      harnesses: ['claude', 'opencode'],
+      process: false,
+      sandbox: true,
+      bell: false,
+      modelServer: true,
+      orchestrator: false,
+    }),
+  );
+  mkdirSync(join(host.home, '.config', 'opencode'), { recursive: true });
+  writeFileSync(join(host.home, '.config', 'opencode', 'opencode.json'), 'not json');
+
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  const [call, ...rest] = host.dockerCalls();
+  assert.deepEqual(rest, []);
+  assert.ok(call.startsWith(`${host.recorded} docker exec `), call);
+  // A run of the branch, which reads the file, is refused for it.
+  const started = host.run([branch, 'echo', 'hi']);
+  assert.equal(started.status, 1, started.stderr);
+  assert.match(started.stderr, /^agentrite: .*opencode\.json is not a JSON object/);
+});
+
 for (const name of ['claude', '0010', 'feature-0010-init2']) {
   test(`--connect ${name} is refused with 1 for a name that is no local branch, and cuts nothing`, (testContext) => {
     const host = setUpWithBuildDue(testContext);

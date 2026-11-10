@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   chmodSync,
   copyFileSync,
@@ -39,6 +40,7 @@ import {
   writeStartSettings,
 } from './wrapper-fixture.mjs';
 import { parseCleanupPeriod } from '../scripts/agentrite-cleanup-period.mjs';
+import { parseJsonc } from '../scripts/agentrite-json.mjs';
 import { HARNESS_NAMES, HARNESSES } from '../scripts/agentrite-harness.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -124,6 +126,7 @@ function setUp(
   for (const file of [
     'agentrite-settings.mjs',
     'agentrite-cleanup-period.mjs',
+    'agentrite-opencode-providers.mjs',
     'agentrite-sandbox.mjs',
     'agentrite-roles.mjs',
     'agentrite-harness.mjs',
@@ -134,6 +137,12 @@ function setUp(
     copyFileSync(join(kitScripts, file), join(container, '..', 'scripts', file));
   }
   cpSync(join(kitScripts, 'harnesses'), join(container, '..', 'scripts', 'harnesses'), { recursive: true });
+  // OpenCode's host member reads the kit's configuration of OpenCode, to give it the host's local providers.
+  mkdirSync(join(container, 'harnesses', 'opencode'), { recursive: true });
+  copyFileSync(
+    join(dirname(wrapper), 'harnesses', 'opencode', 'opencode.json'),
+    join(container, 'harnesses', 'opencode', 'opencode.json'),
+  );
   writeStartSettings(root);
   const home = join(base, 'home');
   mkdirSync(home);
@@ -683,7 +692,7 @@ test("the wrapper stops with the build's own error when the build fails, and run
 
 test('the wrapper runs with no Dockerfile beside it to read a version from', (testContext) => {
   const { root, container, run, dockerCalls } = setUp(testContext, kitPath);
-  assert.deepEqual(readdirSync(container).sort(), ['compose.yml', 'sandbox.sh']);
+  assert.deepEqual(readdirSync(container).sort(), ['compose.yml', 'harnesses', 'sandbox.sh']);
   const result = run(root, '--in-place', 'echo', 'hi');
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(dockerCalls(), runOnly(root, container, hostVersions));
@@ -1150,6 +1159,257 @@ for (const [form, formArgs] of startForms) {
       assert.equal(existsSync(asked), false, text);
     }
   });
+}
+
+// Unit 0106: OpenCode is given the host's local model providers. With "modelServer": true and opencode among the
+// harnesses, a start reads the host's ~/.config/opencode/opencode.json or opencode.jsonc, writes the kit's
+// configuration of OpenCode with the local providers alone into the project's log directory, under a name after its
+// content, and mounts it in the place of the kit's file, at /etc/opencode/opencode.json.
+
+const OPENCODE_TARGET = '/etc/opencode/opencode.json';
+const opencodeDirectory = (home) => join(home, '.config', 'opencode');
+const opencodeFiles = (root) =>
+  readdirSync(homeLogs(root)).filter((name) => name.startsWith('opencode-configuration-'));
+
+// The host's OpenCode configuration as a developer writes it: comments, a trailing comma, a local provider with an
+// API key, a provider of the cloud, and keys of other things.
+const HOST_OPENCODE = `{
+  // the local server
+  "model": "ollama/qwen3:8b",
+  "plugin": ["host-plugin"],
+  "provider": {
+    "ollama": {
+      "npm": "@ai-sdk/openai-compatible",
+      "apiKey": "local-secret",
+      /* where it listens */
+      "options": { "baseURL": "http://localhost:11434/v1", "apiKey": "{env:OLLAMA_KEY}" },
+      "models": { "qwen3:8b": { "name": "Qwen 3", "limit": { "context": 32768, "output": 4096 }, "id": "q" }, },
+    },
+    "openai": { "options": { "baseURL": "https://api.openai.com/v1", "apiKey": "cloud-secret" } },
+  },
+}
+`;
+
+function writeHostOpencode(home, name, text) {
+  mkdirSync(opencodeDirectory(home), { recursive: true });
+  writeFileSync(join(opencodeDirectory(home), name), text);
+}
+
+// The `run` of a start of `form` that gives OpenCode its configuration `file` of the log directory in the place of
+// the kit's, with the bell's `bellMounting` and `bellEnvironmentFlags` when given.
+function opencodeRun(root, container, form, workdir, file, bellMounting = '', bellEnvironmentFlags = '') {
+  const mounted = form === '--in-place' ? root : workdir;
+  const run =
+    `run --rm ${updateEnvironment()}${bellEnvironmentFlags}--volume ${mounted}:/work ` +
+    `${updateMounts(container, ['claude', 'codex'])}${bellMounting}--volume ${file}:${OPENCODE_TARGET}:ro ` +
+    `${logMounts(homeLogs(root))}sandbox echo hi`;
+  return composeCalls(root, container, hostVersions, run);
+}
+
+// The one configuration of OpenCode the log directory of the project at `root` holds, and its content.
+function onlyOpencodeFile(root) {
+  const names = opencodeFiles(root);
+  assert.equal(names.length, 1, names.join());
+  const path = join(homeLogs(root), names[0]);
+  return { name: names[0], path, content: readFileSync(path, 'utf-8') };
+}
+
+const opencodeProvidersLine = (home, name) =>
+  `sandbox.sh: OpenCode is given the local provider "ollama" of ${join(opencodeDirectory(home), name)}\n`;
+
+for (const [form, formArgs] of startForms) {
+  test(`a start with ${form} gives OpenCode the host's local providers alone, in the place of the kit's file`, (
+    testContext,
+  ) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeStartSettings(root, { modelServer: true });
+    writeHostOpencode(home, 'opencode.jsonc', HOST_OPENCODE);
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, opencodeProvidersLine(home, 'opencode.jsonc'));
+    const file = onlyOpencodeFile(root);
+    assert.ok(file.content.endsWith('\n'));
+    const hash = createHash('sha256').update(file.content.slice(0, -1)).digest('hex').slice(0, 16);
+    assert.equal(file.name, `opencode-configuration-${hash}.json`);
+    assert.deepEqual(JSON.parse(file.content), {
+      $schema: 'https://opencode.ai/config.json',
+      autoupdate: false,
+      provider: {
+        ollama: {
+          npm: '@ai-sdk/openai-compatible',
+          options: { baseURL: 'http://host.docker.internal:11434/v1' },
+          models: { 'qwen3:8b': { name: 'Qwen 3', limit: { context: 32768, output: 4096 } } },
+        },
+      },
+    });
+    assert.doesNotMatch(file.content, /secret|OLLAMA_KEY|plugin|openai\.com|"model"/);
+    assert.equal(statSync(file.path).mode & 0o777, 0o644);
+    assert.deepEqual(dockerCalls(), opencodeRun(root, container, form, workdir, file.path));
+    assert.ok(!dockerCalls().some((call) => call.includes(opencodeDirectory(home))), dockerCalls().join('\n'));
+  });
+
+  test(`a start with ${form} and "bell": true gives OpenCode the local providers and the bell`, (testContext) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeStartSettings(root, { bell: true, modelServer: true });
+    writeHostOpencode(home, 'opencode.json', JSON.stringify(parseJsonc(HOST_OPENCODE)));
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, opencodeProvidersLine(home, 'opencode.json'));
+    const file = onlyOpencodeFile(root);
+    assert.deepEqual(
+      dockerCalls(),
+      opencodeRun(root, container, form, workdir, file.path, bellMounts(container), bellEnvironment()),
+    );
+  });
+
+  test(`a start with ${form} and "modelServer": false reads nothing of the host's OpenCode file`, (testContext) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeStartSettings(root);
+    writeHostOpencode(home, 'opencode.json', 'not json');
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stderr, '');
+    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, '', ''));
+    assert.deepEqual(opencodeFiles(root), []);
+  });
+
+  test(`a start with ${form} and no file of OpenCode's on the host mounts the kit's file and says so`, (
+    testContext,
+  ) => {
+    const { base, root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeStartSettings(root, { modelServer: true });
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(
+      result.stderr,
+      `sandbox.sh: there is no opencode.json or opencode.jsonc in ${opencodeDirectory(home)}/, so OpenCode is ` +
+        'given no local provider\n',
+    );
+    assert.deepEqual(dockerCalls(), startRun(root, container, form, workdir, '', ''));
+    assert.deepEqual(opencodeFiles(root), []);
+  });
+
+  test(`a start with ${form} refuses each fault of the host's OpenCode file, asking Docker and npm nothing`, (
+    testContext,
+  ) => {
+    const local = (models) =>
+      JSON.stringify({ provider: { ollama: { options: { baseURL: 'http://localhost:11434' }, models } } });
+    for (const [files, message] of [
+      [
+        { 'opencode.json': '{}', 'opencode.jsonc': '{}' },
+        (directory) =>
+          `${directory}/ holds both opencode.json and opencode.jsonc, and the sandbox reads one alone. Keep one, ` +
+          'with what the other holds moved into it, and start again',
+      ],
+      [
+        { 'opencode.jsonc': '{"provider": [1,]' },
+        (directory) =>
+          new RegExp(
+            `^${escaped(directory)}/opencode\\.jsonc is not a JSON object once its comments and trailing commas ` +
+              'are taken out: .+\\. Correct it as OpenCode reads it, and start again$',
+          ),
+      ],
+      [
+        { 'opencode.json': local(null) },
+        (directory) =>
+          `${directory}/opencode.json: the models of the local provider "ollama" are not a JSON object. Correct ` +
+          'them, and start again',
+      ],
+      [
+        { 'opencode.json': local({ m: 'x' }) },
+        (directory) =>
+          `${directory}/opencode.json: the model "m" of the local provider "ollama" is not a JSON object. ` +
+          'Correct it, and start again',
+      ],
+    ]) {
+      const { base, root, home, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      writeStartSettings(root, { modelServer: true });
+      for (const [name, text] of Object.entries(files)) writeHostOpencode(home, name, text);
+
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+      const expectedMessage = message(opencodeDirectory(home));
+      assert.equal(result.status, 1, result.stderr);
+      assert.equal(result.stdout, '');
+      const printed = result.stderr.replace(/^agentrite: /, '').trimEnd();
+      assert.ok(result.stderr.startsWith('agentrite: '), result.stderr);
+      if (typeof expectedMessage === 'string') assert.equal(printed, expectedMessage);
+      else assert.match(printed, expectedMessage);
+      assert.deepEqual(dockerCalls(), []);
+      assert.deepEqual(npmCalls(), []);
+      assert.equal(existsSync(homeLogs(root)), false);
+    }
+  });
+
+  test(`a start with ${form} refuses a host OpenCode file that cannot be read`, (testContext) => {
+    const { base, root, home, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    const workdir = join(base, 'elsewhere');
+    mkdirSync(workdir);
+    writeStartSettings(root, { modelServer: true });
+    mkdirSync(join(opencodeDirectory(home), 'opencode.json'), { recursive: true });
+
+    const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+    assert.equal(result.status, 1);
+    assert.match(
+      result.stderr,
+      new RegExp(
+        `^agentrite: cannot read ${escaped(opencodeDirectory(home))}/opencode\\.json: .+\\. Make it readable, or ` +
+          'remove it, and start again\n$',
+      ),
+    );
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+test("a changed host OpenCode file gives a new file at the next start, with no build, and the first is left", (
+  testContext,
+) => {
+  const { root, container, home, run, dockerCalls } = setUp(testContext, kitPath);
+  writeStartSettings(root, { modelServer: true });
+  writeHostOpencode(home, 'opencode.jsonc', HOST_OPENCODE);
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  const first = onlyOpencodeFile(root);
+  const before = statSync(first.path).ino;
+  writeHostOpencode(home, 'opencode.jsonc', HOST_OPENCODE.replace('"Qwen 3"', '"Qwen 3 again"'));
+
+  const result = run(root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  const names = opencodeFiles(root);
+  assert.equal(names.length, 2, names.join());
+  const second = join(homeLogs(root), names.find((name) => name !== first.name));
+  assert.match(readFileSync(second, 'utf-8'), /"Qwen 3 again"/);
+  assert.equal(statSync(first.path).ino, before);
+  assert.equal(readFileSync(first.path, 'utf-8'), first.content);
+  assert.deepEqual(dockerCalls(), [
+    ...opencodeRun(root, container, '--in-place', root, first.path),
+    ...opencodeRun(root, container, '--in-place', root, second),
+  ]);
+});
+
+// The text of `text` for a RegExp that matches it literally.
+function escaped(text) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 // Unit 0092: how long Claude Code's sessions are kept. A start reads cleanupPeriodDays from the host's

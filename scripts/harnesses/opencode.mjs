@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { callFollowed, isRecord, jsonRecord, jsonRecords, stringOrNone, textFollowed } from '../agentrite-headless.mjs';
 import {
   INSTRUCTIONS_SECTION,
@@ -7,6 +8,15 @@ import {
   STANDARDS_PATH,
 } from '../agentrite-instructions.mjs';
 import { formattedLike } from '../agentrite-json.mjs';
+import {
+  chosenFile,
+  configurationName,
+  localProviders,
+  noFileNote,
+  opencodeConfiguration,
+  providersNote,
+  readConfiguration,
+} from '../agentrite-opencode-providers.mjs';
 import { descriptionBlock, isKitWrapper, refreshedWrapper, wrapperBody } from '../agentrite-roles.mjs';
 
 /**
@@ -14,6 +24,8 @@ import { descriptionBlock, isKitWrapper, refreshedWrapper, wrapperBody } from '.
  * @typedef {import('../agentrite-headless.mjs').Followed} Followed
  * @typedef {import('../agentrite-instructions.mjs').ProjectFile} ProjectFile
  * @typedef {import('../agentrite-roles.mjs').Role} Role
+ * @typedef {import('../agentrite-harness.mjs').Given} Given
+ * @typedef {import('../agentrite-harness.mjs').Start} Start
  */
 
 /**
@@ -267,6 +279,45 @@ function kitStandardsNotices(read, standards) {
 }
 
 /**
+ * The kit's configuration of OpenCode, in its own directory, and where it is in the container: the file of OpenCode's
+ * that stands above every other.
+ */
+const KIT_CONFIGURATION = { path: 'opencode.json', target: '/etc/opencode/opencode.json' };
+
+/** The directory of the host's OpenCode configuration, relative to the host's home. */
+const HOST_DIRECTORY = '.config/opencode';
+
+/**
+ * What OpenCode in the sandbox is given of the host: with the local model server admitted, the local providers of
+ * the host's OpenCode configuration, with their kept keys alone, in a copy of the kit's configuration that takes the
+ * place of the kit's mount, and the line that names them. Nothing else of the host's file crosses, since it can hold
+ * secrets. Without the model server, nothing of it is read.
+ *
+ * @param {string} home
+ * @param {(path: string) => ProjectFile} read
+ * @param {Start} start
+ * @returns {Given}
+ */
+function opencodeHost(home, read, { modelServer, readKit }) {
+  /** @type {Given} */ const nothing = { environment: [], mounts: [], files: [], notes: [] };
+  if (!modelServer) return nothing;
+  const directory = join(home, HOST_DIRECTORY);
+  const json = read(`${HOST_DIRECTORY}/opencode.json`);
+  const file = chosenFile(directory, json, read(`${HOST_DIRECTORY}/opencode.jsonc`));
+  if (file === undefined) return { ...nothing, notes: [noFileNote(directory)] };
+  const providers = localProviders(readConfiguration(file.text, file.path), file.path);
+  const notes = [providersNote(file.path, Object.keys(providers))];
+  if (Object.keys(providers).length === 0) return { ...nothing, notes };
+  const kit = readKit(KIT_CONFIGURATION.path);
+  if (!('text' in kit)) {
+    throw new Error(`the kit's container/harnesses/opencode/${KIT_CONFIGURATION.path} cannot be read`);
+  }
+  const content = opencodeConfiguration(kit.text, providers);
+  const configuration = { name: configurationName(content), content, target: KIT_CONFIGURATION.target };
+  return { ...nothing, files: [configuration], notes };
+}
+
+/**
  * OpenCode, as the kit knows it.
  *
  * @type {import('../agentrite-harness.mjs').Harness}
@@ -337,10 +388,11 @@ export const opencode = {
       return word === '' ? undefined : word;
     },
     // OpenCode has no switch in the environment, so it is pointed at a configuration that sets autoupdate false. Its
-    // project opencode.json does not override that key.
+    // project opencode.json does not override that key. A file the host member gives at the same target replaces the
+    // mount.
     updates: {
-      environment: ['OPENCODE_CONFIG=/etc/opencode/opencode.json'],
-      mounts: [{ from: 'kit', path: 'opencode.json', target: '/etc/opencode/opencode.json' }],
+      environment: [`OPENCODE_CONFIG=${KIT_CONFIGURATION.target}`],
+      mounts: [{ from: 'kit', ...KIT_CONFIGURATION }],
     },
     // Its data directory, which holds its sessions and its login.
     logDirectories: ['.local/share/opencode'],
@@ -355,6 +407,6 @@ export const opencode = {
       environment: ['OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}'],
       mounts: [{ from: 'kit', path: 'bell-plugin.js', target: '/etc/agentrite/bell/opencode-plugin.js' }],
     },
-    host: () => ({ environment: [], mounts: [], files: [], notes: [] }),
+    host: opencodeHost,
   },
 };

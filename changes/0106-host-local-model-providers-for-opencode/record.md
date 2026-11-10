@@ -26,5 +26,21 @@ timestamp: 2026-11-10T11:54:10Z
   is `approved`
 - 2026-11-10T12:27:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
   `feature-0106-host-local-model-providers-for-opencode` at `d1f3f90`. The status is `in-progress`
+- 2026-11-10T12:38:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built a `provider` key that is
+  absent or not an object as holding no local provider, and a `baseURL` that is no string or no URL as making its
+  provider not local, since requirements 10 and 11 list every refusal
+- 2026-11-10T12:38:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the file the host member gives
+  as replacing the kit's mount at `/etc/opencode/opencode.json`, since the providers are to be in the kit's
+  configuration and Docker takes one mount for each target
+- 2026-11-10T12:38:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the line of requirement 9 as
+  going to standard error, as the wrapper's other lines of what it does
+- 2026-11-10T12:38:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, put the test that `--connect` reads
+  nothing of the host's OpenCode file in `tests/sandbox-only.test.mjs` rather than in `tests/sandbox-wrapper.test.mjs`,
+  since the fixture of the latter has no branch for `--connect` to join. The test also runs the branch, which reads the
+  file and is refused for it
+- 2026-11-10T12:38:07Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave the test of
+  `tests/sandbox-wrapper.test.mjs` that the fixture's `container/` holds no Dockerfile the entry `harnesses` among what
+  it lists, since the fixture now copies the kit's `container/harnesses/opencode/opencode.json`, which OpenCode's host
+  member reads
 
 ## Amendments
