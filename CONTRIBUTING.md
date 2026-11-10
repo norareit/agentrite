@@ -253,12 +253,15 @@ The kit is also a devDependency of itself, installed from the npm registry at on
 * `npm publish` stays on the host: releasing needs the npm login that owns the package, which never enters the
   sandbox
 * The root is a project of the installed release, and its own files are judged against that release, not against
-  the working tree: the root's `agentrite.json` is the installed release's default file,
+  the working tree. The root's `agentrite.json` is the installed release's default file,
   `node_modules/agentrite/templates/project/agentrite.json`, with the roles of this repository's own added to
-  `roles` after the four, and differs from it in nothing else, and the installed release's `refresh`, run at the root
-  with no argument as `npm run kit -- refresh`, prints `up to date` for every file it writes and changes none. The
-  suite checks both. A unit that changes what a project holds changes the root's files only when
-  the repository moves to the release that holds it
+  `roles` after the four, and with each required key that a unit added after that release, which the installed
+  release ignores. A unit that adds a required key to `agentrite.json` adds it to the root's file in the same unit,
+  with the value this repository uses, because the working tree's `npx agentrite` reads the whole file and refuses it
+  without the key. The installed release's `refresh`, run at the root with no argument as `npm run kit -- refresh`,
+  prints `up to date` for every file it writes and changes none, and the suite checks it. Apart from such a key, a
+  unit that changes what a project holds changes the root's files only when the repository moves to the release
+  that holds it
 
 ## Trying the working copy's sandbox
 
