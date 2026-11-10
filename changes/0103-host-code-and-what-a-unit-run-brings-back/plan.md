@@ -151,37 +151,37 @@ Writing under `.orchestrator`:
 
 The record and the resume:
 
-- [ ] Add `tests/agentrite-run-records.test.mjs`: the directory is `$XDG_STATE_HOME/agentrite/.orchestrator-runs` when
+- [x] Add `tests/agentrite-run-records.test.mjs`: the directory is `$XDG_STATE_HOME/agentrite/.orchestrator-runs` when
   it is set and not empty, and `<home>/.local/state/agentrite/.orchestrator-runs` otherwise; the name is the SHA-256 in
   hexadecimal of the path given, followed by `.json`; the text holds the two digests of the buffers given; and the
   judgement accepts the two buffers whose digests the record holds, and gives a refusal for no record, for a record
   that is not of the form, and for each buffer that differs (R8, R9)
-- [ ] Add `scripts/agentrite-run-records.mjs` with `recordDirectory(environment, home)`, `recordName(runPath)`,
+- [x] Add `scripts/agentrite-run-records.mjs` with `recordDirectory(environment, home)`, `recordName(runPath)`,
   `recordText(definition, state)`, `digestOf(buffer)` and `judgeRecord(recordText, definition, state)`, and add it to
   `files` of `package.json` (R8, R9)
-- [ ] Add a test that a run writes, in the `XDG_STATE_HOME` the test gives, the record named by the SHA-256 of its
+- [x] Add a test that a run writes, in the `XDG_STATE_HOME` the test gives, the record named by the SHA-256 of its
   resolved directory, holding the digests of its `definition.json` and `state.json` as they stand after the run; that
   it makes the directory when it is missing; and that a resume writes a record of its own run (R8, R16)
-- [ ] In `runPrepared`, write the record with `writeWhole` each time `state.json` is written, its directory made first
+- [x] In `runPrepared`, write the record with `writeWhole` each time `state.json` is written, its directory made first
   with `mkdirSync(directory, { recursive: true })`, with the digests of the content written. `XDG_STATE_HOME` is read
   from `process.env` and the home from `os.homedir()` in `scripts/agentrite.mjs` and passed to `recordDirectory`
   (R8)
-- [ ] Give `project` in `tests/agentrite-orchestrate.test.mjs` an `XDG_STATE_HOME` in a temporary directory of the test
+- [x] Give `project` in `tests/agentrite-orchestrate.test.mjs` an `XDG_STATE_HOME` in a temporary directory of the test
   outside the project, and make `writeRun` write the record of the run it writes, of the texts it writes. Every
   resume test passes as before (R8, R9)
-- [ ] Add tests that a resume refuses, starts nothing, writes nothing and exits `1` naming the run, that a resume takes
+- [x] Add tests that a resume refuses, starts nothing, writes nothing and exits `1` naming the run, that a resume takes
   a run made where it is resumed whose files are as that run left them, and that `npx agentrite orchestrate <unit>`
   starts a new run: for a run with no record, a run whose `definition.json` differs from its record and one whose
   `state.json` does. Add a test that a resume of a run whose `state.json` is a link to a copy of the file outside
   `.orchestrator` is refused (R9, R16)
-- [ ] Add `readRunBuffer(root, path)`, which opens with `O_RDONLY | O_NOFOLLOW` and reads the file once, and make
+- [x] Add `readRunBuffer(root, path)`, which opens with `O_RDONLY | O_NOFOLLOW` and reads the file once, and make
   `runTexts` read `state.json` and `definition.json` through it as buffers. In `prepareResume`, read the record,
   judge it with `judgeRecord` against those buffers, and throw its refusal before `parseRun`; then parse the decoded
   same buffers. Read the `heartbeat` through the same read, taking `ELOOP` as no heartbeat. `agentrite runs` keeps
   its reads (R1, R9)
-- [ ] Add a test that a resume refuses a run whose `definition.json`, with a record that matches it, names a role the
+- [x] Add a test that a resume refuses a run whose `definition.json`, with a record that matches it, names a role the
   project does not have, with the refusal a run gives for that definition (R10, R16)
-- [ ] Give `parseRun` an optional parameter of the project's roles and harnesses, passed to `parseDefinition`, and pass
+- [x] Give `parseRun` an optional parameter of the project's roles and harnesses, passed to `parseDefinition`, and pass
   `{ roles: Object.keys(settings.roles), harnesses: settings.harnesses }` from `prepareResume` (R10)
 
 Sessions and the model:
@@ -266,7 +266,7 @@ Documents:
 - [x] `feature-0103` the plan and its record entry
 - [x] `feature-0103` the check of the three paths, `.gitignore`, `createFile`, `writeWhole` and the followed file
 - [x] `feature-0103` the check of the run's directory before each write
-- [ ] `feature-0103` the record of runs and the resume's judgement of it, the resume's definition read with the
+- [x] `feature-0103` the record of runs and the resume's judgement of it, the resume's definition read with the
   project's names
 - [ ] `feature-0103` the session pattern and `--model=<model>`
 - [ ] `feature-0103` the comparison of a clone without conversions

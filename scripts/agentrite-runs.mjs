@@ -334,17 +334,19 @@ function heartbeatInstant(text) {
  * @param {string} unit
  * @param {string} name
  * @param {{ state: string, definition: string }} texts
+ * @param {import('./agentrite-definition.mjs').Names} [names] the project's roles and harnesses, which a step of
+ *   the definition must then name, as a step of a definition a run reads must
  * @returns {{
  *   state: RunState,
  *   definition: import('./agentrite-definition.mjs').Definition,
  *   step: import('./agentrite-definition.mjs').Step | null,
  * }}
  */
-export function parseRun(unit, name, texts) {
+export function parseRun(unit, name, texts, names = {}) {
   const directory = `.orchestrator/${unit}/${name}`;
   const [stateFile, definitionFile] = [`${directory}/state.json`, `${directory}/definition.json`];
   const state = /** @type {RunState} */ (parseState(texts.state, stateFile));
-  const definition = parseDefinition(texts.definition, { path: definitionFile });
+  const definition = parseDefinition(texts.definition, { path: definitionFile, ...names });
   const step = state.at === null ? null : (stepNamedBy(definition, state.at) ?? null);
   if (state.at !== null && step === null) {
     throw new Error(`${stateFile}: at names a step that ${definitionFile} does not have`);

@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { spawn, spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   chmodSync,
   closeSync,
@@ -11,6 +12,7 @@ import {
   readdirSync,
   readFileSync,
   readlinkSync,
+  realpathSync,
   renameSync,
   rmSync,
   statSync,
@@ -62,6 +64,7 @@ import {
 import { harnessNamed } from '../scripts/agentrite-harness.mjs';
 import { opencode as opencodeHarness } from '../scripts/harnesses/opencode.mjs';
 import { askAgainRequest, outcomeRequest, readOutcome, RESUMED } from '../scripts/agentrite-outcome.mjs';
+import { recordDirectory, recordName, recordText } from '../scripts/agentrite-run-records.mjs';
 import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
@@ -1783,7 +1786,9 @@ function project(testContext) {
   }
   symlinkSync(SLEEP, join(base, 'bin', 'sleep'));
   symlinkSync(GIT, join(base, 'bin', 'git'));
-  const options = { cwd: base, env: { PATH: join(base, 'bin'), FAKE_DIR: fakes } };
+  // The records of the runs go to a state directory of the test's own, outside the project.
+  const state = temporaryDirectory(testContext, 'agentrite-state-');
+  const options = { cwd: base, env: { PATH: join(base, 'bin'), FAKE_DIR: fakes, XDG_STATE_HOME: state } };
   const agentrite = (...args) => spawnSync(process.execPath, [script, ...args], { ...options, encoding: 'utf-8' });
   // The command run as if it was `time` milliseconds after the epoch, so that runs start at an instant of the test's
   // choosing.
@@ -1841,6 +1846,7 @@ function project(testContext) {
       .map((name) => callOf(readFileSync(join(fakes, name), 'utf-8')));
   return {
     base,
+    state,
     write,
     read,
     agentrite,
@@ -4043,7 +4049,10 @@ test('a resume with --follow opens its first frame with its opening line, and ke
 function withoutAsked(context, run) {
   const state = stateOf(context, run);
   delete state.at.asked;
-  context.write(`${run.directory}/state.json`, `${JSON.stringify(state, null, 2)}\n`);
+  const text = `${JSON.stringify(state, null, 2)}\n`;
+  context.write(`${run.directory}/state.json`, text);
+  // The run stands for one the command wrote without asked, so its record is of the text written.
+  writeRecord(context.state, join(context.base, run.directory), context.read(`${run.directory}/definition.json`), text);
 }
 
 test('a run without asked that stopped at an ask again is resumed at the step asked, numbered as it', (testContext) => {
@@ -4087,7 +4096,7 @@ const REVIEWER_AT = { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, ask
 // Writes the run that started `minutes` after the first, as the orchestrator leaves one that stopped at the review
 // of round 1 on the unit's branch, with the keys of `state` replaced, or removed when `undefined`, and with the text
 // of a file given in `texts` in the place of the orchestrator's.
-function writeRun({ write, read }, minutes, { state = {}, texts = {}, variant = null } = {}) {
+function writeRun({ base, state: stateHome, write, read }, minutes, { state = {}, texts = {}, variant = null } = {}) {
   const run = runOf(minutes, variant);
   const full = {
     unit: UNIT,
@@ -4100,10 +4109,24 @@ function writeRun({ write, read }, minutes, { state = {}, texts = {}, variant = 
     ...state,
   };
   for (const [key, value] of Object.entries(state)) if (value === undefined) delete full[key];
-  write(`${run.directory}/state.json`, texts.state ?? `${JSON.stringify(full, null, 2)}\n`);
-  write(`${run.directory}/definition.json`, texts.definition ?? read('node_modules/agentrite/orchestrator.json'));
+  const stateText = texts.state ?? `${JSON.stringify(full, null, 2)}\n`;
+  const definitionText = texts.definition ?? read('node_modules/agentrite/orchestrator.json');
+  write(`${run.directory}/state.json`, stateText);
+  write(`${run.directory}/definition.json`, definitionText);
   if (texts.heartbeat !== undefined) write(`${run.directory}/heartbeat`, texts.heartbeat);
+  writeRecord(stateHome, join(base, run.directory), definitionText, stateText);
   return run;
+}
+
+// Writes the record of the run at `runPath` in the state directory `stateHome`, as the command would have written it
+// with the texts given.
+function writeRecord(stateHome, runPath, definitionText, stateText) {
+  const records = recordDirectory({ XDG_STATE_HOME: stateHome }, '');
+  mkdirSync(records, { recursive: true });
+  writeFileSync(
+    join(records, recordName(runPath)),
+    recordText(Buffer.from(definitionText), Buffer.from(stateText)),
+  );
 }
 
 function resumeRefused(testContext, prepare, args, message, branch = TRY_BRANCH) {
@@ -4419,3 +4442,106 @@ test('a run whose directory is replaced by a link while a step runs ends the ste
   assert.deepEqual(readdirSync(outside), []);
 });
 
+
+// Unit 0103, R8, R9, R10, R16: the record of each run, outside `.orchestrator`, and what a resume takes by it.
+
+const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
+const recordOf = (context, runPath) =>
+  JSON.parse(
+    readFileSync(
+      join(context.state, 'agentrite', '.orchestrator-runs', `${sha256(realpathSync(runPath))}.json`),
+      'utf-8',
+    ),
+  );
+
+test('a run and a resume each write the record of their run, with the digests of its two files', (testContext) => {
+  const context = stoppedRun(testContext, [
+    claudePrinted(responseOf(DONE)),
+    claudePrinted(responseOf({ ...DONE, questions: ['Which?'] }), 'implementer-session'),
+  ]);
+  const { answer, base, stopped } = context;
+  const digests = (run) => ({
+    definition: sha256(readFileSync(join(base, run.directory, 'definition.json'))),
+    state: sha256(readFileSync(join(base, run.directory, 'state.json'))),
+  });
+
+  assert.deepEqual(readdirSync(join(context.state, 'agentrite', '.orchestrator-runs')).length, 1);
+  assert.deepEqual(recordOf(context, join(base, stopped.directory)), digests(stopped));
+
+  answer(3, claudePrinted(responseOf(DONE)));
+  answer(4, opencodePrinted(responseOf(DONE)));
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(recordOf(context, join(base, runOf(1).directory)), digests(runOf(1)));
+  assert.deepEqual(recordOf(context, join(base, stopped.directory)), digests(stopped));
+});
+
+const unvouched = (clause) =>
+  `the latest run, ${STARTED_RUN}/, ${clause}. A resume takes a run made where it is resumed whose files are as that ` +
+  'run left them. npx agentrite orchestrate 0029 starts a new run';
+
+test('a resume refuses a run with no record, and one whose definition.json or state.json changed since', (t) => {
+  const records = (context) => join(context.state, 'agentrite', '.orchestrator-runs');
+  for (const [prepare, message] of [
+    [
+      (context) => {
+        writeRun(context, 0);
+        rmSync(records(context), { recursive: true });
+      },
+      unvouched('has no record where it is resumed'),
+    ],
+    [
+      (context) => {
+        const run = writeRun(context, 0);
+        context.write(`${run.directory}/definition.json`, `${context.read(`${run.directory}/definition.json`)} `);
+      },
+      unvouched('has a definition.json that is not as the run left it'),
+    ],
+    [
+      (context) => {
+        const run = writeRun(context, 0);
+        context.write(`${run.directory}/state.json`, context.read(`${run.directory}/state.json`).replace('3', '3 '));
+      },
+      unvouched('has a state.json that is not as the run left it'),
+    ],
+    [
+      (context) => {
+        writeRun(context, 0);
+        const [name] = readdirSync(records(context));
+        writeFileSync(join(records(context), name), '{}\n');
+      },
+      unvouched('has a record that is not of the form the command writes'),
+    ],
+    [
+      (context) => {
+        const run = writeRun(context, 0);
+        const outside = temporaryDirectory(t, 'agentrite-outside-');
+        const state = join(context.base, run.directory, 'state.json');
+        writeFileSync(join(outside, 'state.json'), readFileSync(state));
+        rmSync(state);
+        symlinkSync(join(outside, 'state.json'), state);
+      },
+      new RegExp(`^agentrite: ${STARTED_RUN}/state.json cannot be read: ELOOP`),
+    ],
+  ]) {
+    resumeRefused(t, prepare, [], message);
+  }
+});
+
+test('a resume refuses a definition that names a role the project does not have, as a run refuses it', (t) => {
+  const definition = `${JSON.stringify({ steps: [{ role: 'tester', harness: 'claude', model: 'm' }] }, null, 2)}\n`;
+  const ran = project(t);
+  ran.write('tester.json', definition);
+  const refused = ran.agentrite('orchestrate', '0029', '--definition', 'tester.json');
+  assert.equal(refused.status, 1, refused.stderr);
+  assert.match(refused.stderr, /^agentrite: tester\.json: /);
+  const at = { number: 0, item: 0, round: null, index: null, asked: false };
+
+  resumeRefused(
+    t,
+    (context) => writeRun(context, 0, { state: { at }, texts: { definition } }),
+    [],
+    refused.stderr.replace('agentrite: tester.json', `${STARTED_RUN}/definition.json`).slice(0, -1),
+  );
+});

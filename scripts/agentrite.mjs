@@ -17,6 +17,7 @@ import {
   writeFileSync,
   writeSync,
 } from 'node:fs';
+import { homedir } from 'node:os';
 import { basename, dirname, join, posix, resolve } from 'node:path';
 import { performance } from 'node:perf_hooks';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -83,6 +84,7 @@ import {
   variantOfRun,
 } from './agentrite-runs.mjs';
 import { readRoles } from './agentrite-roles.mjs';
+import { judgeRecord, recordDirectory, recordName, recordText } from './agentrite-run-records.mjs';
 import {
   harnessCommand,
   parseRunArgs,
@@ -2159,12 +2161,25 @@ function prepareResume(root, { unit, definition: given }) {
   checkOrchestratorPaths(root, directory);
   const name = latestRunName(root, directory, variantOf(branch));
   const run = join(ORCHESTRATOR_DIRECTORY, directory, name);
-  const texts = runTexts(root, run);
-  const { state, definition, step } = parseRun(directory, name, texts);
+  // Each file is read once, and what is parsed and run is the bytes the record vouched for.
+  const read = {
+    state: readRunBytes(root, join(run, 'state.json')),
+    definition: readRunBytes(root, join(run, 'definition.json')),
+  };
+  const unvouched = judgeRecord(readRecord(root, run), read.definition, read.state);
+  if (unvouched !== undefined) {
+    throw new Error(
+      `the latest run, ${run}/, ${unvouched}. A resume takes a run made where it is resumed whose files are as that ` +
+        `run left them. npx agentrite orchestrate ${directory.split('-')[0]} starts a new run`,
+    );
+  }
+  const texts = { state: read.state.toString('utf-8'), definition: read.definition.toString('utf-8') };
+  const names = { roles: Object.keys(settings.roles), harnesses: settings.harnesses };
+  const { state, definition, step } = parseRun(directory, name, texts, names);
   if (state.ended !== null && (state.at === null || step === null)) {
     throw new Error(`${run}/state.json: at is null. It must hold the step the run was at, in a run that ended`);
   }
-  const listed = runFrom(directory, name, { ...texts, heartbeat: readHeartbeat(root, run) });
+  const listed = runFrom(directory, name, { ...texts, heartbeat: readRunHeartbeat(root, run) });
   const runState = runStateOf(listed, Date.now());
   if (runState !== 'ended' || state.ended?.status !== 3 || state.at === null || step === null) {
     const detail = detailOf({ ...listed, state: runState, followed: null });
@@ -2216,6 +2231,8 @@ async function orchestrateCommand(root, parsed) {
 async function runPrepared(root, prepared, { skipPermissions, follow, prompt: words }) {
   const { directory, branch, path, text, definition, from, resumes, opening } = prepared;
   const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
+  const records = recordDirectory(process.env, homedir());
+  const record = join(records, recordName(realpathSync(resolve(root, runDirectory))));
   const output = (follow ? framedOutput : plainOutput)((text) => process.stdout.write(text));
   /** @type {number | undefined} */ let group;
   // The first check of the run's directory that failed. The heartbeat and the followed lines drop their own
@@ -2239,11 +2256,14 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
     stepFileName(definition, planned.number, planned.step.role, kind);
   const sessions = prepared.sessions.map((session) => ({ ...session }));
   /** @type {object | null} */ let at = null;
-  const writeState = (/** @type {object | null} */ ended) =>
-    write(
-      'state.json',
-      `${JSON.stringify({ unit: directory, definition: path, branch, resumes, at, sessions, ended }, null, 2)}\n`,
-    );
+  // The record holds the digests of the bytes written, taken of what is written and not of a file read back.
+  const writeState = (/** @type {object | null} */ ended) => {
+    const held = { unit: directory, definition: path, branch, resumes, at, sessions, ended };
+    const content = `${JSON.stringify(held, null, 2)}\n`;
+    write('state.json', content);
+    mkdirSync(records, { recursive: true });
+    writeWhole(record, recordText(Buffer.from(text), Buffer.from(content)), WRITE_FILES);
+  };
 
   const stopHeartbeat = startHeartbeat((beat) => write('heartbeat', beat));
   try {
@@ -2407,6 +2427,65 @@ function runTexts(root, directory) {
 function readHeartbeat(root, directory) {
   const heartbeat = resolve(root, directory, 'heartbeat');
   return isRegularFile(heartbeat) ? readFileSync(heartbeat, 'utf-8') : undefined;
+}
+
+/** The flags a resume reads a file of a run with: never through a symbolic link at its name. */
+const READ_FLAGS = constants.O_RDONLY | constants.O_NOFOLLOW;
+
+/**
+ * The bytes of the file at `path`, from the root, of a run, read once and not through a symbolic link at its name.
+ * A read that fails is thrown again naming the file.
+ *
+ * @param {string} root
+ * @param {string} path
+ * @returns {Buffer}
+ */
+function readRunBytes(root, path) {
+  try {
+    const descriptor = openSync(resolve(root, path), READ_FLAGS);
+    try {
+      return readFileSync(descriptor);
+    } finally {
+      closeSync(descriptor);
+    }
+  } catch (error) {
+    throw new Error(`${path} cannot be read: ${messageOf(error)}`, { cause: error });
+  }
+}
+
+/**
+ * The text of the `heartbeat` of the run at `directory`, from the root, for a resume, or `undefined` when it has
+ * none. A symbolic link or a directory at its name reads as none.
+ *
+ * @param {string} root
+ * @param {string} directory
+ * @returns {string | undefined}
+ */
+function readRunHeartbeat(root, directory) {
+  try {
+    return readRunBytes(root, join(directory, 'heartbeat')).toString('utf-8');
+  } catch (error) {
+    const code = /** @type {NodeJS.ErrnoException} */ (/** @type {Error} */ (error).cause)?.code;
+    if (code === 'ENOENT' || code === 'ELOOP' || code === 'EISDIR') return undefined;
+    throw error;
+  }
+}
+
+/**
+ * The text of the record of the run at `run`, from the root, or `undefined` when there is none.
+ *
+ * @param {string} root
+ * @param {string} run
+ * @returns {string | undefined}
+ */
+function readRecord(root, run) {
+  const path = join(recordDirectory(process.env, homedir()), recordName(realpathSync(resolve(root, run))));
+  try {
+    return readFileSync(path, 'utf-8');
+  } catch (error) {
+    if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') return undefined;
+    throw new Error(`the record of ${run}/, ${path}, cannot be read: ${messageOf(error)}`);
+  }
 }
 
 /**
