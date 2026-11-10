@@ -82,6 +82,10 @@ test('parseJsonc takes out a trailing comma before } and before ], also with a c
   assert.deepEqual(parseJsonc('[1,\n  /* x */\n  // y\n]'), [1]);
 });
 
+test('parseJsonc ends a line comment at a carriage return as at a line feed', () => {
+  assert.deepEqual(parseJsonc('{\r// the first\r"a": 1, // after a value\r\n"b": 2\r}'), { a: 1, b: 2 });
+});
+
 test('parseJsonc leaves //, /* and ,} inside a string as they are, and an escaped quote', () => {
   const text =
     '{"url": "http://localhost:11434/v1", "a": "/* not */", "b": "x,}", "c": "say \\"hi\\" // no", "d": "\\\\"}';
@@ -98,4 +102,10 @@ test('parseJsonc throws the error of JSON.parse for a text that is still not JSO
   assert.throws(() => parseJsonc('{"a": 1 "b": 2}'), SyntaxError);
   assert.throws(() => parseJsonc('{"a": }'), SyntaxError);
   assert.throws(() => parseJsonc('[,1]'), SyntaxError);
+});
+
+test('parseJsonc refuses a comma with no value before it, also one before a closing } or ]', () => {
+  for (const text of ['[,]', '{,}', '[ /* x */ , ]', '[1,,]', '{"a": 1,,}', '{"a": [,],}']) {
+    assert.throws(() => parseJsonc(text), SyntaxError, text);
+  }
 });

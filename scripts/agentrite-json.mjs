@@ -61,16 +61,19 @@ export function jsonKeyFault(object, path, place) {
 
 /**
  * The value of `text` read as JSON with comments and trailing commas, as OpenCode reads its configuration: `//` and
- * `/* *\/` comments are taken out, and a comma that only white space and comments separate from a closing `}` or `]`,
- * with the text of strings left as it is. Throws the error of `JSON.parse` for what is still not JSON.
+ * `/* *\/` comments are taken out, a line comment ending at a line feed or a carriage return, and a comma that follows
+ * a value and that only white space and comments separate from a closing `}` or `]`, with the text of strings left as
+ * it is. Throws the error of `JSON.parse` for what is still not JSON, a comma with no value before it among it.
  *
  * @param {string} text
  * @returns {unknown}
  */
 export function parseJsonc(text) {
   let kept = '';
-  // The index in `kept` of a comma that only white space has followed since, or -1.
+  // The index in `kept` of a comma after a value that only white space has followed since, or -1.
   let comma = -1;
+  // The last character of `kept` that is no white space, by which a comma after no value is told.
+  let last = '';
   let index = 0;
   while (index < text.length) {
     const character = text[index];
@@ -78,10 +81,11 @@ export function parseJsonc(text) {
       const end = stringEnd(text, index);
       kept += text.slice(index, end);
       comma = -1;
+      last = '"';
       index = end;
     } else if (text.startsWith('//', index)) {
-      const end = text.indexOf('\n', index);
-      index = end === -1 ? text.length : end;
+      const end = text.slice(index).search(/[\n\r]/);
+      index = end === -1 ? text.length : index + end;
     } else if (text.startsWith('/*', index)) {
       const end = text.indexOf('*/', index + 2);
       // An unclosed comment is left in, for JSON.parse to refuse.
@@ -96,8 +100,11 @@ export function parseJsonc(text) {
       if ((character === '}' || character === ']') && comma !== -1) {
         kept = `${kept.slice(0, comma)} ${kept.slice(comma + 1)}`;
       }
-      if (character === ',') comma = kept.length;
-      else if (!/\s/.test(character)) comma = -1;
+      const space = /\s/.test(character);
+      // A comma after `[`, `{` or another comma follows no value, and is left in for JSON.parse to refuse.
+      if (character === ',') comma = '[{,'.includes(last) ? -1 : kept.length;
+      else if (!space) comma = -1;
+      if (!space) last = character;
       kept += character;
       index += 1;
     }

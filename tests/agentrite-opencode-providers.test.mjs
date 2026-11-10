@@ -119,6 +119,21 @@ test('a text that is not JSON is refused with the parse error', () => {
   );
 });
 
+test('an opencode.jsonc with line endings of carriage returns alone is read past its line comments', () => {
+  const text = '{\r// local provider\r"provider": {"ollama": {"name": "Ollama"}}\r}';
+  assert.deepEqual(readConfiguration(text, JSONC_PATH), { provider: { ollama: { name: 'Ollama' } } });
+});
+
+for (const text of ['{"provider": {"ollama": {"stops": [,]}}}', '{"provider": {,}}', '{"provider": [1,,]}']) {
+  test(`a comma with no value before it, in ${text}, is refused`, () => {
+    const refusal = `${JSONC_PATH} is not a JSON object once its comments and trailing commas are taken out: `;
+    assert.throws(
+      () => readConfiguration(text, JSONC_PATH),
+      (error) => error instanceof Error && error.message.startsWith(refusal),
+    );
+  });
+}
+
 for (const text of ['[1]', '"text"', 'null']) {
   test(`a file holding ${text} is refused as no JSON object`, () => {
     assert.throws(
