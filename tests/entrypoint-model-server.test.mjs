@@ -34,9 +34,9 @@ const getentStandIn = [
   '',
 ].join('\n');
 
-// Runs allow_model_server of the entrypoint for host.docker.internal on 11434, with the stand-in getent above and a
-// stand-in iptables first on the PATH. The iptables stand-in records its arguments, one call to a line, and exits 0.
-function allowModelServer(testContext, addresses) {
+// Runs `call` with the entrypoint's functions `names` defined, with the stand-in getent above and a stand-in iptables
+// first on the PATH. The iptables stand-in records its arguments, one call to a line, and exits 0.
+function runFunctions(testContext, addresses, names, call) {
   const base = temporaryDirectory(testContext, 'entrypoint-model-server-');
   const bin = join(base, 'bin');
   const calls = join(base, 'iptables-calls');
@@ -48,8 +48,8 @@ function allowModelServer(testContext, addresses) {
   const script = join(base, 'allow.sh');
   writeFileSync(script, `
     set -euo pipefail
-    ${entrypointFunctions('log', 'allow_model_server')}
-    allow_model_server host.docker.internal 11434
+    ${entrypointFunctions(...names)}
+    ${call}
   `);
   const result = spawnSync('bash', [script], {
     encoding: 'utf-8',
@@ -57,6 +57,26 @@ function allowModelServer(testContext, addresses) {
   });
   const iptablesCalls = existsSync(calls) ? readFileSync(calls, 'utf-8').split('\n').filter(Boolean) : [];
   return { iptablesCalls, ...result };
+}
+
+// Runs allow_model_server of the entrypoint for host.docker.internal on 11434.
+function allowModelServer(testContext, addresses) {
+  return runFunctions(
+    testContext,
+    addresses,
+    ['log', 'allow_model_server'],
+    'allow_model_server host.docker.internal 11434',
+  );
+}
+
+// Runs admit_model_server of the entrypoint with `admitted`, for host.docker.internal on 11434.
+function admitModelServer(testContext, admitted, addresses) {
+  return runFunctions(
+    testContext,
+    addresses,
+    ['log', 'die', 'allow_model_server', 'admit_model_server'],
+    `admit_model_server '${admitted}' host.docker.internal 11434`,
+  );
 }
 
 const ipv4 = '192.168.65.254';
@@ -104,4 +124,39 @@ test('a host with no address is not admitted, with the warning, and the entrypoi
   assert.equal(result.status, 0, result.stderr);
   assert.deepEqual(result.iptablesCalls, []);
   assert.equal(result.stderr, warningLine);
+});
+
+// 0104 R5, R6: the model server's port is admitted only for a project whose agentrite.json holds "modelServer": true.
+const notAdmittedLine =
+  '[entrypoint] local model server not admitted; "modelServer": true in agentrite.json admits it\n';
+
+test('admit_model_server with true admits the model server as allow_model_server does', (testContext) => {
+  for (const addresses of [[ipv4], [ipv6, ipv4]]) {
+    const result = admitModelServer(testContext, 'true', addresses);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(result.iptablesCalls, admitted);
+    assert.equal(result.stderr, allowedLine);
+  }
+});
+
+test('admit_model_server with false adds no rule, also for a host that has an IPv4 address', (testContext) => {
+  for (const addresses of [[ipv4], [ipv6, ipv4], []]) {
+    const result = admitModelServer(testContext, 'false', addresses);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(result.iptablesCalls, []);
+    assert.equal(result.stderr, notAdmittedLine);
+  }
+});
+
+test('admit_model_server with anything but true or false stops the start, naming the variable', (testContext) => {
+  for (const value of ['', 'yes', 'TRUE']) {
+    const result = admitModelServer(testContext, value, [ipv4]);
+    assert.equal(result.status, 1, value);
+    assert.deepEqual(result.iptablesCalls, [], value);
+    assert.equal(
+      result.stderr,
+      `[entrypoint] FATAL: MODEL_SERVER_ADMITTED is "${value}". It must hold true or false\n`,
+      value,
+    );
+  }
 });

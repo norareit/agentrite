@@ -208,8 +208,9 @@ export function kitAllowlist(harnessAllowlist) {
 
 // The node script with which both hosts' `docker` answers `config --format json`: it reads the JSON object of the
 // project's build arguments on its input, the project's environment from PROJECT_ENVIRONMENT, a file of a JSON object,
-// and the project's Compose file from PROJECT_COMPOSE. The base file's build arguments and KIT_ALLOWLIST come from
-// the wrapper's variables, as Compose interpolates them, and the project's stand over them.
+// and the project's Compose file from PROJECT_COMPOSE. The base file's build arguments, KIT_ALLOWLIST and
+// MODEL_SERVER_ADMITTED come from the wrapper's variables, as Compose interpolates them, and the project's stand over
+// them.
 const mergedConfiguration = `
     let json = "";
     process.stdin.on("data", (chunk) => (json += chunk));
@@ -225,6 +226,7 @@ const mergedConfiguration = `
       };
       const environment = {
         KIT_ALLOWLIST: JSON.parse(env.KIT_ALLOWLIST_TEXT).replace("\\u0000", env.SANDBOX_HARNESS_ALLOWLIST),
+        MODEL_SERVER_ADMITTED: env.SANDBOX_MODEL_SERVER_ADMITTED,
         ...JSON.parse(fs.readFileSync(env.PROJECT_ENVIRONMENT, "utf-8")),
       };
       const file = env.PROJECT_COMPOSE;
@@ -323,12 +325,13 @@ esac`,
 //     * `ps`, with the content of the file `runningContainer` when that is there, which stands for a container
 //       running under the name the file holds, and with nothing otherwise. It fails instead, as it does with no
 //       daemon to ask, when the file `psFails` is there
-//   Every call it records writes the SANDBOX_HARNESS_ALLOWLIST it saw, which `harnessAllowlist` reads. A `build` is
-//   recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does nothing. An `exec`
-//   is recorded, runs nothing, and exits with the status the file `execStatus` holds when that is there, which
-//   stands for the status of the command Docker ran in the container. A `run` is recorded and then plays the agent
-//   when the file `agentScript` is there: it runs that file with `bash` in the directory the call mounts at
-//   `/work`, and exits with its status
+//   Every call it records writes the SANDBOX_HARNESS_ALLOWLIST it saw, which `harnessAllowlist` reads, and adds a line
+//   of the SANDBOX_MODEL_SERVER_ADMITTED it saw, which `modelServerAdmitted` reads, one for each call. A `build` is
+//   recorded and then fails when the file `buildFails` is there. An `rm` is recorded and does nothing. An `exec` is
+//   recorded, runs nothing, and exits with the status the file `execStatus` holds when that is there, which stands for
+//   the status of the command Docker ran in the container. A `run` is recorded and then plays the agent when the file
+//   `agentScript` is there: it runs that file with `bash` in the directory the call mounts at `/work`, and exits with
+//   its status
 // * an `npm` that records each call, which `npmCalls` reads, and answers `view <package> version` for the package of
 //   each harness of the list with the harness's version of `latestVersions`. It prints the content of the file
 //   `npmPrints` instead when that is there, and fails, as the real one does with no registry to reach, when the
@@ -348,6 +351,7 @@ export function fakeHost(base, recorded) {
   const psFails = join(base, 'ps-fails');
   const execStatus = join(base, 'exec-status');
   const harnessAllowlist = join(base, 'harness-allowlist');
+  const modelServerAdmitted = join(base, 'model-server-admitted');
   writeFileSync(projectBuildArgs, '{}');
   writeFileSync(projectEnvironment, '{}');
   writeFileSync(imageLabels, imageLabelsText(hostVersions));
@@ -369,6 +373,7 @@ fi
 ${configAnswer(projectBuildArgs, projectEnvironment)}
 echo "${record} docker $*" >> "${calls}"
 printf '%s' "\${SANDBOX_HARNESS_ALLOWLIST:-}" > "${harnessAllowlist}"
+printf '%s\\n' "\${SANDBOX_MODEL_SERVER_ADMITTED:-}" >> "${modelServerAdmitted}"
 if [ "$1" = "exec" ]; then
   [ ! -f "${execStatus}" ] || exit "$(cat "${execStatus}")"
   exit 0
@@ -395,6 +400,7 @@ fi`,
     psFails,
     execStatus,
     harnessAllowlist: () => readFileSync(harnessAllowlist, 'utf-8'),
+    modelServerAdmitted: linesOf(modelServerAdmitted),
     dockerCalls,
   };
 }

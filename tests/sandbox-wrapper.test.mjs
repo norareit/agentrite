@@ -512,12 +512,16 @@ const callerEnvironment = {
   SANDBOX_HARNESS_RECORD: 'evil@1.0.0',
   SANDBOX_HARNESS_DIRECTORIES: '.evil',
   SANDBOX_HARNESS_ALLOWLIST: 'evil.example',
+  SANDBOX_MODEL_SERVER_ADMITTED: 'true',
   ...Object.fromEntries(HARNESSES.map(({ sandbox }) => [`SANDBOX_${sandbox.versionArgument}`, '0.0.1'])),
   ...Object.fromEntries(HARNESSES.map(({ sandbox }) => [sandbox.versionArgument, '0.0.2'])),
 };
 
 test("the wrapper does not use what the caller's environment holds for the harnesses", (testContext) => {
-  const { root, container, home, bin, dockerCalls, harnessAllowlist } = setUp(testContext, kitPath);
+  const { root, container, home, bin, dockerCalls, harnessAllowlist, modelServerAdmitted } = setUp(
+    testContext,
+    kitPath,
+  );
   const result = spawnSync(join(container, 'sandbox.sh'), [root, '--in-place', '--rebuild', 'echo', 'hi'], {
     encoding: 'utf-8',
     env: { HOME: home, PATH: bin, ...callerEnvironment },
@@ -526,6 +530,8 @@ test("the wrapper does not use what the caller's environment holds for the harne
   assert.equal(result.stderr, '');
   assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
   assert.doesNotMatch(harnessAllowlist(), /evil/);
+  // 0104 R9: whether the local model server is admitted comes from agentrite.json alone.
+  assert.deepEqual(modelServerAdmitted(), ['false', 'false']);
 });
 
 test(
@@ -1084,6 +1090,68 @@ test('a start reads bell again at each start, with no build in between', (testCo
   ]);
 });
 
+// 0104 R4, R6, R7: a start hands Compose the modelServer of agentrite.json, in the build and in the run.
+for (const modelServer of [true, false]) {
+  test(`a start with "modelServer": ${modelServer} hands Compose ${modelServer}, in the build and the run`, (
+    testContext,
+  ) => {
+    const { root, container, run, dockerCalls, modelServerAdmitted } = setUp(testContext, kitPath);
+    writeStartSettings(root, { modelServer });
+
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(dockerCalls(), buildAndRun(root, container, hostVersions));
+    assert.deepEqual(modelServerAdmitted(), [String(modelServer), String(modelServer)]);
+  });
+}
+
+test('a start reads modelServer again at each start, with no build in between', (testContext) => {
+  const { root, container, run, dockerCalls, modelServerAdmitted } = setUp(testContext, kitPath);
+  assert.equal(run(root, '--in-place', 'echo', 'hi').status, 0);
+  writeStartSettings(root, { modelServer: true });
+
+  const result = run(root, '--in-place', 'echo', 'hi');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(dockerCalls(), [
+    ...startRun(root, container, '--in-place', root, '', ''),
+    ...startRun(root, container, '--in-place', root, '', ''),
+  ]);
+  assert.deepEqual(modelServerAdmitted(), ['false', 'true']);
+});
+
+for (const [form, formArgs] of startForms) {
+  test(`a start with ${form} and modelServer at fault is refused with the reader's message, asking nothing`, (
+    testContext,
+  ) => {
+    const MODEL_SERVER_MUST = 'It must hold true or false';
+    for (const [text, message] of [
+      ['{"bell": false, "harnesses": ["claude"]}', `agentrite.json: modelServer is missing. ${MODEL_SERVER_MUST}`],
+      [
+        '{"bell": false, "modelServer": "true", "harnesses": ["claude"]}',
+        `agentrite.json: modelServer is "true". ${MODEL_SERVER_MUST}`,
+      ],
+    ]) {
+      const { base, root, bin, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+      const workdir = join(base, 'elsewhere');
+      mkdirSync(workdir);
+      writeFileSync(join(root, 'agentrite.json'), text);
+      const asked = join(base, 'harness-asked');
+      for (const { start } of HARNESSES) writeCommand(bin, start.command, `echo asked >> "${asked}"`);
+
+      const result = run(root, ...formArgs(workdir), 'echo', 'hi');
+
+      assert.equal(result.status, 1, text);
+      assert.equal(result.stdout, '', text);
+      assert.equal(result.stderr, `agentrite: ${message}\n`, text);
+      assert.deepEqual(dockerCalls(), [], text);
+      assert.deepEqual(npmCalls(), [], text);
+      assert.equal(existsSync(asked), false, text);
+    }
+  });
+}
+
 // Unit 0092: how long Claude Code's sessions are kept. A start reads cleanupPeriodDays from the host's
 // ~/.claude/settings.json, writes the number alone into the project's log directory, and mounts that file in the
 // drop-in directory of Claude Code's managed settings. The file is named after the number, and no start changes or
@@ -1590,6 +1658,23 @@ for (const [what, value] of [
       result.stderr,
       `sandbox.sh: ${root}/sandbox/compose.project.yml sets KIT_ALLOWLIST, which is the kit's to set.\n` +
         'Remove it from that file.\n',
+    );
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+// 0104 R9: whether the local model server is admitted is the kit's to set, from modelServer in agentrite.json.
+for (const value of ['true', 'false']) {
+  test(`the wrapper refuses a project's file that sets MODEL_SERVER_ADMITTED to ${value}`, (testContext) => {
+    const { root, projectEnvironment, run, dockerCalls, npmCalls } = setUp(testContext, kitPath);
+    writeFileSync(projectEnvironment, JSON.stringify({ MODEL_SERVER_ADMITTED: value }));
+    const result = run(root, '--in-place', '--rebuild', 'echo', 'hi');
+    assert.equal(result.status, 1);
+    assert.equal(
+      result.stderr,
+      `sandbox.sh: ${root}/sandbox/compose.project.yml sets MODEL_SERVER_ADMITTED, which is the kit's to set.\n` +
+        'The local model server is admitted by "modelServer" in agentrite.json. Remove it from that file.\n',
     );
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);

@@ -6,17 +6,19 @@
 # command the host's TERM and COLORTERM.
 #
 # The harnesses are those the project's agentrite.json names under harnesses, which it
-# reads at each start but --connect, with bell. It names none itself: what it knows of
-# each is in the kit's module of that harness, of scripts/harnesses/, which the kit's
-# scripts/agentrite-sandbox.mjs reads and prints for it. From that it builds the image
-# with the project's harnesses, admits the hosts they need, mounts the directories of
-# their logs, gives each run what turns off each harness's own updates, the harnesses'
-# bell when agentrite.json holds "bell": true, and what a harness's module takes from
-# the host, such as Claude Code's status line and the cleanupPeriodDays of the host's
-# ~/.claude/settings.json.
+# reads at each start but --connect, with bell and modelServer. It names none itself:
+# what it knows of each is in the kit's module of that harness, of scripts/harnesses/,
+# which the kit's scripts/agentrite-sandbox.mjs reads and prints for it. From that it
+# builds the image with the project's harnesses, admits the hosts they need, mounts the
+# directories of their logs, gives each run what turns off each harness's own updates,
+# the harnesses' bell when agentrite.json holds "bell": true, and what a harness's
+# module takes from the host, such as Claude Code's status line and the
+# cleanupPeriodDays of the host's ~/.claude/settings.json.
 # It sets nothing that confines the container; every such setting is in
 # container/compose.yml and the project's sandbox/compose.project.yml, and the firewall
-# is in container/entrypoint.sh.
+# is in container/entrypoint.sh. It hands that firewall, through
+# SANDBOX_MODEL_SERVER_ADMITTED, whether to admit the local model server, true only when
+# agentrite.json holds "modelServer": true.
 #
 # The logs are the directories each harness's module names, such as Claude Code's
 # sessions and OpenCode's data directory. In every run they are in the project's log
@@ -411,30 +413,34 @@ if [ "$in_place" -eq 0 ] && [ "$workdir_given" -eq 0 ] && [ $# -eq 0 ]; then
   exit 2
 fi
 
-# The project's harnesses, whether they ring the terminal's bell, and what the sandbox
-# gives them, as the kit's scripts/agentrite-sandbox.mjs prints them: it reads harnesses
-# and bell of the project's agentrite.json, judging those two alone and printing its own
-# message for a file at fault, and the kit's module of each harness the project names,
-# in the kit's order of them, with what that module takes from the host's home. One
-# line for each thing, its fields separated by a tab:
+# The project's harnesses, whether they ring the terminal's bell, whether the local model
+# server is admitted, and what the sandbox gives them, as the kit's
+# scripts/agentrite-sandbox.mjs prints them: it reads bell, modelServer and harnesses of
+# the project's agentrite.json, judging those three alone and in that order and printing
+# its own message for a file at fault, and the kit's module of each harness the project
+# names, in the kit's order of them, with what that module takes from the host's home.
+# One line for each thing, its fields separated by a tab:
 #
-#   bell       true or false
-#   harness    the name, the title, the command, the npm package and the build argument
-#              of the version of one harness
-#   directory  a directory of a harness's logs, relative to the home
-#   allow      a host the egress allowlist admits for a harness, and why
-#   env        an entry NAME=value of the command's environment
-#   mount      kit or host, the path of the file, relative to this directory for kit, and
-#              where it is mounted read-only in the container
-#   file       the name, the content and the place in the container of a file that is
-#              written into the project's log directory and mounted read-only
+#   bell         true or false
+#   modelServer  true or false
+#   harness      the name, the title, the command, the npm package and the build
+#                argument of the version of one harness
+#   directory    a directory of a harness's logs, relative to the home
+#   allow        a host the egress allowlist admits for a harness, and why
+#   env          an entry NAME=value of the command's environment
+#   mount        kit or host, the path of the file, relative to this directory for kit,
+#                and where it is mounted read-only in the container
+#   file         the name, the content and the place in the container of a file that
+#                is written into the project's log directory and mounted read-only
 #
 # Read before the host's harnesses, Docker or npm are asked anything and before a branch
 # is cut, so that a refused start has done nothing. The files are written only with the
 # log directory below, so that a refused or failed start writes nothing. --connect starts
 # nothing and reads nothing: the command it connects has the harnesses, the bell and the
-# environment of the run it joins, whose mounts and environment docker exec inherits.
+# environment of the run it joins, whose mounts and environment docker exec inherits, and
+# the firewall its start set up.
 bell=false
+model_server=false
 harness_names=()
 harness_titles=()
 harness_commands=()
@@ -452,6 +458,7 @@ if [ "$connect" -eq 0 ]; then
   while IFS=$'\t' read -r kind first second third fourth fifth; do
     case "$kind" in
       bell) bell="$first" ;;
+      modelServer) model_server="$first" ;;
       harness)
         harness_names+=("$first")
         harness_titles+=("$second")
@@ -674,16 +681,18 @@ unit_container_running() {
 # image name, the limits, the allowlist and the harness versions the project gave, so the
 # sandbox would start without them and say nothing.
 #
-# The harnesses' build arguments and KIT_ALLOWLIST are the kit's to set, from the
-# harnesses' modules, so a project's file that sets one is refused: the merged value is
-# then not the marker, or for KIT_ALLOWLIST not the block the kit's file writes, read
-# from that file with the marker in place of the hosts of the harnesses.
+# The harnesses' build arguments, KIT_ALLOWLIST and MODEL_SERVER_ADMITTED are the kit's
+# to set, from the harnesses' modules and from modelServer of agentrite.json, so a
+# project's file that sets one is refused: the merged value is then not the marker, or
+# for KIT_ALLOWLIST not the block the kit's file writes, read from that file with the
+# marker in place of the hosts of the harnesses.
 unheld="sandbox.sh/no-version-from-the-project"
 read_merged_configuration() {
   local config merged line
   config="$(SANDBOX_HARNESS_PACKAGES="$unheld" SANDBOX_HARNESS_RECORD="$unheld" \
     SANDBOX_HARNESS_DIRECTORIES="$unheld" SANDBOX_HARNESS_ALLOWLIST="$unheld" \
-    SANDBOX_AGENTRITE_VERSION="$unheld" "${compose[@]}" config --format json)"
+    SANDBOX_MODEL_SERVER_ADMITTED="$unheld" SANDBOX_AGENTRITE_VERSION="$unheld" \
+    "${compose[@]}" config --format json)"
   merged="$(node -e '
     const [baseFile, marker, ...versionArguments] = process.argv.slice(1);
     let json = "";
@@ -701,6 +710,10 @@ read_merged_configuration() {
       const kitSet = builds.find((name) => args[name] !== marker);
       if (kitSet !== undefined) {
         console.log(`kit-set ${kitSet}`);
+        return;
+      }
+      if (environment.MODEL_SERVER_ADMITTED !== marker) {
+        console.log("kit-set-model-server");
         return;
       }
       const lines = require("fs").readFileSync(baseFile, "utf-8").split("\n");
@@ -727,6 +740,11 @@ read_merged_configuration() {
   if [ "$merged" = "refused" ]; then
     echo "sandbox.sh: $project_compose configures a service named agent." >&2
     echo "The service is named sandbox, so rename agent: under services: to sandbox: in that file." >&2
+    exit 1
+  fi
+  if [ "$merged" = "kit-set-model-server" ]; then
+    echo "sandbox.sh: $project_compose sets MODEL_SERVER_ADMITTED, which is the kit's to set." >&2
+    echo 'The local model server is admitted by "modelServer" in agentrite.json. Remove it from that file.' >&2
     exit 1
   fi
   if [[ "$merged" == "kit-set "* ]]; then
@@ -1092,12 +1110,13 @@ for ((index = 0; index < ${#allowed_hosts[@]}; index++)); do
   harness_allowlist="$harness_allowlist$newline${allowed_hosts[$index]}"
 done
 export SANDBOX_HARNESS_PACKAGES SANDBOX_HARNESS_RECORD SANDBOX_HARNESS_DIRECTORIES SANDBOX_HARNESS_ALLOWLIST
-export SANDBOX_AGENTRITE_VERSION
+export SANDBOX_AGENTRITE_VERSION SANDBOX_MODEL_SERVER_ADMITTED
 SANDBOX_HARNESS_PACKAGES="${harness_packages_wanted[*]}"
 SANDBOX_HARNESS_RECORD="${harness_record[*]}"
 SANDBOX_HARNESS_DIRECTORIES="${log_directories[*]}"
 SANDBOX_HARNESS_ALLOWLIST="$harness_allowlist"
 SANDBOX_AGENTRITE_VERSION="$kit_version"
+SANDBOX_MODEL_SERVER_ADMITTED="$model_server"
 
 # Compose tags the kit's image with the image's name, and the project's file then takes
 # that name over. The label is given here rather than in the file, so that one the file

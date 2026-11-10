@@ -78,3 +78,9 @@ test('an empty line inside the block does not end it', () => {
   ].join('\n');
   assert.deepEqual(kitAllowlistHosts(text), ['one.example', 'two.example']);
 });
+
+// 0104 R6, R9: whether the local model server is admitted is the wrapper's to give, from `modelServer` in the
+// project's agentrite.json, and Compose refuses a start that does not come through the wrapper.
+test('the sandbox service takes MODEL_SERVER_ADMITTED from a variable Compose requires of the wrapper', () => {
+  assert.match(environmentEntry('MODEL_SERVER_ADMITTED'), /^\$\{SANDBOX_MODEL_SERVER_ADMITTED:\?.+\}$/);
+});

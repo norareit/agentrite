@@ -124,23 +124,23 @@ The start:
 
 What carries the value:
 
-- [ ] In `tests/compose-allowlist.test.mjs`, cover that the sandbox service of `container/compose.yml` sets
+- [x] In `tests/compose-allowlist.test.mjs`, cover that the sandbox service of `container/compose.yml` sets
   `MODEL_SERVER_ADMITTED: ${SANDBOX_MODEL_SERVER_ADMITTED:?...}`, a variable Compose requires (R9)
-- [ ] Add the entry to `container/compose.yml` beside `MODEL_SERVER_HOST`, and change its comment to say that the
+- [x] Add the entry to `container/compose.yml` beside `MODEL_SERVER_HOST`, and change its comment to say that the
   port is admitted only when `modelServer` in the project's `agentrite.json` holds `true`, and that the value is the
   kit's to set (R6, R9)
-- [ ] In `tests/wrapper-fixture.mjs`, give `writeStartSettings` a `modelServer` that is `false` unless given, give
+- [x] In `tests/wrapper-fixture.mjs`, give `writeStartSettings` a `modelServer` that is `false` unless given, give
   the merged configuration of the fake `docker` `MODEL_SERVER_ADMITTED` from `SANDBOX_MODEL_SERVER_ADMITTED`, before
   the project's environment, and record the `SANDBOX_MODEL_SERVER_ADMITTED` of each call as the fake records
   `SANDBOX_HARNESS_ALLOWLIST`, read by a `modelServerAdmitted` that `setUp` returns (R5, R6, R9)
-- [ ] In `tests/sandbox-wrapper.test.mjs`, cover that a start with `"modelServer": true` hands Compose `true` and one
+- [x] In `tests/sandbox-wrapper.test.mjs`, cover that a start with `"modelServer": true` hands Compose `true` and one
   with `false` hands it `false`, in the build and in the run; that the value changes at the next start when the file
   changes and nothing is built for it; that the caller's `SANDBOX_MODEL_SERVER_ADMITTED` is not used; that a file
   that lacks `modelServer` is refused before Docker and npm are asked anything; and that a project's file that sets
   `MODEL_SERVER_ADMITTED`, to `true` or to `false`, is refused with the message of the approach, exit 1, and no
   call to Docker or npm. In `tests/sandbox-unit-run.test.mjs`, cover that `--connect` connects with a file that
   lacks `modelServer` (R4, R7, R8, R9)
-- [ ] In `container/sandbox.sh`, read the line `modelServer` into `model_server` in the loop over the start lines,
+- [x] In `container/sandbox.sh`, read the line `modelServer` into `model_server` in the loop over the start lines,
   export `SANDBOX_MODEL_SERVER_ADMITTED`, hand Compose the marker for it in `read_merged_configuration`, check
   `MODEL_SERVER_ADMITTED` there after the build arguments, and refuse with the message of the approach. Update the
   comment at the top of the file, the list of the start lines and the comment over `read_merged_configuration`
@@ -148,14 +148,14 @@ What carries the value:
 
 The firewall:
 
-- [ ] In `tests/entrypoint-model-server.test.mjs`, cover `admit_model_server`, with the stand-ins of the file: with
+- [x] In `tests/entrypoint-model-server.test.mjs`, cover `admit_model_server`, with the stand-ins of the file: with
   `true` it makes the one call of `allow_model_server` and logs the line of an admitted server; with `false` it makes
   no call of `iptables` and logs only `[entrypoint] local model server not admitted; "modelServer": true in
   agentrite.json admits it`, also when the host has an IPv4 address; with an empty value and with `yes` it exits 1,
   naming `MODEL_SERVER_ADMITTED` and the value, and makes no call (R5, R6)
-- [ ] Add `admit_model_server` to `container/entrypoint.sh`, call it in place of the call of `allow_model_server`,
+- [x] Add `admit_model_server` to `container/entrypoint.sh`, call it in place of the call of `allow_model_server`,
   and name `MODEL_SERVER_ADMITTED` in the comment of the inputs (R5, R6)
-- [ ] Commit point: the wrapper and the firewall
+- [x] Commit point: the wrapper and the firewall
 
 The documents:
 
@@ -202,6 +202,6 @@ The documents:
 
 - [x] The setting and its reading: `scripts/agentrite-settings.mjs`, `scripts/agentrite.mjs`,
   `scripts/agentrite-sandbox.mjs`, the template, the root `agentrite.json` and their tests
-- [ ] The wrapper and the firewall: `container/compose.yml`, `container/sandbox.sh`, `container/entrypoint.sh` and
+- [x] The wrapper and the firewall: `container/compose.yml`, `container/sandbox.sh`, `container/entrypoint.sh` and
   their tests
 - [ ] The documents: `SETUP.md`, `COMMANDS.md` and `SANDBOX.md`

@@ -681,6 +681,21 @@ test('--connect with an agentrite.json that lacks bell connects, reading nothing
   assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
 });
 
+// 0104 R8: --connect reads no modelServer either: the container it joins has what its start admitted.
+test('--connect with an agentrite.json that lacks modelServer connects, reading nothing', (testContext) => {
+  const host = setUp(testContext);
+  const settings = settingsFor('master');
+  assert.ok(settings.includes('  "modelServer": false,\n'));
+  writeFileSync(join(host.root, 'agentrite.json'), settings.replace('  "modelServer": false,\n', ''));
+  markRunning(host);
+
+  const result = host.run(['--connect', branch, 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stderr, '');
+  assert.deepEqual(host.dockerCalls(), [connectCall('echo hi')]);
+});
+
 // 0097 R18: --connect reads no harnesses either, and connects whatever the file holds of them.
 test('--connect with an agentrite.json that lacks harnesses connects, reading nothing', (testContext) => {
   const host = setUp(testContext);

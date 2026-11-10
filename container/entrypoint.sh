@@ -20,6 +20,9 @@ die() { printf '[entrypoint] FATAL: %s\n' "$*" >&2; exit 1; }
 #                     '#' comments and blank lines allowed
 #   MODEL_SERVER_HOST host gateway alias the local model server listens on
 #   MODEL_SERVER_PORT its port
+#   MODEL_SERVER_ADMITTED
+#                     true or false: whether that port is admitted, which the wrapper
+#                     gives from modelServer in the project's agentrite.json
 #   FIREWALL_CANARY   a host that must stay unreachable, proving default-deny denies
 #   FIREWALL_PROBE    a host that must be reachable, proving the allowlist allows
 MODEL_SERVER_HOST="${MODEL_SERVER_HOST:-host.docker.internal}"
@@ -257,7 +260,17 @@ allow_model_server() {
     log "WARNING: $host did not resolve; the local model server will be unreachable"
   fi
 }
-allow_model_server "$MODEL_SERVER_HOST" "$MODEL_SERVER_PORT"
+# The port is admitted only for a project that asks for it. With false no rule names the
+# host gateway's address or the port, so every address of the host falls to default-deny.
+admit_model_server() {
+  local admitted="$1" host="$2" port="$3"
+  case "$admitted" in
+    true) allow_model_server "$host" "$port" ;;
+    false) log 'local model server not admitted; "modelServer": true in agentrite.json admits it' ;;
+    *) die "MODEL_SERVER_ADMITTED is \"$admitted\". It must hold true or false" ;;
+  esac
+}
+admit_model_server "${MODEL_SERVER_ADMITTED:-}" "$MODEL_SERVER_HOST" "$MODEL_SERVER_PORT"
 
 # Start the proxy as its own account, with no capabilities, in a session of its own so
 # that a signal sent to the agent's terminal does not reach it. It outlives this script:

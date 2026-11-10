@@ -109,10 +109,13 @@ services:
         registry.npmjs.org
         ${SANDBOX_HARNESS_ALLOWLIST:?run the sandbox through the project's sandbox.sh}
       #
-      # The local model server on the host, reached through the Docker gateway. Only
-      # this host and port are allowed, nothing else on the host.
+      # The local model server on the host, reached through the Docker gateway. Its
+      # port is admitted only when modelServer in the project's agentrite.json holds
+      # true, and then only this host and port, nothing else on the host. Whether it is
+      # admitted is the kit's to set: the wrapper gives it from that file at each start.
       MODEL_SERVER_HOST: host.docker.internal
       MODEL_SERVER_PORT: "11434"
+      MODEL_SERVER_ADMITTED: ${SANDBOX_MODEL_SERVER_ADMITTED:?run the sandbox through the project's sandbox.sh}
       # The start-up self-check: this host must be blocked, that one must be reachable.
       FIREWALL_CANARY: example.com
       FIREWALL_PROBE: registry.npmjs.org
