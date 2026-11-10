@@ -42,5 +42,11 @@ timestamp: 2026-11-10T11:54:10Z
   `tests/sandbox-wrapper.test.mjs` that the fixture's `container/` holds no Dockerfile the entry `harnesses` among what
   it lists, since the fixture now copies the kit's `container/harnesses/opencode/opencode.json`, which OpenCode's host
   member reads
+- 2026-11-10T12:39:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished the tasks of `plan.md` in
+  the commits `ebd0eea`, `06d890a`, `7812b1a`, `004e736` and `dc2d0bc`. On `dc2d0bc`, `npm test` passes, 1892 tests with
+  none failed or skipped, `npm run check-changes` exits 0, and no line the branch adds is longer than 120 characters but
+  the rows of Markdown tables. Not checked: OpenCode itself reading the written configuration in a running container and
+  listing the local provider's models, and a request to a model server through it. The status stays `in-progress`, for
+  the review
 
 ## Amendments

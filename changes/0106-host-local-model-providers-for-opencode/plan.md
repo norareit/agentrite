@@ -197,9 +197,9 @@ lines of what it does.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes after the last commit
-- [ ] Each requirement 1 to 16 has a ticked task above that names it
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes after the last commit
+- [x] Each requirement 1 to 16 has a ticked task above that names it
 
 ## Commit Points
 
