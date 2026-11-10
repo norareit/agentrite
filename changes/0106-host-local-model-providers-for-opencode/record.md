@@ -21,5 +21,8 @@ timestamp: 2026-11-10T11:54:10Z
   9 and numbered the later requirements on from 10. The two items left of "Beyond the request" are numbered 1 and 2. The
   human declined a review of the spec before approving it. The status is `draft`
 - 2026-11-10T12:07:52Z [human] approved the spec. The status is `approved`
+- 2026-11-10T12:15:18Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0106-host-local-model-providers-for-opencode` cut from `master` at `f80a148`, wrote `plan.md`. The status
+  is `approved`
 
 ## Amendments
