@@ -160,5 +160,17 @@ something the form requires. The commands of `gh` were not run with the owner's 
 - 2026-11-10T17:24:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, cut
   `task-0107-the-advisories-are-created-at-the-release` from `master` at `031ccd6` and began the work. The status is
   `in-progress`
+- 2026-11-10T17:26:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, made the change in `a6d9235` and
+  `ece462a`. In `extra-roles/security-reviewer.md`, "Reporting" gives each finding the fields of GitHub's advisory form
+  first, Summary, Details, Proof of concept, Impact, Severity with its scale, CWE and Affected versions, and then the
+  fix, how such weaknesses are kept out and the related accepted risk. In `RELEASING.md`, step 8 is rewritten as the
+  description gives it, with the `gh` commands as the alternative, and item 8 of the list at the top, the paragraph on
+  what the agent runs and the line of step 3 are brought in line. "Security findings" of `AGENTS.md` gains the line on
+  who creates the advisory. Took the only reading that works for the lower bound the agent proposes: the first tag that
+  `git tag --contains <commit> --sort=v:refname` prints for the earliest commit that brought in the code the unit
+  changes. `npm run kit -- refresh` printed every file up to date, so the wrappers are unchanged. No line of the three
+  files outside a table row is longer than 120 characters. On `ece462a`, `npm test` passes, 1898 tests with none failed
+  or skipped, and `npm run check-changes` exits 0. Not checked: the `gh` commands, which were not run. Handed over for
+  review. The status stays `in-progress`
 
 ## Amendments
