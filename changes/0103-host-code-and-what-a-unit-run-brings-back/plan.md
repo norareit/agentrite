@@ -260,12 +260,12 @@ Documents:
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Every line the unit adds or changes, in code and in documents, is at most 120 characters, a Markdown table row
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Every line the unit adds or changes, in code and in documents, is at most 120 characters, a Markdown table row
   apart
-- [ ] Every requirement from 1 to 16 is delivered by a ticked task, and every task traces to one
-- [ ] Nothing of the unit is pushed, by "Security findings" of `AGENTS.md`
+- [x] Every requirement from 1 to 16 is delivered by a ticked task, and every task traces to one
+- [x] Nothing of the unit is pushed, by "Security findings" of `AGENTS.md`
 
 ## Commit Points
 

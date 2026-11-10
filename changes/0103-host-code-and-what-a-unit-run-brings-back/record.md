@@ -59,5 +59,26 @@ timestamp: 2026-11-09T13:08:29Z
   repository is `false`, and the test task of requirement 14 covers it. The status is `approved`
 - 2026-11-09T23:57:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
   `feature-0103-host-code-and-what-a-unit-run-brings-back` at `bb80a57`. The status is `in-progress`
+- 2026-11-10T00:26:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, put a session that is not of the
+  form aside in the `run` effect of `runPrepared` and not in its `ended` effect, as the plan had it: `orchestrate` keeps
+  the session of a result for later steps before `ended` is called, so only the `run` effect keeps it from them. Such a
+  result now gives `null`, which also puts aside an earlier session of the same role and harness, so the next step
+  starts a session of its own as requirement 11 says. Added that work to `plan.md` as a task of its own
+- 2026-11-10T00:26:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, read the plan's reads of a resume as
+  the one reading that works with its line that `agentrite runs` keeps its reads: the resume reads `state.json`,
+  `definition.json` and `heartbeat` through `readRunBytes` and `readRunHeartbeat`, and `runTexts` and `readHeartbeat`
+  stay as they were for `agentrite runs`
+- 2026-11-10T00:26:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, gave `hash-object --stdin-paths` the
+  absolute paths of the clone's files, which never open with `"`, so only a path that holds a line break is hashed by a
+  call of its own. The comparison now lists the committed paths in the order of the tree and then the files not
+  committed, and prints a path that holds a control character quoted by `printf %q`, as git's own quoting printed such a
+  path before. The fake harness of `tests/agentrite-orchestrate.test.mjs` gained `before-<n>`, by which the test of
+  requirement 7 replaces the run's directory while its step runs
+- 2026-11-10T00:26:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, checked that the test of a filter
+  fails against the comparison it replaces, with the old `container/unit-clone.sh` in the tree, and that the tests of
+  the executable bit pass on both, since the old comparison listed a mode change too. `npm test` passes on `4b90528`,
+  1793 tests and none failing, and `npm run check-changes` passes there. No test wrote a record outside its own state
+  directory. Not checked: a run of a real harness, and the wrapper on macOS and its bash 3.2, which the comparison
+  avoids features beyond. Nothing of the unit is pushed. Handed over for review. The status is `in-progress`
 
 ## Amendments
