@@ -64,5 +64,10 @@ timestamp: 2026-11-09T17:28:29Z
   before it names `modelServer` in `agentrite.json` as the setting, in `container/sandbox.sh`, in its test in
   `tests/sandbox-wrapper.test.mjs` and in the message in `plan.md`. On `e0d19e1`, `npm test` passes, 1815 tests with
   none failed or skipped. The status stays `in-progress`
+- 2026-11-10T11:15:55Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0104 at
+  `067df4ee8020dbaa338f785d8a51460ded385394`, compared with `3db42503a0e004ed5a74f0faef0455ee95a15607`.
+  Returned no new findings in `.reviews/0104-local-model-server-per-project/review-2026-11-10T111555Z.md`.
+  `npm test` passed, 1815 tests with none failed or skipped; `npm run check-changes` and the delta's
+  `git diff --check` passed. Connectivity to the host's actual model server was not independently verified.
 
 ## Amendments
