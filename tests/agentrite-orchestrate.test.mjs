@@ -4382,3 +4382,40 @@ test('a .orchestrator/.gitignore of * alone is not written, and one holding anyt
     assert.equal(readFileSync(ignore, 'utf-8'), '*\n', JSON.stringify(held));
   }
 });
+
+const TWO_STEPS = {
+  steps: [
+    { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
+    { role: 'reviewer', harness: 'claude', model: 'claude-sonnet-5-5' },
+  ],
+};
+
+test('a run whose directory is replaced by a link while a step runs ends the step and exits 1', async (t) => {
+  const { base, write, started, answer, waits, before, pidOf, calls } = project(t);
+  const outside = temporaryDirectory(t, 'agentrite-outside-');
+  write('two.json', JSON.stringify(TWO_STEPS));
+  before(
+    1,
+    `for run in .orchestrator/*/*; do "${MV}" "$run" "$FAKE_DIR/away"; "${LN}" -s '${outside}' "$run"; done\n`,
+  );
+  answer(1, claudePrinted(responseOf(DONE)));
+  waits(1, 30);
+  answer(2, claudePrinted(responseOf(DONE)));
+  const { ended } = started('orchestrate', '0029', '--definition', 'two.json');
+  const harness = await pidOf(1);
+
+  const result = await ended;
+
+  assert.equal(result.status, 1, `${result.stdout}${result.stderr}`);
+  const [name] = readdirSync(join(base, '.orchestrator', UNIT));
+  const meant = join(base, '.orchestrator', UNIT, name);
+  assert.equal(
+    result.stderr,
+    `agentrite: found ${outside} where the run's directory, ${meant}, should be. ` +
+      'The run is stopped, and writes nothing more\n',
+  );
+  assert.ok(await gone(harness), `the harness ${harness} is left`);
+  assert.equal(calls().length, 1);
+  assert.deepEqual(readdirSync(outside), []);
+});
+

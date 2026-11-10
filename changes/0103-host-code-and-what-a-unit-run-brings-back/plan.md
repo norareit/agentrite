@@ -139,11 +139,11 @@ Writing under `.orchestrator`:
   `ftruncateSync(descriptor, length)`, and return `{ add, close }`. A creation that fails leaves `add` doing nothing,
   as a failed write is dropped today. In `runPrepared`, close the followed file when `runStep` settles, in a
   `finally` (R5, R6)
-- [ ] Add a test that a run whose run directory is replaced, while its first step runs, by a link to a directory
+- [x] Add a test that a run whose run directory is replaced, while its first step runs, by a link to a directory
   outside `.orchestrator/<unit-directory>` exits `1`, names both directories on standard error, ends the step's
   harness, starts no next step and writes nothing in the directory the link names. The fake harness swaps the
   directory at its call 1 and then waits, as `waits` makes it (R7, R16)
-- [ ] Add `checkRunDirectory(root, runDirectory)`, which throws the error of R7 unless the resolved run directory is the
+- [x] Add `checkRunDirectory(root, runDirectory)`, which throws the error of R7 unless the resolved run directory is the
   one the approach gives, and call it in `write` of `runPrepared`, in the heartbeat's write and before each line of a
   followed file. Keep the first such error in a variable of `runPrepared`: the heartbeat and the followed line set it
   and send `SIGTERM` to the group that runs, `write` throws it when it is set, and `runPrepared` throws it when
@@ -265,7 +265,7 @@ Documents:
 
 - [x] `feature-0103` the plan and its record entry
 - [x] `feature-0103` the check of the three paths, `.gitignore`, `createFile`, `writeWhole` and the followed file
-- [ ] `feature-0103` the check of the run's directory before each write
+- [x] `feature-0103` the check of the run's directory before each write
 - [ ] `feature-0103` the record of runs and the resume's judgement of it, the resume's definition read with the
   project's names
 - [ ] `feature-0103` the session pattern and `--model=<model>`

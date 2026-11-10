@@ -1844,6 +1844,27 @@ function makeRunDirectory(root, directory, variant) {
 }
 
 /**
+ * Throws, naming both, unless the run's directory at `runDirectory`, from the root, is with every link resolved the
+ * directory of that path below the root, with the links of the root's own path resolved alone.
+ *
+ * @param {string} root
+ * @param {string} runDirectory
+ */
+function checkRunDirectory(root, runDirectory) {
+  const meant = join(realpathSync(root), runDirectory);
+  /** @type {string} */ let found;
+  try {
+    found = realpathSync(meant);
+  } catch (error) {
+    found = `nothing that can be resolved (${messageOf(error)})`;
+  }
+  if (found === meant) return;
+  throw new Error(
+    `found ${found} where the run's directory, ${meant}, should be. The run is stopped, and writes nothing more`,
+  );
+}
+
+/**
  * Sends `signal` to every process of the process group `group`, when it still has one.
  *
  * @param {number} group
@@ -2197,7 +2218,21 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
   const runDirectory = makeRunDirectory(root, directory, variantOf(branch));
   const output = (follow ? framedOutput : plainOutput)((text) => process.stdout.write(text));
   /** @type {number | undefined} */ let group;
+  // The first check of the run's directory that failed. The heartbeat and the followed lines drop their own
+  // failures, so a failure there is kept here, ends the step that runs, and is thrown by the next write.
+  /** @type {Error | undefined} */ let failure;
+  const checked = () => {
+    if (failure !== undefined) throw failure;
+    try {
+      checkRunDirectory(root, runDirectory);
+    } catch (error) {
+      failure = /** @type {Error} */ (error);
+      if (group !== undefined) signalGroup(group, 'SIGTERM');
+      throw failure;
+    }
+  };
   const write = (/** @type {string} */ name, /** @type {string} */ content) => {
+    checked();
     writeWhole(resolve(root, runDirectory, name), content, WRITE_FILES);
   };
   const fileOf = (/** @type {import('./agentrite-orchestrate.mjs').Planned} */ planned, /** @type {string} */ kind) =>
@@ -2225,8 +2260,17 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
         output.started(stepLine(planned));
       },
       run: (planned) => {
+        checked();
         const followed = followedFile(resolve(root, runDirectory, fileOf(planned, 'followed.jsonl')), FOLLOWED_FILES);
-        const { add } = followed;
+        const add = (/** @type {string} */ line) => {
+          try {
+            checked();
+          } catch {
+            // The failure is kept, and the next write of the run throws it.
+            return;
+          }
+          followed.add(line);
+        };
         return runStep(
           root,
           directory,
@@ -2263,6 +2307,7 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
       },
     };
     const { ran, end, unfixed } = await orchestrate(definition, effects, from);
+    if (failure !== undefined) throw failure;
     const status = exitStatus(end);
     stopHeartbeat();
     writeState({ status, line: endLine(end) });
