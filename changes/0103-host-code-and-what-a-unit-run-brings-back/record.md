@@ -89,5 +89,12 @@ timestamp: 2026-11-09T13:08:29Z
 - 2026-11-10T00:43:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, reproduced S1 of the review: with a
   harness that ignores `SIGTERM`, the test of requirement 7 ended only when the harness's 30 second sleep did. The
   human accepted S1, and the fix is added to `plan.md` as a task. The status is `in-progress`
+- 2026-11-10T00:49:25Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S1 of the review:
+  `runGrouped` gives the caller a function that ends the step as its time limit does, `SIGTERM` to the group and
+  `SIGKILL` 10 seconds later when a process is left, and the failed check of the run's directory calls it. Two new
+  tests, a harness that ignores `SIGTERM` and a process it left that ignores it and holds its output, each failed after
+  60 seconds before the fix and pass in about 10 seconds after it. `COMMANDS.md` and `ORCHESTRATOR.md` say how the step
+  is ended. `npm test` passes on `03fa819`, 1795 tests and none failing, and `npm run check-changes` passes there. The
+  outcome of S1 is fixed. Handed over for review again. The status is `in-progress`
 
 ## Amendments
