@@ -182,18 +182,18 @@ lines of what it does.
 
 ### The documents
 
-- [ ] In "The local model server" of `SANDBOX.md`, say what requirement 12 lists, with the line of requirement 9 (R12)
-- [ ] In "What the sandbox defends against" of `SANDBOX.md`, add the row of the host's OpenCode configuration: not
+- [x] In "The local model server" of `SANDBOX.md`, say what requirement 12 lists, with the line of requirement 9 (R12)
+- [x] In "What the sandbox defends against" of `SANDBOX.md`, add the row of the host's OpenCode configuration: not
   mounted, of it the keys of the local providers alone, in "The local model server" (R13)
-- [ ] In "The project's log directory" of "Where things are kept on the host" of `SANDBOX.md`, add
+- [x] In "The project's log directory" of "Where things are kept on the host" of `SANDBOX.md`, add
   `<logs>/opencode-configuration-<hash>.json`, mounted read-only at `/etc/opencode/opencode.json`: the kit's
   configuration of OpenCode with the local providers, written at a start when there are local providers and the file
   is not there yet, one for each content, none changed or removed; and say that removing the directory removes them
   (R14)
-- [ ] In "sandbox.sh" of `COMMANDS.md`, say that with `"modelServer": true` and `opencode` among `harnesses` every form
+- [x] In "sandbox.sh" of `COMMANDS.md`, say that with `"modelServer": true` and `opencode` among `harnesses` every form
   but `--connect` reads `~/.config/opencode/opencode.json` or `opencode.jsonc` at each start, before Docker or npm,
   the line it prints, and what it refuses with exit status 1 (R15)
-- [ ] Check every changed line against the limit of 120 characters
+- [x] Check every changed line against the limit of 120 characters
 
 ## Verification
 
@@ -211,4 +211,4 @@ lines of what it does.
   host member and the helper", which changes no behavior
 - [x] `feature-0106 Give OpenCode in the sandbox the host's local providers`: the rest of "OpenCode's host member and
   the helper" and "The wrapper"
-- [ ] `feature-0106 Document the host's local providers for OpenCode`: the tasks of "The documents"
+- [x] `feature-0106 Document the host's local providers for OpenCode`: the tasks of "The documents"

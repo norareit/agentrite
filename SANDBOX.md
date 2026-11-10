@@ -629,6 +629,41 @@ With the port admitted, the container reaches the server's whole API, as any pro
 what a harness uses of it. What the server does for a caller, such as pulling a model from a registry the caller
 names, it does from the host, beyond the allowlist and the firewall of the container.
 
+**OpenCode and the host's local providers**
+
+With `"modelServer": true` and `opencode` among `harnesses`, each start but `--connect` reads the host's OpenCode
+configuration, `~/.config/opencode/opencode.json` or `~/.config/opencode/opencode.jsonc`, and gives OpenCode in the
+sandbox the file's local providers. The file is read at each start, so a change to it holds from the next start, with
+no rebuild. Any other start reads nothing of it.
+
+A provider is local when its `options.baseURL` is an `http` URL on `localhost`, `127.0.0.1` or `[::1]`, at the port of
+the local model server, `11434`. Of a local provider only `npm`, `name`, `options.baseURL` and `models` cross, and of
+each of its models only `name`, `limit`, `options` and `variants`. Each crosses as the file holds it, but for the host
+of `baseURL`, which becomes `host.docker.internal`, with the scheme, the port and the path as they are:
+`http://localhost:11434/v1` becomes `http://host.docker.internal:11434/v1`.
+
+Nothing else of the file crosses: no other provider, no other key of a local provider or of its models, `apiKey` and
+`headers` among them, and no other key of the file, such as `model`, `plugin`, `mcp` or `permission`. The file itself
+is not mounted, so an API key the file holds stays on the host. A secret written into a key that crosses, such as a
+model's `options`, crosses as written, and the agent can read it.
+
+The local providers are in the kit's configuration of OpenCode, `/etc/opencode/opencode.json`, beside
+`"autoupdate": false`. It is the file of OpenCode's configuration that stands above every other, and the agent cannot
+write it. What else of OpenCode a developer wants in the sandbox, an API key or a default model among it, they set in
+the home volume's `~/.config/opencode/opencode.json`, where it stays for the project. A provider of the same name
+there loses to the kit's configuration the settings both of them set, and keeps the rest. A developer who wants
+another provider of a local server gives it another name.
+
+Before the container starts, the start prints one line of what it gave OpenCode:
+
+```
+sandbox.sh: OpenCode is given the local provider "ollama" of /home/me/.config/opencode/opencode.json
+```
+
+or that the file holds no local provider on port `11434`, or that there is no `opencode.json` or `opencode.jsonc` in
+`~/.config/opencode/`. With no file, or no local provider, the start goes on, and OpenCode in the sandbox has no
+provider of the kit's.
+
 For a model that the container cannot reach, see "When something goes wrong".
 
 ## Where things are kept on the host
@@ -687,13 +722,18 @@ It holds, of each harness the project names or named before:
   `/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json`: the number `<n>` of "How long Claude Code's
   sessions are kept", alone. The wrapper writes the file of a number at a start when the host holds that number
   and the file is not there yet, and changes or removes none, so one is left for each number the host has held
+* `<logs>/opencode-configuration-<hash>.json`, mounted read-only at `/etc/opencode/opencode.json` in the place of the
+  kit's file: the kit's configuration of OpenCode with the local providers of "The local model server". `<hash>` is
+  drawn from the content. The wrapper writes the file of a content at a start when there are local providers and the
+  file is not there yet, and changes or removes none, so one is left for each content the host's file has given
 
 The directories have the places they have in a home, so a tool on the host that reads the harnesses' logs is
 given that one path and reads them there. What a harness writes belongs to the developer on the host, who reads it
 like any other file of theirs, without Docker.
 
 With no sandbox of the project running, remove the directory with `rm -rf`. The sessions of the harnesses, the logins
-of OpenCode and Codex and the files of the numbers go with it. The next run makes the directory again, empty.
+of OpenCode and Codex, the files of the numbers and the configurations of OpenCode go with it. The next run makes the
+directory again, empty.
 
 **How long Claude Code's sessions are kept**
 
@@ -791,14 +831,15 @@ What it confines:
 
 Nothing of the host is reachable but what is mounted at `/work`, with these exceptions:
 
-| Of the host                                               | Mounted    | In `SANDBOX.md`                     |
-|-----------------------------------------------------------|------------|-------------------------------------|
-| The developer's `~/.gitconfig`                            | Read-only  |                                     |
-| The developer's Claude Code status line                   | Read-only  | "The status line"                   |
-| The project's log directory                               | Read-write | "Where things are kept on the host" |
-| The local model server's port, with `"modelServer": true` |            | "The local model server"            |
-| The project's `.reviews`, in a unit run only              | Read-write | "Running a unit"                    |
-| The project's `.orchestrator`, in a unit run only         | Read-write | "Running a unit"                    |
+| Of the host                                                                                       | Mounted    | In `SANDBOX.md`                     |
+|---------------------------------------------------------------------------------------------------|------------|-------------------------------------|
+| The developer's `~/.gitconfig`                                                                    | Read-only  |                                     |
+| The developer's Claude Code status line                                                           | Read-only  | "The status line"                   |
+| The project's log directory                                                                       | Read-write | "Where things are kept on the host" |
+| The local model server's port, with `"modelServer": true`                                         |            | "The local model server"            |
+| Of the developer's OpenCode configuration, the keys of its local providers alone, with the port   | No         | "The local model server"            |
+| The project's `.reviews`, in a unit run only                                                      | Read-write | "Running a unit"                    |
+| The project's `.orchestrator`, in a unit run only                                                 | Read-write | "Running a unit"                    |
 
 The `~/.gitconfig` makes commits from inside carry the same name and email as on the host.
 

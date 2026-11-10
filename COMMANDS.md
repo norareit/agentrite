@@ -877,6 +877,19 @@ what to do. See "Holding a harness version" and "Reaching more hosts" in `SANDBO
 `MODEL_SERVER_ADMITTED` too, with a message that names the file, that the variable is the kit's to set, and that
 `modelServer` in `agentrite.json` admits the local model server.
 
+In a project whose `agentrite.json` holds `"modelServer": true` and whose `harnesses` names `opencode`, every form but
+`--connect` reads the host's OpenCode configuration at each start, before it asks the host's harnesses, Docker or npm
+anything: `~/.config/opencode/opencode.json` or `~/.config/opencode/opencode.jsonc`, with the comments and trailing
+commas OpenCode accepts. It gives OpenCode in the sandbox the local providers of the file, and nothing else of it, as
+"The local model server" in `SANDBOX.md` says. Any other start reads nothing of the file. Before the container starts
+it prints one line to standard error: `sandbox.sh: OpenCode is given the local provider "<name>" of <file>`, with
+each provider it gives named, or that the file holds no local provider on port `11434`, or that there is no
+`opencode.json` or `opencode.jsonc` in `~/.config/opencode/`. With no file, or no local provider, the start goes on.
+It refuses, with `1` and starting nothing, a file that cannot be read, one that is not a JSON object once its
+comments and trailing commas are taken out, a `~/.config/opencode/` that holds both files, and a local provider whose
+`models`, or a model of them, is not a JSON object. The message names the file, or the two, the provider and the
+model where there is one, what is wrong and what to do.
+
 | Argument or option | What it is                                                                                   |
 |--------------------|----------------------------------------------------------------------------------------------|
 | `UNIT`             | Mounts a clone of the unit's branch, given by its name or by the unit's number in its name   |
@@ -925,7 +938,8 @@ Before the command in the container starts, or the one of `--connect`, it exits 
 `1` for every other refusal or failure of its own: among them an `agentrite.json` at fault, a unit that names no
 branch, a unit given by a number that names no branch and that is cancelled on the default branch, a run under way
 for the branch or none to connect to, a clone not yet brought back, a project's compose file that gives a version
-of another shape or sets what is the kit's to set, and Docker or npm that cannot be asked. A Docker
+of another shape or sets what is the kit's to set, the host's OpenCode configuration at fault, and Docker or npm that
+cannot be asked. A Docker
 command it runs before that which fails, as Compose reading the configuration or the build of the image, ends it with
 Docker's status, which it passes on. Once the command started, it passes on the command's status, as
 [Exit statuses](#exit-statuses) says. A unit run of a new clone that holds a `package-lock.json` installs the clone's
