@@ -76,3 +76,15 @@ timestamp: 2026-11-09T17:28:29Z
   to the host's model server with `"modelServer": true` remains unverified. The status is `implemented`
 
 ## Amendments
+
+- 2026-11-10T11:33:22Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request, corrected
+  the entry "The container cannot reach the model of the local model server" of "When something goes wrong" in
+  `SANDBOX.md`: it now says what is seen, a request that hangs with no error, since what is not admitted is dropped;
+  that a `curl` of the server times out for both causes and the entrypoint's line at the start tells them apart; and,
+  for the host's firewall, that Compose makes a network per project, by default in `172.16.0.0/12`, with the `ufw` rule
+  that allows that range to the port. Reason: the human, testing the unit, met the hang and found the entry did not name
+  it, and the sandbox's network was `172.24.0.0/16`, which a rule for Docker's default `172.17.0.0/16` misses. Also
+  recorded: the timeouts of the verification entry came from `ufw` on the host, which is active there. Containers
+  without the kit's firewall timed out on port 11434 from the default bridge and from the dev sandbox's network alike.
+  With `172.16.0.0/12` allowed to port 11434 and `"modelServer": true`, OpenCode in the dev sandbox got answers from a
+  local Qwen model, as the human observed. With `"modelServer": false` the request hung, as the drop policy makes it

@@ -1062,15 +1062,27 @@ Why: the kit checks no version of either harness. What it promises for no versio
 What to do, in the order of least effort: add the refused host to the project's `ALLOWLIST`, or hold a version that
 works in the project's `sandbox/compose.project.yml`.
 
-**The container cannot reach the model of the local model server.**
+**The container cannot reach the model of the local model server: a harness's request to it hangs, with no
+error.**
 
-Why: the project's `agentrite.json` lacks `"modelServer": true`, so the firewall admits nothing of the host, and the
-entrypoint logs at the start that the local model server is not admitted. Or the server is admitted, and the host is a
-Linux host whose firewall denies incoming traffic by default, `ufw` for example.
+Why: what is not admitted is dropped, so a request gets no answer and waits until the harness's own timeout, which
+may be long. Either the project's `agentrite.json` lacks `"modelServer": true`, so the firewall admits nothing of the
+host, and the entrypoint logs at the start that the local model server is not admitted. Or the server is admitted,
+and the host is a Linux host whose firewall denies incoming traffic by default, `ufw` for example. Inside the
+sandbox, `curl -m 5 http://host.docker.internal:11434/api/tags` times out in both cases, and the entrypoint's line at
+the start tells them apart.
 
-What to do: set `"modelServer": true` in the project's `agentrite.json`, and start the sandbox again. When the
-entrypoint logs the server admitted and the model is still not reached, allow the Docker bridge subnets to
-`MODEL_SERVER_PORT` on the host.
+What to do: when the entrypoint logged that the local model server is not admitted, set `"modelServer": true` in the
+project's `agentrite.json`, and start the sandbox again. When it logged the server admitted, allow the networks
+Docker makes to `MODEL_SERVER_PORT` on the host. A sandbox's network is not always Docker's default `172.17.0.0/16`:
+Compose makes one for each project, by default in `172.16.0.0/12`, which one rule covers, with `ufw`:
+
+```sh
+sudo ufw allow from 172.16.0.0/12 to any port 11434 proto tcp
+```
+
+The rule holds at once, with no new start of the sandbox. A network of the project outside that range, such as one
+in `192.168.0.0/16`, needs a rule of its own.
 
 **Either harness continues or lists another project's sessions, a reader cannot tell the two projects' sessions
 apart, and the two share one OpenCode login.**
