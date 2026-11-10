@@ -52,5 +52,10 @@ timestamp: 2026-11-09T17:28:29Z
   timed out too, though a process on the host listens on `*:11434`. Whether the host's firewall drops it, the case of
   the entry in "When something goes wrong", was not checked. The message of the refusal of a project's file that sets
   `MODEL_SERVER_ADMITTED` is the plan's text as written. The status stays `in-progress`, for the review
+- 2026-11-10T11:10:43Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0104 at
+  `3db42503a0e004ed5a74f0faef0455ee95a15607`, against the merge base with `master`. Returned C1 and C2 in
+  `.reviews/0104-local-model-server-per-project/review-2026-11-10T111043Z.md`. `npm test` passed, 1815 tests with none
+  failed or skipped; `npm run check-changes` and `git diff --check master...HEAD` passed. Did not independently repeat
+  the manual sandbox runs or verify connectivity to the host's actual model server.
 
 ## Amendments
