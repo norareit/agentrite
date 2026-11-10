@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-09T13:08:29Z
 ---
 
@@ -102,5 +102,10 @@ timestamp: 2026-11-09T13:08:29Z
   `.reviews/0103-host-code-and-what-a-unit-run-brings-back/review-2026-11-10T005202Z.md`.
   Ran `npm test`, 1795 tests passed, `npm run check-changes` and `git diff --check 37a2593..HEAD`; all passed.
   Could not independently verify live model requests through the three harnesses or the wrapper on macOS and bash 3.2.
+- 2026-11-10T00:54:58Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit implemented: the human
+  accepted S1, the one blocking finding, the delta review of `889e305` verified its fix and returned no new findings,
+  and every task of `plan.md` is ticked. `npm test` passes on `dfc007c`, 1795 tests and none failing, and `npm run
+  check-changes` passes there. Not checked, as the reviews say too: a run of a real harness, and the wrapper on macOS
+  and bash 3.2. Nothing of the unit is pushed. The status is `implemented`
 
 ## Amendments
