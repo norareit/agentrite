@@ -184,5 +184,12 @@ something the form requires. The commands of `gh` were not run with the owner's 
   the finding names no CWE. The outcome of both is applied. On `3b4f8f5`, `npm test` passes, 1898 tests with none failed
   or skipped, `npm run check-changes` and `git diff --check master...HEAD` exit 0, and no line of `RELEASING.md` outside
   a table row is longer than 120 characters. The status stays `in-progress`
+- 2026-11-10T17:36:44Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of 0107 at
+  `a6709b710f65d3f60dd7190a206e87cb9b5fec59` from `0532a7ecc83f0f107fdc8ca964e4954f58581dff`. Verified the
+  corrections of C1 and C2 and returned no findings. Saved the review in
+  `.reviews/0107-the-advisories-are-created-at-the-release/review-a6709b710f65-20261110T173644Z.md`.
+  `npm test` passed all 1898 tests with none failed or skipped; `npm run check-changes` and
+  `git diff --check master...HEAD` exited 0. Three local JSON round-trip checks passed. The owner-authenticated
+  commands and live web form remain unverified.
 
 ## Amendments
