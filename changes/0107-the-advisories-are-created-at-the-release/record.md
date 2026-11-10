@@ -178,5 +178,11 @@ something the form requires. The commands of `gh` were not run with the owner's 
   `.reviews/0107-the-advisories-are-created-at-the-release/review-0532a7ecc83f-20261110T173016Z.md`.
   `npm test` passed all 1898 tests with none failed or skipped; `npm run check-changes` and
   `git diff --check master...HEAD` exited 0. The owner-authenticated commands and live web form were not verified.
+- 2026-11-10T17:34:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1 and C2 of the review of
+  `0532a7ecc83f`, which the human accepted, in `3b4f8f5`. C1: step 8 of `RELEASING.md` says to escape each backslash of
+  the copied text as `\\` before its line breaks and double quotes. C2: it says to leave out the line of `cwe_ids` when
+  the finding names no CWE. The outcome of both is applied. On `3b4f8f5`, `npm test` passes, 1898 tests with none failed
+  or skipped, `npm run check-changes` and `git diff --check master...HEAD` exit 0, and no line of `RELEASING.md` outside
+  a table row is longer than 120 characters. The status stays `in-progress`
 
 ## Amendments
