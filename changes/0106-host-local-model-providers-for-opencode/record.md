@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-10T11:54:10Z
 ---
 
@@ -20,5 +20,6 @@ timestamp: 2026-11-10T11:54:10Z
   first item of "Beyond the request", the line a start prints of the providers it hands to OpenCode, made it requirement
   9 and numbered the later requirements on from 10. The two items left of "Beyond the request" are numbered 1 and 2. The
   human declined a review of the spec before approving it. The status is `draft`
+- 2026-11-10T12:07:52Z [human] approved the spec. The status is `approved`
 
 ## Amendments
