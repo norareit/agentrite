@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-10T16:10:06Z
 ---
 
@@ -156,5 +156,6 @@ something the form requires. The commands of `gh` were not run with the owner's 
   8.5.0 established, and folded the change of the role file into this task, since it serves the same step. Read
   "Proofs of concept", "What needs the host" and "Reporting" of `extra-roles/security-reviewer.md`. The status is
   `draft`
+- 2026-11-10T17:24:06Z [human] approved the record. The status is `approved`
 
 ## Amendments
