@@ -25,5 +25,14 @@ timestamp: 2026-11-09T17:28:29Z
   it in the unit. The spec records no exception to that rule. The unit goes back to the specifier and the human to
   settle whether the key reaches the root's file in this unit, with an exception recorded, or when the repository
   moves to the release that ships it. The status stays `approved`
+- 2026-11-10T10:28:21Z [human] decided that requirement 3 stays as the spec has it: a new required key goes into the
+  root `agentrite.json` in the unit that adds it, because the working tree's `npx agentrite` refuses the file
+  without it, as unit 0095 did for `process` and task 0096 allowed for. The passage of "The kit's own copy of the
+  kit" in `CONTRIBUTING.md` that says otherwise is out of date, and is to be corrected by a task of its own
+- 2026-11-10T10:28:21Z [Claude Code, anthropic/claude-opus-5-5] as the planner, wrote `plan.md` against
+  `feature-0104-local-model-server-per-project` at `519e5c7`. Read requirement 5 as no rule naming the host
+  gateway's address or the model server's port, with the rules of DNS as they are, since the spec's context leaves
+  the project DNS to its resolvers. "Updating a project to a newer kit" of `SETUP.md` gains the line a project adds
+  for `modelServer`, as it has for each required key. The status stays `approved`
 
 ## Amendments
