@@ -744,7 +744,8 @@ read_merged_configuration() {
   fi
   if [ "$merged" = "kit-set-model-server" ]; then
     echo "sandbox.sh: $project_compose sets MODEL_SERVER_ADMITTED, which is the kit's to set." >&2
-    echo 'The local model server is admitted by "modelServer" in agentrite.json. Remove it from that file.' >&2
+    echo "Remove MODEL_SERVER_ADMITTED from $project_compose." >&2
+    echo 'The local model server is admitted by "modelServer" in agentrite.json instead.' >&2
     exit 1
   fi
   if [[ "$merged" == "kit-set "* ]]; then

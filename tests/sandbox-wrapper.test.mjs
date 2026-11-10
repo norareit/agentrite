@@ -1674,7 +1674,8 @@ for (const value of ['true', 'false']) {
     assert.equal(
       result.stderr,
       `sandbox.sh: ${root}/sandbox/compose.project.yml sets MODEL_SERVER_ADMITTED, which is the kit's to set.\n` +
-        'The local model server is admitted by "modelServer" in agentrite.json. Remove it from that file.\n',
+        `Remove MODEL_SERVER_ADMITTED from ${root}/sandbox/compose.project.yml.\n` +
+        'The local model server is admitted by "modelServer" in agentrite.json instead.\n',
     );
     assert.deepEqual(dockerCalls(), []);
     assert.deepEqual(npmCalls(), []);

@@ -33,7 +33,8 @@ check comes after that of the build arguments and before that of `KIT_ALLOWLIST`
 
 ```text
 sandbox.sh: <project compose> sets MODEL_SERVER_ADMITTED, which is the kit's to set.
-The local model server is admitted by "modelServer" in agentrite.json. Remove it from that file.
+Remove MODEL_SERVER_ADMITTED from <project compose>.
+The local model server is admitted by "modelServer" in agentrite.json instead.
 ```
 
 **The firewall.** `container/entrypoint.sh` gains a function `admit_model_server <admitted> <host> <port>`. With
