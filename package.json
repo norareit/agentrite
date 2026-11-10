@@ -70,6 +70,6 @@
     "diagrams": "./generate-diagrams.sh"
   },
   "devDependencies": {
-    "agentrite": "8.4.0"
+    "agentrite": "8.5.0"
   }
 }
