@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-11-10T16:10:06Z
 ---
 
@@ -191,5 +191,10 @@ something the form requires. The commands of `gh` were not run with the owner's 
   `npm test` passed all 1898 tests with none failed or skipped; `npm run check-changes` and
   `git diff --check master...HEAD` exited 0. Three local JSON round-trip checks passed. The owner-authenticated
   commands and live web form remain unverified.
+- 2026-11-10T17:38:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's decision, set the
+  task implemented. The review of `0532a7ecc83f` returned C1 and C2, neither blocking, which the human accepted and
+  which are applied in `3b4f8f5`, and the delta review of `a6709b710f65` verified them and returned no findings. The
+  task has no `plan.md`. On `83b2894`, `npm test` passes, 1898 tests with none failed or skipped. Not checked: the `gh`
+  commands of step 8 with the owner's login. The status is `implemented`
 
 ## Amendments
