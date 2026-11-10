@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-09T17:28:29Z
 ---
 
@@ -69,5 +69,10 @@ timestamp: 2026-11-09T17:28:29Z
   Returned no new findings in `.reviews/0104-local-model-server-per-project/review-2026-11-10T111555Z.md`.
   `npm test` passed, 1815 tests with none failed or skipped; `npm run check-changes` and the delta's
   `git diff --check` passed. Connectivity to the host's actual model server was not independently verified.
+- 2026-11-10T11:17:33Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's confirmation that the
+  delta review of `067df4e` returned no new findings, set the unit implemented. Neither review returned a blocking
+  finding, C1 and C2 of the first are applied, and every task of `plan.md` is ticked. The suite last ran on `067df4e`,
+  in the delta review, with 1815 tests passed; later commits change `record.md` alone. A connection from the container
+  to the host's model server with `"modelServer": true` remains unverified. The status is `implemented`
 
 ## Amendments
