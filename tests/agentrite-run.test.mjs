@@ -482,7 +482,7 @@ test('the argument list of each harness in each mode is the row of the table, op
           for (const harnessArguments of [[], EXTRA]) {
             const options = [
               ...(row.role ?? ['--agent', 'reviewer']),
-              ...(model === undefined ? [] : ['--model', model]),
+              ...(model === undefined ? [] : [`--model=${model}`]),
               ...(skipPermissions ? [row.skip] : []),
             ];
             assert.deepEqual(
@@ -523,7 +523,7 @@ test('the prompt is last in every row, and what the caller gave stands in front 
       assert.ok(args.at(-1).endsWith(PROMPT), `${harness} ${headless}`);
       assert.deepEqual(args.slice(at, at + EXTRA.length), EXTRA, `${harness} ${headless}`);
       assert.equal(args.length, at + EXTRA.length + 2, `${harness} ${headless}`);
-      assert.ok(args.indexOf('m') < at && args.indexOf('--agent') < at, `${harness} ${headless}`);
+      assert.ok(args.indexOf('--model=m') < at && args.indexOf('--agent') < at, `${harness} ${headless}`);
     }
   }
 });
@@ -540,8 +540,7 @@ test('the four rows with nothing of the caller, written out', () => {
   assert.deepEqual(harnessCommand({ ...all, harness: 'claude', headless: false }).args, [
     '--agent',
     'implementer',
-    '--model',
-    'm',
+    '--model=m',
     '--dangerously-skip-permissions',
     '--',
     PROMPT,
@@ -550,8 +549,7 @@ test('the four rows with nothing of the caller, written out', () => {
     '--print',
     '--agent',
     'implementer',
-    '--model',
-    'm',
+    '--model=m',
     '--dangerously-skip-permissions',
     '--',
     PROMPT,
@@ -559,8 +557,7 @@ test('the four rows with nothing of the caller, written out', () => {
   assert.deepEqual(harnessCommand({ ...all, harness: 'opencode', headless: false }).args, [
     '--agent',
     'implementer',
-    '--model',
-    'm',
+    '--model=m',
     '--auto',
     '--prompt',
     PROMPT,
@@ -569,12 +566,25 @@ test('the four rows with nothing of the caller, written out', () => {
     'run',
     '--agent',
     'implementer',
-    '--model',
-    'm',
+    '--model=m',
     '--auto',
     '--',
     PROMPT,
   ]);
+});
+
+// 0103 R10, R16: the model reaches every harness as one argument, joined to its option.
+test('each harness is given the model as --model=<model>, one argument, headless and not', () => {
+  for (const harness of HARNESS_NAMES) {
+    for (const headless of [false, true]) {
+      for (const model of ['claude-sonnet-5-5', '-x']) {
+        const { args } = harnessCommand({ ...START, harness, role: 'reviewer', model, headless, prompt: PROMPT });
+        const given = args.filter((argument) => argument.startsWith('--model'));
+        assert.deepEqual(given, [`--model=${model}`], `${harness} ${headless} ${model}`);
+        assert.ok(!args.includes(model), `${harness} ${headless} ${model}`);
+      }
+    }
+  }
 });
 
 // 0100 R2, R16: how each harness starts in a role
@@ -707,8 +717,7 @@ test('run gives the harness the model, the permission flag and the text, and not
 
   const claude = agentrite([
     'run',
-    '--model',
-    'claude-sonnet-5-5',
+    '--model=claude-sonnet-5-5',
     'implementer',
     'claude',
     `changes/${UNIT}/`,
@@ -732,8 +741,7 @@ test('run gives the harness the model, the permission flag and the text, and not
     started('claude', [
       '--agent',
       'implementer',
-      '--model',
-      'claude-sonnet-5-5',
+      '--model=claude-sonnet-5-5',
       '--dangerously-skip-permissions',
       '--',
       `${UNIT_PROMPT}\n\n${text}`,
@@ -742,7 +750,7 @@ test('run gives the harness the model, the permission flag and the text, and not
   assert.equal(opencode.status, 0, opencode.stderr);
   assert.equal(
     opencode.stdout,
-    started('opencode', ['run', '--agent', 'planner', '--model', 'openai/gpt-6.1-sol', '--auto', '--', UNIT_PROMPT]),
+    started('opencode', ['run', '--agent', 'planner', '--model=openai/gpt-6.1-sol', '--auto', '--', UNIT_PROMPT]),
   );
 });
 

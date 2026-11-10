@@ -40,6 +40,7 @@ import {
   OPENING_RULE,
   plainOutput,
   judgeStep,
+  isSession,
   resumePosition,
   orchestrate,
   openingLine,
@@ -1983,18 +1984,17 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   const [planner, implementer, reviewer] = calls();
   assert.equal(calls().length, 3);
   assert.equal(planner.harness, 'claude');
-  assert.deepEqual(planner.options.slice(0, 8), [
+  assert.deepEqual(planner.options.slice(0, 7), [
     '--print',
     '--agent',
     'planner',
-    '--model',
-    'claude-opus-5-5',
+    '--model=claude-opus-5-5',
     '--output-format',
     'stream-json',
     '--verbose',
   ]);
-  assert.equal(planner.options[8], '--session-id');
-  assert.match(planner.options[9], UUID);
+  assert.equal(planner.options[7], '--session-id');
+  assert.match(planner.options[8], UUID);
   assert.ok(planner.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${REQUEST_LINE}, and reads`), planner.prompt);
   assert.ok(implementer.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${IMPLEMENTER_PROMPT}\n\n`));
   assert.ok(implementer.prompt.includes(`${REQUEST_LINE}, in round 1 of a repeat of at most 3 rounds, and reads`));
@@ -2003,8 +2003,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
     'run',
     '--agent',
     'reviewer',
-    '--model',
-    'openai/gpt-6.1-sol',
+    '--model=openai/gpt-6.1-sol',
     '--format',
     'json',
   ]);
@@ -2029,8 +2028,8 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.equal(state.branch, null);
   assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, asked: false });
   assert.deepEqual(state.sessions, [
-    { role: 'planner', harness: 'claude', session: planner.options[9] },
-    { role: 'implementer', harness: 'claude', session: implementer.options[9] },
+    { role: 'planner', harness: 'claude', session: planner.options[8] },
+    { role: 'implementer', harness: 'claude', session: implementer.options[8] },
     { role: 'reviewer', harness: 'opencode', session: 'ses_test' },
   ]);
   assert.deepEqual(state.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
@@ -2541,7 +2540,7 @@ test(
 
       assert.equal(result.status, 0, result.stderr);
       assert.equal(calls().length, 1);
-      assert.equal(calls()[0].options[4], 'theirs');
+      assert.equal(calls()[0].options[3], '--model=theirs');
       const run = runDirectoryOf(base);
       assert.equal(read(`${run.name}/definition.json`), text);
       assert.equal(JSON.parse(read(`${run.name}/state.json`)).definition, given);
@@ -2905,7 +2904,7 @@ test(
       'state.json',
     ]);
     const state = JSON.parse(read(`${run.name}/state.json`));
-    assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[9] }]);
+    assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[8] }]);
     assert.match(state.sessions[0].session, UUID);
     assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
     const [kept, ...rest] = read(`${run.name}/00-implementer.followed.jsonl`).split('\n');
@@ -3841,7 +3840,7 @@ test('a resume after stopWhen reruns the review in its session, and goes on when
   assert.equal(calls().length, 4);
   assert.deepEqual(review.options.slice(-2), ['--session', 'ses_test']);
   assert.equal(review.prompt, rerunPrompt('Fixed S1.\nLook again.', outcomeRequest(undefined)));
-  assert.equal(planner.options[8], '--session-id');
+  assert.equal(planner.options[7], '--session-id');
   const resumed = runOf(1);
   assert.equal(read(`${resumed.directory}/definition.json`), files['stop.json']);
   assert.equal(stateOf(context, resumed).definition, 'stop.json');
@@ -3934,8 +3933,7 @@ test('a rerun whose role and harness the stopped run holds no session for starts
     'run',
     '--agent',
     'reviewer',
-    '--model',
-    'openai/gpt-6.1-sol',
+    '--model=openai/gpt-6.1-sol',
     '--format',
     'json',
   ]);
@@ -4296,9 +4294,9 @@ test('a step of Codex starts in its role, is followed by its messages, and is as
   const [first, again] = calls();
   assert.equal(calls().length, 2);
   assert.equal(first.harness, 'codex');
-  assert.deepEqual(first.options, ['exec', '--model', 'gpt-6.1-sol', '--json']);
+  assert.deepEqual(first.options, ['exec', '--model=gpt-6.1-sol', '--json']);
   assert.ok(first.prompt.startsWith(`${opening}\n\nThe unit is changes/${UNIT}/.\n\n${REQUEST_LINE}`), first.prompt);
-  assert.deepEqual(again.options, ['exec', '--model', 'gpt-6.1-sol', '--json', 'resume', CODEX_THREAD]);
+  assert.deepEqual(again.options, ['exec', '--model=gpt-6.1-sol', '--json', 'resume', CODEX_THREAD]);
   assert.equal(again.prompt, `${opening}\n\nThe unit is changes/${UNIT}/.\n\n${askAgainRequest(undefined)}`);
   assert.ok(result.stdout.includes('I read the unit.'), result.stdout);
   assert.ok(result.stdout.includes('No block.'), result.stdout);
@@ -4544,4 +4542,63 @@ test('a resume refuses a definition that names a role the project does not have,
     [],
     refused.stderr.replace('agentrite: tester.json', `${STARTED_RUN}/definition.json`).slice(0, -1),
   );
+});
+
+// Unit 0103, R11, R16: the form of a session passed to a harness.
+
+test('isSession takes the ids of the three harnesses, and none empty, opening with - or _, or too long', () => {
+  for (const session of [
+    '5faf91c6-bb1c-420a-9a99-a3ddf7e6741b',
+    'ses_fe651eea9ffetznsUtnsTg1uyn',
+    '01a1bb93-215e-74f0-b069-911b68314f9a',
+    'a'.repeat(128),
+  ]) {
+    assert.ok(isSession(session), session);
+  }
+  for (const session of ['', '-x', '--resume', '_x', 'a'.repeat(129), 'a b', 'a/b', 'a\n', 'a\nb', 'é']) {
+    assert.ok(!isSession(session), JSON.stringify(session));
+  }
+});
+
+test('a resume refuses a state.json that holds a session not of the form, naming its role and harness', (t) => {
+  const sessions = [
+    { role: 'planner', harness: 'claude', session: 'planner-session' },
+    { role: 'reviewer', harness: 'opencode', session: '--dangerously-skip-permissions' },
+  ];
+
+  resumeRefused(
+    t,
+    (context) => writeRun(context, 0, { state: { sessions } }),
+    [],
+    `${STARTED_RUN}/state.json holds a session of the role reviewer on the harness opencode that is not of the form ` +
+      'of a session: a letter or a digit, followed by up to 127 letters, digits, - and _. ' +
+      'npx agentrite orchestrate 0029 starts a new run',
+  );
+});
+
+test('a session a step gives that is not of the form is not kept, and the next step starts one of its own', (t) => {
+  const { base, write, read, agentrite, answer, calls } = project(t);
+  const twice = { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' };
+  write('twice.json', JSON.stringify({ steps: [twice, twice] }));
+  answer(1, claudePrinted(responseOf(DONE), '-bad'));
+  answer(2, claudePrinted(responseOf(DONE)));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'twice.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.ok(
+    result.stderr.includes(
+      'agentrite: the harness claude gave step 0 a session that is not of the form of a session, a letter or a ' +
+        'digit, followed by up to 127 letters, digits, - and _. It is not kept, and the next step of the role ' +
+        'implementer on claude starts a session of its own\n',
+    ),
+    result.stderr,
+  );
+  const [first, second] = calls();
+  assert.equal(first.options[7], '--session-id');
+  assert.equal(second.options[7], '--session-id');
+  assert.ok(!second.options.includes('--resume'), second.options.join(' '));
+  assert.notEqual(second.options[8], first.options[8]);
+  const state = JSON.parse(read(`${runDirectoryOf(base).name}/state.json`));
+  assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: second.options[8] }]);
 });

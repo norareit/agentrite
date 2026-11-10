@@ -186,21 +186,22 @@ The record and the resume:
 
 Sessions and the model:
 
-- [ ] In `tests/agentrite-run.test.mjs`, change the rows of each harness so that a model is `--model=<model>`, one
+- [x] In `tests/agentrite-run.test.mjs`, change the rows of each harness so that a model is `--model=<model>`, one
   argument, and add a test that each of the three harnesses gets it so, headless and not (R10, R16)
-- [ ] Make `harnessCommand` in `scripts/agentrite-run.mjs` pass `` `--model=${model}` `` (R10)
-- [ ] Add unit tests of `isSession`: the ids of the three harnesses above match, and an empty id, one that opens with
+- [x] Make `harnessCommand` in `scripts/agentrite-run.mjs` pass `` `--model=${model}` `` (R10)
+- [x] Add unit tests of `isSession`: the ids of the three harnesses above match, and an empty id, one that opens with
   `-` or `_`, one of 129 characters and one holding a space, a `/` or a line break do not (R11)
-- [ ] Add `SESSION_FORM` and `isSession` to `scripts/agentrite-orchestrate.mjs` (R11)
-- [ ] Add a test that a resume refuses, starts nothing, writes nothing and exits `1` when the run's `state.json`, with a
+- [x] Add `SESSION_FORM` and `isSession` to `scripts/agentrite-orchestrate.mjs` (R11)
+- [x] Add a test that a resume refuses, starts nothing, writes nothing and exits `1` when the run's `state.json`, with a
   record that matches it, holds a session that opens with `-`, naming its role and harness and the form a session
   takes. Add a test that a step whose harness gives a session that does not match leaves it out of `sessions` in
   `state.json`, says so on standard error, and that the next step of its role and harness is started with no session
   (R11, R16)
-- [ ] In `prepareResume`, after `parseRun`, throw the refusal of R11 for the first session of `state.sessions` that
-  `isSession` refuses. In the `ended` effect of `runPrepared`, keep `result.session` only when `isSession` takes it,
-  and otherwise write on standard error that the session the harness gave is not of the form, so it is not kept and
-  the next step of the role on that harness starts a session of its own (R11)
+- [x] In `prepareResume`, after `parseRun`, throw the refusal of R11 for the first session of `state.sessions` that
+  `isSession` refuses. In the `run` effect of `runPrepared`, leave `result.session` out unless `isSession` takes it,
+  before `orchestrate` keeps it for later steps and the `ended` effect writes it, and otherwise write on standard
+  error that the session the harness gave is not of the form, so it is not kept and the next step of the role on that
+  harness starts a session of its own (R11)
 
 Comparing a clone:
 
@@ -268,6 +269,6 @@ Documents:
 - [x] `feature-0103` the check of the run's directory before each write
 - [x] `feature-0103` the record of runs and the resume's judgement of it, the resume's definition read with the
   project's names
-- [ ] `feature-0103` the session pattern and `--model=<model>`
+- [x] `feature-0103` the session pattern and `--model=<model>`
 - [ ] `feature-0103` the comparison of a clone without conversions
 - [ ] `feature-0103` the documents and the rule in `AGENTS.md`

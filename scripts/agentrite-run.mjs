@@ -213,7 +213,8 @@ export function harnessCommand(run) {
   const started = start.role(role, roleFile);
   const options = [
     ...started.options,
-    ...(model === undefined ? [] : ['--model', model]),
+    // Joined to its option, so that a model that opens with a dash is not taken for an option of the harness.
+    ...(model === undefined ? [] : [`--model=${model}`]),
     ...(skipPermissions ? [start.skipPermissions] : []),
     ...harnessArguments,
   ];

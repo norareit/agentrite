@@ -56,6 +56,7 @@ import {
   exitStatus,
   followedLine,
   framedOutput,
+  isSession,
   openingLine,
   plainOutput,
   timedItems,
@@ -64,6 +65,7 @@ import {
   parseOrchestrateArgs,
   resumePosition,
   runName,
+  SESSION_WORDS,
   stepFileName,
   stepLine,
   variantOf,
@@ -2039,6 +2041,26 @@ async function runStep(root, directory, skipPermissions, words, planned, grouped
 }
 
 /**
+ * The result of the step `planned` with its session left out when the session is not of the form of a session, which
+ * is then said on standard error. Left out here, it is neither kept among the run's sessions nor passed to a later
+ * step, so the next step of its role on its harness starts a session of its own.
+ *
+ * @param {import('./agentrite-orchestrate.mjs').Planned} planned
+ * @param {import('./agentrite-orchestrate.mjs').Result} result
+ * @returns {import('./agentrite-orchestrate.mjs').Result}
+ */
+function withSessionOfForm(planned, result) {
+  if (result.session === undefined || isSession(result.session)) return result;
+  const { role, harness } = planned.step;
+  process.stderr.write(
+    `agentrite: the harness ${harness} gave step ${planned.number} a session that is not of the form of a session, ` +
+      `${SESSION_WORDS}. It is not kept, and the next step of the role ${role} on ${harness} starts a session of ` +
+      'its own\n',
+  );
+  return { ...result, session: undefined };
+}
+
+/**
  * Passes `SIGINT`, `SIGTERM` and `SIGHUP` on to the process group of the step that runs, which a step in a group of
  * its own no longer gets from the terminal, and then ends the command by the same signal, as it ended before steps
  * had a group of their own. With its listener gone, the signal sent to the command itself takes its default action.
@@ -2176,6 +2198,14 @@ function prepareResume(root, { unit, definition: given }) {
   const texts = { state: read.state.toString('utf-8'), definition: read.definition.toString('utf-8') };
   const names = { roles: Object.keys(settings.roles), harnesses: settings.harnesses };
   const { state, definition, step } = parseRun(directory, name, texts, names);
+  const malformed = state.sessions.find(({ session }) => !isSession(session));
+  if (malformed !== undefined) {
+    throw new Error(
+      `${run}/state.json holds a session of the role ${malformed.role} on the harness ${malformed.harness} that is ` +
+        `not of the form of a session: ${SESSION_WORDS}. npx agentrite orchestrate ${directory.split('-')[0]} ` +
+        'starts a new run',
+    );
+  }
   if (state.ended !== null && (state.at === null || step === null)) {
     throw new Error(`${run}/state.json: at is null. It must hold the step the run was at, in a run that ended`);
   }
@@ -2305,7 +2335,9 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
             output.items(timed);
             for (const item of timed) add(followedLine(item, instantOf(item.time)));
           },
-        ).finally(() => followed.close());
+        )
+          .then((result) => withSessionOfForm(planned, result))
+          .finally(() => followed.close());
       },
       ended(entry) {
         const { planned, result, reading } = entry;

@@ -107,6 +107,26 @@ function sessionKey(role, harness) {
 }
 
 /**
+ * The form of a session the command passes to a harness: a letter or a digit, then up to 127 letters, digits, `-`
+ * and `_`. It admits the ids of the kit's harnesses, and its first character keeps a session from being taken for
+ * an option.
+ */
+export const SESSION_FORM = /^[A-Za-z0-9][A-Za-z0-9_-]{0,127}$/;
+
+/** What `SESSION_FORM` says in words, for a refusal. */
+export const SESSION_WORDS = 'a letter or a digit, followed by up to 127 letters, digits, - and _';
+
+/**
+ * Whether `session` is of the form of a session, and may be passed to a harness.
+ *
+ * @param {string} session
+ * @returns {boolean}
+ */
+export function isSession(session) {
+  return SESSION_FORM.test(session);
+}
+
+/**
  * Where a resume of a stopped run starts, from the `at` and the `sessions` of its `state.json`: at the step `at`
  * names, with its number, and for an ask again at the step it asked, whose number is the one before it.
  *
