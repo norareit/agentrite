@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { formattedLike, jsonFault, jsonKeyFault, jsonPath } from '../scripts/agentrite-json.mjs';
+import { formattedLike, jsonFault, jsonKeyFault, jsonPath, parseJsonc } from '../scripts/agentrite-json.mjs';
 
 // R4, R10
 
@@ -62,4 +62,40 @@ test('jsonKeyFault names the first key in the order of the object that the place
     'findings[0].why is no key of a finding. A finding holds id',
   );
   assert.equal(jsonKeyFault({ x: 1 }, '', place), 'x is no key of a finding. A finding holds id');
+});
+
+// Unit 0106, R3, R16: JSON with the comments and the trailing commas that OpenCode accepts.
+
+test('parseJsonc reads plain JSON as JSON.parse does', () => {
+  assert.deepEqual(parseJsonc('{"a": [1, {"b": null}], "c": "d"}'), { a: [1, { b: null }], c: 'd' });
+  assert.equal(parseJsonc('"text"'), 'text');
+});
+
+test('parseJsonc takes out a line comment and a block comment over lines', () => {
+  const text = '{\n  // the first\n  "a": 1, // after a value\n  /* over\n     lines */ "b": /* inline */ 2\n}\n';
+  assert.deepEqual(parseJsonc(text), { a: 1, b: 2 });
+});
+
+test('parseJsonc takes out a trailing comma before } and before ], also with a comment between', () => {
+  assert.deepEqual(parseJsonc('{"a": [1, 2,], "b": 3,}'), { a: [1, 2], b: 3 });
+  assert.deepEqual(parseJsonc('{"a": [1, /* last */ ], "b": 3, // end\n}'), { a: [1], b: 3 });
+  assert.deepEqual(parseJsonc('[1,\n  /* x */\n  // y\n]'), [1]);
+});
+
+test('parseJsonc leaves //, /* and ,} inside a string as they are, and an escaped quote', () => {
+  const text =
+    '{"url": "http://localhost:11434/v1", "a": "/* not */", "b": "x,}", "c": "say \\"hi\\" // no", "d": "\\\\"}';
+  assert.deepEqual(parseJsonc(text), {
+    url: 'http://localhost:11434/v1',
+    a: '/* not */',
+    b: 'x,}',
+    c: 'say "hi" // no',
+    d: '\\',
+  });
+});
+
+test('parseJsonc throws the error of JSON.parse for a text that is still not JSON', () => {
+  assert.throws(() => parseJsonc('{"a": 1 "b": 2}'), SyntaxError);
+  assert.throws(() => parseJsonc('{"a": }'), SyntaxError);
+  assert.throws(() => parseJsonc('[,1]'), SyntaxError);
 });

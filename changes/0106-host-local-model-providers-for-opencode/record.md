@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-10T11:54:10Z
 ---
 
@@ -24,5 +24,7 @@ timestamp: 2026-11-10T11:54:10Z
 - 2026-11-10T12:15:18Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
   `feature-0106-host-local-model-providers-for-opencode` cut from `master` at `f80a148`, wrote `plan.md`. The status
   is `approved`
+- 2026-11-10T12:27:23Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
+  `feature-0106-host-local-model-providers-for-opencode` at `d1f3f90`. The status is `in-progress`
 
 ## Amendments

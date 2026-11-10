@@ -103,11 +103,11 @@ lines of what it does.
 
 ### JSONC
 
-- [ ] In `tests/agentrite-json.test.mjs`, test `parseJsonc`: plain JSON; a `//` comment to the end of a line and a
+- [x] In `tests/agentrite-json.test.mjs`, test `parseJsonc`: plain JSON; a `//` comment to the end of a line and a
   `/* */` comment over lines; a trailing comma before `}` and before `]`, also with a comment between; `//`, `/*`
   and `,}` inside a string, and a string with an escaped quote, left as they are; a text that is still not JSON
   throws `JSON.parse`'s error (R3, R16)
-- [ ] Add `parseJsonc` to `scripts/agentrite-json.mjs` (R3)
+- [x] Add `parseJsonc` to `scripts/agentrite-json.mjs` (R3)
 
 ### The reading of the host's file
 
@@ -203,8 +203,8 @@ lines of what it does.
 
 ## Commit Points
 
-- [ ] `feature-0106 Plan giving OpenCode in the sandbox the host's local model providers`: this plan and its log entry
-- [ ] `feature-0106 Read JSON with comments and trailing commas`: the tasks of "JSONC"
+- [x] `feature-0106 Plan giving OpenCode in the sandbox the host's local model providers`: this plan and its log entry
+- [x] `feature-0106 Read JSON with comments and trailing commas`: the tasks of "JSONC"
 - [ ] `feature-0106 Read the local providers of the host's OpenCode configuration`: the tasks of "The reading of the
   host's file"
 - [ ] `feature-0106 Give a harness's host member the start, and let it print a line`: the first task of "OpenCode's

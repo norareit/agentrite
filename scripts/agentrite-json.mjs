@@ -58,3 +58,67 @@ export function jsonKeyFault(object, path, place) {
   const extra = Object.keys(object).find((key) => !place.keys.includes(key));
   return extra === undefined ? undefined : `${jsonPath(path, extra)} is no key of ${place.name}. ${place.holds}`;
 }
+
+/**
+ * The value of `text` read as JSON with comments and trailing commas, as OpenCode reads its configuration: `//` and
+ * `/* *\/` comments are taken out, and a comma that only white space and comments separate from a closing `}` or `]`,
+ * with the text of strings left as it is. Throws the error of `JSON.parse` for what is still not JSON.
+ *
+ * @param {string} text
+ * @returns {unknown}
+ */
+export function parseJsonc(text) {
+  let kept = '';
+  // The index in `kept` of a comma that only white space has followed since, or -1.
+  let comma = -1;
+  let index = 0;
+  while (index < text.length) {
+    const character = text[index];
+    if (character === '"') {
+      const end = stringEnd(text, index);
+      kept += text.slice(index, end);
+      comma = -1;
+      index = end;
+    } else if (text.startsWith('//', index)) {
+      const end = text.indexOf('\n', index);
+      index = end === -1 ? text.length : end;
+    } else if (text.startsWith('/*', index)) {
+      const end = text.indexOf('*/', index + 2);
+      // An unclosed comment is left in, for JSON.parse to refuse.
+      if (end === -1) {
+        kept += text.slice(index);
+        index = text.length;
+      } else {
+        kept += ' ';
+        index = end + 2;
+      }
+    } else {
+      if ((character === '}' || character === ']') && comma !== -1) {
+        kept = `${kept.slice(0, comma)} ${kept.slice(comma + 1)}`;
+      }
+      if (character === ',') comma = kept.length;
+      else if (!/\s/.test(character)) comma = -1;
+      kept += character;
+      index += 1;
+    }
+  }
+  return JSON.parse(kept);
+}
+
+/**
+ * The index just past the end of the string that opens at `start` of `text`, or the length of `text` for a string
+ * that is never closed.
+ *
+ * @param {string} text
+ * @param {number} start
+ * @returns {number}
+ */
+function stringEnd(text, start) {
+  let index = start + 1;
+  while (index < text.length) {
+    if (text[index] === '\\') index += 2;
+    else if (text[index] === '"') return index + 1;
+    else index += 1;
+  }
+  return text.length;
+}
