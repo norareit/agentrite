@@ -172,5 +172,11 @@ something the form requires. The commands of `gh` were not run with the owner's 
   files outside a table row is longer than 120 characters. On `ece462a`, `npm test` passes, 1898 tests with none failed
   or skipped, and `npm run check-changes` exits 0. Not checked: the `gh` commands, which were not run. Handed over for
   review. The status stays `in-progress`
+- 2026-11-10T17:30:16Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of 0107 at
+  `0532a7ecc83f0f107fdc8ca964e4954f58581dff` against merge base `031ccd6` with `master`. Returned C1 and C2,
+  both non-blocking, in
+  `.reviews/0107-the-advisories-are-created-at-the-release/review-0532a7ecc83f-20261110T173016Z.md`.
+  `npm test` passed all 1898 tests with none failed or skipped; `npm run check-changes` and
+  `git diff --check master...HEAD` exited 0. The owner-authenticated commands and live web form were not verified.
 
 ## Amendments
