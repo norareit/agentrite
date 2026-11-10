@@ -140,7 +140,7 @@ lines of what it does.
 
 ### OpenCode's host member and the helper
 
-- [ ] In `scripts/agentrite-harness.mjs`, add `notes: string[]` to `Given` and the `start` argument to the type of
+- [x] In `scripts/agentrite-harness.mjs`, add `notes: string[]` to `Given` and the `start` argument to the type of
   `sandbox.host`, and update its purpose in `HARNESS_CONTRACT`. Give `notes: []` in Claude Code's and Codex's `host`,
   and in the `nothing` of `startText`, and update the expected values of `tests/agentrite-harness.test.mjs`. The suite
   passes with no change of behavior (R9)
@@ -207,7 +207,7 @@ lines of what it does.
 - [x] `feature-0106 Read JSON with comments and trailing commas`: the tasks of "JSONC"
 - [x] `feature-0106 Read the local providers of the host's OpenCode configuration`: the tasks of "The reading of the
   host's file"
-- [ ] `feature-0106 Give a harness's host member the start, and let it print a line`: the first task of "OpenCode's
+- [x] `feature-0106 Give a harness's host member the start, and let it print a line`: the first task of "OpenCode's
   host member and the helper", which changes no behavior
 - [ ] `feature-0106 Give OpenCode in the sandbox the host's local providers`: the rest of "OpenCode's host member and
   the helper" and "The wrapper"

@@ -25,9 +25,17 @@ import { opencode } from './harnesses/opencode.mjs';
  */
 
 /**
- * What a run of the sandbox gives a harness: entries `NAME=value` of the command's environment, mounts and files.
+ * What a run of the sandbox gives a harness: entries `NAME=value` of the command's environment, mounts and files, and
+ * the lines a start prints of what it gave.
  *
- * @typedef {{ environment: string[], mounts: Mount[], files: SandboxFile[] }} Given
+ * @typedef {{ environment: string[], mounts: Mount[], files: SandboxFile[], notes: string[] }} Given
+ */
+
+/**
+ * What a start tells a harness's `host` member besides the home: whether the project admits the local model server,
+ * and a reader of the harness's own files in `container/harnesses/<name>/`, by a path relative to that directory.
+ *
+ * @typedef {{ modelServer: boolean, readKit: (path: string) => ProjectFile }} Start
  */
 
 /**
@@ -77,7 +85,7 @@ import { opencode } from './harnesses/opencode.mjs';
  *     logDirectories: string[],
  *     hosts: { host: string, reason: string }[],
  *     bell: { environment: string[], mounts: Mount[] },
- *     host: (home: string, read: (path: string) => ProjectFile) => Given,
+ *     host: (home: string, read: (path: string) => ProjectFile, start: Start) => Given,
  *   },
  * }} Harness
  */
@@ -211,7 +219,9 @@ export const HARNESS_CONTRACT = [
   {
     member: 'sandbox.host',
     kind: 'function',
-    purpose: "what a run gives the harness besides from the host's files, from the host's home and a reader of them",
+    purpose:
+      "what a run gives the harness besides from the host's files, and the lines a start prints of it, from the " +
+      "host's home, a reader of them, and the start",
   },
 ];
 

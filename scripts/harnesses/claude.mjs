@@ -222,7 +222,7 @@ function claudeHost(home, read) {
             target: '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json',
           },
         ];
-  return { environment: [], mounts: statusLine, files: cleanupPeriod };
+  return { environment: [], mounts: statusLine, files: cleanupPeriod, notes: [] };
 }
 
 export const claude = {

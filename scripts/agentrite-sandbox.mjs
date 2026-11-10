@@ -118,7 +118,7 @@ function linesText(lines) {
 function startText(root, home) {
   const { bell, modelServer, harnesses } = readStart(root);
   const chosen = HARNESSES.filter((harness) => harnesses.includes(harness.name));
-  const nothing = { environment: [], mounts: [], files: [] };
+  const nothing = { environment: [], mounts: [], files: [], notes: [] };
   const read = hostReader(home);
   const given = (/** @type {Harness} */ harness) => (home === '' ? nothing : harness.sandbox.host(home, read));
   return linesText(startLines(bell, modelServer, chosen, given));

@@ -340,6 +340,6 @@ export const codex = {
       environment: [],
       mounts: [{ from: 'kit', path: 'bell-config.toml', target: '/etc/codex/config.toml' }],
     },
-    host: () => ({ environment: [], mounts: [], files: [] }),
+    host: () => ({ environment: [], mounts: [], files: [], notes: [] }),
   },
 };

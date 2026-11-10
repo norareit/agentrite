@@ -56,7 +56,7 @@ function mountLine(name, { from, path, target }) {
 
 // What the helper prints for the harnesses named `names`, built from the list, with what each is given of a home
 // that is `given` of its name, and with `modelServer`.
-function expected(names, bell, given = () => ({ environment: [], mounts: [], files: [] }), modelServer = false) {
+function expected(names, bell, given = () => ({ environment: [], mounts: [], files: [], notes: [] }), modelServer = false) {
   const harnesses = HARNESSES.filter((harness) => names.includes(harness.name));
   const lines = [`bell\t${bell}`, `modelServer\t${modelServer}`];
   for (const { name, title, start, sandbox } of harnesses) {

@@ -355,6 +355,6 @@ export const opencode = {
       environment: ['OPENCODE_CONFIG_CONTENT={"plugin":["file:///etc/agentrite/bell/opencode-plugin.js"]}'],
       mounts: [{ from: 'kit', path: 'bell-plugin.js', target: '/etc/agentrite/bell/opencode-plugin.js' }],
     },
-    host: () => ({ environment: [], mounts: [], files: [] }),
+    host: () => ({ environment: [], mounts: [], files: [], notes: [] }),
   },
 };

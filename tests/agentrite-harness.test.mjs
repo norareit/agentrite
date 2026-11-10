@@ -510,6 +510,7 @@ const STATUS_LINE = {
     { from: 'kit', path: 'managed-settings.json', target: '/etc/claude-code/managed-settings.json' },
   ],
   files: [],
+  notes: [],
 };
 
 test("Claude Code is given the host's status line when the script is a file that can be read", () => {
@@ -518,7 +519,7 @@ test("Claude Code is given the host's status line when the script is a file that
 });
 
 test('Claude Code is given no status line for a script that is missing, a directory or unreadable', () => {
-  const nothing = { environment: [], mounts: [], files: [] };
+  const nothing = { environment: [], mounts: [], files: [], notes: [] };
   assert.deepEqual(claude.sandbox.host(HOME, hostReader({})), nothing);
   assert.deepEqual(claude.sandbox.host(HOME, hostReader({ '.claude/statusline-command.sh': UNREADABLE })), nothing);
 });
@@ -538,11 +539,12 @@ test("Claude Code is given the host's cleanupPeriodDays as a file of managed set
         target: '/etc/claude-code/managed-settings.d/agentrite-cleanup-period.json',
       },
     ],
+    notes: [],
   });
 });
 
 test('Claude Code is given no cleanup period for settings that are missing or lack the key', () => {
-  const nothing = { environment: [], mounts: [], files: [] };
+  const nothing = { environment: [], mounts: [], files: [], notes: [] };
   assert.deepEqual(claude.sandbox.host(HOME, hostReader({})), nothing);
   const withoutKey = hostReader({ '.claude/settings.json': found('{"model": "x"}') });
   assert.deepEqual(claude.sandbox.host(HOME, withoutKey), nothing);
@@ -573,7 +575,7 @@ test('OpenCode is given nothing of the host', () => {
     '.claude/statusline-command.sh': found('echo status\n'),
     '.claude/settings.json': found('{"cleanupPeriodDays": 7}'),
   });
-  assert.deepEqual(opencode.sandbox.host(HOME, read), { environment: [], mounts: [], files: [] });
+  assert.deepEqual(opencode.sandbox.host(HOME, read), { environment: [], mounts: [], files: [], notes: [] });
 });
 
 // 0097 R3: the files of a harness's own in the sandbox
@@ -646,7 +648,7 @@ test("Codex's version is the word after codex-cli on the first line of what it p
 
 test('Codex is given nothing of the host', () => {
   const read = hostReader({ '.codex/config.toml': found('model = "x"\n') });
-  assert.deepEqual(codex.sandbox.host(HOME, read), { environment: [], mounts: [], files: [] });
+  assert.deepEqual(codex.sandbox.host(HOME, read), { environment: [], mounts: [], files: [], notes: [] });
 });
 
 test('Codex starts in a role by no option, and by words that name the role and its file', () => {
