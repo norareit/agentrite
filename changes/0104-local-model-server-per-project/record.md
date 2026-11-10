@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-09T17:28:29Z
 ---
 
@@ -34,5 +34,7 @@ timestamp: 2026-11-09T17:28:29Z
   gateway's address or the model server's port, with the rules of DNS as they are, since the spec's context leaves
   the project DNS to its resolvers. "Updating a project to a newer kit" of `SETUP.md` gains the line a project adds
   for `modelServer`, as it has for each required key. The status stays `approved`
+- 2026-11-10T10:44:32Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, began the work on
+  `feature-0104-local-model-server-per-project` at `74a46bf`. The status is `in-progress`
 
 ## Amendments
