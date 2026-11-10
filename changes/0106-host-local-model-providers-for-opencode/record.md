@@ -48,5 +48,10 @@ timestamp: 2026-11-10T11:54:10Z
   the rows of Markdown tables. Not checked: OpenCode itself reading the written configuration in a running container and
   listing the local provider's models, and a request to a model server through it. The status stays `in-progress`, for
   the review
+- 2026-11-10T13:09:28Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed unit 0106 at
+  `1dae517e3936ff71471f81d4870c54c538a23c9f` in a full review against merge base `f80a148`. Returned S1 in
+  `.reviews/0106-host-local-model-providers-for-opencode/review-20261110T130928Z.md`. `npm test` passes, 1892 tests
+  with none failed or skipped, and `npm run check-changes` passes. Not verified: OpenCode loading the generated
+  configuration and listing models in a running sandbox, or a request through it to a local model server
 
 ## Amendments
