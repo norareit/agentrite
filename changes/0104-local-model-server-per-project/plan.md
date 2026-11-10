@@ -190,13 +190,13 @@ The documents:
 
 ## Verification
 
-- [ ] `npm test` passes, with the tests that need Docker run on a host that has it (R15)
-- [ ] `./sandbox-dev.sh --in-place true` on the host logs that the local model server is not admitted, and a
+- [x] `npm test` passes, with the tests that need Docker run on a host that has it (R15)
+- [x] `./sandbox-dev.sh --in-place true` on the host logs that the local model server is not admitted, and a
   connection from the container to `host.docker.internal:11434` times out. With `"modelServer"` set to `true` in the
   root `agentrite.json` for the check alone, and set back to `false` after it, the next start logs the server
   admitted at the gateway's IPv4 address, with no change to the image (R5, R6, R7)
-- [ ] `npm run check-changes` exits 0
-- [ ] No line of a changed file is longer than 120 characters, but the rows of a Markdown table
+- [x] `npm run check-changes` exits 0
+- [x] No line of a changed file is longer than 120 characters, but the rows of a Markdown table
 
 ## Commit Points
 

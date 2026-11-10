@@ -41,5 +41,16 @@ timestamp: 2026-11-09T17:28:29Z
   `tests/sandbox-wrapper.test.mjs` write the key `modelServer` in the commit of the setting rather than in that of the
   wrapper, since `parseStart` refuses a start without it once it judges the key, and the suite would fail between the
   two commits. `writeStartSettings` takes `modelServer`, `false` unless given, as the plan has it under task 13
+- 2026-11-10T11:04:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished the tasks of `plan.md` in
+  three commits, `7ea2911`, `74dfd35` and `9bd04d4`. On `9bd04d4`, on the host with Docker, `npm test` passes, 1815
+  tests with none failed or skipped, `npm run check-changes` exits 0, and no line of a file the branch changes is longer
+  than 120 characters but the rows of Markdown tables. `./sandbox-dev.sh --in-place` with a command that opens a TCP
+  connection to `host.docker.internal:11434` was run twice. With `"modelServer": false` the entrypoint logged that the
+  local model server is not admitted, and the connection timed out after 5 seconds. With `"modelServer": true` in the
+  root `agentrite.json` for the check alone, set back to `false` after it, the next start logged the server allowed at
+  `172.17.0.1:11434`, the image's ID was the same before and after, every layer of its build cached, and the connection
+  timed out too, though a process on the host listens on `*:11434`. Whether the host's firewall drops it, the case of
+  the entry in "When something goes wrong", was not checked. The message of the refusal of a project's file that sets
+  `MODEL_SERVER_ADMITTED` is the plan's text as written. The status stays `in-progress`, for the review
 
 ## Amendments
