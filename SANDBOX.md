@@ -522,6 +522,9 @@ the file runs the kit's image as it is.
 The example above installs a JDK from the Debian packages of the image, which is Debian bookworm, and sets
 `JAVA_HOME`. `TARGETARCH` is `amd64` or `arm64`, as the machine is, so the path holds on both.
 
+A `PATH` that the file sets with `ENV`, as `ENV PATH=/opt/tool/bin:$PATH` for a tool installed under `/opt`, is the
+`PATH` of the agent's commands: of the command a run starts, and of a command that `--connect` runs.
+
 The file must not change the entrypoint, the command, the user or the working directory that the kit's image sets,
 with `ENTRYPOINT`, `CMD`, `USER` or `WORKDIR`. The kit's entrypoint is what installs the firewall and drops to the
 agent. At every start with the file, the wrapper compares the image with the kit's, and refuses to start an image

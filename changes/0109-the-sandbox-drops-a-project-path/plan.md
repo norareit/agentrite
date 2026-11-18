@@ -98,12 +98,12 @@ and run those lines verbatim where they can be run on the host.
   call, which the change of `--connect` makes fail (R2)
 - [x] Run `npm test` and see every test pass (R1, R2, R3, R4, R6)
 - [x] Commit: `bugfix-0109 Give the agent the PATH of the image`
-- [ ] In "Adding software to the sandbox" of `SANDBOX.md`, after the paragraph on the example and `TARGETARCH`, add
+- [x] In "Adding software to the sandbox" of `SANDBOX.md`, after the paragraph on the example and `TARGETARCH`, add
   a paragraph that says that a `PATH` the file sets with `ENV`, as `ENV PATH=/opt/tool/bin:$PATH` for a tool
   installed under `/opt`, is the `PATH` of the agent's commands: of the command a run starts and of a command that
   `--connect` runs. Leave the statement of "Two agents on one unit" that the connected command has `PATH` as the
   first command has it as it is, which the fix keeps true. Wrap at 120 characters (R5)
-- [ ] Commit: `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`
+- [x] Commit: `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`
 
 ## Verification
 
@@ -118,4 +118,4 @@ and run those lines verbatim where they can be run on the host.
 
 - [x] `bugfix-0109 Add the regression tests of the PATH the agent is given`: the failing tests
 - [x] `bugfix-0109 Give the agent the PATH of the image`: the entrypoint and `--connect`, with every test passing
-- [ ] `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`: `SANDBOX.md`
+- [x] `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`: `SANDBOX.md`
