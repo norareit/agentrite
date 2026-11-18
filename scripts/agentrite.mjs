@@ -51,6 +51,7 @@ import { HARNESS_NAMES, HARNESSES, harnessNamed, plannedFiles, wrapperDirectorie
 import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
 import { formattedLike } from './agentrite-json.mjs';
 import {
+  endError,
   endLine,
   endReport,
   exitStatus,
@@ -2008,7 +2009,8 @@ function runGrouped(root, args, timeoutMinutes, grouped, line) {
  * Runs one step as `agentrite run` of this file, headless, in a process group of its own, with the step's prompt and
  * the request of its outcome, for the rerun of a resume with the human's `words` between them, or for an ask again
  * the request of an ask again alone, and gives how its harness ended, its final response, its session, whether it
- * ran past its time limit and the tool calls its harness refused for lack of permission. The harness's standard
+ * ran past its time limit, the tool calls its harness refused for lack of permission and the errors it reported that
+ * ended the step. The harness's standard
  * error reaches the terminal, and its standard output is read. `grouped` is given the step's `Running` when it
  * starts, and `undefined` when it has ended. `follow` is given what the harness makes known of the step in each line
  * it prints, as it arrives.
@@ -2053,6 +2055,7 @@ async function runStep(root, directory, skipPermissions, words, planned, grouped
     response: read.response,
     session: read.session ?? start.session,
     refused: headless.refused(stdout),
+    errors: headless.errors(stdout),
   };
 }
 
@@ -2319,6 +2322,7 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
     writeState(null);
     passSignalsOn(() => running?.group);
     /** @type {string | undefined} */ let responsePath;
+    /** @type {string | undefined} */ let errorPath;
     if (opening !== undefined) output.opening(opening);
     /** @type {import('./agentrite-orchestrate.mjs').Effects} */ const effects = {
       started(planned) {
@@ -2369,6 +2373,11 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
           else known.session = result.session;
         }
         responsePath = undefined;
+        errorPath = undefined;
+        if (result.errors.length > 0) {
+          write(fileOf(planned, 'error.txt'), `${result.errors.join('\n')}\n`);
+          errorPath = join(runDirectory, fileOf(planned, 'error.txt'));
+        }
         if (reading.kind === 'outcome') {
           write(fileOf(planned, 'outcome.json'), `${reading.text}\n`);
         } else if (result.response !== undefined) {
@@ -2383,9 +2392,15 @@ async function runPrepared(root, prepared, { skipPermissions, follow, prompt: wo
     if (failure !== undefined) throw failure;
     const status = exitStatus(end);
     stopHeartbeat();
-    writeState({ status, line: endLine(end) });
+    writeState({ status, line: endLine(end), error: endError(end) });
     output.report(
-      endReport(ran, end, unfixed, { runDirectory, unitDirectory: directory, responsePath, skipPermissions }),
+      endReport(ran, end, unfixed, {
+        runDirectory,
+        unitDirectory: directory,
+        responsePath,
+        errorPath,
+        skipPermissions,
+      }),
     );
     return status;
   } finally {
