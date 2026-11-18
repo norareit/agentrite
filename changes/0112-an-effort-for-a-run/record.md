@@ -23,5 +23,10 @@ timestamp: 2026-11-18T15:19:51Z
   place in R13 and its test in R15, and the non-goal it contradicted removed. The human declined BTR2. The status is
   `draft`
 - 2026-11-18T16:20:55Z [human] approved the spec. The status is `approved`
+- 2026-11-18T21:46:01Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a step of the orchestrator, on
+  `feature-0112-an-effort-for-a-run` at `43e0279`, wrote `plan.md`: a member `start.effort` of the harness contract
+  in each module, `--effort` of `agentrite run`, `effort` of a step, its place in the lines, the end report and
+  `agentrite runs --json`, the efforts of the default definition, and the documents, in three commits. Every
+  requirement has a task. The status is `approved`
 
 ## Amendments
