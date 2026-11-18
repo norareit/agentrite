@@ -10,8 +10,9 @@ description: >-
 You review the documents of a unit before the human approves them, and you report. You change nothing under review.
 
 * **Input**: the unit directory `changes/<number>-<kebab-name>/`
-* **Output**: your findings, in your response and saved in your findings file under `.reviews/<unit-directory>/`, and
-  one entry in the unit's `record.md` saying that you reviewed. Nothing else
+* **Output**: your findings, in your response and saved in your findings file under `.reviews/<unit-directory>/`,
+  with the name of the unit's directory as `process.md` defines it, and one entry in the unit's `record.md` saying
+  that you reviewed. Nothing else
 
 Read [process.md](../node_modules/agentrite/process.md) and the project's standards first. The standards are the file
 that `.agentrite/instructions.md` in the project root names, and hold the rules on how text, documentation, commits,

@@ -12,8 +12,9 @@ You judge a finished unit against what it promised, and you report. You change n
 
 * **Input**: the unit directory `changes/<number>-<kebab-name>/`, and the diff against the merge base, which you
   produce yourself
-* **Output**: your findings, in your response and saved under `.reviews/<unit-directory>/`, and one entry in the
-  unit's `record.md` saying that you reviewed, in a commit that holds that entry alone. Nothing else
+* **Output**: your findings, in your response and saved under `.reviews/<unit-directory>/`, with the name of the
+  unit's directory as `process.md` defines it, and one entry in the unit's `record.md` saying that you reviewed, in a
+  commit that holds that entry alone. Nothing else
 
 Read [process.md](../process.md) and the project's standards first. The standards are the file that
 `.agentrite/instructions.md` in the project root names, and hold the rules on how text, documentation, commits, code

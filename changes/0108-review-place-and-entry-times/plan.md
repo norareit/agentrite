@@ -29,57 +29,59 @@ does not, and no file at the root is added, so neither table of `README.md` or `
 
 ## Tasks
 
-- [ ] Add `tests/process-rules.test.mjs`, run by `npm test` as every `tests/*.test.mjs` is. It reads files with
+- [x] Add `tests/process-rules.test.mjs`, run by `npm test` as every `tests/*.test.mjs` is. It reads files with
   `readFileSync` and builds paths with `fileURLToPath`, never from a URL's `pathname`, as
   `tests/file-paths.test.mjs` requires. It holds two tests, each with a comment naming the requirement of unit 0108
   it keeps (R5)
-    - [ ] One asserts that `process.md` at the root holds `date -u +%Y-%m-%dT%H:%M:%SZ`, with a message saying that
+    - [x] One asserts that `process.md` at the root holds `date -u +%Y-%m-%dT%H:%M:%SZ`, with a message saying that
       `process.md` no longer states where the timestamp of an entry in `record.md` comes from (R3, R5)
-    - [ ] One reads `process.md` and every `.md` file directly in `roles/` and in `extra-roles/`, and asserts that the
+    - [x] One reads `process.md` and every `.md` file directly in `roles/` and in `extra-roles/`, and asserts that the
       list of those whose text holds `.reviews/changes/` is empty, with a message naming the files and saying that a
       place under `.reviews` takes the name of the unit's directory without `changes/` (R2, R5)
-- [ ] Run `node --test tests/process-rules.test.mjs` and see the test on the timestamp fail and the one on
+- [x] Run `node --test tests/process-rules.test.mjs` and see the test on the timestamp fail and the one on
   `.reviews/changes/` pass (R5)
-- [ ] In `process.md`, in the paragraph that begins "A review's findings are saved in full", say that
+- [x] In `process.md`, in the paragraph that begins "A review's findings are saved in full", say that
   `<unit-directory>` in a path under `.reviews` is the name of the unit's directory in `changes/`, without
   `changes/`, and give `.reviews/0012-export-to-csv/` as the example, the unit of the example that the paragraph on
   variants below already uses (R1)
-- [ ] In `process.md`, directly after the bullet "It opens with the timestamp, in the same UTC format as the
+- [x] In `process.md`, directly after the bullet "It opens with the timestamp, in the same UTC format as the
   frontmatter, written bare", or as a sentence of that bullet, say that the timestamp of an entry, and the
   `timestamp` of a record's frontmatter, is the output of `date -u +%Y-%m-%dT%H:%M:%SZ` run when the entry or the
   record is written, and is never estimated, carried over from another entry or taken from a local clock. Keep the
   format of the timestamp as it is (R3)
-- [ ] In `process.md`, under "### Commits", add a bullet saying that an agent sets neither the author date nor the
+- [x] In `process.md`, under "### Commits", add a bullet saying that an agent sets neither the author date nor the
   committer date of a commit, by an option such as `--date` or by `GIT_AUTHOR_DATE` or `GIT_COMMITTER_DATE`, and
   leaves both to git (R4)
-- [ ] Run `node --test tests/process-rules.test.mjs` and see both tests pass (R5)
-- [ ] In `roles/reviewer.md`, in "Output", name the place as `.reviews/<unit-directory>/`, the name of the unit's
+- [x] Run `node --test tests/process-rules.test.mjs` and see both tests pass (R5)
+- [x] In `roles/reviewer.md`, in "Output", name the place as `.reviews/<unit-directory>/`, the name of the unit's
   directory as `process.md` defines it. The later mention under "Save your complete findings" stays as it is (R2)
-- [ ] In `roles/implementer.md`, in the line "Take findings only from the files of `.reviews/<unit-directory>/` of
+- [x] In `roles/implementer.md`, in the line "Take findings only from the files of `.reviews/<unit-directory>/` of
   your own run, as `process.md` says", make the reference to `process.md` cover the definition of `<unit-directory>`
   as well as the variants, without restating the definition (R2)
-- [ ] In `extra-roles/spec-reviewer.md`, in "Output", name `.reviews/<unit-directory>/` as `process.md` defines it.
+- [x] In `extra-roles/spec-reviewer.md`, in "Output", name `.reviews/<unit-directory>/` as `process.md` defines it.
   The later mention under "Save your complete findings" stays as it is (R2)
-- [ ] In `extra-roles/security-reviewer.md`, at the path `.reviews/<unit-directory>/security-review-<commit>-
+- [x] In `extra-roles/security-reviewer.md`, at the path `.reviews/<unit-directory>/security-review-<commit>-
   <instant>.md`, say that `<unit-directory>` is as `process.md` defines it, in the sentences below the list that
   already say what `<commit>` and `<instant>` are. The places of an audit, `.reviews/security-audits/`, and
   `.reviews/security-accepted.md` are not a unit's and stay as they are (R2)
-- [ ] Read every line of `process.md`, `roles/` and `extra-roles/` that holds `.reviews` and confirm that each place
+- [x] Read every line of `process.md`, `roles/` and `extra-roles/` that holds `.reviews` and confirm that each place
   of a unit is written `.reviews/<unit-directory>/` and that no text near it reads as a path holding `changes/` (R2)
 
 ## Verification
 
 - [ ] `npm test` passes
-- [ ] `grep -rn "reviews/changes" process.md roles extra-roles` prints nothing
-- [ ] `grep -n "date -u +%Y-%m-%dT%H:%M:%SZ\|GIT_COMMITTER_DATE\|0012-export-to-csv/" process.md` shows the three
+- [x] `grep -rn "reviews/changes" process.md roles extra-roles` prints nothing
+- [x] `grep -n "date -u +%Y-%m-%dT%H:%M:%SZ\|GIT_COMMITTER_DATE\|0012-export-to-csv/" process.md` shows the three
   rules
-- [ ] Every changed line is at most 120 characters, checked before each commit
+- [x] Every changed line is at most 120 characters, checked before each commit
 - [ ] `npm run check-changes` passes after the last commit
 
 ## Commit Points
 
-- [ ] `bugfix-0108 Plan the fix`: this `plan.md` and the planner's entry in `record.md`
-- [ ] `bugfix-0108 State where reviews are saved and where timestamps and commit dates come from`: the test and
+- [x] `bugfix-0108 Plan the fix`: this `plan.md` and the planner's entry in `record.md`
+- [x] `bugfix-0108 State where reviews are saved and where timestamps and commit dates come from`: the test and
   `process.md`
-- [ ] `bugfix-0108 Name the place of a unit's reviews as process.md defines it`: the four role files, and the
+- [x] `bugfix-0108 Name the place of a unit's reviews as process.md defines it`: the four role files, and the
   implementer's entries in `record.md`
+- [ ] `bugfix-0108 Record the change check`: the tick of `npm run check-changes` under "Verification" and the
+  implementer's entry on it in `record.md`

@@ -212,11 +212,12 @@ one file and in no other:
 * For a unit review, `.reviews/<unit-directory>/security-review-<commit>-<instant>.md`
 * For an audit, `.reviews/security-audits/security-audit-<commit>-<instant>.md`
 
-`<commit>` is the commit you review, as `git rev-parse --short=12 HEAD` prints it at the start of the review.
-`<instant>` is the moment in UTC at which the review starts, read at the same point as `<commit>`, in the form that
-`date -u +%Y%m%dT%H%M%SZ` prints, as `20261108T141500Z`. The form holds no colon and no `--`. Together they tell two
-reviews of one commit apart, so that a later review does not overwrite an earlier one. On a variant's branch the name
-ends in `--<name>.md` with the variant's name, after the instant, as `process.md` says of the reviews of a variant, as
+`<unit-directory>` is the name of the unit's directory, as `process.md` defines it. `<commit>` is the commit you review,
+as `git rev-parse --short=12 HEAD` prints it at the start of the review. `<instant>` is the moment in UTC at which the
+review starts, read at the same point as `<commit>`, in the form that `date -u +%Y%m%dT%H%M%SZ` prints, as
+`20261108T141500Z`. The form holds no colon and no `--`. Together they tell two reviews of one commit apart, so that a
+later review does not overwrite an earlier one. On a variant's branch the name ends in `--<name>.md` with the variant's
+name, after the instant, as `process.md` says of the reviews of a variant, as
 `security-review-<commit>-<instant>--opus.md`. On the unit's branch it holds no `--`. Make the directory of the file
 when it is not there, `.reviews/security-audits/` among them. Save them as well as reporting them, not instead: the
 response is what the human reads now, and the file is what survives the session being closed or interrupted.
