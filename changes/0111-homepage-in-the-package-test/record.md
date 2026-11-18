@@ -20,8 +20,8 @@ timestamp: 2026-11-18T12:18:43Z
   `tests/package-documents.test.mjs` expects to `https://agentrite.dev`, and nothing else. `npm test` on this tree
   passes 1898 of 1898 tests. The work is handed over for review. The status stays `in-progress`
 - 2026-11-18T12:24:44Z [human] reviewed the unit and found it good, with no findings
-- 2026-11-18T12:24:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit to `implemented` on the human's
-  review. The status is `implemented`
+- 2026-11-18T12:24:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit to `implemented` on
+  the human's review. The status is `implemented`
 
 ## The task
 
@@ -31,3 +31,6 @@ package is, where it lives and under which license" in `tests/package-documents.
 `https://agentrite.dev` is the homepage. The test is to expect it, and nothing else changes.
 
 ## Amendments
+
+- 2026-11-18T12:24:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrapped again the first line of the entry that
+  sets `implemented`, which `dd883a5` made longer than 120 characters
