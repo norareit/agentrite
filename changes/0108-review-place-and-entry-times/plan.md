@@ -74,7 +74,7 @@ does not, and no file at the root is added, so neither table of `README.md` or `
 - [x] `grep -n "date -u +%Y-%m-%dT%H:%M:%SZ\|GIT_COMMITTER_DATE\|0012-export-to-csv/" process.md` shows the three
   rules
 - [x] Every changed line is at most 120 characters, checked before each commit
-- [ ] `npm run check-changes` passes after the last commit
+- [x] `npm run check-changes` passes after the last commit
 
 ## Commit Points
 
@@ -83,5 +83,5 @@ does not, and no file at the root is added, so neither table of `README.md` or `
   `process.md`
 - [x] `bugfix-0108 Name the place of a unit's reviews as process.md defines it`: the four role files, and the
   implementer's entries in `record.md`
-- [ ] `bugfix-0108 Record the change check`: the tick of `npm run check-changes` under "Verification" and the
-  implementer's entry on it in `record.md`
+- [x] `bugfix-0108 Record the change check`: the tick of `npm run check-changes` under "Verification", the
+  implementer's entry on it in `record.md` and the wrapping again of its entries that were too long
