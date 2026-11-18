@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 #
 # The one script in the sandbox that holds logic. It runs as root at container start,
 # installs a default-deny egress firewall, starts the egress proxy that admits TLS by
@@ -6,6 +6,9 @@
 # then drops to the unprivileged agent user. It exists only because iptables rules cannot
 # be baked into an image: they are kernel state in a network namespace that does not
 # exist until the container runs.
+#
+# Its bash is named by the path it has in the image, and not looked up with env, which
+# would search the PATH the image sets before the fixed one below is set.
 set -euo pipefail
 
 # The entrypoint runs as root, and runs the programs of the system directories alone,

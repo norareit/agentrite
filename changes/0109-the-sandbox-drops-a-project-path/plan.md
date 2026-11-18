@@ -115,9 +115,9 @@ and run those lines verbatim where they can be run on the host.
   with its refusal of a start that is not root, which it reaches only with bash started and the fixed `PATH` set.
   Skip the run when the suite runs as root. See both fail against the tree (R4, R6)
 - [x] Commit: `bugfix-0109 Add the regression test of the shell the entrypoint starts with`
-- [ ] Make the first line of `container/entrypoint.sh` `#!/bin/bash`, with a comment that says why it is not
+- [x] Make the first line of `container/entrypoint.sh` `#!/bin/bash`, with a comment that says why it is not
   looked up on the `PATH`, and see `npm test` pass (R1, R4)
-- [ ] Commit: `bugfix-0109 Start the entrypoint with the bash of the image by its path`
+- [x] Commit: `bugfix-0109 Start the entrypoint with the bash of the image by its path`
 
 ## Verification
 
@@ -137,4 +137,4 @@ and run those lines verbatim where they can be run on the host.
   the implementer's entry on them in `record.md`
 - [x] `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`: the tests alone, C1
 - [x] `bugfix-0109 Add the regression test of the shell the entrypoint starts with`: the failing test, S1
-- [ ] `bugfix-0109 Start the entrypoint with the bash of the image by its path`: the entrypoint, S1
+- [x] `bugfix-0109 Start the entrypoint with the bash of the image by its path`: the entrypoint, S1
