@@ -38,5 +38,17 @@ timestamp: 2026-11-15T23:30:08Z
   none is put to the human. The status is `approved`
 - 2026-11-18T17:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a run of the orchestrator, on
   `feature-0110-report-a-harness-failure-that-stops-a-run` at `040c714`, began the work. The status is `in-progress`
+- 2026-11-18T18:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a run of the orchestrator, on
+  `feature-0110-report-a-harness-failure-that-stops-a-run`, built every task of `plan.md` in the five commits of its
+  commit points. The existing tests that the new lines of a stop by a harness changed were updated: the report of a
+  harness that exited 1, the `ended` of `state.json` now holding `error`, and the `Result` of the tests holding
+  `errors`. The sample of the error in the command's tests is cut to 100 characters in `state.json`, as R8 says. The
+  documents say the line of the resume command is one line, wrapped, since it is longer than 120 characters. The
+  three commits of the command's files hold files, not the tests of each step, so the tests of the orchestrator and
+  `state.json` stand in the second commit and those of `runs` in the third. `npm test` was run on the tree of
+  `2061b67` before the record was written and reported 1900 passed, 0 failed and 34 skipped. No formatter is installed in
+  the repository, so the line limit was checked with a script of line lengths, for the files this unit changed. Not
+  checked: a real outage of a provider, and the forms of the errors beyond the samples the plan holds. The status is
+  `in-progress`
 
 ## Amendments

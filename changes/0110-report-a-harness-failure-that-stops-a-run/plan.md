@@ -173,76 +173,76 @@ first `COMMAND_LENGTH` code points, the constant `callLabel` cuts a command by, 
   with a doc comment that says what it reads and why the rest is not read, and each read with `jsonRecords`. Set
   them as `headless.errors` (R1, R2)
 - [x] Commit: `feature-0110 Read the errors a harness ends a step with`
-- [ ] In `tests/agentrite-orchestrate.test.mjs`, give `runWith` the default `errors: []`, and add tests of
+- [x] In `tests/agentrite-orchestrate.test.mjs`, give `runWith` the default `errors: []`, and add tests of
   `orchestrate`, `judgeStep`, `stepLine` and `endReport` that fail against the tree (R3 to R5, R7, R11, R13):
-    - [ ] A step that exits 0 with an error and a final response with no block marked `json` stops by `harness`,
+    - [x] A step that exits 0 with an error and a final response with no block marked `json` stops by `harness`,
       is not asked again, and nothing runs after it; one that exits 0 with an error and an outcome that is `done`
       stops by `harness` too, its outcome read (R3)
-    - [ ] A step that timed out with an error is judged `timeout` (R3)
-    - [ ] A step that exits 0 with no error and no block is asked again, as now (R11)
-    - [ ] `stepLine` gives `the harness reported an error` for an exit of 0 with an error, and still
+    - [x] A step that timed out with an error is judged `timeout` (R3)
+    - [x] A step that exits 0 with no error and no block is asked again, as now (R11)
+    - [x] `stepLine` gives `the harness reported an error` for an exit of 0 with an error, and still
       `the harness exited with 1` and `the harness was ended by SIGTERM` when they hold, with an error or without
       (R4)
-    - [ ] The end report of each of the three: the end line, then `The harness reported this error:` and each line
+    - [x] The end report of each of the three: the end line, then `The harness reported this error:` and each line
       indented by two spaces, of an error of two errors whose lines are joined in order; an error of 20 lines in
       full; one of 21 lines with `The other line of the error is in <path>.`; one of 25 with `The other 5 lines of
       the error are in <path>.`, the path the `errorPath` given; a harness that exited 1 with no error, with the line
       of no error (R5)
-    - [ ] The resume line, without ` --skip-permissions` and with it, and for a stop with refused calls both the
+    - [x] The resume line, without ` --skip-permissions` and with it, and for a stop with refused calls both the
       resume line and the lines of the refused calls as they are now, the resume line first; a stop by any other
       case gives neither the error lines nor the resume line (R7, R11)
-- [ ] Implement in `scripts/agentrite-orchestrate.mjs` (R3 to R5, R7, R11):
-    - [ ] `errors: string[]` in the `Result` typedef, documented as the errors the harness reported that ended the
+- [x] Implement in `scripts/agentrite-orchestrate.mjs` (R3 to R5, R7, R11):
+    - [x] `errors: string[]` in the `Result` typedef, documented as the errors the harness reported that ended the
       step, in the order it printed them
-    - [ ] `judgeStep` gives `harness` also for `errors.length > 0`, after the time limit, and its doc comment says
+    - [x] `judgeStep` gives `harness` also for `errors.length > 0`, after the time limit, and its doc comment says
       so; the comment above the ask again in `orchestrate` says that `none` is judged only of a harness that
       reported no error either
-    - [ ] `stepResult` gives `the harness reported an error` after the cases of the signal and the status
-    - [ ] `endLine` gives `its harness reported an error.` for `harness` with a status of 0 and no signal
-    - [ ] `resumeCommand(unitDirectory, skipPermissions)`, used by `refusedLines` with `true`
-    - [ ] `harnessLines(end, { unitDirectory, errorPath, skipPermissions })`, which gives nothing but for a stop by
+    - [x] `stepResult` gives `the harness reported an error` after the cases of the signal and the status
+    - [x] `endLine` gives `its harness reported an error.` for `harness` with a status of 0 and no signal
+    - [x] `resumeCommand(unitDirectory, skipPermissions)`, used by `refusedLines` with `true`
+    - [x] `harnessLines(end, { unitDirectory, errorPath, skipPermissions })`, which gives nothing but for a stop by
       `harness`, and `endReport` takes `errorPath` in its last argument and puts these lines directly after the end
       line, before `refusedLines`
-- [ ] Commit: `feature-0110 Stop the run and report the error of a harness`
-- [ ] Add a test of `endError` to `tests/agentrite-orchestrate.test.mjs`: the first line of the joined errors of a
+- [x] Commit: `feature-0110 Stop the run and report the error of a harness`
+- [x] Add a test of `endError` to `tests/agentrite-orchestrate.test.mjs`: the first line of the joined errors of a
   stop by `harness`, a first line ending in a carriage return without it, one of 150 code points cut to 100 with a
   character outside the BMP across the cut kept whole, `null` for a stop by `harness` with no error, and `null` for a
   complete run, a run out of rounds and every other stop (R8)
-- [ ] Implement `endError(end)` in `scripts/agentrite-orchestrate.mjs`, splitting the error as `harnessLines` does by
+- [x] Implement `endError(end)` in `scripts/agentrite-orchestrate.mjs`, splitting the error as `harnessLines` does by
   one function that both call (R8)
-- [ ] Add tests of the command to `tests/agentrite-orchestrate.test.mjs`, by the fake harness of `project`, that fail
+- [x] Add tests of the command to `tests/agentrite-orchestrate.test.mjs`, by the fake harness of `project`, that fail
   against the tree (R3, R5, R6, R8, R10, R13):
-    - [ ] A step whose fake prints the Claude Code sample of the 500 and exits 1 stops the run with the status 3; its
+    - [x] A step whose fake prints the Claude Code sample of the 500 and exits 1 stops the run with the status 3; its
       `<number>-<role>.error.txt` holds the error and a line break; the report gives the error under its line, the
       path in the run's directory where the file is, and the resume line; `state.json` holds an end whose `error`
       is the first line of the error
-    - [ ] A step whose fake prints the OpenCode sample of the two errors and exits 0 stops the run with the status
+    - [x] A step whose fake prints the OpenCode sample of the two errors and exits 0 stops the run with the status
       3, the end line saying that the harness reported an error; the file holds both, in order
-    - [ ] A step whose fake prints nothing and exits 1 has no error file, the report gives the line of no error, and
+    - [x] A step whose fake prints nothing and exits 1 has no error file, the report gives the line of no error, and
       `state.json` holds `error: null`; a run that ran every item holds `error: null` too
-    - [ ] `--resume` of a run stopped by a failure of its harness reruns the step whose harness failed, with the
+    - [x] `--resume` of a run stopped by a failure of its harness reruns the step whose harness failed, with the
       number it had, and goes on to the end when the fake answers with an outcome (R10)
-- [ ] In `scripts/agentrite.mjs`, have `runStep` give `errors: headless.errors(stdout)`; have the effect `ended`
+- [x] In `scripts/agentrite.mjs`, have `runStep` give `errors: headless.errors(stdout)`; have the effect `ended`
   write `fileOf(planned, 'error.txt')` with the joined errors and a line break when there are any, keeping its path
   from the root as `errorPath` and setting it to `undefined` first, as `responsePath` is; write the end as
   `{ status, line: endLine(end), error: endError(end) }`; and give `endReport` the `errorPath`. Update the doc
   comment of `runStep` (R5, R6, R8)
-- [ ] Commit: `feature-0110 Keep the error of a harness in the run's directory and in state.json`
-- [ ] In `tests/agentrite-runs.test.mjs`, add tests that fail against the tree (R8, R9, R13):
-    - [ ] An end with an `error` that is a string, one with `error: null` and one with no `error` are read, and
+- [x] Commit: `feature-0110 Keep the error of a harness in the run's directory and in state.json`
+- [x] In `tests/agentrite-runs.test.mjs`, add tests that fail against the tree (R8, R9, R13):
+    - [x] An end with an `error` that is a string, one with `error: null` and one with no `error` are read, and
       `ended` holds `error` as given, `null` for the last two; an `error` of `1` is refused with
       `ended.error is 1. It must hold a string or null`, and the refusal of an extra key of `ended` names
       `ended holds status, line and error`
-    - [ ] The line of an ended run with an `error` is the line of its end, a space, `The harness reported:`, a space,
+    - [x] The line of an ended run with an `error` is the line of its end, a space, `The harness reported:`, a space,
       and the error; one whose `error` is `null` and one written before it held `error` give the line of the end
       alone
-    - [ ] With `--json`, the `ended` of each of the three holds `error`, `null` for the last two
-- [ ] In `scripts/agentrite-runs.mjs`, add `error` to `ENDED_PLACE`, check it in `endedFault` as missing, `null` or
+    - [x] With `--json`, the `ended` of each of the three holds `error`, `null` for the last two
+- [x] In `scripts/agentrite-runs.mjs`, add `error` to `ENDED_PLACE`, check it in `endedFault` as missing, `null` or
   a string, give `RunState` an `ended` of `{ status: number, line: string, error: string | null }`, read a missing
   `error` as `null` where the run is made, and add the error in `detailOf`. Say in the doc comment of `stateFault`
   that an `error` of `ended` that is missing is no fault, since an end from before unit 0110 has none (R8, R9)
-- [ ] Commit: `feature-0110 Show the error of a harness in agentrite runs`
-- [ ] In `ORCHESTRATOR.md`, "How a run ends": the case of the list of when the run stops says that a harness that
+- [x] Commit: `feature-0110 Show the error of a harness in agentrite runs`
+- [x] In `ORCHESTRATOR.md`, "How a run ends": the case of the list of when the run stops says that a harness that
   reported an error on its standard output stops it too, also when it exited 0; the paragraph of the ask again
   names a step whose harness reported an error among those not asked again; the paragraph of what the command
   prints last gives, for a stop by a failure of its harness, the error and its lines, the file it names past 20
@@ -250,26 +250,26 @@ first `COMMAND_LENGTH` code points, the constant `callLabel` cuts a command by, 
   has passed, rerunning the step. Show an example of the lines, from the Claude Code sample. Say that what each
   harness reports as such an error is read by its module, and that an error a harness retried and went on after is
   not one (R12)
-- [ ] In `ORCHESTRATOR.md`, "What .orchestrator holds": add `<number>-<role>.error.txt` beside the outcome and
+- [x] In `ORCHESTRATOR.md`, "What .orchestrator holds": add `<number>-<role>.error.txt` beside the outcome and
   response files, for a step whose harness reported an error, holding all of it; and add `error` to what the end in
   `state.json` holds, with the first line cut to 100 characters, `null` otherwise, and missing in an end from before
   it was written (R12)
-- [ ] In `COMMANDS.md`, "agentrite runs": the line of `ended` gives `The harness reported:` and the error after the
+- [x] In `COMMANDS.md`, "agentrite runs": the line of `ended` gives `The harness reported:` and the error after the
   line of its end, for an end that holds one, with an example line; the `ended` of `--json` holds `error` too, a
   string or `null` (R12)
-- [ ] Commit: `feature-0110 Document the failure of a harness`
+- [x] Commit: `feature-0110 Document the failure of a harness`
 
 ## Verification
 
-- [ ] `npm test` passes, which holds the unit tests and the tests that run the command end to end with the fake
+- [x] `npm test` passes, which holds the unit tests and the tests that run the command end to end with the fake
   harness
-- [ ] Every line written is at most 120 characters, but a row of a Markdown table
-- [ ] `npm run check-changes` passes, after the last commit
+- [x] Every line written is at most 120 characters, but a row of a Markdown table
+- [x] `npm run check-changes` passes, after the last commit
 
 ## Commit Points
 
 - [x] After the readers of the three harnesses: `feature-0110 Read the errors a harness ends a step with`
-- [ ] After the judging and the report: `feature-0110 Stop the run and report the error of a harness`
-- [ ] After the command's files: `feature-0110 Keep the error of a harness in the run's directory and in state.json`
-- [ ] After `runs`: `feature-0110 Show the error of a harness in agentrite runs`
-- [ ] After the documents: `feature-0110 Document the failure of a harness`
+- [x] After the judging and the report: `feature-0110 Stop the run and report the error of a harness`
+- [x] After the command's files: `feature-0110 Keep the error of a harness in the run's directory and in state.json`
+- [x] After `runs`: `feature-0110 Show the error of a harness in agentrite runs`
+- [x] After the documents: `feature-0110 Document the failure of a harness`
