@@ -32,5 +32,5 @@ package is, where it lives and under which license" in `tests/package-documents.
 
 ## Amendments
 
-- 2026-11-18T12:24:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrapped again the first line of the entry that
-  sets `implemented`, which `dd883a5` made longer than 120 characters
+- 2026-11-18T12:24:55Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, wrapped again the first line of the
+  entry that sets `implemented`, which `dd883a5` made longer than 120 characters
