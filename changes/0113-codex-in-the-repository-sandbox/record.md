@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-18T16:32:36Z
 ---
 
@@ -36,5 +36,8 @@ After the task, the human logs Codex in once in the sandbox, which no agent can 
   `SANDBOX.md`, the installed release's `scripts/harnesses/codex.mjs` and its default `agentrite.json`, and
   `tests/repository-own-files.test.mjs`. Wrote this record. The status is `draft`
 - 2026-11-18T16:33:42Z [human] approved the record. The status is `approved`
+- 2026-11-18T16:38:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  began the work on `master` at `a231c6b`, and not on a branch of the task, as the human asked. The status is
+  `in-progress`
 
 ## Amendments
