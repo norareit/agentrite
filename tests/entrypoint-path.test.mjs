@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { DROP_TO_AGENT } from './entrypoint-drop.mjs';
 
 // The entrypoint runs as root with a PATH of its own, and gives the agent's command the PATH it was started with,
 // which Docker takes from the image. Its top level is no function, so these tests read its shipped lines out of the
 // file, and run those that can be run on the host verbatim.
-const entrypoint = readFileSync(new URL('../container/entrypoint.sh', import.meta.url), 'utf-8');
+const entrypointUrl = new URL('../container/entrypoint.sh', import.meta.url);
+const entrypoint = readFileSync(entrypointUrl, 'utf-8');
 const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.url), 'utf-8');
 
 const FIXED_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
@@ -53,6 +55,21 @@ test('the entrypoint runs its own commands with the fixed PATH and the agent wit
   const result = spawnSync('bash', ['-c', script], { encoding: 'utf-8', env: { PATH: startedWith } });
   assert.equal(result.status, 0, result.stderr);
   assert.equal(result.stdout, `root ${FIXED_PATH}\nagent ${startedWith}\n`);
+});
+
+test('the shell that runs the entrypoint is named by its path, and not looked up on the PATH of the image', () => {
+  assert.equal(entrypoint.split('\n')[0], '#!/bin/bash');
+});
+
+// Run as the suite's user, the entrypoint refuses to start, as it does for any start that is not root. It reaches the
+// refusal only when the shell started with a PATH that holds no shell, and when the fixed PATH is set, since the
+// refusal asks id for the user. As root it would go on to install the firewall, so the run is skipped then.
+test('the entrypoint starts and runs its own commands with a PATH of the image that holds no shell', {
+  skip: process.getuid?.() === 0 ? 'the suite runs as root, and the entrypoint would install its firewall' : false,
+}, () => {
+  const result = spawnSync(fileURLToPath(entrypointUrl), [], { encoding: 'utf-8', env: { PATH: '/opt/tool/bin' } });
+  assert.equal(result.status, 1, result.stderr);
+  assert.equal(result.stderr, '[entrypoint] FATAL: must start as root to install the firewall\n');
 });
 
 test("the kit's image sets no PATH, so it has the one of its base image", () => {

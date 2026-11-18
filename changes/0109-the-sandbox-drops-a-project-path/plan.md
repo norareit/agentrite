@@ -109,12 +109,12 @@ and run those lines verbatim where they can be run on the host.
   `tests/entrypoint-path.test.mjs`, `tests/known-terminal.test.mjs` and `firstCommandGets` of
   `tests/sandbox-unit-run.test.mjs` take the pattern or the path from it, and see `npm test` pass (R6)
 - [x] Commit: `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`
-- [ ] After S1 of the review of `1e37678`: in `tests/entrypoint-path.test.mjs`, assert that the first line of the
+- [x] After S1 of the review of `1e37678`: in `tests/entrypoint-path.test.mjs`, assert that the first line of the
   entrypoint is `#!/bin/bash`, so that the shell that runs it as root is not looked up on the image's `PATH`, and
   run the entrypoint as a file, as the suite's user, with a `PATH` of `/opt/tool/bin` alone, and assert that it ends
   with its refusal of a start that is not root, which it reaches only with bash started and the fixed `PATH` set.
   Skip the run when the suite runs as root. See both fail against the tree (R4, R6)
-- [ ] Commit: `bugfix-0109 Add the regression test of the shell the entrypoint starts with`
+- [x] Commit: `bugfix-0109 Add the regression test of the shell the entrypoint starts with`
 - [ ] Make the first line of `container/entrypoint.sh` `#!/bin/bash`, with a comment that says why it is not
   looked up on the `PATH`, and see `npm test` pass (R1, R4)
 - [ ] Commit: `bugfix-0109 Start the entrypoint with the bash of the image by its path`
@@ -136,5 +136,5 @@ and run those lines verbatim where they can be run on the host.
 - [x] `bugfix-0109 Apply the review of 1e37678`: this plan's tasks after S1 and C1, its "Verification" after P1, and
   the implementer's entry on them in `record.md`
 - [x] `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`: the tests alone, C1
-- [ ] `bugfix-0109 Add the regression test of the shell the entrypoint starts with`: the failing test, S1
+- [x] `bugfix-0109 Add the regression test of the shell the entrypoint starts with`: the failing test, S1
 - [ ] `bugfix-0109 Start the entrypoint with the bash of the image by its path`: the entrypoint, S1
