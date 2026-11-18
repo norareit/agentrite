@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-18T15:19:51Z
 ---
 
@@ -22,5 +22,6 @@ timestamp: 2026-11-18T15:19:51Z
   Opus and the implementer on Sonnet and `high` for the reviewer on GPT Sol, which is now R14, with its decision, its
   place in R13 and its test in R15, and the non-goal it contradicted removed. The human declined BTR2. The status is
   `draft`
+- 2026-11-18T16:20:55Z [human] approved the spec. The status is `approved`
 
 ## Amendments
