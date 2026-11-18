@@ -50,5 +50,22 @@ timestamp: 2026-11-15T23:30:08Z
   run again. Added to `plan.md` the tasks after S1 and C1 and their commit points, made the step of "Verification"
   after P1 the invocation that builds and runs in place, and unticked the steps of "Verification", which hold only
   for the final tree
+- 2026-11-18T15:57:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1 in `d0a5c80`:
+  `tests/entrypoint-drop.mjs` holds the pattern of the entrypoint's last line, and the tests of the entrypoint's `PATH`,
+  of `known-terminal.sh` and of `--connect` take it, or the path of the script it captures, from there
+- 2026-11-18T15:57:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S1. The regression test of
+  `2613ba8` asserts that the first line of `container/entrypoint.sh` is `#!/bin/bash` and runs the entrypoint, as the
+  suite's user, with a `PATH` of `/opt/tool/bin` alone. Against the tree both failed, the run with the status 127 of
+  `env` finding no `bash`. `ac10b6c` names `/bin/bash` in the shebang, which the kit's image holds, and both pass
+- 2026-11-18T15:57:51Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, checked the fix on `ac10b6c`, on the
+  Linux host. `npm test` passed, 1907 tests with none failed or skipped, and `npm run check-changes` exited 0. No line
+  of the files the unit changes is longer than 120 characters but a row of a Markdown table. `./sandbox-dev.sh
+  --in-place --rebuild sh -c 'echo "$PATH"'` built the image and printed
+  `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`, which `docker image inspect` showed in its
+  configuration (R3). Two images built on it, with `docker run` and the capabilities and variables the entrypoint needs,
+  started the agent's command with their own `PATH`: one with `ENV PATH=/opt/tool/bin:$PATH` gave `/opt/tool/bin` first
+  and found a command installed there, and one with `ENV PATH=/opt/tool/bin` alone started, which the review saw fail
+  before S1, and gave the command that `PATH` (R1, R4). `--connect` was not run against them. The unit is handed
+  over for review. The status stays `in-progress`
 
 ## Amendments
