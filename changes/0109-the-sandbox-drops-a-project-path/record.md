@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -21,5 +21,7 @@ timestamp: 2026-11-15T23:30:08Z
   first, then the entrypoint and `--connect`, then `SANDBOX.md`. The kit's image has the `PATH` of R3 from its base
   image, `node:26-bookworm`, as `docker image inspect` showed, so R3 needs no change and gets a test that keeps it.
   The status stays `approved`
+- 2026-11-18T15:29:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
+  `bugfix-0109-the-sandbox-drops-a-project-path` at `f9647f6`, began the work. The status is `in-progress`
 
 ## Amendments
