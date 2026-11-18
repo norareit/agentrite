@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -81,5 +81,9 @@ timestamp: 2026-11-15T23:30:08Z
   Saved `.reviews/0109-the-sandbox-drops-a-project-path/review-4a7fce61c5fa-20261118T161353Z.md`. Ran `npm test`
   and `npm run check-changes` and checked the default and custom `PATH` cases in Docker. Did not replay the
   historical pre-fix test run
+- 2026-11-18T16:16:54Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request, set the unit
+  to `implemented`. The delta review of `4a7fce6` returned no new findings, the human accepted the fixes of the two
+  blocking findings of the first review, S1 and C1, P1 did not block and was applied, and every task in `plan.md` is
+  ticked. The status is `implemented`
 
 ## Amendments
