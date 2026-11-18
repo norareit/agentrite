@@ -50,7 +50,6 @@ timestamp: 2026-11-15T23:30:08Z
   in the repository, so the line limit was checked with a script of line lengths, for the files this unit changed. Not
   checked: a real outage of a provider, and the forms of the errors beyond the samples the plan holds. The status is
   `in-progress`
-
 - 2026-11-18T17:15:24Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0110 at
   `e08dcfe19af4aec6a478e50a185070ba66070ea6`. Returned C1 in
   `.reviews/0110-report-a-harness-failure-that-stops-a-run/review-2026-11-18T171524Z.md`. `npm test` reported 1900
