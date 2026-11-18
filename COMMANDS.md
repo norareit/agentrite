@@ -3,28 +3,28 @@
 Every command a project that installed the kit runs, each with every argument, option and environment variable it
 takes.
 
-| Command                                                                                                                                    | What it does                                                   | Section                                         |
-|--------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|-------------------------------------------------|
-| `npx agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...`                            | Sets a project up, writing `agentrite.json` from its arguments | [agentrite init](#agentrite-init)               |
-| `npx agentrite init`                                                                                                                       | Sets a project up again from its `agentrite.json`              | [agentrite init](#agentrite-init)               |
-| `npx agentrite config`                                                                                                                     | Writes the default `agentrite.json` into a project             | [agentrite config](#agentrite-config)           |
-| `npx agentrite refresh`                                                                                                                    | Brings the kit's files in a project up to date                 | [agentrite refresh](#agentrite-refresh)         |
-| `npx agentrite roles [--json]`                                                                                                             | Lists the roles of the project                                 | [agentrite roles](#agentrite-roles)             |
-| `npx agentrite units [<number>] [--open \| --status <status>] [--kind <kind>] [--limit <count>] [--json]`                                  | Lists the units of `changes/`, with their status               | [agentrite units](#agentrite-units)             |
-| `npx agentrite approve <unit>`                                                                                                             | Approves a unit and commits its `record.md`                    | [agentrite approve](#agentrite-approve)         |
-| `npx agentrite cancel <unit> --reason <text> [--by <unit>]`                                                                                | Cancels a unit and commits its `record.md`                     | [agentrite cancel](#agentrite-cancel)           |
-| `npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions] [-- <harness arguments...>]` | Starts a harness as one of the roles, for one unit             | [agentrite run](#agentrite-run)                 |
-| `npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]`                      | Takes an approved unit through its roles                       | [agentrite orchestrate](#agentrite-orchestrate) |
-| `npx agentrite runs [<number>] [--limit <count>] [--json]`                                                                                 | Lists the runs of the orchestrator and their state             | [agentrite runs](#agentrite-runs)               |
-| `npm run check-changes`                                                                                                                    | Runs the change check, by the project's own command            | [check-changes](#check-changes)                 |
-| `node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]`                                                                | Runs the change check, on the repository root given            | [check-changes](#check-changes)                 |
-| `node node_modules/agentrite/container/check-commit-message.mjs <commit message file>`                                                     | Refuses a commit message with a trailer the standards forbid   | [check-commit-message](#check-commit-message)   |
-| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]`                                                       | Starts the sandbox on a clone of a unit's branch               | [sandbox.sh](#sandboxsh)                        |
-| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]`                                                                  | Starts the sandbox on the project root as it is                | [sandbox.sh](#sandboxsh)                        |
-| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]`                                                               | Starts the sandbox on a directory as it is                     | [sandbox.sh](#sandboxsh)                        |
-| `./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]`                                                                                | Runs a command beside a unit run that is under way             | [sandbox.sh](#sandboxsh)                        |
-| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... BRANCH [COMMAND...]`                                                                      | In a sandbox-only project, starts the sandbox on a branch      | [sandbox.sh](#sandboxsh)                        |
-| `./sandbox.sh --connect BRANCH [COMMAND...]`                                                                                               | In a sandbox-only project, runs a command beside a run         | [sandbox.sh](#sandboxsh)                        |
+| Command                                                                                                                                                       | What it does                                                   | Section                                         |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------|-------------------------------------------------|
+| `npx agentrite init [--sandbox-only] [--no-sandbox] [--no-orchestrator] [--default-branch <name>] <harness>...`                                               | Sets a project up, writing `agentrite.json` from its arguments | [agentrite init](#agentrite-init)               |
+| `npx agentrite init`                                                                                                                                          | Sets a project up again from its `agentrite.json`              | [agentrite init](#agentrite-init)               |
+| `npx agentrite config`                                                                                                                                        | Writes the default `agentrite.json` into a project             | [agentrite config](#agentrite-config)           |
+| `npx agentrite refresh`                                                                                                                                       | Brings the kit's files in a project up to date                 | [agentrite refresh](#agentrite-refresh)         |
+| `npx agentrite roles [--json]`                                                                                                                                | Lists the roles of the project                                 | [agentrite roles](#agentrite-roles)             |
+| `npx agentrite units [<number>] [--open \| --status <status>] [--kind <kind>] [--limit <count>] [--json]`                                                     | Lists the units of `changes/`, with their status               | [agentrite units](#agentrite-units)             |
+| `npx agentrite approve <unit>`                                                                                                                                | Approves a unit and commits its `record.md`                    | [agentrite approve](#agentrite-approve)         |
+| `npx agentrite cancel <unit> --reason <text> [--by <unit>]`                                                                                                   | Cancels a unit and commits its `record.md`                     | [agentrite cancel](#agentrite-cancel)           |
+| `npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>] [--headless] [--skip-permissions] [-- <harness arguments...>]` | Starts a harness as one of the roles, for one unit             | [agentrite run](#agentrite-run)                 |
+| `npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]`                                         | Takes an approved unit through its roles                       | [agentrite orchestrate](#agentrite-orchestrate) |
+| `npx agentrite runs [<number>] [--limit <count>] [--json]`                                                                                                    | Lists the runs of the orchestrator and their state             | [agentrite runs](#agentrite-runs)               |
+| `npm run check-changes`                                                                                                                                       | Runs the change check, by the project's own command            | [check-changes](#check-changes)                 |
+| `node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]`                                                                                   | Runs the change check, on the repository root given            | [check-changes](#check-changes)                 |
+| `node node_modules/agentrite/container/check-commit-message.mjs <commit message file>`                                                                        | Refuses a commit message with a trailer the standards forbid   | [check-commit-message](#check-commit-message)   |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]`                                                                          | Starts the sandbox on a clone of a unit's branch               | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]`                                                                                     | Starts the sandbox on the project root as it is                | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]`                                                                                  | Starts the sandbox on a directory as it is                     | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]`                                                                                                   | Runs a command beside a unit run that is under way             | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... BRANCH [COMMAND...]`                                                                                         | In a sandbox-only project, starts the sandbox on a branch      | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh --connect BRANCH [COMMAND...]`                                                                                                                  | In a sandbox-only project, runs a command beside a run         | [sandbox.sh](#sandboxsh)                        |
 
 ## agentrite init
 
@@ -480,8 +480,8 @@ says.
 ## agentrite run
 
 ```sh
-npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
-                  [-- <harness arguments...>]
+npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>] [--headless]
+                  [--skip-permissions] [-- <harness arguments...>]
 ```
 
 Starts a harness as one of the roles, for one unit, from the project root. Run with no argument, it prints its
@@ -496,6 +496,7 @@ the project has, starts nothing and exits 1.
 | `<unit>`                    | A directory of `changes/`, by its name or by the four digits its name opens with    |
 | `--prompt <text>`           | Adds its text to the prompt, as it is written. Also `--prompt="<text>"`             |
 | `--model <id>`              | The harness's own id of a model, passed on as `--model=<id>`. Also `--model=<id>`   |
+| `--effort <level>`          | The harness's own level of reasoning, given with `--model`. Also `--effort=<level>`  |
 | `--headless`                | Runs the harness without a session, for a script: it works on the prompt and ends   |
 | `--skip-permissions`        | Ends the harness's questions about permissions. The option belongs in the sandbox   |
 | `-- <harness arguments...>` | Ends the command's own arguments. What follows goes to the harness as it is written |
@@ -539,6 +540,14 @@ The options, which may stand anywhere among the arguments before a `--`:
   wrapper is what such a run is expected to use. Codex does not start its run as the wrapper's agent, so a model pinned
   in a Codex wrapper holds only for a subagent of that role that the run spawns, and the run itself uses `--model` or
   the model Codex chooses by its own configuration
+* `--effort` takes the harness's own word for a level of reasoning, such as `high`, and the command does not judge
+  it: the harness refuses a level it does not know, with its own message. Claude Code gets `--effort=<level>`,
+  OpenCode gets `--variant=<level>`, a variant of the model, which is the provider's own reasoning effort, and Codex
+  gets `-c` and `model_reasoning_effort=<level>`, which sets that configuration key for the run. Each level is joined
+  to its option or its key in one argument, so a level that opens with a dash is not taken for an option of the
+  harness. `--effort` without `--model` is refused, since a level is meant for a model: the command prints that an
+  effort is given only with `--model`, prints its usage, starts no harness and exits 2. Without `--effort` the harness
+  gets no effort and decides by itself
 * `--skip-permissions` holds in both modes. Claude Code gets `--dangerously-skip-permissions`, which bypasses every
   check, OpenCode gets `--auto`, which approves what is not explicitly denied, and Codex gets
   `--dangerously-bypass-approvals-and-sandbox`, which skips every approval and Codex's own sandbox, so the three do
@@ -547,7 +556,8 @@ The options, which may stand anywhere among the arguments before a `--`:
 
 What the harness is given, in this order:
 
-1. The role, as an option for Claude Code and OpenCode, the model as `--model=<id>` and the permission flag
+1. The role, as an option for Claude Code and OpenCode, the model as `--model=<id>`, the effort as the harness takes it,
+   and the permission flag
 2. Every argument after the `--`, as it is written and in the order given
 3. The prompt, which is the last argument the harness gets, opening with the role for Codex. Where the harness takes
    it as an argument of its own, the command puts a `--` in front of it
@@ -768,7 +778,8 @@ an object with:
 * `state`, one of `running`, `stale` and `ended`
 * `heartbeat`, the instant its `heartbeat` holds, or `null` when it holds none of the form or is missing
 * `step`, `null` for a run that is not at a step yet, or an object with the step's `number`, its `round` and the
-  `rounds` of its repeat, both `null` for a step outside a repeat, its `role`, its `harness` and its `model`
+  `rounds` of its repeat, both `null` for a step outside a repeat, its `role`, its `harness`, its `model` and its
+  `effort`, or `null` for a step without one
 * `followed`, the path from the directory the command runs in of the file that holds the followed output of the run's
   step, or `null` for a run with no step and when the run's directory holds no such file, as for a run from before the
   followed files or a step whose file is not yet made. The command reads whether the file is there and not what it holds

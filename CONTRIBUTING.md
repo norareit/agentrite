@@ -314,6 +314,11 @@ How a run starts in a role, and the format of the role wrappers, are the module'
   as `--agent <role>` for Claude Code and OpenCode, or words that the prompt opens with, before an empty line, as
   Codex, which has no option that starts a session as an agent, is told its role and the file to read. The command
   that starts the harness names no option of its own for the role
+* `start.effort`: the arguments that give the harness an effort, from the level as it was given. The level is joined to
+  its option or its key in one argument, so that a level that opens with a dash is not taken for an option of the
+  harness: `--effort=<level>` for Claude Code, `--variant=<level>` for OpenCode, and `-c` with
+  `model_reasoning_effort=<level>` for Codex, which has no option for it. The command that starts the harness names no
+  option of its own for the effort
 * `wrappers.extension`: what the name of a wrapper ends with after the role's name, as `.md`, or `.toml` for Codex
 * `wrappers.render`: the wrapper of a role, in the harness's format, holding the role file's description and the body
   that every wrapper holds, `wrapperBody` of `scripts/agentrite-roles.mjs`, which says to read the role's file
@@ -374,9 +379,9 @@ list. Each says what a new harness takes there.
 * **The `CLAUDE.md` that `init` writes into every project**, from `templates/project/CLAUDE.md` in `processFiles` of
   `scripts/agentrite.mjs`, whatever the harnesses. A new harness's instruction file is written only by its module's
   `instructions.init`
-* **The default orchestrator**, `orchestrator.json`, whose steps each name a harness and a model of it
+* **The default orchestrator**, `orchestrator.json`, whose steps each name a harness, a model of it and an effort
 * **The help texts that name harnesses**, in the usage of `agentrite run` in `scripts/agentrite-run.mjs`: a model id
-  of each harness, and what `--skip-permissions` gives each
+  of each harness, and what `--effort` and `--skip-permissions` give each
 * **The documents**: the sections of `README.md`, `COMMANDS.md`, `ORCHESTRATOR.md`, `SETUP.md` and `SANDBOX.md` that
   name each harness, the `keywords` of `package.json`, and the text of the `agentrite-roles` pointer package in
   `pointers/agentrite-roles/`
