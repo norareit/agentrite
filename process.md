@@ -44,6 +44,8 @@ developer actually sees.
 * Prefix feature implementation commits with `feature-<number>`
 * Prefix bugfix commits with `bugfix-<number>`
 * Prefix task commits with `task-<number>`
+* Set neither the author date nor the committer date of a commit, by an option such as `--date` or by
+  `GIT_AUTHOR_DATE` or `GIT_COMMITTER_DATE`. Leave both to git
 
 ## Changes
 
@@ -89,6 +91,9 @@ Every entry under `## Log` and under `## Amendments` of `record.md` is a list it
 ```
 
 * It opens with the timestamp, in the same UTC format as the frontmatter, written bare
+* The timestamp of an entry, and the `timestamp` of a record's frontmatter, is the output of
+  `date -u +%Y-%m-%dT%H:%M:%SZ` run when the entry or the record is written. It is never estimated, carried over from
+  another entry or taken from a local clock
 * Then comes who made it, in square brackets: `[<harness>, <provider>/<model>]` for an agent, and `[human]` for a
   human-only action. The brackets are written, and are not a mark for something to fill in
 * Then, for an agent that acts in a role, comes `as the <role>`, with the name of the role it acts in. An entry of a
@@ -137,9 +142,10 @@ any such unit. It also rejects an implemented unit whose `plan.md` still has unt
 content, so commit before trusting it. The default branch is the one the project names as `defaultBranch` in
 `agentrite.json` at its root.
 
-A review's findings are saved in full in the ignored `.reviews/<unit-directory>/` directory. Record the outcome of
-each finding, not the full review, in `record.md`: as timestamped log entries while the unit is not frozen, and
-as amendments once it is.
+A review's findings are saved in full in the ignored `.reviews/<unit-directory>/` directory. In a path under
+`.reviews`, `<unit-directory>` is the name of the unit's directory in `changes/`, without `changes/`, as
+`.reviews/0012-export-to-csv/` for the unit `changes/0012-export-to-csv/`. Record the outcome of each finding, not the
+full review, in `record.md`: as timestamped log entries while the unit is not frozen, and as amendments once it is.
 
 A unit may be worked on in more than one variant, each a separate run of the unit on a branch of its own. A branch
 whose name holds `--` is a variant's, and the variant's name is what follows the last `--`, as `opus` for
