@@ -67,5 +67,14 @@ timestamp: 2026-11-15T23:30:08Z
   and found a command installed there, and one with `ENV PATH=/opt/tool/bin` alone started, which the review saw fail
   before S1, and gave the command that `PATH` (R1, R4). `--connect` was not run against them. The unit is handed
   over for review. The status stays `in-progress`
+- 2026-11-18T16:10:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, recorded that the human accepted the
+  fixes of S1 and C1 as `5bfb041` and `7f5e76c` hold them
+- 2026-11-18T16:10:47Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the human's request, folded each
+  of the two commits that wrapped a record at 120 characters into the commit it wrapped, by a rebase from `eb5120d`,
+  which rewrote every commit after it and left the tree of the branch's head as it was. The hashes named in this record,
+  in `plan.md` and in the name of the review file map as follows: `5ac5684` and `1e37678` (`1e37678d5ee7`) are now
+  `86f0858`, whose tree is that of `1e37678`, `3525219` is now `0cd647f`, `37c740e` is now `af37a51`, `d0a5c80` is now
+  `7f5e76c`, `2613ba8` is now `9cf820b`, `ac10b6c` is now `5bfb041`, and `aefd1de` and `a27d360` are now `6ae2c79`. The
+  unit goes to another review. The status stays `in-progress`
 
 ## Amendments
