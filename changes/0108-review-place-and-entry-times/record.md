@@ -34,7 +34,7 @@ timestamp: 2026-11-15T23:30:08Z
   `homepage` of `package.json` to be `https://github.com/norareit/agentrite#readme`, which `be11220` on `master` changed
   to `https://agentrite.dev`. It fails on `master` as well, is outside this unit and is left as it is, so the box of
   `npm test` under "Verification" stays open. The two greps of "Verification" show what it expects, and every changed
-  line is at most 120 characters
+  line of `process.md`, the test and the role files is at most 120 characters
 - 2026-11-18T11:48:12Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added the commit point `bugfix-0108
   Record the change check` to `plan.md`: `npm run check-changes` reads committed content, so it can run only after the
   last commit of the work, and its result is recorded in a commit of its own
@@ -46,5 +46,9 @@ timestamp: 2026-11-15T23:30:08Z
   `5c068fc`, the last commit of the work, and it passed. Ticked it under "Verification" and widened the commit point
   `bugfix-0108 Record the change check` to hold the wrapping of the entries above. The box of `npm test` stays open for
   the failure that `master` has as well. The work is handed over for review. The status stays `in-progress`
+- 2026-11-18T11:48:52Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, found that the narrowing which the
+  entry of 11:48:30 says was made was not in `3486eba`, whose script replaced the sentence before joining its lines.
+  Narrowed the sentence of the entry of 11:48:12 on `npm test` now, in the commit point `bugfix-0108 Narrow the claim on
+  line lengths` added to `plan.md` for it
 
 ## Amendments

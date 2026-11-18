@@ -85,3 +85,5 @@ does not, and no file at the root is added, so neither table of `README.md` or `
   implementer's entries in `record.md`
 - [x] `bugfix-0108 Record the change check`: the tick of `npm run check-changes` under "Verification", the
   implementer's entry on it in `record.md` and the wrapping again of its entries that were too long
+- [x] `bugfix-0108 Narrow the claim on line lengths`: the sentence of the implementer's entry on `npm test` that
+  names the files whose lines were checked, and the implementer's entry on it in `record.md`
