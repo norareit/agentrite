@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -68,5 +68,10 @@ timestamp: 2026-11-15T23:30:08Z
   `.reviews/0110-report-a-harness-failure-that-stops-a-run/review-2026-11-18T172035Z.md`. `npm test` reported 1900
   passed, 0 failed and 34 skipped; `npm run check-changes` and the delta whitespace check passed. Docker-dependent
   tests could not run in this sandbox. The status remains `in-progress`
+- 2026-11-18T21:42:18Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit implemented: the
+  human accepted C1, the one blocking finding, which the definition had accepted and the delta review of `bf65db6`
+  verified fixed with no new findings, and every task of `plan.md` is ticked. `npm test` on `916ed0d` reported 1934
+  passed, 0 failed and 0 skipped, the tests that need Docker among them. Not checked, as the reviews say too: a real
+  outage of a provider. Nothing of the unit is pushed. The status is `implemented`
 
 ## Amendments
