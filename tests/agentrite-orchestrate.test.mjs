@@ -30,6 +30,8 @@ import {
   callText,
   clockTime,
   duration,
+  endError,
+  endLine,
   endReport,
   exitStatus,
   followedLine,
@@ -104,7 +106,7 @@ async function runWith(definition, results, from) {
       calls.push(['run', planned]);
       assert.ok(queue.length > 0, `step ${planned.number} ran, and no result was listed for it`);
       const result = { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 1000 };
-      return { ...result, timedOut: false, refused: [], ...queue.shift() };
+      return { ...result, timedOut: false, refused: [], errors: [], ...queue.shift() };
     },
     ended: (ran) => calls.push(['ended', ran]),
   };
@@ -443,7 +445,7 @@ test('a failed harness, a time limit reached, several blocks and an unknown sess
 test('of two cases that hold, the first of the order is named', () => {
   const step = { role: 'reviewer', harness: 'opencode', model: 'm', stopWhen: 'blocking-findings' };
   const reading = (outcome) => readOutcome(responseOf(outcome));
-  const ok = { status: 0, signal: null, timedOut: false };
+  const ok = { status: 0, signal: null, timedOut: false, errors: [] };
   assert.equal(judgeStep(step, { ...ok, status: 1 }, { kind: 'none' }), 'harness');
   assert.equal(judgeStep(step, ok, { kind: 'none' }), 'none');
   assert.equal(judgeStep(step, ok, { kind: 'several', count: 2 }), 'several');
@@ -704,7 +706,7 @@ const reviewer = {
 
 function ended(planned, result) {
   const defaults = { status: 0, signal: null, response: undefined, session: undefined, milliseconds: 8000 };
-  const full = { ...defaults, timedOut: false, ...result };
+  const full = { ...defaults, timedOut: false, errors: [], ...result };
   const reading = full.response === undefined || full.timedOut ? { kind: 'none' } : readOutcome(full.response);
   return { planned, result: full, reading, stop: judgeStep(planned.step, full, reading) };
 }
@@ -955,10 +957,12 @@ test(
       (await reportOf([done(), { response: `${responseOf(DONE)}${responseOf(DONE)}` }], DEFAULT, where))[3],
       'Step 1 stopped the run: its final response holds 2 blocks marked json, not one.',
     );
-    assert.deepEqual((await reportOf([done(), { status: 1 }])).slice(3, 5), [
+    assert.deepEqual((await reportOf([done(), { status: 1 }])).slice(3, 6), [
       'Step 1 stopped the run: its harness exited with 1.',
-      'The harness gave step 1 no final response.',
+      NO_ERROR_LINE,
+      resumeLine(false),
     ]);
+    assert.equal((await reportOf([done(), { status: 1 }]))[6], 'The harness gave step 1 no final response.');
     assert.equal(
       (await reportOf([done(), { status: null, signal: 'SIGTERM' }]))[3],
       'Step 1 stopped the run: its harness was ended by SIGTERM.',
@@ -967,8 +971,10 @@ test(
 );
 
 test('the report of a harness that failed after it gave an outcome gives the outcome', async () => {
-  assert.deepEqual((await reportOf([done(), { status: 1, ...done({ summary: 'Half done.' }) }])).slice(3, 5), [
+  assert.deepEqual((await reportOf([done(), { status: 1, ...done({ summary: 'Half done.' }) }])).slice(3, 7), [
     'Step 1 stopped the run: its harness exited with 1.',
+    NO_ERROR_LINE,
+    resumeLine(false),
     'Summary: Half done.',
   ]);
 });
@@ -1405,8 +1411,10 @@ test('the report of a stopping ask again gives the calls of the step it follows 
 
 test('the report gives the refused calls of a step stopped by its harness or by running out of time', async () => {
   const lines = await reportOf([done(), { status: 1, refused: [RUN_TESTS] }]);
-  assert.deepEqual(lines.slice(3, 6), [
+  assert.deepEqual(lines.slice(3, 8), [
     'Step 1 stopped the run: its harness exited with 1.',
+    NO_ERROR_LINE,
+    resumeLine(false),
     REFUSED_ONE,
     '  Bash npm test',
   ]);
@@ -1434,6 +1442,147 @@ test('the report gives no refused call of a step that went on, nor of a run that
   assert.deepEqual(await reportOf([done(), went, asks]), await reportOf([done(), done(), asks]));
   assert.deepEqual(await reportOf([done(), went, done()]), await reportOf([done(), done(), done()]));
 });
+
+// Unit 0110, R3 to R5, R7, R11: a harness that ended its step with an error.
+
+const NO_ERROR_LINE =
+  'The harness reported no error on its standard output. What it printed on its standard error stood on the terminal.';
+const resumeLine = (skipPermissions) =>
+  'Once the cause of the failure has been dealt with or has passed, resume the run: ' +
+  `npx agentrite orchestrate 0029-x --resume${skipPermissions ? ' --skip-permissions' : ''}`;
+const ERROR_PATH = '.orchestrator/0029-x/2026-10-21T10:00:00Z/01-implementer.error.txt';
+const ERROR_WHERE = { ...WHERE, errorPath: ERROR_PATH };
+const numberedLines = (count) => Array.from({ length: count }, (_, index) => `line ${index + 1}`);
+const reportWithError = (errors, where = ERROR_WHERE, status = 1) =>
+  reportOf([done(), { status, errors }], DEFAULT, where);
+
+test('a step whose harness reported an error stops by harness, also at exit 0, and is not asked again', async () => {
+  const noBlock = { response: 'API Error: 500', session: 'abc', errors: ['API Error: 500'] };
+  const run = await runWith(DEFAULT, [done(), noBlock]);
+  assert.equal(run.end.by, 'harness');
+  assert.equal(run.left, 0);
+  assert.equal(run.planned.length, 2);
+  assert.equal(exitStatus(run.end), 3);
+  const withOutcome = await runWith(DEFAULT, [done(), { ...done(), errors: ['API Error: 500'] }]);
+  assert.equal(withOutcome.end.by, 'harness');
+  assert.equal(withOutcome.ran[1].reading.kind, 'outcome');
+});
+
+test('a step that ran out of time with an error is judged to have run out of time', async () => {
+  const run = await runWith(DEFAULT, [{ ...TIMED_OUT, errors: ['API Error: 500'] }]);
+  assert.equal(run.end.by, 'timeout');
+});
+
+test('a step whose harness exited 0, reported no error and gave no block is asked again, as before', async () => {
+  const run = await runWith(DEFAULT, [done(), { response: 'No block.', session: 'abc' }, done(), done()]);
+  assert.equal(run.planned[2].asked, true);
+});
+
+test('the line after a step says that its harness reported an error only when it exited 0 with no signal', () => {
+  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+  const errors = ['API Error: 500'];
+  for (const [result, said] of [
+    [{ errors }, 'the harness reported an error'],
+    [{ errors, ...done() }, 'the harness reported an error'],
+    [{ errors, status: 1 }, 'the harness exited with 1'],
+    [{ errors, status: null, signal: 'SIGTERM' }, 'the harness was ended by SIGTERM'],
+    [{ status: 1 }, 'the harness exited with 1'],
+  ]) {
+    assert.equal(stepLine(reviewer, ended(reviewer, result)), `${head}: ${said} after 0m 08s`);
+  }
+});
+
+test('the end line of a harness that exited 0 with an error says that it reported one', async () => {
+  const run = await runWith(DEFAULT, [done(), { errors: ['API Error: 500'] }]);
+  assert.equal(endLine(run.end), 'Step 1 stopped the run: its harness reported an error.');
+  const exited = await runWith(DEFAULT, [done(), { status: 1, errors: ['API Error: 500'] }]);
+  assert.equal(endLine(exited.end), 'Step 1 stopped the run: its harness exited with 1.');
+  const ended = await runWith(DEFAULT, [done(), { status: null, signal: 'SIGKILL', errors: ['x'] }]);
+  assert.equal(endLine(ended.end), 'Step 1 stopped the run: its harness was ended by SIGKILL.');
+});
+
+test('the report gives the error under its line, indented by two spaces, and then how to resume the run', async () => {
+  const lines = await reportWithError(['stub: Internal server error', 'second\nthird\r\n']);
+  assert.deepEqual(lines.slice(3, 11), [
+    'Step 1 stopped the run: its harness exited with 1.',
+    'The harness reported this error:',
+    '  stub: Internal server error',
+    '  second',
+    '  third',
+    resumeLine(false),
+    'The harness gave step 1 no final response.',
+    '',
+  ]);
+});
+
+test('the report gives an error of 20 lines in full, and of more with the count left out and the file', async () => {
+  const header = 'The harness reported this error:';
+  const twenty = await reportWithError([numberedLines(20).join('\n')]);
+  assert.equal(twenty[4], header);
+  assert.deepEqual(twenty.slice(5, 25), numberedLines(20).map((text) => `  ${text}`));
+  assert.equal(twenty[25], resumeLine(false));
+  const twentyOne = await reportWithError([numberedLines(21).join('\n')]);
+  assert.deepEqual(twentyOne.slice(5, 25), numberedLines(20).map((text) => `  ${text}`));
+  assert.equal(twentyOne[25], `The other line of the error is in ${ERROR_PATH}.`);
+  assert.equal(twentyOne[26], resumeLine(false));
+  const twentyFive = await reportWithError([numberedLines(25).join('\n')]);
+  assert.equal(twentyFive[25], `The other 5 lines of the error are in ${ERROR_PATH}.`);
+  assert.equal(twentyFive[26], resumeLine(false));
+});
+
+test('the report of a harness that reported no error says so, and gives the resume line', async () => {
+  const lines = await reportWithError([]);
+  assert.deepEqual(lines.slice(3, 6), [
+    'Step 1 stopped the run: its harness exited with 1.',
+    NO_ERROR_LINE,
+    resumeLine(false),
+  ]);
+});
+
+test('the resume line has --skip-permissions when the run had it, and the refused lines follow it', async () => {
+  const where = { ...ERROR_WHERE, skipPermissions: true };
+  const refusing = [done(), { status: 1, errors: ['boom'], refused: [RUN_TESTS] }];
+  assert.deepEqual((await reportOf(refusing, DEFAULT, where)).slice(3, 9), [
+    'Step 1 stopped the run: its harness exited with 1.',
+    'The harness reported this error:',
+    '  boom',
+    resumeLine(true),
+    REFUSED_ONE,
+    '  Bash npm test',
+  ]);
+  const without = await reportOf(refusing, DEFAULT, ERROR_WHERE);
+  assert.deepEqual(without.slice(6, 9), [resumeLine(false), REFUSED_ONE, '  Bash npm test']);
+});
+
+test('a stop by any other case gives neither the lines of an error nor the resume line', async () => {
+  const other = [
+    [done(), stopsForHuman([])],
+    [done(), { response: 'No block.' }],
+    [done(), blocked(), done(), blocked()],
+  ];
+  for (const results of other) {
+    const text = (await reportOf(results, DEFAULT, ERROR_WHERE)).join('\n');
+    assert.doesNotMatch(text, /The harness reported|Once the cause|resume the run/);
+  }
+});
+
+// Unit 0110, R8: the error of an end, as state.json holds it.
+
+test('the error of an end is the first line of the errors of a stop by harness, cut to 100 code points', async () => {
+  const of = async (errors, status = 1) => endError((await runWith(DEFAULT, [done(), { status, errors }])).end);
+  assert.equal(await of(['first\nsecond']), 'first');
+  assert.equal(await of(['first\r\nsecond']), 'first');
+  assert.equal(await of(['one', 'two']), 'one');
+  assert.equal(await of(['a'.repeat(150)]), 'a'.repeat(100));
+  const wide = `${'a'.repeat(99)}😀😀`;
+  assert.equal(await of([wide]), `${'a'.repeat(99)}😀`);
+  assert.equal(await of([]), null);
+  assert.equal(endError((await runWith(DEFAULT, [done(), done(), done()])).end), null);
+  assert.equal(endError((await runWith(DEFAULT, [done(), stopsForHuman([])])).end), null);
+  const ranOut = await runWith(DEFAULT, [done(), done(), blocked(), done(), blocked(), done(), blocked()]);
+  assert.equal(endError(ranOut.end), null);
+});
+
 
 // R5, R6
 
@@ -2038,7 +2187,8 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
     { role: 'implementer', harness: 'claude', session: implementer.options[8] },
     { role: 'reviewer', harness: 'opencode', session: 'ses_test' },
   ]);
-  assert.deepEqual(state.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
+  const line = 'The run ran every item of the definition to its end.';
+  assert.deepEqual(state.ended, { status: 0, line, error: null });
 });
 
 // R7, R10, R11, R14, R17 of unit 0076
@@ -2385,7 +2535,17 @@ test('each stop of a step exits 3, starts nothing after the step and says what t
       ],
       'response.md',
     ],
-    ['', 1, ['Step 1 stopped the run: its harness exited with 1.', 'The harness gave step 1 no final response.'], null],
+    [
+      '',
+      1,
+      [
+        'Step 1 stopped the run: its harness exited with 1.',
+        'The harness reported no error on its standard output.',
+        'Once the cause of the failure has been dealt with or has passed, resume the run: npx agentrite orchestrate',
+        'The harness gave step 1 no final response.',
+      ],
+      null,
+    ],
   ]) {
     const { base, agentrite, answer, calls, read } = project(testContext);
     answer(1, claudePrinted(responseOf(DONE)));
@@ -2912,7 +3072,7 @@ test(
     const state = JSON.parse(read(`${run.name}/state.json`));
     assert.deepEqual(state.sessions, [{ role: 'implementer', harness: 'claude', session: calls()[0].options[8] }]);
     assert.match(state.sessions[0].session, UUID);
-    assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE });
+    assert.deepEqual(state.ended, { status: 3, line: LIMIT_LINE, error: null });
     const [kept, ...rest] = read(`${run.name}/00-implementer.followed.jsonl`).split('\n');
     assert.deepEqual(rest, ['']);
     const { time, ...item } = JSON.parse(kept);
@@ -3758,7 +3918,11 @@ test('a resume after an ask again reruns the step asked, numbered as it, in its 
   assert.deepEqual(after.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, asked: false });
   const reviewerSession = { role: 'reviewer', harness: 'opencode', session: 'ses_test' };
   assert.deepEqual(after.sessions, [...before.sessions, reviewerSession]);
-  assert.deepEqual(after.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
+  assert.deepEqual(after.ended, {
+    status: 0,
+    line: 'The run ran every item of the definition to its end.',
+    error: null,
+  });
 });
 
 // Unit 0090, R4
@@ -4672,11 +4836,98 @@ test('orchestrate forgets the session of a role and harness when a step gives nu
     started: () => {},
     run: async (entry) => {
       planned.push(entry.session);
-      const ended = { status: 0, signal: null, milliseconds: 1, timedOut: false, refused: [] };
+      const ended = { status: 0, signal: null, milliseconds: 1, timedOut: false, refused: [], errors: [] };
       return { ...done(), ...ended, session: given.shift() };
     },
     ended: () => {},
   });
 
   assert.deepEqual(planned, [undefined, 'first', undefined]);
+});
+
+// Unit 0110, R3, R5, R6, R8, R10: a step whose harness ended it with an error, by the command.
+
+const CLAUDE_ERROR_TEXT =
+  'API Error: 500 stub: Internal server error. This is a server-side issue, usually temporary — try again in a ' +
+  'moment. If it persists, check your inference gateway (127.0.0.1:18500).';
+const CLAUDE_FAILED = [
+  { type: 'system', subtype: 'init', session_id: 'a3e1b8e1-1542-4c0f-bf7c-d0ab4dae15cd' },
+  { type: 'system', subtype: 'api_retry', attempt: 1, max_retries: 10, error_status: 500 },
+  { type: 'result', subtype: 'success', is_error: true, api_error_status: 500, result: CLAUDE_ERROR_TEXT },
+]
+  .map((event) => `${JSON.stringify(event)}\n`)
+  .join('');
+const OPENCODE_FAILED = [
+  { type: 'error', error: { name: 'APIError', data: { message: 'stub: Internal server error', statusCode: 500 } } },
+  { type: 'error', error: { name: 'APIError', data: { message: 'stub: usage limit reached', statusCode: 429 } } },
+]
+  .map((event) => `${JSON.stringify(event)}\n`)
+  .join('');
+const PLANNED = claudePrinted(responseOf({ ...DONE, summary: 'Planned.' }));
+
+test('a step whose harness exits 1 with an error stops the run, keeps the error and reports how to resume', (t) => {
+  const { base, read, agentrite, answer } = project(t);
+  answer(1, PLANNED);
+  answer(2, CLAUDE_FAILED, 1);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 3, result.stderr);
+  const run = runDirectoryOf(base);
+  assert.equal(read(`${run.name}/01-implementer.error.txt`), `${CLAUDE_ERROR_TEXT}\n`);
+  const report = result.stdout.split('\n');
+  const at = report.indexOf('Step 1 stopped the run: its harness exited with 1.');
+  assert.notEqual(at, -1, result.stdout);
+  assert.equal(report[at + 1], 'The harness reported this error:');
+  assert.equal(report[at + 2], `  ${CLAUDE_ERROR_TEXT}`);
+  assert.equal(
+    report[at + 3],
+    'Once the cause of the failure has been dealt with or has passed, resume the run: ' +
+      `npx agentrite orchestrate ${UNIT} --resume`,
+  );
+  assert.deepEqual(JSON.parse(read(`${run.name}/state.json`)).ended, {
+    status: 3,
+    line: 'Step 1 stopped the run: its harness exited with 1.',
+    error: Array.from(CLAUDE_ERROR_TEXT).slice(0, 100).join(''),
+  });
+});
+
+test('a step whose harness exits 0 with two errors stops the run, and the file holds both in order', (t) => {
+  const { base, read, agentrite, answer } = project(t);
+  answer(1, PLANNED);
+  answer(2, claudePrinted(responseOf({ ...DONE, summary: 'Built.' })));
+  answer(3, OPENCODE_FAILED);
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 3, result.stderr);
+  assert.ok(result.stdout.includes('\nStep 2 stopped the run: its harness reported an error.\n'), result.stdout);
+  assert.ok(result.stdout.includes(`${REVIEWER_ROUND_1}: the harness reported an error after `), result.stdout);
+  const run = runDirectoryOf(base);
+  assert.equal(read(`${run.name}/02-reviewer.error.txt`), 'stub: Internal server error\nstub: usage limit reached\n');
+  assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.error, 'stub: Internal server error');
+});
+
+test('a step whose harness prints no error has no error file, says so, and a run that ended holds null', (t) => {
+  const failed = project(t);
+  failed.answer(1, PLANNED);
+  failed.answer(2, '', 1);
+  const result = failed.agentrite('orchestrate', '0029');
+  assert.equal(result.status, 3, result.stderr);
+  const run = runDirectoryOf(failed.base);
+  assert.ok(!readdirSync(join(failed.base, run.name)).some((name) => name.endsWith('.error.txt')));
+  assert.ok(result.stdout.includes('\nThe harness reported no error on its standard output.'), result.stdout);
+  assert.equal(JSON.parse(failed.read(`${run.name}/state.json`)).ended.error, null);
+});
+
+test('a resume of a run that a failure of its harness stopped reruns the step, numbered as it', (testContext) => {
+  const context = stoppedRun(testContext, [PLANNED, [CLAUDE_FAILED, 1]]);
+  context.answer(3, claudePrinted(responseOf({ ...DONE, summary: 'Built.' })));
+  context.answer(4, opencodePrinted(responseOf({ ...DONE, summary: 'Reviewed.' })));
+
+  const result = resume(context, 1);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(startedLines(result.stdout), [`${IMPLEMENTER_ROUND_1}: started`, `${REVIEWER_ROUND_1}: started`]);
+  assert.equal(stateOf(context, runOf(1)).ended.error, null);
 });

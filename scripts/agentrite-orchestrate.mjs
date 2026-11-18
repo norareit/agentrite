@@ -39,10 +39,11 @@ import { optionError } from './agentrite-run.mjs';
  *   milliseconds: number,
  *   timedOut: boolean,
  *   refused: Call[],
+ *   errors: string[],
  * }} Result How the harness of a step ended, its final response, the id of its session, or `null` when the session
  *   it gave is not to be kept and none of its role and harness is to be continued, whether the command ended
  *   it for running past its time limit, and the tool calls the harness refused for lack of permission, in the order
- *   it printed them
+ *   it printed them, and the errors the harness reported that ended the step, in the order it printed them
  * @typedef {'timeout'
  *   | 'harness'
  *   | 'none'
@@ -80,13 +81,15 @@ function blocks(outcome) {
  * step that failed after it gave one said.
  *
  * @param {Step} step
- * @param {{ status: number | null, signal: string | null, timedOut: boolean }} result
+ * @param {{ status: number | null, signal: string | null, timedOut: boolean, errors: string[] }} result
  * @param {Reading} reading
  * @returns {Stop | undefined}
  */
-export function judgeStep(step, { status, signal, timedOut }, reading) {
+export function judgeStep(step, { status, signal, timedOut, errors }, reading) {
   if (timedOut) return 'timeout';
-  if (status !== 0 || signal !== null) return 'harness';
+  // A harness that reported an error stops the run also when it exited 0, since asked again it would meet the same
+  // error, by unit 0110.
+  if (status !== 0 || signal !== null || errors.length > 0) return 'harness';
   if (reading.kind !== 'outcome') return reading.kind;
   const { outcome } = reading;
   if (outcome.outcome !== 'done') return outcome.outcome;
@@ -201,8 +204,8 @@ export async function orchestrate(definition, effects, from) {
     /** @type {Reading} */ const reading =
       result.response === undefined || result.timedOut ? { kind: 'none' } : readOutcome(result.response);
     const stop = judgeStep(step, result, reading);
-    // `none` is judged only of a harness that exited 0 by itself, within its time limit, with no block marked json or
-    // no final response: a step that finished, whose outcome alone is missing.
+    // `none` is judged only of a harness that exited 0 by itself, within its time limit, and reported no error, with
+    // no block marked json or no final response: a step that finished, whose outcome alone is missing.
     const askAgain = stop === 'none' && !asked && sessions.has(key);
     /** @type {Ran} */ const entry = { planned, result, reading, stop: askAgain ? undefined : stop };
     ran.push(entry);
@@ -310,6 +313,7 @@ function stepResult({ result, reading }) {
   if (result.timedOut) return 'ran out of time';
   if (result.signal !== null) return `the harness was ended by ${result.signal}`;
   if (result.status !== 0) return `the harness exited with ${result.status}`;
+  if (result.errors.length > 0) return 'the harness reported an error';
   if (reading.kind === 'outcome') return reading.outcome.outcome;
   if (reading.kind === 'none') return 'no outcome';
   if (reading.kind === 'several') return `${reading.count} outcomes`;
@@ -465,10 +469,10 @@ export function endLine(end) {
   const limit = planned.step.timeoutMinutes;
   /** @type {Record<Stop, () => string>} */ const cases = {
     timeout: () => `it ran past its time limit of ${limit} ${limit === 1 ? 'minute' : 'minutes'}.`,
-    harness: () =>
-      result.signal === null
-        ? `its harness exited with ${result.status}.`
-        : `its harness was ended by ${result.signal}.`,
+    harness: () => {
+      if (result.signal !== null) return `its harness was ended by ${result.signal}.`;
+      return result.status === 0 ? 'its harness reported an error.' : `its harness exited with ${result.status}.`;
+    },
     none: () => 'its final response holds no block marked json.',
     several: () =>
       `its final response holds ${reading.kind === 'several' ? reading.count : 0} blocks marked json, not one.`,
@@ -553,6 +557,87 @@ function afterwardsLines(ran) {
 }
 
 /**
+ * The command that resumes a run of the unit, with `--skip-permissions` when the run is to go on with it.
+ *
+ * @param {string} unitDirectory
+ * @param {boolean} skipPermissions
+ * @returns {string}
+ */
+function resumeCommand(unitDirectory, skipPermissions) {
+  return `npx agentrite orchestrate ${unitDirectory} --resume${skipPermissions ? ' --skip-permissions' : ''}`;
+}
+
+/** The most lines of the error a harness reported that the end report gives. */
+const ERROR_LINES = 20;
+
+/**
+ * The lines of the errors a harness reported: the errors joined by a line break, split at each line break, with the
+ * line breaks at its end and the carriage return before each left out.
+ *
+ * @param {string[]} errors
+ * @returns {string[]}
+ */
+function errorLines(errors) {
+  return errors
+    .join('\n')
+    .replace(/\n+$/, '')
+    .split('\n')
+    .map((line) => line.replace(/\r$/, ''));
+}
+
+/**
+ * How a failure of the harness of the step that stopped the run is reported: the error it reported, at most
+ * `ERROR_LINES` lines of it, with the count of the lines left out and the file that holds all of it, or that it
+ * reported none, and how to resume the run once its cause has passed. A stop by any other case gives none.
+ *
+ * @param {End} end
+ * @param {{ unitDirectory: string, errorPath: string | undefined, skipPermissions: boolean }} where
+ * @returns {string[]}
+ */
+function harnessLines(end, { unitDirectory, errorPath, skipPermissions }) {
+  if (end.kind !== 'stopped' || end.by !== 'harness') return [];
+  const resume =
+    'Once the cause of the failure has been dealt with or has passed, resume the run: ' +
+    resumeCommand(unitDirectory, skipPermissions);
+  const { errors } = end.ran.result;
+  if (errors.length === 0) {
+    return [
+      'The harness reported no error on its standard output. What it printed on its standard error stood on the ' +
+        'terminal.',
+      resume,
+    ];
+  }
+  const all = errorLines(errors);
+  const left = all.length - ERROR_LINES;
+  const rest =
+    left <= 0
+      ? []
+      : [
+          left === 1
+            ? `The other line of the error is in ${errorPath}.`
+            : `The other ${left} lines of the error are in ${errorPath}.`,
+        ];
+  return [
+    'The harness reported this error:',
+    ...all.slice(0, ERROR_LINES).map((line) => `  ${line}`),
+    ...rest,
+    resume,
+  ];
+}
+
+/**
+ * The first line of the error a run that a failure of its harness stopped holds, cut to `COMMAND_LENGTH` code
+ * points, or `null` for any other end and for a harness that reported no error.
+ *
+ * @param {End} end
+ * @returns {string | null}
+ */
+export function endError(end) {
+  if (end.kind !== 'stopped' || end.by !== 'harness' || end.ran.result.errors.length === 0) return null;
+  return Array.from(errorLines(end.ran.result.errors)[0]).slice(0, COMMAND_LENGTH).join('');
+}
+
+/**
  * The tool calls the harness refused for lack of permission of the step that stopped the run, and of an ask again
  * the calls of the step it follows before its own, since its outcome stands for that step's. Each is given on a line
  * of its own, under a line that counts them, and for a run without `--skip-permissions` followed by what to do. A
@@ -575,11 +660,10 @@ function refusedLines(ran, end, unitDirectory, skipPermissions) {
     ...refused.map((call) => `  ${callText(call)}`),
   ];
   if (skipPermissions) return lines;
-  const resume = `npx agentrite orchestrate ${unitDirectory} --resume --skip-permissions`;
   return [
     ...lines,
     'The run was started without --skip-permissions, so a headless step had nobody to ask.',
-    `In the sandbox, resume the run with the option: ${resume}`,
+    `In the sandbox, resume the run with the option: ${resumeCommand(unitDirectory, true)}`,
     "On the host, allow the refused calls in the harness's settings instead.",
   ];
 }
@@ -596,15 +680,22 @@ function refusedLines(ran, end, unitDirectory, skipPermissions) {
  *   runDirectory: string,
  *   unitDirectory: string,
  *   responsePath: string | undefined,
+ *   errorPath: string | undefined,
  *   skipPermissions: boolean,
  * }} where
  * @returns {string}
  */
-export function endReport(ran, end, unfixed, { runDirectory, unitDirectory, responsePath, skipPermissions }) {
+export function endReport(
+  ran,
+  end,
+  unfixed,
+  { runDirectory, unitDirectory, responsePath, errorPath, skipPermissions },
+) {
   return [
     ranTable(ran),
     '',
     endLine(end),
+    ...harnessLines(end, { unitDirectory, errorPath, skipPermissions }),
     ...refusedLines(ran, end, unitDirectory, skipPermissions),
     ...lastStepLines(/** @type {Ran} */ (ran.at(-1)), end, responsePath),
     ...unfixedLines(unfixed),
