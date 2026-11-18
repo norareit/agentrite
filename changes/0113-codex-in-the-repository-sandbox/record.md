@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-18T16:32:36Z
 ---
 
@@ -35,5 +35,6 @@ After the task, the human logs Codex in once in the sandbox, which no agent can 
   Read "The kit's own copy of the kit" and "Adding a harness" of `CONTRIBUTING.md`, "Another set of harnesses" of
   `SANDBOX.md`, the installed release's `scripts/harnesses/codex.mjs` and its default `agentrite.json`, and
   `tests/repository-own-files.test.mjs`. Wrote this record. The status is `draft`
+- 2026-11-18T16:33:42Z [human] approved the record. The status is `approved`
 
 ## Amendments
