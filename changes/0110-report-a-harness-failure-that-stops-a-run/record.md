@@ -30,5 +30,11 @@ timestamp: 2026-11-15T23:30:08Z
   `npx agentrite runs`, now R8 and R9, and did not take items 1 and 2. Read "agentrite runs" of `COMMANDS.md` and
   how `scripts/agentrite-runs.mjs` gives the line of an end. Renumbered the requirements. The status is `draft`
 - 2026-11-18T16:20:44Z [human] approved the spec. The status is `approved`
+- 2026-11-18T16:55:18Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a run of the orchestrator, on
+  `feature-0110-report-a-harness-failure-that-stops-a-run` at `08dc86f`, wrote `plan.md`. The forms of the errors
+  were established from the real output of Claude Code 2.1.327, OpenCode 1.19.6 and Codex 0.167.0 against a local
+  server that answered with 500 and 429, and with 500 before a valid answer, and the reading of OpenCode was
+  checked against its own `run` command. Each of the three reports an error that ends a step on standard output, so
+  none is put to the human. The status is `approved`
 
 ## Amendments
