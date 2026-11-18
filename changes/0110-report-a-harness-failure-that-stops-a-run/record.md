@@ -46,8 +46,8 @@ timestamp: 2026-11-15T23:30:08Z
   documents say the line of the resume command is one line, wrapped, since it is longer than 120 characters. The
   three commits of the command's files hold files, not the tests of each step, so the tests of the orchestrator and
   `state.json` stand in the second commit and those of `runs` in the third. `npm test` was run on the tree of
-  `2061b67` before the record was written and reported 1900 passed, 0 failed and 34 skipped. No formatter is installed in
-  the repository, so the line limit was checked with a script of line lengths, for the files this unit changed. Not
+  `2061b67` before the record was written and reported 1900 passed, 0 failed and 34 skipped. No formatter is installed
+  in the repository, so the line limit was checked with a script of line lengths, for the files this unit changed. Not
   checked: a real outage of a provider, and the forms of the errors beyond the samples the plan holds. The status is
   `in-progress`
 
