@@ -76,5 +76,10 @@ timestamp: 2026-11-15T23:30:08Z
   `86f0858`, whose tree is that of `1e37678`, `3525219` is now `0cd647f`, `37c740e` is now `af37a51`, `d0a5c80` is now
   `7f5e76c`, `2613ba8` is now `9cf820b`, `ac10b6c` is now `5bfb041`, and `aefd1de` and `a27d360` are now `6ae2c79`. The
   unit goes to another review. The status stays `in-progress`
+- 2026-11-18T16:14:05Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, made a delta review of 0109 at
+  `4a7fce61c5fa` against `86f0858cda03`, the same tree as `1e37678d5ee7`. No new findings.
+  Saved `.reviews/0109-the-sandbox-drops-a-project-path/review-4a7fce61c5fa-20261118T161353Z.md`. Ran `npm test`
+  and `npm run check-changes` and checked the default and custom `PATH` cases in Docker. Did not replay the
+  historical pre-fix test run
 
 ## Amendments
