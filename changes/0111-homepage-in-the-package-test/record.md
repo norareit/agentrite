@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-18T12:18:43Z
 ---
 
@@ -12,6 +12,9 @@ timestamp: 2026-11-18T12:18:43Z
   `master` at `cc989d1`, on the human's request to fix the test that fails since `be11220`. Numbered 0111: the
   highest number in `changes/`, on every local branch, is 0110. Wrote this record. The status is `draft`
 - 2026-11-18T12:21:07Z [human] approved the record. The status is `approved`
+- 2026-11-18T12:21:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  cut `task-0111-homepage-in-the-package-test` from `master` at `7d0b8ca` and began the work. The status is
+  `in-progress`
 
 ## The task
 
