@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -15,5 +15,6 @@ timestamp: 2026-11-15T23:30:08Z
   call of `container/sandbox.sh`, the test of `tests/sandbox-unit-run.test.mjs` that holds the two against each other
   and "Adding software to the sandbox" and "Two agents on one unit" of `SANDBOX.md`. Wrote `spec.md`. The status is
   `draft`
+- 2026-11-18T15:19:48Z [human] approved the spec. The status is `approved`
 
 ## Amendments
