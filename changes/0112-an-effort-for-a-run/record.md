@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-18T15:19:51Z
 ---
 
@@ -45,5 +45,7 @@ timestamp: 2026-11-18T15:19:51Z
   Saved the review in `.reviews/0112-an-effort-for-a-run/review-2026-11-18T220836Z.md`. Independently ran `npm test`:
   1911 passing, 0 failing, 34 Docker-dependent tests skipped; `npm run check-changes` passed. Live model sessions in
   the three harnesses and the Docker-dependent tests were not verified. The status remains `in-progress`
+- 2026-11-18T23:54:14Z [Claude Code, anthropic/claude-opus-5-5] on the human's request, with every task of `plan.md`
+  ticked and the review of `3c014ef` without findings, set the unit to implemented. The status is `implemented`
 
 ## Amendments
