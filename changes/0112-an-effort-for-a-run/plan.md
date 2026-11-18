@@ -48,55 +48,55 @@ The default `orchestrator.json` gains `"effort"` on each of its three steps, aft
 
 ### The harness contract
 
-- [ ] In `tests/agentrite-harness.test.mjs`, add `start.effort` after `start.role` in the list of the test of the
+- [x] In `tests/agentrite-harness.test.mjs`, add `start.effort` after `start.role` in the list of the test of the
   members of the contract, and rename that test from thirty-one to thirty-two members. In the test that names a
   harness lacking a member, add a module without `start.effort`, which gives `['claude lacks start.effort']`, and
   one whose `start.effort` is a string, which gives the fault the test already expects of a member of another kind
   (R11, R15)
-- [ ] Add a test that each harness's `start.effort('high')` is `['--effort=high']` for claude, `['--variant=high']`
+- [x] Add a test that each harness's `start.effort('high')` is `['--effort=high']` for claude, `['--variant=high']`
   for opencode and `['-c', 'model_reasoning_effort=high']` for codex, and that `start.effort('-x')` gives the level
   joined in one argument the same way (R2, R11, R15)
-- [ ] Add `start.effort` to the JSDoc type `Harness` as `effort: (level: string) => string[]`, and to
+- [x] Add `start.effort` to the JSDoc type `Harness` as `effort: (level: string) => string[]`, and to
   `HARNESS_CONTRACT` after `start.role`, of kind `function`, with the purpose "the arguments that give the harness
   an effort, from its level as it was given" (R11)
-- [ ] Implement `start.effort` in each of the three modules as R2 gives, after `role`. In the Codex module, a comment
+- [x] Implement `start.effort` in each of the three modules as R2 gives, after `role`. In the Codex module, a comment
   says that Codex has no option for the effort and that `-c` sets one configuration key for the run (R2, R11)
 
 ### agentrite run
 
-- [ ] In `tests/agentrite-run.test.mjs`, add `effort: undefined` to `PLAIN` and to `START`, and `effort` to the
+- [x] In `tests/agentrite-run.test.mjs`, add `effort: undefined` to `PLAIN` and to `START`, and `effort` to the
   options of the test that takes them before, between and after the positions, as `--effort high` and as
   `--effort=high`. Add to "each option of run is taken alone" that `--model m --effort high` gives both, and that
   `--effort=-x` with a model gives the level `-x` (R1, R15)
-- [ ] Add to "each argument run does not take is named" the cases `--effort` at the end, `--effort` followed by
+- [x] Add to "each argument run does not take is named" the cases `--effort` at the end, `--effort` followed by
   `--headless`, `--effort=` and `--effort ''`, each with a model, which give `--effort takes a level, and none was
   given`, and `--effort high` without `--model`, which gives `--effort is given only with --model, the model the
   level is for`, each followed by the usage (R4, R15)
-- [ ] Extend "the argument list of each harness in each mode is the row of the table" with a loop over the efforts
+- [x] Extend "the argument list of each harness in each mode is the row of the table" with a loop over the efforts
   `undefined` and `high`, where the options of the row are the role, the model, `start.effort` of the row's harness
   as written in the test (`['--effort=high']`, `['--variant=high']`, `['-c', 'model_reasoning_effort=high']`) and the
   permission flag, in that order. Add a test that, for each harness in each mode, an effort of `high` and of `-x`
   stands after `--model=<model>` and before the permission flag and the harness arguments, and that the level never
   stands as an argument of its own. The test that gives a harness no effort keeps its exact argument lists (R1, R2,
   R3, R15)
-- [ ] Update `RUN_USAGE` in the test to the usage below, and add an end-to-end test beside "run gives the harness the
+- [x] Update `RUN_USAGE` in the test to the usage below, and add an end-to-end test beside "run gives the harness the
   model, the permission flag and the text" that runs `agentrite run` with `--model` and `--effort` for each harness,
   once with `--headless` and once without, and finds the arguments of R2 and R3 in what the fake harness was given,
   and one that `--effort high` without `--model` exits 1, prints the refusal and the usage on standard error, and
   starts no harness (R1 to R5, R15)
-- [ ] In `scripts/agentrite-run.mjs`, add `effort: { type: 'string' }` to `RUN_OPTIONS` and `effort: 'a level'` to
+- [x] In `scripts/agentrite-run.mjs`, add `effort: { type: 'string' }` to `RUN_OPTIONS` and `effort: 'a level'` to
   `OPTION_VALUES`. In `parseRunArgs`, return `effort: values.effort`, and refuse an effort without a model after
   `positionError`, with the line of the task above and the usage. Update its JSDoc return type (R1, R4)
-- [ ] Change `RUN_FORM` so that both lines stay within 120 characters, as
+- [x] Change `RUN_FORM` so that both lines stay within 120 characters, as
   `usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>]` and, under the
   first argument, `[--headless] [--skip-permissions] [-- <harness arguments...>]`. Add to `runUsage`, after
   `--model <id>`, the option `--effort <level>` with: the level of reasoning, as the harness's own word, such as
   high, given only with --model: --effort=<level> for claude, --variant=<level> for opencode and -c
   model_reasoning_effort=<level> for codex. It is wrapped as the other options are (R5)
-- [ ] In `harnessCommand`, take `effort` from the run and put `...(effort === undefined ? [] : start.effort(effort))`
+- [x] In `harnessCommand`, take `effort` from the run and put `...(effort === undefined ? [] : start.effort(effort))`
   after the model and before the permission flag. Update its JSDoc. In `scripts/agentrite.mjs`, pass `effort` from
   the parsed arguments to `harnessCommand` in the command `run` (R2, R3, R11)
-- [ ] Run `npm test`
+- [x] Run `npm test`
 
 Commit point 1: `feature-0112 Give agentrite run an effort through each harness's module`.
 
@@ -187,6 +187,6 @@ Commit point 3: `feature-0112 Document the effort of a run and of a step`.
 
 ## Commit Points
 
-- [ ] `feature-0112 Give agentrite run an effort through each harness's module`
+- [x] `feature-0112 Give agentrite run an effort through each harness's module`
 - [ ] `feature-0112 Give a step of the orchestrator an effort, and the default definition its efforts`
 - [ ] `feature-0112 Document the effort of a run and of a step`

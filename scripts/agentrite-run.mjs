@@ -31,9 +31,8 @@ export function rolesJson(roles) {
 
 /** How `run` is run, the second line starting under the first argument. */
 export const RUN_FORM =
-  'usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
-  '[--skip-permissions]\n' +
-  '                     [-- <harness arguments...>]';
+  'usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>]\n' +
+  '                     [--headless] [--skip-permissions] [-- <harness arguments...>]';
 
 /**
  * @returns {string}
@@ -48,6 +47,9 @@ export function runUsage() {
     '  --prompt <text>     added to the prompt, after the unit, as it is written',
     "  --model <id>        the harness's own id of a model, such as claude-sonnet-5-5, openai/gpt-6.1-sol or",
     "                      gpt-6.1-sol. Without it the harness decides: the role's wrapper may pin one",
+    "  --effort <level>    the level of reasoning, as the harness's own word, such as high, given only with --model:",
+    '                      --effort=<level> for claude, --variant=<level> for opencode and',
+    '                      -c model_reasoning_effort=<level> for codex',
     '  --headless          run without a session: the harness works on the prompt and ends',
     '  --skip-permissions  the harness asks no permission: --dangerously-skip-permissions for claude, which',
     '                      bypasses every check, --auto for opencode, which approves what is not denied, and',
@@ -62,12 +64,13 @@ export function runUsage() {
 const RUN_OPTIONS = /** @type {const} */ ({
   prompt: { type: 'string' },
   model: { type: 'string' },
+  effort: { type: 'string' },
   headless: { type: 'boolean' },
   'skip-permissions': { type: 'boolean' },
 });
 
 /** What each option that takes a value takes, as the line that says none was given names it. */
-const OPTION_VALUES = { prompt: 'a text', model: 'an id' };
+const OPTION_VALUES = { prompt: 'a text', model: 'an id', effort: 'a level' };
 
 /**
  * What is wrong with an option as it was given to a command that takes `options`, or `undefined` when the command
@@ -115,6 +118,7 @@ function positionError([role, harness, unit, beyond]) {
  *   unit: string,
  *   text: string | undefined,
  *   model: string | undefined,
+ *   effort: string | undefined,
  *   headless: boolean,
  *   skipPermissions: boolean,
  *   harnessArguments: string[],
@@ -142,7 +146,12 @@ export function parseRunArgs(args) {
       .flatMap((token) => (token.kind === 'option' ? [optionError(RUN_OPTIONS, OPTION_VALUES, token)] : []))
       .find(Boolean) ??
     positionError(positionals);
-  if (error !== undefined) throw new Error(`${error}\n${runUsage()}`);
+  const effortError =
+    values.effort !== undefined && values.model === undefined
+      ? '--effort is given only with --model, the model the level is for'
+      : undefined;
+  const refusal = error ?? effortError;
+  if (refusal !== undefined) throw new Error(`${refusal}\n${runUsage()}`);
 
   const [role, harness, unit] = positionals;
   return {
@@ -151,6 +160,7 @@ export function parseRunArgs(args) {
     unit,
     text: values.prompt,
     model: values.model,
+    effort: values.effort,
     headless: values.headless === true,
     skipPermissions: values['skip-permissions'] === true,
     harnessArguments,
@@ -200,6 +210,7 @@ export function unitPrompt(directory, text) {
  *   role: string,
  *   roleFile: string,
  *   model: string | undefined,
+ *   effort: string | undefined,
  *   headless: boolean,
  *   skipPermissions: boolean,
  *   prompt: string,
@@ -208,13 +219,14 @@ export function unitPrompt(directory, text) {
  * @returns {{ command: string, args: string[] }}
  */
 export function harnessCommand(run) {
-  const { harness, role, roleFile, model, headless, skipPermissions, prompt, harnessArguments } = run;
+  const { harness, role, roleFile, model, effort, headless, skipPermissions, prompt, harnessArguments } = run;
   const { start } = harnessNamed(harness);
   const started = start.role(role, roleFile);
   const options = [
     ...started.options,
     // Joined to its option, so that a model that opens with a dash is not taken for an option of the harness.
     ...(model === undefined ? [] : [`--model=${model}`]),
+    ...(effort === undefined ? [] : start.effort(effort)),
     ...(skipPermissions ? [start.skipPermissions] : []),
     ...harnessArguments,
   ];

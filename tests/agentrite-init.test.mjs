@@ -243,9 +243,8 @@ test('parseArgs gives the usage of every command for no command and for one that
     '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
     '       agentrite approve <unit>\n' +
     '       agentrite cancel <unit> --reason <text> [--by <unit>]\n' +
-    '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
-    '[--skip-permissions]\n' +
-    '                     [-- <harness arguments...>]\n' +
+    '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>]\n' +
+    '                     [--headless] [--skip-permissions] [-- <harness arguments...>]\n' +
     '       agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] ' +
     '[--skip-permissions] [--follow]\n' +
     '       agentrite runs [<number>] [--limit <count>] [--json]';

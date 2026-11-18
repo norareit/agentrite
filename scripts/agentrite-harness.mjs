@@ -62,6 +62,7 @@ import { opencode } from './harnesses/opencode.mjs';
  *     interactive: (options: string[], prompt: string) => string[],
  *     headless: (options: string[], prompt: string) => string[],
  *     role: (role: string, file: string) => { options: string[], opening: string | undefined },
+ *     effort: (level: string) => string[],
  *   },
  *   headless: {
  *     arguments: (session: string | undefined) => { args: string[], session: string | undefined },
@@ -145,6 +146,11 @@ export const HARNESS_CONTRACT = [
     member: 'start.role',
     kind: 'function',
     purpose: "the options and the opening words that start a run in a role, from the role's name and its file",
+  },
+  {
+    member: 'start.effort',
+    kind: 'function',
+    purpose: 'the arguments that give the harness an effort, from its level as it was given',
   },
   {
     member: 'headless.arguments',

@@ -285,6 +285,8 @@ export const codex = {
         `You act as the ${role}. Read \`${file}\` in the project root and follow it: ` +
         'it is the instruction of your role.',
     }),
+    // Codex has no option for the effort: `-c` sets its configuration key for the one run.
+    effort: (level) => ['-c', `model_reasoning_effort=${level}`],
   },
   headless: {
     // A new run chooses no session: Codex makes the thread, whose id it prints. Its options stand before `resume`.

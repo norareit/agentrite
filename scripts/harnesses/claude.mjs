@@ -261,6 +261,7 @@ export const claude = {
     interactive: (options, prompt) => [...options, '--', prompt],
     headless: (options, prompt) => ['--print', ...options, '--', prompt],
     role: (role) => ({ options: ['--agent', role], opening: undefined }),
+    effort: (level) => [`--effort=${level}`],
   },
   headless: {
     arguments(session) {

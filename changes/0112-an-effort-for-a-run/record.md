@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-18T15:19:51Z
 ---
 
@@ -28,5 +28,7 @@ timestamp: 2026-11-18T15:19:51Z
   in each module, `--effort` of `agentrite run`, `effort` of a step, its place in the lines, the end report and
   `agentrite runs --json`, the efforts of the default definition, and the documents, in three commits. Every
   requirement has a task. The status is `approved`
+- 2026-11-18T22:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a step of the orchestrator, on
+  `feature-0112-an-effort-for-a-run`, began the work. The status is `in-progress`
 
 ## Amendments

@@ -369,6 +369,8 @@ export const opencode = {
     interactive: (options, prompt) => [...options, '--prompt', prompt],
     headless: (options, prompt) => ['run', ...options, '--', prompt],
     role: (role) => ({ options: ['--agent', role], opening: undefined }),
+    // A variant of the model, which is the provider's own reasoning effort.
+    effort: (level) => [`--variant=${level}`],
   },
   headless: {
     arguments(session) {

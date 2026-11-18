@@ -158,8 +158,8 @@ test(
 // R12: the usage of `run`.
 
 const RUN_USAGE = `
-usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] [--skip-permissions]
-                     [-- <harness arguments...>]
+usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>]
+                     [--headless] [--skip-permissions] [-- <harness arguments...>]
 
   <role>              a role that agentrite.json names, as agentrite roles lists them
   <harness>           claude | opencode | codex
@@ -167,6 +167,9 @@ usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [-
   --prompt <text>     added to the prompt, after the unit, as it is written
   --model <id>        the harness's own id of a model, such as claude-sonnet-5-5, openai/gpt-6.1-sol or
                       gpt-6.1-sol. Without it the harness decides: the role's wrapper may pin one
+  --effort <level>    the level of reasoning, as the harness's own word, such as high, given only with --model:
+                      --effort=<level> for claude, --variant=<level> for opencode and
+                      -c model_reasoning_effort=<level> for codex
   --headless          run without a session: the harness works on the prompt and ends
   --skip-permissions  the harness asks no permission: --dangerously-skip-permissions for claude, which
                       bypasses every check, --auto for opencode, which approves what is not denied, and
@@ -185,7 +188,12 @@ test('the usage of run is the text of the plan, with the roles and the harnesses
 
 // R2, R3, R13: the arguments of `run`.
 
-const PLAIN = { text: undefined, model: undefined, headless: false, skipPermissions: false, harnessArguments: [] };
+const PLAIN = {
+  text: undefined,
+  model: undefined,
+  effort: undefined,
+  headless: false, skipPermissions: false, harnessArguments: [],
+};
 const REVIEW = { role: 'reviewer', harness: 'opencode', unit: '0007' };
 
 test('run takes the role, the harness and the unit, in that order', () => {
@@ -205,16 +213,20 @@ test('the options of run are taken before, between and after the three positions
     unit: '0007',
     text: 'look at the tests',
     model: 'claude-sonnet-5-5',
+    effort: 'high',
     headless: true,
     skipPermissions: true,
     harnessArguments: [],
   };
   const prompt = ['--prompt', 'look at the tests'];
-  const model = ['--model', 'claude-sonnet-5-5'];
+  const model = ['--model', 'claude-sonnet-5-5', '--effort', 'high'];
   for (const args of [
     [...prompt, ...model, '--headless', '--skip-permissions', 'implementer', 'claude', '0007'],
     ['implementer', '--headless', 'claude', ...model, '0007', '--skip-permissions', ...prompt],
-    ['implementer', 'claude', '0007', '--skip-permissions', '--headless', '--model=claude-sonnet-5-5', ...prompt],
+    [
+      ...['implementer', 'claude', '0007', '--skip-permissions', '--headless'],
+      ...['--model=claude-sonnet-5-5', '--effort=high', ...prompt],
+    ],
     ['--skip-permissions', 'implementer', ...prompt, ...model, 'claude', '--headless', '0007'],
     ['implementer', 'claude', '--prompt=look at the tests', '0007', '--headless', ...model, '--skip-permissions'],
   ]) {
@@ -232,6 +244,13 @@ test('each option of run is taken alone, and a model id is taken as it is writte
     model: 'openai/gpt-6.1-sol',
   });
   assert.deepEqual(parseRunArgs([...base, '--prompt', 'why']), { ...REVIEW, ...PLAIN, text: 'why' });
+  assert.deepEqual(parseRunArgs([...base, '--model', 'm', '--effort', 'high']), {
+    ...REVIEW,
+    ...PLAIN,
+    model: 'm',
+    effort: 'high',
+  });
+  assert.equal(parseRunArgs([...base, '--model', 'm', '--effort=-x']).effort, '-x');
 });
 
 // R5, R23: the text.
@@ -335,6 +354,8 @@ test('run with no argument at all throws its usage alone', () => {
 test('each argument run does not take is named, followed by the usage of run', () => {
   const noText = '--prompt takes a text, and none was given';
   const noId = '--model takes an id, and none was given';
+  const noLevel = '--effort takes a level, and none was given';
+  const noModel = '--effort is given only with --model, the model the level is for';
   for (const [args, named] of [
     [['reviewer', 'aider', '0007'], 'unknown harness: aider'],
     [['reviewer', 'constructor', '0007'], 'unknown harness: constructor'],
@@ -350,6 +371,11 @@ test('each argument run does not take is named, followed by the usage of run', (
     [['reviewer', 'claude', '0007', '--model'], noId],
     [['reviewer', 'claude', '--model', '--headless', '0007'], noId],
     [['reviewer', 'claude', '0007', '--model='], noId],
+    [['reviewer', 'claude', '0007', '--model', 'm', '--effort'], noLevel],
+    [['reviewer', 'claude', '0007', '--model', 'm', '--effort', '--headless'], noLevel],
+    [['reviewer', 'claude', '0007', '--model', 'm', '--effort='], noLevel],
+    [['reviewer', 'claude', '0007', '--model', 'm', '--effort', ''], noLevel],
+    [['reviewer', 'claude', '0007', '--effort', 'high'], noModel],
     [['reviewer', 'claude', '0007', '--prompt'], noText],
     [['reviewer', 'claude', '0007', '--prompt', '--'], noText],
     [['reviewer', 'claude', '0007', '--prompt', ''], noText],
@@ -461,7 +487,12 @@ const ROWS = {
 };
 const EXTRA = ['--resume', 'an id', '--allowedTools', 'Read', 'Grep'];
 const ROLE_FILE = 'node_modules/agentrite/roles/reviewer.md';
-const START = { model: undefined, headless: false, skipPermissions: false, harnessArguments: [], roleFile: ROLE_FILE };
+const START = {
+  model: undefined,
+  effort: undefined,
+  headless: false, skipPermissions: false, harnessArguments: [],
+  roleFile: ROLE_FILE,
+};
 
 test('every harness the kit has holds a row for each mode', () => {
   assert.deepEqual(Object.keys(ROWS).sort(), [...HARNESS_NAMES].sort());
@@ -474,32 +505,44 @@ test('every harness the kit has holds a row for each mode', () => {
   }
 });
 
+// What each harness is given for the effort `high`, as the unit's requirements write it, and not as its module does.
+const EFFORTS = {
+  claude: ['--effort=high'],
+  opencode: ['--variant=high'],
+  codex: ['-c', 'model_reasoning_effort=high'],
+};
+const EFFORT_CASES = [undefined, 'high'].flatMap((effort) =>
+  [false, true].flatMap((skipPermissions) =>
+    [[], EXTRA].map((harnessArguments) => [effort, skipPermissions, harnessArguments]),
+  ),
+);
+
 test('the argument list of each harness in each mode is the row of the table, option by option', () => {
   for (const [harness, row] of Object.entries(ROWS)) {
     for (const mode of ['interactive', 'headless']) {
       for (const model of [undefined, 'openai/gpt-6.1-sol']) {
-        for (const skipPermissions of [false, true]) {
-          for (const harnessArguments of [[], EXTRA]) {
-            const options = [
-              ...(row.role ?? ['--agent', 'reviewer']),
-              ...(model === undefined ? [] : [`--model=${model}`]),
-              ...(skipPermissions ? [row.skip] : []),
-            ];
-            assert.deepEqual(
-              harnessCommand({
-                harness,
-                role: 'reviewer',
-                roleFile: ROLE_FILE,
-                model,
-                headless: mode === 'headless',
-                skipPermissions,
-                prompt: PROMPT,
-                harnessArguments,
-              }),
-              { command: row.command, args: row[mode](options, harnessArguments) },
-              `${harness} ${mode} ${model} ${skipPermissions} ${harnessArguments.length}`,
-            );
-          }
+        for (const [effort, skipPermissions, harnessArguments] of EFFORT_CASES) {
+          const options = [
+            ...(row.role ?? ['--agent', 'reviewer']),
+            ...(model === undefined ? [] : [`--model=${model}`]),
+            ...(effort === undefined ? [] : EFFORTS[harness]),
+            ...(skipPermissions ? [row.skip] : []),
+          ];
+          assert.deepEqual(
+            harnessCommand({
+              harness,
+              role: 'reviewer',
+              roleFile: ROLE_FILE,
+              model,
+              effort,
+              headless: mode === 'headless',
+              skipPermissions,
+              prompt: PROMPT,
+              harnessArguments,
+            }),
+            { command: row.command, args: row[mode](options, harnessArguments) },
+            `${harness} ${mode} ${model} ${effort} ${skipPermissions} ${harnessArguments.length}`,
+          );
         }
       }
     }
@@ -582,6 +625,33 @@ test('each harness is given the model as --model=<model>, one argument, headless
         const given = args.filter((argument) => argument.startsWith('--model'));
         assert.deepEqual(given, [`--model=${model}`], `${harness} ${headless} ${model}`);
         assert.ok(!args.includes(model), `${harness} ${headless} ${model}`);
+      }
+    }
+  }
+});
+
+// 0112 R2, R3: the effort reaches every harness after the model and before the permission flag.
+test('each harness is given an effort after the model, before the permission flag and what the caller gave', () => {
+  for (const harness of HARNESS_NAMES) {
+    for (const headless of [false, true]) {
+      for (const level of ['high', '-x']) {
+        const { args } = harnessCommand({
+          ...START,
+          harness,
+          role: 'reviewer',
+          model: 'm',
+          effort: level,
+          headless,
+          skipPermissions: true,
+          harnessArguments: EXTRA,
+          prompt: PROMPT,
+        });
+        const given = harnessNamed(harness).start.effort(level);
+        const at = args.indexOf('--model=m') + 1;
+        assert.deepEqual(args.slice(at, at + given.length), given, `${harness} ${headless} ${level}`);
+        assert.equal(args[at + given.length], harnessNamed(harness).start.skipPermissions);
+        assert.equal(args[at + given.length + 1], EXTRA[0]);
+        assert.ok(!args.includes(level), `${harness} ${headless} ${level}`);
       }
     }
   }
@@ -752,6 +822,35 @@ test('run gives the harness the model, the permission flag and the text, and not
     opencode.stdout,
     started('opencode', ['run', '--agent', 'planner', '--model=openai/gpt-6.1-sol', '--auto', '--', UNIT_PROMPT]),
   );
+});
+
+test('run gives each harness in each mode the effort after the model, before the permission flag', (testContext) => {
+  const { agentrite } = project(testContext);
+  for (const [key, expected] of Object.entries(STARTED)) {
+    const harness = key.split(' ')[0];
+    const result = agentrite([
+      ...reviewerRun(key),
+      '--skip-permissions',
+      '--effort',
+      'high',
+      '--model=the-model',
+      '--prompt',
+      'which word',
+    ]);
+
+    const before = ['--model=the-model', ...EFFORTS[harness], harnessNamed(harness).start.skipPermissions];
+    assert.equal(result.status, 0, result.stderr);
+    assert.equal(result.stdout, started(harness, expected(before, `${UNIT_PROMPT}\n\nwhich word`)), key);
+  }
+});
+
+test('run refuses an effort without a model, with the usage, exit 2 and no harness', (testContext) => {
+  const { agentrite } = project(testContext);
+  const result = agentrite([...reviewerRun('claude'), '--effort', 'high']);
+
+  assert.equal(result.status, 2, result.stderr);
+  assert.equal(result.stdout, '');
+  assert.equal(result.stderr, `--effort is given only with --model, the model the level is for\n${RUN_USAGE}\n`);
 });
 
 test('each harness in each mode gets what follows the -- before its prompt, as it is written', (testContext) => {
@@ -987,9 +1086,8 @@ test(
       '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
       '       agentrite approve <unit>\n' +
       '       agentrite cancel <unit> --reason <text> [--by <unit>]\n' +
-      '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--headless] ' +
-      '[--skip-permissions]\n' +
-      '                     [-- <harness arguments...>]\n' +
+      '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>]\n' +
+      '                     [--headless] [--skip-permissions] [-- <harness arguments...>]\n' +
       '       agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] ' +
       '[--skip-permissions] [--follow]\n' +
       '       agentrite runs [<number>] [--limit <count>] [--json]\n';

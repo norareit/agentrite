@@ -143,6 +143,14 @@ test('a harness that lacks a member, or has one of another kind, is named with t
   const withoutCommand = { ...claude, start: { ...claude.start, command: undefined } };
   assert.deepEqual(contractFaults(withoutCommand, HARNESS_CONTRACT), ['claude lacks start.command']);
 
+  const withoutEffort = { ...claude, start: { ...claude.start, effort: undefined } };
+  assert.deepEqual(contractFaults(withoutEffort, HARNESS_CONTRACT), ['claude lacks start.effort']);
+
+  const stringEffort = { ...claude, start: { ...claude.start, effort: '--effort' } };
+  assert.deepEqual(contractFaults(stringEffort, HARNESS_CONTRACT), [
+    'claude has start.effort as string, and the contract makes it function',
+  ]);
+
   const stringAgents = { ...claude, wrappers: { ...claude.wrappers, ownAgents: 'Explore' } };
   assert.deepEqual(contractFaults(stringAgents, HARNESS_CONTRACT), [
     'claude has wrappers.ownAgents as string, and the contract makes it strings',
@@ -189,7 +197,7 @@ test('a harness that lacks a member, or has one of another kind, is named with t
 
 // R2
 
-test('the contract holds its thirty-one members, each with a kind and a purpose', () => {
+test('the contract holds its thirty-two members, each with a kind and a purpose', () => {
   assert.deepEqual(
     HARNESS_CONTRACT.map(({ member }) => member),
     [
@@ -206,6 +214,7 @@ test('the contract holds its thirty-one members, each with a kind and a purpose'
       'start.interactive',
       'start.headless',
       'start.role',
+      'start.effort',
       'headless.arguments',
       'headless.read',
       'headless.follow',
@@ -769,6 +778,19 @@ test('Codex starts in a role by no option, and by words that name the role and i
       'You act as the reviewer. Read `rules/our reviewer.md` in the project root and follow it: it is the ' +
       'instruction of your role.',
   });
+});
+
+test('each harness gives an effort as one argument joined to its option, and Codex as -c and its key', () => {
+  const expected = {
+    claude: (level) => [`--effort=${level}`],
+    opencode: (level) => [`--variant=${level}`],
+    codex: (level) => ['-c', `model_reasoning_effort=${level}`],
+  };
+  for (const harness of HARNESSES) {
+    for (const level of ['high', '-x']) {
+      assert.deepEqual(harness.start.effort(level), expected[harness.name](level), `${harness.name} ${level}`);
+    }
+  }
 });
 
 test("Codex's session and headless run put a -- before the prompt, and the headless run is exec", () => {
