@@ -62,5 +62,11 @@ timestamp: 2026-11-15T23:30:08Z
   orchestrator, and not as a decision of the human. Renamed it `testContext` in the new tests, and shortened two titles
   to keep the line limit. `npm test` on the tree before this entry reported 1900 passed, 0 failed and 34 skipped. The
   status is `in-progress`
+- 2026-11-18T17:20:35Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a delta review of unit 0110 at
+  `bf65db663a5031e3cd30de0386b7d69ff2814e2f`, compared with `e08dcfe19af4aec6a478e50a185070ba66070ea6`.
+  Returned no findings; the review is in
+  `.reviews/0110-report-a-harness-failure-that-stops-a-run/review-2026-11-18T172035Z.md`. `npm test` reported 1900
+  passed, 0 failed and 34 skipped; `npm run check-changes` and the delta whitespace check passed. Docker-dependent
+  tests could not run in this sandbox. The status remains `in-progress`
 
 ## Amendments
