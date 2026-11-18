@@ -43,6 +43,7 @@ import {
   plainOutput,
   judgeStep,
   isSession,
+  modelText,
   resumePosition,
   orchestrate,
   openingLine,
@@ -72,10 +73,20 @@ import { installKit } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const NAMES = { roles: ['specifier', 'planner', 'implementer', 'reviewer'], harnesses: ['claude', 'opencode'] };
-const DEFAULT = parseDefinition(readFileSync(new URL('../orchestrator.json', import.meta.url), 'utf-8'), {
+const KIT_DEFAULT = parseDefinition(readFileSync(new URL('../orchestrator.json', import.meta.url), 'utf-8'), {
   path: 'orchestrator.json',
   ...NAMES,
 });
+// The default definition without its efforts, so that the tests of the lines and the table of steps with no effort
+// keep reading it. The tests of an effort name `KIT_DEFAULT`.
+const withoutEffort = ({ effort, ...step }) => step;
+const DEFAULT = {
+  steps: KIT_DEFAULT.steps.map((item) =>
+    item.repeat === undefined
+      ? withoutEffort(item)
+      : { repeat: { ...item.repeat, steps: item.repeat.steps.map(withoutEffort) } },
+  ),
+};
 
 const HEARTBEAT_FORM = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z\n$/;
 const FENCE = '```';
@@ -716,6 +727,18 @@ test('the head of a step gives its number, its round in a repeat, its role, harn
   assert.equal(stepHead(planner), 'step 0, planner, claude, claude-opus-5-5');
 });
 
+// 0112 R7, R8: the effort of a step, after its model.
+
+test('the head of a step names its effort after its model, and the head of one without has none', () => {
+  assert.equal(
+    stepHead({ ...reviewer, step: KIT_DEFAULT.steps[1].repeat.steps[1] }),
+    'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high',
+  );
+  assert.equal(stepHead(planner), 'step 0, planner, claude, claude-opus-5-5');
+  assert.equal(modelText({ model: 'm', effort: 'high' }), 'm, effort high');
+  assert.equal(modelText({ model: 'm' }), 'm');
+});
+
 test('the name of a step file has as many digits as the highest step number needs, and two at least', () => {
   assert.equal(stepFileName(DEFAULT, 0, 'planner', 'outcome.json'), '00-planner.outcome.json');
   const many = { steps: [{ repeat: { times: 101, steps: [DEFAULT.steps[0]] } }] };
@@ -825,6 +848,22 @@ test('the table of the steps that ran is the spec example, line for line', () =>
       '2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s',
       '3  implementer  claude    claude-sonnet-5-5   15m 50s',
       '4  reviewer     opencode  openai/gpt-6.1-sol   6m 03s',
+    ].join('\n'),
+  );
+});
+
+test('the table gives the effort in the cell of the model, aligned to the widest cell', () => {
+  const steps = [KIT_DEFAULT.steps[1].repeat.steps[1], DEFAULT.steps[0], KIT_DEFAULT.steps[0]];
+  const ran = steps.map((step, number) => {
+    const planned = { number, item: 0, round: undefined, index: undefined, step, session: undefined };
+    return ended(planned, { ...done(), milliseconds: 724000 });
+  });
+  assert.equal(
+    ranTable(ran),
+    [
+      '0  reviewer  opencode  openai/gpt-6.1-sol, effort high  12m 04s',
+      '1  planner   claude    claude-opus-5-5                  12m 04s',
+      '2  planner   claude    claude-opus-5-5, effort medium   12m 04s',
     ].join('\n'),
   );
 });
@@ -1623,6 +1662,15 @@ test('the opening line names the run resumed and the step rerun, by its head', (
   );
 });
 
+test('the opening line names the effort of the step rerun, after its model', () => {
+  const step = { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5', effort: 'medium' };
+  assert.equal(
+    openingLine('.orchestrator/0029-x/2026-10-21T10:00:00Z', { number: 0, round: undefined, step }),
+    'Resuming the run .orchestrator/0029-x/2026-10-21T10:00:00Z/ at step 0, implementer, claude, ' +
+      'claude-sonnet-5-5, effort medium',
+  );
+});
+
 test('plainOutput writes the opening line as a line before the line of the first step', () => {
   /** @type {string[]} */ const written = [];
   const output = plainOutput((text) => written.push(text));
@@ -2121,11 +2169,11 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.equal(result.status, 0, result.stderr);
   const lines = stepLines(result.stdout);
   assert.equal(lines.length, 6);
-  assert.equal(lines[0], 'step 0, planner, claude, claude-opus-5-5: started');
-  assert.match(lines[1], /^step 0, planner, claude, claude-opus-5-5: done after 0m 0\ds$/);
-  assert.equal(lines[2], 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5: started');
-  assert.equal(lines[4], 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started');
-  assert.match(lines[5], /^step 2, round 1 of 3, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
+  assert.equal(lines[0], 'step 0, planner, claude, claude-opus-5-5, effort medium: started');
+  assert.match(lines[1], /^step 0, planner, claude, claude-opus-5-5, effort medium: done after 0m 0\ds$/);
+  assert.equal(lines[2], 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5, effort medium: started');
+  assert.equal(lines[4], 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started');
+  assert.match(lines[5], /^step 2, round 1 of 3, reviewer, opencode, openai\/gpt-6\.1-sol, effort high: done after /);
 
   const run = runDirectoryOf(base);
   assert.ok(
@@ -2139,17 +2187,20 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   const [planner, implementer, reviewer] = calls();
   assert.equal(calls().length, 3);
   assert.equal(planner.harness, 'claude');
-  assert.deepEqual(planner.options.slice(0, 7), [
+  assert.deepEqual(planner.options.slice(0, 8), [
     '--print',
     '--agent',
     'planner',
     '--model=claude-opus-5-5',
+    '--effort=medium',
     '--output-format',
     'stream-json',
     '--verbose',
   ]);
-  assert.equal(planner.options[7], '--session-id');
-  assert.match(planner.options[8], UUID);
+  assert.equal(planner.options[8], '--session-id');
+  assert.match(planner.options[9], UUID);
+  assert.ok(implementer.options.includes('--model=claude-sonnet-5-5'));
+  assert.equal(implementer.options[implementer.options.indexOf('--model=claude-sonnet-5-5') + 1], '--effort=medium');
   assert.ok(planner.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${REQUEST_LINE}, and reads`), planner.prompt);
   assert.ok(implementer.prompt.startsWith(`The unit is changes/${UNIT}/.\n\n${IMPLEMENTER_PROMPT}\n\n`));
   assert.ok(implementer.prompt.includes(`${REQUEST_LINE}, in round 1 of a repeat of at most 3 rounds, and reads`));
@@ -2159,6 +2210,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
     '--agent',
     'reviewer',
     '--model=openai/gpt-6.1-sol',
+    '--variant=high',
     '--format',
     'json',
   ]);
@@ -2183,8 +2235,8 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.equal(state.branch, null);
   assert.deepEqual(state.at, { number: 2, item: 1, round: { at: 1, of: 3 }, index: 1, asked: false });
   assert.deepEqual(state.sessions, [
-    { role: 'planner', harness: 'claude', session: planner.options[8] },
-    { role: 'implementer', harness: 'claude', session: implementer.options[8] },
+    { role: 'planner', harness: 'claude', session: planner.options[9] },
+    { role: 'implementer', harness: 'claude', session: implementer.options[9] },
     { role: 'reviewer', harness: 'opencode', session: 'ses_test' },
   ]);
   const line = 'The run ran every item of the definition to its end.';
@@ -2411,6 +2463,8 @@ test('a step without a block is asked again in its session, and the run goes on 
   const asked = made[2];
   assert.equal(asked.harness, 'claude');
   assert.deepEqual(asked.options.slice(-2), ['--resume', 'implementer-session']);
+  assert.ok(asked.options.includes('--effort=medium'), asked.options.join(' '));
+  assert.ok(made[1].options.includes('--effort=medium'), made[1].options.join(' '));
   assert.equal(asked.prompt, `The unit is changes/${UNIT}/.\n\n${askAgainRequest({ at: 1, of: 3 })}`);
   assert.ok(asked.prompt.includes(`\n\n${ASK_AGAIN_LINE}`));
   assert.ok(!asked.prompt.includes(IMPLEMENTER_PROMPT));
@@ -2418,14 +2472,15 @@ test('a step without a block is asked again in its session, and the run goes on 
 
   const lines = stepLines(result.stdout);
   assert.equal(lines.length, 8);
-  assert.match(lines[3], /^step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5: no outcome after /);
-  const head = 'step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for its outcome';
+  const implementer = 'implementer, claude, claude-sonnet-5-5, effort medium';
+  assert.match(lines[3], new RegExp(`^step 1, round 1 of 3, ${implementer}: no outcome after `));
+  const head = `step 2, round 1 of 3, ${implementer}, asked again for its outcome`;
   assert.equal(lines[4], `${head}: started`);
   assert.match(lines[5], new RegExp(`^${head}: done after 0m 0\\ds$`));
-  assert.equal(lines[6], 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started');
+  assert.equal(lines[6], 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started');
   const rows = result.stdout.split('\n').filter((line) => /^\d  /.test(line));
   assert.equal(rows.length, 4);
-  assert.match(rows[2], /^2  implementer  claude {4}claude-sonnet-5-5 {3}0m 0\ds {2}asked again$/);
+  assert.match(rows[2], /^2  implementer  claude {4}claude-sonnet-5-5, effort medium {2}0m 0\ds {2}asked again$/);
   for (const row of [rows[0], rows[1], rows[3]]) assert.ok(!row.endsWith(' ') && !row.includes('asked'), row);
 
   const run = runDirectoryOf(base);
@@ -3114,6 +3169,10 @@ test('a step with a limit that ends in time ends as it would without the limit',
 
   assert.equal(result.status, 0, result.stderr);
   assert.equal(calls().length, 2);
+  // A step of a definition that gives no effort is given none.
+  for (const { options } of calls()) {
+    assert.ok(!options.some((option) => option.startsWith('--effort') || option.startsWith('--variant')), options);
+  }
   assert.match(stepLines(result.stdout)[1], /^step 0, implementer, claude, claude-sonnet-5-5: done after 0m 0\ds$/);
   assert.ok(result.stdout.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
 });
@@ -3868,8 +3927,8 @@ const NO_OUTCOME = () => [
   claudePrinted(NO_BLOCK, 'implementer-session'),
   claudePrinted('I still give no block.'),
 ];
-const IMPLEMENTER_ROUND_1 = 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5';
-const REVIEWER_ROUND_1 = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+const IMPLEMENTER_ROUND_1 = 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5, effort medium';
+const REVIEWER_ROUND_1 = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high';
 const rerunPrompt = (...parts) => [`The unit is changes/${UNIT}/.`, ...parts].join('\n\n');
 
 // R6
@@ -3972,8 +4031,8 @@ test('a resume after questions gives the rerun the words of --prompt, and goes o
   assert.deepEqual(startedLines(result.stdout), [
     `${IMPLEMENTER_ROUND_1}: started`,
     `${REVIEWER_ROUND_1}: started`,
-    'step 3, round 2 of 3, implementer, claude, claude-sonnet-5-5: started',
-    'step 4, round 2 of 3, reviewer, opencode, openai/gpt-6.1-sol: started',
+    'step 3, round 2 of 3, implementer, claude, claude-sonnet-5-5, effort medium: started',
+    'step 4, round 2 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started',
   ]);
 });
 
@@ -4034,6 +4093,10 @@ test('a resume runs the definition of the run it resumes, and not the one agentr
     calls().slice(2).map(({ harness }) => harness),
     ['claude', 'opencode'],
   );
+  // The rerun takes its efforts from the definition the run kept, and the one agentrite.json names now gives none.
+  const [rerunPlanner, rerunReviewer] = calls().slice(2);
+  assert.ok(rerunPlanner.options.includes('--effort=medium'), rerunPlanner.options.join(' '));
+  assert.ok(rerunReviewer.options.includes('--variant=high'), rerunReviewer.options.join(' '));
   const resumed = runOf(1);
   assert.equal(read(`${resumed.directory}/definition.json`), read('node_modules/agentrite/orchestrator.json'));
   assert.equal(stateOf(context, resumed).definition, 'node_modules/agentrite/orchestrator.json');
@@ -4076,7 +4139,7 @@ test('a resume of a repeat that ran out gets no round more, and is resumed in tu
   assert.equal(calls().length, 9);
   assert.equal(
     firstLine(last.stdout),
-    `Resuming the run ${first.directory}/ at step 6, round 3 of 3, reviewer, opencode, openai/gpt-6.1-sol`,
+    `Resuming the run ${first.directory}/ at step 6, round 3 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high`,
   );
   assert.deepEqual(calls()[8].options.slice(-2), ['--session', 'ses_test']);
   const [initial, middle, final] = [stopped, first, runOf(2)].map((run) => stateOf(context, run));
@@ -4473,6 +4536,25 @@ test('a step of Codex starts in its role, is followed by its messages, and is as
   assert.ok(result.stdout.includes('Summary: Reviewed.'), result.stdout);
   const state = JSON.parse(read(`${runDirectoryOf(base).name}/state.json`));
   assert.deepEqual(state.sessions, [{ role: 'reviewer', harness: 'codex', session: CODEX_THREAD }]);
+});
+
+// 0112 R2, R6, R15: a step of Codex with an effort gives its harness `-c` and the key.
+
+test('a step of Codex with an effort is given -c and model_reasoning_effort after its model', (context) => {
+  const { base, agentrite, answer, calls, write } = project(context);
+  write('bin/codex', FAKE_HARNESS);
+  chmodSync(join(base, 'bin', 'codex'), 0o755);
+  write('agentrite.json', SETTINGS.replace('["claude", "opencode"]', '["claude", "opencode", "codex"]'));
+  assert.equal(agentrite('refresh').status, 0);
+  const step = { role: 'reviewer', harness: 'codex', model: 'gpt-6.1-sol', effort: 'high' };
+  write('codex.json', JSON.stringify({ steps: [step] }));
+  answer(1, codexPrinted(responseOf({ ...DONE, summary: 'Reviewed.' })));
+
+  const result = agentrite('orchestrate', '0029', '--definition', 'codex.json');
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.deepEqual(calls()[0].options, ['exec', '--model=gpt-6.1-sol', '-c', 'model_reasoning_effort=high', '--json']);
+  assert.ok(stepLines(result.stdout)[0].startsWith('step 0, reviewer, codex, gpt-6.1-sol, effort high: started'));
 });
 
 // Unit 0103, R3, R4, R7, R16: what `agentrite orchestrate` writes under `.orchestrator`, and where.

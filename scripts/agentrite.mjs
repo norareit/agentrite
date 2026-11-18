@@ -2041,6 +2041,7 @@ async function runStep(root, directory, skipPermissions, words, planned, grouped
     directory,
     // Written onto their options, so that a value that opens with a dash is not taken for an option.
     `--model=${step.model}`,
+    ...(step.effort === undefined ? [] : [`--effort=${step.effort}`]),
     '--headless',
     `--prompt=${prompt}`,
     ...(skipPermissions ? ['--skip-permissions'] : []),

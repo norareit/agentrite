@@ -121,7 +121,7 @@ test('the package ships the default agentrite.json, as a template', () => {
 // R4 of unit 0065: the default definition, as the spec writes it.
 const DEFAULT_DEFINITION = `{
   "steps": [
-    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5" },
+    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5", "effort": "medium" },
     {
       "repeat": {
         "times": 3,
@@ -131,12 +131,14 @@ const DEFAULT_DEFINITION = `{
             "role": "implementer",
             "harness": "claude",
             "model": "claude-sonnet-5-5",
+            "effort": "medium",
             "prompt": "From round 2, this definition accepts review findings you agree with. Propose declining others."
           },
           {
             "role": "reviewer",
             "harness": "opencode",
-            "model": "openai/gpt-6.1-sol"
+            "model": "openai/gpt-6.1-sol",
+            "effort": "high"
           }
         ]
       }

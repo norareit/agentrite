@@ -21,7 +21,16 @@ import { readRuns } from '../scripts/agentrite.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const script = join(import.meta.dirname, '..', 'scripts', 'agentrite.mjs');
-const DEFAULT = readFileSync(new URL('../orchestrator.json', import.meta.url), 'utf-8');
+const KIT_DEFAULT = readFileSync(new URL('../orchestrator.json', import.meta.url), 'utf-8');
+// The default definition without its efforts, which the tests of a step with no effort read.
+const withoutEffort = ({ effort, ...step }) => step;
+const DEFAULT = JSON.stringify({
+  steps: JSON.parse(KIT_DEFAULT).steps.map((item) =>
+    item.repeat === undefined
+      ? withoutEffort(item)
+      : { repeat: { ...item.repeat, steps: item.repeat.steps.map(withoutEffort) } },
+  ),
+});
 const INSTANT = '2026-10-21T10:00:00Z';
 const NOW = Date.parse('2026-10-21T12:00:00Z');
 
@@ -119,12 +128,28 @@ test('a run at a step in a repeat gives its step, its head and the name of its f
     role: 'reviewer',
     harness: 'opencode',
     model: 'openai/gpt-6.1-sol',
+    effort: null,
   });
   assert.equal(run.head, 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol');
   assert.equal(run.followedName, '02-reviewer.followed.jsonl');
   assert.equal(run.directory, `.orchestrator/0029-x/${INSTANT}`);
   assert.equal(run.number, '0029');
   assert.equal(run.run, INSTANT);
+});
+
+test('a run at a step with an effort gives it in its step and in its head', () => {
+  const run = read({}, { definition: KIT_DEFAULT });
+  assert.deepEqual(run.step, {
+    number: 2,
+    round: 1,
+    rounds: 3,
+    role: 'reviewer',
+    harness: 'opencode',
+    model: 'openai/gpt-6.1-sol',
+    effort: 'high',
+  });
+  assert.equal(run.head, 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high');
+  assert.equal(read({ at: FIRST_AT }, { definition: KIT_DEFAULT }).step.effort, 'medium');
 });
 
 test('a run at a step outside a repeat has no round and no rounds, and one before its first step has no step', () => {
@@ -136,6 +161,7 @@ test('a run at a step outside a repeat has no round and no rounds, and one befor
     role: 'planner',
     harness: 'claude',
     model: 'claude-opus-5-5',
+    effort: null,
   });
   assert.equal(first.head, 'step 0, planner, claude, claude-opus-5-5');
   assert.equal(first.followedName, '00-planner.followed.jsonl');
@@ -514,7 +540,9 @@ test('the document holds the keys of a run and of its step in order, each as a v
     'followed',
     'ended',
   ]);
-  assert.deepEqual(Object.keys(parsed.runs[0].step), ['number', 'round', 'rounds', 'role', 'harness', 'model']);
+  assert.deepEqual(Object.keys(parsed.runs[0].step), [
+    ...['number', 'round', 'rounds', 'role', 'harness', 'model', 'effort'],
+  ]);
   assert.deepEqual(parsed.runs[0], {
     number: '0029',
     unit: '0029-x',
@@ -531,6 +559,7 @@ test('the document holds the keys of a run and of its step in order, each as a v
       role: 'reviewer',
       harness: 'opencode',
       model: 'openai/gpt-6.1-sol',
+      effort: null,
     },
     followed: `.orchestrator/0029-x/${INSTANT}--opus/02-reviewer.followed.jsonl`,
     ended: ENDED,

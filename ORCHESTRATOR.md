@@ -17,7 +17,8 @@ A project that does not use the orchestrator holds `"orchestrator": false` in `a
 
 What a run does is in its definition, a JSON file that `orchestrator` in `agentrite.json` names. The kit's default,
 `node_modules/agentrite/orchestrator.json`, has the planner write the plan in Claude Code on Opus, and then runs at most
-three rounds of the implementer in Claude Code on Sonnet followed by a review in OpenCode on GPT Sol. The implementer
+three rounds of the implementer in Claude Code on Sonnet followed by a review in OpenCode on GPT Sol. The planner and
+the implementer run at the effort `medium`, and the review at `high`. The implementer
 of the first round builds the unit, and that of a later round applies the findings of the review before it. A review
 with no findings ends the repeat. A third review with a blocking finding stops the run, and a third review with only
 non-blocking findings lets the run end, with those findings listed in the end report:
@@ -25,7 +26,7 @@ non-blocking findings lets the run end, with those findings listed in the end re
 ```json
 {
   "steps": [
-    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5" },
+    { "role": "planner", "harness": "claude", "model": "claude-opus-5-5", "effort": "medium" },
     {
       "repeat": {
         "times": 3,
@@ -35,12 +36,14 @@ non-blocking findings lets the run end, with those findings listed in the end re
             "role": "implementer",
             "harness": "claude",
             "model": "claude-sonnet-5-5",
+            "effort": "medium",
             "prompt": "From round 2, this definition accepts review findings you agree with. Propose declining others."
           },
           {
             "role": "reviewer",
             "harness": "opencode",
-            "model": "openai/gpt-6.1-sol"
+            "model": "openai/gpt-6.1-sol",
+            "effort": "high"
           }
         ]
       }
@@ -52,8 +55,9 @@ non-blocking findings lets the run end, with those findings listed in the end re
 * A definition is a JSON object with one key, `steps`, a list of one or more items. An item is a step or a repeat,
   and the items run in the order of the list
 * A step holds `role`, a role that `roles` in `agentrite.json` names, `harness`, one that `harnesses` names, and
-  `model`, the harness's own id of a model, each a string that is not empty. It may hold `prompt`, a string that is
-  not empty, which the step's prompt gets after the unit, `stopWhen` and `timeoutMinutes`
+  `model`, the harness's own id of a model, each a string that is not empty. It may hold `effort`, the harness's own
+  level of reasoning for the model, a string that is not empty, which the step's `agentrite run` gets as `--effort`,
+  `prompt`, a string that is not empty, which the step's prompt gets after the unit, `stopWhen` and `timeoutMinutes`
 * A repeat is an object with one key, `repeat`, an object that holds `times`, a whole number of one or more, and
   `steps`, a list of one or more steps, and may hold `until`. It runs its steps in order, round after round. A repeat
   holds no repeat
@@ -167,12 +171,13 @@ The outcome of a review with one blocking finding, as it stands in the final res
 ## How a run ends
 
 Before and after each step the command prints a line with the step's number, counted from 0 in the order the steps
-run, its round in a repeat, its role, its harness and its model. The line after it adds the outcome, or that the step
+run, its round in a repeat, its role, its harness and its model, and after the model, `, effort` and its effort for a
+step that has one. The line after it adds the outcome, or that the step
 ran out of time, and how long the step took:
 
 ```
-step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started
-step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: done after 8m 12s
+step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started
+step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: done after 8m 12s
 ```
 
 The harness's standard error reaches the terminal. Without `--follow`, what it prints on standard output is read and
@@ -211,7 +216,7 @@ prints no rule. A step followed, the first of a run of two, its two tool calls d
 
 ```
 ==== agentrite =================================================================
-step 1, implementer, claude, claude-sonnet-5-5: started
+step 1, implementer, claude, claude-sonnet-5-5, effort medium: started
 ================================================================================
 
 14:03:27 I will read the spec first, and then the tests of the command.
@@ -222,8 +227,8 @@ step 1, implementer, claude, claude-sonnet-5-5: started
 14:12:05 The tests pass, and the plan is ticked.
 
 ==== agentrite =================================================================
-step 1, implementer, claude, claude-sonnet-5-5: done after 8m 41s
-step 2, reviewer, opencode, openai/gpt-6.1-sol: started
+step 1, implementer, claude, claude-sonnet-5-5, effort medium: done after 8m 41s
+step 2, reviewer, opencode, openai/gpt-6.1-sol, effort high: started
 ================================================================================
 ```
 
@@ -265,13 +270,14 @@ files in the run's directory, its place as the step the run is at in `state.json
 Its lines say that it asked again for the outcome:
 
 ```
-step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5: no outcome after 41m 37s
-step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for its outcome: started
-step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for its outcome: done after 0m 12s
+step 1, implementer, claude, claude-sonnet-5-5, effort medium: no outcome after 41m 37s
+step 2, implementer, claude, claude-sonnet-5-5, effort medium, asked again for its outcome: started
+step 2, implementer, claude, claude-sonnet-5-5, effort medium, asked again for its outcome: done after 0m 12s
 ```
 
 When the run ends, the command prints last: a list of every step that ran, with its number, role, harness, model and
-how long it took, and `asked again` after an ask again; how the run ended, and for a stop which step stopped it and
+how long it took, the model followed by `, effort` and the effort in the same cell for a step that has one, and
+`asked again` after an ask again; how the run ended, and for a stop which step stopped it and
 why, with what is wrong with an outcome
 not of the form; then, for a stop by a failure of the harness, its error and how to resume the run, and then, for a
 stop, the tool calls the harness refused for lack of permission, as below; then from the
@@ -288,18 +294,18 @@ that ran past its time limit, it gives the limit, and the path of its final resp
 Nothing is taken from an earlier step but the non-blocking findings still open and the items of `afterwards`.
 
 ```
-0  planner      claude    claude-opus-5-5     12m 04s
-1  implementer  claude    claude-sonnet-5-5   41m 37s
-2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s
+0  planner      claude    claude-opus-5-5, effort medium    12m 04s
+1  implementer  claude    claude-sonnet-5-5, effort medium  41m 37s
+2  reviewer     opencode  openai/gpt-6.1-sol, effort high    8m 12s
 ```
 
 A run whose implementer was asked again lists the ask again as a step of its own:
 
 ```
-0  planner      claude    claude-opus-5-5     12m 04s
-1  implementer  claude    claude-sonnet-5-5   41m 37s
-2  implementer  claude    claude-sonnet-5-5    0m 12s  asked again
-3  reviewer     opencode  openai/gpt-6.1-sol   8m 12s
+0  planner      claude    claude-opus-5-5, effort medium    12m 04s
+1  implementer  claude    claude-sonnet-5-5, effort medium  41m 37s
+2  implementer  claude    claude-sonnet-5-5, effort medium   0m 12s  asked again
+3  reviewer     opencode  openai/gpt-6.1-sol, effort high    8m 12s
 ```
 
 The items of `afterwards` are given whatever ended the run, under the line `After the run:`, grouped by step in the
@@ -407,8 +413,8 @@ the run it resumes and the step it reruns. With `--follow`, it stands in the fra
 with:
 
 ```
-Resuming the run .orchestrator/0029-export/2026-10-21T10:00:00Z/ at step 0, planner, claude, claude-opus-5-5
-step 0, planner, claude, claude-opus-5-5: started
+Resuming the run .orchestrator/0029-x/2026-10-21T10:00:00Z/ at step 0, planner, claude, claude-opus-5-5, effort medium
+step 0, planner, claude, claude-opus-5-5, effort medium: started
 ```
 
 Its steps are numbered on from the run it resumes, so the rerun has the number its step had there. Its end report

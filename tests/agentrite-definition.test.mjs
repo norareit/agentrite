@@ -15,7 +15,7 @@ const ROLES_MUST = 'a role that roles in agentrite.json names: specifier, planne
 const HARNESS_MUST = 'a harness that harnesses in agentrite.json names: claude and opencode';
 const MODEL_MUST = "the harness's own id of a model, as a string that is not empty";
 const OBJECT_MUST = 'It must hold a JSON object with one key, steps';
-const STEP_KEYS = 'A step holds role, harness and model, and may hold prompt, stopWhen and timeoutMinutes';
+const STEP_KEYS = 'A step holds role, harness and model, and may hold effort, prompt, stopWhen and timeoutMinutes';
 
 function parse(definition, context = CONTEXT) {
   return parseDefinition(typeof definition === 'string' ? definition : JSON.stringify(definition), context);
@@ -33,7 +33,7 @@ const repeat = (overrides = {}) => ({ repeat: { times: 2, steps: [step()], ...ov
 test('the default definition is taken with the roles and harnesses of the default file, as typed', () => {
   assert.deepEqual(parse(DEFAULT), {
     steps: [
-      { role: 'planner', harness: 'claude', model: 'claude-opus-5-5' },
+      { role: 'planner', harness: 'claude', model: 'claude-opus-5-5', effort: 'medium' },
       {
         repeat: {
           times: 3,
@@ -43,15 +43,37 @@ test('the default definition is taken with the roles and harnesses of the defaul
               role: 'implementer',
               harness: 'claude',
               model: 'claude-sonnet-5-5',
+              effort: 'medium',
               prompt:
                 "From round 2, this definition accepts review findings you agree with. Propose declining others.",
             },
-            { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
+            { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol', effort: 'high' },
           ],
         },
       },
     ],
   });
+});
+
+// 0112 R6
+
+test('a step with an effort is taken with it, inside a repeat and outside one, and one without has no key', () => {
+  const efforts = step({ effort: 'high' });
+  assert.deepEqual(parse({ steps: [efforts, repeat({ steps: [efforts] })] }), {
+    steps: [efforts, { repeat: { times: 2, steps: [efforts] } }],
+  });
+  assert.equal(Object.hasOwn(parse({ steps: [step()] }).steps[0], 'effort'), false);
+});
+
+test('an effort that is not a string that is not empty is refused at its place', () => {
+  for (const effort of ['', 3, true, null, [], {}]) {
+    const must = 'a string that is not empty';
+    refuses({ steps: [step({ effort })] }, `steps[0].effort is ${JSON.stringify(effort)}. It must hold ${must}`);
+    refuses(
+      { steps: [step(), repeat({ steps: [step(), step({ effort })] })] },
+      `steps[1].repeat.steps[1].effort is ${JSON.stringify(effort)}. It must hold ${must}`,
+    );
+  }
 });
 
 // R5 to R8

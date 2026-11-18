@@ -6,6 +6,7 @@ import { isObject, jsonFault, jsonKeyFault, jsonPath } from './agentrite-json.mj
  *   role: string,
  *   harness: string,
  *   model: string,
+ *   effort?: string,
  *   prompt?: string,
  *   stopWhen?: 'blocking-findings',
  *   timeoutMinutes?: number,
@@ -30,8 +31,8 @@ const PLACES = {
   definition: { name: 'a definition', keys: ['steps'], holds: 'A definition holds one key, steps' },
   step: {
     name: 'a step',
-    keys: ['role', 'harness', 'model', 'prompt', 'stopWhen', 'timeoutMinutes'],
-    holds: 'A step holds role, harness and model, and may hold prompt, stopWhen and timeoutMinutes',
+    keys: ['role', 'harness', 'model', 'effort', 'prompt', 'stopWhen', 'timeoutMinutes'],
+    holds: 'A step holds role, harness and model, and may hold effort, prompt, stopWhen and timeoutMinutes',
   },
   item: { name: 'a repeat', keys: ['repeat'], holds: 'A repeat holds one key, repeat' },
   repeat: {
@@ -120,6 +121,10 @@ function parseStep(value, path, { roles, harnesses }) {
     harness: /** @type {string} */ (valueAt(value, path, 'harness', harnessCheck.holds, harnessCheck.must)),
     model: /** @type {string} */ (valueAt(value, path, 'model', isFilledString, modelMust)),
   };
+  if (Object.hasOwn(value, 'effort')) {
+    const effortMust = 'a string that is not empty';
+    step.effort = /** @type {string} */ (valueAt(value, path, 'effort', isFilledString, effortMust));
+  }
   if (Object.hasOwn(value, 'prompt')) {
     step.prompt = /** @type {string} */ (valueAt(value, path, 'prompt', isFilledString, 'a string that is not empty'));
   }

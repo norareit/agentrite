@@ -368,13 +368,23 @@ export function runName(instant, variant) {
 }
 
 /**
- * What names a step in the lines about it: its number, round, role, harness and model.
+ * The model of a step, and after it, for a step that has one, its effort.
+ *
+ * @param {Pick<Step, 'model' | 'effort'>} step
+ * @returns {string}
+ */
+export function modelText({ model, effort }) {
+  return effort === undefined ? model : `${model}, effort ${effort}`;
+}
+
+/**
+ * What names a step in the lines about it: its number, round, role, harness, model and effort.
  *
  * @param {Pick<Planned, 'number' | 'round' | 'step'>} planned
  * @returns {string}
  */
 export function stepHead({ number, round, step }) {
-  return `step ${number}${inRound(round)}, ${step.role}, ${step.harness}, ${step.model}`;
+  return `step ${number}${inRound(round)}, ${step.role}, ${step.harness}, ${modelText(step)}`;
 }
 
 /**
@@ -430,9 +440,9 @@ export function stepLine(planned, ended) {
 }
 
 /**
- * The list of every step that ran, one line each: its number, role, harness, model, how long it took and, for an ask
- * again, `asked again`, each column as wide as its widest entry and two spaces apart, the duration aligned right, and
- * no line ending in a space.
+ * The list of every step that ran, one line each: its number, role, harness, model and effort, how long it took and,
+ * for an ask again, `asked again`, each column as wide as its widest entry and two spaces apart, the duration aligned
+ * right, and no line ending in a space.
  *
  * @param {Ran[]} ran
  * @returns {string}
@@ -442,7 +452,7 @@ export function ranTable(ran) {
     String(planned.number),
     planned.step.role,
     planned.step.harness,
-    planned.step.model,
+    modelText(planned.step),
     duration(result.milliseconds),
     planned.asked ? 'asked again' : '',
   ]);

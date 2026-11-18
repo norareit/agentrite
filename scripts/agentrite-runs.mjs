@@ -34,6 +34,7 @@ const OPTION_VALUES = { limit: 'a count' };
  * @property {string} role
  * @property {string} harness
  * @property {string} model
+ * @property {string | null} effort
  */
 
 /**
@@ -407,6 +408,7 @@ export function runFrom(unit, name, texts) {
           role: found.role,
           harness: found.harness,
           model: found.model,
+          effort: found.effort ?? null,
         };
 
   return {
