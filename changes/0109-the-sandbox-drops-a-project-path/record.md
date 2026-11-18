@@ -37,5 +37,10 @@ timestamp: 2026-11-15T23:30:08Z
   and a command run in it printed that `PATH` (R3). A container of a project's image that sets `ENV PATH` was not
   started: R1 is shown by the test that runs the entrypoint's own lines on the host, not in a container. The unit is
   handed over for review. The status stays `in-progress`
+- 2026-11-18T15:46:12Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, made a full review of 0109 at `1e37678d5ee7`.
+  Returned S1, P1 and C1 in
+  `.reviews/0109-the-sandbox-drops-a-project-path/review-1e37678d5ee7-20261118T154544Z.md`. Ran `npm test` and
+  `npm run check-changes` and checked the default and custom `PATH` cases with Docker. Did not replay the
+  historical pre-fix suite run
 
 ## Amendments
