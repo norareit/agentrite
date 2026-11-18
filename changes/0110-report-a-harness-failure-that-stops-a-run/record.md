@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -29,5 +29,6 @@ timestamp: 2026-11-15T23:30:08Z
   human took item 3 of "Beyond the request", the first line of the error in `state.json` and shown by
   `npx agentrite runs`, now R8 and R9, and did not take items 1 and 2. Read "agentrite runs" of `COMMANDS.md` and
   how `scripts/agentrite-runs.mjs` gives the line of an end. Renumbered the requirements. The status is `draft`
+- 2026-11-18T16:20:44Z [human] approved the spec. The status is `approved`
 
 ## Amendments
