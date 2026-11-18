@@ -52,7 +52,7 @@ const OPTION_VALUES = { limit: 'a count' };
  * @property {RunStep | null} step
  * @property {string | null} followedName
  * @property {string | null} head
- * @property {{ status: number, line: string } | null} ended
+ * @property {{ status: number, line: string, error: string | null } | null} ended
  */
 
 /**
@@ -171,7 +171,11 @@ const SESSION_PLACE = {
   keys: ['role', 'harness', 'session'],
   holds: 'A session holds role, harness and session',
 };
-const ENDED_PLACE = { name: 'ended', keys: ['status', 'line'], holds: 'ended holds status and line' };
+const ENDED_PLACE = {
+  name: 'ended',
+  keys: ['status', 'line', 'error'],
+  holds: 'ended holds status, line and error',
+};
 const STATE_PLACE = {
   name: 'state.json',
   keys: ['unit', 'definition', 'branch', 'resumes', 'at', 'sessions', 'ended'],
@@ -234,13 +238,18 @@ function endedFault(value, path) {
   return objectFault(value, path, ENDED_PLACE, {
     status: (status, statusPath) => valueFault(statusPath, status, Number.isInteger, 'a whole number'),
     line: (line, linePath) => valueFault(linePath, line, (given) => typeof given === 'string', 'a string'),
+    error: (error, errorPath) =>
+      error === undefined
+        ? undefined
+        : valueFault(errorPath, error, (given) => given === null || typeof given === 'string', 'a string or null'),
   });
 }
 
 /**
  * The first fault of the `state.json` the orchestrator writes, in the order of its keys, or `undefined`. A `branch`
  * that is missing is no fault, since a run from before unit 0081 has none, and neither is a `resumes` or an `asked` of
- * `at` that is missing, since a run from before unit 0089 has neither.
+ * `at` that is missing, since a run from before unit 0089 has neither, nor an `error` of `ended`, since an end from
+ * before unit 0110 has none.
  *
  * @param {unknown} state
  * @returns {string | undefined}
@@ -321,7 +330,7 @@ function heartbeatInstant(text) {
  *     asked?: boolean,
  *   } | null,
  *   sessions: { role: string, harness: string, session: string }[],
- *   ended: { status: number, line: string } | null,
+ *   ended: { status: number, line: string, error?: string | null } | null,
  * }} RunState
  */
 
@@ -414,7 +423,7 @@ export function runFrom(unit, name, texts) {
       at === null || found === null
         ? null
         : stepHead({ number: at.number, round: at.round ?? undefined, step: found }),
-    ended: state.ended,
+    ended: state.ended === null ? null : { ...state.ended, error: state.ended.error ?? null },
   };
 }
 
@@ -468,7 +477,10 @@ export function selectRuns(runs, limit) {
  * @returns {string}
  */
 export function detailOf({ state, head, heartbeat, ended }) {
-  if (state === 'ended') return /** @type {{ line: string }} */ (ended).line;
+  if (state === 'ended') {
+    const { line, error } = /** @type {{ line: string, error: string | null }} */ (ended);
+    return error === null ? line : `${line} The harness reported: ${error}`;
+  }
   const at = head ?? 'before its first step';
   if (state === 'running') return at;
   const since = heartbeat === null ? 'no sign of life' : `no sign of life since ${heartbeat}`;

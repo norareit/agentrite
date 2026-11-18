@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { test } from 'node:test';
 import { parseDefinition } from '../scripts/agentrite-definition.mjs';
 import {
+  detailOf,
   isAskAgain,
   isRunDirectory,
   parseRun,
@@ -164,7 +165,7 @@ test('the variant is what the directory name gives after the --, and null withou
 
 test('an end is kept, and a run with an end is ended whatever its heartbeat holds', () => {
   const run = read({ ended: { status: 0, line: 'The run ran every item of the definition to its end.' } });
-  assert.deepEqual(run.ended, { status: 0, line: 'The run ran every item of the definition to its end.' });
+  assert.deepEqual(run.ended, { status: 0, line: 'The run ran every item of the definition to its end.', error: null });
   assert.equal(runStateOf(run, Date.parse('2026-10-21T10:00:30Z')), 'ended');
   assert.equal(read().ended, null);
 });
@@ -235,6 +236,49 @@ test('a state.json that is not of the form the orchestrator writes is refused, n
   refuses(
     JSON.stringify(withKey('ended', { status: '0', line: 'x' })),
     `${STATE_FILE}: ended.status is "0". It must hold a whole number`,
+  );
+});
+
+// Unit 0110, R8, R9: the error of an end
+
+const HARNESS_END = { status: 3, line: 'Step 1 stopped the run: its harness exited with 1.' };
+
+test('an end with an error that is a string or null is kept as given, and one with none is read as null', () => {
+  const error = 'API Error: 500 stub: Internal server error.';
+  assert.deepEqual(read({ ended: { ...HARNESS_END, error } }).ended, { ...HARNESS_END, error });
+  assert.deepEqual(read({ ended: { ...HARNESS_END, error: null } }).ended, { ...HARNESS_END, error: null });
+  assert.deepEqual(read({ ended: HARNESS_END }).ended, { ...HARNESS_END, error: null });
+});
+
+test('an end whose error is no string or null, or that holds another key, is refused', () => {
+  const refused = (ended, message) => {
+    const start = `^${STATE_FILE.replaceAll('.', '\\.')}: `;
+    assert.throws(() => read({ ended }), { message: new RegExp(`${start}.*${message}$`) });
+  };
+  refused({ ...HARNESS_END, error: 1 }, 'ended\\.error is 1\\. It must hold a string or null');
+  refused({ ...HARNESS_END, error: null, other: 1 }, 'ended holds status, line and error');
+});
+
+test('the line of an ended run with an error adds The harness reported: and the error, apart by a space', () => {
+  const error = 'API Error: 500';
+  const withError = listed('0029-x', INSTANT, { ended: { ...HARNESS_END, error } });
+  const without = listed('0030-y', INSTANT, { ended: { ...HARNESS_END, error: null } });
+  const before = read({ ended: HARNESS_END });
+  const earlier = { ...before, state: runStateOf(before, NOW), followed: null };
+  assert.equal(detailOf(withError), `${HARNESS_END.line} The harness reported: ${error}`);
+  assert.equal(detailOf(without), HARNESS_END.line);
+  assert.equal(detailOf(earlier), HARNESS_END.line);
+});
+
+test('the JSON of a run holds the error of its end, null for an end with none and for one from before it', () => {
+  const withError = listed('0029-x', INSTANT, { ended: { ...HARNESS_END, error: 'API Error: 500' } });
+  const without = listed('0030-y', INSTANT, { ended: { ...HARNESS_END, error: null } });
+  const before = read({ ended: HARNESS_END });
+  const earlier = { ...before, state: runStateOf(before, NOW), followed: null };
+  const parsed = JSON.parse(runsJson({ runs: [withError, without, earlier], total: 3 }));
+  assert.deepEqual(
+    parsed.runs.map((run) => run.ended.error),
+    ['API Error: 500', null, null],
   );
 });
 
@@ -378,7 +422,7 @@ test('60 runs are cut to 50 with a total of 60, to a limit given, and not at all
 
 // R12, R16, R17: the text
 
-const ENDED = { status: 3, line: 'The run stopped at step 2: the reviewer found blocking findings.' };
+const ENDED = { status: 3, line: 'The run stopped at step 2: the reviewer found blocking findings.', error: null };
 
 test('each state gives its line, the columns lined up, with and without a variant', () => {
   const runs = [
