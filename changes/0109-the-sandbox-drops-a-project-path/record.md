@@ -16,5 +16,10 @@ timestamp: 2026-11-15T23:30:08Z
   and "Adding software to the sandbox" and "Two agents on one unit" of `SANDBOX.md`. Wrote `spec.md`. The status is
   `draft`
 - 2026-11-18T15:19:48Z [human] approved the spec. The status is `approved`
+- 2026-11-18T15:24:38Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on the Linux host, cut
+  `bugfix-0109-the-sandbox-drops-a-project-path` from `master` at `66170c9` and wrote `plan.md`: regression tests
+  first, then the entrypoint and `--connect`, then `SANDBOX.md`. The kit's image has the `PATH` of R3 from its base
+  image, `node:26-bookworm`, as `docker image inspect` showed, so R3 needs no change and gets a test that keeps it.
+  The status stays `approved`
 
 ## Amendments
