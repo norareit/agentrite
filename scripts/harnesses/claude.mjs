@@ -46,6 +46,23 @@ function refusedClaude(stdout) {
 }
 
 /**
+ * The error that ended the step: the text of the last `result` event when it is an error, which is its `result`, or
+ * the strings of its `errors` for a failure before any turn. Only the last `result` ends the step, so an earlier one
+ * with an error is one the step went on after, and the `assistant` event that repeats the error and the `tool_result`
+ * of a failed tool call are not read.
+ *
+ * @param {string} stdout
+ * @returns {string[]}
+ */
+function errorsClaude(stdout) {
+  const ended = jsonRecords(stdout).findLast((event) => event.type === 'result');
+  if (ended?.is_error !== true) return [];
+  if (typeof ended.result === 'string' && ended.result !== '') return [ended.result];
+  if (!Array.isArray(ended.errors)) return [];
+  return ended.errors.filter((text) => typeof text === 'string' && text !== '');
+}
+
+/**
  * What Claude Code makes known in one line of `stream-json`: the text blocks and tool calls of an event of the step's
  * agent's message, in their order. An event of a subagent's carries the id of the call that started it.
  *
@@ -263,6 +280,7 @@ export const claude = {
     },
     follow: followClaude,
     refused: refusedClaude,
+    errors: errorsClaude,
   },
   instructions: {
     file: CLAUDE_FILE,

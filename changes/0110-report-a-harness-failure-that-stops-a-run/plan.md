@@ -149,30 +149,30 @@ first `COMMAND_LENGTH` code points, the constant `callLabel` cuts a command by, 
 
 ## Tasks
 
-- [ ] In `tests/agentrite-harness.test.mjs`, add `'headless.errors'` after `'headless.refused'` in the test of the
+- [x] In `tests/agentrite-harness.test.mjs`, add `'headless.errors'` after `'headless.refused'` in the test of the
   contract's members, which now names thirty-one, and add `errors` to the members `opencode lacks` when it has no
   `headless`. Both fail against the tree (R2, R13)
-- [ ] Add `headless.errors` to the `Harness` typedef and to `HARNESS_CONTRACT` in `scripts/agentrite-harness.mjs`,
+- [x] Add `headless.errors` to the `Harness` typedef and to `HARNESS_CONTRACT` in `scripts/agentrite-harness.mjs`,
   after `headless.refused`, with the purpose `the errors that ended a headless run, read from what it printed, in the
   order it printed them`. Give each harness module `errors: () => []` for now, so that the suite passes (R2)
-- [ ] In `tests/agentrite-outcome.test.mjs`, after the tests of `headless.refused`, add the samples of the Approach
+- [x] In `tests/agentrite-outcome.test.mjs`, after the tests of `headless.refused`, add the samples of the Approach
   as constants, with a comment that names the versions, the date and how they were caused, and tests that fail
   against the tree (R1, R13):
-    - [ ] Claude Code: the run of the 500 gives its `result` text as the one error; the resume of a missing session
+    - [x] Claude Code: the run of the 500 gives its `result` text as the one error; the resume of a missing session
       gives the one string of its `errors`; the recovered run gives none; a run whose earlier `result` has
       `is_error: true` and whose last has `is_error: false` gives none; a run whose `user` event holds a
       `tool_result` with `is_error: true` gives none; an `is_error: true` with an empty `result` and no `errors`
       gives none; `''` gives none
-    - [ ] OpenCode: the two `error` lines give their two texts in order; an `error` whose `data` has no `message`
+    - [x] OpenCode: the two `error` lines give their two texts in order; an `error` whose `data` has no `message`
       gives its `name`; one with neither gives the JSON of its `error`; a `tool_use` whose state is `error`, the
       refused one among them, gives none; `''` gives none
-    - [ ] Codex: the run of the 429 gives the text of `turn.failed` once; the recovered run gives none; the
+    - [x] Codex: the run of the 429 gives the text of `turn.failed` once; the recovered run gives none; the
       `FAILED_RUN` that the tests already hold gives the message of its `turn.failed`; `''` gives none
-- [ ] Implement the three readers by the Approach: `errorsClaude` in `scripts/harnesses/claude.mjs`,
+- [x] Implement the three readers by the Approach: `errorsClaude` in `scripts/harnesses/claude.mjs`,
   `errorsOpencode` in `scripts/harnesses/opencode.mjs` and `errorsCodex` in `scripts/harnesses/codex.mjs`, each
   with a doc comment that says what it reads and why the rest is not read, and each read with `jsonRecords`. Set
   them as `headless.errors` (R1, R2)
-- [ ] Commit: `feature-0110 Read the errors a harness ends a step with`
+- [x] Commit: `feature-0110 Read the errors a harness ends a step with`
 - [ ] In `tests/agentrite-orchestrate.test.mjs`, give `runWith` the default `errors: []`, and add tests of
   `orchestrate`, `judgeStep`, `stepLine` and `endReport` that fail against the tree (R3 to R5, R7, R11, R13):
     - [ ] A step that exits 0 with an error and a final response with no block marked `json` stops by `harness`,
@@ -268,7 +268,7 @@ first `COMMAND_LENGTH` code points, the constant `callLabel` cuts a command by, 
 
 ## Commit Points
 
-- [ ] After the readers of the three harnesses: `feature-0110 Read the errors a harness ends a step with`
+- [x] After the readers of the three harnesses: `feature-0110 Read the errors a harness ends a step with`
 - [ ] After the judging and the report: `feature-0110 Stop the run and report the error of a harness`
 - [ ] After the command's files: `feature-0110 Keep the error of a harness in the run's directory and in state.json`
 - [ ] After `runs`: `feature-0110 Show the error of a harness in agentrite runs`

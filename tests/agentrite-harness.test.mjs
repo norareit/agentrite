@@ -183,13 +183,13 @@ test('a harness that lacks a member, or has one of another kind, is named with t
   const withoutHeadless = { ...opencode, headless: undefined };
   assert.deepEqual(
     contractFaults(withoutHeadless, HARNESS_CONTRACT).filter((fault) => fault.includes('headless')),
-    ['arguments', 'read', 'follow', 'refused'].map((member) => `opencode lacks headless.${member}`),
+    ['arguments', 'read', 'follow', 'refused', 'errors'].map((member) => `opencode lacks headless.${member}`),
   );
 });
 
 // R2
 
-test('the contract holds its thirty members, each with a kind and a purpose', () => {
+test('the contract holds its thirty-one members, each with a kind and a purpose', () => {
   assert.deepEqual(
     HARNESS_CONTRACT.map(({ member }) => member),
     [
@@ -210,6 +210,7 @@ test('the contract holds its thirty members, each with a kind and a purpose', ()
       'headless.read',
       'headless.follow',
       'headless.refused',
+      'headless.errors',
       'instructions.file',
       'instructions.init',
       'instructions.refresh',

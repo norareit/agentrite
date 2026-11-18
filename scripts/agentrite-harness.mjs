@@ -68,6 +68,7 @@ import { opencode } from './harnesses/opencode.mjs';
  *     read: (stdout: string) => { response: string | undefined, session: string | undefined },
  *     follow: (line: string) => Followed[],
  *     refused: (stdout: string) => Call[],
+ *     errors: (stdout: string) => string[],
  *   },
  *   instructions: {
  *     file: string,
@@ -160,6 +161,11 @@ export const HARNESS_CONTRACT = [
     member: 'headless.refused',
     kind: 'function',
     purpose: 'the tool calls a headless run refused for lack of permission, read from what it printed',
+  },
+  {
+    member: 'headless.errors',
+    kind: 'function',
+    purpose: 'the errors that ended a headless run, read from what it printed, in the order it printed them',
   },
   { member: 'instructions.file', kind: 'string', purpose: "the file the harness reads the kit's instructions from" },
   {

@@ -715,3 +715,121 @@ test('codex: nothing is refused of any run', () => {
     assert.deepEqual(codexHarness.headless.refused(run.join('\n')), []);
   }
 });
+
+// Unit 0110, R1 and R13: the errors that ended a step, as Claude Code 2.1.327, OpenCode 1.19.6 and Codex 0.167.0
+// printed them on 2026-11-18, each pointed at a local server that answered with a status of 500 or 429, or with 500
+// before a valid answer. The fields the readers do not use are left out.
+
+const lines = (...events) =>
+  events.map((event) => (typeof event === 'string' ? event : JSON.stringify(event))).join('\n');
+const CLAUDE_SESSION = 'a3e1b8e1-1542-4c0f-bf7c-d0ab4dae15cd';
+const CLAUDE_500 =
+  'API Error: 500 stub: Internal server error. This is a server-side issue, usually temporary — try again in a ' +
+  'moment. If it persists, check your inference gateway (127.0.0.1:18500).';
+const CLAUDE_FAILED_RUN = lines(
+  { type: 'system', subtype: 'init', session_id: CLAUDE_SESSION },
+  { type: 'system', subtype: 'api_retry', attempt: 1, max_retries: 10, error_status: 500, session_id: CLAUDE_SESSION },
+  {
+    type: 'assistant',
+    message: { role: 'assistant', content: [{ type: 'text', text: CLAUDE_500 }] },
+    is_api_error_message: true,
+    api_error_status: 500,
+  },
+  { type: 'result', subtype: 'success', is_error: true, result: CLAUDE_500, session_id: CLAUDE_SESSION },
+);
+
+test('claude: the result of the last result event is the error that ended the step, once', () => {
+  assert.deepEqual(claudeHarness.headless.errors(`${CLAUDE_FAILED_RUN}\n`), [CLAUDE_500]);
+});
+
+test('claude: a session that cannot be resumed gives the string of errors of its result', () => {
+  const printed = lines({
+    type: 'result',
+    subtype: 'error_during_execution',
+    is_error: true,
+    num_turns: 0,
+    errors: ['No conversation found with session ID: 11111111-1111-4111-8111-111111111111'],
+  });
+  assert.deepEqual(claudeHarness.headless.errors(printed), [
+    'No conversation found with session ID: 11111111-1111-4111-8111-111111111111',
+  ]);
+});
+
+test('claude: an error it recovered from, one of an earlier turn and one of a tool call are not read', () => {
+  const recovered = lines(
+    { type: 'system', subtype: 'api_retry', attempt: 1, error_status: 500 },
+    { type: 'result', subtype: 'success', is_error: false, result: 'hi' },
+  );
+  const earlierTurn = lines(
+    { type: 'result', is_error: true, result: 'an error of an earlier turn' },
+    { type: 'result', is_error: false, result: 'hi' },
+  );
+  const toolError = lines(
+    { type: 'user', message: { content: [{ type: 'tool_result', is_error: true, content: 'No such file' }] } },
+    { type: 'result', is_error: false, result: 'hi' },
+  );
+  const emptyError = lines({ type: 'result', is_error: true, result: '' });
+  for (const printed of [recovered, earlierTurn, toolError, emptyError, '']) {
+    assert.deepEqual(claudeHarness.headless.errors(printed), [], printed);
+  }
+});
+
+const OPENCODE_500 = {
+  type: 'error',
+  sessionID: 'ses_e106f0531ffespk7j7A10c4abU',
+  error: { name: 'APIError', data: { message: 'stub: Internal server error', statusCode: 500, isRetryable: true } },
+};
+const OPENCODE_429 = {
+  type: 'error',
+  sessionID: 'ses_e106ee3f1ffeD3vtznaVSYRh2Z',
+  error: { name: 'APIError', data: { message: 'stub: usage limit reached', statusCode: 429 } },
+};
+
+test('opencode: every error event is read, in order, as the message of its data', () => {
+  assert.deepEqual(opencodeHarness.headless.errors(lines(OPENCODE_500, OPENCODE_429)), [
+    'stub: Internal server error',
+    'stub: usage limit reached',
+  ]);
+});
+
+test('opencode: an error whose data holds no message gives its name, and one with neither gives its JSON', () => {
+  const named = { type: 'error', error: { name: 'UnknownError', data: {} } };
+  const bare = { type: 'error', error: { code: 7 } };
+  assert.deepEqual(opencodeHarness.headless.errors(lines(named, bare)), ['UnknownError', '{"code":7}']);
+});
+
+test('opencode: a tool call that failed, the refused one among them, is not an error that ended the step', () => {
+  const printed = lines(
+    { type: 'tool_use', part: { tool: 'edit', state: { status: 'error', error: 'The user rejected permission' } } },
+    { type: 'tool_use', part: { tool: 'read', state: { status: 'error', error: 'No such file' } } },
+  );
+  assert.deepEqual(opencodeHarness.headless.errors(printed), []);
+  assert.deepEqual(opencodeHarness.headless.errors(''), []);
+});
+
+const CODEX_429 = 'exceeded retry limit, last status: 429 Too Many Requests';
+
+test('codex: the turn.failed of the run of the 429 gives its message once, and not the events before it', () => {
+  const printed = lines(
+    CODEX_LINES.started,
+    CODEX_LINES.errorItem,
+    CODEX_LINES.turn,
+    { type: 'error', message: `Reconnecting... 1/1 (${CODEX_429})` },
+    { type: 'error', message: CODEX_429 },
+    { type: 'turn.failed', error: { message: CODEX_429 } },
+  );
+  assert.deepEqual(codexHarness.headless.errors(printed), [CODEX_429]);
+});
+
+test('codex: a retry it recovered from gives no error, and the failed run of the tests gives its message', () => {
+  const recovered = lines(
+    CODEX_LINES.started,
+    CODEX_LINES.turn,
+    { type: 'error', message: 'Reconnecting... 1/1 (We’re currently experiencing high demand)' },
+    CODEX_LINES.message('item_1', 'hi'),
+    CODEX_LINES.completed,
+  );
+  assert.deepEqual(codexHarness.headless.errors(recovered), []);
+  assert.deepEqual(codexHarness.headless.errors(FAILED_RUN.join('\n')), ['unexpected status 401 Unauthorized: ...']);
+  assert.deepEqual(codexHarness.headless.errors(''), []);
+});

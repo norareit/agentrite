@@ -139,6 +139,21 @@ function followCodex(line) {
 }
 
 /**
+ * The errors that ended the step: the `error.message` of every `turn.failed` event. The `error` event before it
+ * repeats the same text, one that opens with `Reconnecting...` is a retry, and an `item.completed` of an error is a
+ * warning the step goes on after, so none of them is read.
+ *
+ * @param {string} stdout
+ * @returns {string[]}
+ */
+function errorsCodex(stdout) {
+  return jsonRecords(stdout)
+    .filter((event) => event.type === 'turn.failed' && isRecord(event.error))
+    .map((event) => /** @type {Record<string, unknown>} */ (event.error).message)
+    .filter((message) => typeof message === 'string' && message !== '');
+}
+
+/**
  * The text of a missing `.codex/config.toml`, whose `developer_instructions` tells Codex to read the instruction
  * files before anything else.
  *
@@ -280,6 +295,7 @@ export const codex = {
     follow: followCodex,
     // `exec` never asks for an approval, so no refusal can be read of what it printed.
     refused: () => [],
+    errors: errorsCodex,
   },
   instructions: {
     file: CODEX_FILE,

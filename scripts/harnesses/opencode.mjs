@@ -134,6 +134,34 @@ function refusedOpencode(stdout) {
   });
 }
 
+/**
+ * The text of one `error` event, as OpenCode itself words it: the `message` of the error's `data` when it has one, the
+ * `name` of the error otherwise, and the JSON of the error when it has neither.
+ *
+ * @param {unknown} error
+ * @returns {string}
+ */
+function errorText(error) {
+  if (!isRecord(error)) return JSON.stringify(error) ?? '';
+  if (isRecord(error.data) && 'message' in error.data) return String(error.data.message);
+  if ('name' in error) return String(error.name);
+  return JSON.stringify(error);
+}
+
+/**
+ * The errors that ended the step: every `error` event, in order, as OpenCode joins them. OpenCode prints no event for
+ * a retry it recovered from, and a call that failed is a `tool_use` event, which is not read.
+ *
+ * @param {string} stdout
+ * @returns {string[]}
+ */
+function errorsOpencode(stdout) {
+  return jsonRecords(stdout)
+    .filter((event) => event.type === 'error')
+    .map((event) => errorText(event.error))
+    .filter((text) => text !== '');
+}
+
 /** OpenCode's configuration file at the project root, whose `instructions` list loads the kit's instructions. */
 export const OPENCODE_FILE = 'opencode.json';
 
@@ -349,6 +377,7 @@ export const opencode = {
     read: readOpencode,
     follow: followOpencode,
     refused: refusedOpencode,
+    errors: errorsOpencode,
   },
   instructions: {
     file: OPENCODE_FILE,

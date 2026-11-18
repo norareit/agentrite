@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -36,5 +36,7 @@ timestamp: 2026-11-15T23:30:08Z
   server that answered with 500 and 429, and with 500 before a valid answer, and the reading of OpenCode was
   checked against its own `run` command. Each of the three reports an error that ends a step on standard output, so
   none is put to the human. The status is `approved`
+- 2026-11-18T17:30:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a run of the orchestrator, on
+  `feature-0110-report-a-harness-failure-that-stops-a-run` at `040c714`, began the work. The status is `in-progress`
 
 ## Amendments
