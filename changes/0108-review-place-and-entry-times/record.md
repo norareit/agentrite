@@ -16,5 +16,10 @@ timestamp: 2026-11-15T23:30:08Z
   of `scripts/agentrite-orchestrate.mjs`. The human chose the rule in `process.md` over a check of the timestamps.
   Wrote `spec.md`. The status is `draft`
 - 2026-11-18T11:37:21Z [human] approved the spec. The status is `approved`
+- 2026-11-18T11:40:03Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a session on the Linux host, cut
+  `bugfix-0108-review-place-and-entry-times` from `master` at `cc989d1`. The fix takes several steps, a regression
+  test, three rules in `process.md` and the wording of four role files, so it gets a plan. Found that no file of
+  `process.md`, `roles/` or `extra-roles/` names `.reviews/changes/` today, so that half of the regression test
+  passes before the fix and keeps R2 after it. Wrote `plan.md`. The status stays `approved`
 
 ## Amendments
