@@ -104,18 +104,37 @@ and run those lines verbatim where they can be run on the host.
   `--connect` runs. Leave the statement of "Two agents on one unit" that the connected command has `PATH` as the
   first command has it as it is, which the fix keeps true. Wrap at 120 characters (R5)
 - [x] Commit: `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`
+- [ ] After C1 of the review of `1e37678`: add `tests/entrypoint-drop.mjs`, which holds the pattern of the
+  entrypoint's last line once and gives the path of the script the agent's command runs through. Make
+  `tests/entrypoint-path.test.mjs`, `tests/known-terminal.test.mjs` and `firstCommandGets` of
+  `tests/sandbox-unit-run.test.mjs` take the pattern or the path from it, and see `npm test` pass (R6)
+- [ ] Commit: `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`
+- [ ] After S1 of the review of `1e37678`: in `tests/entrypoint-path.test.mjs`, assert that the first line of the
+  entrypoint is `#!/bin/bash`, so that the shell that runs it as root is not looked up on the image's `PATH`, and
+  run the entrypoint as a file, as the suite's user, with a `PATH` of `/opt/tool/bin` alone, and assert that it ends
+  with its refusal of a start that is not root, which it reaches only with bash started and the fixed `PATH` set.
+  Skip the run when the suite runs as root. See both fail against the tree (R4, R6)
+- [ ] Commit: `bugfix-0109 Add the regression test of the shell the entrypoint starts with`
+- [ ] Make the first line of `container/entrypoint.sh` `#!/bin/bash`, with a comment that says why it is not
+  looked up on the `PATH`, and see `npm test` pass (R1, R4)
+- [ ] Commit: `bugfix-0109 Start the entrypoint with the bash of the image by its path`
 
 ## Verification
 
-- [x] `npm test` passes
-- [x] `npm run check-changes` passes, after the last commit
-- [x] Every line the unit changes or adds is within 120 characters, apart from a row of a Markdown table
-- [x] `docker image inspect` of the image `./sandbox-dev.sh --rebuild` builds shows a `PATH` of
-  `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin` in its configuration, and
-  `./sandbox-dev.sh --in-place sh -c 'echo "$PATH"'` prints that `PATH`, on the host, where Docker is (R3)
+- [ ] `npm test` passes
+- [ ] `npm run check-changes` passes, after the last commit
+- [ ] Every line the unit changes or adds is within 120 characters, apart from a row of a Markdown table
+- [ ] `./sandbox-dev.sh --in-place --rebuild sh -c 'echo "$PATH"'` builds the image and prints
+  `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`, and `docker image inspect` of the image it built
+  shows that `PATH` in its configuration, on the host, where Docker is (R3)
 
 ## Commit Points
 
 - [x] `bugfix-0109 Add the regression tests of the PATH the agent is given`: the failing tests
 - [x] `bugfix-0109 Give the agent the PATH of the image`: the entrypoint and `--connect`, with every test passing
 - [x] `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`: `SANDBOX.md`
+- [x] `bugfix-0109 Apply the review of 1e37678`: this plan's tasks after S1 and C1, its "Verification" after P1, and
+  the implementer's entry on them in `record.md`
+- [ ] `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`: the tests alone, C1
+- [ ] `bugfix-0109 Add the regression test of the shell the entrypoint starts with`: the failing test, S1
+- [ ] `bugfix-0109 Start the entrypoint with the bash of the image by its path`: the entrypoint, S1

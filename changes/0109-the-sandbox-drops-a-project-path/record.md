@@ -42,5 +42,13 @@ timestamp: 2026-11-15T23:30:08Z
   `.reviews/0109-the-sandbox-drops-a-project-path/review-1e37678d5ee7-20261118T154544Z.md`. Ran `npm test` and
   `npm run check-changes` and checked the default and custom `PATH` cases with Docker. Did not replay the
   historical pre-fix suite run
+- 2026-11-18T15:51:57Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took the findings of
+  `.reviews/0109-the-sandbox-drops-a-project-path/review-1e37678d5ee7-20261118T154544Z.md` and accepted all three.
+  S1: the shebang `#!/usr/bin/env bash` has the image's `PATH` choose the shell that runs the entrypoint as root,
+  before the fixed `PATH` is set, which R4 rules out. C1: the pattern of the entrypoint's last line is written in
+  three test files. P1: `./sandbox-dev.sh --rebuild` alone refuses, since it mounts nothing at `/work`, as it did when
+  run again. Added to `plan.md` the tasks after S1 and C1 and their commit points, made the step of "Verification"
+  after P1 the invocation that builds and runs in place, and unticked the steps of "Verification", which hold only
+  for the final tree
 
 ## Amendments
