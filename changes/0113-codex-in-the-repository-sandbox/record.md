@@ -39,5 +39,15 @@ After the task, the human logs Codex in once in the sandbox, which no agent can 
 - 2026-11-18T16:38:13Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   began the work on `master` at `a231c6b`, and not on a branch of the task, as the human asked. The status is
   `in-progress`
+- 2026-11-18T16:39:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  committed the work in `4c5296a`. `harnesses` of `agentrite.json` names `codex` after the two. The installed
+  release's `refresh` wrote the six wrappers in `.codex/agents/` and does not write a missing `.codex/config.toml`,
+  which `init` writes. Rather than run `init` over the whole root, the file was written by the installed release's
+  `instructions.init` of its Codex module, the text `init` writes for a missing file. "What the repository holds
+  besides the package" lists `.codex/`, "The kit's own copy of the kit" says that `harnesses` adds `codex` to the
+  default, and "Adding a harness" names `.codex/` among the repository's own files. `npm test` passes, 1907 tests,
+  on `4c5296a`, and `npm run kit -- refresh` there prints `up to date` for every file it writes. The image of the
+  sandbox, which the wrapper builds again at its next start, and a run of Codex in it were not tried. The status
+  stays `in-progress`
 
 ## Amendments
