@@ -66,14 +66,20 @@ does not, and no file at the root is added, so neither table of `README.md` or `
   `.reviews/security-accepted.md` are not a unit's and stay as they are (R2)
 - [x] Read every line of `process.md`, `roles/` and `extra-roles/` that holds `.reviews` and confirm that each place
   of a unit is written `.reviews/<unit-directory>/` and that no text near it reads as a path holding `changes/` (R2)
+- [x] After S1 of the review of `b4d2904`: make the test on the timestamp assert that `process.md`, its whitespace
+  folded to single spaces, holds the sentence of R3 that ties `date -u +%Y-%m-%dT%H:%M:%SZ` to the timestamp of an
+  entry and of a record's frontmatter, so that a mention of the command elsewhere does not keep it passing. See it
+  fail on a `process.md` without the rule and with the command in another place, and pass on the tree (R3, R5)
 
 ## Verification
 
-- [ ] `npm test` passes
+- [x] `npm test` passes but for the test of `homepage` in `tests/package-documents.test.mjs`, which fails on `master`
+  as well
 - [x] `grep -rn "reviews/changes" process.md roles extra-roles` prints nothing
 - [x] `grep -n "date -u +%Y-%m-%dT%H:%M:%SZ\|GIT_COMMITTER_DATE\|0012-export-to-csv/" process.md` shows the three
   rules
-- [x] Every changed line is at most 120 characters, checked before each commit
+- [x] Every changed line of the final diff is at most 120 characters. Three lines of `record.md` in `5c068fc` were
+  longer, and `3486eba` wrapped them again
 - [x] `npm run check-changes` passes after the last commit
 
 ## Commit Points
@@ -87,3 +93,5 @@ does not, and no file at the root is added, so neither table of `README.md` or `
   implementer's entry on it in `record.md` and the wrapping again of its entries that were too long
 - [x] `bugfix-0108 Narrow the claim on line lengths`: the sentence of the implementer's entry on `npm test` that
   names the files whose lines were checked, and the implementer's entry on it in `record.md`
+- [x] `bugfix-0108 Apply the review of b4d2904`: the tightened test, this plan's changes after S1, P1 and P2, and
+  the implementer's entries on them in `record.md`

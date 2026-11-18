@@ -53,5 +53,23 @@ timestamp: 2026-11-15T23:30:08Z
 - 2026-11-18T11:59:37Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, reviewed unit 0108 in full at `b4d290425bf7`.
   Returned S1, P1 and P2 in `.reviews/0108-review-place-and-entry-times/review-b4d2904.md`. Could not verify the
   implementer's historical test order or clock readings, or reproduce the developer's original runs.
+- 2026-11-18T12:11:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, took the findings of
+  `.reviews/0108-review-place-and-entry-times/review-b4d2904.md` and added to `plan.md` a task after S1, the changes of
+  "Verification" after P1 and P2, and the commit point `bugfix-0108 Apply the review of b4d2904`
+- 2026-11-18T12:11:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted S1 and applied it: the test
+  on the timestamp in `tests/process-rules.test.mjs` now asserts that `process.md`, its whitespace folded, holds the
+  sentence of R3 that ties `date -u +%Y-%m-%dT%H:%M:%SZ` to the timestamp of an entry and of a record's frontmatter.
+  With that sentence removed from a copy of `process.md` and the command added under "Commits", it failed and the test
+  on `.reviews/changes/` passed; on the tree both pass
+- 2026-11-18T12:11:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted P1 and applied it: the box
+  of `npm test` under "Verification" now states the result, that it passes but for the test of `homepage` in
+  `tests/package-documents.test.mjs`, which fails on `master` as well, and is ticked
+- 2026-11-18T12:11:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, accepted P2 and applied it: the box
+  on line lengths under "Verification" now claims the limit for the final diff and names the three lines of `5c068fc`
+  that `3486eba` wrapped again
+- 2026-11-18T12:11:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm test` on the tree of this
+  commit: 1899 of 1900 tests pass, the one that fails being the test of `homepage` that fails on `master` as well. No
+  line of a file the branch changes is longer than 120 characters. `npm run check-changes` passed on `ea2c004` and is
+  run again after this commit. The status stays `in-progress`
 
 ## Amendments

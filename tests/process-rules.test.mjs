@@ -13,10 +13,16 @@ function markdownFilesIn(directory) {
     .map((entry) => join(directory, entry.name));
 }
 
+// The sentence of the rule rather than the command alone, since the command may be mentioned elsewhere in
+// process.md, and with its whitespace folded, since the sentence is wrapped at any of its spaces.
+const timestampRule =
+  "The timestamp of an entry, and the `timestamp` of a record's frontmatter, is the output of " +
+  '`date -u +%Y-%m-%dT%H:%M:%SZ` run when the entry or the record is written.';
+
 // R3 and R5 of unit 0108: an agent that is told only the format of a timestamp writes the time it estimates.
 test('process.md states where the timestamp of an entry comes from', () => {
   assert.ok(
-    readFileSync(processDocument, 'utf-8').includes('date -u +%Y-%m-%dT%H:%M:%SZ'),
+    readFileSync(processDocument, 'utf-8').replace(/\s+/g, ' ').includes(timestampRule),
     'process.md no longer states where the timestamp of an entry in record.md comes from',
   );
 });
