@@ -1,0 +1,7 @@
+developer_instructions = """
+Before anything else, read the files below in the project root and follow them. They hold the project's process \
+and its standards.
+
+- node_modules/agentrite/process.md
+- node_modules/agentrite/standards.md
+"""

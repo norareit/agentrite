@@ -29,6 +29,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `.agentrite/`                 | The list of the instruction files in use, which `refresh` writes                     |
 | `.claude/`                    | The role wrappers for Claude Code, and the `/release` skill                          |
 | `.opencode/`                  | The role wrappers for OpenCode                                                       |
+| `.codex/`                     | The role wrappers for Codex, and the configuration that loads the kit's instructions |
 | `extra-roles/`                | The roles of this repository's own, which are not in the package                     |
 | `agentrite.json`              | This repository's own settings, which the kit's commands read                        |
 | `sandbox.sh`                  | The shim that runs the sandbox of the installed release                              |
@@ -254,14 +255,14 @@ The kit is also a devDependency of itself, installed from the npm registry at on
   sandbox
 * The root is a project of the installed release, and its own files are judged against that release, not against
   the working tree. The root's `agentrite.json` is the installed release's default file,
-  `node_modules/agentrite/templates/project/agentrite.json`, with the roles of this repository's own added to
-  `roles` after the four, and with each required key that a unit added after that release, which the installed
-  release ignores. A unit that adds a required key to `agentrite.json` adds it to the root's file in the same unit,
-  with the value this repository uses, because the working tree's `npx agentrite` reads the whole file and refuses it
-  without the key. The installed release's `refresh`, run at the root with no argument as `npm run kit -- refresh`,
-  prints `up to date` for every file it writes and changes none, and the suite checks it. Apart from such a key, a
-  unit that changes what a project holds changes the root's files only when the repository moves to the release
-  that holds it
+  `node_modules/agentrite/templates/project/agentrite.json`, with `codex` added to `harnesses` after the two, with
+  the roles of this repository's own added to `roles` after the four, and with each required key that a unit added
+  after that release, which the installed release ignores. A unit that adds a required key to `agentrite.json` adds
+  it to the root's file in the same unit, with the value this repository uses, because the working tree's
+  `npx agentrite` reads the whole file and refuses it without the key. The installed release's `refresh`, run at the
+  root with no argument as `npm run kit -- refresh`, prints `up to date` for every file it writes and changes none,
+  and the suite checks it. Apart from such a key, a unit that changes what a project holds changes the root's files
+  only when the repository moves to the release that holds it
 
 ## Trying the working copy's sandbox
 
@@ -365,10 +366,11 @@ list. Each says what a new harness takes there.
 * **The terminal variables** that `container/sandbox.sh` passes on into the container, which were added for
   OpenCode's colours: a new harness may need others
 * **This repository's own files**: the default `harnesses` of `templates/project/agentrite.json`, this repository's
-  `agentrite.json`, its wrappers and instruction files (`CLAUDE.md`, `opencode.json`, `.claude/`, `.opencode/`), its
-  `sandbox/compose.project.yml`, and the table "What the repository holds besides the package" above, which lists
-  them. The root is a project of the installed release, so it names a new harness, and holds its files, only once
-  the repository moves to the release that holds the harness, as "The kit's own copy of the kit" says
+  `agentrite.json`, its wrappers and instruction files (`CLAUDE.md`, `opencode.json`, `.claude/`, `.opencode/`,
+  `.codex/`), its `sandbox/compose.project.yml`, and the table "What the repository holds besides the package"
+  above, which lists them. The root is a project of the installed release, so it names a new harness, and holds its
+  files, only once the repository moves to the release that holds the harness, as "The kit's own copy of the kit"
+  says
 * **The `CLAUDE.md` that `init` writes into every project**, from `templates/project/CLAUDE.md` in `processFiles` of
   `scripts/agentrite.mjs`, whatever the harnesses. A new harness's instruction file is written only by its module's
   `instructions.init`

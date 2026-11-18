@@ -1,6 +1,6 @@
 {
   "defaultBranch": "master",
-  "harnesses": ["claude", "opencode"],
+  "harnesses": ["claude", "opencode", "codex"],
   "process": true,
   "sandbox": true,
   "bell": true,
