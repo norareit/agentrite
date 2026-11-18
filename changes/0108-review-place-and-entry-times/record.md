@@ -76,3 +76,13 @@ timestamp: 2026-11-15T23:30:08Z
   human decided both blocking findings and every task in `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
+
+- 2026-11-18T12:28:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, rebased the branch on `master` at
+  `00c2e03` on the human's request, which rewrote every commit of the unit and changed no tree but by what `master`
+  gained. The hashes named in this record, in `plan.md` and in the name of the review file map as follows: `64c13f7` is
+  now `a768565`, `a39eb0a` is now `8dfcac6`, `5c068fc` is now `51baad6`, `3486eba` is now `c0864f7`, `b4d2904`
+  (`b4d290425bf7`) is now `255282f`, `ea2c004` is now `3069c5d`, `1287145` is now `ef34491` and `6c2eaa0` is now
+  `cfb8f5d`
+- 2026-11-18T12:28:43Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, ran `npm test` on `cfb8f5d`, the
+  rebased tree: 1900 of 1900 tests pass, since unit 0111 on `master` made the test of `homepage` expect
+  `https://agentrite.dev`. `npm run check-changes` passes on it
