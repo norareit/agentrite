@@ -107,10 +107,10 @@ and run those lines verbatim where they can be run on the host.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes, after the last commit
-- [ ] Every line the unit changes or adds is within 120 characters, apart from a row of a Markdown table
-- [ ] `docker image inspect` of the image `./sandbox-dev.sh --rebuild` builds shows a `PATH` of
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes, after the last commit
+- [x] Every line the unit changes or adds is within 120 characters, apart from a row of a Markdown table
+- [x] `docker image inspect` of the image `./sandbox-dev.sh --rebuild` builds shows a `PATH` of
   `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin` in its configuration, and
   `./sandbox-dev.sh --in-place sh -c 'echo "$PATH"'` prints that `PATH`, on the host, where Docker is (R3)
 

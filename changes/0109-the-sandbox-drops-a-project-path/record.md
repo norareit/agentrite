@@ -29,5 +29,13 @@ timestamp: 2026-11-15T23:30:08Z
   regression tests before the fix, two tests of `tests/entrypoint-path.test.mjs` passed already, since the tree had
   no other line that sets `PATH` and the kit's image sets none; the three others failed, with the tests of the other
   two files
+- 2026-11-18T15:38:45Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, finished the plan. On `eb5120d`, on
+  the Linux host, `npm test` passed, 1905 tests with none failed or skipped, and `npm run check-changes` exited 0. No
+  line the unit changes or adds is longer than 120 characters, as `awk` over the changed files showed. The image that
+  `./sandbox-dev.sh --in-place --rebuild` built has the `PATH`
+  `/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin` in its configuration, as `docker image inspect` showed,
+  and a command run in it printed that `PATH` (R3). A container of a project's image that sets `ENV PATH` was not
+  started: R1 is shown by the test that runs the entrypoint's own lines on the host, not in a container. The unit is
+  handed over for review. The status stays `in-progress`
 
 ## Amendments
