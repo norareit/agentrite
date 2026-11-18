@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-11-18T12:18:43Z
 ---
 
@@ -19,6 +19,9 @@ timestamp: 2026-11-18T12:18:43Z
   "package.json says what the package is, where it lives and under which license" of
   `tests/package-documents.test.mjs` expects to `https://agentrite.dev`, and nothing else. `npm test` on this tree
   passes 1898 of 1898 tests. The work is handed over for review. The status stays `in-progress`
+- 2026-11-18T12:24:44Z [human] reviewed the unit and found it good, with no findings
+- 2026-11-18T12:24:44Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit to `implemented` on the human's
+  review. The status is `implemented`
 
 ## The task
 
