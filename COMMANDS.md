@@ -728,12 +728,20 @@ runs on:
   instant of its `heartbeat`, or `no sign of life` for a run with none, then `, at` and the step, or
   `, before its first step`
 * `ended`: the run's `state.json` holds an end, whatever its `heartbeat` holds. The line gives the line of its end, as
+  `state.json` holds it, and for a run that a failure of its harness stopped and that reported an error, after it a
+  space, `The harness reported:`, a space and the first line of the error, cut to its first 100 characters, as
   `state.json` holds it
 
 ```text
 2026-10-23T10:05:00Z  0081--opus  running  step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol
 2026-10-23T09:40:00Z  0081        stale    no sign of life since 2026-10-23T09:41:10Z, before its first step
 2026-10-22T16:00:00Z  0080        ended    The run ran every item of the definition to its end.
+```
+
+The state of such a run, after its instant, its unit and its state, reads:
+
+```text
+Step 1 stopped the run: its harness exited with 1. The harness reported: API Error: 500 stub: Internal server error.
 ```
 
 `<number>` is exactly four digits. With it the command lists the runs whose unit directory opens with those digits and a
@@ -764,7 +772,9 @@ an object with:
 * `followed`, the path from the directory the command runs in of the file that holds the followed output of the run's
   step, or `null` for a run with no step and when the run's directory holds no such file, as for a run from before the
   followed files or a step whose file is not yet made. The command reads whether the file is there and not what it holds
-* `ended`, `null` for a run without an end, or its end as `state.json` holds it, with its `status` and its `line`
+* `ended`, `null` for a run without an end, or its end as `state.json` holds it, with its `status`, its `line` and its
+  `error`, a string for a run that a failure of its harness stopped and that reported an error, and `null` otherwise,
+  also for an end written before `state.json` held it
 
 When there is nothing to show, `runs` is an empty array and no line of text is printed.
 

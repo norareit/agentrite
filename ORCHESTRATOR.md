@@ -233,6 +233,10 @@ The run stops, and runs nothing after the step, when:
   step printed as an outcome: its final response is kept as that of a step without an outcome
 * the harness exits with a status other than 0, or a signal ends it. A step whose `agentrite run` refuses, as for a
   wrapper that `refresh` would rewrite, is such a step
+* the harness reported an error that ended the step, on its standard output, also when it exited with 0. This is a
+  failure of the harness, as the provider's API answering with an error or the account reaching a usage limit. What
+  each harness reports as such an error is read by its module, and an error the harness retried and went on after is
+  not one, nor is an error of a tool call the agent made
 * the final response holds more than one block marked `json`, or one that is not an outcome of the form above
 * the final response holds no block marked `json`, or the harness gave no final response, and the step is an ask
   again or its session is not known. Any other such step is asked again, as below
@@ -245,16 +249,16 @@ The run stops, and runs nothing after the step, when:
 
 `afterwards` stops no run. A run that ran every item to its end exits 0 also when a step left items in it.
 
-A step whose harness exited with 0 and no signal, within its time limit, whose final response holds no block marked
-`json` or that gave no final response, and whose session is known, does not stop the run. The command runs one step
-more after it, the ask again, in every harness alike: the same role, harness, model, round and `timeoutMinutes`,
-continuing that step's session, with a prompt that says the last response held no block marked `json` and asks for
-the step's outcome for its work as it stands, followed by the request of "The outcome of a step". The step's own
-`prompt` is not given to it. The outcome of the ask again stands for the step's: the cases above judge it, and so do
-the step's `stopWhen` and, for the last step of a round, the repeat's `until`, and the end report takes it as the
-step's. An ask again is never asked again, so one whose final response holds no block marked `json` stops the run. A
-step whose harness failed or that ran past its time limit is not asked again, and neither is one whose final response
-holds more than one block marked `json` or one not of the form.
+A step whose harness exited with 0 and no signal, within its time limit, reported no error, whose final response holds
+no block marked `json` or that gave no final response, and whose session is known, does not stop the run. The command
+runs one step more after it, the ask again, in every harness alike: the same role, harness, model, round and
+`timeoutMinutes`, continuing that step's session, with a prompt that says the last response held no block marked `json`
+and asks for the step's outcome for its work as it stands, followed by the request of "The outcome of a step". The
+step's own `prompt` is not given to it. The outcome of the ask again stands for the step's: the cases above judge it,
+and so do the step's `stopWhen` and, for the last step of a round, the repeat's `until`, and the end report takes it as
+the step's. An ask again is never asked again, so one whose final response holds no block marked `json` stops the run. A
+step whose harness failed, also by an error it reported, or that ran past its time limit is not asked again, and neither
+is one whose final response holds more than one block marked `json` or one not of the form.
 
 An ask again is a step of the run in every other respect: it has the next number, its lines before and after it, its
 files in the run's directory, its place as the step the run is at in `state.json` and its row in the end report.
@@ -269,7 +273,8 @@ step 2, round 1 of 3, implementer, claude, claude-sonnet-5-5, asked again for it
 When the run ends, the command prints last: a list of every step that ran, with its number, role, harness, model and
 how long it took, and `asked again` after an ask again; how the run ended, and for a stop which step stopped it and
 why, with what is wrong with an outcome
-not of the form; then, for a stop, the tool calls the harness refused for lack of permission, as below; then from the
+not of the form; then, for a stop by a failure of the harness, its error and how to resume the run, and then, for a
+stop, the tool calls the harness refused for lack of permission, as below; then from the
 outcome of the step that ran last, when it is of the form, its summary, the blocking
 findings still open after a stop by `stopWhen` or by a repeat that ran out, its questions and its proposed declines;
 then, for each repeat with `"no-findings"` that let the run go on with only non-blocking findings after its last
@@ -314,22 +319,43 @@ After the run:
 
 A step outside a repeat is named as `  step 0, planner:`.
 
-The tool calls the harness refused for lack of permission stand directly after the line that says how the run ended,
-and only for a run that stopped. They are those of the step that stopped it, and for an ask again first those of the
-step it asked, since its outcome stands for that step's. A refused call of a step that went on, and of a run that ran
-every item to its end, is not given. Claude Code makes a refused call known in `permission_denials` of the `result`
-event that ends each turn, and every turn of the step counts. OpenCode makes it known as a `tool_use` event whose
-status is `error` and whose error is `The user rejected permission to use this specific tool call.`. Codex asks for
-no permission in a headless run, so a step of Codex never has a refused call, and never stops the run for one: a step
-that a refusal would have stopped goes on to its outcome. The line `The
-harness refused <n> tool calls for lack of permission:` counts them, and is followed by each call, in the order the
-harness printed them, on a line of its own: the name of the tool as the harness gives it, and the label `--follow`
-gives the call, or the name alone for a call without a label. For a run started, or resumed, without
-`--skip-permissions`, three lines follow: that a headless step had nobody to ask, the command that resumes the run with
-the option in the sandbox, and that on the host the harness's settings are to allow the refused calls instead. A step
-with no refused call adds nothing to the report. A tool that the harness's settings deny outright is not given, since
-no call of it is made: OpenCode does not offer such a tool to the agent. For a planner on Claude Code whose write of
-the plan was refused, in a run without the option:
+When the harness failed, the line that says how the run ended says how it ended: that it exited with a status, that a
+signal ended it, or, when it exited with 0 and no signal, that it reported an error. Directly after it, the command
+gives the error the harness reported, under the line `The harness reported this error:`, each of its lines indented by
+two spaces. The error is the errors the harness reported, in the order it printed them, joined by a line break. An
+error of more than 20 lines is given by its first 20, followed by a line that says how many lines were left out and
+names the file of the step that holds all of it, as "What .orchestrator holds" gives. A harness that reported no
+error on its standard output gives instead the line that it reported none, and that what it printed on its standard
+error stood on the terminal. The line `Once the cause of the failure has been dealt with or has passed, resume the
+run:` follows, with the command that resumes the run, which has `--skip-permissions` when the run was started or
+resumed with it. A run stopped this way is resumed with `--resume` once the cause has passed, and the resume reruns
+the step whose harness failed. For a step of Claude Code that the provider answered with an error:
+
+```
+Step 1 stopped the run: its harness exited with 1.
+The harness reported this error:
+  API Error: 500 stub: Internal server error.
+Once the cause of the failure has been dealt with or has passed, resume the run:
+npx agentrite orchestrate 0061-x --resume
+The harness gave step 1 no final response.
+```
+
+The line of the resume command is one line, wrapped here. The tool calls the harness refused for lack of permission
+stand directly after those lines, or after the line that says how the run ended when the run did not stop by a failure
+of the harness, and only for a run that stopped. They are those of the step that stopped it, and for an ask again first
+those of the step it asked, since its outcome stands for that step's. A refused call of a step that went on, and of a
+run that ran every item to its end, is not given. Claude Code makes a refused call known in `permission_denials` of the
+`result` event that ends each turn, and every turn of the step counts. OpenCode makes it known as a `tool_use` event
+whose status is `error` and whose error is `The user rejected permission to use this specific tool call.`. Codex asks
+for no permission in a headless run, so a step of Codex never has a refused call, and never stops the run for one: a
+step that a refusal would have stopped goes on to its outcome. The line `The harness refused <n> tool calls for lack of
+permission:` counts them, and is followed by each call, in the order the harness printed them, on a line of its own: the
+name of the tool as the harness gives it, and the label `--follow` gives the call, or the name alone for a call without
+a label. For a run started, or resumed, without `--skip-permissions`, three lines follow: that a headless step had
+nobody to ask, the command that resumes the run with the option in the sandbox, and that on the host the harness's
+settings are to allow the refused calls instead. A step with no refused call adds nothing to the report. A tool that the
+harness's settings deny outright is not given, since no call of it is made: OpenCode does not offer such a tool to the
+agent. For a planner on Claude Code whose write of the plan was refused, in a run without the option:
 
 ```
 Step 0 stopped the run: its outcome is needs-human.
@@ -403,12 +429,14 @@ and outside a git repository has no variant, and its directory is the instant al
 * `state.json`, the state of the run: the unit, the definition's path as it was given, the branch checked out when the
   run started as `branch`, which is `null` on a detached `HEAD` and outside a git repository, is written once and never
   changes, and is missing in a run from before it was written, the name of the directory of the run it resumes as
-  `resumes`, which is `null` for a run that resumes none, the step and round it is at as `at`, with `asked`, `true`
-  for an ask again and `false` for any other step, the id of each harness session, and when the run ended, its exit
-  status and how it ended. `resumes` and `asked` are missing in a run from before they were written. Such a run is
-  read as one that resumes none, and a resume reads whether its step is an ask again from its files: it is one when
-  the run's directory holds the followed file of the step numbered one lower, of the same role, and no outcome file
-  of it, since a run goes on after a step without an outcome only to ask it again
+  `resumes`, which is `null` for a run that resumes none, the step and round it is at as `at`, with `asked`, `true` for
+  an ask again and `false` for any other step, the id of each harness session, and when the run ended, its exit status,
+  how it ended and, as `error`, for a run that a failure of its harness stopped and that reported an error, the first
+  line of that error cut to its first 100 characters, and `null` for every other end. `resumes` and `asked` are missing
+  in a run from before they were written, and so is `error` of an end from before it was written, which is read as
+  `null`. A run without `resumes` is read as one that resumes none, and a resume reads whether its step is an ask again
+  from its files: it is one when the run's directory holds the followed file of the step numbered one lower, of the same
+  role, and no outcome file of it, since a run goes on after a step without an outcome only to ask it again
 * `heartbeat`, one instant in UTC to the second, as `2026-10-23T10:00:05Z`, followed by a line break, and nothing
   else. The command writes it when it makes the run's directory, before the first step starts, and then every 10
   seconds while the run lasts, between steps and while a step runs, with `--follow` and without it. Each write
@@ -421,6 +449,9 @@ and outside a git repository has no variant, and its directory is the instant al
   have as many digits as the highest step number the definition can reach needs, counting an ask again after every
   step, two at least, so that the names sort in the order the steps ran. An outcome file holds the step's items of
   `afterwards`, so the run's directory holds those of every step that gave an outcome of the form
+* `<number>-<role>.error.txt` for a step whose harness reported an error that ended it, numbered as those files are,
+  holding all of the error, the errors the harness reported joined by a line break, and a line break. A step whose
+  harness reported no error has none
 * `<number>-<role>.followed.jsonl` for each step that starts, numbered as those files are, and written with
   `--follow` and without it. It is made empty when the step starts, before its harness starts. Each text message and
   each tool call that `--follow` prints of the step is added to its end as one line, in the order `--follow` prints
