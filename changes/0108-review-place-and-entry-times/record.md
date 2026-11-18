@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -71,5 +71,8 @@ timestamp: 2026-11-15T23:30:08Z
   commit: 1899 of 1900 tests pass, the one that fails being the test of `homepage` that fails on `master` as well. No
   line of a file the branch changes is longer than 120 characters. `npm run check-changes` passed on `ea2c004` and is
   run again after this commit. The status stays `in-progress`
+- 2026-11-18T12:15:20Z [human] accepted the fixes of S1 and P1, the two blocking findings of the review of `b4d2904`
+- 2026-11-18T12:15:20Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, set the unit to `implemented`: the
+  human decided both blocking findings and every task in `plan.md` is ticked. The status is `implemented`
 
 ## Amendments
