@@ -40,6 +40,7 @@ and run those lines verbatim where they can be run on the host.
 - `tests/sandbox-unit-run.test.mjs`: `connectCall` and `firstCommandGets`, and the test that holds `--connect`
   against the entrypoint, the compose file and the image (R2, R6)
 - `tests/known-terminal.test.mjs`: the pattern of the entrypoint's last line, at line 102
+- `tests/sandbox-dev.test.mjs`: the call of `--connect` that the test of the shim expects, at line 157 (R2)
 - `container/entrypoint.sh`: the capture of the started-with `PATH`, its comment, and the last line (R1, R4)
 - `container/sandbox.sh`: the `--env PATH=...` of the `docker exec` of `--connect`, and the comment above the
   `--connect` block that lists what the call gives (R2)
@@ -80,20 +81,23 @@ and run those lines verbatim where they can be run on the host.
   is, which is expected until the next task
 - [x] Run `npm test` and see the tests of the three tasks above fail, and no other (R6)
 - [x] Commit: `bugfix-0109 Add the regression tests of the PATH the agent is given`
-- [ ] In `container/entrypoint.sh`, put `image_path="$PATH"` directly after `set -euo pipefail` and before the
+- [x] In `container/entrypoint.sh`, put `image_path="$PATH"` directly after `set -euo pipefail` and before the
   `export PATH=...` line, with a comment above the two that says why: the entrypoint runs as root and runs the
   programs of the system directories alone, whatever the image puts on its `PATH`, and the agent's command is given
   the `PATH` the container was started with, which Docker takes from the image (R1, R4)
-- [ ] In `container/entrypoint.sh`, make the last line the one "Approach" gives, of 118 characters, and add to the
+- [x] In `container/entrypoint.sh`, make the last line the one "Approach" gives, of 118 characters, and add to the
   comment above it that `env`, which runs as the agent, gives the command the image's `PATH`, so
   that `setpriv` is looked up with the fixed one (R1, R4)
-- [ ] In `container/sandbox.sh`, remove the line
+- [x] In `container/sandbox.sh`, remove the line
   `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \` of the `docker exec` of `--connect`.
   In the comment above the `--connect` block, say that HOME, USER and LOGNAME are the values the entrypoint
   exports, and that no PATH is given, so the command has the container's, which is the image's and the one the
   entrypoint hands the first command (R2)
-- [ ] Run `npm test` and see every test pass (R1, R2, R3, R4, R6)
-- [ ] Commit: `bugfix-0109 Give the agent the PATH of the image`
+- [x] In `tests/sandbox-dev.test.mjs`, in the test `the shim connects to a unit run under the dev name, and asks
+  for no build`, remove `--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ` from the expected
+  call, which the change of `--connect` makes fail (R2)
+- [x] Run `npm test` and see every test pass (R1, R2, R3, R4, R6)
+- [x] Commit: `bugfix-0109 Give the agent the PATH of the image`
 - [ ] In "Adding software to the sandbox" of `SANDBOX.md`, after the paragraph on the example and `TARGETARCH`, add
   a paragraph that says that a `PATH` the file sets with `ENV`, as `ENV PATH=/opt/tool/bin:$PATH` for a tool
   installed under `/opt`, is the `PATH` of the agent's commands: of the command a run starts and of a command that
@@ -113,5 +117,5 @@ and run those lines verbatim where they can be run on the host.
 ## Commit Points
 
 - [x] `bugfix-0109 Add the regression tests of the PATH the agent is given`: the failing tests
-- [ ] `bugfix-0109 Give the agent the PATH of the image`: the entrypoint and `--connect`, with every test passing
+- [x] `bugfix-0109 Give the agent the PATH of the image`: the entrypoint and `--connect`, with every test passing
 - [ ] `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`: `SANDBOX.md`

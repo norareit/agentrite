@@ -847,12 +847,14 @@ from_environment() {
 # What the command is given is what the first command of the container has, which this
 # call holds a second time: the user is the one container/entrypoint.sh becomes, named
 # with no group so that Docker takes its groups from the container's own account files,
-# HOME, USER, LOGNAME and PATH are the values the entrypoint exports, /work is the
-# working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. A
-# test in tests/sandbox-unit-run.test.mjs reads the three files and holds this call
-# against them. Without --user the command would be root, with the capabilities the
-# container is given. The command runs through known-terminal.sh, as the
-# entrypoint runs the first, so that a TERM the image does not describe is replaced.
+# HOME, USER and LOGNAME are the values the entrypoint exports, /work is the
+# working_dir of container/compose.yml, and bash is the CMD of container/Dockerfile. No
+# PATH is given, so the command has the container's, which is the image's and the one
+# the entrypoint hands the first command. A test in tests/sandbox-unit-run.test.mjs
+# reads the three files and holds this call against them. Without --user the command
+# would be root, with the capabilities the container is given. The command runs through
+# known-terminal.sh, as the entrypoint runs the first, so that a TERM the image does not
+# describe is replaced.
 # TERM and COLORTERM are not the first command's but those of this wrapper's shell,
 # since --connect may be run from another terminal.
 #
@@ -894,7 +896,6 @@ if [ "$connect" -eq 1 ]; then
   ! from_environment COLORTERM || connected_colorterm="$COLORTERM"
   exec docker exec --interactive ${terminal[@]+"${terminal[@]}"} --user agent --workdir /work \
     --env HOME=/home/agent --env USER=agent --env LOGNAME=agent \
-    --env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin \
     --env "TERM=$connected_term" --env "COLORTERM=$connected_colorterm" \
     "$container_name" /usr/local/bin/known-terminal.sh "$@"
 fi

@@ -23,5 +23,11 @@ timestamp: 2026-11-15T23:30:08Z
   The status stays `approved`
 - 2026-11-18T15:29:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host, on
   `bugfix-0109-the-sandbox-drops-a-project-path` at `f9647f6`, began the work. The status is `in-progress`
+- 2026-11-18T15:35:26Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, added to `plan.md` a task for
+  `tests/sandbox-dev.test.mjs`, which the plan did not name: its test of the shim's `--connect` expects the call to
+  give `--env PATH`, and was the one test of `npm test` that failed once `--connect` gave none. In the run of the
+  regression tests before the fix, two tests of `tests/entrypoint-path.test.mjs` passed already, since the tree had
+  no other line that sets `PATH` and the kit's image sets none; the three others failed, with the tests of the other
+  two files
 
 ## Amendments

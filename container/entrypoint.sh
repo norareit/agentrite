@@ -8,6 +8,10 @@
 # exist until the container runs.
 set -euo pipefail
 
+# The entrypoint runs as root, and runs the programs of the system directories alone,
+# whatever the image puts on its PATH. The agent's command is given the PATH the
+# container was started with, which Docker takes from the image, and which is kept here.
+image_path="$PATH"
 export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
 
 log() { printf '[entrypoint] %s\n' "$*" >&2; }
@@ -352,7 +356,8 @@ refused_at_probe_address "$FIREWALL_CANARY" "$probe_ip" \
 
 # The command runs through known-terminal.sh, which replaces a TERM the image holds no
 # description of: the wrapper passes the TERM of the developer's terminal, and only the
-# image knows which terminals it describes.
+# image knows which terminals it describes. env, which runs as the agent, gives the
+# command the image's PATH, so that setpriv is looked up with the fixed one.
 log "firewall verified; dropping to the agent user"
 export HOME=/home/agent USER=agent LOGNAME=agent
-exec setpriv --reuid=agent --regid=agent --init-groups -- /usr/local/bin/known-terminal.sh "$@"
+exec setpriv --reuid=agent --regid=agent --init-groups -- env "PATH=$image_path" /usr/local/bin/known-terminal.sh "$@"
