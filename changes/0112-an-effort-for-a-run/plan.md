@@ -181,9 +181,9 @@ Commit point 3: `feature-0112 Document the effort of a run and of a step`.
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] Each requirement R1 to R15 has its task, traced above, and no task traces to nothing
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed branch
+- [x] Each requirement R1 to R15 has its task, traced above, and no task traces to nothing
 
 ## Commit Points
 

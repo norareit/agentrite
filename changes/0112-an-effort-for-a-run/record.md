@@ -30,5 +30,15 @@ timestamp: 2026-11-18T15:19:51Z
   requirement has a task. The status is `approved`
 - 2026-11-18T22:00:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a step of the orchestrator, on
   `feature-0112-an-effort-for-a-run`, began the work. The status is `in-progress`
+- 2026-11-18T22:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on
+  `feature-0112-an-effort-for-a-run`, built every task of `plan.md` in the three planned commits, `425ea6c`, `8108dda`
+  and `af96363`. Two readings that the spec leaves one way: `--effort` without `--model` exits 2 with the usage, as
+  every other refusal of the arguments of `run` does, where the plan's task wrote exit 1, and the example block of
+  `ORCHESTRATOR.md` is in the second commit with `orchestrator.json`, since a test of the package documents compares
+  the two. In the tests of the orchestrator and of `agentrite runs`, the default definition without its efforts stands
+  in for the tests of a step with no effort, and the kit's own file for the tests of an effort. `npm test` reported 1911
+  passing and 0 failing on the tree of `af96363`, which differs from the one tested only by the ticks of `plan.md`, and
+  `npm run check-changes` passed on the committed branch. Not checked: the three harnesses themselves, which take the
+  arguments of R2 only as the unit tests and the fake harnesses show. The status is `in-progress`
 
 ## Amendments
