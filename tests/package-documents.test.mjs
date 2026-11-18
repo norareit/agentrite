@@ -50,7 +50,7 @@ test('package.json says what the package is, where it lives and under which lice
     'sandbox',
     'process',
   ]);
-  assert.equal(packageJson.homepage, 'https://github.com/norareit/agentrite#readme');
+  assert.equal(packageJson.homepage, 'https://agentrite.dev');
   assert.deepEqual(packageJson.bugs, { url: 'https://github.com/norareit/agentrite/issues' });
 });
 

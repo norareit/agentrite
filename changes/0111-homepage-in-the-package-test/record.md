@@ -15,6 +15,10 @@ timestamp: 2026-11-18T12:18:43Z
 - 2026-11-18T12:21:19Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
   cut `task-0111-homepage-in-the-package-test` from `master` at `7d0b8ca` and began the work. The status is
   `in-progress`
+- 2026-11-18T12:22:36Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, changed the `homepage` that the test
+  "package.json says what the package is, where it lives and under which license" of
+  `tests/package-documents.test.mjs` expects to `https://agentrite.dev`, and nothing else. `npm test` on this tree
+  passes 1898 of 1898 tests. The work is handed over for review. The status stays `in-progress`
 
 ## The task
 
