@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-11-15T23:30:08Z
 ---
 
@@ -15,5 +15,6 @@ timestamp: 2026-11-15T23:30:08Z
   every local branch, is 0107. Read `process.md`, the role files under `roles/` and `extra-roles/` and the end report
   of `scripts/agentrite-orchestrate.mjs`. The human chose the rule in `process.md` over a check of the timestamps.
   Wrote `spec.md`. The status is `draft`
+- 2026-11-18T11:37:21Z [human] approved the spec. The status is `approved`
 
 ## Amendments
