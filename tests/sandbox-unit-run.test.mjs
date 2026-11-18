@@ -16,6 +16,7 @@ import {
 import { delimiter, join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { commandWrapperPath } from './entrypoint-drop.mjs';
 import { copyKitInstructions, kitSettingsText } from './installed-kit.mjs';
 import { skipReason } from './skip-reason.mjs';
 import {
@@ -1333,9 +1334,7 @@ function firstCommandGets() {
     user,
     logname,
     becomes: entrypoint.match(/^exec setpriv --reuid=(\S+) /m)[1],
-    through: entrypoint.match(
-      /^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$/m,
-    )[1],
+    through: commandWrapperPath(entrypoint),
     workingDirectory: read('compose.yml').match(/^ +working_dir: (\S+)$/m)[1],
     defaultCommand: read('Dockerfile').match(/^CMD \["([^"]+)"\]$/m)[1],
   };

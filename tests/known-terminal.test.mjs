@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { executablePaths } from './dockerfile-executables.mjs';
+import { commandWrapperPath } from './entrypoint-drop.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
 
 const knownTerminal = fileURLToPath(new URL('../container/known-terminal.sh', import.meta.url));
@@ -99,11 +100,7 @@ test('the script exits with the status of the command', (testContext) => {
 // a test of tests/sandbox-unit-run.test.mjs holds. Both name it by the path it has in the image, which is where the
 // Dockerfile has to put it.
 test('the image holds the script at the path the entrypoint runs the command through', () => {
-  const through = entrypoint.match(
-    /^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$/m,
-  );
-  assert.ok(through, "the entrypoint's last command runs the command through a script");
-  const [, path] = through;
+  const path = commandWrapperPath(entrypoint);
   assert.match(dockerfile, new RegExp(`^COPY \\$\\{KIT_CONTAINER\\}/known-terminal\\.sh ${path}$`, 'm'));
   assert.ok(executablePaths(dockerfile).includes(path), 'the Dockerfile makes the script executable');
 });

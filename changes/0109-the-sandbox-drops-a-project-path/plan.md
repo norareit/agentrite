@@ -104,11 +104,11 @@ and run those lines verbatim where they can be run on the host.
   `--connect` runs. Leave the statement of "Two agents on one unit" that the connected command has `PATH` as the
   first command has it as it is, which the fix keeps true. Wrap at 120 characters (R5)
 - [x] Commit: `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`
-- [ ] After C1 of the review of `1e37678`: add `tests/entrypoint-drop.mjs`, which holds the pattern of the
+- [x] After C1 of the review of `1e37678`: add `tests/entrypoint-drop.mjs`, which holds the pattern of the
   entrypoint's last line once and gives the path of the script the agent's command runs through. Make
   `tests/entrypoint-path.test.mjs`, `tests/known-terminal.test.mjs` and `firstCommandGets` of
   `tests/sandbox-unit-run.test.mjs` take the pattern or the path from it, and see `npm test` pass (R6)
-- [ ] Commit: `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`
+- [x] Commit: `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`
 - [ ] After S1 of the review of `1e37678`: in `tests/entrypoint-path.test.mjs`, assert that the first line of the
   entrypoint is `#!/bin/bash`, so that the shell that runs it as root is not looked up on the image's `PATH`, and
   run the entrypoint as a file, as the suite's user, with a `PATH` of `/opt/tool/bin` alone, and assert that it ends
@@ -135,6 +135,6 @@ and run those lines verbatim where they can be run on the host.
 - [x] `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`: `SANDBOX.md`
 - [x] `bugfix-0109 Apply the review of 1e37678`: this plan's tasks after S1 and C1, its "Verification" after P1, and
   the implementer's entry on them in `record.md`
-- [ ] `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`: the tests alone, C1
+- [x] `bugfix-0109 Hold the pattern of the entrypoint's drop in one place among the tests`: the tests alone, C1
 - [ ] `bugfix-0109 Add the regression test of the shell the entrypoint starts with`: the failing test, S1
 - [ ] `bugfix-0109 Start the entrypoint with the bash of the image by its path`: the entrypoint, S1

@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
+import { DROP_TO_AGENT } from './entrypoint-drop.mjs';
 
 // The entrypoint runs as root with a PATH of its own, and gives the agent's command the PATH it was started with,
 // which Docker takes from the image. Its top level is no function, so these tests read its shipped lines out of the
@@ -12,7 +13,6 @@ const dockerfile = readFileSync(new URL('../container/Dockerfile', import.meta.u
 const FIXED_PATH = '/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin';
 const CAPTURE = 'image_path="$PATH"';
 const EXPORT = `export PATH=${FIXED_PATH}`;
-const DROP = /^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$/;
 
 // The lines of the entrypoint that are neither blank nor comments, in their order.
 const codeLines = entrypoint.split('\n').filter((line) => line.trim() !== '' && !line.trim().startsWith('#'));
@@ -33,13 +33,13 @@ test('no other line of the entrypoint sets the PATH', () => {
 });
 
 test("the entrypoint gives the image's PATH only to what runs as the agent, through a script named by its path", () => {
-  const drop = lastLine.match(DROP);
+  const drop = lastLine.match(DROP_TO_AGENT);
   assert.ok(drop, `the last line of the entrypoint is the drop to the agent: ${lastLine}`);
   assert.ok(drop[1].startsWith('/'), `the script the command runs through is named by an absolute path: ${drop[1]}`);
 });
 
 test('the entrypoint runs its own commands with the fixed PATH and the agent with the one it was started with', () => {
-  const drop = lastLine.match(DROP);
+  const drop = lastLine.match(DROP_TO_AGENT);
   assert.ok(drop, `the last line of the entrypoint is the drop to the agent: ${lastLine}`);
   const handOver = lastLine.slice(lastLine.indexOf(' env ') + 1, lastLine.lastIndexOf(` ${drop[1]} `));
   const program = 'console.log(`agent ${process.env.PATH}`)';
