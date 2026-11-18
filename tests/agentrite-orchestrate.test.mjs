@@ -4865,8 +4865,8 @@ const OPENCODE_FAILED = [
   .join('');
 const PLANNED = claudePrinted(responseOf({ ...DONE, summary: 'Planned.' }));
 
-test('a step whose harness exits 1 with an error stops the run, keeps the error and reports how to resume', (t) => {
-  const { base, read, agentrite, answer } = project(t);
+test('a step whose harness exits 1 with an error stops the run, keeps the error and the resume', (testContext) => {
+  const { base, read, agentrite, answer } = project(testContext);
   answer(1, PLANNED);
   answer(2, CLAUDE_FAILED, 1);
 
@@ -4892,8 +4892,8 @@ test('a step whose harness exits 1 with an error stops the run, keeps the error 
   });
 });
 
-test('a step whose harness exits 0 with two errors stops the run, and the file holds both in order', (t) => {
-  const { base, read, agentrite, answer } = project(t);
+test('a step whose harness exits 0 with two errors stops the run, and the file holds both in order', (testContext) => {
+  const { base, read, agentrite, answer } = project(testContext);
   answer(1, PLANNED);
   answer(2, claudePrinted(responseOf({ ...DONE, summary: 'Built.' })));
   answer(3, OPENCODE_FAILED);
@@ -4908,8 +4908,8 @@ test('a step whose harness exits 0 with two errors stops the run, and the file h
   assert.equal(JSON.parse(read(`${run.name}/state.json`)).ended.error, 'stub: Internal server error');
 });
 
-test('a step whose harness prints no error has no error file, says so, and a run that ended holds null', (t) => {
-  const failed = project(t);
+test('a step whose harness prints no error has no error file, says so, and holds null', (testContext) => {
+  const failed = project(testContext);
   failed.answer(1, PLANNED);
   failed.answer(2, '', 1);
   const result = failed.agentrite('orchestrate', '0029');
