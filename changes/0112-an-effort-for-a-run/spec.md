@@ -39,8 +39,8 @@ the way a harness takes it a part of what a harness module implements, and so of
    permission flag, so that what the harness is given is, in this order: the role, the model, the effort and the
    permission flag; every argument after the `--`; the prompt
 4. `--effort` given without a level, or with an empty one, is refused as `--model` is: the command names the option,
-   says what it takes, prints its usage, and starts no harness. `--effort` without `--model` is taken, and the harness
-   gets the effort and chooses the model itself
+   says what it takes, prints its usage, and starts no harness. `--effort` without `--model` is refused too: the
+   command says that an effort is given only with the model it is for, prints its usage, and starts no harness
 5. The usage of `agentrite run` names `--effort <level>` in its form and in its list of options, with what each
    harness gets for it
 6. A step of the orchestrator's definition may hold `effort`, a string that is not empty, in a repeat or not. A step
@@ -67,10 +67,15 @@ the way a harness takes it a part of what a harness module implements, and so of
     each
 13. `COMMANDS.md` describes `--effort` in the section of `agentrite run`, with what each harness gets, and in its list
     of what the harness is given, and gives `effort` in the `step` of `agentrite runs --json`. `ORCHESTRATOR.md` gives
-    `effort` among the keys of a step, and the effort in the lines of a step and in the table of the end report
-14. Unit tests show R1 to R4 for each harness, R6 for a step with an effort, one without and an `effort` of another
-    form, R7 to R9 for a step with an effort and one without, and R11 for a module that lacks `start.effort`. A test
-    of the orchestrator with its fake harnesses shows that a step with an effort gives its harness the arguments of R2
+    `effort` among the keys of a step, the effort in the lines of a step and in the table of the end report, and the
+    default definition of R14, in its example and in the text that says what the default does
+14. The kit's default definition, `orchestrator.json`, gives each of its steps an effort: `"medium"` for the planner in
+    Claude Code on Opus, `"medium"` for the implementer in Claude Code on Sonnet, and `"high"` for the reviewer in
+    OpenCode on GPT Sol. Its steps are otherwise what they are now
+15. Unit tests show R1 to R4 for each harness, R6 for a step with an effort, one without and an `effort` of another
+    form, R7 to R9 for a step with an effort and one without, R11 for a module that lacks `start.effort`, and R14 for
+    the default definition, which is a valid definition that gives those efforts. A test of the orchestrator with its
+    fake harnesses shows that a step with an effort gives its harness the arguments of R2
 
 ## Decisions
 
@@ -86,6 +91,15 @@ the way a harness takes it a part of what a harness module implements, and so of
   onto each harness, which would have to know every model's variants
 * **Joined to its option, and for Codex to its key.** It is how `--model` is given, for the same reason. Codex has no
   option for the effort, and `-c` with the key is how its documentation sets one configuration value for a run
+* **An effort only with its model.** A level means something only for a known model: OpenCode's variants are the
+  provider's for one model, and the levels Claude Code and Codex take can differ between models. Without `--model`,
+  the model is the one the harness or the role's wrapper chooses, which the kit does not know, so the same level could
+  be refused, or mean another thing, for each model the harness happens to choose. The human chose to refuse it.
+  Rejected: taking it, as `--model` is optional, which was the first reading of this spec. A step of the definition
+  holds its `model` already, so the refusal changes nothing for the orchestrator
+* **The default definition gives an effort to each step, `medium` on Opus and Sonnet and `high` on GPT Sol.** The
+  human chose the levels, which give the review more reasoning than the planning and the implementing. A project that
+  wants others copies the definition and changes them
 * **Optional everywhere, and nothing when it is not given.** The request asks for it to be optional, and a project
   that gives no effort keeps the command lines, the lines of a run and the end report it has now
 * **A member of the contract, not a case in the run command.** How a harness takes an effort is knowledge of the
@@ -98,7 +112,6 @@ the way a harness takes it a part of what a harness module implements, and so of
 ## Non-goals
 
 * An effort pinned in a role's wrapper, as a model can be, and its keeping by `refresh`
-* An effort in the kit's default definition, `orchestrator.json`, whose steps stay as they are
 * Checking a level against what the harness or the model takes, or listing the levels of each
 * Passing arguments of the harness's own from a step of the definition
 * An effort for the specifier's session, or any session a developer starts without `agentrite run`
@@ -107,11 +120,8 @@ the way a harness takes it a part of what a harness module implements, and so of
 
 ## Beyond the request
 
-1. An effort in the default definition, as `high` for the reviewer on GPT Sol and the planner on Opus. It costs a line
-   per step in `orchestrator.json` and the example in `ORCHESTRATOR.md`, and a choice of levels that the kit's users
-   then inherit. Without it, the default runs at each harness's default effort, as now, and a project that wants more
-   copies the definition and adds `effort`
+1. Taken by the human, with levels of their own, as R14: an effort in the default definition
 2. An effort pinned in a role's wrapper, which Claude Code's agent files take as `effort` and OpenCode's as `variant`,
    kept by `refresh` as a pinned model is. It costs a case in each module's `refreshed` and `isKit`, and their tests.
    Without it, an effort is given per run or per step, and a line of an effort that a developer adds to a wrapper by
-   hand is not kept by `refresh`
+   hand is not kept by `refresh`. Declined by the human
