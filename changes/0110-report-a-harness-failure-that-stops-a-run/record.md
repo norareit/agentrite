@@ -23,5 +23,11 @@ timestamp: 2026-11-15T23:30:08Z
   `refusedLines` of `scripts/agentrite-orchestrate.mjs`, how a step is spawned in `scripts/agentrite.mjs`, and the
   reading of the final response in `scripts/harnesses/`. The behavior of a step under a real outage was not
   reproduced, and the spec says so. The status is `draft`
+- 2026-11-18T16:18:07Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, in a session on the Linux host, on
+  `master` at `8523b8e`, on the human's choices. The reading of the error is a member of the harness contract, which
+  its check holds every harness to, R2, so that a harness added later needs it and the orchestrator names none. The
+  human took item 3 of "Beyond the request", the first line of the error in `state.json` and shown by
+  `npx agentrite runs`, now R8 and R9, and did not take items 1 and 2. Read "agentrite runs" of `COMMANDS.md` and
+  how `scripts/agentrite-runs.mjs` gives the line of an end. Renumbered the requirements. The status is `draft`
 
 ## Amendments
