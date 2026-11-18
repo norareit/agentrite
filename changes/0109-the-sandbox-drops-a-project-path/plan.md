@@ -47,39 +47,39 @@ and run those lines verbatim where they can be run on the host.
 
 ## Tasks
 
-- [ ] Write `tests/entrypoint-path.test.mjs`, failing against the tree as it is. Its tests read
+- [x] Write `tests/entrypoint-path.test.mjs`, failing against the tree as it is. Its tests read
   `container/entrypoint.sh` as text, take its code lines as the lines that are neither blank nor comments, and:
-    - [ ] Assert that the first two code lines after `set -euo pipefail` are `image_path="$PATH"` and
+    - [x] Assert that the first two code lines after `set -euo pipefail` are `image_path="$PATH"` and
       `export PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin`, in that order, so that nothing
       runs before the fixed `PATH` is set (R4, R6)
-    - [ ] Assert that no other code line of the entrypoint sets `PATH`: no line but those two and the last holds
+    - [x] Assert that no other code line of the entrypoint sets `PATH`: no line but those two and the last holds
       `PATH=`, and none runs `export PATH` (R4, R6)
-    - [ ] Assert that the last code line matches
+    - [x] Assert that the last code line matches
       `^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$`, so that the
       image's `PATH` is given only after the `--` of `setpriv`, to what runs as the agent, and the script the command
       runs through is named by an absolute path, starting with `/` (R1, R4, R6)
-    - [ ] Run, with bash, a script made of those two opening lines verbatim, then `printf 'root %s\n' "$PATH"`,
+    - [x] Run, with bash, a script made of those two opening lines verbatim, then `printf 'root %s\n' "$PATH"`,
       then the text of the last line from `env` up to the script it names, verbatim, followed by `process.execPath`
       with `-e` and a program that prints `agent ` and its `process.env.PATH`. Start it with
       `PATH=/opt/tool/bin:` before the suite's `PATH`. Assert that it prints `root` with the fixed `PATH` and
       `agent` with the `PATH` it was started with, `/opt/tool/bin` first (R1, R4, R6)
-    - [ ] Assert that `container/Dockerfile` has no line that sets `PATH` with `ENV`, so that the kit's image has
+    - [x] Assert that `container/Dockerfile` has no line that sets `PATH` with `ENV`, so that the kit's image has
       the `PATH` of its base image (R3)
-- [ ] In `tests/sandbox-unit-run.test.mjs`, make the tests of `--connect` fail against the tree as it is (R2, R6):
-    - [ ] Remove `'--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin '` from `connectCall`,
+- [x] In `tests/sandbox-unit-run.test.mjs`, make the tests of `--connect` fail against the tree as it is (R2, R6):
+    - [x] Remove `'--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin '` from `connectCall`,
       and say in its comment that the call gives no `PATH`, so the command has the container's
-    - [ ] In `firstCommandGets`, remove `path`, and match `through` with the pattern of the last line that the
+    - [x] In `firstCommandGets`, remove `path`, and match `through` with the pattern of the last line that the
       first task asserts, so that it still yields `/usr/local/bin/known-terminal.sh`. Say in its comment that the
       first command is given the `PATH` the container was started with
-    - [ ] In the test `--connect gives the command what the entrypoint, the compose file and the image give the
+    - [x] In the test `--connect gives the command what the entrypoint, the compose file and the image give the
       first`, remove `--env PATH=${gets.path} ` from the expected call, and assert that the recorded call holds no
       `--env PATH`
-- [ ] In `tests/known-terminal.test.mjs`, at line 102, match the entrypoint's last line with
+- [x] In `tests/known-terminal.test.mjs`, at line 102, match the entrypoint's last line with
   `^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$`, so that the test
   that the image holds the script still finds its path once the entrypoint changes. It fails against the tree as it
   is, which is expected until the next task
-- [ ] Run `npm test` and see the tests of the three tasks above fail, and no other (R6)
-- [ ] Commit: `bugfix-0109 Add the regression tests of the PATH the agent is given`
+- [x] Run `npm test` and see the tests of the three tasks above fail, and no other (R6)
+- [x] Commit: `bugfix-0109 Add the regression tests of the PATH the agent is given`
 - [ ] In `container/entrypoint.sh`, put `image_path="$PATH"` directly after `set -euo pipefail` and before the
   `export PATH=...` line, with a comment above the two that says why: the entrypoint runs as root and runs the
   programs of the system directories alone, whatever the image puts on its `PATH`, and the agent's command is given
@@ -112,6 +112,6 @@ and run those lines verbatim where they can be run on the host.
 
 ## Commit Points
 
-- [ ] `bugfix-0109 Add the regression tests of the PATH the agent is given`: the failing tests
+- [x] `bugfix-0109 Add the regression tests of the PATH the agent is given`: the failing tests
 - [ ] `bugfix-0109 Give the agent the PATH of the image`: the entrypoint and `--connect`, with every test passing
 - [ ] `bugfix-0109 Say that the PATH of a project's Dockerfile is the agent's`: `SANDBOX.md`

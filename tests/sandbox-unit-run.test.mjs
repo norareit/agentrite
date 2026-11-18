@@ -1322,18 +1322,20 @@ test(
 
 // What the entrypoint, the compose file and the image give the first command of a container, read from the three
 // files, the script the entrypoint runs the command through among them. The wrapper holds them a second time, for
-// the command it connects.
+// the command it connects. The first command is given the PATH the container was started with, which is the
+// container's, so the wrapper gives the connected command none and it has the container's too.
 function firstCommandGets() {
   const read = (file) => readFileSync(join(kitContainer, file), 'utf-8');
   const entrypoint = read('entrypoint.sh');
   const [, home, user, logname] = entrypoint.match(/^export HOME=(\S+) USER=(\S+) LOGNAME=(\S+)$/m);
   return {
-    path: entrypoint.match(/^export PATH=(\S+)$/m)[1],
     home,
     user,
     logname,
     becomes: entrypoint.match(/^exec setpriv --reuid=(\S+) /m)[1],
-    through: entrypoint.match(/^exec setpriv .* -- (\S+) "\$@"$/m)[1],
+    through: entrypoint.match(
+      /^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$/m,
+    )[1],
     workingDirectory: read('compose.yml').match(/^ +working_dir: (\S+)$/m)[1],
     defaultCommand: read('Dockerfile').match(/^CMD \["([^"]+)"\]$/m)[1],
   };
@@ -1342,11 +1344,11 @@ function firstCommandGets() {
 // The one call of Docker a connect makes, as the stand-in records it: `command` in the unit run's container, run
 // through the script that makes the TERM one the image describes, with a terminal when `tty` says so. It gives the
 // command `term` and `colorterm` in every call, empty where the shell of the connect lacks one, since a command
-// that is given none inherits the run's. A TERM the shell lacks is xterm on a terminal, as Docker gives it.
+// that is given none inherits the run's. A TERM the shell lacks is xterm on a terminal, as Docker gives it. It gives
+// no PATH, so the command has the container's.
 const connectCall = (command, { tty = false, term = tty ? 'xterm' : '', colorterm = '' } = {}) =>
   `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive ${tty ? '--tty ' : ''}--user agent --workdir /work ` +
   '--env HOME=/home/agent --env USER=agent --env LOGNAME=agent ' +
-  '--env PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ' +
   `--env TERM=${term} --env COLORTERM=${colorterm} ${containerName} /usr/local/bin/known-terminal.sh ${command}`;
 
 // What the stand-in's `ps` prints for a container that is running.
@@ -1463,9 +1465,10 @@ test(
     assert.deepEqual(host.dockerCalls(), [
       `AGENTRITE_CONTAINER=${kitPath} docker exec --interactive --user ${gets.becomes} ` +
         `--workdir ${gets.workingDirectory} --env HOME=${gets.home} --env USER=${gets.user} ` +
-        `--env LOGNAME=${gets.logname} --env PATH=${gets.path} --env TERM= --env COLORTERM= ${containerName} ` +
+        `--env LOGNAME=${gets.logname} --env TERM= --env COLORTERM= ${containerName} ` +
         `${gets.through} ${gets.defaultCommand}`,
     ]);
+    assert.ok(!host.dockerCalls()[0].includes('--env PATH'), 'the connected command is given no PATH');
   },
 );
 

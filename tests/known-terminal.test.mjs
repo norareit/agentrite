@@ -99,7 +99,9 @@ test('the script exits with the status of the command', (testContext) => {
 // a test of tests/sandbox-unit-run.test.mjs holds. Both name it by the path it has in the image, which is where the
 // Dockerfile has to put it.
 test('the image holds the script at the path the entrypoint runs the command through', () => {
-  const through = entrypoint.match(/^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- (\S+) "\$@"$/m);
+  const through = entrypoint.match(
+    /^exec setpriv --reuid=\S+ --regid=\S+ --init-groups -- env "PATH=\$image_path" (\S+) "\$@"$/m,
+  );
   assert.ok(through, "the entrypoint's last command runs the command through a script");
   const [, path] = through;
   assert.match(dockerfile, new RegExp(`^COPY \\$\\{KIT_CONTAINER\\}/known-terminal\\.sh ${path}$`, 'm'));
