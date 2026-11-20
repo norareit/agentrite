@@ -39,3 +39,15 @@ installs a release that holds this task, since its `agentrite.json` names the in
   the task is taken here as the approval of the record, so the status moves through `approved` to `in-progress` in
   this one entry. That reading is the implementer's, not words of the human. Read `roles/implementer.md` of the
   installed release. The status is `in-progress`
+- 2026-11-20T02:41:30Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, built the task in `d02ed9e` and
+  `36d5868`. The reviewer step of `orchestrator.json` and its copy in "The definition" of `ORCHESTRATOR.md` name
+  `openai/gpt-6.2-sol`, and so do the example output of `ORCHESTRATOR.md` and `COMMANDS.md`, the example ids of
+  `--model` in `COMMANDS.md` and in the usage of `agentrite run` in `scripts/agentrite-run.mjs`, for OpenCode and for
+  Codex, and the tests that read the default definition or check the documents and the usage:
+  `agentrite-definition`, `agentrite-orchestrate`, `agentrite-run`, `agentrite-runs` and `package-documents`. In the
+  two test files that also define steps of their own, those steps were moved to 6.2 Sol with the rest of the file,
+  except the Codex steps near the end of `agentrite-orchestrate`, which stay on `gpt-6.1-sol` as fixtures, as do the
+  Codex pins of `agentrite-init`, `agentrite-harness` and `agentrite-refresh` and the second definition of
+  `agentrite-definition`. On `36d5868`, `npm test` passed 1945 of 1945 tests and `npm run check-changes` exited 0. No
+  line changed is longer than 120 characters, apart from Markdown table rows. Not checked: a run of the orchestrator
+  with a real OpenCode on `openai/gpt-6.2-sol`. The status stays `in-progress` for the review
