@@ -34,3 +34,8 @@ installs a release that holds this task, since its `agentrite.json` names the in
   decision left open. Numbered 0114: the highest number in `changes/` is 0113. Before writing, `node --test` of
   `tests/agentrite-orchestrate.test.mjs` and `tests/agentrite-runs.test.mjs`, with only `orchestrator.json` changed,
   failed on the expected model id. The status is `draft`
+- 2026-11-20T02:31:10Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, in a session on the Linux host,
+  on `master` at `6bbfd5c`, began the work there and cut no branch, as the human asked. The human's request to build
+  the task is taken here as the approval of the record, so the status moves through `approved` to `in-progress` in
+  this one entry. That reading is the implementer's, not words of the human. Read `roles/implementer.md` of the
+  installed release. The status is `in-progress`
