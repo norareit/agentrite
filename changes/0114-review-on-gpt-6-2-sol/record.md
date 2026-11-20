@@ -49,8 +49,8 @@ installs a release that holds this task, since its `agentrite.json` names the in
   except the Codex steps near the end of `agentrite-orchestrate`, which stay on `gpt-6.1-sol` as fixtures, as do the
   Codex pins of `agentrite-init`, `agentrite-harness` and `agentrite-refresh` and the second definition of
   `agentrite-definition`. On `36d5868`, `npm test` passed 1945 of 1945 tests and `npm run check-changes` exited 0. No
-   line changed is longer than 120 characters, apart from Markdown table rows. Not checked: a run of the orchestrator
-   with a real OpenCode on `openai/gpt-6.2-sol`. The status stays `in-progress` for the review
+  line changed is longer than 120 characters, apart from Markdown table rows. Not checked: a run of the orchestrator
+  with a real OpenCode on `openai/gpt-6.2-sol`. The status stays `in-progress` for the review
 - 2026-11-20T02:38:53Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, reviewed task 0114 in full on `master` at
   `5f5982658c86e8d3f43fd69fe989f53928a9a296`, compared with `b460dd6`. Returned S1 and C1 in
   `.reviews/0114-review-on-gpt-6-2-sol/review-5f59826.md`. Did not verify a live orchestrator run or replay the
