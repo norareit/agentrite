@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: in-progress
 timestamp: 2026-11-20T02:28:25Z
 ---
 
@@ -55,3 +55,8 @@ installs a release that holds this task, since its `agentrite.json` names the in
   `5f5982658c86e8d3f43fd69fe989f53928a9a296`, compared with `b460dd6`. Returned S1 and C1 in
   `.reviews/0114-review-on-gpt-6-2-sol/review-5f59826.md`. Did not verify a live orchestrator run or replay the
   earlier failing test run
+- 2026-11-20T02:45:24Z [human] approved the record of the task, confirming the approval the implementer had read
+  from the request to build it, and accepted C1
+- 2026-11-20T02:45:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1: the frontmatter, which
+  the entry that began the work left at `draft`, now says `in-progress`, as the log does. S1 is open. The status is
+  `in-progress`
