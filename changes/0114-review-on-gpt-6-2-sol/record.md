@@ -60,7 +60,8 @@ installs a release that holds this task, since its `agentrite.json` names the in
 - 2026-11-20T02:45:24Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied C1: the frontmatter, which
   the entry that began the work left at `draft`, now says `in-progress`, as the log does. S1 is open. The status is
   `in-progress`
-- 2026-11-20T02:52:11Z [human] accepted S1, so that a later move of the default to another model finds only the ids that track it
+- 2026-11-20T02:52:11Z [human] accepted S1, so that a later move of the default to another model finds only the
+  ids that track it
 - 2026-11-20T02:52:11Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, applied S1 in `c80e096`. In
   `agentrite-orchestrate` and `agentrite-run` the model ids are those of `b460dd6` again, except where a test
   failed with them: the tests whose run or head comes from the default definition, `REVIEWER_ROUND_1` that the
