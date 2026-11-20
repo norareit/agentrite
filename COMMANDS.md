@@ -533,7 +533,7 @@ The options, which may stand anywhere among the arguments before a `--`:
 
 * `--headless` chooses between the two modes. Without it the harness opens a session on the terminal the command
   was run on, with the prompt as its first. With it the harness is run without a session
-* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code, `openai/gpt-6.1-sol` for OpenCode or `gpt-6.1-sol`
+* `--model` takes an id such as `claude-sonnet-5-5` for Claude Code, `openai/gpt-6.2-sol` for OpenCode or `gpt-6.2-sol`
   for Codex. The kit has no names of its own for models. The harness gets the id as it is written, joined to its option
   as one argument, `--model=<id>`, so an id that opens with a dash is not taken for an option of the harness. Without
   `--model` the harness gets no model and decides by itself. For Claude Code and OpenCode, a model pinned in the role's
@@ -743,7 +743,7 @@ runs on:
   `state.json` holds it
 
 ```text
-2026-10-23T10:05:00Z  0081--opus  running  step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol
+2026-10-23T10:05:00Z  0081--opus  running  step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol
 2026-10-23T09:40:00Z  0081        stale    no sign of life since 2026-10-23T09:41:10Z, before its first step
 2026-10-22T16:00:00Z  0080        ended    The run ran every item of the definition to its end.
 ```

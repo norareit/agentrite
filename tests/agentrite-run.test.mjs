@@ -165,8 +165,8 @@ usage: agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [-
   <harness>           claude | opencode | codex
   <unit>              a directory of changes/, by its name or by the four digits its name opens with
   --prompt <text>     added to the prompt, after the unit, as it is written
-  --model <id>        the harness's own id of a model, such as claude-sonnet-5-5, openai/gpt-6.1-sol or
-                      gpt-6.1-sol. Without it the harness decides: the role's wrapper may pin one
+  --model <id>        the harness's own id of a model, such as claude-sonnet-5-5, openai/gpt-6.2-sol or
+                      gpt-6.2-sol. Without it the harness decides: the role's wrapper may pin one
   --effort <level>    the level of reasoning, as the harness's own word, such as high, given only with --model:
                       --effort=<level> for claude, --variant=<level> for opencode and
                       -c model_reasoning_effort=<level> for codex
@@ -238,10 +238,10 @@ test('each option of run is taken alone, and a model id is taken as it is writte
   const base = ['reviewer', 'opencode', '0007'];
   assert.deepEqual(parseRunArgs([...base, '--headless']), { ...REVIEW, ...PLAIN, headless: true });
   assert.deepEqual(parseRunArgs([...base, '--skip-permissions']), { ...REVIEW, ...PLAIN, skipPermissions: true });
-  assert.deepEqual(parseRunArgs([...base, '--model', 'openai/gpt-6.1-sol']), {
+  assert.deepEqual(parseRunArgs([...base, '--model', 'openai/gpt-6.2-sol']), {
     ...REVIEW,
     ...PLAIN,
-    model: 'openai/gpt-6.1-sol',
+    model: 'openai/gpt-6.2-sol',
   });
   assert.deepEqual(parseRunArgs([...base, '--prompt', 'why']), { ...REVIEW, ...PLAIN, text: 'why' });
   assert.deepEqual(parseRunArgs([...base, '--model', 'm', '--effort', 'high']), {
@@ -520,7 +520,7 @@ const EFFORT_CASES = [undefined, 'high'].flatMap((effort) =>
 test('the argument list of each harness in each mode is the row of the table, option by option', () => {
   for (const [harness, row] of Object.entries(ROWS)) {
     for (const mode of ['interactive', 'headless']) {
-      for (const model of [undefined, 'openai/gpt-6.1-sol']) {
+      for (const model of [undefined, 'openai/gpt-6.2-sol']) {
         for (const [effort, skipPermissions, harnessArguments] of EFFORT_CASES) {
           const options = [
             ...(row.role ?? ['--agent', 'reviewer']),
@@ -802,7 +802,7 @@ test('run gives the harness the model, the permission flag and the text, and not
     UNIT,
     '--headless',
     '--skip-permissions',
-    '--model=openai/gpt-6.1-sol',
+    '--model=openai/gpt-6.2-sol',
   ]);
 
   assert.equal(claude.status, 0, claude.stderr);
@@ -820,7 +820,7 @@ test('run gives the harness the model, the permission flag and the text, and not
   assert.equal(opencode.status, 0, opencode.stderr);
   assert.equal(
     opencode.stdout,
-    started('opencode', ['run', '--agent', 'planner', '--model=openai/gpt-6.1-sol', '--auto', '--', UNIT_PROMPT]),
+    started('opencode', ['run', '--agent', 'planner', '--model=openai/gpt-6.2-sol', '--auto', '--', UNIT_PROMPT]),
   );
 });
 

@@ -137,7 +137,7 @@ const DEFAULT_DEFINITION = `{
           {
             "role": "reviewer",
             "harness": "opencode",
-            "model": "openai/gpt-6.1-sol",
+            "model": "openai/gpt-6.2-sol",
             "effort": "high"
           }
         ]

@@ -723,7 +723,7 @@ function ended(planned, result) {
 }
 
 test('the head of a step gives its number, its round in a repeat, its role, harness and model', () => {
-  assert.equal(stepHead(reviewer), 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol');
+  assert.equal(stepHead(reviewer), 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol');
   assert.equal(stepHead(planner), 'step 0, planner, claude, claude-opus-5-5');
 });
 
@@ -732,7 +732,7 @@ test('the head of a step gives its number, its round in a repeat, its role, harn
 test('the head of a step names its effort after its model, and the head of one without has none', () => {
   assert.equal(
     stepHead({ ...reviewer, step: KIT_DEFAULT.steps[1].repeat.steps[1] }),
-    'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high',
+    'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high',
   );
   assert.equal(stepHead(planner), 'step 0, planner, claude, claude-opus-5-5');
   assert.equal(modelText({ model: 'm', effort: 'high' }), 'm, effort high');
@@ -785,11 +785,11 @@ test('the name of a run is its instant, followed by -- and its variant for a run
 
 test('the line before a step gives its number, its round in a repeat, its role, harness and model', () => {
   assert.equal(stepLine(planner), 'step 0, planner, claude, claude-opus-5-5: started');
-  assert.equal(stepLine(reviewer), 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol: started');
+  assert.equal(stepLine(reviewer), 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol: started');
 });
 
 test('the line after a step adds its outcome and how long it took, the harness case first', () => {
-  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol';
   for (const [result, said] of [
     [done(), 'done'],
     [done({ outcome: 'needs-human' }), 'needs-human'],
@@ -810,11 +810,11 @@ test('the line after a step adds its outcome and how long it took, the harness c
 // Unit 0088, R4
 test('the lines of an ask again say that it asked again for the outcome, and its head does not', () => {
   const asked = { ...reviewer, number: 3, asked: true };
-  const head = 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, asked again for its outcome';
+  const head = 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, asked again for its outcome';
   assert.equal(stepLine(asked), `${head}: started`);
   assert.equal(stepLine(asked, ended(asked, done())), `${head}: done after 0m 08s`);
   assert.equal(stepLine(asked, ended(asked, { response: 'No.' })), `${head}: no outcome after 0m 08s`);
-  assert.equal(stepHead(asked), 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol');
+  assert.equal(stepHead(asked), 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol');
 });
 
 test('duration rounds to whole seconds, and gives hours from an hour on', () => {
@@ -845,9 +845,9 @@ test('the table of the steps that ran is the spec example, line for line', () =>
     [
       '0  planner      claude    claude-opus-5-5     12m 04s',
       '1  implementer  claude    claude-sonnet-5-5   41m 37s',
-      '2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s',
+      '2  reviewer     opencode  openai/gpt-6.2-sol   8m 12s',
       '3  implementer  claude    claude-sonnet-5-5   15m 50s',
-      '4  reviewer     opencode  openai/gpt-6.1-sol   6m 03s',
+      '4  reviewer     opencode  openai/gpt-6.2-sol   6m 03s',
     ].join('\n'),
   );
 });
@@ -861,7 +861,7 @@ test('the table gives the effort in the cell of the model, aligned to the widest
   assert.equal(
     ranTable(ran),
     [
-      '0  reviewer  opencode  openai/gpt-6.1-sol, effort high  12m 04s',
+      '0  reviewer  opencode  openai/gpt-6.2-sol, effort high  12m 04s',
       '1  planner   claude    claude-opus-5-5                  12m 04s',
       '2  planner   claude    claude-opus-5-5, effort medium   12m 04s',
     ].join('\n'),
@@ -880,7 +880,7 @@ test('the table marks an ask again in a last column, and its other rows end with
     [
       '0  planner      claude    claude-opus-5-5     12m 04s',
       '1  implementer  claude    claude-sonnet-5-5   41m 37s',
-      '2  reviewer     opencode  openai/gpt-6.1-sol   8m 12s  asked again',
+      '2  reviewer     opencode  openai/gpt-6.2-sol   8m 12s  asked again',
     ].join('\n'),
   );
 });
@@ -1194,7 +1194,7 @@ test('a step that ran out of time with a done outcome stops the run, read as no 
 });
 
 test('the line after a step that ran out of time says so, whatever it printed and however it ended', () => {
-  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol';
   for (const result of [{ ...TIMED_OUT, ...done() }, { ...TIMED_OUT, signal: 'SIGKILL' }]) {
     assert.equal(stepLine(reviewer, ended(reviewer, result)), `${head}: ran out of time after 0m 08s`);
   }
@@ -1518,7 +1518,7 @@ test('a step whose harness exited 0, reported no error and gave no block is aske
 });
 
 test('the line after a step says that its harness reported an error only when it exited 0 with no signal', () => {
-  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol';
+  const head = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol';
   const errors = ['API Error: 500'];
   for (const [result, said] of [
     [{ errors }, 'the harness reported an error'],
@@ -2172,7 +2172,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.equal(lines[0], 'step 0, planner, claude, claude-opus-5-5, effort medium: started');
   assert.match(lines[1], /^step 0, planner, claude, claude-opus-5-5, effort medium: done after 0m 0\ds$/);
   assert.equal(lines[2], 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5, effort medium: started');
-  assert.equal(lines[4], 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started');
+  assert.equal(lines[4], 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high: started');
   assert.match(lines[5], /^step 2, round 1 of 3, reviewer, opencode, openai\/gpt-6\.1-sol, effort high: done after /);
 
   const run = runDirectoryOf(base);
@@ -2209,7 +2209,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
     'run',
     '--agent',
     'reviewer',
-    '--model=openai/gpt-6.1-sol',
+    '--model=openai/gpt-6.2-sol',
     '--variant=high',
     '--format',
     'json',
@@ -2477,7 +2477,7 @@ test('a step without a block is asked again in its session, and the run goes on 
   const head = `step 2, round 1 of 3, ${implementer}, asked again for its outcome`;
   assert.equal(lines[4], `${head}: started`);
   assert.match(lines[5], new RegExp(`^${head}: done after 0m 0\\ds$`));
-  assert.equal(lines[6], 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started');
+  assert.equal(lines[6], 'step 3, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high: started');
   const rows = result.stdout.split('\n').filter((line) => /^\d  /.test(line));
   assert.equal(rows.length, 4);
   assert.match(rows[2], /^2  implementer  claude {4}claude-sonnet-5-5, effort medium {2}0m 0\ds {2}asked again$/);
@@ -3085,7 +3085,7 @@ function limitedTo(timeoutMinutes) {
   return {
     steps: [
       { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5', timeoutMinutes },
-      { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
+      { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol' },
     ],
   };
 }
@@ -3200,11 +3200,11 @@ test(
 const FOLLOWED = {
   steps: [
     { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
-    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
+    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol' },
   ],
 };
 const IMPLEMENTER_HEAD = 'step 0, implementer, claude, claude-sonnet-5-5';
-const REVIEWER_HEAD = 'step 1, reviewer, opencode, openai/gpt-6.1-sol';
+const REVIEWER_HEAD = 'step 1, reviewer, opencode, openai/gpt-6.2-sol';
 const HIDDEN = ['TOOL RESULT', 'REASONING'];
 
 // What Claude Code prints with `stream-json` for a step that says what it will do, makes a call with a label and one
@@ -3928,7 +3928,7 @@ const NO_OUTCOME = () => [
   claudePrinted('I still give no block.'),
 ];
 const IMPLEMENTER_ROUND_1 = 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5, effort medium';
-const REVIEWER_ROUND_1 = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high';
+const REVIEWER_ROUND_1 = 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high';
 const rerunPrompt = (...parts) => [`The unit is changes/${UNIT}/.`, ...parts].join('\n\n');
 
 // R6
@@ -4032,7 +4032,7 @@ test('a resume after questions gives the rerun the words of --prompt, and goes o
     `${IMPLEMENTER_ROUND_1}: started`,
     `${REVIEWER_ROUND_1}: started`,
     'step 3, round 2 of 3, implementer, claude, claude-sonnet-5-5, effort medium: started',
-    'step 4, round 2 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started',
+    'step 4, round 2 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high: started',
   ]);
 });
 
@@ -4042,7 +4042,7 @@ test('a resume after questions gives the rerun the words of --prompt, and goes o
 const STOP_WHEN = {
   steps: [
     { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
-    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol', stopWhen: 'blocking-findings' },
+    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol', stopWhen: 'blocking-findings' },
     { role: 'planner', harness: 'claude', model: 'claude-opus-5-5' },
   ],
 };
@@ -4063,7 +4063,7 @@ test('a resume after stopWhen reruns the review in its session, and goes on when
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
     firstLine(result.stdout),
-    `Resuming the run ${stopped.directory}/ at step 1, reviewer, opencode, openai/gpt-6.1-sol`,
+    `Resuming the run ${stopped.directory}/ at step 1, reviewer, opencode, openai/gpt-6.2-sol`,
   );
   const [review, planner] = calls().slice(2);
   assert.equal(calls().length, 4);
@@ -4139,7 +4139,7 @@ test('a resume of a repeat that ran out gets no round more, and is resumed in tu
   assert.equal(calls().length, 9);
   assert.equal(
     firstLine(last.stdout),
-    `Resuming the run ${first.directory}/ at step 6, round 3 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high`,
+    `Resuming the run ${first.directory}/ at step 6, round 3 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high`,
   );
   assert.deepEqual(calls()[8].options.slice(-2), ['--session', 'ses_test']);
   const [initial, middle, final] = [stopped, first, runOf(2)].map((run) => stateOf(context, run));
@@ -4153,7 +4153,7 @@ test('a resume of a repeat that ran out gets no round more, and is resumed in tu
 
 test('a rerun whose role and harness the stopped run holds no session for starts a new one', (testContext) => {
   const files = {
-    'review.json': JSON.stringify({ steps: [{ role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' }] }),
+    'review.json': JSON.stringify({ steps: [{ role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol' }] }),
   };
   const context = stoppedRun(testContext, [['', 1]], { args: ['--definition', 'review.json'], files });
   assert.deepEqual(stateOf(context, context.stopped).sessions, []);
@@ -4166,7 +4166,7 @@ test('a rerun whose role and harness the stopped run holds no session for starts
     'run',
     '--agent',
     'reviewer',
-    '--model=openai/gpt-6.1-sol',
+    '--model=openai/gpt-6.2-sol',
     '--format',
     'json',
   ]);

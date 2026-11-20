@@ -127,10 +127,10 @@ test('a run at a step in a repeat gives its step, its head and the name of its f
     rounds: 3,
     role: 'reviewer',
     harness: 'opencode',
-    model: 'openai/gpt-6.1-sol',
+    model: 'openai/gpt-6.2-sol',
     effort: null,
   });
-  assert.equal(run.head, 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol');
+  assert.equal(run.head, 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol');
   assert.equal(run.followedName, '02-reviewer.followed.jsonl');
   assert.equal(run.directory, `.orchestrator/0029-x/${INSTANT}`);
   assert.equal(run.number, '0029');
@@ -145,10 +145,10 @@ test('a run at a step with an effort gives it in its step and in its head', () =
     rounds: 3,
     role: 'reviewer',
     harness: 'opencode',
-    model: 'openai/gpt-6.1-sol',
+    model: 'openai/gpt-6.2-sol',
     effort: 'high',
   });
-  assert.equal(run.head, 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high');
+  assert.equal(run.head, 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high');
   assert.equal(read({ at: FIRST_AT }, { definition: KIT_DEFAULT }).step.effort, 'medium');
 });
 
@@ -465,9 +465,9 @@ test('each state gives its line, the columns lined up, with and without a varian
 
   assert.equal(
     runsListing({ runs, total: 3 }, undefined),
-    '2026-10-21T10:00:00Z  0029--opus  running  step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol\n' +
+    '2026-10-21T10:00:00Z  0029--opus  running  step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol\n' +
       '2026-10-21T09:00:00Z  0030        stale    no sign of life since 2026-10-21T09:00:30Z, ' +
-      'at step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol\n' +
+      'at step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol\n' +
       `2026-10-21T08:00:00Z  0031        ended    ${ENDED.line}\n`,
   );
 });
@@ -494,7 +494,7 @@ test('a run with no heartbeat at a step says no sign of life, then where it was'
 
   assert.equal(
     runsListing({ runs: [stale], total: 1 }, undefined),
-    `${INSTANT}  0029  stale  no sign of life, at step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol\n`,
+    `${INSTANT}  0029  stale  no sign of life, at step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol\n`,
   );
 });
 
@@ -558,7 +558,7 @@ test('the document holds the keys of a run and of its step in order, each as a v
       rounds: 3,
       role: 'reviewer',
       harness: 'opencode',
-      model: 'openai/gpt-6.1-sol',
+      model: 'openai/gpt-6.2-sol',
       effort: null,
     },
     followed: `.orchestrator/0029-x/${INSTANT}--opus/02-reviewer.followed.jsonl`,

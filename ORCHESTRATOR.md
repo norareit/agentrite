@@ -42,7 +42,7 @@ non-blocking findings lets the run end, with those findings listed in the end re
           {
             "role": "reviewer",
             "harness": "opencode",
-            "model": "openai/gpt-6.1-sol",
+            "model": "openai/gpt-6.2-sol",
             "effort": "high"
           }
         ]
@@ -176,8 +176,8 @@ step that has one. The line after it adds the outcome, or that the step
 ran out of time, and how long the step took:
 
 ```
-step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: started
-step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.1-sol, effort high: done after 8m 12s
+step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high: started
+step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high: done after 8m 12s
 ```
 
 The harness's standard error reaches the terminal. Without `--follow`, what it prints on standard output is read and
@@ -228,7 +228,7 @@ step 1, implementer, claude, claude-sonnet-5-5, effort medium: started
 
 ==== agentrite =================================================================
 step 1, implementer, claude, claude-sonnet-5-5, effort medium: done after 8m 41s
-step 2, reviewer, opencode, openai/gpt-6.1-sol, effort high: started
+step 2, reviewer, opencode, openai/gpt-6.2-sol, effort high: started
 ================================================================================
 ```
 
@@ -296,7 +296,7 @@ Nothing is taken from an earlier step but the non-blocking findings still open a
 ```
 0  planner      claude    claude-opus-5-5, effort medium    12m 04s
 1  implementer  claude    claude-sonnet-5-5, effort medium  41m 37s
-2  reviewer     opencode  openai/gpt-6.1-sol, effort high    8m 12s
+2  reviewer     opencode  openai/gpt-6.2-sol, effort high    8m 12s
 ```
 
 A run whose implementer was asked again lists the ask again as a step of its own:
@@ -305,7 +305,7 @@ A run whose implementer was asked again lists the ask again as a step of its own
 0  planner      claude    claude-opus-5-5, effort medium    12m 04s
 1  implementer  claude    claude-sonnet-5-5, effort medium  41m 37s
 2  implementer  claude    claude-sonnet-5-5, effort medium   0m 12s  asked again
-3  reviewer     opencode  openai/gpt-6.1-sol, effort high    8m 12s
+3  reviewer     opencode  openai/gpt-6.2-sol, effort high    8m 12s
 ```
 
 The items of `afterwards` are given whatever ended the run, under the line `After the run:`, grouped by step in the
