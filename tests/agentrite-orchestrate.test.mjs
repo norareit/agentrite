@@ -2173,7 +2173,7 @@ test('a run whose every item ends runs the default definition and exits 0', (tes
   assert.match(lines[1], /^step 0, planner, claude, claude-opus-5-5, effort medium: done after 0m 0\ds$/);
   assert.equal(lines[2], 'step 1, round 1 of 3, implementer, claude, claude-sonnet-5-5, effort medium: started');
   assert.equal(lines[4], 'step 2, round 1 of 3, reviewer, opencode, openai/gpt-6.2-sol, effort high: started');
-  assert.match(lines[5], /^step 2, round 1 of 3, reviewer, opencode, openai\/gpt-6\.1-sol, effort high: done after /);
+  assert.match(lines[5], /^step 2, round 1 of 3, reviewer, opencode, openai\/gpt-6\.2-sol, effort high: done after /);
 
   const run = runDirectoryOf(base);
   assert.ok(
@@ -3322,7 +3322,7 @@ test(
       ].join('\n'),
     );
     for (const hidden of HIDDEN) assert.ok(!result.stdout.includes(hidden), result.stdout);
-    assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
+    assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.2-sol: done after /);
     const report = endReportOf(result.stdout);
     assert.ok(report.startsWith('0  implementer'), result.stdout);
     assert.ok(report.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);

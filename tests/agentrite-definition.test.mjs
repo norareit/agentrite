@@ -47,7 +47,7 @@ test('the default definition is taken with the roles and harnesses of the defaul
               prompt:
                 "From round 2, this definition accepts review findings you agree with. Propose declining others.",
             },
-            { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol', effort: 'high' },
+            { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol', effort: 'high' },
           ],
         },
       },
