@@ -3085,7 +3085,7 @@ function limitedTo(timeoutMinutes) {
   return {
     steps: [
       { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5', timeoutMinutes },
-      { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol' },
+      { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
     ],
   };
 }
@@ -3200,11 +3200,11 @@ test(
 const FOLLOWED = {
   steps: [
     { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
-    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol' },
+    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' },
   ],
 };
 const IMPLEMENTER_HEAD = 'step 0, implementer, claude, claude-sonnet-5-5';
-const REVIEWER_HEAD = 'step 1, reviewer, opencode, openai/gpt-6.2-sol';
+const REVIEWER_HEAD = 'step 1, reviewer, opencode, openai/gpt-6.1-sol';
 const HIDDEN = ['TOOL RESULT', 'REASONING'];
 
 // What Claude Code prints with `stream-json` for a step that says what it will do, makes a call with a label and one
@@ -3322,7 +3322,7 @@ test(
       ].join('\n'),
     );
     for (const hidden of HIDDEN) assert.ok(!result.stdout.includes(hidden), result.stdout);
-    assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.2-sol: done after /);
+    assert.match(stepLines(result.stdout).at(-1), /^step 1, reviewer, opencode, openai\/gpt-6\.1-sol: done after /);
     const report = endReportOf(result.stdout);
     assert.ok(report.startsWith('0  implementer'), result.stdout);
     assert.ok(report.includes('\nThe run ran every item of the definition to its end.\n'), result.stdout);
@@ -4042,7 +4042,7 @@ test('a resume after questions gives the rerun the words of --prompt, and goes o
 const STOP_WHEN = {
   steps: [
     { role: 'implementer', harness: 'claude', model: 'claude-sonnet-5-5' },
-    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol', stopWhen: 'blocking-findings' },
+    { role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol', stopWhen: 'blocking-findings' },
     { role: 'planner', harness: 'claude', model: 'claude-opus-5-5' },
   ],
 };
@@ -4063,7 +4063,7 @@ test('a resume after stopWhen reruns the review in its session, and goes on when
   assert.equal(result.status, 0, result.stderr);
   assert.equal(
     firstLine(result.stdout),
-    `Resuming the run ${stopped.directory}/ at step 1, reviewer, opencode, openai/gpt-6.2-sol`,
+    `Resuming the run ${stopped.directory}/ at step 1, reviewer, opencode, openai/gpt-6.1-sol`,
   );
   const [review, planner] = calls().slice(2);
   assert.equal(calls().length, 4);
@@ -4153,7 +4153,7 @@ test('a resume of a repeat that ran out gets no round more, and is resumed in tu
 
 test('a rerun whose role and harness the stopped run holds no session for starts a new one', (testContext) => {
   const files = {
-    'review.json': JSON.stringify({ steps: [{ role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.2-sol' }] }),
+    'review.json': JSON.stringify({ steps: [{ role: 'reviewer', harness: 'opencode', model: 'openai/gpt-6.1-sol' }] }),
   };
   const context = stoppedRun(testContext, [['', 1]], { args: ['--definition', 'review.json'], files });
   assert.deepEqual(stateOf(context, context.stopped).sessions, []);
@@ -4166,7 +4166,7 @@ test('a rerun whose role and harness the stopped run holds no session for starts
     'run',
     '--agent',
     'reviewer',
-    '--model=openai/gpt-6.2-sol',
+    '--model=openai/gpt-6.1-sol',
     '--format',
     'json',
   ]);

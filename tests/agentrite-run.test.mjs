@@ -238,10 +238,10 @@ test('each option of run is taken alone, and a model id is taken as it is writte
   const base = ['reviewer', 'opencode', '0007'];
   assert.deepEqual(parseRunArgs([...base, '--headless']), { ...REVIEW, ...PLAIN, headless: true });
   assert.deepEqual(parseRunArgs([...base, '--skip-permissions']), { ...REVIEW, ...PLAIN, skipPermissions: true });
-  assert.deepEqual(parseRunArgs([...base, '--model', 'openai/gpt-6.2-sol']), {
+  assert.deepEqual(parseRunArgs([...base, '--model', 'openai/gpt-6.1-sol']), {
     ...REVIEW,
     ...PLAIN,
-    model: 'openai/gpt-6.2-sol',
+    model: 'openai/gpt-6.1-sol',
   });
   assert.deepEqual(parseRunArgs([...base, '--prompt', 'why']), { ...REVIEW, ...PLAIN, text: 'why' });
   assert.deepEqual(parseRunArgs([...base, '--model', 'm', '--effort', 'high']), {
@@ -520,7 +520,7 @@ const EFFORT_CASES = [undefined, 'high'].flatMap((effort) =>
 test('the argument list of each harness in each mode is the row of the table, option by option', () => {
   for (const [harness, row] of Object.entries(ROWS)) {
     for (const mode of ['interactive', 'headless']) {
-      for (const model of [undefined, 'openai/gpt-6.2-sol']) {
+      for (const model of [undefined, 'openai/gpt-6.1-sol']) {
         for (const [effort, skipPermissions, harnessArguments] of EFFORT_CASES) {
           const options = [
             ...(row.role ?? ['--agent', 'reviewer']),
@@ -802,7 +802,7 @@ test('run gives the harness the model, the permission flag and the text, and not
     UNIT,
     '--headless',
     '--skip-permissions',
-    '--model=openai/gpt-6.2-sol',
+    '--model=openai/gpt-6.1-sol',
   ]);
 
   assert.equal(claude.status, 0, claude.stderr);
@@ -820,7 +820,7 @@ test('run gives the harness the model, the permission flag and the text, and not
   assert.equal(opencode.status, 0, opencode.stderr);
   assert.equal(
     opencode.stdout,
-    started('opencode', ['run', '--agent', 'planner', '--model=openai/gpt-6.2-sol', '--auto', '--', UNIT_PROMPT]),
+    started('opencode', ['run', '--agent', 'planner', '--model=openai/gpt-6.1-sol', '--auto', '--', UNIT_PROMPT]),
   );
 });
 
