@@ -85,5 +85,10 @@ timestamp: 2026-11-21T12:04:21Z
   Independently ran `npm test`: 1951 tests, 1917 pass, 0 fail, 34 skipped; `npm run check-changes` and
   `git diff --check` passed. Could not verify Docker-dependent tests or the reporting project's end-to-end run.
   The status stays `in-progress`
+- 2026-11-21T13:40:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a step of the orchestrator,
+  accepted P1 of `.reviews/0116-no-branch-for-a-draft-unit/review-2026-11-21T125428Z.md`, as accepted by the definition
+  of the orchestrator and not as a decision of the human. Split the verification task of `plan.md` in two: the run
+  without Docker stays ticked, and the run on a host with Docker is left open, since 34 tests were skipped here. No
+  other finding was made. The status stays `in-progress`
 
 ## Amendments
