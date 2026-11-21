@@ -161,7 +161,7 @@ The documents follow R8 to R10, and the forms the wrapper prints follow R8.
 ## Verification
 
 - [x] `npm test` passes in the environment without Docker, where 34 tests are skipped
-- [ ] `npm test` passes on a host that has Docker, the tests that need it among them, which is a check of the human
+- [x] `npm test` passes on a host that has Docker, the tests that need it among them, which is a check of the human
 - [x] `npm run check-changes` passes once the work is committed
 - [x] `grep -n "cut" SANDBOX.md COMMANDS.md container/sandbox.sh` shows no description of the cut of a unit's branch
   that disagrees with R1 to R5

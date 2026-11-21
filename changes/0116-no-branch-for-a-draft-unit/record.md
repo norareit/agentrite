@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-11-21T12:04:21Z
 ---
 
@@ -96,5 +96,10 @@ timestamp: 2026-11-21T12:04:21Z
   `.reviews/0116-no-branch-for-a-draft-unit/review-2026-11-21T125705Z.md`. Independently ran `npm test`:
   1951 tests, 1917 pass, 0 fail, 34 skipped; `npm run check-changes` and `git diff --check` passed.
   Could not verify Docker-dependent tests or the reporting project's end-to-end run. The status stays `in-progress`
+- 2026-11-21T13:04:28Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, on the host with Docker, ran
+  `npm test` on `dec1fdb`: 1951 tests, 1951 pass, 0 fail, 0 skipped. The human accepted that run as the check of the
+  human that the last open task of `plan.md` names, and the task is ticked. Not checked: the end-to-end run of the
+  reporting project. No finding of either review blocks, and every task of `plan.md` is ticked. The status is
+  `implemented`
 
 ## Amendments
