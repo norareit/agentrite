@@ -90,5 +90,11 @@ timestamp: 2026-11-21T12:04:21Z
   of the orchestrator and not as a decision of the human. Split the verification task of `plan.md` in two: the run
   without Docker stays ticked, and the run on a host with Docker is left open, since 34 tests were skipped here. No
   other finding was made. The status stays `in-progress`
+- 2026-11-21T12:57:05Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
+  `0116-no-branch-for-a-draft-unit` at `ff437ce` as a delta from `dc65325`. Verified P1's correction and returned
+  no new findings on all three axes, in
+  `.reviews/0116-no-branch-for-a-draft-unit/review-2026-11-21T125705Z.md`. Independently ran `npm test`:
+  1951 tests, 1917 pass, 0 fail, 34 skipped; `npm run check-changes` and `git diff --check` passed.
+  Could not verify Docker-dependent tests or the reporting project's end-to-end run. The status stays `in-progress`
 
 ## Amendments
