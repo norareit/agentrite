@@ -78,6 +78,11 @@ does. The default branch is the local branch that `defaultBranch` names in `agen
 4. The wrapper says what it cut, from which branch and commit and for which unit, before it builds an image or
    starts a container
 
+No branch is cut for a unit that is `draft` on the default branch. Approve it there with `npx agentrite approve
+<unit>`, and the same command cuts the branch, from the default branch with the approval on it. No branch is cut for a
+unit that is `implemented` there either, since its work is done: further work on it is a new unit. A branch that exists
+is run as it is, whatever its record holds, and the wrapper does not move it.
+
 A run that cuts no branch, a unit whose branch exists, `--in-place` or `--workdir`, reads only `bell`,
 `modelServer` and `harnesses` of `agentrite.json`, as "The bell", "The local model server" and "Holding a harness
 version" say, and judges no other key.
@@ -283,11 +288,12 @@ a unit" says.
 * The variant works on the branch that is the unit's branch, two hyphens and the name, as
   `feature-0029-sandbox-clone-of-the-branch--opus`. It is a unit run of that branch, and everything "Running a unit"
   and "Getting the work back" say of a unit run holds for it
-* When that branch does not exist, the wrapper cuts it from the host's branch of the unit, at the commit that branch
-  is at, and says what it cut and from which commit before it builds an image or starts a container. A unit with no
-  branch gets its branch cut first, from the default branch, and then the variant's. Commits of a unit run that is
-  under way and has not been brought back to the host are in its clone and not in the variant. When the branch
-  exists, the run works on it as it is, and nothing of the unit's branch is taken into it
+* When that branch does not exist, the wrapper cuts it from the host's branch of the unit, as that branch is and at
+  the commit it is at, whatever its record holds, and says what it cut and from which commit before it builds an image
+  or starts a container. A unit with no branch gets its branch cut first, from the default branch, as "Running a unit"
+  says, and then the variant's, so that a unit that is `draft` or `implemented` there gets neither. Commits of a unit
+  run that is under way and has not been brought back to the host are in its clone and not in the variant. When the
+  branch exists, the run works on it as it is, and nothing of the unit's branch is taken into it
 * A variant runs while the unit's run, or another variant, runs, and while none does. Any number may run at a time.
   Starting, running and ending one stops nothing in another container, writes nothing in another clone and moves no
   other branch
@@ -913,6 +919,13 @@ Why, and what to do for each:
 * The unit is given by such a number, and the default branch that `agentrite.json` names is no local branch. Make
   the local branch, for example with `git branch main origin/main` for a default branch `main`. Or, when the name
   is not the project's default branch, correct `defaultBranch` in `agentrite.json`
+
+**In a unit run, the orchestrator refuses the unit as `draft`, although it is approved on the default branch.**
+
+Why: the checkout the run reads holds the record from before the approval. It is a branch cut before the approval, a
+variant cut from such a branch, or a clone kept from an earlier run, which is resumed as it is and not updated from the
+host's branch. What to do: bring the work of a kept clone back to the host first, merge the default branch into the
+branch the run is on, on the host, and run again.
 
 **In a sandbox-only project, the wrapper says why and starts nothing: it refuses the branch, or cuts none for it.**
 

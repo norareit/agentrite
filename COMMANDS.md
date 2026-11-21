@@ -19,7 +19,7 @@ takes.
 | `npm run check-changes`                                                                                                                                       | Runs the change check, by the project's own command            | [check-changes](#check-changes)                 |
 | `node node_modules/agentrite/scripts/check-changes.mjs [<repository root>]`                                                                                   | Runs the change check, on the repository root given            | [check-changes](#check-changes)                 |
 | `node node_modules/agentrite/container/check-commit-message.mjs <commit message file>`                                                                        | Refuses a commit message with a trailer the standards forbid   | [check-commit-message](#check-commit-message)   |
-| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]`                                                                          | Starts the sandbox on a clone of a unit's branch               | [sandbox.sh](#sandboxsh)                        |
+| `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... UNIT [--variant NAME] [COMMAND...]`                                                                          | Sandbox on a unit's branch, cut if approved or in progress     | [sandbox.sh](#sandboxsh)                        |
 | `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --in-place [COMMAND...]`                                                                                     | Starts the sandbox on the project root as it is                | [sandbox.sh](#sandboxsh)                        |
 | `./sandbox.sh [--rebuild] [--mount HOST[:ro]]... --workdir DIR [COMMAND...]`                                                                                  | Starts the sandbox on a directory as it is                     | [sandbox.sh](#sandboxsh)                        |
 | `./sandbox.sh --connect UNIT [--variant NAME] [COMMAND...]`                                                                                                   | Runs a command beside a unit run that is under way             | [sandbox.sh](#sandboxsh)                        |
@@ -651,7 +651,12 @@ It refuses, starts nothing, writes nothing and exits 1 when:
   in it the fault is, what is wrong and what it must hold
 * `changes/` holds no directory for the unit, or more than one for its digits
 * the unit's status is not `approved`. It names the status, and says that a run starts the work of an approved unit.
-  A `record.md` that is missing, or holds no status, is refused as one that is missing a status field
+  For a `draft` unit it also says that the record read in this checkout is `draft`, and that a unit not yet approved
+  is approved on the default branch with `npx agentrite approve <unit>`. It says that a unit approved on the default
+  branch already means a checkout that holds the record from before the approval, which is recovered by merging the
+  default branch into the branch the run is on, on the host, and running again, and that the work of a clone the
+  sandbox kept is brought back to the host first. A `record.md` that is missing, or holds no status, is refused as
+  one that is missing a status field
 * the branch checked out in the project root ends in `--` and a variant that is not one or more words of the lowercase
   letters `a` to `z` and the digits `0` to `9`, joined by single hyphens. It names the branch and the form a variant
   takes. A directory that is in no git repository, and a detached `HEAD`, are not refused
@@ -877,8 +882,10 @@ too and has no form with `UNIT`. A project with the process has no form with `BR
 
 Starts the sandbox, from the project root, with what the form names mounted at `/work`, and opens a shell in it.
 With `--connect` it starts nothing, and runs beside a unit run that is under way. A unit given by a number that no
-branch holds gets its branch first, cut from the default branch that `agentrite.json` names, unless the unit is
-cancelled there, which gets none. With `--variant` the run is of a variant of the unit, on a branch of its own.
+branch holds gets its branch first, cut from the default branch that `agentrite.json` names. It gets none when the unit
+is `draft` there, until the unit is approved there, nor when it is `implemented` there, further work on it being a new
+unit, nor when it is `cancelled` there. With `--variant` the run is of a variant of the unit, on a branch of its own,
+and a variant's branch that does not exist is cut from the unit's branch as that branch is.
 
 Every form but `--connect` reads `bell`, `modelServer` and `harnesses` from the project's `agentrite.json` at each
 start, before it asks the host's harnesses, Docker or npm anything. The image holds the harnesses that `harnesses`
@@ -957,10 +964,10 @@ after `--in-place COMMAND`, are the command's, and are passed on as they are.
 
 Before the command in the container starts, or the one of `--connect`, it exits with `2` for wrong arguments and with
 `1` for every other refusal or failure of its own: among them an `agentrite.json` at fault, a unit that names no
-branch, a unit given by a number that names no branch and that is cancelled on the default branch, a run under way
-for the branch or none to connect to, a clone not yet brought back, a project's compose file that gives a version
-of another shape or sets what is the kit's to set, the host's OpenCode configuration at fault, and Docker or npm that
-cannot be asked. A Docker
+branch, a unit given by a number that names no branch and that is draft, implemented or cancelled on the default
+branch, a run under way for the branch or none to connect to, a clone not yet brought back, a project's compose file
+that gives a version of another shape or sets what is the kit's to set, the host's OpenCode configuration at fault,
+and Docker or npm that cannot be asked. A Docker
 command it runs before that which fails, as Compose reading the configuration or the build of the image, ends it with
 Docker's status, which it passes on. Once the command started, it passes on the command's status, as
 [Exit statuses](#exit-statuses) says. A unit run of a new clone that holds a `package-lock.json` installs the clone's
