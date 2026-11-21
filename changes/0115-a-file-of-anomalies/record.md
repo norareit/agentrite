@@ -78,3 +78,8 @@ counts, and an investigation of the occurrence it starts with. An occurrence is 
   `ANOMALIES.md` as the record gives it, and a row for it in the tables of `CONTRIBUTING.md` and `AGENTS.md`. `files` of
   `package.json` is unchanged. `npm test` reported 1911 passed, 0 failed, 34 skipped on the tree before this commit,
   whose only other changes are this record. The status is `in-progress`
+- 2026-11-21T11:56:04Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, made a full review of unit 0115 at `b8e79d0`
+  against merge base `5897931`. No findings on any of the three axes. Saved the review in
+  `.reviews/0115-a-file-of-anomalies/review-20261121-round1.md`. `npm test`: 1911 passed, 0 failed, 34 skipped;
+  `npm run check-changes` and `git diff --check` passed. Docker-dependent tests and the other project's source
+  artifacts could not be verified. The status stays `in-progress`
