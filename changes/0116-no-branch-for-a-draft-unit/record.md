@@ -79,5 +79,11 @@ timestamp: 2026-11-21T12:04:21Z
 - 2026-11-21T13:21:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm test` on `9d5827f`: 1951
   tests, 1917 pass, 0 fail, 34 skipped. Not checked: the tests that need Docker beyond what that run executed, and the
   end-to-end run of the reporting project. `npm run check-changes` is run after the commit that holds this entry
+- 2026-11-21T12:54:28Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
+  `0116-no-branch-for-a-draft-unit` at `dc65325` in full against merge base `4b17595` with `origin/master`.
+  Returned non-blocking P1 in `.reviews/0116-no-branch-for-a-draft-unit/review-2026-11-21T125428Z.md`.
+  Independently ran `npm test`: 1951 tests, 1917 pass, 0 fail, 34 skipped; `npm run check-changes` and
+  `git diff --check` passed. Could not verify Docker-dependent tests or the reporting project's end-to-end run.
+  The status stays `in-progress`
 
 ## Amendments
