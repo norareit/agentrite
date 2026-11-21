@@ -40,7 +40,8 @@
 #   fast-forwards the host's branch when it can, and removes the clone unless it holds
 #   work the host does not. A clone that is still there is resumed. A unit given by its
 #   number that has no branch yet gets one first, cut from the default branch, which
-#   is the one the project's agentrite.json names. The git work is in
+#   is the one the project's agentrite.json names, and none when the unit is draft,
+#   implemented or cancelled there. The git work is in
 #   container/unit-clone.sh. With --variant the run is of the unit's variant: the
 #   branch is the unit's followed by two hyphens and the variant's name, so a variant
 #   has the container, the clone and the bringing back of a unit run of its own, and
@@ -109,10 +110,11 @@
 #   UNIT             mount a clone of the unit's branch at /work: a local branch by its
 #                    name, or by a unit's number that one branch name holds. A number
 #                    that no branch holds and that is a unit of changes/ on the default
-#                    branch gets its branch first, cut from the head of that branch
+#                    branch gets its branch first, cut from the head of that branch,
+#                    and none when it is draft, implemented or cancelled there
 #   --variant NAME   run a variant of the unit: a unit run of the branch <the unit's
-#                    branch>--NAME, cut from the host's branch of the unit when it does not
-#                    exist, in a container and on a clone of its own. Given before the
+#                    branch>--NAME, cut from the host's branch of the unit as it is when it
+#                    does not exist, in a container and on a clone of its own. Given before the
 #                    unit or right after it, optional, and not with --in-place or --workdir
 #   --in-place       mount the project root at /work, as it is
 #   --workdir DIR    mount DIR at /work, as it is
@@ -161,9 +163,11 @@ if [ "$sandbox_only" -eq 0 ]; then
   run_forms=(
     "  sandbox.sh UNIT [--variant NAME] [COMMAND...]"
     "                                       a clone of the unit's branch, named by its ID or its branch."
-    "                                       An ID with no branch gets one, cut from the default branch"
+    "                                       An ID with no branch gets one, cut from the default branch once"
+    "                                       the unit is approved there. A draft unit gets none, nor does an"
+    "                                       implemented one: further work on it is a new unit."
     "                                       With --variant, a clone of the branch of that variant of the unit,"
-    "                                       cut from the unit's branch when it does not exist"
+    "                                       cut from the unit's branch as it is when it does not exist"
   )
   connect_forms=(
     "Or run a command beside the one of a unit's run that is under way, which mounts nothing:"

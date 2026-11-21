@@ -1561,7 +1561,8 @@ function unitStatus(root, directory) {
 }
 
 /**
- * Throws unless the unit's record says that it is approved.
+ * Throws unless the unit's record says that it is approved. The refusal of a draft unit also says how to approve it and
+ * how to recover a checkout that holds the record from before the approval.
  *
  * @param {string} root
  * @param {string} directory
@@ -1569,7 +1570,18 @@ function unitStatus(root, directory) {
 function checkApproved(root, directory) {
   const status = unitStatus(root, directory);
   if (status === 'approved') return;
-  throw new Error(`the unit changes/${directory}/ is ${status}, and a run starts the work of an approved unit`);
+  const refusal = `the unit changes/${directory}/ is ${status}, and a run starts the work of an approved unit`;
+  if (status !== 'draft') throw new Error(refusal);
+  throw new Error(
+    [
+      `${refusal}.`,
+      'The record read in this checkout is draft. A unit not yet approved is approved on the default branch, with ' +
+        `npx agentrite approve ${directory}.`,
+      'When the unit is approved on the default branch already, this checkout holds the record from before the ' +
+        'approval: merge the default branch into the branch the run is on, on the host, and run again.',
+      'A clone the sandbox kept is resumed as it is, so bring its work back to the host first.',
+    ].join('\n'),
+  );
 }
 
 /**

@@ -160,6 +160,13 @@ test('the wrapper lists the branches an ID names when there are several, and sta
   assert.equal(existsSync(state), false);
 });
 
+const formLines = [
+  'An ID with no branch gets one, cut from the default branch once',
+  'the unit is approved there. A draft unit gets none, nor does an',
+  'implemented one: further work on it is a new unit.',
+  "cut from the unit's branch as it is when it does not exist",
+];
+
 for (const unit of ['claude', 'feature-0031-cut-me']) {
   test(
     `the wrapper says that ${unit} names no branch and that a number gets one cut, and starts nothing`,
@@ -177,7 +184,7 @@ for (const unit of ['claude', 'feature-0031-cut-me']) {
         result.stderr,
       );
       assert.doesNotMatch(result.stderr, /master/);
-      assert.ok(result.stderr.includes('An ID with no branch gets one, cut from the default branch\n'), result.stderr);
+      for (const line of formLines) assert.ok(result.stderr.includes(`${line}\n`), result.stderr);
       assert.doesNotMatch(result.stderr, /made on the host/);
       assert.match(result.stderr, /sandbox\.sh --in-place /);
       assert.deepEqual(dockerCalls(), []);
@@ -268,7 +275,7 @@ test(
   },
 );
 
-for (const status of ['draft', 'approved', 'in-progress', 'implemented']) {
+for (const status of ['approved', 'in-progress']) {
   test(`the wrapper cuts feature-${cutDirectory} from master for a unit that is ${status} there`, (testContext) => {
     const host = setUp(testContext);
     const { run, git } = host;
@@ -355,8 +362,31 @@ test('a second run of a unit whose branch was cut runs that branch, and cuts not
   assert.equal(git('for-each-ref'), refs);
 });
 
+const draftSays = [
+  /^sandbox\.sh: changes\/0031-cut-me is draft on master and not approved, so no branch is cut for it\.$/m,
+  /^Approve it on master with 'npx agentrite approve 0031-cut-me', and run the same command again\.$/m,
+];
+const implementedSays = [
+  /^sandbox\.sh: changes\/0031-cut-me is implemented on master, so its work is done and no branch is cut for it\.$/m,
+  /^Undoing or correcting implemented work is a new unit that names 0031-cut-me in supersedes\.$/m,
+];
+
 // What makes the wrapper cut nothing, each with what its message must name.
 const noCut = [
+  {
+    name: 'a unit that is draft on master',
+    unit: '0031',
+    arrange: (host) => commitUnit(host, 'kind: feature\nstatus: draft\ntimestamp: 2026-10-05T13:45:27Z'),
+    says: draftSays,
+  },
+  {
+    name: 'a unit that is implemented on master',
+    unit: '0031',
+    arrange: (host) => {
+      commitUnit(host, 'kind: feature\nstatus: implemented\ntimestamp: 2026-10-05T13:45:27Z');
+    },
+    says: implementedSays,
+  },
   {
     name: 'digits master holds no unit of',
     unit: '0099',
@@ -732,7 +762,7 @@ test('the forms the wrapper lists say the default branch, and are printed withou
   const result = run([]);
 
   assert.equal(result.status, 2);
-  assert.ok(result.stderr.includes('An ID with no branch gets one, cut from the default branch\n'), result.stderr);
+  for (const line of formLines) assert.ok(result.stderr.includes(`${line}\n`), result.stderr);
   assert.doesNotMatch(result.stderr, /master|agentrite\.json/);
 });
 
@@ -1813,6 +1843,65 @@ test('--variant for a unit with no branch cuts the unit and then the variant, an
     host.dockerCalls(),
     variantRun(host, `${cut}--opus`, join(state, 'agentrite', 'project-sandbox', `${cut}--opus`)),
   );
+});
+
+for (const [status, says] of [
+  ['draft', draftSays],
+  ['implemented', implementedSays],
+]) {
+  test(`--variant for a unit that is ${status} on master cuts neither the unit nor the variant`, (testContext) => {
+    const host = setUpWithBuildDue(testContext);
+    const { run, git, dockerCalls, npmCalls } = host;
+    commitUnit(host, `kind: feature\nstatus: ${status}\ntimestamp: 2026-10-05T13:45:27Z`);
+    const refs = git('for-each-ref');
+
+    const result = run(['0031', '--variant', 'opus', 'echo', 'hi']);
+
+    assert.equal(result.status, 1, result.stderr);
+    assert.match(result.stderr, says[0]);
+    assert.equal(git('for-each-ref'), refs);
+    assert.deepEqual(dockerCalls(), []);
+    assert.deepEqual(npmCalls(), []);
+  });
+}
+
+test('a unit approved on master after a refused cut gets its branch cut with the approval on it', (testContext) => {
+  const host = setUp(testContext);
+  const { state, run, git } = host;
+  commitUnit(host, 'kind: feature\nstatus: draft\ntimestamp: 2026-10-05T13:45:27Z');
+  const refs = git('for-each-ref');
+  const refused = run(['0031', 'echo', 'hi']);
+  assert.equal(refused.status, 1, refused.stderr);
+  assert.equal(git('for-each-ref'), refs);
+  const approval = commitUnit(host, 'kind: feature\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z');
+  host.agent('git show HEAD:changes/0031-cut-me/record.md > ../record-seen');
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  const cutLine = `sandbox.sh: cut feature-0031-cut-me from master at ${approval}, for changes/0031-cut-me.\n`;
+  assert.ok(result.stderr.includes(cutLine), result.stderr);
+  assert.equal(git('rev-parse', 'refs/heads/feature-0031-cut-me'), git('rev-parse', 'refs/heads/master'));
+  const seen = readFileSync(join(state, 'agentrite', 'project-sandbox', 'record-seen'), 'utf-8');
+  assert.match(seen, /^status: approved$/m);
+});
+
+test('a branch cut before the approval is run as it is, and is not moved to the approval', (testContext) => {
+  const host = setUp(testContext);
+  const { state, run, git } = host;
+  commitUnit(host, 'kind: feature\nstatus: draft\ntimestamp: 2026-10-05T13:45:27Z');
+  git('branch', 'feature-0031-cut-me', 'master');
+  commitUnit(host, 'kind: feature\nstatus: approved\ntimestamp: 2026-10-05T13:45:27Z');
+  const refs = git('for-each-ref');
+  host.agent('git show HEAD:changes/0031-cut-me/record.md > ../record-seen');
+
+  const result = run(['0031', 'echo', 'hi']);
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.doesNotMatch(result.stderr, /cut /);
+  assert.equal(git('for-each-ref'), refs);
+  const seen = readFileSync(join(state, 'agentrite', 'project-sandbox', 'record-seen'), 'utf-8');
+  assert.match(seen, /^status: draft$/m);
 });
 
 test('a build that fails after a variant was cut leaves both branches cut', (testContext) => {

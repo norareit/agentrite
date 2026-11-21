@@ -22,8 +22,9 @@
 # it has not committed do not matter and are left as they are. Says on standard error
 # what it cut, because standard output is the branch's name. Says why and fails
 # otherwise, with 1 when the default branch holds no such unit and 3 when it holds one
-# that no branch can be cut for. A unit that is cancelled on the default branch is one of
-# those, and gets no branch.
+# that no branch can be cut for. A unit that is draft, implemented or cancelled on the
+# default branch is one of those, and gets no branch: a draft unit gets one once it is
+# approved there, and the work of an implemented or a cancelled one is done or dropped.
 cut_unit_branch() {
   local root="$1" unit="$2" default_branch="$3" directories directory record line kind="" status="" prefix name
   local base="refs/heads/$default_branch"
@@ -60,11 +61,25 @@ cut_unit_branch() {
       break
     fi
   done < <(git -C "$root" show "$base:$record")
-  if [ "$status" = "cancelled" ]; then
-    echo "sandbox.sh: changes/$directory is cancelled on $default_branch, so no branch is cut for it." >&2
-    echo "Taking its idea up again is a new unit that names $directory in supersedes." >&2
-    return 3
-  fi
+  case "$status" in
+    draft)
+      echo "sandbox.sh: changes/$directory is draft on $default_branch and not approved, so no branch is cut" \
+        "for it." >&2
+      echo "Approve it on $default_branch with 'npx agentrite approve $directory', and run the same command again." >&2
+      return 3
+      ;;
+    implemented)
+      echo "sandbox.sh: changes/$directory is implemented on $default_branch, so its work is done and no branch is" \
+        "cut for it." >&2
+      echo "Undoing or correcting implemented work is a new unit that names $directory in supersedes." >&2
+      return 3
+      ;;
+    cancelled)
+      echo "sandbox.sh: changes/$directory is cancelled on $default_branch, so no branch is cut for it." >&2
+      echo "Taking its idea up again is a new unit that names $directory in supersedes." >&2
+      return 3
+      ;;
+  esac
   case "$kind" in
     feature) prefix="feature" ;;
     bug) prefix="bugfix" ;;

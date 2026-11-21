@@ -2789,6 +2789,16 @@ const OPTED_OUT =
   'the project opted out of the orchestrator: orchestrator in agentrite.json is false. ' +
   'To use it, set orchestrator to the path of a definition, as node_modules/agentrite/orchestrator.json';
 
+// The refusal of a unit that is draft: the message of every status, and what a checkout from before the approval needs.
+const DRAFT_REFUSAL = [
+  `the unit changes/${UNIT}/ is draft, and a run starts the work of an approved unit.`,
+  'The record read in this checkout is draft. A unit not yet approved is approved on the default branch, with ' +
+    `npx agentrite approve ${UNIT}.`,
+  'When the unit is approved on the default branch already, this checkout holds the record from before the ' +
+    'approval: merge the default branch into the branch the run is on, on the host, and run again.',
+  'A clone the sandbox kept is resumed as it is, so bring its work back to the host first.',
+].join('\n');
+
 test('the refusals of requirement 11 exit 1, start nothing and make no .orchestrator', (testContext) => {
   const settings = JSON.parse(SETTINGS);
   const optOut = ({ write }) => write('agentrite.json', JSON.stringify({ ...settings, orchestrator: false }));
@@ -2829,7 +2839,8 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
       'the digits 0029 open more than one directory of changes/, so give the unit by its name:\n' +
         `- changes/0029-another\n- changes/${UNIT}`,
     ],
-    ...['draft', 'in-progress', 'implemented', 'cancelled'].map((name) => [
+    [status(APPROVED.replace('approved', 'draft')), ['0029'], DRAFT_REFUSAL],
+    ...['in-progress', 'implemented', 'cancelled'].map((name) => [
       status(APPROVED.replace('approved', name)),
       ['0029'],
       `the unit changes/${UNIT}/ is ${name}, and a run starts the work of an approved unit`,
@@ -2843,6 +2854,60 @@ test('the refusals of requirement 11 exit 1, start nothing and make no .orchestr
   ]) {
     refused(testContext, prepare, args, message);
   }
+});
+
+// A git of the test, with an identity, in `base`.
+function gitIdentity(base) {
+  return (...args) => {
+    const identity = ['-c', 'user.name=Test', '-c', 'user.email=test@example.com'];
+    const result = spawnSync('git', [...identity, ...args], { cwd: base, encoding: 'utf-8' });
+    assert.equal(result.status, 0, result.stderr);
+    return result.stdout.trim();
+  };
+}
+
+test('the refusal of a draft unit is the same on a branch, on a detached HEAD and outside git', (testContext) => {
+  const draft = ({ write }) => write(`changes/${UNIT}/record.md`, APPROVED.replace('approved', 'draft'));
+  const onTryBranch = (context) => {
+    draft(context);
+    onBranch(context.base, TRY_BRANCH);
+  };
+  const detached = (context) => {
+    draft(context);
+    const git = gitIdentity(context.base);
+    git('init', '--quiet');
+    git('add', 'changes');
+    git('commit', '--quiet', '--message', 'the draft');
+    git('checkout', '--quiet', '--detach', git('rev-parse', 'HEAD'));
+  };
+  refused(testContext, onTryBranch, ['0029'], DRAFT_REFUSAL);
+  refused(testContext, detached, ['0029'], DRAFT_REFUSAL);
+  refused(testContext, draft, ['0029'], DRAFT_REFUSAL);
+});
+
+test('a branch cut before the approval, behind master, is refused with the draft refusal', (testContext) => {
+  const { base, write, agentrite, calls } = project(testContext);
+  const git = gitIdentity(base);
+  git('init', '--quiet', '--initial-branch=master');
+  write(`changes/${UNIT}/record.md`, APPROVED.replace('approved', 'draft'));
+  git('add', 'changes');
+  git('commit', '--quiet', '--message', 'the draft');
+  git('branch', TRY_BRANCH);
+  write(`changes/${UNIT}/record.md`, APPROVED);
+  git('add', 'changes');
+  git('commit', '--quiet', '--message', 'the approval');
+  git('checkout', '--quiet', TRY_BRANCH);
+  const refs = git('for-each-ref');
+  const head = git('rev-parse', 'HEAD');
+
+  const result = agentrite('orchestrate', '0029');
+
+  assert.equal(result.status, 1, result.stderr);
+  assert.equal(result.stderr, `agentrite: ${DRAFT_REFUSAL}\n`);
+  assert.equal(calls().length, 0);
+  assert.ok(!existsSync(join(base, '.orchestrator')));
+  assert.equal(git('rev-parse', 'HEAD'), head);
+  assert.equal(git('for-each-ref'), refs);
 });
 
 // R25: the branch and the variant of a run
