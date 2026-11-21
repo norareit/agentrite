@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-21T11:31:26Z
 ---
 
@@ -69,3 +69,4 @@ counts, and an investigation of the occurrence it starts with. An occurrence is 
   read from `.orchestrator/0029-choose-the-voice/2026-11-20T15:22:52Z/` of aloudrite-intellij: `state.json` ended
   with status 3 on a block that is not JSON, and the stray token stands in `02-reviewer.followed.jsonl` as the
   harness printed it. The status is `draft`
+- 2026-11-21T11:46:20Z [human] approved the record. The status is `approved`
