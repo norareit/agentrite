@@ -70,3 +70,7 @@ counts, and an investigation of the occurrence it starts with. An occurrence is 
   with status 3 on a block that is not JSON, and the stray token stands in `02-reviewer.followed.jsonl` as the
   harness printed it. The status is `draft`
 - 2026-11-21T11:46:20Z [human] approved the record. The status is `approved`
+- 2026-11-21T11:52:43Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on `task-0115-a-file-of-anomalies` at
+  `5897931`. The unit needs no plan: the record gives the file's whole content, and the work is that file and one
+  row each in the tables of `CONTRIBUTING.md` and `AGENTS.md`, checked by `npm test` and `npm run check-changes`.
+  The status stays `approved`
