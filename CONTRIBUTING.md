@@ -23,6 +23,7 @@ What the package holds is in "What is here" of `README.md`. The repository holds
 | `CONTRIBUTING.md`             | This document                                                                        |
 | `changes/`                    | The kit's own change units                                                           |
 | `pointers/`                   | The package that holds the name `agentrite-roles`                                    |
+| `ANOMALIES.md`                | The anomalies of harnesses and models that were seen, counted by kind                |
 | `AGENTS.md`                   | This repository's own instructions for agents                                        |
 | `CLAUDE.md`                   | The bridge that imports the kit's instruction files and `AGENTS.md` into Claude Code |
 | `opencode.json`               | The configuration that loads the kit's instruction files into OpenCode               |

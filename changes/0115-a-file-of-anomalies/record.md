@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-21T11:31:26Z
 ---
 
@@ -74,3 +74,7 @@ counts, and an investigation of the occurrence it starts with. An occurrence is 
   `5897931`. The unit needs no plan: the record gives the file's whole content, and the work is that file and one
   row each in the tables of `CONTRIBUTING.md` and `AGENTS.md`, checked by `npm test` and `npm run check-changes`.
   The status stays `approved`
+- 2026-11-21T12:10:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work and built it:
+  `ANOMALIES.md` as the record gives it, and a row for it in the tables of `CONTRIBUTING.md` and `AGENTS.md`. `files` of
+  `package.json` is unchanged. `npm test` reported 1911 passed, 0 failed, 34 skipped on the tree before this commit,
+  whose only other changes are this record. The status is `in-progress`

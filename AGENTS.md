@@ -39,6 +39,7 @@ Each document answers the question its reader brings to it, and holds what answe
 | `SETUP.md`        | How do I install, configure and update the kit?          | Installing it, the git hooks, the project's settings, replacing and adding roles, updating                                             |
 | `SANDBOX.md`      | How do I run an agent in the sandbox?                    | What a developer does with the sandbox and meets in it, by what they are doing                                                         |
 | `CONTRIBUTING.md` | How do I work on the kit itself?                         | This repository's own commands, tests, copy of the kit and sandbox, what it holds besides the package, and what adding a harness takes |
+| `ANOMALIES.md`    | Which anomalies were seen, and how often?                | A section per kind, with its count and a row per occurrence                                                                            |
 
 They are kept as follows.
 
