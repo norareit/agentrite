@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-11-21T12:04:21Z
 ---
 
@@ -58,5 +58,6 @@ timestamp: 2026-11-21T12:04:21Z
   progress, since R5 keeps the cut for `in-progress`. On the human's request the unit's commits on `master` were
   squashed into one, and the names of the commits the squash removed are taken out of the entries above. The status
   stays `draft`
+- 2026-11-21T12:32:49Z [human] approved the spec. The status is `approved`
 
 ## Amendments
