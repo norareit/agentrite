@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-11-21T12:04:21Z
 ---
 
@@ -65,5 +65,19 @@ timestamp: 2026-11-21T12:04:21Z
   refuses `draft` and `implemented` beside `cancelled` with `3`, which the wrapper turns into `1` without the forms,
   a longer message of `checkApproved` in `scripts/agentrite.mjs` for `draft` alone, the forms and comments of
   `container/sandbox.sh`, and `SANDBOX.md` and `COMMANDS.md`. BTR1 is not taken. The status stays `approved`
+- 2026-11-21T12:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a step of the orchestrator, on
+  `bugfix-0116-no-branch-for-a-draft-unit`, began the work from `plan.md`. The status is `in-progress`
+- 2026-11-21T13:20:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, in a step of the orchestrator, on
+  `bugfix-0116-no-branch-for-a-draft-unit`, wrote the regression tests first and saw the 8 new or changed ones fail,
+  then made the fix, in `e9773fe` and `9d5827f`: a `case` on the status in `cut_unit_branch` that refuses `draft`,
+  `implemented` and `cancelled` with `3`, the four-line refusal of `checkApproved` for `draft`, and the forms, the
+  header comments, `SANDBOX.md` and `COMMANDS.md`. BTR1 is not taken. Two small departures, neither changing the spec:
+  the row of the form with `UNIT` in the table at the top of `COMMANDS.md` reads "Sandbox on a unit's branch, cut if
+  approved or in progress", since a test of `tests/document-links.test.mjs` limits that column to 60 characters, and
+  the forms the wrapper prints say the missing variant's branch is cut "as it is" in the line the plan names, with the
+  draft and implemented lines added as three lines to keep each within the width of the longest line there before
+- 2026-11-21T13:21:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm test` on `9d5827f`: 1951
+  tests, 1917 pass, 0 fail, 34 skipped. Not checked: the tests that need Docker beyond what that run executed, and the
+  end-to-end run of the reporting project. `npm run check-changes` is run after the commit that holds this entry
 
 ## Amendments
