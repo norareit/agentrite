@@ -59,5 +59,11 @@ timestamp: 2026-11-21T12:04:21Z
   squashed into one, and the names of the commits the squash removed are taken out of the entries above. The status
   stays `draft`
 - 2026-11-21T12:32:49Z [human] approved the spec. The status is `approved`
+- 2026-11-21T12:39:02Z [Claude Code, anthropic/claude-opus-5-5] as the planner, in a step of the orchestrator, on
+  `bugfix-0116-no-branch-for-a-draft-unit` at `4b17595`, wrote `plan.md`, since the fix takes more than a couple of
+  steps: regression tests first, then a `case` on the status in `cut_unit_branch` of `container/unit-clone.sh` that
+  refuses `draft` and `implemented` beside `cancelled` with `3`, which the wrapper turns into `1` without the forms,
+  a longer message of `checkApproved` in `scripts/agentrite.mjs` for `draft` alone, the forms and comments of
+  `container/sandbox.sh`, and `SANDBOX.md` and `COMMANDS.md`. BTR1 is not taken. The status stays `approved`
 
 ## Amendments
