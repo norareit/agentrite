@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: approved
+status: in-progress
 timestamp: 2026-11-22T12:49:07Z
 ---
 
@@ -83,5 +83,8 @@ timestamp: 2026-11-22T12:49:07Z
   every task traced to R1 to R21. `extra-roles/spec-reviewer.md`, which says that the human decides whether a finding
   of a spec review is accepted, is left as it is, since it concerns a draft spec and is not the kit's. The status
   stays `approved`
+- 2026-11-22T14:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on
+  `feature-0117-set-a-unit-implemented-by-a-command`, began the work. `wc -w process.md` prints `2406` at `0a84557`,
+  the commit the branch was cut from. The status is `in-progress`
 
 ## Amendments

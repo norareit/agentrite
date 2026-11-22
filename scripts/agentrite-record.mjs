@@ -1,5 +1,8 @@
 import { fieldFrom } from './check-changes.mjs';
 
+/** The width an entry of a record is wrapped at, as the line limit of this repository's documents. */
+const LINE_WIDTH = 120;
+
 /** The prefix of the commits of each kind of unit, as `process.md` gives them. */
 const PREFIXES = { feature: 'feature', bug: 'bugfix', task: 'task' };
 
@@ -81,6 +84,31 @@ function endedAt(lines, index, ending) {
 }
 
 /**
+ * The entry wrapped at 120 characters, at spaces, with each line after the first indented by two spaces. A word
+ * longer than a line stands alone on its line, unbroken.
+ *
+ * @param {string} entry
+ * @returns {string[]}
+ */
+export function wrappedEntry(entry) {
+  /** @type {string[]} */
+  const lines = [];
+  let line = '';
+  for (const word of entry.split(' ')) {
+    if (line === '') {
+      line = lines.length === 0 ? word : `  ${word}`;
+    } else if (line.length + 1 + word.length <= LINE_WIDTH) {
+      line += ` ${word}`;
+    } else {
+      lines.push(line);
+      line = `  ${word}`;
+    }
+  }
+  lines.push(line);
+  return lines;
+}
+
+/**
  * The files `git status --porcelain=v1 -z --untracked-files=all --no-renames` printed, with the path from the project
  * root and how each differs from the commit checked out. `prefix` is what `git rev-parse --show-prefix` printed,
  * which the paths of status start with when the project is in a directory of a larger repository.
@@ -114,7 +142,7 @@ function stateOf(columns) {
 /**
  * @param {string} directory
  * @param {{ path: string, state: string }[]} files
- * @param {'approves' | 'cancels'} act what the human does, which the last line says they do to what is committed
+ * @param {'approves' | 'cancels' | 'completes'} act what the human does, which the last line says they do to what is committed
  * @returns {string}
  */
 export function uncommittedRefusal(directory, files, act) {

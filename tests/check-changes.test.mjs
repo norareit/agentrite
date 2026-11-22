@@ -9,6 +9,7 @@ import {
   findIncompletePlans,
   findSplitEntries,
   statusFrom,
+  untickedTaskCount,
 } from '../scripts/check-changes.mjs';
 import { installKit, kitSettingsText } from './installed-kit.mjs';
 import { temporaryDirectory } from './temporary-directory.mjs';
@@ -121,6 +122,11 @@ test('findFrozenViolations allows a unit that reaches cancelled on the branch', 
     ),
     [],
   );
+});
+
+test('untickedTaskCount counts the open tasks of a plan', () => {
+  assert.equal(untickedTaskCount('# Plan\n\nSome prose.\n\n- [x] done\n- [x] also done\n'), 0);
+  assert.equal(untickedTaskCount('- [ ] first\n- [x] second\n  - [ ] indented\n'), 2);
 });
 
 test('findIncompletePlans reports an implemented unit with an unticked task', () => {

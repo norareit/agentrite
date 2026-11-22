@@ -10,9 +10,6 @@ const CANCEL_OPTIONS = /** @type {const} */ ({ reason: { type: 'string' }, by: {
 /** What each option takes, as the line that says none was given names it. */
 const CANCEL_VALUES = { reason: 'a reason', by: 'a unit' };
 
-/** The width an entry of a record is wrapped at, as the line limit of this repository's documents. */
-const LINE_WIDTH = 120;
-
 /**
  * What `cancel` is given: the unit as it was given, the reason as `reasonText` makes it, and the unit by, or
  * `undefined` without `--by`. Throws the line that says what is wrong, a line feed and the form, for the entry point
@@ -101,31 +98,6 @@ export function reasonText(value) {
 export function cancellationEntry(instant, reason, byDirectory) {
   const by = byDirectory === undefined ? '' : ` The unit \`${byDirectory}\` did the work or made it moot.`;
   return `- ${instant} [human] cancelled the unit: ${reason}.${by} The status is \`cancelled\``;
-}
-
-/**
- * The entry wrapped at 120 characters, at spaces, with each line after the first indented by two spaces. A word
- * longer than a line stands alone on its line, unbroken.
- *
- * @param {string} entry
- * @returns {string[]}
- */
-export function wrappedEntry(entry) {
-  /** @type {string[]} */
-  const lines = [];
-  let line = '';
-  for (const word of entry.split(' ')) {
-    if (line === '') {
-      line = lines.length === 0 ? word : `  ${word}`;
-    } else if (line.length + 1 + word.length <= LINE_WIDTH) {
-      line += ` ${word}`;
-    } else {
-      lines.push(line);
-      line = `  ${word}`;
-    }
-  }
-  lines.push(line);
-  return lines;
 }
 
 /**

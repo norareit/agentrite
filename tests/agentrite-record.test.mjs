@@ -6,6 +6,7 @@ import {
   recordFields,
   uncommittedFiles,
   uncommittedRefusal,
+  wrappedEntry,
 } from '../scripts/agentrite-record.mjs';
 
 const RECORD = [
@@ -85,4 +86,41 @@ test('uncommittedRefusal ends by what the human does with what is committed', ()
       'The human cancels what is committed, so commit these files, or discard their changes, and run the command ' +
       'again',
   );
+});
+
+test('uncommittedRefusal says that the human completes what is committed', () => {
+  const files = [{ path: 'changes/0010-x/spec.md', state: 'changed' }];
+  assert.equal(
+    uncommittedRefusal('0010-x', files, 'completes'),
+    'changes/0010-x/ holds files that differ from the commit checked out:\n' +
+      '- changes/0010-x/spec.md: changed\n' +
+      'The human completes what is committed, so commit these files, or discard their changes, and run the command ' +
+      'again',
+  );
+});
+
+test('wrappedEntry keeps an entry that fits one line', () => {
+  assert.deepEqual(wrappedEntry('- a b c'), ['- a b c']);
+});
+
+test('wrappedEntry wraps at 120 characters and indents each line after the first by two spaces', () => {
+  const words = Array.from({ length: 70 }, (_, index) => `w${index}`);
+  const lines = wrappedEntry(`- ${words.join(' ')}`);
+  assert.equal(lines.length, 3);
+  for (const line of lines) assert.ok(line.length <= 120, line);
+  assert.equal(lines[0].startsWith('- w0 '), true);
+  for (const line of lines.slice(1)) assert.match(line, /^ {2}\S/);
+  assert.equal(lines.join(' ').replaceAll(/ {2,}/g, ' '), `- ${words.join(' ')}`);
+});
+
+test('wrappedEntry fills a line to exactly 120 characters', () => {
+  const full = `- ${'a'.repeat(115)} bb`;
+  assert.equal(full.length, 120);
+  assert.deepEqual(wrappedEntry(full), [full]);
+  assert.deepEqual(wrappedEntry(`${full} cc`), [full, '  cc']);
+});
+
+test('wrappedEntry leaves a word longer than a line alone and unbroken', () => {
+  const long = 'x'.repeat(130);
+  assert.deepEqual(wrappedEntry(`- one ${long} two`), ['- one', `  ${long}`, '  two']);
 });

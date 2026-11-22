@@ -44,6 +44,14 @@ export function findFrozenViolations(base, head) {
 const UNTICKED_TASK = /^\s*- \[ \]/gm;
 
 /**
+ * @param {string} plan the text of a `plan.md`
+ * @returns {number} how many tasks of the plan are not ticked
+ */
+export function untickedTaskCount(plan) {
+  return plan.match(UNTICKED_TASK)?.length ?? 0;
+}
+
+/**
  * A unit reaches implemented only when its plan is complete. A plan with no checkboxes at all passes: a project that
  * adopted this process later may hold plans written as prose, and inventing a task breakdown for them would be
  * fabrication.
@@ -57,7 +65,7 @@ export function findIncompletePlans(head) {
   for (const [unit, documents] of Object.entries(head)) {
     if (documents.status !== 'implemented' || documents.plan === undefined) continue;
 
-    const open = documents.plan.match(UNTICKED_TASK)?.length ?? 0;
+    const open = untickedTaskCount(documents.plan);
     if (open > 0) {
       violations.push(`${unit}: plan.md has ${open} unticked task${open === 1 ? '' : 's'}`);
     }

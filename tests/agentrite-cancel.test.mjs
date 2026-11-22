@@ -11,7 +11,6 @@ import {
   cancellationMessage,
   cancellationRefusal,
   parseCancelArgs,
-  wrappedEntry,
 } from '../scripts/agentrite-cancel.mjs';
 import { installKit, kitSettingsText } from './installed-kit.mjs';
 import { commitRecord, environment, git, installHook, write } from './record-command.mjs';
@@ -66,32 +65,6 @@ test('cancellationEntry gives the entry without and with the unit by', () => {
     `- ${INSTANT} [human] cancelled the unit: Done elsewhere. The unit \`0042-x\` did the work or made it moot. ` +
       'The status is `cancelled`',
   );
-});
-
-test('wrappedEntry keeps an entry that fits one line', () => {
-  assert.deepEqual(wrappedEntry('- a b c'), ['- a b c']);
-});
-
-test('wrappedEntry wraps at 120 characters and indents each line after the first by two spaces', () => {
-  const words = Array.from({ length: 70 }, (_, index) => `w${index}`);
-  const lines = wrappedEntry(`- ${words.join(' ')}`);
-  assert.equal(lines.length, 3);
-  for (const line of lines) assert.ok(line.length <= 120, line);
-  assert.equal(lines[0].startsWith('- w0 '), true);
-  for (const line of lines.slice(1)) assert.match(line, /^ {2}\S/);
-  assert.equal(lines.join(' ').replaceAll(/ {2,}/g, ' '), `- ${words.join(' ')}`);
-});
-
-test('wrappedEntry fills a line to exactly 120 characters', () => {
-  const full = `- ${'a'.repeat(115)} bb`;
-  assert.equal(full.length, 120);
-  assert.deepEqual(wrappedEntry(full), [full]);
-  assert.deepEqual(wrappedEntry(`${full} cc`), [full, '  cc']);
-});
-
-test('wrappedEntry leaves a word longer than a line alone and unbroken', () => {
-  const long = 'x'.repeat(130);
-  assert.deepEqual(wrappedEntry(`- one ${long} two`), ['- one', `  ${long}`, '  two']);
 });
 
 const RECORD = [

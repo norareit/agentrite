@@ -146,15 +146,15 @@ so R11 leaves it as it is.
 
 ### What is shared, moved
 
-- [ ] Move `wrappedEntry` and `LINE_WIDTH` to `scripts/agentrite-record.mjs`, import it in
+- [x] Move `wrappedEntry` and `LINE_WIDTH` to `scripts/agentrite-record.mjs`, import it in
   `scripts/agentrite-cancel.mjs` and `scripts/agentrite.mjs` from there, and move its four tests to
   `tests/agentrite-record.test.mjs` (R15)
-- [ ] Give `uncommittedRefusal` and `checkCommitted` the `act` `completes`, and add a case to
+- [x] Give `uncommittedRefusal` and `checkCommitted` the `act` `completes`, and add a case to
   `tests/agentrite-record.test.mjs` that its last line reads `The human completes what is committed, ...` (R14)
-- [ ] Write a test in `tests/check-changes.test.mjs` that `untickedTaskCount` gives 0 for a plan of ticked tasks and
+- [x] Write a test in `tests/check-changes.test.mjs` that `untickedTaskCount` gives 0 for a plan of ticked tasks and
   of prose, and 2 for two open tasks of which one is indented; then export `untickedTaskCount` from
   `scripts/check-changes.mjs` and have `findIncompletePlans` call it (R14)
-- [ ] Run `npm test`, which passes with the moved tests
+- [x] Run `npm test`, which passes with the moved tests
 
 ### The forms of the record
 

@@ -43,9 +43,8 @@ import {
   cancellationMessage,
   cancellationRefusal,
   parseCancelArgs,
-  wrappedEntry,
 } from './agentrite-cancel.mjs';
-import { recordFields, uncommittedFiles, uncommittedRefusal } from './agentrite-record.mjs';
+import { recordFields, uncommittedFiles, uncommittedRefusal, wrappedEntry } from './agentrite-record.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
 import { HARNESS_NAMES, HARNESSES, harnessNamed, plannedFiles, wrapperDirectories } from './agentrite-harness.mjs';
 import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
@@ -1305,7 +1304,7 @@ function approvableRecord(root, directory) {
  * @param {string} root
  * @param {string} directory
  * @param {string} prefix
- * @param {'approves' | 'cancels'} act
+ * @param {'approves' | 'cancels' | 'completes'} act
  */
 function checkCommitted(root, directory, prefix, act) {
   const status = spawnSync(
