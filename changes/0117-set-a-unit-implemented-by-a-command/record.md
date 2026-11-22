@@ -78,5 +78,10 @@ timestamp: 2026-11-22T12:49:07Z
   the fourth spec review, which returned no findings. The commits of 0118 and 0119 now follow both. The names of the
   commits the fold removed are taken out of the entries above. The status stays `draft`
 - 2026-11-22T14:14:19Z [human] approved the spec. The status is `approved`
+- 2026-11-22T14:29:07Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `feature-0117-set-a-unit-implemented-by-a-command`, cut from `0a84557`, wrote `plan.md` against that tree, with
+  every task traced to R1 to R21. `extra-roles/spec-reviewer.md`, which says that the human decides whether a finding
+  of a spec review is accepted, is left as it is, since it concerns a draft spec and is not the kit's. The status
+  stays `approved`
 
 ## Amendments
