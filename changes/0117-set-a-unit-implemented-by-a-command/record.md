@@ -136,5 +136,12 @@ timestamp: 2026-11-22T12:49:07Z
 - 2026-11-22T23:31:14Z [human] decided the proposed decline of `S2`: to be
   fixed. The fix is `32e7a8e`, which holds the SVG generated on the host, recorded by the implementer on the human's
   message in the run's prompt
+- 2026-11-22T23:33:14Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at
+  `1f72cf2ae033da7f0ad0871bbc68c4c70a610093` as a delta review from `3b925b8`, for
+  `0117-set-a-unit-implemented-by-a-command`. Verified S1, S2 and C1 corrected; returned no new findings.
+  Blocking findings: none. The review is in
+  `.reviews/0117-set-a-unit-implemented-by-a-command/review-2026-11-22T233314Z.md`. Suite: 2021 passed, 0 failed,
+  34 skipped; the committed change check passed. Did not verify Docker-dependent tests, live harness handling of the
+  entry forms, or visual SVG rendering. The status stays `in-progress`
 
 ## Amendments
