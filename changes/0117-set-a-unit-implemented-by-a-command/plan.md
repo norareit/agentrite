@@ -178,27 +178,27 @@ so R11 leaves it as it is.
 
 ### The pure parts of the command
 
-- [ ] In a new `tests/agentrite-complete.test.mjs`, write unit tests of `parseCompleteArgs`: a unit given by its
+- [x] In a new `tests/agentrite-complete.test.mjs`, write unit tests of `parseCompleteArgs`: a unit given by its
   digits and by `changes/<name>/`; refused with the line and `COMPLETE_FORM`: no argument, two units, `--json`,
   `--`, `-x` (R12)
-- [ ] Write unit tests of `runOfBranch`: the unit's branch, a variant's, a variant whose name `VARIANT_PATTERN`
+- [x] Write unit tests of `runOfBranch`: the unit's branch, a variant's, a variant whose name `VARIANT_PATTERN`
   refuses, as `--Opus` and `--a--b` read whole after the unit's branch and `--`, another unit's branch, and the
   default branch; and of `branchRefusal` naming both branches (R13, R14)
-- [ ] Write unit tests of `statusRefusal` for `in-progress` and for each of `implemented`, `cancelled`, `draft`,
+- [x] Write unit tests of `statusRefusal` for `in-progress` and for each of `implemented`, `cancelled`, `draft`,
   `approved` and another status, each line holding what R14 says of it; and of `planRefusal` for a feature without a
   plan, a plan with one and with three open tasks, a bug and a task without one, and a complete plan (R14)
-- [ ] Write unit tests of `commitsNamed` for no line, one commit, a commit and a blob, and two commits; and of
+- [x] Write unit tests of `commitsNamed` for no line, one commit, a commit and a blob, and two commits; and of
   `filesOutside` for a change inside the unit only, one outside, both paths of a rename out of the unit, a project in a
   directory of a larger repository, and a file of another unit's directory (R14)
-- [ ] Write unit tests of `lastReview` and `decisionsRefusal`: no review in the run, while the other run has one;
+- [x] Write unit tests of `lastReview` and `decisionsRefusal`: no review in the run, while the other run has one;
   the last review of the habit before this unit after one in the form; the last review's blocking labels; a proposed
   decline undecided, decided before it was proposed, decided by the other variant, and decided after it by the same
   run; a decision `to be fixed` before the last review, which passes, and after it, which is refused; a decision
   `declined` after the last review, which passes; and the order of the refusals when several hold (R1, R6 to R9, R14)
-- [ ] Write unit tests of `completionEntry`, of `completedRecord` changing the `status` line alone of the front matter
+- [x] Write unit tests of `completionEntry`, of `completedRecord` changing the `status` line alone of the front matter
   and adding the entry after the last of `## Log`, of `completionMessage` for each kind, and of `completedLine`, with
   the texts of R15, R16 and R17
-- [ ] Create `scripts/agentrite-complete.mjs` with what the approach gives, and run its tests, which pass
+- [x] Create `scripts/agentrite-complete.mjs` with what the approach gives, and run its tests, which pass
 
 ### The command
 
