@@ -74,5 +74,12 @@ timestamp: 2026-11-22T12:55:15Z
   `650cd087f45d` on `master` as a delta from `37239a477e2a`. Checked F3, F4 and F8. Finding F9 is in
   `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T150806Z.md`. Did not independently verify the
   32-unit project sample or live harness handling of note-only responses
+- 2026-11-22T22:53:11Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `e8a03da`, revised
+  `spec.md` for F9 of `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T150806Z.md`, as the human
+  decided it, in the spec and with no text for it in the role files. The decision on a run made afterwards now tells
+  apart a record that names no commits or leaves out a file the run needs, which is missing proof and a finding of
+  R7, from a complete record whose run the reviewer cannot repeat for want of an environment, which it lists with
+  what it could not check and does not report as a finding. Its last sentence is finished. R7 agrees as it stands
+  and is not changed. The status stays `draft`
 
 ## Amendments

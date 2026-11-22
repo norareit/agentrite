@@ -126,13 +126,18 @@ than forbids it, as for 0117.
   or the commit before the fix, and the record names it, as "What you may claim" of the implementer's role file asks
   of every claim, so that the reviewer can repeat it. A run on an uncommitted tree was rejected, since nothing names
   that tree for the reviewer to rebuild
-* **A run made afterwards names both of its commits, and one the reviewer cannot repeat is not proof.** For a run on
+* **A run made afterwards names both of its commits, and a record that does not is missing proof.** For a run on
   the commit before the fix, the record names that commit and the commit the test files are taken from: the test and
   the files it needs, as a fixture or a helper. A later change to the test, as for a finding, is then a later commit
-  that a new run names. When the reviewer cannot reproduce the run from what the record names, as when setup fails
-  for a file left out, the run counts as not verified and is not proof, and the reviewer says so as it says what it
-  could not check, and reports the missing proof under R7. This is settled here and not in the role files: the
-  reviewer's role file already treats a record entry as a claim to verify, and says what it does with one it cannot
+  that a new run names. Two cases are told apart:
+    * a record that names no commits, or leaves out a file the run needs, so that setup fails when the run is
+      repeated from it, is missing proof. It is a finding of R7, which the implementer fixes by a run and a record
+      that name them
+    * a complete record whose run the reviewer cannot repeat for want of an environment, as Docker, is not a finding.
+      The reviewer lists it with what it could not check, as "What you read" of its role file already has it do
+
+  This is settled here and not in the role files: the reviewer's role file already treats a record entry as a claim
+  to verify, and says what it does with one it cannot settle, and R7 already makes missing proof a finding
 * **A test found during the work is work not in the plan.** The implementer's role file already has that work added to
   `plan.md` and logged, which keeps the plan a true map of what was built. Naming the test there as welcome, rather
   than as a departure, is all this unit adds to it. The reviewer tells it from a late planned test by the plan: the
