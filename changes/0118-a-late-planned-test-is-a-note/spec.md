@@ -24,12 +24,15 @@ order is one way to show it, not the thing that is checked.
 
 The default definition of the orchestrator, `orchestrator.json`, repeats the implementer and the reviewer `until`
 `"no-findings"`, which holds only when the review's outcome has no finding at all, blocking or not. A finding that
-never blocks still goes back to the implementer in the next round, and one it cannot fix is proposed for declining.
+never blocks still goes back to the implementer in the next round to be applied, and one it cannot apply it proposes
+to decline, which stops the run.
 
 The human is concerned that the kit's instructions keep growing. `process.md` and the standards are read by every
-session of every project. At `ed8c644`, `wc -w` in the root of this repository prints `2406` for `process.md`,
-`1205` for `standards.md`, `963` for `roles/implementer.md`, `2012` for `roles/reviewer.md` and `686` for
-`roles/planner.md`.
+session of every project, and the role files by every session of their role. At `ed8c644`, `wc -w` in the root of
+this repository prints `2406` for `process.md`, `1205` for `standards.md`, `963` for `roles/implementer.md`, `2012`
+for `roles/reviewer.md` and `686` for `roles/planner.md`. The aim is that `process.md` and the standards do not
+change in this unit, and that the role files grow by no more than the change needs. The human weighs a growth rather
+than forbids it, as for 0117.
 
 ## Requirements
 
@@ -77,9 +80,12 @@ session of every project. At `ed8c644`, `wc -w` in the root of this repository p
    `process.md` and `standards.md` are not changed by this unit: the bullet of `process.md` on `plan.md`, with its
    ordered tasks, tests first, agrees with R1 and R8 as it stands, and the "Testing" section of the standards states
    no order
-10. Once the unit is done, `wc -w` prints for `process.md` and `standards.md` the count it prints at the commit the
-    unit's branch is cut from, which at `ed8c644` is `2406` and `1205`. It prints for `roles/implementer.md` at most
-    100 more than at that commit, for `roles/reviewer.md` at most 150 more, and for `roles/planner.md` at most 60 more
+10. `record.md` logs what `wc -w` in the root of this repository prints for `process.md`, `standards.md`,
+    `roles/implementer.md`, `roles/reviewer.md` and `roles/planner.md` on the commit the unit's branch is cut from and
+    on the tree once the unit is done. When a count grew, the entry says what the added words are for. The review of
+    this unit then says which file grew, by how many words and what for, as an item of the list under
+    `**Needed from you**` of its response, which in a step of the orchestrator is an item of `afterwards`, so that the
+    human reassesses the growth at the end, and not as a finding. A growth fails no requirement of the unit
 11. The lines of the changed files are within 120 characters, they hold no em dash, `npm test` passes, and the change
     check, `npm run check-changes`, exits 0
 
@@ -87,8 +93,8 @@ session of every project. At `ed8c644`, `wc -w` in the root of this repository p
 
 * **The kind is `task`.** The unit changes the text of three role files and nothing else, as 0060 changed a rule of
   `standards.md` and 0070 one of `process.md`, both tasks. What it had to decide, the form of the note, where it
-  goes and the limits on length, is decided here, so that what is left is an edit whose description and diff say the
-  same thing. `spec.md` is kept, as 0060 kept its own, because the reviewer judges the work against these
+  goes and how its length is weighed, is decided here, so that what is left is an edit whose description and diff
+  say the same thing. `spec.md` is kept, as 0060 kept its own, because the reviewer judges the work against these
   requirements and decisions. Its branch is `task-0118-a-late-planned-test-is-a-note`
 * **The order stays the rule for the planned tests, and stops being a finding.** Writing the planned tests first is
   what makes them a test of the spec rather than of the code, and the human keeps it. Once the history holds the
@@ -96,12 +102,14 @@ session of every project. At `ed8c644`, `wc -w` in the root of this repository p
   declined, and a decline is the human's. The note keeps the human informed and gives the implementer nothing to
   answer. Dropping the report altogether was rejected: the human would then not see how often a model skips the
   order, which is what the six units showed
-* **The note is outside the findings, and not a finding that never blocks.** Under the default definition, a repeat
-  `until` `"no-findings"` goes on while an outcome has any finding, so a non-blocking finding would still return to
-  the implementer every round, which would propose to decline it in the end, and the run would stop as before.
-  Leaving the note out of the labels and of the outcome's `findings` keeps it out of that loop, and the findings file
-  is where the human reads it. Putting it in `afterwards` was rejected: that list is for what the human must do,
-  check or decide after the run, and the note asks nothing of them
+* **The note is outside the findings, and not a finding that never blocks.** Under the default definition's `until`
+  of `"no-findings"`, a non-blocking finding goes back to the implementer to be applied. One that is still open after
+  the last round does not stop the run, and a run stops for it only when the implementer proposes to decline it. A
+  late planned test cannot be applied, since the order is in the history, so the implementer would propose to decline
+  it, and that decline would stop the run as before. Leaving the note out of the labels and of the outcome's
+  `findings` keeps it out of that loop, and the findings file is where the human reads it. Putting it in
+  `afterwards` was rejected: that list is for what the human must do, check or decide after the run, and the note
+  asks nothing of them
 * **A regression test is judged by its evidence, not by its place in the history.** A run of the test on a tree
   without the fix shows what a regression test must show, whenever that run is made, and a single-commit fix, which
   `process.md` allows, holds the test and the fix in one commit by definition. The record names the tree the run was
@@ -126,10 +134,19 @@ session of every project. At `ed8c644`, `wc -w` in the root of this repository p
 * **`process.md` and the standards stay as they are.** Neither says anything this unit changes: "tests first" in the
   bullet of `plan.md` is the planned order, which stays, and a test added during the work is a change of the plan
   under the implementer's rule. Rewording the bullet would add words to the file every session reads, for no change
-  of meaning. The limits of R10 are counted against the commit the branch is cut from, so that they hold whether
+  of meaning. The counts of R10 are taken on the commit the branch is cut from, so that they compare alike whether
   0117 lands before this unit or after it
-* **The role files grow by what the change needs, within stated limits.** The limits of R10 are those of a draft of
-  the three texts, about 80, 140 and 50 words more, with some room for their wording
+* **The length of the files is logged and put to the human, not limited.** This follows the decision 0117 made on the
+  length of `process.md`. A hard limit would fail the unit over a few words the change may need, and the human wants
+  to weigh the growth rather than forbid it. A growth is not a finding, since a finding asks the implementer for a
+  change, while the growth is the human's to reassess: as a non-blocking finding under `"no-findings"` it would go
+  back to the implementer, which would trim words to make it go away, or propose to decline it, which stops the run
+  for a decision the human wants to take at the end. The reviewer of this unit says it as an item under
+  `**Needed from you**`, which reaches the human in its response by hand and in `afterwards`, and so in the end
+  report, in a step of the orchestrator, without stopping the run. It is not put in the findings file, which the
+  implementer takes findings from. A draft of the three role texts came to about 80, 140 and 50 words more, which
+  the log of R10 lets the human compare with what the work added. The requirement is of this unit, and not a rule of
+  the role files, since the length of the kit's instructions is a concern of the kit's own repository
 * **How this unit and 0117 touch the same files.** 0117, `changes/0117-set-a-unit-implemented-by-a-command/`, is a
   draft that changes `roles/implementer.md` under "Review findings" and `roles/reviewer.md` under "What blocks",
   "Reporting" and "Record that you reviewed", for the rule of `implemented` and the forms of the reviewer's entry and
