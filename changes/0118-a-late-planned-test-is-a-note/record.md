@@ -70,5 +70,9 @@ timestamp: 2026-11-22T12:55:15Z
   planner would put such an assertion with the code, and git would not show its order. R10 now points to the
   section of `AGENTS.md` for the log and the growth, and the decision on length names that section. The status
   stays `draft`
+- 2026-11-22T15:08:33Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, reviewed `spec.md` and `record.md` at
+  `650cd087f45d` on `master` as a delta from `37239a477e2a`. Checked F3, F4 and F8. Finding F9 is in
+  `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T150806Z.md`. Did not independently verify the
+  32-unit project sample or live harness handling of note-only responses
 
 ## Amendments
