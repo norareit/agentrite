@@ -163,7 +163,8 @@ A unit moves through these statuses, as `process.md` gives them:
 sandbox on the unit's branch, where the planner creates the plan, the implementer implements the changes and a reviewer
 of another model family reviews against the spec and the plan, back to the implementer for its findings, or agentrite
 orchestrate runs all three at once; you then exit the sandbox, which brings the branch back, set the unit implemented
-with npx agentrite complete, and merge it](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
+with npx agentrite complete, and merge
+it](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
 
 The writers current workflow:
 

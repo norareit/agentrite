@@ -1541,7 +1541,16 @@ function checkChangeDocuments(root) {
  * @param {string} timestamp the instant of the review's entry
  */
 function checkWorkReviewed(root, prefix, directory, reviewed, timestamp) {
-  const differing = gitOutput(root, ['diff', '--no-renames', '--no-relative', '--name-only', '-z', reviewed, 'HEAD']);
+  const differing = gitOutput(root, [
+    'diff',
+    '--no-renames',
+    '--no-relative',
+    '--ignore-submodules=none',
+    '--name-only',
+    '-z',
+    reviewed,
+    'HEAD',
+  ]);
   const files = filesOutside(differing, prefix, directory);
   if (files.length === 0) return;
   throw new Error(

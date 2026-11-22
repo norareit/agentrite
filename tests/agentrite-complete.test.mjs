@@ -682,6 +682,20 @@ const REFUSALS = [
     /- brought\.txt/,
   ],
   [
+    'a changed gitlink after the review, with submodules ignored by the configuration',
+    (given) => {
+      const { base, project } = given;
+      const link = (hash) => git(base, project, 'update-index', '--add', '--cacheinfo', `160000,${hash},vendor`);
+      link('1'.repeat(40));
+      git(base, project, 'commit', '--quiet', '-m', 'Add a gitlink');
+      logEntry(given, reviewLine(git(base, project, 'rev-parse', '--short=12', 'HEAD').trim()));
+      link('2'.repeat(40));
+      git(base, project, 'commit', '--quiet', '-m', 'Change the gitlink');
+      git(base, project, 'config', 'diff.ignoreSubmodules', 'all');
+    },
+    /- vendor\nThe work changed after the last review/,
+  ],
+  [
     'a blocking finding still open',
     (given) => logEntry(given, reviewLine(given.reviewed, '`S1`, `C2`')),
     /the last review lists blocking findings still open: S1, C2/,
