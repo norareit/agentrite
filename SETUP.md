@@ -399,7 +399,8 @@ The default file, which `npx agentrite config` writes, and `npx agentrite init c
   outside is judged on the path as it is written, with no symbolic link followed. Whether it names a file is judged with
   symbolic links followed, so a kit linked into `node_modules`, as `npm link` does, is taken
 * The file is read by `refresh`, by `init` in a project that has one, by `agentrite roles`, by `agentrite run`, by
-  `agentrite orchestrate`, by `agentrite approve`, by `agentrite cancel`, by the change check, and by `./sandbox.sh`.
+  `agentrite orchestrate`, by `agentrite approve`, by `agentrite cancel`, by `agentrite complete`, by the change
+  check, and by `./sandbox.sh`.
   Every form of `./sandbox.sh` but `--connect` reads `bell`, `modelServer` and `harnesses` at each start, and judges
   no other key of the file, unless a unit run, or a run on a branch in a sandbox-only project, cuts a branch, which
   reads the whole file. `--connect` does not read it
@@ -475,7 +476,12 @@ and the form it must have, and writes nothing. After the front matter, a role fi
   the standards are the file `.agentrite/instructions.md` names, and a project's can name its own file directly
 * what the role is given, what it produces and the status it sets, in terms of the documents of `changes/` and the
   statuses that `process.md` gives: a spec the human approves, a plan where the kind needs one, the work, and a review
-  whose blocking findings `implemented` waits on. Each role covers one of these, and none is left out
+  whose blocking findings still open hold back `implemented`. Each role covers one of these, and none is left out
+
+A project's own reviewer and implementer files write the entries of the forms that the kit's role files give, the
+reviewer's entry and the implementer's proposed decline, which `agentrite complete` reads. They also say that every
+review after the first in a run accounts for every finding still open of the review before it, and that a label is
+never used for two findings within a run.
 
 A standards file is the project's whole set of rules on how text, documentation, commits, code and tests are written:
 with it, the kit's `standards.md` no longer holds in the project. A broken rule in it blocks `implemented` as a broken

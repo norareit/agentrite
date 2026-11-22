@@ -112,9 +112,19 @@ Then take a first unit from its spec to the merge:
    ```
 
 5. Leave the sandbox with `exit`. The unit's branch on the host is brought up to date with the work of the sandbox
-6. Merge the unit's branch on the default branch, once the unit is `implemented`:
+6. Check out the unit's branch on the host and set the unit to `implemented`, which `npx agentrite complete` does when
+   the record shows that the last review saw the work as it stands and lists no blocking finding still open, that every
+   proposed decline is decided, and that the plan is ticked:
 
    ```sh
+   git checkout feature-0001-...
+   npx agentrite complete 0001
+   ```
+
+7. Merge the unit's branch on the default branch, once the unit is `implemented`:
+
+   ```sh
+   git checkout <default branch>
    git merge feature-0001-...
    ```
 
@@ -141,19 +151,19 @@ roles that run just before or just after one of the four, within its stage, and 
 
 A unit moves through these statuses, as `process.md` gives them:
 
-| Status        | Set by                                  | When                                                                           |
-|---------------|-----------------------------------------|--------------------------------------------------------------------------------|
-| `draft`       | The specifier                           | It wrote the spec, or a task's record                                          |
-| `approved`    | The human, with `npx agentrite approve` | The human approved the spec, or a task's record                                |
-| `in-progress` | The implementer                         | It began the work                                                              |
-| `implemented` | The implementer, or the human           | The human decided every blocking finding, and every task of the plan is ticked |
-| `cancelled`   | The human, with `npx agentrite cancel`  | From `draft`, `approved` or `in-progress`, for a unit that will not be done    |
+| Status        | Set by                                                       | When                                                                                                                                                      |
+|---------------|--------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `draft`       | The specifier                                                | It wrote the spec, or a task's record                                                                                                                     |
+| `approved`    | The human, with `npx agentrite approve`                      | The human approved the spec, or a task's record                                                                                                           |
+| `in-progress` | The implementer                                              | It began the work                                                                                                                                         |
+| `implemented` | The human, with `npx agentrite complete`, or the implementer | The last review saw the work as it stands and lists no blocking finding open, every proposed decline is decided by the human, and every task of the plan is ticked |
+| `cancelled`   | The human, with `npx agentrite cancel`                       | From `draft`, `approved` or `in-progress`, for a unit that will not be done                                                                               |
 
 ![The workflow: on the default branch you specify the unit with the specifier and approve it; ./sandbox.sh starts the
 sandbox on the unit's branch, where the planner creates the plan, the implementer implements the changes and a reviewer
 of another model family reviews against the spec and the plan, back to the implementer for its findings, or agentrite
-orchestrate runs all three at once; you then exit the sandbox, which brings the branch back, and merge
-it](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
+orchestrate runs all three at once; you then exit the sandbox, which brings the branch back, set the unit implemented
+with npx agentrite complete, and merge it](https://raw.githubusercontent.com/norareit/agentrite/master/diagrams/workflow.svg)
 
 The writers current workflow:
 
@@ -168,7 +178,8 @@ The writers current workflow:
 8. Repeat step 6 and 7 until no more issues arise
 9. Exit the container. This will fast-forward the branch on the host to the one from the container (which was a
    separate checkout!). At this point it is up to you how to handle the rest. You can create a pull request and check
-   the changes yourself, or you can simply mark the change `implemented` and merge it back to the default branch
+   the changes yourself, or you can simply set the change `implemented` by running `npx agentrite complete` on its
+   branch and merge it back to the default branch
 
 ## The documents
 

@@ -210,6 +210,10 @@ When the container exits, whatever its exit code, the wrapper brings the work ba
 A clone that was kept is resumed by the same command, as it is: it is not updated from the host's branch. How a
 clone is discarded is in "Where things are kept on the host".
 
+The wrapper moves the unit's branch, or the variant's, while you stay on the branch you have checked out, which is
+usually the default branch, and it checks out and moves no other branch. To set the unit to `implemented`, check out
+the unit's branch, or the variant's, and run `npx agentrite complete <unit>`.
+
 For commits that wait, a crash during a unit run and a removal that fails, see "When something goes wrong".
 
 ## Two agents on one unit
@@ -317,8 +321,11 @@ The runs of the orchestrator are kept apart in the same way, by the name of thei
 the same second each get a directory. `npx agentrite runs` shows the variant of each run.
 
 To compare two results and take one, use git. Compare with `git diff <unit's branch> <variant's branch>`, or of two
-variants' branches. Take one by merging its branch into the unit's branch with `git merge`, or by moving the unit's
-branch to it with `git branch --force <unit's branch> <variant's branch>` while the unit's branch is not checked out.
+variants' branches. Set a variant's run to `implemented` on the variant's branch before it is taken, with
+`npx agentrite complete <unit>` there, since on the unit's branch the command reads the reviews of the unit's branch
+only. Take a completed variant by moving the unit's branch to it with `git branch --force <unit's branch> <variant's
+branch>` while the unit's branch is not checked out, or by a merge of its branch into the unit's branch that
+fast-forwards it, as `git merge --ff-only`.
 A variant that is not taken is a branch to delete, with `git branch --delete --force`, and its clone with `rm -rf` of
 its directory when one was kept, as "Where things are kept on the host" says.
 

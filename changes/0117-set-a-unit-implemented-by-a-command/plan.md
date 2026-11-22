@@ -293,42 +293,42 @@ so R11 leaves it as it is.
 
 ### The documents
 
-- [ ] In `ORCHESTRATOR.md`, replace `The human sets `implemented` after the run, once the findings of its last review
+- [x] In `ORCHESTRATOR.md`, replace `The human sets `implemented` after the run, once the findings of its last review
   are decided.` with that the human sets it after the run with `npx agentrite complete`, when the rule of
   `process.md` holds; and where a resume follows the human deciding the proposed declines, say that the decision is
   recorded in the form `roles/implementer.md` gives, by the human or by the step a resume reruns with the decision in
   its `--prompt` (R10)
-- [ ] In `README.md`, make the row of `implemented` in the table of the statuses read, as "Set by", `The human, with
+- [x] In `README.md`, make the row of `implemented` in the table of the statuses read, as "Set by", `The human, with
   npx agentrite complete, or the implementer`, and as "When" the rule of R1 in short; add a step to the quick start
   after leaving the sandbox that checks out the unit's branch and runs `npx agentrite complete 0001`, before the step
   that merges, which then checks out the default branch first; and in step 9 of the writer's workflow, replace
   marking the change `implemented` with running `npx agentrite complete` on its branch (R11)
-- [ ] In `diagrams/workflow.mmd`, add a human step `complete(["<b>Complete</b> the unit<br/>npx agentrite
+- [x] In `diagrams/workflow.mmd`, add a human step `complete(["<b>Complete</b> the unit<br/>npx agentrite
   complete"])` between `leave` and `merge`, with `leave --> complete --> merge`, in the class `human`; run
   `npm run diagrams` to generate `diagrams/workflow.svg`; and make the description of the diagram in `README.md` say
   that you set the unit implemented with `npx agentrite complete` before you merge it. When `npm run diagrams` cannot
   run where the work is done, as in the sandbox without the host's Chrome, log it in `record.md` and leave the SVG to
   be generated on the host before the merge (R11)
-- [ ] In `SETUP.md`, where a role file covers a review whose blocking findings `implemented` waits on, say that it is
+- [x] In `SETUP.md`, where a role file covers a review whose blocking findings `implemented` waits on, say that it is
   a review whose blocking findings still open hold back `implemented`; say of a project's own reviewer and implementer
   files that they write the entries of the forms of R7 and R8, that every review after the first in a run accounts for
   every finding still open of the review before it, and that a label is never used for two findings within a run; and
   add `by agentrite complete` after `by agentrite cancel` among the commands that read `agentrite.json` (R11)
-- [ ] In "Getting the work back" of `SANDBOX.md`, say that the wrapper moves the unit's branch, or the variant's,
+- [x] In "Getting the work back" of `SANDBOX.md`, say that the wrapper moves the unit's branch, or the variant's,
   while the developer stays on the branch checked out, usually the default branch, and that the unit is set to
   `implemented` by checking out the unit's branch, or the variant's, and running `npx agentrite complete`; in "Two
   implementations of one unit", say that a variant's run is set to `implemented` on the variant's branch before it is
   taken, since on the unit's branch the command reads the reviews of the unit's branch only, and that a completed
   variant is taken by moving the unit's branch to it or by a merge that fast-forwards the unit's branch to it, in
   place of taking one by any `git merge` (R11)
-- [ ] In `COMMANDS.md`, add the row `npx agentrite complete <unit>` with `Sets a unit to implemented when its record
+- [x] In `COMMANDS.md`, add the row `npx agentrite complete <unit>` with `Sets a unit to implemented when its record
   shows the rule, and commits its record.md` after that of `cancel`, and a section `agentrite complete` after that of
   `agentrite cancel`, in the shape of that section: where it runs, the rule it reads and the forms of R7 to R9 with an
   example of each, the entry of R15, the commit of R16, the line of R17, each refusal of R14 in its order, the
   argument, and its exit statuses `0`, `1` and `2` by "Exit statuses" (R20)
-- [ ] Log in `record.md` what `wc -w process.md` prints on the final tree and, when it grew, what the added words are
+- [x] Log in `record.md` what `wc -w process.md` prints on the final tree and, when it grew, what the added words are
   for (R3)
-- [ ] Check every changed file for lines over 120 characters, a Markdown table row aside, and for em dashes, and run
+- [x] Check every changed file for lines over 120 characters, a Markdown table row aside, and for em dashes, and run
   `npm test` and `npm run check-changes` on the committed tree, which pass, and log the result in `record.md`
 
 ## Verification

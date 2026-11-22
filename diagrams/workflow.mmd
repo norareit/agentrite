@@ -40,15 +40,16 @@ flowchart LR
     review -->|no findings left| leave
     orchestrate -.-> leave
   end
+  complete(["<b>Complete</b> the unit<br/>npx agentrite complete"])
   merge(["<b>Merge</b> the unit's branch"])
 
   approve -->|./sandbox.sh| plan
   approve -.->|./sandbox.sh| orchestrate
-  leave --> merge
+  leave --> complete --> merge
 
   classDef human fill:#ffffff,stroke:#f59e0b,stroke-width:3px,color:#0f172a
   classDef agent fill:#ffffff,stroke:#6366f1,stroke-width:3px,color:#0f172a
   classDef alternative fill:#ffffff,stroke:#a5b4fc,color:#0f172a,stroke-dasharray:6 4
-  class specify,approve,leave,merge human
+  class specify,approve,leave,complete,merge human
   class plan,implement,review agent
   class orchestrate alternative

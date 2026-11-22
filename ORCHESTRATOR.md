@@ -147,8 +147,8 @@ reports its end after it. The command reads the response the harness gave last.
 
 The request also says that a finding the step's prompt accepts is recorded in `record.md` as accepted by the
 orchestrator's definition, and not as a decision of the human, and that the step sets the unit's status to no status
-later than `in-progress`. The human sets `implemented` after the run, once the findings of its last review are
-decided.
+later than `in-progress`. The human sets `implemented` after the run with `npx agentrite complete`, when the rule of
+`process.md` holds.
 
 The outcome of a review with one blocking finding, as it stands in the final response:
 
@@ -380,7 +380,9 @@ A run neither sets the unit's status nor commits. What the roles do to the unit,
 `record.md` among it, is theirs, as when they are started by hand.
 
 Once the human has done what a run stopped for, as answering its questions, deciding its proposed declines or fixing
-what a review found, the run is resumed with `--resume`, from the project root on the branch the run ran on:
+what a review found, the run is resumed with `--resume`, from the project root on the branch the run ran on. The
+decision on a proposed decline is recorded in the form the implementer's role file gives, by the human or by the step
+the resume reruns, with the decision in its `--prompt`:
 
 ```sh
 npx agentrite orchestrate 0029 --resume --prompt "Take the second reading of R2."

@@ -13,6 +13,7 @@ takes.
 | `npx agentrite units [<number>] [--open \| --status <status>] [--kind <kind>] [--limit <count>] [--json]`                                                     | Lists the units of `changes/`, with their status               | [agentrite units](#agentrite-units)             |
 | `npx agentrite approve <unit>`                                                                                                                                | Approves a unit and commits its `record.md`                    | [agentrite approve](#agentrite-approve)         |
 | `npx agentrite cancel <unit> --reason <text> [--by <unit>]`                                                                                                   | Cancels a unit and commits its `record.md`                     | [agentrite cancel](#agentrite-cancel)           |
+| `npx agentrite complete <unit>`                                                                                                                               | Sets a unit to implemented and commits its `record.md`         | [agentrite complete](#agentrite-complete)       |
 | `npx agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>] [--headless] [--skip-permissions] [-- <harness arguments...>]` | Starts a harness as one of the roles, for one unit             | [agentrite run](#agentrite-run)                 |
 | `npx agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] [--skip-permissions] [--follow]`                                         | Takes an approved unit through its roles                       | [agentrite orchestrate](#agentrite-orchestrate) |
 | `npx agentrite runs [<number>] [--limit <count>] [--json]`                                                                                                    | Lists the runs of the orchestrator and their state             | [agentrite runs](#agentrite-runs)               |
@@ -476,6 +477,135 @@ take, it prints what is wrong, then its usage, and exits 2.
 
 It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as [Exit statuses](#exit-statuses)
 says.
+
+## agentrite complete
+
+```sh
+npx agentrite complete <unit>
+```
+
+Sets a unit to `implemented`, from the project root, on the unit's branch or on a variant's branch of the unit, when
+the record of the unit shows that the rule of `process.md` for `implemented` holds. The unit's branch is the prefix of
+the unit's kind, `feature`, `bugfix` or `task`, a hyphen and the name of its directory, as
+`feature-0117-set-a-unit-implemented-by-a-command`, and a variant's branch is the unit's branch, `--` and a variant's
+name of the form `agentrite orchestrate` takes. The command reads the unit's `record.md` and `plan.md` in the working
+tree, `agentrite.json`, what git gives of the repository, and what the change check reads. It reads nothing under
+`.reviews/` or `.orchestrator/`, asks nothing, reads nothing from its standard input, opens no editor and needs no
+terminal. It merges, pushes, cuts, moves, deletes and checks out no branch.
+
+The rule is read from the entries of `## Log`. The entries of a run are those of the branch checked out: on a variant's
+branch the entries whose text, after who made it and, for an agent in a role, after `as the <role>, `, opens with
+``on the variant `<name>`, ``, with the variant's name, and on the unit's branch the entries with no such phrase. An
+entry wrapped over several lines is read as its lines joined, each continuation line's indent taken as one space. The
+last review of the run is the last entry of the reviewer, `as the reviewer`, of the run in the order of `## Log`. The
+command reads three forms. The text of each is given after the phrase of the variant on a variant's branch.
+
+The reviewer's entry opens with ``reviewed the unit at `<commit>` ``, with the commit by its hash, of 7 to 40
+lowercase hexadecimal characters, in backticks, and holds exactly one sentence that is `Blocking findings: none.` or
+`Blocking findings: ` followed by the labels of the blocking findings still open after the review, each in backticks,
+separated by a comma and a space, and a full stop:
+
+```text
+- 2026-11-22T14:02:11Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, reviewed the unit at `1a2b3c4` as a delta review
+  from `9f8e7d6`. Returned `S3` and `C1`. Blocking findings: `S3`. The findings are in
+  `.reviews/0042-a-unit/review-2026-11-22T140100Z.md`. Did not verify the behavior of the harness
+```
+
+The implementer's proposal to decline a finding, one entry for each finding, opens with
+``proposed to decline `<label>`: ``, with the finding's label, and then gives the reason. The command reads it of an
+entry of any author:
+
+```text
+- 2026-11-22T14:20:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, proposed to decline `C2`: The
+  function is long, and splitting it would separate steps that change together
+```
+
+The human's decision on it is an entry of `[human]`, whoever writes it, with no role, that opens with
+``decided the proposed decline of `<label>`: `` followed by `declined` or `to be fixed`:
+
+```text
+- 2026-11-22T14:35:00Z [human] on the variant `opus`, decided the proposed decline of `C2`: to be fixed
+```
+
+A record written before these forms has none of them in its entries, and the command refuses a last review that is not
+of the form of the reviewer's entry, so that a review in the form, as a delta review of the commit checked out, lets
+it go on. A proposed decline that is not of the form is not seen.
+
+It writes in the unit's `record.md` and nowhere else. The `status` field of the front matter becomes `implemented`,
+and nothing else of the front matter changes. An entry is added to `## Log`, directly after its last entry, with the
+instant the command runs, in UTC, and the commit of the last review as that review's entry names it, wrapped at 120
+characters as the entry of `agentrite cancel` is:
+
+```text
+- 2026-11-22T14:02:11Z [human] set the unit to implemented, on the review at `ff437ce`. The status is `implemented`
+```
+
+The entry names the human whoever runs the command, and names no variant.
+
+It then commits `record.md` alone, on the branch checked out, with the message `feature-<number> Set the unit to
+implemented`, `bugfix-<number> Set the unit to implemented` or `task-<number> Set the unit to implemented`, by the kind
+of the unit and the four digits of its directory. Whatever else the working tree or the index holds is left as it was,
+and is not in the commit. The commit is made as any `git commit` of the developer is, with their identity and the
+repository's hooks, the `commit-msg` hook of the kit among them. When the commit fails, as when a hook refuses it,
+`record.md` and the index are as they were before the command, what git printed goes to standard error, and the command
+exits 1.
+
+On success it prints one line, the unit's directory, the new status, the branch and the commit by its short hash and
+its message, and exits 0:
+
+```text
+changes/0042-a-unit/ is implemented on feature-0042-a-unit, in 1a2b3c4 feature-0042 Set the unit to implemented
+```
+
+It prints nothing on standard output, writes nothing, commits nothing and exits 1, with one message on standard error
+for the first of these that holds, in this order:
+
+* `agentrite.json` is missing or is not valid
+* the project root is in no git repository, or no branch is checked out, as on a detached `HEAD`. The message says
+  which, and that a unit is set to `implemented` on its branch
+* `changes/` holds no directory for the unit, or more than one for its digits
+* the unit's `record.md` is missing, or has no `status` field, no `kind` field or no `## Log` heading, or gives a kind
+  that is not `feature`, `bug` or `task`. The message names the file and what is wrong
+* the branch checked out is neither the unit's branch nor a variant's branch of it. The message names the branch
+  checked out and the unit's branch, and says that a unit is set to `implemented` on its branch
+* the unit's status is not `in-progress`. For `implemented`, the message says that the unit is implemented already on
+  the branch checked out, and that a later correction is an amendment or a new unit that names it in `supersedes`. For
+  `cancelled`, that a cancelled unit is never set back, and that taking it up again is a new unit that names it in
+  `supersedes`. For `draft`, that the unit is not approved, and is approved on the default branch with
+  `npx agentrite approve`. For `approved`, that its work has not begun, and that the implementer moves it to
+  `in-progress` as it begins. For any other, the message names the status and says that a unit is set to
+  `implemented` from `in-progress`
+* the unit is a feature and has no `plan.md`, or has a `plan.md` with a task that is not ticked, counted as the change
+  check counts it. The message names the file and the count of the tasks not ticked. A bug or a task without a
+  `plan.md` passes
+* a file of the unit's directory differs from what the commit checked out holds: changed, staged, or not tracked. The
+  message names each file with its state, and says that the human completes what is committed, so that the files are
+  committed or discarded first
+* the change check fails on the repository. The message gives what the check reported
+* the run of the branch checked out has no review. The message names the run, the unit's branch or the variant, and
+  says that the reviewer reviews the unit first
+* the last review of the run is not of the form given above. The message names the entry by its timestamp, says that it
+  is not of the form the command reads, and that a review in that form, as a delta review of the commit checked out,
+  lets the command go on
+* the commit the last review names is not a commit of the repository, or names more than one
+* a file outside the unit's directory differs between the commit the last review names and the commit checked out, on
+  either side of a rename. The message names those files and says that the work changed after the last review, so that
+  it is reviewed again. The commit need not be an ancestor of the commit checked out, and a change to the unit's own
+  directory, its `record.md` and `plan.md` among it, does not count
+* the last review lists a blocking finding still open. The message names its labels
+* a proposed decline of the run has no entry of the human's decision of the same run after it with the same label. The
+  message names each such decline by its label, and says that the human decides it
+* an entry of the human's decision of the run that decides a finding `to be fixed` stands after the last review. The
+  message names it, and says that the fix is reviewed first
+
+With no `<unit>`, a second one, or an option, it prints what is wrong, then its usage, and exits 2.
+
+| Argument or option | What it is                                                                                          |
+|--------------------|-----------------------------------------------------------------------------------------------------|
+| `<unit>`           | A directory of `changes/`, by its name, with or without `changes/` before it, or by its four digits |
+
+It takes no option. It exits with `0`, `1` when it refuses or fails, and `2` for a wrong argument, as
+[Exit statuses](#exit-statuses) says.
 
 ## agentrite run
 
