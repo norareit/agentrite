@@ -53,5 +53,9 @@ timestamp: 2026-11-22T12:55:15Z
   allow the commit. BTR1 and BTR3 stay as written. F7: the decision on 0117 says that it is approved, that it also
   changes "Re-reviewing a unit", that this unit adds nothing to that section's rules for findings, and that the
   implementer of the unit that lands second keeps 0117's rules while adding the note. The status stays `draft`
+- 2026-11-22T14:49:11Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, reviewed `spec.md` and `record.md` at
+  `37239a477e2a` on `master` as a delta from `0a84557d2960`. Checked F1 to F7. Findings F3, F4 and F8 are in
+  `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T144840Z.md`. Did not independently verify the
+  32-unit project sample or live harness handling of note-only responses
 
 ## Amendments
