@@ -158,22 +158,22 @@ so R11 leaves it as it is.
 
 ### The forms of the record
 
-- [ ] In a new `tests/agentrite-log-forms.test.mjs`, write unit tests of `logEntries`: an entry on one line and one
+- [x] In a new `tests/agentrite-log-forms.test.mjs`, write unit tests of `logEntries`: an entry on one line and one
   wrapped over three lines, read as their lines joined with one space; entries of `## Amendments` and of a section
   after `## Log` left out; the author, the role and the variant of an agent's entry on the unit's branch, of one on a
   variant's branch, of `[human]` on a variant's branch, of an agent with no role, and of an entry whose role is
   followed by a space; and a variant phrase wrapped at its space (R6, R21)
-- [ ] Write unit tests of `runEntries` keeping the entries of one variant, and those of the unit's branch for `null`
+- [x] Write unit tests of `runEntries` keeping the entries of one variant, and those of the unit's branch for `null`
   (R6, R21)
-- [ ] Write unit tests of `reviewForm`: the entry of R7 with `Blocking findings: none.`, with one label, and with
+- [x] Write unit tests of `reviewForm`: the entry of R7 with `Blocking findings: none.`, with one label, and with
   `` `S1`, `C2` ``, on one line and wrapped, on the unit's branch and on a variant's; refused: the reviewer's entry of
   the habit before this unit, as "reviewed `0116-...` at `dc65325` in full. Returned non-blocking P1", a hash of 6 and
   of 41 characters, one in upper case, no space after the hash's backtick, no `Blocking findings:`, two of them, a
   label not in backticks, labels apart by a comma alone, and no final full stop (R7, R21)
-- [ ] Write unit tests of `proposedDecline` and `declineDecision`: each form on one line and wrapped, on the unit's
+- [x] Write unit tests of `proposedDecline` and `declineDecision`: each form on one line and wrapped, on the unit's
   branch and on a variant's; refused: a decision by an agent, a decision with another word than `declined` or
   `to be fixed`, `to be fixedly`, and a decline without the colon (R8, R9, R21)
-- [ ] Create `scripts/agentrite-log-forms.mjs` with `logEntries`, `runEntries`, `reviewForm`, `proposedDecline` and
+- [x] Create `scripts/agentrite-log-forms.mjs` with `logEntries`, `runEntries`, `reviewForm`, `proposedDecline` and
   `declineDecision` as the approach gives them, and run its tests, which pass
 
 ### The pure parts of the command
