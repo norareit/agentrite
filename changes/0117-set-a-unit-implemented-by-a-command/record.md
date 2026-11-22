@@ -118,5 +118,16 @@ timestamp: 2026-11-22T12:49:07Z
   `.reviews/0117-set-a-unit-implemented-by-a-command/review-2026-11-22T144804Z.md`. Suite: 2020 passed, 0 failed,
   34 skipped; the committed change check passed. Did not verify Docker-dependent tests, live harness handling of the
   entry forms, or host diagram rendering. The status stays `in-progress`
+- 2026-11-22T14:52:10Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, accepted `S1` and `C1` of
+  `.reviews/0117-set-a-unit-implemented-by-a-command/review-2026-11-22T144804Z.md`, as accepted by the definition of the
+  orchestrator and not as a decision of the human, and applied them in `0434539`. `S1`: `checkWorkReviewed` passes
+  `--ignore-submodules=none` to `git diff`, with a command test of a gitlink changed after the review under
+  `diff.ignoreSubmodules=all`, which failed before the option and passes with it. `C1`: the image description of
+  `README.md` is wrapped so that no line passes 120 characters. `npm test` on `0434539` reported 2055 tests, 2021
+  passed, 0 failed. The status stays `in-progress`
+- 2026-11-22T14:52:10Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, proposed to decline `S2`: the SVG
+  of the workflow diagram cannot be generated here, since `./generate-diagrams.sh` exits 1 for want of a Chrome that the
+  sandbox cannot reach, and the plan has the SVG generated on the host before the merge. The human generates it with
+  `npm run diagrams` and commits it, and that is an action of theirs that no step can take
 
 ## Amendments
