@@ -83,8 +83,34 @@ timestamp: 2026-11-22T12:49:07Z
   every task traced to R1 to R21. `extra-roles/spec-reviewer.md`, which says that the human decides whether a finding
   of a spec review is accepted, is left as it is, since it concerns a draft spec and is not the kit's. The status
   stays `approved`
-- 2026-11-22T14:50:00Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on
+- 2026-11-22T14:31:06Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on
   `feature-0117-set-a-unit-implemented-by-a-command`, began the work. `wc -w process.md` prints `2406` at `0a84557`,
   the commit the branch was cut from. The status is `in-progress`
+- 2026-11-22T14:43:29Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built the unit as its plan has it,
+  in the six commits of its commit points and one that wraps a line of `scripts/agentrite-record.mjs` at 120 characters.
+  `wc -w process.md` prints `2562` on the tree once the unit is done, against `2406` at `0a84557`, a growth of 156
+  words. The added words are for the rule of R1, as a list of four conditions with the sentence that a finding accepted
+  and fixed needs no decision, and for the human's decision on a proposed decline in the sentence on a variant's phrase.
+  The merged paragraph of the three commands is about as long as the two it replaces, and adds `complete`. The review
+  reports the growth to the human, as R3 says
+- 2026-11-22T14:43:29Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built three readings that the spec
+  leaves one way. `process.md` says "a finding accepted and fixed" and "the files of the roles that write the entries"
+  and names no role, since a test of `tests/package-documents.test.mjs` from the unit 0052 holds that `process.md` names
+  none outside its example entry. `complete` gives `git cat-file --batch-check` the format `%(objectname)
+  %(objecttype)`, so that `commitsNamed` reads the type of each object, and `git diff` the option `--no-relative`, so
+  that a `diff.relative` setting of the user cannot change the paths it lists. The row of `complete` in the table at the
+  top of `COMMANDS.md` reads `Sets a unit to implemented and commits its record.md`, shorter than the plan has it, to
+  fit the column that the table keeps at its width
+- 2026-11-22T14:43:29Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm run diagrams` twice and
+  `./generate-diagrams.sh` once, and each exited 1 after the warning on `puppeteer`, so `diagrams/workflow.svg` is not
+  generated from the changed `diagrams/workflow.mmd`. The SVG is left to be generated on the host before the merge, as
+  the plan says
+- 2026-11-22T14:43:29Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm test` on `5f76a9a`, which
+  reported 2054 tests, 2020 passed, 0 failed and 34 skipped, and `npm run check-changes` on the committed branch, which
+  printed no violation. The one commit after it, `f39d569`, wraps a line of a comment, and
+  `tests/agentrite-record.test.mjs` reported 0 failed on it. No line of a changed file is over 120 characters but a
+  Markdown table row and the image line of `README.md`, and no added line holds an em dash. Not checked: `npm run
+  diagrams`, whose Chrome is not reachable here, and the unit with `npx agentrite complete`, since the review of this
+  unit is not yet in the form of R7. The status stays `in-progress`
 
 ## Amendments

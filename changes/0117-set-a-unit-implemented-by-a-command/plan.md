@@ -333,19 +333,19 @@ so R11 leaves it as it is.
 
 ## Verification
 
-- [ ] `npm test` passes on the final tree
-- [ ] `npm run check-changes` passes on the committed branch
-- [ ] `node scripts/agentrite.mjs` with no argument prints the line of `complete` after that of `cancel`
-- [ ] `grep -rn "every blocking finding\|decides which" process.md roles README.md ORCHESTRATOR.md SETUP.md SANDBOX.md
+- [x] `npm test` passes on the final tree
+- [x] `npm run check-changes` passes on the committed branch
+- [x] `node scripts/agentrite.mjs` with no argument prints the line of `complete` after that of `cancel`
+- [x] `grep -rn "every blocking finding\|decides which" process.md roles README.md ORCHESTRATOR.md SETUP.md SANDBOX.md
   COMMANDS.md` prints nothing
-- [ ] No line of a changed file is over 120 characters, a Markdown table row aside
+- [x] No line of a changed file is over 120 characters, a Markdown table row aside
 
 ## Commit Points
 
-- [ ] `feature-0117 Share the entry wrapping and the open task count`: the tasks of "What is shared, moved"
-- [ ] `feature-0117 Read the forms of the record`: the tasks of "The forms of the record"
-- [ ] `feature-0117 Add the pure parts of complete`: the tasks of "The pure parts of the command"
-- [ ] `feature-0117 Set a unit to implemented by a command`: the tasks of "The command"
-- [ ] `feature-0117 State the rule for implemented and the forms of the record`: the tasks of "The rule and the role
+- [x] `feature-0117 Share the entry wrapping and the open task count`: the tasks of "What is shared, moved"
+- [x] `feature-0117 Read the forms of the record`: the tasks of "The forms of the record"
+- [x] `feature-0117 Add the pure parts of complete`: the tasks of "The pure parts of the command"
+- [x] `feature-0117 Set a unit to implemented by a command`: the tasks of "The command"
+- [x] `feature-0117 State the rule for implemented and the forms of the record`: the tasks of "The rule and the role
   files"
-- [ ] `feature-0117 Document the command complete`: the tasks of "The documents"
+- [x] `feature-0117 Document the command complete`: the tasks of "The documents"
