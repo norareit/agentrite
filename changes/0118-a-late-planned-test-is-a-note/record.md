@@ -57,5 +57,18 @@ timestamp: 2026-11-22T12:55:15Z
   `37239a477e2a` on `master` as a delta from `0a84557d2960`. Checked F1 to F7. Findings F3, F4 and F8 are in
   `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T144840Z.md`. Did not independently verify the
   32-unit project sample or live harness handling of note-only responses
+- 2026-11-22T14:55:55Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `74f7a29`, revised
+  `spec.md` for F3, F4 and F8 of
+  `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T144840Z.md`, as the human decided them, and
+  for "The length of the kit's instructions" of `AGENTS.md`. F3: a new decision has a run made afterwards name the
+  commit before the fix and the commit the test and the files it needs are taken from, and counts a run the
+  reviewer cannot reproduce as not verified and not proof. R2 and R7 changed only as far as that needs, with no
+  sentence for it in the role files, since the reviewer's role file already says what it does with a claim it
+  cannot check. F4: R5 drops the promise of one note per run, and a decision says that a repeated note is harmless,
+  since a note never blocks and stops nothing. F8: R8 lets the tests the commit adds or changes fail, as an
+  assertion updated for a changed behavior. It is settled in the role file's text, by replacing words: without it a
+  planner would put such an assertion with the code, and git would not show its order. R10 now points to the
+  section of `AGENTS.md` for the log and the growth, and the decision on length names that section. The status
+  stays `draft`
 
 ## Amendments
