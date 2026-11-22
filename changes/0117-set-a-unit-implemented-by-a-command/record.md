@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-22T12:49:07Z
 ---
 
@@ -77,5 +77,6 @@ timestamp: 2026-11-22T12:49:07Z
   findings of the three spec reviews with their entries, the restoring of the items beyond the request and the entry of
   the fourth spec review, which returned no findings. The commits of 0118 and 0119 now follow both. The names of the
   commits the fold removed are taken out of the entries above. The status stays `draft`
+- 2026-11-22T14:14:19Z [human] approved the spec. The status is `approved`
 
 ## Amendments
