@@ -112,5 +112,11 @@ timestamp: 2026-11-22T12:49:07Z
   Markdown table row and the image line of `README.md`, and no added line holds an em dash. Not checked: `npm run
   diagrams`, whose Chrome is not reachable here, and the unit with `npx agentrite complete`, since the review of this
   unit is not yet in the form of R7. The status stays `in-progress`
+- 2026-11-22T14:48:04Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed
+  `0117-set-a-unit-implemented-by-a-command` at `3b925b8f20465683b083c194e29b31359c730262` in full, against merge base
+  `0a84557`. Returned blocking S1, S2 and C1. The findings are in
+  `.reviews/0117-set-a-unit-implemented-by-a-command/review-2026-11-22T144804Z.md`. Suite: 2020 passed, 0 failed,
+  34 skipped; the committed change check passed. Did not verify Docker-dependent tests, live harness handling of the
+  entry forms, or host diagram rendering. The status stays `in-progress`
 
 ## Amendments
