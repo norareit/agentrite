@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: in-progress
+status: implemented
 timestamp: 2026-11-22T12:49:07Z
 ---
 
@@ -148,5 +148,7 @@ timestamp: 2026-11-22T12:49:07Z
   `roles/reviewer.md` from 2012 to 2302. It is accepted for now, and the three files are trimmed in one task after 0118,
   which changes the same role files. On the host with Docker, `npm test` on `b1ff601` reported 2055 tests, 2055 passed,
   0 failed and 0 skipped, which covers the check the review left open
+- 2026-11-22T23:41:09Z [human] set the unit to implemented, on the review at `1f72cf2ae033da7f0ad0871bbc68c4c70a610093`.
+  The status is `implemented`
 
 ## Amendments
