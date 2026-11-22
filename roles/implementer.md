@@ -55,12 +55,37 @@ The reviewer returns findings and does not edit files, so applying them is yours
   directory and the files of the run as `process.md` defines them: on a variant's branch, those whose name ends in
   `--<name>.md` with your variant's name, and on the unit's branch, those whose name holds no `--`. You read your
   variant from the branch you are on
-* Apply an accepted finding as part of the unit, and record its outcome
+* Apply a finding you agree with as part of the unit, by hand as in a step of the orchestrator, unless the human
+  decided otherwise, and record its outcome
 * Answer a finding you disagree with as a proposed decline: say what you would not change and why, and leave it
-  there. Record it as a proposal, so that pushing back is visible and argued rather than silent
+  there. Record it as a proposal, so that pushing back is visible and argued rather than silent. Write one entry for
+  each finding you propose to decline, by hand as in a step of the orchestrator, beside the `declines` of the step's
+  outcome. After the variant's phrase on a variant's branch, its text opens with ``proposed to decline `<label>`: ``,
+  with the finding's label, and then gives the reason, as in this one:
+
+  ```markdown
+  - 2026-11-22T14:20:00Z [Claude Code, anthropic/claude-opus-5-5] as the implementer, proposed to decline `C2`: the
+    function is longer than the standards like, and splitting it would separate steps that change together
+  ```
+
 * Only the human turns a proposed decline into a decision. Until they do, the finding is open, and writing your own
   decline into the unit as a decision puts your opinion where the human's belongs. It is the recorded decision, not
   the proposal, that a later review treats as settled
+* The human's decision on a proposed decline is an entry of `[human]`, and names no role. After the variant's phrase
+  on a variant's branch, its text opens with ``decided the proposed decline of `<label>`: ``, with the label of the
+  proposed decline, followed by `declined` when the finding is declined or `to be fixed` when it is to be applied, as
+  in this one:
+
+  ```markdown
+  - 2026-11-22T14:35:00Z [human] on the variant `opus`, decided the proposed decline of `C2`: to be fixed
+  ```
+
+  It is written as `[human]` whether the human writes it or an agent records the decision the human gave it, as a
+  resume's `--prompt` or the human's message in a session gives it. An agent writes it only for a decision of the
+  human
+* Once the human's decision is recorded, as when a run is resumed after it, act on it: a finding decided `declined`
+  is not proposed for declining again, neither in `record.md` nor in the `declines` of the step's outcome, and a
+  finding decided `to be fixed` is applied
 * `process.md` says where an outcome goes, which depends on whether the unit is frozen yet
 
 ## What you may claim

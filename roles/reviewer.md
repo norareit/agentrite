@@ -64,8 +64,8 @@ Assess them separately, because they fail separately and a unit can pass one whi
 
 ## What blocks
 
-`implemented` waits on the human deciding every blocking finding, so calling a finding blocking is a claim about the
-unit's contract and not about how much the finding matters. What blocks is defined in
+A blocking finding still open after the last review holds back `implemented`, so calling a finding blocking is a
+claim about the unit's contract and not about how much the finding matters. What blocks is defined in
 [`process.md`](../process.md), in exactly two cases.
 
 Everything else is reported without blocking. A design you would have chosen differently, a test you would have
@@ -86,10 +86,12 @@ information.
 
 ## Reporting
 
-Label each finding by its axis and number it, as `S1`, `P1`, `C1`. Give each one the location, what is wrong, and why
-it matters, and say whether it blocks `implemented`. A spec-conformance finding names the requirement it concerns, as
-`R3`, or says that the work matches no requirement. A finding that does not block is still worth reporting, and
-saying so lets the human take it without treating it as a gate.
+Label each finding by its axis and number it, as `S1`, `P1`, `C1`. A label is never used twice in a run: a review
+continues the numbering of each axis from the reviews of its run before it, so that a new finding takes the next number,
+as `S3` after `S1` and `S2`, and a finding reported again keeps its label. Give each one the location, what is wrong,
+and why it matters, and say whether it blocks `implemented`. A spec-conformance finding names the requirement it
+concerns, as `R3`, or says that the work matches no requirement. A finding that does not block is still worth reporting,
+and saying so lets the human take it without treating it as a gate.
 
 State plainly when an axis has no findings. A review that says nothing about an axis reads as a review that skipped
 it.
@@ -103,9 +105,9 @@ reporting them, not instead: the response is what the human reads now, and the f
 being closed or interrupted.
 
 Saving them is where your writing about the findings stops: what follows is your record entry and its commit, and
-nothing else. The human decides which are accepted and the implementer applies them.
-Reporting and fixing in one pass loses the record of what was wrong. If you are reviewing work you did yourself,
-that separation matters more, not less: report first, and change nothing until the human has decided.
+nothing else. The implementer applies the findings it agrees with and proposes declining the others, and the human
+decides a proposed decline. Reporting and fixing in one pass loses the record of what was wrong. If you are reviewing
+work you did yourself, that separation matters more, not less: you fix nothing you reported.
 
 ## Re-reviewing a unit
 
@@ -115,13 +117,18 @@ work getting worse when only the sampling changed.
 
 A delta review does two things and stops:
 
-* Verify the accepted findings from the last review. Each one is corrected in the diff, or it is not, and you say
-  which. The last review is looked for only among the files of the same run as yours: on a variant, those that end
-  in `--<name>.md` with its name, and on the unit's branch, those whose name holds no `--`
+* Verify every finding of the review before it in its run, in a delta review and in a full one alike, and not only
+  the accepted ones. A finding whose proposed decline the human decided `declined`, in the form the implementer's role
+  file gives, is settled and is not reported again. Every other is seen corrected in the diff, or reported again by
+  the label it had, with whether it blocks. The review before it is looked for only among the files of the same run as
+  yours: on a variant, those that end in `--<name>.md` with its name, and on the unit's branch, those whose name holds
+  no `--`
 * Review the diff since the commit that review named, on all three axes, as you would review any diff
 
-Say that the review was a delta and name the commit you compared against. Where the last review's commit cannot be
-found, say so and ask, rather than quietly falling back to a full re-review.
+Say that the review was a delta and name the commit you compared against. The `Blocking findings:` sentence of your
+record entry lists all the blocking findings still open after your review, those you found and those of the reviews
+before it that you reported again. Where the last review's commit cannot be found, say so and ask, rather than quietly
+falling back to a full re-review.
 
 ## Where an outcome belongs
 
@@ -145,8 +152,22 @@ you then commit:
 * Whether the review was a delta or a full one, and for a delta the commit it was taken from, so that the next
   reviewer knows what has been looked at and what has not
 * The labels of the findings you returned, and anything you could not verify
-* Nothing about outcomes. Whether a finding is accepted is the human's decision and the implementer's to record. An
-  entry that grades your own findings turns your opinion into the project's history
+* Nothing about outcomes. What becomes of a finding is the implementer's to record and, for a proposed decline, the
+  human's to decide. An entry that grades your own findings turns your opinion into the project's history
+
+The text of the entry, after the variant's phrase on a variant's branch, opens with ``reviewed the unit at `<commit>`
+``, with the commit by its hash, of 7 to 40 lowercase hexadecimal characters, in backticks, and holds exactly one
+sentence that is `Blocking findings: none.` or `Blocking findings: ` followed by the labels of the blocking findings
+still open after your review, each in backticks, separated by a comma and a space, and a full stop. A command reads that
+form, so the entry is written so, as in this one:
+
+```markdown
+- 2026-11-22T14:02:11Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, reviewed the unit at `1a2b3c4` as a delta review
+  from `9f8e7d6`. Returned `S3` and `C1`. Blocking findings: `S3`. The findings are in
+  `.reviews/0042-a-unit/review-2026-11-22T140100Z.md`. Did not verify the behavior of the harness
+```
+
+On a variant's branch the text opens with ``on the variant `opus`, `` and then the same.
 
 Append it. Do not edit an entry that is already there, and do not put your findings in it: they belong in the file
 you saved, and naming that file here is what lets a later reader find them. The entry belongs under `## Log` while

@@ -58,15 +58,13 @@ findable.
 `npx agentrite units` lists the units of a project, and `npx agentrite units --open` those still open. An agent asked
 which units are open, or in what status a unit is, runs it rather than reading the records.
 
-`npx agentrite approve <unit>` makes the approval of a unit: it sets its `status` to `approved`, adds the human's
-entry to `## Log`, and commits `record.md` alone on the default branch. An agent runs it only when the human has
-approved that unit and asked for the approval to be recorded, and never on its own judgement.
-
-`npx agentrite cancel <unit>` makes the cancellation of a unit on the branch checked out: it sets its `status` to
-`cancelled`, adds the human's entry to `## Log` with the reason and, with `--by`, the unit that did the work or made it
-moot, and commits `record.md` alone. An agent runs it only when the human has decided to cancel that unit, on that
-branch, and asked for the cancellation to be recorded, with the reason the human gave written in the agent's own
-words, and never on its own judgement.
+`npx agentrite approve <unit>`, `npx agentrite cancel <unit>` and `npx agentrite complete <unit>` set the `status` of a
+unit to `approved`, `cancelled` and `implemented`, add the human's entry to `## Log`, and commit `record.md` alone:
+`approve` on the default branch, `cancel` on the branch checked out, which is the one the human chose, with the reason
+and, with `--by`, the unit that did the work or made it moot, and `complete` on the unit's branch or a variant's, when
+the rule for `implemented` below holds. An agent runs one only when the human has approved that unit, decided to cancel
+it or asked for it to be set to `implemented`, and asked for it to be recorded, with the reason of a cancellation
+written in the agent's own words, and never on its own judgement.
 
 Each unit has a mandatory `record.md` and may also have `spec.md` and `plan.md`. Start from the kit's
 `templates/changes/`.
@@ -99,7 +97,8 @@ Every entry under `## Log` and under `## Amendments` of `record.md` is a list it
 * Then, for an agent that acts in a role, comes `as the <role>`, with the name of the role it acts in. An entry of a
   human has none, and neither has one of an agent that acts in no role
 * Then comes the text. In an entry of an agent made on a variant's branch, defined under the review's findings
-  below, the text names the variant, as "on the variant `opus`". An entry made on the unit's branch names none
+  below, the text names the variant, as "on the variant `opus`", and so does the human's decision on a proposed
+  decline, which still names no role. An entry made on the unit's branch names none
 * In `templates/changes/record.md` the brackets around who made the entry are the written ones, and its other
   brackets mark what is to be filled in
 
@@ -113,8 +112,20 @@ the first four in that order. `implemented` and `cancelled` are the two end stat
 task its record. An approved unit may be built: a task always; a bug when it has a `plan.md`, or a log entry in
 its `record.md` that says it needs no plan; a feature when it has a `plan.md`. Nobody approves a plan.
 
-Set `implemented` only after the human has decided every blocking finding the review returned and every task in
-`plan.md` is ticked. A finding of a review blocks in exactly two cases:
+A unit may be set to `implemented` once all of these hold, whether it was built by hand or by the orchestrator:
+
+* The last review of the run, the last review entry in `## Log` among those of the run of the branch checked out,
+  was of the work as it stands: no file outside the unit's directory under `changes/` differs between the commit
+  it reviewed and the commit checked out. The entries of a variant's run name the variant, and those of the unit's
+  branch name none
+* That review lists no blocking finding still open
+* Every proposed decline of the run has the human's decision, and a finding the human decided to be fixed was reviewed
+  after the decision
+* Every task in `plan.md` is ticked, where the unit has one
+
+The files of the roles that write the entries of a review, a proposed decline and its decision give their forms. A
+finding accepted and fixed needs no decision of the human, since the review after the fix verifies it. A finding of a
+review blocks in exactly two cases:
 
 * A requirement in `spec.md` is false, under the usage the spec says the unit supports and the threat model it
   states. A requirement that holds for supported usage and fails only outside it is not false

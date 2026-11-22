@@ -246,39 +246,39 @@ so R11 leaves it as it is.
 
 ### The rule and the role files
 
-- [ ] Log in `record.md` that `wc -w process.md` prints `2406` at `0a84557`, the commit the branch was cut from (R3)
-- [ ] In `process.md`, replace the paragraphs of `npx agentrite approve <unit>` and `npx agentrite cancel <unit>` with
+- [x] Log in `record.md` that `wc -w process.md` prints `2406` at `0a84557`, the commit the branch was cut from (R3)
+- [x] In `process.md`, replace the paragraphs of `npx agentrite approve <unit>` and `npx agentrite cancel <unit>` with
   one paragraph for the three commands, adding that `npx agentrite complete <unit>` sets `implemented` on the unit's
   branch, or a variant's, when the rule holds, and that an agent runs it only when the human has asked for that unit
   to be set to `implemented`, never on its own judgement; and check, sentence by sentence, that every statement of
   the two paragraphs is still there with its strength (R2, R3)
-- [ ] In `process.md`, replace the sentence ``Set `implemented` only after the human has decided every blocking
+- [x] In `process.md`, replace the sentence ``Set `implemented` only after the human has decided every blocking
   finding the review returned and every task in `plan.md` is ticked.`` with the rule of R1: the four conditions as a
   list, the last review being the last entry of the reviewer of the branch's run, read by the variant the entries
   name; that a finding the implementer accepted and fixed needs no decision of the human, since the review after the
   fix verifies it; and that the rule holds alike for a unit built by hand and by the orchestrator. Keep the sentence
   on the two cases of what blocks, and the two cases, as they are (R1)
-- [ ] In `process.md`, where an entry of an agent made on a variant's branch names the variant, say the same of the
+- [x] In `process.md`, where an entry of an agent made on a variant's branch names the variant, say the same of the
   human's decision on a proposed decline, which names no role (R9)
-- [ ] In `roles/reviewer.md`, under "What blocks", say that a blocking finding still open after the last review holds
+- [x] In `roles/reviewer.md`, under "What blocks", say that a blocking finding still open after the last review holds
   back `implemented`, in place of the human deciding every blocking finding; under "Reporting", replace `The human
   decides which are accepted and the implementer applies them` and `change nothing until the human has decided` with
   that the implementer applies the findings it agrees with and proposes declining the others, that the human decides
   a proposed decline, and that the reviewer fixes nothing it reported; and say that a label is never used twice in a
   run, a review continuing the numbering of each axis from the reviews of its run before it and a finding reported
   again keeping its label (R4)
-- [ ] In "Re-reviewing a unit" of `roles/reviewer.md`, replace the bullet that verifies the accepted findings with
+- [x] In "Re-reviewing a unit" of `roles/reviewer.md`, replace the bullet that verifies the accepted findings with
   one that says that every review of a run after its first, a delta or a full one, verifies every finding of the
   review before it in its run: one the human decided `declined`, in the form of `roles/implementer.md`, is settled
   and not reported again, and every other is seen corrected or reported again by its label, with whether it blocks
   (R4)
-- [ ] In "Record that you reviewed" of `roles/reviewer.md`, give the form of R7 with an example of a delta review on
+- [x] In "Record that you reviewed" of `roles/reviewer.md`, give the form of R7 with an example of a delta review on
   the unit's branch, of the form ``- <instant> [OpenCode, openai/gpt-6.2-sol] as the reviewer, reviewed the unit at
   `1a2b3c4` as a delta review from `9f8e7d6`. Returned `S3` and `C1`. Blocking findings: `S3`. The findings are in
   `.reviews/0042-a-unit/review-<instant>.md`. Did not verify ...``, wrapped, and say what a variant's branch adds; and
   replace `Whether a finding is accepted is the human's decision and the implementer's to record` with that what
   becomes of a finding is the implementer's to record and, for a proposed decline, the human's to decide (R7, R11)
-- [ ] In "Review findings" of `roles/implementer.md`, say that the implementer applies a finding it agrees with, by
+- [x] In "Review findings" of `roles/implementer.md`, say that the implementer applies a finding it agrees with, by
   hand as in a step of the orchestrator, unless the human decided otherwise; give the form of R8 with an example,
   written beside the `declines` of a step's outcome, one entry for each finding; keep that only the human turns a
   proposed decline into a decision; give the form of R9 with an example on a variant's branch, and that it is
@@ -286,7 +286,7 @@ so R11 leaves it as it is.
   `--prompt` or a message; and say that once a decision is recorded the implementer acts on it, proposing no decline
   again of a finding decided `declined`, in `record.md` or in `declines`, and applying one decided `to be fixed` (R5,
   R8, R9)
-- [ ] Search `process.md`, `roles/`, `orchestrator.json`, `scripts/agentrite-outcome.mjs`, `templates/`,
+- [x] Search `process.md`, `roles/`, `orchestrator.json`, `scripts/agentrite-outcome.mjs`, `templates/`,
   `README.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md` and `COMMANDS.md` for `every blocking finding`, `decides
   which`, `accepted`, `waits on` and `decided`, and change each statement that says that the human decides every
   blocking finding before `implemented` or decides which findings are accepted (R11)
