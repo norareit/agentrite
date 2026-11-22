@@ -142,7 +142,8 @@ function stateOf(columns) {
 /**
  * @param {string} directory
  * @param {{ path: string, state: string }[]} files
- * @param {'approves' | 'cancels' | 'completes'} act what the human does, which the last line says they do to what is committed
+ * @param {'approves' | 'cancels' | 'completes'} act what the human does, which the last line says they do to what is
+ *   committed
  * @returns {string}
  */
 export function uncommittedRefusal(directory, files, act) {
