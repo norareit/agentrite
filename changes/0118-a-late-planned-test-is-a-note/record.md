@@ -107,8 +107,8 @@ timestamp: 2026-11-22T12:55:15Z
   found during the work is no departure, and no statement that R9 rules out. The line length check exited 0 and the
   count of added em dashes was 0. `npm test` reported 2055 tests, 2021 passed, 0 failed and 34 skipped, and the skipped
   tests were not examined for their cause. `npm run check-changes` is logged below, after the commit
-- 2026-11-22T23:49:49Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran
-  `npm run check-changes` on the committed work, and it exited 0. The work was committed in one commit and not in the five commit points of `plan.md`, since the
-  unit schedules no planned tests and the edits are text. The status stays `in-progress`
+- 2026-11-22T23:49:49Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm run check-changes` on the
+  committed work, and it exited 0. The work was committed in one commit and not in the five commit points of `plan.md`,
+  since the unit schedules no planned tests and the edits are text. The status stays `in-progress`
 
 ## Amendments
