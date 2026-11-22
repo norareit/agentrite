@@ -92,7 +92,7 @@ pointer to the role file.
   of a regression test, and that `process.md` and `standards.md` show no diff against `9e2db59` (R9)
 - [x] Log in `record.md` the counts of `wc -w` of the five files on the finished work, and what the words added to
   each role file are for. Put no growth in a findings file (R10)
-- [ ] Run the checks under "Verification" on the final commit, and log in `record.md` what each reported, naming any
+- [x] Run the checks under "Verification" on the final commit, and log in `record.md` what each reported, naming any
   test skipped for want of Docker (R11)
 
 ## Verification
@@ -107,7 +107,7 @@ pointer to the role file.
 - [x] `git diff 9e2db59 -- roles templates changes/0118-a-late-planned-test-is-a-note | grep '^+' |
   LC_ALL=C grep -c $'\xe2\x80\x94'`, run as one line, prints 0, which is the count of em dashes added (R11)
 - [x] `npm test` passes (R11)
-- [ ] `npm run check-changes` exits 0, on the committed work (R11)
+- [x] `npm run check-changes` exits 0, on the committed work (R11)
 
 ## Commit Points
 
