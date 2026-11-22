@@ -129,5 +129,9 @@ timestamp: 2026-11-22T12:49:07Z
   of the workflow diagram cannot be generated here, since `./generate-diagrams.sh` exits 1 for want of a Chrome that the
   sandbox cannot reach, and the plan has the SVG generated on the host before the merge. The human generates it with
   `npm run diagrams` and commits it, and that is an action of theirs that no step can take
+- 2026-11-22T23:29:36Z [Claude Code, anthropic/claude-opus-5-5] on the host, on the unit's branch, on the human's
+  request generated `diagrams/workflow.svg` from `diagrams/workflow.mmd` with `npm run diagrams`, which `S2` asks for
+  and the sandbox cannot do. The same run also rewrote `diagrams/components.svg`, whose source the unit does not change,
+  and that file was restored. The status stays `in-progress`
 
 ## Amendments
