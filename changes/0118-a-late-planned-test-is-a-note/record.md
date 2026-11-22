@@ -110,5 +110,14 @@ timestamp: 2026-11-22T12:55:15Z
 - 2026-11-22T23:49:49Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran `npm run check-changes` on the
   committed work, and it exited 0. The work was committed in one commit and not in the five commit points of `plan.md`,
   since the unit schedules no planned tests and the edits are text. The status stays `in-progress`
+- 2026-11-22T23:52:44Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at
+  `e010e34a2a7c253106471a1bf65a48077257ef07` as a full review of
+  `changes/0118-a-late-planned-test-is-a-note/`, against merge base `9e2db59`. Returned `P1` and `P2`.
+  Blocking findings: `P1`. The findings are in
+  `.reviews/0118-a-late-planned-test-is-a-note/review-2026-11-22T235156Z.md`. Independently ran `npm test`:
+  2055 tests, 2021 passed, 0 failed, 34 skipped for missing Docker; those Docker cases could not be verified here.
+  `npm run check-changes`, whitespace and line-length checks passed; the added em-dash count was 0. Did not reproduce
+  the historical 32-unit sample or verify live harness compliance with the new instructions. The status stays
+  `in-progress`
 
 ## Amendments
