@@ -39,5 +39,19 @@ timestamp: 2026-11-22T12:55:15Z
   `templates/changes/plan.md` for the planned tests' own commit point, and its place in "Beyond the request" says so.
   The decision on the kind and the non-goal on the templates agree with it, and no requirement is renumbered. The
   findings of the spec review are not taken up in this revision. The status stays `draft`
+- 2026-11-22T14:46:29Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `0c9f620`, revised
+  `spec.md` for F1 to F7 of `.reviews/0118-a-late-planned-test-is-a-note/spec-review-2026-11-22T143031Z.md`, as the
+  human decided them, keeping the role files as short as the change allows. F1: a project whose hooks refuse a commit
+  with failing tests is a recorded limitation, in a decision of its own, and R1 and R8 say that the role files add
+  nothing for it. F2: R1 and R8 have a planned test of new or changed behavior fail first, and one that pins existing
+  behavior go first and pass. F3: R2, R7 and the decision on regression tests show the failure on a commit, the
+  tests' own commit point or the commit before the fix with the test file added, and no longer on an uncommitted
+  tree. F4: R5 has a review report the note only when the late test shows in the diff it covers, in place of once
+  for the unit. F5: R6 exempts only when a test found during the work was written, and the decision on such tests
+  says that it excuses no missing proof of a regression test. F6: a decision on R12 says that a plan without the
+  commit point is no note by itself, and the non-goal on a log of each planned test names the projects whose hooks
+  allow the commit. BTR1 and BTR3 stay as written. F7: the decision on 0117 says that it is approved, that it also
+  changes "Re-reviewing a unit", that this unit adds nothing to that section's rules for findings, and that the
+  implementer of the unit that lands second keeps 0117's rules while adding the note. The status stays `draft`
 
 ## Amendments

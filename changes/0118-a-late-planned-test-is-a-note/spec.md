@@ -38,11 +38,14 @@ than forbids it, as for 0117.
 
 ### The implementer
 
-1. `roles/implementer.md` says that each test the plan schedules is written before the code it covers, committed at
-   the commit point the plan gives it, and seen to fail there
-2. `roles/implementer.md` says that a regression test is shown to fail without the fix, by a run before the fix or by
-   a run afterwards on a tree without the fix, and that the implementer logs in `record.md` the commit or tree the run
-   was on and what it reported. This holds for a bug with a `plan.md` and for one without
+1. `roles/implementer.md` says that each test the plan schedules is written before the code it covers and committed
+   at the commit point the plan gives it, where a test of new or changed behavior is seen to fail and a test that
+   pins existing behavior, as before a refactoring, passes. The role file says nothing of a project whose hooks refuse
+   that commit, which the decision on the planned tests' commit settles
+2. `roles/implementer.md` says that a regression test is shown to fail without the fix on a commit: the tests' own
+   commit point of R8, or afterwards the commit before the fix with the test file added for the run. The implementer
+   logs in `record.md` the commit the run was on and what it reported. This holds for a bug with a `plan.md` and for
+   one without
 3. `roles/implementer.md` says that a test found to be needed during the work is welcome at any time, also for code
    of the unit written before it, and that it is not a departure from the order of R1. It is added to `plan.md`, where
    the unit has one, and logged in one line of `record.md`, by the rule the role file already gives for work not in
@@ -54,24 +57,27 @@ than forbids it, as for 0117.
 
 5. `roles/reviewer.md` says that a test the plan scheduled which the history shows written with or after the code it
    covers is reported as a note and not as a finding:
-    * the note is reported once, in the review that first sees it, and not again in a later review of the unit
+    * a review reports the note only when the late test shows in the diff that review covers. A delta review covers
+      the commits since the review before it, so the note is made once in a run, without looking back through the
+      earlier reviews
     * it is written in the response and in the findings file, apart from the findings and with no label of an axis
     * it is not one of the `findings` of a step's outcome when the review runs in the orchestrator
     * it never blocks, and asks nothing of the implementer, neither a fix nor a proposed decline
 6. `roles/reviewer.md` says that a test found to be needed during the work, added to `plan.md` and logged as R3 says,
-   is neither a note nor a finding
+   is never a note, whenever it was written
 7. `roles/reviewer.md` says that a test that is missing, as a test the plan scheduled that was not written or new
    logic with no unit test, and a regression test that nothing shows failing without the fix, are findings, and that
-   they block where the blocking cases of `process.md` say. It says that a commit of the history holding the test
-   without the code it covers, or without the fix, lets the reviewer run the test there and see it fail, in a checkout
-   apart from the working tree under review, so that the reviewer still changes nothing under review
+   they block where the blocking cases of `process.md` say. It says that the commit R2 names, the tests' own commit
+   point or the commit before the fix with the test file added, lets the reviewer run the test there and see it fail,
+   in a checkout apart from the working tree under review, so that the reviewer still changes nothing under review
 
 ### The planner
 
 8. `roles/planner.md` says that the tests the plan schedules get a commit point of their own, before the commit point
-   of the code they cover, so that git shows the order and a reviewer can run them there and see them fail. It says
-   that this commit point is the one at which tests may fail, and only the tests it adds. For a bug, the failing
-   regression test is the first task and has that commit point
+   of the code they cover, so that git shows the order and a reviewer can run them there. It says that this commit
+   point is the one at which tests may fail, and only the tests it adds of new or changed behavior, while a test that
+   pins existing behavior passes there. For a bug, the failing regression test is the first task and has that commit
+   point. The role file says nothing of a project whose hooks refuse that commit, as for R1
 
 ### Agreement and length
 
@@ -117,24 +123,33 @@ than forbids it, as for 0117.
   `findings` keeps it out of that loop, and the findings file is where the human reads it. Putting it in
   `afterwards` was rejected: that list is for what the human must do, check or decide after the run, and the note
   asks nothing of them
-* **A regression test is judged by its evidence, not by its place in the history.** A run of the test on a tree
-  without the fix shows what a regression test must show, whenever that run is made, and a single-commit fix, which
-  `process.md` allows, holds the test and the fix in one commit by definition. The record names the tree the run was
-  on, as "What you may claim" of the implementer's role file asks of every claim, so the reviewer can repeat it
+* **A regression test is judged by its evidence, not by its place in the history.** A run of the test without the
+  fix shows what a regression test must show, whenever that run is made, and a single-commit fix, which `process.md`
+  allows, holds the test and the fix in one commit by definition. The run is on a commit, the tests' own commit point
+  or the commit before the fix with the test file added, and the record names it, as "What you may claim" of the
+  implementer's role file asks of every claim, so that the reviewer can repeat it. A run on an uncommitted tree was
+  rejected, since nothing names that tree for the reviewer to rebuild
 * **A test found during the work is work not in the plan.** The implementer's role file already has that work added to
   `plan.md` and logged, which keeps the plan a true map of what was built. Naming the test there as welcome, rather
   than as a departure, is all this unit adds to it. The reviewer tells it from a late planned test by the plan: the
   planned tests are those of the plan as the planner wrote it, and a test added later stands in `plan.md` with its
-  line in `record.md`
+  line in `record.md`. What R6 exempts is only when such a test was written. It does not excuse a regression test
+  added during the work that nothing shows failing without the fix, which R7 makes a finding, nor a test that does
+  not exercise the behavior it is for, which the code quality axis judges as before. This is settled here and not in
+  the role file, since the role file's rules on findings already hold for every test
 * **"Code that already exists" is the code of the unit.** A test found to be needed may cover code the unit wrote
   before the test. A test of code the unit does not change stays under the implementer's rule on scope, as an
   improvement worth raising and not worth including unasked. Taking such tests into a unit is BTR1
 * **The planned tests get a commit of their own, which may fail.** It is what makes the order visible in git, which in
   18 of the 32 units it was not, and it gives the reviewer a commit on which to run the tests and see them fail. The
   planner's rule that a commit point leaves the tree coherent gets this one exception, limited to the tests that
-  commit adds. A project whose own git hooks refuse a commit whose tests fail cannot make that commit; the implementer
-  then commits the tests with the code and says so in the record, and the reviewer notes the order as R5 says. A
-  hook is not bypassed for it
+  commit adds of new or changed behavior. A test that pins existing behavior, as before a refactoring, goes first too
+  and passes there, since what it shows is that the behavior is kept
+* **A project whose hooks refuse a commit with failing tests is a recorded limitation.** Such a project cannot make
+  the planned tests' own commit, and a hook is not bypassed for it. The implementer still writes the planned tests
+  first, runs them and sees them fail, then commits them with the code and says so in the record, and the reviewer
+  reports the combined commit as the note of R5. The role files say nothing of it: it changes no step of a run that
+  matters, and the human wants the role files, read by every session of their role, to grow as little as possible
 * **No mechanical check of the order of commits.** A check that a test's commit comes before its code's would refuse
   the tests found during the work, which the human welcomes, and could not tell the two apart without reading the plan
   as a reviewer does
@@ -154,15 +169,22 @@ than forbids it, as for 0117.
   implementer takes findings from. A draft of the three role texts came to about 80, 140 and 50 words more, which
   the log of R10 lets the human compare with what the work added. The requirement is of this unit, and not a rule of
   the role files, since the length of the kit's instructions is a concern of the kit's own repository
-* **How this unit and 0117 touch the same files.** 0117, `changes/0117-set-a-unit-implemented-by-a-command/`, is a
-  draft that changes `roles/implementer.md` under "Review findings" and `roles/reviewer.md` under "What blocks",
-  "Reporting" and "Record that you reviewed", for the rule of `implemented` and the forms of the reviewer's entry and
-  of a proposed decline. This unit changes `roles/implementer.md` under "Working the plan", `roles/reviewer.md` under
-  "The three axes" and `roles/planner.md` under "Writing the plan", none of which 0117 changes, so that whichever
-  lands second merges without a conflict of text. Neither depends on the other in meaning: the note of R5 is not a
-  finding, so it stands in no entry of 0117's forms and holds back no `implemented` under either rule, and R7 says
-  that a finding blocks where `process.md` says, whichever rule `process.md` then holds. This unit specifies nothing
-  of the rule of `implemented`, of the reviewer's entry or of a proposed decline
+* **How this unit and 0117 touch the same files.** 0117, `changes/0117-set-a-unit-implemented-by-a-command/`, is
+  approved, and changes `roles/implementer.md` under "Review findings" and `roles/reviewer.md` under "What blocks",
+  "Reporting", "Re-reviewing a unit" and "Record that you reviewed", for the rule of `implemented`, the findings a
+  later review verifies and their labels, and the forms of the reviewer's entry and of a proposed decline. This unit
+  changes `roles/implementer.md` under "Working the plan", `roles/reviewer.md` under "The three axes" and
+  `roles/planner.md` under "Writing the plan", none of which 0117 changes, so that whichever lands second merges
+  without a conflict of text. It adds nothing to the rules of "Re-reviewing a unit" for findings: the note of R5 is
+  not a finding, and a review makes it from the diff that review covers, which that section already defines, so a
+  delta review needs nothing of the reviews before it for the note. The implementer of the unit that lands second
+  keeps 0117's rules for findings as they are, and adds the note of this unit beside them. Neither depends on the
+  other in meaning: the note stands in no entry of 0117's forms and holds back no `implemented` under either rule,
+  and R7 says that a finding blocks where `process.md` says, whichever rule `process.md` then holds. This unit
+  specifies nothing of the rule of `implemented`, of the reviewer's entry or of a proposed decline
+* **The template shows the planned tests' commit point (R12, was BTR2).** It reminds a planner who writes from the
+  template alone. A plan that omits the commit point is no note by itself: R5 judges the history, so the note comes
+  only when git shows a planned test committed with or after the code it covers
 
 ## Non-goals
 
@@ -170,7 +192,8 @@ than forbids it, as for 0117.
 * Rewriting the history of a unit whose tests were committed late, in this repository or in a project
 * Changing the orchestrator, its default definition, the outcome of a step or when a run stops
 * Changing the blocking cases of `process.md`, or anything 0117 specifies
-* A log entry for each planned test that shows it failing. The commit of the planned tests lets the reviewer see it
+* A log entry for each planned test that shows it failing. The commit of the planned tests lets the reviewer see it,
+  where the project's hooks allow that commit
 * Changing `process.md`, the standards, the templates other than the line of R12, or the specifier's role file
 
 ## Beyond the request
