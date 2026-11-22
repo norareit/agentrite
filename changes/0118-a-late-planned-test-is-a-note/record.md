@@ -34,5 +34,10 @@ timestamp: 2026-11-22T12:55:15Z
   that keeps the note out of the findings: under `"no-findings"` a non-blocking finding goes back to be applied, and
   stops a run only by a proposed decline, which a late planned test, that cannot be applied, would get. The
   findings F1 to F7 of the spec review are not taken up in this revision. The status stays `draft`
+- 2026-11-22T14:39:48Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on `master` at `0bba533`, revised
+  `spec.md` after the human took BTR2 into the unit and left BTR1 and BTR3 out. BTR2 is now R12, a line of
+  `templates/changes/plan.md` for the planned tests' own commit point, and its place in "Beyond the request" says so.
+  The decision on the kind and the non-goal on the templates agree with it, and no requirement is renumbered. The
+  findings of the spec review are not taken up in this revision. The status stays `draft`
 
 ## Amendments

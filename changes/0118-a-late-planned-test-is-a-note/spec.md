@@ -89,9 +89,16 @@ than forbids it, as for 0117.
 11. The lines of the changed files are within 120 characters, they hold no em dash, `npm test` passes, and the change
     check, `npm run check-changes`, exits 0
 
+### The template
+
+12. `templates/changes/plan.md` holds, under "Commit Points", a line for the commit point of the planned tests, before
+    the line for the commit of the code they cover, so that a planner who writes from the template sees that the
+    planned tests have a commit point of their own, as R8 says (was BTR2)
+
 ## Decisions
 
-* **The kind is `task`.** The unit changes the text of three role files and nothing else, as 0060 changed a rule of
+* **The kind is `task`.** The unit changes the text of three role files and one line of the plan's template, and
+  nothing else, as 0060 changed a rule of
   `standards.md` and 0070 one of `process.md`, both tasks. What it had to decide, the form of the note, where it
   goes and how its length is weighed, is decided here, so that what is left is an edit whose description and diff
   say the same thing. `spec.md` is kept, as 0060 kept its own, because the reviewer judges the work against these
@@ -164,16 +171,14 @@ than forbids it, as for 0117.
 * Changing the orchestrator, its default definition, the outcome of a step or when a run stops
 * Changing the blocking cases of `process.md`, or anything 0117 specifies
 * A log entry for each planned test that shows it failing. The commit of the planned tests lets the reviewer see it
-* Changing `process.md`, the standards, the templates or the specifier's role file
+* Changing `process.md`, the standards, the templates other than the line of R12, or the specifier's role file
 
 ## Beyond the request
 
 1. Welcome a test found to be needed during the work also for code the unit does not change. It would cover more of a
    project, at the cost of units whose diff reaches past their scope and a reviewer who can no longer tell such a
    test from unasked work. Without it, the implementer raises such a test as an improvement, as now
-2. Show the planned tests' own commit point in `templates/changes/plan.md`, as a line under "Commit Points". It would
-   cost one line of the template, and remind a planner who writes from the template alone. Without it, the planner's
-   role file holds the rule, and a plan without the commit point shows in the review as a note of the order
+2. BTR2: taken, now R12
 3. Have the implementer log a run that shows each planned test failing at its commit point, as R2 asks of a
    regression test. It would put the evidence in the record, at the cost of a line per commit point in every unit.
    Without it, the reviewer runs the tests on that commit when it wants the evidence
