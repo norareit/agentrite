@@ -143,5 +143,10 @@ timestamp: 2026-11-22T12:49:07Z
   `.reviews/0117-set-a-unit-implemented-by-a-command/review-2026-11-22T233314Z.md`. Suite: 2021 passed, 0 failed,
   34 skipped; the committed change check passed. Did not verify Docker-dependent tests, live harness handling of the
   entry forms, or visual SVG rendering. The status stays `in-progress`
+- 2026-11-22T23:41:08Z [Claude Code, anthropic/claude-opus-5-5] on the unit's branch, logged the human's decision on the
+  growth the review put to them: `process.md` from 2406 to 2562 words, `roles/implementer.md` from 963 to 1241 and
+  `roles/reviewer.md` from 2012 to 2302. It is accepted for now, and the three files are trimmed in one task after 0118,
+  which changes the same role files. On the host with Docker, `npm test` on `b1ff601` reported 2055 tests, 2055 passed,
+  0 failed and 0 skipped, which covers the check the review left open
 
 ## Amendments
