@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-22T12:55:15Z
 ---
 
@@ -81,5 +81,6 @@ timestamp: 2026-11-22T12:55:15Z
   R7, from a complete record whose run the reviewer cannot repeat for want of an environment, which it lists with
   what it could not check and does not report as a finding. Its last sentence is finished. R7 agrees as it stands
   and is not changed. The status stays `draft`
+- 2026-11-22T22:53:37Z [human] approved the record. The status is `approved`
 
 ## Amendments
