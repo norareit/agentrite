@@ -2,7 +2,7 @@
 
 ## Approach
 
-The unit changes the text of three role files and one line group of the plan's template. The tree is that of
+The unit changes the text of three role files and the commit points of the plan's template. The tree is that of
 `9e2db59`, the head of `master`, where 0117 has landed. This unit is therefore the one that lands second: 0117's rules
 for findings stay as they are, and the note is added beside them. The sections this unit edits, "Working the plan" of
 the implementer, "The three axes" of the reviewer and "Writing the plan" of the planner, are ones 0117 did not change.
@@ -104,8 +104,8 @@ pointer to the role file.
 - [ ] `awk 'length > 120 { print FILENAME": "FNR; found = 1 } END { exit found }' roles/implementer.md
   roles/reviewer.md roles/planner.md templates/changes/plan.md changes/0118-a-late-planned-test-is-a-note/record.md`,
   run as one line, exits 0 (R11)
-- [ ] `git diff 9e2db59 -- roles templates changes/0118-a-late-planned-test-is-a-note | grep '^+' | grep -c '—'`
-  prints 0 (R11)
+- [ ] `git diff 9e2db59 -- roles templates changes/0118-a-late-planned-test-is-a-note | grep '^+' |
+  LC_ALL=C grep -c $'\xe2\x80\x94'`, run as one line, prints 0, which is the count of em dashes added (R11)
 - [ ] `npm test` passes (R11)
 - [ ] `npm run check-changes` exits 0, on the committed work (R11)
 
