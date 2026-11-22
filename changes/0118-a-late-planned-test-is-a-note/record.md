@@ -82,5 +82,11 @@ timestamp: 2026-11-22T12:55:15Z
   what it could not check and does not report as a finding. Its last sentence is finished. R7 agrees as it stands
   and is not changed. The status stays `draft`
 - 2026-11-22T22:53:37Z [human] approved the record. The status is `approved`
+- 2026-11-22T23:47:48Z [Claude Code, anthropic/claude-opus-5-5] as the planner, on
+  `task-0118-a-late-planned-test-is-a-note`, cut from `9e2db59`, wrote `plan.md` against that tree, with every task
+  traced to R1 to R12. 0117 has landed there, so this unit is the one that lands second, and the sections it edits are
+  ones 0117 did not change. The word counts of R10 are taken on `9e2db59`, and differ from those the spec gives for
+  `ed8c644` because of 0117. The unit adds no logic, so the plan schedules no tests and has no commit point of planned
+  tests. The status stays `approved`
 
 ## Amendments
