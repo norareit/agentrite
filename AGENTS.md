@@ -109,6 +109,20 @@ been misled, and may have written any file, directory or symbolic link there.
 * Build a reading of a spec that is the only one that works, such as `package-lock.json` changing with
   `package.json`, and log it in one line of `record.md`. Do not put it to the human as a decision
 
+## The length of the kit's instructions
+
+`process.md` and `standards.md` are read by every session of every project that uses the kit, and a role file under
+`roles/` each time its role is taken on. Their words are paid for at every reading, so they grow only where the
+words are needed.
+
+* A unit that changes one of these files logs `wc -w` of each one it changes in `record.md`, on the commit the
+  unit's branch is cut from and once the work is done. Where a file grew, the entry says what the added words are for
+* A growth is not refused and is not a finding. The reviewer puts it to the human under `**Needed from you**`, which
+  a step of the orchestrator gives as `afterwards`, and the human decides whether the words stay
+* Before a finding is settled by text in one of these files, the specifier says what goes wrong at runtime without
+  it. Where nothing that matters goes wrong, as for a rare case the text would only spell out, the finding is settled
+  in the unit's `spec.md` as a decision or a recorded limitation, which only the unit's workers read
+
 ## Security findings
 
 A finding of the security reviewer, [`extra-roles/security-reviewer.md`](extra-roles/security-reviewer.md), is kept
