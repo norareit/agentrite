@@ -133,7 +133,8 @@ timestamp: 2026-11-22T12:49:07Z
   request generated `diagrams/workflow.svg` from `diagrams/workflow.mmd` with `npm run diagrams`, which `S2` asks for
   and the sandbox cannot do. The same run also rewrote `diagrams/components.svg`, whose source the unit does not change,
   and that file was restored. The status stays `in-progress`
-- 2026-11-22T23:31:14Z [human] decided the proposed decline of `S2`: to be fixed. The fix is `32e7a8e`, which holds the SVG
-  generated on the host, recorded by the implementer on the human's message in the run's prompt
+- 2026-11-22T23:31:14Z [human] decided the proposed decline of `S2`: to be
+  fixed. The fix is `32e7a8e`, which holds the SVG generated on the host, recorded by the implementer on the human's
+  message in the run's prompt
 
 ## Amendments
