@@ -38,8 +38,15 @@ apply only where there is one.
 
 * Follow the tasks in order and tick each box as its task is done, not in a sweep at the end. An unticked box is the
   honest state of the work
-* Write the test before the code it covers, and for a bug write the regression test first, confirm that it fails, and
-  only then implement the fix. A regression test that has never failed proves nothing
+* Write each test the plan schedules before the code it covers, and commit it at the commit point the plan gives it.
+  There a test of new or changed behavior is seen to fail, and a test that pins existing behavior, as before a
+  refactoring, passes
+* Show a regression test failing without the fix on a commit, with or without a `plan.md`: the tests' own commit
+  point, or afterwards the commit before the fix, with the test and the files it needs taken from a commit for the
+  run. Log in `record.md` the commits the run used and what it reported. A regression test never seen to fail proves
+  nothing
+* A test found to be needed during the work is welcome at any time, also for code of the unit written before it, and
+  is no departure from that order. Add it to `plan.md` where there is one, and log it in one line of `record.md`
 * When necessary work is not in the plan, add it to `plan.md` before doing it and log the reason in `record.md`. The
   plan stays a true map of what was built, which is what makes it reviewable later
 * Never change `spec.md`. If the work needs something the spec does not cover, or contradicts it, the unit goes back

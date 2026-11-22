@@ -62,6 +62,17 @@ Assess them separately, because they fail separately and a unit can pass one whi
 * **Code quality**: is the code itself right? Correctness, naming, tests that actually exercise the behavior, and the
   code and testing rules in the project's standards. Judge the code as written, not as you would have written it
 
+A test the plan scheduled that the history shows written with or after the code it covers is a note and not a
+finding. Report it when the late test shows in the diff this review covers, in your response and in the findings
+file, apart from the findings and with no label of an axis. It is not one of the `findings` of a step's outcome, never
+blocks, and asks nothing of the implementer, neither a fix nor a proposed decline. A test found to be needed during
+the work, added to `plan.md` where there is one and logged in `record.md`, is never a note, whenever it was written.
+
+A planned test that was not written, new logic with no unit test, and a regression test that nothing shows failing
+without the fix are findings, and block where `process.md` says. The commits the record names for a regression test
+let you run it as the implementer did and see it fail, in a checkout apart from the working tree under review, so
+that you still change nothing under review.
+
 ## What blocks
 
 A blocking finding still open after the last review holds back `implemented`, so calling a finding blocking is a

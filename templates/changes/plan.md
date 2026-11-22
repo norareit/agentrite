@@ -18,4 +18,5 @@
 
 ## Commit Points
 
-- [ ] [Commit]
+- [ ] [Commit of the planned tests, before the code they cover]
+- [ ] [Commit of the code they cover]

@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-22T12:55:15Z
 ---
 
@@ -88,5 +88,24 @@ timestamp: 2026-11-22T12:55:15Z
   ones 0117 did not change. The word counts of R10 are taken on `9e2db59`, and differ from those the spec gives for
   `ed8c644` because of 0117. The unit adds no logic, so the plan schedules no tests and has no commit point of planned
   tests. The status stays `approved`
+- 2026-11-22T23:49:34Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on
+  `task-0118-a-late-planned-test-is-a-note`, began the work. `wc -w` on `9e2db59`, where the branch was cut:
+  `process.md` 2562, `standards.md` 1205, `roles/implementer.md` 1241, `roles/reviewer.md` 2302, `roles/planner.md` 686.
+  The status is `in-progress`
+- 2026-11-22T23:49:34Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, put the wording of `plan.md` into
+  `roles/implementer.md`, `roles/reviewer.md`, `roles/planner.md` and `templates/changes/plan.md`, as written there. The
+  unit schedules no test and has no commit point of planned tests, as the plan says. `wc -w` of the finished work:
+  `process.md` 2562 and `standards.md` 1205, unchanged, `roles/implementer.md` 1363 (+122), `roles/reviewer.md` 2482
+  (+180) and `roles/planner.md` 764 (+78). The added words are for: in the implementer's file, the commit point of the
+  planned tests, the run that shows a regression test failing and the commits the record names for it, and the welcome
+  of a test found during the work; in the reviewer's file, the note of a late planned test and the findings for a
+  missing test, and the checkout apart for running a regression test; in the planner's file, the commit point of the
+  planned tests, where tests may fail. No growth is in a findings file
+- 2026-11-22T23:49:34Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, ran the checks of `plan.md` on the
+  finished work before its commit. `git diff --exit-code 9e2db59 -- process.md standards.md` exited 0. The search of the
+  plan found only `process.md` on `plan.md`, which agrees, and the new sentence of the implementer's file that a test
+  found during the work is no departure, and no statement that R9 rules out. The line length check exited 0 and the
+  count of added em dashes was 0. `npm test` reported 2055 tests, 2021 passed, 0 failed and 34 skipped, and the skipped
+  tests were not examined for their cause. `npm run check-changes` is logged below, after the commit
 
 ## Amendments

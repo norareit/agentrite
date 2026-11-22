@@ -43,11 +43,15 @@ The plan is a map of the work, accurate enough that the implementer follows it r
   not a task. Decide it, or write a task that does the deciding and says what the decision has to satisfy
 * Order tasks so that each one leaves the tree in a state the next can build on, and put the test that proves a piece
   of behavior ahead of the code that provides it
-* For a bug, the first task is the failing regression test
+* Give the tests the plan schedules a commit point of their own, before that of the code they cover, so that git
+  shows the order and a reviewer can run them there. It is the one commit point at which tests may fail, and only
+  those it adds or changes for new or changed behavior, as an assertion updated for a changed behavior. A test that
+  pins existing behavior passes there. For a bug, the failing regression test is the first task and has this commit
+  point
 * Write tasks a reader can tick. "Handle the error case" cannot be ticked honestly; "return the existing entry when
   the id is already present, and cover it in a unit test" can
 * Name the files the work touches, so that the implementer notices immediately when the plan and the tree disagree
-* Set commit points where the tree is coherent and the change is reviewable on its own
+* Set the other commit points where the tree is coherent and the change is reviewable on its own
 
 `process.md` sets the threshold at which a bug needs a plan. Judge it by the work, not by the size of the diff: a
 one-line fix that also needs a regression test, a snapshot update and a documentation change is several steps.
