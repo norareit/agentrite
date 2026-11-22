@@ -1086,6 +1086,7 @@ test(
       '       agentrite units [<number>] [--open | --status <status>] [--kind <kind>] [--limit <count>] [--json]\n' +
       '       agentrite approve <unit>\n' +
       '       agentrite cancel <unit> --reason <text> [--by <unit>]\n' +
+      '       agentrite complete <unit>\n' +
       '       agentrite run <role> <harness> <unit> [--prompt <text>] [--model <id>] [--effort <level>]\n' +
       '                     [--headless] [--skip-permissions] [-- <harness arguments...>]\n' +
       '       agentrite orchestrate <unit> [--definition <file>] [--resume [--prompt <text>]] ' +

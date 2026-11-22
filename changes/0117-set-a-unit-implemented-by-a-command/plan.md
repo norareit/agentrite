@@ -202,23 +202,23 @@ so R11 leaves it as it is.
 
 ### The command
 
-- [ ] In `tests/agentrite-complete.test.mjs`, write a fixture as that of `tests/agentrite-cancel.test.mjs`: a project
+- [x] In `tests/agentrite-complete.test.mjs`, write a fixture as that of `tests/agentrite-cancel.test.mjs`: a project
   made by `git init` on `master` with the kit, a feature in progress with a ticked `plan.md`, cut on its branch, with
   a file outside the unit, the work committed and a review in the form of R7 of that commit committed after it; and
   helpers to append an entry and commit it, and to run the command with the fixture's environment
-- [ ] Write command tests of success on the unit's branch and on a variant's branch: exit 0, the line of R17 alone on
+- [x] Write command tests of success on the unit's branch and on a variant's branch: exit 0, the line of R17 alone on
   standard output, nothing on standard error, the record with `status: implemented` and the entry of R15 naming the
   review's commit as written, wrapped within 120 characters for a commit of 40 characters, and one new commit
   holding `record.md` alone with the message of R16 (R15 to R17, R21)
-- [ ] Write command tests that pass: a commit after the last review that changes only `record.md`; a reviewed commit
+- [x] Write command tests that pass: a commit after the last review that changes only `record.md`; a reviewed commit
   made by `git commit-tree` of the tree of the commit checked out on another parent, which is not its ancestor; a
   bug without a `plan.md` (R14, R21)
-- [ ] Write a command test that the refs, by `git for-each-ref`, and the branch checked out are as before but for the
+- [x] Write a command test that the refs, by `git for-each-ref`, and the branch checked out are as before but for the
   branch checked out moving by the one commit, and that a file staged and a file changed outside the unit are left as
   they were and out of the commit (R16, R17)
-- [ ] Write a command test that a `commit-msg` hook that exits 1 makes the command exit 1 with what the hook printed
+- [x] Write a command test that a `commit-msg` hook that exits 1 makes the command exit 1 with what the hook printed
   on standard error, and leaves `record.md`, the index and `HEAD` as they were (R16, R21)
-- [ ] Write command tests for each refusal of R14, each asserting exit 1, nothing on standard output, the message on
+- [x] Write command tests for each refusal of R14, each asserting exit 1, nothing on standard output, the message on
   standard error, and `HEAD`, the status of git and `record.md` as before: no `agentrite.json`; an invalid one; no git
   repository; a detached `HEAD`; no directory for the unit; two for its digits; no `record.md`; one without `status`,
   without `kind`, without `## Log`, with the kind `epic`; the default branch checked out; another unit's branch; each
@@ -229,16 +229,16 @@ so R11 leaves it as it is.
   merge after the review that brings in a file outside the unit; a blocking finding still open; an undecided
   proposed decline; a proposed decline of the variant decided only on the unit's branch; a decision `to be fixed`
   after the last review (R14, R21)
-- [ ] For the hash that names two commits, make two commits with one prefix of 7 characters by computing, with
+- [x] For the hash that names two commits, make two commits with one prefix of 7 characters by computing, with
   `node:crypto`, the SHA-1 of `commit <length>\0<content>` for a fixed tree, parent, author, committer and dates and
   the messages `0`, `1`, ... until two share their first 7 characters, and writing both with
   `git hash-object -t commit -w --stdin`. The search is deterministic and takes the order of 2^14 hashes
-- [ ] Write command tests of R12 that each wrong argument exits 2 with the line, then `COMPLETE_FORM`, on standard
+- [x] Write command tests of R12 that each wrong argument exits 2 with the line, then `COMPLETE_FORM`, on standard
   error, and changes nothing; and that `agentrite` with no argument lists `complete` after `cancel` (R12)
-- [ ] Write command tests that a run with its standard input closed, by `stdio: ['ignore', 'pipe', 'pipe']`, and a
+- [x] Write command tests that a run with its standard input closed, by `stdio: ['ignore', 'pipe', 'pipe']`, and a
   run with no controlling terminal, started with `detached: true` so that it is in a session of its own, each set the
   unit to implemented as R15 to R17 say (R19, R21)
-- [ ] Write `complete` in `scripts/agentrite.mjs` as the approach gives it, add `complete: { form: COMPLETE_FORM,
+- [x] Write `complete` in `scripts/agentrite.mjs` as the approach gives it, add `complete: { form: COMPLETE_FORM,
   parse: parseCompleteArgs, run: complete }` to `COMMANDS` after `cancel`, add the line
   `       agentrite complete <unit>` after that of `cancel` to the usage in `tests/agentrite-init.test.mjs`, add
   `scripts/agentrite-log-forms.mjs` and `scripts/agentrite-complete.mjs` to `files` of `package.json` and to the list

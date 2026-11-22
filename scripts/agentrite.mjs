@@ -44,7 +44,24 @@ import {
   cancellationRefusal,
   parseCancelArgs,
 } from './agentrite-cancel.mjs';
-import { recordFields, uncommittedFiles, uncommittedRefusal, wrappedEntry } from './agentrite-record.mjs';
+import {
+  branchRefusal,
+  COMPLETE_FORM,
+  commitsNamed,
+  completedLine,
+  completedRecord,
+  completionEntry,
+  completionMessage,
+  decisionsRefusal,
+  filesOutside,
+  lastReview,
+  parseCompleteArgs,
+  planRefusal,
+  runOfBranch,
+  statusRefusal,
+} from './agentrite-complete.mjs';
+import { logEntries } from './agentrite-log-forms.mjs';
+import { commitPrefix, recordFields, uncommittedFiles, uncommittedRefusal, wrappedEntry } from './agentrite-record.mjs';
 import { parseDefinition } from './agentrite-definition.mjs';
 import { HARNESS_NAMES, HARNESSES, harnessNamed, plannedFiles, wrapperDirectories } from './agentrite-harness.mjs';
 import { foreignHookNotice, isKitHook, noRepositoryNotice, printedHookPath } from './agentrite-hook.mjs';
@@ -113,7 +130,7 @@ import {
   unitsListing,
   UNITS_FORM,
 } from './agentrite-units.mjs';
-import { statusFrom } from './check-changes.mjs';
+import { run as checkChanges, statusFrom } from './check-changes.mjs';
 
 const CHECK_CHANGES = 'node node_modules/agentrite/scripts/check-changes.mjs';
 // The kit's container/ directory as a project installs it, from which the image build copies its files.
@@ -1381,8 +1398,19 @@ function approve(root, { unit }) {
  * @returns {{ prefix: string, branch: string }}
  */
 function cancellationBranch(root) {
+  return branchCommittedOn(root, 'a cancellation is committed on a branch');
+}
+
+/**
+ * Throws unless `root` is in a git repository with a branch checked out, and returns the prefix of `root` and the
+ * branch. `committedOn` says what the command does on a branch, for the message that names what is missing.
+ *
+ * @param {string} root
+ * @param {string} committedOn
+ * @returns {{ prefix: string, branch: string }}
+ */
+function branchCommittedOn(root, committedOn) {
   const prefix = repositoryPrefix(root);
-  const committedOn = 'a cancellation is committed on a branch';
   if (prefix === null) throw new Error(`${root} is in no git repository, and ${committedOn}`);
   const branch = checkedOutBranch(root);
   if (branch === null) throw new Error(`no branch is checked out, and ${committedOn}`);
@@ -1450,6 +1478,124 @@ function cancel(root, { unit, reason, by }) {
   const entry = wrappedEntry(cancellationEntry(instantOf(Date.now()), reason, named));
   const hash = commitRecordAlone(root, recordFile, text, cancelledRecord(text, entry), message);
   console.log(cancelledLine(directory, branch, hash, message));
+  return 0;
+}
+
+/**
+ * Runs `git` in `root` with its arguments as a list, and returns its output. Throws when git cannot be run or fails.
+ *
+ * @param {string} root
+ * @param {string[]} args
+ * @param {string} [input] what is given to its standard input
+ * @returns {string}
+ */
+function gitOutput(root, args, input) {
+  const result = spawnSync('git', args, { cwd: root, encoding: 'utf-8', input: input ?? '' });
+  if (result.error !== undefined) throw new Error(`git could not be run: ${result.error.message}`);
+  if (result.status !== 0) throw new Error(`git could not be run: ${result.stderr.trim()}`);
+  return result.stdout;
+}
+
+/**
+ * The commit a review names, given as the hexadecimal characters its entry has, and refused when they name none or
+ * more than one. `git rev-parse --disambiguate` lists every object whose name starts with them, a blob among them.
+ *
+ * @param {string} root
+ * @param {string} commit
+ * @param {string} timestamp the instant of the review's entry
+ * @returns {string} the full name of the commit
+ */
+function reviewedCommit(root, commit, timestamp) {
+  const names = gitOutput(root, ['rev-parse', `--disambiguate=${commit}`]);
+  const commits = commitsNamed(gitOutput(root, ['cat-file', '--batch-check=%(objectname) %(objecttype)'], names));
+  if (commits.length === 0) {
+    throw new Error(`the last review, at ${timestamp}, names ${commit}, which is no commit of the repository`);
+  }
+  if (commits.length > 1) {
+    throw new Error(`the last review, at ${timestamp}, names ${commit}, which names more than one commit`);
+  }
+  return commits[0];
+}
+
+/**
+ * Throws unless the change check passes on the repository, with what it reported.
+ *
+ * @param {string} root
+ */
+function checkChangeDocuments(root) {
+  try {
+    checkChanges(root);
+  } catch (error) {
+    throw new Error(`the change check failed:\n${messageOf(error)}`);
+  }
+}
+
+/**
+ * Throws when a file outside the unit's directory differs between the commit the last review names and the commit
+ * checked out, since the work then changed after it was reviewed.
+ *
+ * @param {string} root
+ * @param {string} prefix
+ * @param {string} directory
+ * @param {string} reviewed the full name of the commit the last review names
+ * @param {string} timestamp the instant of the review's entry
+ */
+function checkWorkReviewed(root, prefix, directory, reviewed, timestamp) {
+  const differing = gitOutput(root, ['diff', '--no-renames', '--no-relative', '--name-only', '-z', reviewed, 'HEAD']);
+  const files = filesOutside(differing, prefix, directory);
+  if (files.length === 0) return;
+  throw new Error(
+    [
+      `these files outside changes/${directory}/ differ between the last review, at ${timestamp}, and the commit ` +
+        'checked out:',
+      ...files.map((file) => `- ${file}`),
+      'The work changed after the last review, so the reviewer reviews it again',
+    ].join('\n'),
+  );
+}
+
+/**
+ * Sets a unit to `implemented` when its record shows that the rule for it holds, logs it, and commits the record
+ * alone on the branch checked out, which is the unit's branch or a variant's. Nothing is written when a refusal comes
+ * first, and when the commit fails the record is put back as it was.
+ *
+ * @param {string} root
+ * @param {{ unit: string }} parsed
+ * @returns {number}
+ */
+function complete(root, { unit }) {
+  readSettings(root);
+  const { prefix, branch } = branchCommittedOn(root, 'a unit is set to implemented on its branch');
+  const directory = resolveUnit(unit, changeDirectories(root));
+  const recordFile = `changes/${directory}/record.md`;
+  if (!isRegularFile(resolve(root, recordFile))) throw new Error(`${recordFile} does not exist`);
+  const text = readFileSync(resolve(root, recordFile), 'utf-8');
+  const { status, kind } = recordFields(text, recordFile);
+
+  const unitBranch = `${commitPrefix(kind)}-${directory}`;
+  const branchRun = runOfBranch(branch, unitBranch);
+  if (branchRun === null) throw new Error(branchRefusal(branch, unitBranch));
+  const refusal = statusRefusal(directory, status);
+  if (refusal !== undefined) throw new Error(refusal);
+  const planFile = resolve(root, `changes/${directory}/plan.md`);
+  const plan = isRegularFile(planFile) ? readFileSync(planFile, 'utf-8') : undefined;
+  const planProblem = planRefusal(directory, kind, plan);
+  if (planProblem !== undefined) throw new Error(planProblem);
+  checkCommitted(root, directory, prefix, 'completes');
+  checkChangeDocuments(root);
+
+  const entries = logEntries(text);
+  const runName = branchRun.variant === null ? "the unit's branch" : `the variant \`${branchRun.variant}\``;
+  const review = lastReview(entries, branchRun.variant, runName);
+  const timestamp = entries[review.index].timestamp;
+  checkWorkReviewed(root, prefix, directory, reviewedCommit(root, review.commit, timestamp), timestamp);
+  const held = decisionsRefusal(entries, branchRun.variant, review);
+  if (held !== undefined) throw new Error(held);
+
+  const message = completionMessage(kind, directory);
+  const entry = wrappedEntry(completionEntry(instantOf(Date.now()), review.commit));
+  const hash = commitRecordAlone(root, recordFile, text, completedRecord(text, entry), message);
+  console.log(completedLine(directory, branch, hash, message));
   return 0;
 }
 
@@ -2642,6 +2788,7 @@ const COMMANDS = {
   units: { form: UNITS_FORM, parse: parseUnitsArgs, run: units },
   approve: { form: APPROVE_FORM, parse: parseApproveArgs, run: approve },
   cancel: { form: CANCEL_FORM, parse: parseCancelArgs, run: cancel },
+  complete: { form: COMPLETE_FORM, parse: parseCompleteArgs, run: complete },
   run: { form: RUN_FORM, parse: parseRunArgs, run },
   orchestrate: { form: ORCHESTRATE_FORM, parse: parseOrchestrateArgs, run: orchestrateCommand },
   runs: { form: RUNS_FORM, parse: parseRunsArgs, run: runs },
