@@ -145,5 +145,13 @@ timestamp: 2026-11-22T12:55:15Z
   tests pass without Docker. The other groups stand: 4 of the bell and the commit hook, 4 of the install and the mount
   of a unit run, and 1 of the signal to the sandbox. The split was checked against the skipped lines of a run of `npm
   test` on `4855d0d`, which gave 20 of the project's image file and 34 in all. The status stays `in-progress`
+- 2026-11-23T00:13:59Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at
+  `9b53675f459aadbd6dacad470be8f48d9841daa7` as a delta review from
+  `7a8281842b209f76df3361156a9e60a4bad12e99`. Verified the correction of `P2`; returned no findings.
+  Blocking findings: none. The review is in
+  `.reviews/0118-a-late-planned-test-is-a-note/review-2026-11-23T001237Z.md`. Independently ran `npm test`:
+  2055 tests, 2021 passed, 0 failed, 34 skipped for missing Docker. `npm run check-changes`, whitespace and
+  line-length checks passed. Could not exercise the Docker-backed tests; did not newly examine the historical
+  sample or live harness compliance. The status stays `in-progress`
 
 ## Amendments
