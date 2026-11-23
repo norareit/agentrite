@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-22T13:27:16Z
 ---
 
@@ -22,5 +22,6 @@ timestamp: 2026-11-22T13:27:16Z
   this unit after those of 0117, when the commits of 0117 were folded. The commit the entry above named for the word
   counts no longer exists, and is replaced by `ed8c644`, where `process.md` and `standards.md` are the same. The status
   stays `draft`
+- 2026-11-23T00:02:24Z [human] approved the record. The status is `approved`
 
 ## Amendments
