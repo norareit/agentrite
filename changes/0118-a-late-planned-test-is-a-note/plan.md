@@ -59,8 +59,8 @@ replaced by the first bullet below, and the bullet "Set commit points" by the se
 **`templates/changes/plan.md`, "Commit Points".** The one line `- [ ] [Commit]` becomes these two:
 
 ```markdown
-- [ ] [Commit of the planned tests, before the code they cover]
-- [ ] [Commit of the code they cover]
+[ ] [Commit of the planned tests, before the code they cover]
+[ ] [Commit of the code they cover]
 ```
 
 **No planned tests in this unit.** It adds no logic, so the standards ask for no unit test, and the spec asks for no

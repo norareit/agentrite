@@ -153,5 +153,12 @@ timestamp: 2026-11-22T12:55:15Z
   2055 tests, 2021 passed, 0 failed, 34 skipped for missing Docker. `npm run check-changes`, whitespace and
   line-length checks passed. Could not exercise the Docker-backed tests; did not newly examine the historical
   sample or live harness compliance. The status stays `in-progress`
+- 2026-11-23T00:30:23Z [Claude Code, anthropic/claude-opus-5-5] on the unit's branch, on the human's request took the
+  list marker off the two lines of the template that `plan.md` quotes in a code block, since the count of unticked tasks
+  read them as open tasks; every task of the plan is ticked. On the host with Docker, `npm test` on `122ac1a` reported
+  2055 tests, 2055 passed, 0 failed and 0 skipped, which covers the check the review left open. The human accepted for
+  now the growth the review put to them, `roles/implementer.md` from 1241 to 1363 words, `roles/reviewer.md` from 2302
+  to 2482 and `roles/planner.md` from 686 to 764, and these files are trimmed in one task with `process.md`. The status
+  stays `in-progress`
 
 ## Amendments
