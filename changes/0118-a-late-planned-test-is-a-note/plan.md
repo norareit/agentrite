@@ -111,11 +111,12 @@ pointer to the role file.
 
 ## Commit Points
 
-- [ ] `task-0118 Log the word counts the unit starts from`, with `record.md`
-- [ ] `task-0118 Have the implementer commit planned tests first and show a regression test failing`, with
-  `roles/implementer.md` and its entry in `record.md`
-- [ ] `task-0118 Have the reviewer report a late planned test as a note`, with `roles/reviewer.md` and its entry in
-  `record.md`
-- [ ] `task-0118 Give the planned tests a commit point of their own`, with `roles/planner.md`,
-  `templates/changes/plan.md` and their entry in `record.md`
-- [ ] `task-0118 Record the word counts and the checks of the finished work`, with `plan.md` and `record.md`
+The work was committed as these commits, and not as the five commit points first planned, since the unit schedules no
+planned tests and the edits are text. The five commit points are removed from the plan, and the reason is in
+`record.md`.
+
+- [x] `task-0118 Plan the role texts and the template line`, the plan
+- [x] `task-0118 Have the implementer, the reviewer and the planner treat a late planned test as a note`, with
+  `roles/implementer.md`, `roles/reviewer.md`, `roles/planner.md`, `templates/changes/plan.md` and the entries of
+  `record.md` that log the word counts and the checks
+- [x] `task-0118 Record the checks of the finished work`, with `plan.md` and `record.md`

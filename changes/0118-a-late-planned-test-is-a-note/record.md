@@ -119,5 +119,15 @@ timestamp: 2026-11-22T12:55:15Z
   `npm run check-changes`, whitespace and line-length checks passed; the added em-dash count was 0. Did not reproduce
   the historical 32-unit sample or verify live harness compliance with the new instructions. The status stays
   `in-progress`
+- 2026-11-23T00:09:35Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, accepted P1 and P2 of
+  `.reviews/0118-a-late-planned-test-is-a-note/review-2026-11-22T235156Z.md` by the definition of the orchestrator,
+  and not as a decision of the human. P1: replaced the five unticked commit points of `plan.md` with the commits made,
+  as the rest of the unit was done in one commit with the text changes, and removed the points not followed, since the
+  unit schedules no planned tests. History is not rewritten. P2: `npm test` run again on `4855d0d` reported 2055
+  tests, 2021 passed, 0 failed and 34 skipped, and all 34 carry the reason that they need Docker, which the host
+  lacks. They are 4 of the bell, the group tty and the commit hook in a container, 4 of the install and the mount of a
+  unit run, 19 of the project's image file, its build, labels and the dev shim, 1 of the signal to the sandbox and 6 of
+  variants run at once. The earlier entry that said the cause of the skips was not examined is corrected by this one.
+  The status stays `in-progress`
 
 ## Amendments
