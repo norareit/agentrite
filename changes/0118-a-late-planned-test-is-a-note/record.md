@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-11-22T12:55:15Z
 ---
 
@@ -160,5 +160,7 @@ timestamp: 2026-11-22T12:55:15Z
   now the growth the review put to them, `roles/implementer.md` from 1241 to 1363 words, `roles/reviewer.md` from 2302
   to 2482 and `roles/planner.md` from 686 to 764, and these files are trimmed in one task with `process.md`. The status
   stays `in-progress`
+- 2026-11-23T00:30:24Z [human] set the unit to implemented, on the review at `9b53675f459aadbd6dacad470be8f48d9841daa7`.
+  The status is `implemented`
 
 ## Amendments
