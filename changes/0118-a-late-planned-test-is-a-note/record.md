@@ -129,5 +129,13 @@ timestamp: 2026-11-22T12:55:15Z
   unit run, 19 of the project's image file, its build, labels and the dev shim, 1 of the signal to the sandbox and 6 of
   variants run at once. The earlier entry that said the cause of the skips was not examined is corrected by this one.
   The status stays `in-progress`
+- 2026-11-23T00:11:37Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at
+  `7a8281842b209f76df3361156a9e60a4bad12e99` as a delta review from
+  `e010e34a2a7c253106471a1bf65a48077257ef07`. Verified the changes for `P1` and `P2`; returned `P2`.
+  Blocking findings: none. The findings are in
+  `.reviews/0118-a-late-planned-test-is-a-note/review-2026-11-23T001108Z.md`. Independently ran `npm test`:
+  2055 tests, 2021 passed, 0 failed, 34 skipped for missing Docker. `npm run check-changes`, whitespace and
+  line-length checks passed. Could not exercise the Docker-backed tests; did not newly examine the historical
+  sample or live harness compliance. The status stays `in-progress`
 
 ## Amendments
