@@ -115,9 +115,9 @@ its `record.md` that says it needs no plan; a feature when it has a `plan.md`. N
 A unit may be set to `implemented` once all of these hold, whether it was built by hand or by the orchestrator:
 
 * The last review of the run, the last review entry in `## Log` among those of the run of the branch checked out,
-  was of the work as it stands: no file outside the unit's directory under `changes/` differs between the commit
-  it reviewed and the commit checked out. The entries of a variant's run name the variant, and those of the unit's
-  branch name none
+  was of the work as it stands: neither the commit that added its entry nor any since touches a file outside the
+  unit's directory under `changes/`. The entries of a variant's run name the variant, and those of the unit's branch
+  name none
 * That review lists no blocking finding still open
 * Every proposed decline of the run has the human's decision, and a finding the human decided to be fixed was reviewed
   after the decision

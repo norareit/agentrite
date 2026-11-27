@@ -497,13 +497,20 @@ The rule is read from the entries of `## Log`. The entries of a run are those of
 branch the entries whose text, after who made it and, for an agent in a role, after `as the <role>, `, opens with
 ``on the variant `<name>`, ``, with the variant's name, and on the unit's branch the entries with no such phrase. An
 entry wrapped over several lines is read as its lines joined, each continuation line's indent taken as one space. The
-last review of the run is the last entry of the reviewer, `as the reviewer`, of the run in the order of `## Log`. The
-command reads three forms. The text of each is given after the phrase of the variant on a variant's branch.
+last review of the run is the last entry of the reviewer, `as the reviewer`, of the run in the order of `## Log`.
+Whether it saw the work as it stands is read from the commits. The commit that added its entry is the newest commit
+reachable from the commit checked out at which `record.md` holds the entry's opening, up to and including
+`as the reviewer`, at the start of more lines than at each of its parents, and the commits after it are those reachable
+from the commit checked out and not from it. The commit the entry names need not exist in the repository, so that a
+rebase of the branch, or a fresh clone of it, does not change the answer. What a commit touches is read the same
+whatever the `diff.*` settings of git say, and no external diff or textconv driver runs. The command reads three forms.
+The text of each is given after the phrase of the variant on a variant's branch.
 
 The reviewer's entry opens with ``reviewed the unit at `<commit>` ``, with the commit by its hash, of 7 to 40
 lowercase hexadecimal characters, in backticks, and holds exactly one sentence that is `Blocking findings: none.` or
 `Blocking findings: ` followed by the labels of the blocking findings still open after the review, each in backticks,
-separated by a comma and a space, and a full stop:
+separated by a comma and a space, and a full stop. Its opening, up to and including `as the reviewer`, stands whole on
+the entry's first line:
 
 ```text
 - 2026-11-22T14:02:11Z [OpenCode, openai/gpt-6.2-sol] as the reviewer, reviewed the unit at `1a2b3c4` as a delta review
@@ -587,11 +594,19 @@ for the first of these that holds, in this order:
 * the last review of the run is not of the form given above. The message names the entry by its timestamp, says that it
   is not of the form the command reads, and that a review in that form, as a delta review of the commit checked out,
   lets the command go on
-* the commit the last review names is not a commit of the repository, or names more than one
-* a file outside the unit's directory differs between the commit the last review names and the commit checked out, on
-  either side of a rename. The message names those files and says that the work changed after the last review, so that
-  it is reviewed again. The commit need not be an ancestor of the commit checked out, and a change to the unit's own
-  directory, its `record.md` and `plan.md` among it, does not count
+* the commit that added the entry of the last review is a merge commit, with the message of a merge given below, or
+  touches a file outside the unit's directory. The message names those files and that commit by its short hash, and
+  says that the commit of the last review also holds other work, so that the reviewer reviews it again from the parent
+  of that commit, which it names by its short hash. When that commit has no parent in the history the repository
+  holds, as the oldest commit of a shallow clone, the message says so in place of naming a parent, and says that
+  fetching the full history, or another review, lets the command go on
+* a commit after the one that added the entry is a merge commit. The message names the newest such merge by its short
+  hash, and says that rebasing the branch on the default branch, or another review, lets the command go on
+* a commit after the one that added the entry touches a file outside the unit's directory, a renamed file by both its
+  paths and a changed, added or removed gitlink among them. The message names those files, each once, and the commit
+  that added the entry by its short hash, and says that the work changed after the last review, so that the reviewer
+  reviews it again. A commit that touches only the unit's own directory, its `record.md` and `plan.md` among it, does
+  not count, and neither does an empty commit
 * the last review lists a blocking finding still open. The message names its labels
 * a proposed decline of the run has no entry of the human's decision of the same run after it with the same label. The
   message names each such decline by its label, and says that the human decides it

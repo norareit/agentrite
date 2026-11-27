@@ -160,34 +160,34 @@ in a subdirectory is made: the change check refuses every such project before th
   `scripts/agentrite-complete.mjs` and the imports. Run `npm test` until it passes (R2 to R10)
 - [x] Log in `record.md`, in one line each, the readings this plan builds: the newest merge named by R5, and the shallow
   clone recovered by fetching the full history in R4's message (R5, R4)
-- [ ] Commit: `bugfix-0120 Read the commits from the review on, and not the trees`
-- [ ] In `process.md`, replace `no file outside the unit's directory under `changes/` differs between the commit it
+- [x] Commit: `bugfix-0120 Read the commits from the review on, and not the trees`
+- [x] In `process.md`, replace `no file outside the unit's directory under `changes/` differs between the commit it
   reviewed and the commit checked out` with `neither the commit that added its entry nor any since touches a file
   outside the unit's directory under `changes/``, which keeps 19 words, and rewrap the item at 120 characters (R1)
-- [ ] In `COMMANDS.md`, in the section of `complete`: say in the paragraph of the rule that the command reads the
+- [x] In `COMMANDS.md`, in the section of `complete`: say in the paragraph of the rule that the command reads the
   commits from the one that added the last review's entry, found by the entry's opening, and that the commit the entry
   names need not exist; say in the form of the reviewer's entry that its opening, up to and including
   `as the reviewer`, stands on the entry's first line; replace the two refusals of the named commit and the comparison
   with the refusals of R4 to R6, in that order, in the list; leave the row of `complete` in the table at the top as it
   is (R12, R13)
-- [ ] Check that `README.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md`, `roles/` and `standards.md` are unchanged,
+- [x] Check that `README.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md`, `roles/` and `standards.md` are unchanged,
   and that the documents of 0117 are (R11, R13)
-- [ ] Log in `record.md` the `wc -w process.md` once the work is done, `2562` if the replacement keeps it (R14)
-- [ ] Commit: `bugfix-0120 State the rule by the commits from the review on`
+- [x] Log in `record.md` the `wc -w process.md` once the work is done, `2562` if the replacement keeps it (R14)
+- [x] Commit: `bugfix-0120 State the rule by the commits from the review on`
 
 ## Verification
 
-- [ ] `npm test` passes
-- [ ] `npm run check-changes` passes on the committed work
-- [ ] `git diff 0b09add -- roles extra-roles standards.md README.md ORCHESTRATOR.md SETUP.md SANDBOX.md
+- [x] `npm test` passes
+- [x] `npm run check-changes` passes on the committed work
+- [x] `git diff 0b09add -- roles extra-roles standards.md README.md ORCHESTRATOR.md SETUP.md SANDBOX.md
   changes/0117-set-a-unit-implemented-by-a-command` prints nothing
-- [ ] No line of a changed file is longer than 120 characters, apart from Markdown table rows
-- [ ] `wc -w process.md` prints no more than `2562`
+- [x] No line of a changed file is longer than 120 characters, apart from Markdown table rows
+- [x] `wc -w process.md` prints no more than `2562`
 
 ## Commit Points
 
 - [x] `bugfix-0120 Read the opening, the commit that added it and the refusals of the commits after it`: the pure
   functions and their unit tests, with the command unchanged
-- [ ] `bugfix-0120 Read the commits from the review on, and not the trees`: the command tests, the removed tests and
+- [x] `bugfix-0120 Read the commits from the review on, and not the trees`: the command tests, the removed tests and
   the command's new step
-- [ ] `bugfix-0120 State the rule by the commits from the review on`: `process.md`, `COMMANDS.md` and the record
+- [x] `bugfix-0120 State the rule by the commits from the review on`: `process.md`, `COMMANDS.md` and the record

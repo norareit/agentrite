@@ -70,5 +70,9 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
 - 2026-11-27T15:00:39Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built these readings
   of the plan: R5 names the newest merge after the commit that added the entry, the first that `git rev-list` lists,
   and R4 names fetching the full history as the recovery when that commit has no parent in the history held
+- 2026-11-27T15:02:22Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, stated the rule of
+  `process.md` and the refusals of `complete` in `COMMANDS.md` by the commits from the review on. `wc -w process.md`
+  prints `2562` once the work is done, as at `0b09add`. `git diff 0b09add` of `roles`, `extra-roles`,
+  `standards.md`, `README.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md` and the documents of 0117 prints nothing
 
 ## Amendments
