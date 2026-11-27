@@ -63,6 +63,13 @@ What the kit relies on and found changed:
 * On the first search, OpenCode downloads ripgrep from `github.com`. In the sandbox the proxy refuses the host and
   every call of the `grep` tool fails with `ripgrep execution failed`. With Debian's `ripgrep` 13.0.0 on the `PATH`
   the `grep` tool worked and nothing was downloaded
+* The terminal client, `opencode` with no subcommand, takes `--standalone`, `--auto`, `--session` and `--prompt`,
+  and no `--agent` or `--model`, which the kit passes it today. `opencode mini`, a smaller client, takes `--agent`
+  and `--model` and refuses `--auto`. With `--standalone`, `default_agent` and `model` in `OPENCODE_CONFIG_CONTENT`
+  started the terminal client in a role of the project's, which it followed, on the model given. A `model` of
+  `<model>#high` there gave the variant `high`, and an unknown variant there fell back to the model's default without
+  a word, where `opencode run` ends with an error for it. A `variant` of the agent in the configuration was not taken
+* A login is kept in the table `credential` of `opencode.db`, where OpenCode 1 kept it in `auth.json`
 * OpenCode 2 has no built-in agent `scout`. Its own agents are `build`, `plan`, `general` and `explore`, and the
   hidden `compaction`, `title` and `summary`, per https://opencode.ai/docs/agents/
 
@@ -116,7 +123,10 @@ Starting OpenCode:
 4. Every start of OpenCode that the kit makes, interactive and headless, on the host and in the sandbox, passes
    `--standalone`
 5. An effort is given to OpenCode with its model, as the one argument `--model=<model>#<level>`, and no other argument
-   carries it. Without `--effort` the model is given as `--model=<model>`, as today
+   carries it. Without `--effort` the model is given as `--model=<model>`, as today. A `--model` that already names
+   a variant after a `#`, given with `--effort`, is refused before OpenCode starts, with the status of "Exit
+   statuses" of `COMMANDS.md` for a usage error, and a message that names both and says to give the effort in one of
+   them only
 6. The kit's names of OpenCode's own agents are those of OpenCode 2: `build`, `plan`, `general`, `explore`,
    `compaction`, `title` and `summary`
 
@@ -133,7 +143,8 @@ The sandbox:
 
 10. The bell of OpenCode, with `"bell": true`, is a plugin that OpenCode 2 loads, and rings the bell's script when a
     turn ends, when a turn fails, and when OpenCode asks for a permission, the moments OpenCode 1's plugin rang at
-11. The sandbox's own configuration of OpenCode turns updating off with OpenCode 2's key, `"update": "disable"`
+11. The sandbox's own configuration of OpenCode turns updating off with OpenCode 2's key, `"update": "disable"`, and
+    holds no `autoupdate`
 12. The image holds `rg`, so that OpenCode's `grep` tool works in the sandbox without a download. `github.com` is not
     admitted for it
 
@@ -142,14 +153,25 @@ The documents:
 13. The kit's documents and the help texts of its commands describe OpenCode 2: none gives `--variant`,
     `opencode-ai`, a plugin of OpenCode 1 or a version of OpenCode 1 as what the kit uses, the usage of `agentrite run`
     among them, and every example of a version of OpenCode in them gives a version of OpenCode 2, as those of
-    "Holding a harness version" in `SANDBOX.md` and the words of the label of the harness versions there
+    "Holding a harness version" in `SANDBOX.md` and the words of the label of the harness versions there. Among them:
+    * the way `SANDBOX.md` gives to log OpenCode in from the sandbox's shell is one that OpenCode 2's `opencode auth
+      login` takes, and the place where OpenCode keeps a login is given as OpenCode 2's database,
+      `~/.local/share/opencode/opencode.db`, and not as `auth.json`
+    * `SANDBOX.md` says that a command of OpenCode that the developer starts in the sandbox, as
+      `./sandbox.sh --connect 0029 opencode` or `opencode session list`, is not given `--standalone` by the kit, and
+      so works through OpenCode's shared background server
+    * "Adding a harness" of `CONTRIBUTING.md` says that a program a harness needs in the sandbox is a package of the
+      image, which names no harness
 
 Verification, by the implementer, with OpenCode 2 in this repository's own sandbox, `./sandbox-dev.sh`:
 
-14. The implementation is checked, and the checks recorded in `record.md` with the versions they ran with:
-    * a headless step of `npx agentrite run` in OpenCode, with a model and an effort, that calls the shell and a
-      tool of files, as the output of the step shows them; one resumed with its session; one with a call refused,
-      as the stop reports it; and one with an unknown model, as the error of the step shows it
+14. The implementation is checked, with a log directory of the sandbox of its own and not the developer's, and the
+    checks recorded in `record.md` with the versions they ran with:
+    * runs of `npx agentrite orchestrate` with a step in OpenCode, which reads the step's events: one with a model
+      and an effort, whose step calls the shell and a tool of files, as the followed output shows them; one whose
+      step is resumed with its session; one whose step makes a call that is refused, which ends the run, as the stop
+      reports the call; and one with an unknown model, as the run reports the harness's error
+    * a step given `--effort` with a `--model` that names a variant, refused by requirement 5
     * the terminal client started by the kit with `--prompt`, its colours, the bell when a turn ends, and a login
       that holds into a new container
     * a start refused by requirement 3, with a version of 1 given in `sandbox/compose.project.yml`
@@ -183,9 +205,23 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
 * **Debian's `ripgrep` in the image, not `github.com` in the allowlist.** With `rg` on the `PATH` OpenCode downloads
   nothing, and admitting `github.com` would admit far more than a download of ripgrep. Debian's is 13.0.0 where
   OpenCode would download 15.1.0, and the `grep` tool worked with it
+* **`ripgrep` is a package of the image, and not a member of the harness module.** The image installs it for every
+  sandbox, whatever harnesses the project names, and names no harness for it. A member of the module for the
+  packages a harness needs was weighed and declined by the human: OpenCode is the one harness that needs one, and the
+  member would be built for a second case that has not come
 * **The rest of OpenCode 2's new configuration shapes are not adopted.** The wrappers keep `mode: all` and the
   sandbox's configuration keeps `provider` for the local providers, since OpenCode 2 reads both, as found. The bell's
-  plugin and `update` change because OpenCode 2 does not read the old ones, or not as OpenCode 1 did
+  plugin changes because OpenCode 2 does not load a plugin of OpenCode 1
+* **`update` replaces `autoupdate` in the sandbox's configuration, although OpenCode 2 reads the old key.** OpenCode
+  2 took `autoupdate: false` without a warning, and its guide to moving from 1 maps it to `"update": "disable"`, so
+  updating is off either way. The key is kept by OpenCode 2 for configurations written for 1 only, and a later release
+  may drop it, which would turn updating back on in every sandbox without a word. The file is the kit's own, so
+  moving it changes nothing for a project. Keeping `autoupdate` was weighed and declined by the human
+* **Nothing of OpenCode 1 carries over in the sandbox.** A login made under OpenCode 1 may or may not hold under 2,
+  which imports some older credentials into its database and writes none back to `auth.json`, and that was not
+  checked. The developer logs in again where it does not hold, as on a new project. Sessions of OpenCode 1 are not
+  resumed by the kit. A project that goes back to the release of the kit before this unit, after OpenCode 2 has run
+  in its sandbox, is not supported, and what OpenCode 1 makes of the data that OpenCode 2 left was not checked
 * **The bell rings when a turn fails too.** OpenCode 1's `session.idle` came at the end of every turn, whatever its
   end, and OpenCode 2 splits that end into two events, so the plugin rings on both
 
@@ -198,6 +234,8 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
 * Reading the host's local providers when the host's file is in OpenCode 2's shape. See "Beyond the request"
 * Permission rules of the kit's own for OpenCode, `external_directory` among them
 * Admitting `opencode.ai`, for OpenCode's own free models, in the sandbox
+* Carrying a login or a session of OpenCode 1 over to OpenCode 2, and going back to OpenCode 1 in a sandbox where
+  OpenCode 2 has run
 * The wait of `opencode run` on an open standard input, and the reach of the local model server from the sandbox on
   the human's host, which are the same under OpenCode 1
 * `CHANGELOG.md`, which is written at the release, as `AGENTS.md` gives
