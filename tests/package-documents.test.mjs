@@ -42,13 +42,19 @@ test('package.json says what the package is, where it lives and under which lice
   assert.deepEqual(packageJson.repository, { type: 'git', url: 'git+https://github.com/norareit/agentrite.git' });
   assert.equal(packageJson.description, 'A kit for running coding agents by a fixed process');
   assert.deepEqual(packageJson.keywords, [
-    'agents',
     'coding-agents',
+    'ai-agents',
+    'agentic-coding',
+    'agentic-software-engineering',
+    'software-engineering',
     'claude-code',
-    'opencode',
     'codex',
+    'opencode',
+    'spec-driven-development',
+    'code-review',
     'sandbox',
-    'process',
+    'developer-workflow',
+    'llm',
   ]);
   assert.equal(packageJson.homepage, 'https://agentrite.dev');
   assert.deepEqual(packageJson.bugs, { url: 'https://github.com/norareit/agentrite/issues' });
