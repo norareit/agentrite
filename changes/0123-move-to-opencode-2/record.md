@@ -43,5 +43,10 @@ timestamp: 2026-11-27T13:24:19Z
   `058dfd969f03` as a delta from `03d0e24e713e`. Returned `F11` in
   `.reviews/0123-move-to-opencode-2/spec-review-2026-11-27T151108Z.md`. Did not repeat the 373-session migration,
   interactive role selection, credential migration, or R14's full kit integration
+- 2026-11-27T15:16:03Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled `F11` of the delta spec review
+  on the human's decision: the refusal of an `OPENCODE_CONFIG_CONTENT` that is no object holds for an interactive start
+  only, and an empty one is taken as not set. Added, on the human's decisions, how `./sandbox-dev.sh` is given OpenCode
+  2 for the checks, by a pin in the working copy that is not committed, and that this unit is merged last, after 0121
+  and 0122
 
 ## Amendments

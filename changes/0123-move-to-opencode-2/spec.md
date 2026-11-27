@@ -11,6 +11,11 @@ The human decided that the kit moves to OpenCode 2 and stops supporting OpenCode
 This repository's own sandbox holds no version of OpenCode and takes the host's, so the host moves to OpenCode 2
 when this repository moves to that release, or its starts are refused by requirement 3.
 
+The human also decided that this unit is merged into `master` last, right before the release that holds it, after
+units 0121 and 0122. In this repository `npx agentrite` runs the working tree's kit, which once this unit is merged
+expects OpenCode 2 while the host and the installed release still have 1, so the steps of 0121 and 0122 run on the
+kit as it is today.
+
 ### What OpenCode 2 is
 
 OpenCode 2 is published on npm as `@opencode/cli`. Its latest on 2026-11-27 is 2.4.2, published on 2026-11-26. The
@@ -137,10 +142,11 @@ Starting OpenCode:
    `--skip-permissions` and `--prompt`, since the terminal client takes no `--agent` or `--model`. What
    `OPENCODE_CONFIG_CONTENT` already holds for the start is kept in it, as the bell's plugin in the sandbox, and
    where a key is in both, the kit's role or model is the one given. That content is read as OpenCode reads it, with
-   comments and trailing commas, and a start whose `OPENCODE_CONFIG_CONTENT` is no JSON object once read so is
-   refused before OpenCode starts, with the status of "Exit statuses" of `COMMANDS.md` for a refusal and a message
-   that names the variable and what is wrong with it. Without `--model` the kit gives no `model`, and one that the
-   content holds stays. A `--model` that already names
+   comments and trailing commas, and an interactive start whose `OPENCODE_CONFIG_CONTENT` is no JSON object once
+   read so is refused before OpenCode starts, with the status of "Exit statuses" of `COMMANDS.md` for a refusal and a message
+   that names the variable and what is wrong with it. An empty `OPENCODE_CONFIG_CONTENT` is taken as one that is not
+   set. A headless start passes `OPENCODE_CONFIG_CONTENT` on as it is, and is not refused for it. Without `--model`
+   the kit gives no `model`, and one that the content holds stays. A `--model` that already names
    a variant after a `#`, given with `--effort`, is refused before OpenCode starts, with the status of "Exit
    statuses" of `COMMANDS.md` for a usage error, and a message that names both and says to give the effort in one of
    them only
@@ -184,7 +190,10 @@ The documents:
 
 Verification, by the implementer, with OpenCode 2 in this repository's own sandbox, `./sandbox-dev.sh`, and on the
 host with OpenCode 2 installed in a scratch directory, with the home and the XDG directories of its runs pointed at a
-scratch directory, so that the developer's OpenCode and its data are left as they are:
+scratch directory, so that the developer's OpenCode and its data are left as they are. `./sandbox-dev.sh` is given
+OpenCode 2 by a version of 2 in the working copy's `sandbox/compose.project.yml`, which is not committed and is taken
+out once the checks are done, since a committed one would break the sandbox of the release installed in this
+repository, whose package holds no version 2:
 
 14. The implementation is checked, with a log directory of the sandbox of its own and not the developer's, and the
     checks recorded in `record.md` with the versions they ran with:
@@ -192,8 +201,9 @@ scratch directory, so that the developer's OpenCode and its data are left as the
       and an effort, whose step calls the shell and a tool of files, as the followed output shows them; one whose
       step is resumed with its session; one whose step makes a call that is refused, which ends the run, as the stop
       reports the call; and one with an unknown model, as the run reports the harness's error
-    * a step given `--effort` with a `--model` that names a variant, and a start whose `OPENCODE_CONFIG_CONTENT` is
-      no JSON object, each refused by requirement 5
+    * a step given `--effort` with a `--model` that names a variant, and an interactive start whose
+      `OPENCODE_CONFIG_CONTENT` is no JSON object, each refused by requirement 5, and a headless start with such an
+      `OPENCODE_CONFIG_CONTENT`, which is not
     * the terminal client started by the kit in a role of the project's, with a model and an effort, and with
       `--skip-permissions`: that the session runs in that role and on that model and variant, as OpenCode's database
       records them, that `--prompt` is sent, its colours, the bell when a turn ends, and a login that holds into a new
@@ -266,7 +276,9 @@ scratch directory, so that the developer's OpenCode and its data are left as the
   `--agent` and `--model`
 * **A configuration of the start that cannot be read is refused, and not replaced.** Replacing it with the kit's
   own, with a warning, was weighed and declined by the human: it would drop what the developer put in it. Reading it
-  as OpenCode reads it is the one reading under which a value that OpenCode takes is not refused
+  as OpenCode reads it is the one reading under which a value that OpenCode takes is not refused. Only an
+  interactive start reads it, since only there does the kit add to it: a headless start gives the role and the model
+  as options, and refusing it for a value that OpenCode 2 itself goes on with would refuse runs that work today
 * **The bell rings when a turn fails too.** OpenCode 1's `session.idle` came at the end of every turn, whatever its
   end, and OpenCode 2 splits that end into two events, so the plugin rings on both
 
