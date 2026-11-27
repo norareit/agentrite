@@ -37,5 +37,12 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   Findings F9 to F11 are in `.reviews/0120-a-clean-rebase-needs-no-new-review/spec-review-2026-11-27T142420Z.md`.
   Did not verify live harness behavior or run the proposed command, which is not yet implemented
 - 2026-11-27T14:28:22Z [human] approved the spec. The status is `approved`
+- 2026-11-27T14:30:05Z [Claude Code, anthropic/claude-opus-5-5] as the planner, stopped before writing `plan.md`,
+  since the spec leaves open two things the command must do, raised as F9 and F10 of the last spec review and not
+  settled before the approval. R2 reads the opening of the review's entry literally on one line, while the form the
+  command reads accepts an entry wrapped after who made it, so that R3's claim that the commit is always found fails
+  for such an entry and the spec gives no behavior for it. R4 names the parent of the commit that added the entry,
+  which a commit with no parent, as the oldest commit of a shallow clone, lacks, and the spec gives no message for
+  it. The unit goes back to the specifier and the human. The status is `approved`
 
 ## Amendments
