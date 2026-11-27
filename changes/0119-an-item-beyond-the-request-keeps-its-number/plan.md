@@ -65,6 +65,8 @@ unit that claims to be safe":
 - [x] Log in `record.md` `wc -w` of `process.md`, `standards.md` and `roles/specifier.md` once the work is done. The
   first two do not change; for `roles/specifier.md` the entry says that the added words are the rule of R1 and R2
   (R7)
+- [ ] Set the keywords that `tests/package-documents.test.mjs` expects of `package.json` to those `package.json` holds
+  since `b863835`, so that `npm test` passes, in a commit of its own (R8, review finding `S1`)
 
 ## Verification
 
