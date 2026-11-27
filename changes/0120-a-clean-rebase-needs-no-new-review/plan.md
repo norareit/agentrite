@@ -99,29 +99,29 @@ a subdirectory is made by a `fixture` option that puts the repository one direct
 
 ## Tasks
 
-- [ ] Log in `record.md` that `wc -w process.md` prints `2562` at `0b09add`, the commit the branch was cut from (R14)
-- [ ] Add a `logEntries` test that a wrapped entry's `firstLine` is its first line as it stands, and update the two
+- [x] Log in `record.md` that `wc -w process.md` prints `2562` at `0b09add`, the commit the branch was cut from (R14)
+- [x] Add a `logEntries` test that a wrapped entry's `firstLine` is its first line as it stands, and update the two
   `deepEqual` expectations of `tests/agentrite-log-forms.test.mjs` with `firstLine`; then add `firstLine` to the
   `LogEntry` type and to `entryOf`'s result in `scripts/agentrite-log-forms.mjs`, keeping the joined text for every
   other field (R3)
-- [ ] Add unit tests of `openingCount`: zero for a text without the opening, one for the opening at the start of the
+- [x] Add unit tests of `openingCount`: zero for a text without the opening, one for the opening at the start of the
   text and one after a line feed, none for the opening after an indent or inside a line, two for two such lines, and the
   timestamp and author read literally, so that `.` or `[` in them matches only itself; then write it (R2)
-- [ ] Add unit tests of `reviewOpening(entry)`, giving `` - <timestamp> [<author>] as the reviewer ``; then write it
+- [x] Add unit tests of `reviewOpening(entry)`, giving `` - <timestamp> [<author>] as the reviewer ``; then write it
   (R2)
-- [ ] Add unit tests of `addingCommit`: the newest of two commits that raise the count is returned; a commit after it
+- [x] Add unit tests of `addingCommit`: the newest of two commits that raise the count is returned; a commit after it
   that removes an entry is not; an edit of the entry's text past the opening, in a later commit with the same count, is
   not; a merge with the count of one parent is not, and the side commit that raised it is; a commit with no parent and
   a positive count is; and it throws when no commit qualifies; then write it (R2, R3)
-- [ ] Add `lastReview` unit tests that a last review whose first line ends before `as the reviewer` is complete, as
+- [x] Add `lastReview` unit tests that a last review whose first line ends before `as the reviewer` is complete, as
   `[author]` on the first line and `as the reviewer, reviewed ...` on the next, is refused with the message of a review
   not of the form, and that a review wrapped after its opening passes; then make `lastReview` check `firstLine`
   against `reviewOpening` (R3, R10)
-- [ ] Add unit tests of `reviewCommitRefusal`, `mergeRefusal` and `changedAfterRefusal` for their texts: the files as
+- [x] Add unit tests of `reviewCommitRefusal`, `mergeRefusal` and `changedAfterRefusal` for their texts: the files as
   list items, the short hashes, the parent named, the text with no parent and the recovery by fetching the full
   history, the recovery by a rebase or another review, and each file once in `changedAfterRefusal` when two commits
   touch it; then write them (R4, R5, R6)
-- [ ] Commit: `bugfix-0120 Read the opening, the commit that added it and the refusals of the commits after it`
+- [x] Commit: `bugfix-0120 Read the opening, the commit that added it and the refusals of the commits after it`
 - [ ] Add the command tests of R15 to `tests/agentrite-complete.test.mjs`, which fail on the tree as it is:
   - a clean rebase on a moved `master` before `complete` passes, with the commit added on `master` touching a file
     outside the unit, and the entry written naming the commit the review names
@@ -180,7 +180,7 @@ a subdirectory is made by a `fixture` option that puts the repository one direct
 
 ## Commit Points
 
-- [ ] `bugfix-0120 Read the opening, the commit that added it and the refusals of the commits after it`: the pure
+- [x] `bugfix-0120 Read the opening, the commit that added it and the refusals of the commits after it`: the pure
   functions and their unit tests, with the command unchanged
 - [ ] `bugfix-0120 Read the commits from the review on, and not the trees`: the command tests, the removed tests and
   the command's new step

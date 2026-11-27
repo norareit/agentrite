@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: approved
+status: in-progress
 timestamp: 2026-11-23T00:03:55Z
 supersedes: 0117-set-a-unit-implemented-by-a-command
 ---
@@ -54,5 +54,7 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
 - 2026-11-27T14:53:14Z [Claude Code, anthropic/claude-opus-5-5] as the planner, wrote `plan.md` against `d77a689`,
   with F9 to F11 settled in `spec.md`. Every requirement R1 to R16 has a task, and every task names the requirements
   it delivers. The status is `approved`
+- 2026-11-27T14:53:44Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work. `wc -w process.md`
+  prints `2562` at `0b09add`, the commit the branch was cut from. The status is `in-progress`
 
 ## Amendments

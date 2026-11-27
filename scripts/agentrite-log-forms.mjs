@@ -2,13 +2,14 @@ import { VARIANT_PATTERN } from './agentrite-orchestrate.mjs';
 
 /**
  * One entry of `## Log`: its instant, who made it as the text of its brackets, the role it acted in, the variant it
- * names, and what follows all of them, its lines joined.
+ * names, the line it opens at as the record has it, and what follows all of them, its lines joined.
  *
  * @typedef {{
  *   timestamp: string,
  *   author: string,
  *   role: string | null,
  *   variant: string | null,
+ *   firstLine: string,
  *   text: string,
  * }} LogEntry
  */
@@ -36,27 +37,28 @@ export function logEntries(record) {
   const next = lines.findIndex((line, index) => index > heading && line.startsWith('## '));
   const section = lines.slice(heading + 1, next === -1 ? lines.length : next);
 
-  /** @type {string[]} */
+  /** @type {{ firstLine: string, text: string }[]} */
   const joined = [];
   let open = false;
   for (const line of section) {
     if (line.startsWith('- ')) {
-      joined.push(line);
+      joined.push({ firstLine: line, text: line });
       open = true;
     } else if (open && /^\s/.test(line) && line.trim() !== '') {
-      joined[joined.length - 1] += ` ${line.trimStart()}`;
+      joined[joined.length - 1].text += ` ${line.trimStart()}`;
     } else {
       open = false;
     }
   }
-  return joined.flatMap((text) => entryOf(text) ?? []);
+  return joined.flatMap(({ firstLine, text }) => entryOf(firstLine, text) ?? []);
 }
 
 /**
+ * @param {string} firstLine the line the entry opens at
  * @param {string} text an entry, its lines joined
  * @returns {LogEntry | null} `null` when it does not open with an instant and who made it
  */
-function entryOf(text) {
+function entryOf(firstLine, text) {
   const matched = ENTRY.exec(text);
   if (matched === null) return null;
   const [, timestamp, author, afterAuthor] = matched;
@@ -69,6 +71,7 @@ function entryOf(text) {
     author,
     role: role === null ? null : role[1],
     variant: variant === null ? null : variant[1],
+    firstLine,
     text: variant === null ? afterRole : afterRole.slice(variant[0].length),
   };
 }

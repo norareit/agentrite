@@ -160,13 +160,99 @@ export function lastReview(entries, variant, runName) {
     throw new Error(`the run of ${runName} has no review, and the reviewer reviews the unit first`);
   }
   const form = reviewForm(last.text);
-  if (form === null) {
+  // The commit that added the entry is found by its opening on one line, so an entry wrapped inside it is refused.
+  if (form === null || !last.firstLine.startsWith(reviewOpening(last))) {
     throw new Error(
       `the last review of ${runName}, at ${last.timestamp}, is not of the form the command reads, and a review in ` +
         'that form, as a delta review of the commit checked out, lets the command go on',
     );
   }
   return { ...form, index: entries.indexOf(last) };
+}
+
+/**
+ * @param {{ timestamp: string, author: string }} entry an entry of the reviewer
+ * @returns {string} the opening of the entry, up to and including its role, as it stands on its first line
+ */
+export function reviewOpening(entry) {
+  return `- ${entry.timestamp} [${entry.author}] as the reviewer`;
+}
+
+/**
+ * @param {string} text
+ * @param {string} opening
+ * @returns {number} how many lines of `text` start with `opening`, read literally
+ */
+export function openingCount(text, opening) {
+  return text.split('\n').filter((line) => line.startsWith(opening)).length;
+}
+
+/**
+ * The commit that added an entry: the first of `listed` that holds its opening more often than each of its parents,
+ * a commit with no parent compared with none.
+ *
+ * @param {{ commit: string, parents: string[] }[]} listed the commits that changed the record, newest first
+ * @param {Map<string, number>} counts how often each commit and each parent holds the opening
+ * @returns {string}
+ */
+export function addingCommit(listed, counts) {
+  /** @param {string} commit */
+  const countOf = (commit) => counts.get(commit) ?? 0;
+  const found = listed.find(({ commit, parents }) => {
+    const parentCounts = parents.length === 0 ? [0] : parents.map(countOf);
+    return parentCounts.every((count) => countOf(commit) > count);
+  });
+  // lastReview refuses an entry whose opening is not on its first line, and the entry is in the record of the commit
+  // checked out, so that following back the parents that hold it ends at a commit that qualifies.
+  if (found === undefined) throw new Error('the history holds no commit that adds the entry of the last review');
+  return found.commit;
+}
+
+/**
+ * @param {{ directory: string, timestamp: string, commit: string, parent: string | null, files: string[] }} found
+ *   the unit, the instant of the last review, the commit that added its entry and its parent by their short hashes,
+ *   `null` for no parent in the history held, and the files outside the unit that commit touches
+ * @returns {string}
+ */
+export function reviewCommitRefusal({ directory, timestamp, commit, parent, files }) {
+  const recovery =
+    parent === null
+      ? 'and has no parent in the history the repository holds: fetching the full history, or another review, lets ' +
+        'the command go on'
+      : `so the reviewer reviews it again from ${parent}, the parent of that commit`;
+  return [
+    `these files outside changes/${directory}/ are in ${commit}, the commit that added the last review, at ` +
+      `${timestamp}:`,
+    ...files.map((file) => `- ${file}`),
+    `The commit of the last review also holds other work, ${recovery}`,
+  ].join('\n');
+}
+
+/**
+ * @param {string} timestamp the instant of the last review
+ * @param {string} merge the merge commit by its short hash
+ * @returns {string}
+ */
+export function mergeRefusal(timestamp, merge) {
+  return (
+    `the commits from the last review, at ${timestamp}, on include the merge commit ${merge}, and the command reads ` +
+    'no merge: rebasing the branch on the default branch, or another review, lets the command go on'
+  );
+}
+
+/**
+ * @param {{ directory: string, timestamp: string, commit: string, files: string[] }} changed the unit, the instant
+ *   of the last review, the commit that added its entry by its short hash, and the files outside the unit that the
+ *   commits after it touch, newest commit first
+ * @returns {string}
+ */
+export function changedAfterRefusal({ directory, timestamp, commit, files }) {
+  return [
+    `these files outside changes/${directory}/ changed in the commits after ${commit}, which added the last review, ` +
+      `at ${timestamp}:`,
+    ...[...new Set(files)].map((file) => `- ${file}`),
+    'The work changed after the last review, so the reviewer reviews it again',
+  ].join('\n');
 }
 
 /**

@@ -5,7 +5,9 @@ import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import {
+  addingCommit,
   branchRefusal,
+  changedAfterRefusal,
   commitsNamed,
   COMPLETE_FORM,
   completedLine,
@@ -15,8 +17,12 @@ import {
   decisionsRefusal,
   filesOutside,
   lastReview,
+  mergeRefusal,
+  openingCount,
   parseCompleteArgs,
   planRefusal,
+  reviewCommitRefusal,
+  reviewOpening,
   runOfBranch,
   statusRefusal,
 } from '../scripts/agentrite-complete.mjs';
@@ -154,6 +160,151 @@ test('lastReview refuses a last review that is not of the form, after one that i
       "the last review of the unit's branch, at 2026-11-22T11:00:00Z, is not of the form the command reads, and a " +
       'review in that form, as a delta review of the commit checked out, lets the command go on',
   });
+});
+
+test('lastReview refuses a last review wrapped before the end of its opening, and passes one wrapped after it', () => {
+  const wrappedInside = entriesOf(
+    `- 2026-11-22T10:00:00Z ${AGENT}`,
+    '  as the reviewer, reviewed the unit at `aaaaaaa` in full. Blocking findings: none.',
+  );
+  assert.equal(wrappedInside[0].role, 'reviewer');
+  assert.throws(() => lastReview(wrappedInside, null, "the unit's branch"), {
+    message:
+      "the last review of the unit's branch, at 2026-11-22T10:00:00Z, is not of the form the command reads, and a " +
+      'review in that form, as a delta review of the commit checked out, lets the command go on',
+  });
+  const wrappedAfter = entriesOf(
+    `- 2026-11-22T10:00:00Z ${AGENT} as the reviewer,`,
+    '  reviewed the unit at `aaaaaaa` in full. Blocking findings: none.',
+  );
+  assert.equal(lastReview(wrappedAfter, null, "the unit's branch").commit, 'aaaaaaa');
+});
+
+test('reviewOpening gives the opening of the entry, up to and including the role', () => {
+  const [entry] = entriesOf(review('2026-11-22T10:00:00Z', 'aaaaaaa', 'none'));
+  assert.equal(reviewOpening(entry), `- 2026-11-22T10:00:00Z ${AGENT} as the reviewer`);
+});
+
+const OPENING = `- 2026-11-22T10:00:00Z ${AGENT} as the reviewer`;
+
+test('openingCount counts the lines that start with the opening', () => {
+  assert.equal(openingCount('', OPENING), 0);
+  assert.equal(openingCount('# A record\n- 2026-11-22T10:00:00Z [human] approved\n', OPENING), 0);
+  assert.equal(openingCount(`${OPENING}, reviewed`, OPENING), 1);
+  assert.equal(openingCount(`## Log\n\n${OPENING}, reviewed\n`, OPENING), 1);
+  assert.equal(openingCount(`## Log\n  ${OPENING}, quoted\n`, OPENING), 0);
+  assert.equal(openingCount(`- an entry that quotes ${OPENING}\n`, OPENING), 0);
+  assert.equal(openingCount(`${OPENING}, one\n${OPENING}, two\n`, OPENING), 2);
+});
+
+test('openingCount reads the timestamp and who made the entry literally', () => {
+  const opening = '- 2026-11-22T10:00:00Z [A.b [c] as the reviewer';
+  assert.equal(openingCount(`${opening}, reviewed\n`, opening), 1);
+  assert.equal(openingCount('- 2026-11-22T10:00:00Z [Axb [c] as the reviewer, reviewed\n', opening), 0);
+  assert.equal(openingCount('- 2026-11-22T10x00:00Z [A.b [c] as the reviewer, reviewed\n', opening), 0);
+});
+
+test('addingCommit gives the newest commit that holds the opening more often than each of its parents', () => {
+  const counts = new Map([
+    ['e', 1],
+    ['d', 1],
+    ['c', 2],
+    ['b', 1],
+    ['a', 0],
+  ]);
+  const listed = [
+    { commit: 'e', parents: ['d'] },
+    { commit: 'd', parents: ['c'] },
+    { commit: 'c', parents: ['b'] },
+    { commit: 'b', parents: ['a'] },
+  ];
+  // e edits the entry past its opening, d removes an earlier entry with the same opening, and c adds the entry.
+  assert.equal(addingCommit(listed, counts), 'c');
+  assert.equal(addingCommit(listed.slice(3), counts), 'b');
+});
+
+test('addingCommit passes over a merge that holds the entry by one parent, and takes the commit of that side', () => {
+  const counts = new Map([
+    ['merge', 1],
+    ['main', 0],
+    ['side', 1],
+    ['start', 0],
+  ]);
+  const listed = [
+    { commit: 'merge', parents: ['main', 'side'] },
+    { commit: 'side', parents: ['start'] },
+  ];
+  assert.equal(addingCommit(listed, counts), 'side');
+});
+
+test('addingCommit takes a commit with no parent that holds the entry, and throws when no commit qualifies', () => {
+  assert.equal(addingCommit([{ commit: 'root', parents: [] }], new Map([['root', 1]])), 'root');
+  assert.throws(
+    () => addingCommit([{ commit: 'b', parents: ['a'] }], new Map([['a', 1], ['b', 1]])),
+    { message: /the history holds no commit that adds the entry/ },
+  );
+});
+
+test('reviewCommitRefusal names the files, the commit of the review and its parent', () => {
+  assert.equal(
+    reviewCommitRefusal({
+      directory: '0117-x',
+      timestamp: '2026-11-22T10:00:00Z',
+      commit: 'abc1234',
+      parent: 'def5678',
+      files: ['tracked.txt', 'src/a.mjs'],
+    }),
+    [
+      'these files outside changes/0117-x/ are in abc1234, the commit that added the last review, at ' +
+        '2026-11-22T10:00:00Z:',
+      '- tracked.txt',
+      '- src/a.mjs',
+      'The commit of the last review also holds other work, so the reviewer reviews it again from def5678, ' +
+        'the parent of that commit',
+    ].join('\n'),
+  );
+});
+
+test('reviewCommitRefusal says when the commit of the review has no parent in the history held', () => {
+  const message = reviewCommitRefusal({
+    directory: '0117-x',
+    timestamp: '2026-11-22T10:00:00Z',
+    commit: 'abc1234',
+    parent: null,
+    files: ['tracked.txt'],
+  });
+  assert.equal(
+    message.split('\n').at(-1),
+    'The commit of the last review also holds other work, and has no parent in the history the repository holds: ' +
+      'fetching the full history, or another review, lets the command go on',
+  );
+  assert.match(message, /^these files outside changes\/0117-x\/ are in abc1234,[^]*\n- tracked\.txt\n/);
+});
+
+test('mergeRefusal names the merge commit and says how to go on', () => {
+  assert.equal(
+    mergeRefusal('2026-11-22T10:00:00Z', 'abc1234'),
+    'the commits from the last review, at 2026-11-22T10:00:00Z, on include the merge commit abc1234, and the ' +
+      'command reads no merge: rebasing the branch on the default branch, or another review, lets the command go on',
+  );
+});
+
+test('changedAfterRefusal names each file once and the commit that added the review', () => {
+  assert.equal(
+    changedAfterRefusal({
+      directory: '0117-x',
+      timestamp: '2026-11-22T10:00:00Z',
+      commit: 'abc1234',
+      files: ['b.txt', 'a.txt', 'b.txt'],
+    }),
+    [
+      'these files outside changes/0117-x/ changed in the commits after abc1234, which added the last review, at ' +
+        '2026-11-22T10:00:00Z:',
+      '- b.txt',
+      '- a.txt',
+      'The work changed after the last review, so the reviewer reviews it again',
+    ].join('\n'),
+  );
 });
 
 const proposed = (label, variant = '') =>

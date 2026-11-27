@@ -33,6 +33,14 @@ test('logEntries reads an entry on one line and one wrapped over three lines, it
   assert.equal(entries[1].text, 'reviewed the unit at `abc1234` as a delta review. Blocking findings: none.');
 });
 
+test('logEntries gives the first line of a wrapped entry as it stands', () => {
+  const first = `- 2026-11-22T11:00:00Z ${AGENT} as the reviewer, reviewed the unit at`;
+  const text = record('## Log', '', first, '  `abc1234` as a delta review.', '    Blocking findings: none.');
+  const [entry] = logEntries(text);
+  assert.equal(entry.firstLine, first);
+  assert.equal(entry.text, 'reviewed the unit at `abc1234` as a delta review. Blocking findings: none.');
+});
+
 test('logEntries leaves out the entries of other sections and ends an entry at a blank line', () => {
   const text = record(
     '## Log',
@@ -52,22 +60,22 @@ test('logEntries leaves out the entries of other sections and ends an entry at a
 });
 
 test('logEntries reads the author, the role and the variant of an entry', () => {
-  const text = record(
-    '## Log',
-    '',
+  const lines = [
     `- 2026-11-22T10:00:00Z ${AGENT} as the reviewer, reviewed the unit`,
     `- 2026-11-22T10:01:00Z ${AGENT} as the reviewer, on the variant \`opus\`, reviewed the unit`,
     '- 2026-11-22T10:02:00Z [human] on the variant `opus-2`, decided the proposed decline of `S1`: declined',
     `- 2026-11-22T10:03:00Z ${AGENT} began the work`,
     `- 2026-11-22T10:04:00Z ${AGENT} as the implementer on the variant \`opus\`, began`,
     '- 2026-11-22T10:05:00Z [human] approved the spec',
-  );
+  ];
+  const text = record('## Log', '', ...lines);
   assert.deepEqual(logEntries(text), [
     {
       timestamp: '2026-11-22T10:00:00Z',
       author: 'Claude Code, anthropic/claude-opus-5-5',
       role: 'reviewer',
       variant: null,
+      firstLine: lines[0],
       text: 'reviewed the unit',
     },
     {
@@ -75,6 +83,7 @@ test('logEntries reads the author, the role and the variant of an entry', () => 
       author: 'Claude Code, anthropic/claude-opus-5-5',
       role: 'reviewer',
       variant: 'opus',
+      firstLine: lines[1],
       text: 'reviewed the unit',
     },
     {
@@ -82,6 +91,7 @@ test('logEntries reads the author, the role and the variant of an entry', () => 
       author: 'human',
       role: null,
       variant: 'opus-2',
+      firstLine: lines[2],
       text: 'decided the proposed decline of `S1`: declined',
     },
     {
@@ -89,6 +99,7 @@ test('logEntries reads the author, the role and the variant of an entry', () => 
       author: 'Claude Code, anthropic/claude-opus-5-5',
       role: null,
       variant: null,
+      firstLine: lines[3],
       text: 'began the work',
     },
     {
@@ -96,6 +107,7 @@ test('logEntries reads the author, the role and the variant of an entry', () => 
       author: 'Claude Code, anthropic/claude-opus-5-5',
       role: 'implementer',
       variant: null,
+      firstLine: lines[4],
       text: 'on the variant `opus`, began',
     },
     {
@@ -103,6 +115,7 @@ test('logEntries reads the author, the role and the variant of an entry', () => 
       author: 'human',
       role: null,
       variant: null,
+      firstLine: lines[5],
       text: 'approved the spec',
     },
   ]);
