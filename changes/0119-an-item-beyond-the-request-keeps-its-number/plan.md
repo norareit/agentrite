@@ -65,7 +65,7 @@ unit that claims to be safe":
 - [x] Log in `record.md` `wc -w` of `process.md`, `standards.md` and `roles/specifier.md` once the work is done. The
   first two do not change; for `roles/specifier.md` the entry says that the added words are the rule of R1 and R2
   (R7)
-- [ ] Set the keywords that `tests/package-documents.test.mjs` expects of `package.json` to those `package.json` holds
+- [x] Set the keywords that `tests/package-documents.test.mjs` expects of `package.json` to those `package.json` holds
   since `b863835`, so that `npm test` passes, in a commit of its own (R8, review finding `S1`)
 
 ## Verification
@@ -73,7 +73,7 @@ unit that claims to be safe":
 - [x] `awk 'length > 120 { print FILENAME ": " FNR }'` over the three changed files and `record.md` prints nothing
   (R8)
 - [x] `grep -nP '\x{2014}'`, a search for the em dash, over the three changed files and `record.md` prints nothing (R8)
-- [ ] `npm test` passes (R8)
+- [x] `npm test` passes (R8)
 - [x] `npm run check-changes` exits 0, run after the work is committed (R8)
 
 ## Commit Points
