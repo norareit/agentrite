@@ -93,5 +93,10 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   versions after the review that exceed a mebibyte together failed with `ENOBUFS` on the code of `4ba22ad` and
   passes on `8e16b6b`, where `npm test` passes, 2046 tests and none failing, and `npm run check-changes` passes. A
   single version of the record longer than the memory of the process is not checked. The status is `in-progress`
+- 2026-11-27T15:13:02Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at `bc34526c9629` as a delta
+  review from `4ba22ad9f077`. Returned no findings. Blocking findings: none. The findings are in
+  `.reviews/0120-a-clean-rebase-needs-no-new-review/review-2026-11-27T151302Z.md`. `npm test` passed with 2046 passing
+  and 34 Docker-dependent tests skipped; `npm run check-changes` passed. Did not reenact the regression on the
+  pre-fix tree or test a record that exhausts process memory. The status stays `in-progress`
 
 ## Amendments
