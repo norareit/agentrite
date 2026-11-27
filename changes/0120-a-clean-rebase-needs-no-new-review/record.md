@@ -56,5 +56,19 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   it delivers. The status is `approved`
 - 2026-11-27T14:53:44Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work. `wc -w process.md`
   prints `2562` at `0b09add`, the commit the branch was cut from. The status is `in-progress`
+- 2026-11-27T15:00:39Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, added two pure readers to
+  `plan.md` before writing them: `parentsListed` for the output of `git rev-list --parents` and `batchContents` for
+  that of `git cat-file --batch`, read by the size of each blob in bytes, since the plan's calls need both read and
+  the standards put such reading in pure, unit tested functions. `addingCommit` returns the commit with its parents,
+  so that the command reads the parents of R4 from it
+- 2026-11-27T15:00:39Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, changed the test of
+  `diff.relative=true` in `plan.md` to a project at the top of its repository. The change check, which `complete`
+  runs before it reads the review, refuses every project in a subdirectory of its repository with `Unable to read
+  changes/<unit>/record.md`, since it reads the records with `git show <revision>:changes/...` from the top of the
+  repository. That was so before this unit, and this unit leaves the change check as it is. In such a project the
+  setting is therefore not tested through the command, and `diff-tree` is given `--no-relative` as the plan says
+- 2026-11-27T15:00:39Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, built these readings
+  of the plan: R5 names the newest merge after the commit that added the entry, the first that `git rev-list` lists,
+  and R4 names fetching the full history as the recovery when that commit has no parent in the history held
 
 ## Amendments

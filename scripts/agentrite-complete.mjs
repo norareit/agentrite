@@ -122,14 +122,37 @@ export function planRefusal(directory, kind, plan) {
 }
 
 /**
- * @param {string} batchCheckOutput what `git cat-file --batch-check='%(objectname) %(objecttype)'` printed
- * @returns {string[]} the object names of the commits among the objects it described
+ * @param {string} revListOutput what `git rev-list --parents` printed: a commit and its parents on each line
+ * @returns {{ commit: string, parents: string[] }[]} the commits in its order, each with its parents
  */
-export function commitsNamed(batchCheckOutput) {
-  return batchCheckOutput
+export function parentsListed(revListOutput) {
+  return revListOutput
     .split('\n')
-    .filter((line) => line.endsWith(' commit'))
-    .map((line) => line.slice(0, -' commit'.length));
+    .filter((line) => line !== '')
+    .map((line) => {
+      const [commit, ...parents] = line.split(' ');
+      return { commit, parents };
+    });
+}
+
+/**
+ * @param {Buffer} batchOutput what `git cat-file --batch` printed for blobs that exist: for each, a line of its name,
+ *   its type and its size in bytes, its content and a line feed
+ * @returns {Map<string, string>} the content of each blob by its name, read as UTF-8
+ */
+export function batchContents(batchOutput) {
+  /** @type {Map<string, string>} */
+  const contents = new Map();
+  let position = 0;
+  while (position < batchOutput.length) {
+    const headerEnd = batchOutput.indexOf(0x0a, position);
+    const [name, , size] = batchOutput.subarray(position, headerEnd).toString('utf-8').split(' ');
+    const start = headerEnd + 1;
+    const end = start + Number(size);
+    contents.set(name, batchOutput.subarray(start, end).toString('utf-8'));
+    position = end + 1;
+  }
+  return contents;
 }
 
 /**
@@ -193,7 +216,7 @@ export function openingCount(text, opening) {
  *
  * @param {{ commit: string, parents: string[] }[]} listed the commits that changed the record, newest first
  * @param {Map<string, number>} counts how often each commit and each parent holds the opening
- * @returns {string}
+ * @returns {{ commit: string, parents: string[] }}
  */
 export function addingCommit(listed, counts) {
   /** @param {string} commit */
@@ -205,7 +228,7 @@ export function addingCommit(listed, counts) {
   // lastReview refuses an entry whose opening is not on its first line, and the entry is in the record of the commit
   // checked out, so that following back the parents that hold it ends at a commit that qualifies.
   if (found === undefined) throw new Error('the history holds no commit that adds the entry of the last review');
-  return found.commit;
+  return found;
 }
 
 /**

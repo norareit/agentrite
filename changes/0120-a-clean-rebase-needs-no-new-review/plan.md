@@ -81,14 +81,16 @@ after the branch was cut and running `git rebase master` on the unit's branch. A
 rebase left it reachable from no ref and `git clone` of a local path with `--no-local` copies only what refs reach. A
 commit with no parent is made as the first commit of a repository, holding the unit in progress with its review and
 the work, with `master` and the unit's branch both at it. A shallow clone would serve too, but its boundary commit has
-no common ancestor with `master`, so that the change check refuses before the command reads the review. A project in
-a subdirectory is made by a `fixture` option that puts the repository one directory above the project, as `app/`.
+no common ancestor with `master`, so that the change check refuses before the command reads the review. No project
+in a subdirectory is made: the change check refuses every such project before the command reads the review, so that
+`diff.relative=true` is tested in a project at the top of its repository.
 
 ## Files
 
 - `scripts/agentrite-log-forms.mjs`: `firstLine` on each entry of `logEntries`
 - `scripts/agentrite-complete.mjs`: `reviewOpening`, `openingCount`, `addingCommit`, `reviewCommitRefusal`,
-  `mergeRefusal`, `changedAfterRefusal`; the first-line check in `lastReview`; `commitsNamed` removed
+  `mergeRefusal`, `changedAfterRefusal`, `parentsListed`, `batchContents`; the first-line check in `lastReview`;
+  `commitsNamed` removed
 - `scripts/agentrite.mjs`: the git calls of the new step in place of `reviewedCommit` and `checkWorkReviewed`
 - `tests/agentrite-log-forms.test.mjs`: `firstLine` in the expected entries
 - `tests/agentrite-complete.test.mjs`: unit tests of the new functions, command tests of R15, removed and adapted tests
@@ -122,7 +124,7 @@ a subdirectory is made by a `fixture` option that puts the repository one direct
   history, the recovery by a rebase or another review, and each file once in `changedAfterRefusal` when two commits
   touch it; then write them (R4, R5, R6)
 - [x] Commit: `bugfix-0120 Read the opening, the commit that added it and the refusals of the commits after it`
-- [ ] Add the command tests of R15 to `tests/agentrite-complete.test.mjs`, which fail on the tree as it is:
+- [x] Add the command tests of R15 to `tests/agentrite-complete.test.mjs`, which fail on the tree as it is:
   - a clean rebase on a moved `master` before `complete` passes, with the commit added on `master` touching a file
     outside the unit, and the entry written naming the commit the review names
   - a code commit after the review refuses, naming the file and the commit that added the entry
@@ -136,23 +138,27 @@ a subdirectory is made by a `fixture` option that puts the repository one direct
   - a merge after the review refuses, naming its short hash, and a review logged after the merge passes
   - a review commit made on a side branch, as at `sandbox/<branch>`, and merged into the unit's branch with
     `--no-ff`, refuses as a merge after the review, naming the merge and not the review commit
-  - a gitlink changed after the review refuses under `diff.ignoreSubmodules=all`, and, for a project in `app/`, a
-    file at the top of the repository changed after the review refuses under `diff.relative=true`, naming it
+  - a gitlink changed after the review refuses under `diff.ignoreSubmodules=all`, and a file changed after the review
+    refuses under `diff.relative=true`, naming it. A project in `app/` is not used, since the change check, which runs
+    before the review is read, refuses every project in a subdirectory of its repository
   - a rename of a file outside the unit after the review names both paths
   - with `diff.external` and a textconv driver for `*.md` set to a command that writes a marker file, the command
     passes and the marker file does not exist (R9)
   (R15, R7, R9)
-- [ ] Remove the tests of R16: the `commitsNamed` unit test, `twoCommitsWithOnePrefix` and the `createHash` import,
+- [x] Remove the tests of R16: the `commitsNamed` unit test, `twoCommitsWithOnePrefix` and the `createHash` import,
   the refusals `a hash that names no commit` and `a hash that names two commits`, and `complete passes for a reviewed
   commit that is no ancestor with the same tree outside the unit`. Adapt the refusals `a file outside the unit changed
   after the review`, `a merge after the review that brings in a file outside the unit` and the gitlink refusal to the
   new messages, the merge one to that of R5 (R16, R8)
-- [ ] In `scripts/agentrite.mjs`, replace `reviewedCommit` and `checkWorkReviewed` with `checkReviewedCommits(root,
+- [x] Add unit tests of `parentsListed`, which reads the output of `git rev-list --parents`, and of `batchContents`,
+  which reads that of `git cat-file --batch` by the size of each blob in bytes; then write them, and `gitBytes` in
+  `scripts/agentrite.mjs` for the output as bytes (R2)
+- [x] In `scripts/agentrite.mjs`, replace `reviewedCommit` and `checkWorkReviewed` with `checkReviewedCommits(root,
   prefix, directory, opening, timestamp)`, which runs the three calls that find the commit, `addingCommit`, the
   `rev-list` of the commits after it and the `diff-tree` of each one that is no merge, and throws the refusals in the
   order of the approach. Call it where `checkWorkReviewed` is called. Remove `commitsNamed` from
   `scripts/agentrite-complete.mjs` and the imports. Run `npm test` until it passes (R2 to R10)
-- [ ] Log in `record.md`, in one line each, the readings this plan builds: the newest merge named by R5, and the shallow
+- [x] Log in `record.md`, in one line each, the readings this plan builds: the newest merge named by R5, and the shallow
   clone recovered by fetching the full history in R4's message (R5, R4)
 - [ ] Commit: `bugfix-0120 Read the commits from the review on, and not the trees`
 - [ ] In `process.md`, replace `no file outside the unit's directory under `changes/` differs between the commit it

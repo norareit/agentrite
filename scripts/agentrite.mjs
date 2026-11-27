@@ -45,9 +45,11 @@ import {
   parseCancelArgs,
 } from './agentrite-cancel.mjs';
 import {
+  addingCommit,
+  batchContents,
   branchRefusal,
+  changedAfterRefusal,
   COMPLETE_FORM,
-  commitsNamed,
   completedLine,
   completedRecord,
   completionEntry,
@@ -55,8 +57,13 @@ import {
   decisionsRefusal,
   filesOutside,
   lastReview,
+  mergeRefusal,
+  openingCount,
+  parentsListed,
   parseCompleteArgs,
   planRefusal,
+  reviewCommitRefusal,
+  reviewOpening,
   runOfBranch,
   statusRefusal,
 } from './agentrite-complete.mjs';
@@ -1497,27 +1504,6 @@ function gitOutput(root, args, input) {
 }
 
 /**
- * The commit a review names, given as the hexadecimal characters its entry has, and refused when they name none or
- * more than one. `git rev-parse --disambiguate` lists every object whose name starts with them, a blob among them.
- *
- * @param {string} root
- * @param {string} commit
- * @param {string} timestamp the instant of the review's entry
- * @returns {string} the full name of the commit
- */
-function reviewedCommit(root, commit, timestamp) {
-  const names = gitOutput(root, ['rev-parse', `--disambiguate=${commit}`]);
-  const commits = commitsNamed(gitOutput(root, ['cat-file', '--batch-check=%(objectname) %(objecttype)'], names));
-  if (commits.length === 0) {
-    throw new Error(`the last review, at ${timestamp}, names ${commit}, which is no commit of the repository`);
-  }
-  if (commits.length > 1) {
-    throw new Error(`the last review, at ${timestamp}, names ${commit}, which names more than one commit`);
-  }
-  return commits[0];
-}
-
-/**
  * Throws unless the change check passes on the repository, with what it reported.
  *
  * @param {string} root
@@ -1531,36 +1517,103 @@ function checkChangeDocuments(root) {
 }
 
 /**
- * Throws when a file outside the unit's directory differs between the commit the last review names and the commit
- * checked out, since the work then changed after it was reviewed.
+ * Runs `git` in `root` as `gitOutput` does, and returns its output as bytes.
+ *
+ * @param {string} root
+ * @param {string[]} args
+ * @param {string} input
+ * @returns {Buffer}
+ */
+function gitBytes(root, args, input) {
+  const result = spawnSync('git', args, { cwd: root, input });
+  if (result.error !== undefined) throw new Error(`git could not be run: ${result.error.message}`);
+  if (result.status !== 0) throw new Error(`git could not be run: ${result.stderr.toString('utf-8').trim()}`);
+  return result.stdout;
+}
+
+/**
+ * The commit that added the entry of the last review to the unit's record, found by its opening among the commits
+ * reachable from the commit checked out. Every call is of plumbing, which runs no external diff and no textconv driver
+ * and reads no `diff.*` setting.
+ *
+ * @param {string} root
+ * @param {string} record the path of the unit's `record.md` from the top of the repository
+ * @param {string} opening
+ * @returns {{ commit: string, parents: string[] }}
+ */
+function reviewAddingCommit(root, record, opening) {
+  // Every parent of a merge is walked, so that a review commit that came in on a merge's other side is listed.
+  const changed = gitOutput(root, [
+    'rev-list',
+    '--topo-order',
+    '--full-history',
+    'HEAD',
+    '--',
+    `:(top,literal)${record}`,
+  ]);
+  // The parents that rev-list gives with a path are rewritten to the path's history, so they are read again.
+  const listed = parentsListed(gitOutput(root, ['rev-list', '--no-walk=unsorted', '--parents', '--stdin'], changed));
+  const commits = [...new Set(listed.flatMap(({ commit, parents }) => [commit, ...parents]))];
+  const blobs = gitOutput(
+    root,
+    ['cat-file', '--batch-check=%(objectname)'],
+    commits.map((commit) => `${commit}:${record}\n`).join(''),
+  ).split('\n');
+  const named = [...new Set(blobs.filter((line) => /^[0-9a-f]+$/.test(line)))];
+  const contents = batchContents(gitBytes(root, ['cat-file', '--batch'], named.map((blob) => `${blob}\n`).join('')));
+  const counts = new Map(
+    commits.map((commit, index) => [commit, openingCount(contents.get(blobs[index]) ?? '', opening)]),
+  );
+  return addingCommit(listed, counts);
+}
+
+/**
+ * Throws unless the last review was of the work as it stands: unless neither the commit that added its entry nor any
+ * commit after it is a merge or touches a file outside the unit's directory.
  *
  * @param {string} root
  * @param {string} prefix
  * @param {string} directory
- * @param {string} reviewed the full name of the commit the last review names
+ * @param {string} opening the opening of the last review's entry
  * @param {string} timestamp the instant of the review's entry
  */
-function checkWorkReviewed(root, prefix, directory, reviewed, timestamp) {
-  const differing = gitOutput(root, [
-    'diff',
-    '--no-renames',
-    '--no-relative',
-    '--ignore-submodules=none',
-    '--name-only',
-    '-z',
-    reviewed,
-    'HEAD',
-  ]);
-  const files = filesOutside(differing, prefix, directory);
-  if (files.length === 0) return;
-  throw new Error(
-    [
-      `these files outside changes/${directory}/ differ between the last review, at ${timestamp}, and the commit ` +
-        'checked out:',
-      ...files.map((file) => `- ${file}`),
-      'The work changed after the last review, so the reviewer reviews it again',
-    ].join('\n'),
-  );
+function checkReviewedCommits(root, prefix, directory, opening, timestamp) {
+  const added = reviewAddingCommit(root, `${prefix}changes/${directory}/record.md`, opening);
+  /** @param {string} commit */
+  const short = (commit) => gitOutput(root, ['rev-parse', '--short', commit]).trim();
+  /** @param {string} commit */
+  const touched = (commit) =>
+    filesOutside(
+      gitOutput(root, [
+        'diff-tree',
+        '-r',
+        '-z',
+        '--name-only',
+        '--no-commit-id',
+        '--no-renames',
+        '--no-relative',
+        '--ignore-submodules=none',
+        '--no-ext-diff',
+        '--no-textconv',
+        '--root',
+        commit,
+      ]),
+      prefix,
+      directory,
+    );
+  if (added.parents.length > 1) throw new Error(mergeRefusal(timestamp, short(added.commit)));
+  const own = touched(added.commit);
+  if (own.length > 0) {
+    const parent = added.parents.length === 0 ? null : short(added.parents[0]);
+    throw new Error(reviewCommitRefusal({ directory, timestamp, commit: short(added.commit), parent, files: own }));
+  }
+  const after = parentsListed(gitOutput(root, ['rev-list', '--parents', `${added.commit}..HEAD`]));
+  const merge = after.find(({ parents }) => parents.length > 1);
+  if (merge !== undefined) throw new Error(mergeRefusal(timestamp, short(merge.commit)));
+  const files = after.flatMap(({ commit }) => touched(commit));
+  if (files.length > 0) {
+    throw new Error(changedAfterRefusal({ directory, timestamp, commit: short(added.commit), files }));
+  }
 }
 
 /**
@@ -1596,8 +1649,8 @@ function complete(root, { unit }) {
   const entries = logEntries(text);
   const runName = branchRun.variant === null ? "the unit's branch" : `the variant \`${branchRun.variant}\``;
   const review = lastReview(entries, branchRun.variant, runName);
-  const timestamp = entries[review.index].timestamp;
-  checkWorkReviewed(root, prefix, directory, reviewedCommit(root, review.commit, timestamp), timestamp);
+  const reviewEntry = entries[review.index];
+  checkReviewedCommits(root, prefix, directory, reviewOpening(reviewEntry), reviewEntry.timestamp);
   const held = decisionsRefusal(entries, branchRun.variant, review);
   if (held !== undefined) throw new Error(held);
 

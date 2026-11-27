@@ -1,14 +1,13 @@
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { createHash } from 'node:crypto';
-import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { test } from 'node:test';
 import {
   addingCommit,
+  batchContents,
   branchRefusal,
   changedAfterRefusal,
-  commitsNamed,
   COMPLETE_FORM,
   completedLine,
   completedRecord,
@@ -19,6 +18,7 @@ import {
   lastReview,
   mergeRefusal,
   openingCount,
+  parentsListed,
   parseCompleteArgs,
   planRefusal,
   reviewCommitRefusal,
@@ -106,11 +106,29 @@ test('planRefusal refuses a feature without a plan and a plan with open tasks', 
   assert.equal(planRefusal('0117-x', 'feature', '- [x] a\n'), undefined);
 });
 
-test('commitsNamed keeps the names of commits only', () => {
-  assert.deepEqual(commitsNamed(''), []);
-  assert.deepEqual(commitsNamed('aaa111 commit\n'), ['aaa111']);
-  assert.deepEqual(commitsNamed('aaa111 commit\naaa222 blob\n'), ['aaa111']);
-  assert.deepEqual(commitsNamed('aaa111 commit\naaa222 commit\n'), ['aaa111', 'aaa222']);
+test('parentsListed reads each commit and its parents, none for a commit at the root', () => {
+  assert.deepEqual(parentsListed(''), []);
+  assert.deepEqual(parentsListed('c b\nm c s\nr\n'), [
+    { commit: 'c', parents: ['b'] },
+    { commit: 'm', parents: ['c', 's'] },
+    { commit: 'r', parents: [] },
+  ]);
+});
+
+test('batchContents reads each blob by its size in bytes, a line feed and a multibyte character among them', () => {
+  const first = 'line one\nline twö\n';
+  const output = Buffer.concat([
+    Buffer.from(`aaa blob ${Buffer.byteLength(first)}\n${first}\n`),
+    Buffer.from('bbb blob 0\n\n'),
+  ]);
+  assert.deepEqual(
+    batchContents(output),
+    new Map([
+      ['aaa', first],
+      ['bbb', ''],
+    ]),
+  );
+  assert.deepEqual(batchContents(Buffer.alloc(0)), new Map());
 });
 
 test('filesOutside gives the paths that are not in the unit directory', () => {
@@ -219,8 +237,8 @@ test('addingCommit gives the newest commit that holds the opening more often tha
     { commit: 'b', parents: ['a'] },
   ];
   // e edits the entry past its opening, d removes an earlier entry with the same opening, and c adds the entry.
-  assert.equal(addingCommit(listed, counts), 'c');
-  assert.equal(addingCommit(listed.slice(3), counts), 'b');
+  assert.equal(addingCommit(listed, counts).commit, 'c');
+  assert.equal(addingCommit(listed.slice(3), counts).commit, 'b');
 });
 
 test('addingCommit passes over a merge that holds the entry by one parent, and takes the commit of that side', () => {
@@ -234,11 +252,14 @@ test('addingCommit passes over a merge that holds the entry by one parent, and t
     { commit: 'merge', parents: ['main', 'side'] },
     { commit: 'side', parents: ['start'] },
   ];
-  assert.equal(addingCommit(listed, counts), 'side');
+  assert.deepEqual(addingCommit(listed, counts), { commit: 'side', parents: ['start'] });
 });
 
 test('addingCommit takes a commit with no parent that holds the entry, and throws when no commit qualifies', () => {
-  assert.equal(addingCommit([{ commit: 'root', parents: [] }], new Map([['root', 1]])), 'root');
+  assert.deepEqual(addingCommit([{ commit: 'root', parents: [] }], new Map([['root', 1]])), {
+    commit: 'root',
+    parents: [],
+  });
   assert.throws(
     () => addingCommit([{ commit: 'b', parents: ['a'] }], new Map([['a', 1], ['b', 1]])),
     { message: /the history holds no commit that adds the entry/ },
@@ -498,6 +519,7 @@ function assertRefused(given, expected) {
   assert.match(result.stderr, expected);
   assert.equal(result.stderr.split('\n').filter((line) => line.startsWith('agentrite: ')).length, 1);
   assert.deepEqual(stateOf(given), before);
+  return result;
 }
 
 // What the command leaves of the record: the status changed, and one entry after the last of its log.
@@ -570,15 +592,205 @@ test('complete passes after a commit that changes only the record, and for a bug
   assert.match(git(given.base, given.project, 'log', '-1', '--format=%s'), /^bugfix-0010 Set the unit/);
 });
 
-test('complete passes for a reviewed commit that is no ancestor with the same tree outside the unit', (testContext) => {
+function shortHash({ base, project }, commit) {
+  return git(base, project, 'rev-parse', '--short', commit).trim();
+}
+
+// The review's entry, at an instant after that of `reviewLine`.
+function laterReviewLine(commit) {
+  return reviewLine(commit).replace('2026-11-22T10:00:00Z', '2026-11-22T12:00:00Z');
+}
+
+// Adds a commit that touches a file outside the unit to `master`, and rebases the unit's branch on it.
+function moveMasterAndRebase(given) {
+  const { base, project, branch } = given;
+  git(base, project, 'checkout', '--quiet', 'master');
+  write(project, 'other.txt', 'other\n');
+  commitAll(given, 'Other work');
+  git(base, project, 'checkout', '--quiet', branch);
+  git(base, project, 'rebase', '--quiet', 'master');
+}
+
+test('complete passes after a clean rebase of the branch on a default branch that moved', (testContext) => {
+  const given = { ...fixture(testContext), kind: 'feature' };
+  given.named = given.reviewed.slice(0, 7);
+  logEntry(given, reviewLine(given.named));
+  moveMasterAndRebase(given);
+  assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
+});
+
+test('complete passes in a fresh clone of a rebased branch, which lacks the commit the review names', (testContext) => {
+  const given = { ...fixture(testContext), kind: 'feature' };
+  given.named = given.reviewed;
+  logEntry(given, reviewLine(given.named));
+  moveMasterAndRebase(given);
+  const clone = join(given.base, 'clone');
+  git(given.base, given.base, 'clone', '--quiet', '--no-local', given.project, clone);
+  installKit(clone);
+  const cloned = { ...given, project: clone };
+  const lookup = spawnSync('git', ['cat-file', '-e', `${given.named}^{commit}`], {
+    cwd: clone,
+    env: environment(given.base),
+  });
+  assert.notEqual(lookup.status, 0);
+  assert.match(git(given.base, clone, 'branch', '--all'), /remotes\/origin\/master/);
+  assertCompleted(cloned, stateOf(cloned), runIn(cloned, [UNIT]));
+});
+
+test('complete refuses a code commit after the review, naming the file and the commit of the review', (testContext) => {
+  const given = fixture(testContext);
+  const added = logEntry(given, reviewLine(given.reviewed));
+  write(given.project, 'tracked.txt', 'three\n');
+  commitAll(given, 'More work');
+  assertRefused(
+    given,
+    new RegExp(
+      `changed in the commits after ${shortHash(given, added)}, which added the last review, at ` +
+        '2026-11-22T10:00:00Z:\n- tracked\\.txt\nThe work changed after the last review',
+    ),
+  );
+});
+
+test('complete passes commits after the review that touch only the plan and the record, and an empty one', (t) => {
+  const given = { ...fixture(t), kind: 'feature' };
+  given.named = given.reviewed;
+  logEntry(given, reviewLine(given.named));
+  write(given.project, `changes/${UNIT}/plan.md`, '- [x] the work\n- [x] a note\n');
+  commitAll(given, 'Plan');
+  logEntry(given, '- 2026-11-22T11:00:00Z [human] a note');
+  git(given.base, given.project, 'commit', '--quiet', '--allow-empty', '-m', 'Nothing');
+  assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
+});
+
+test('complete finds the commit of the review after an edit of its text past its opening', (testContext) => {
+  const given = { ...fixture(testContext), kind: 'feature' };
+  given.named = given.reviewed;
+  logEntry(given, reviewLine(given.named));
+  rewriteRecord(given, (text) => text.replace('in full.', 'in full, with the suites run.'));
+  commitAll(given, 'Edit the review');
+  assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
+});
+
+test('complete refuses a code commit between the review and an edit of its text', (testContext) => {
+  const given = fixture(testContext);
+  const added = logEntry(given, reviewLine(given.reviewed));
+  write(given.project, 'tracked.txt', 'three\n');
+  commitAll(given, 'More work');
+  rewriteRecord(given, (text) => text.replace('in full.', 'in full, with the suites run.'));
+  commitAll(given, 'Edit the review');
+  assertRefused(given, new RegExp(`after ${shortHash(given, added)}, which added the last review[^]*- tracked\\.txt`));
+});
+
+test('complete refuses a commit of the review that also holds code, naming its parent', (testContext) => {
+  const given = fixture(testContext);
+  write(given.project, 'tracked.txt', 'three\n');
+  const added = logEntry(given, reviewLine(given.reviewed));
+  assertRefused(
+    given,
+    new RegExp(
+      `are in ${shortHash(given, added)}, the commit that added the last review, at 2026-11-22T10:00:00Z:\n` +
+        '- tracked\\.txt\nThe commit of the last review also holds other work, so the reviewer reviews it again ' +
+        `from ${shortHash(given, `${added}~1`)}, the parent of that commit\n`,
+    ),
+  );
+});
+
+test('complete refuses a commit of the review that has no parent, saying so', (testContext) => {
   const given = fixture(testContext);
   const { base, project } = given;
+  logEntry(given, reviewLine(given.reviewed));
   const tree = git(base, project, 'rev-parse', 'HEAD^{tree}').trim();
-  const start = git(base, project, 'rev-parse', 'master').trim();
-  const other = git(base, project, 'commit-tree', tree, '-p', start, '-m', 'The same work').trim();
-  logEntry(given, reviewLine(other.slice(0, 9)));
-  const result = runIn(given, [UNIT]);
-  assert.equal(result.status, 0, result.stderr);
+  const root = git(base, project, 'commit-tree', tree, '-m', 'All at once').trim();
+  git(base, project, 'branch', '--force', 'master', root);
+  git(base, project, 'reset', '--quiet', '--hard', root);
+  assertRefused(
+    given,
+    new RegExp(
+      `are in ${shortHash(given, root)}, the commit that added the last review[^]*- tracked\\.txt\n[^]*` +
+        'has no parent in the history the repository holds: fetching the full history, or another review, lets ' +
+        'the command go on',
+    ),
+  );
+});
+
+test('complete refuses a last review wrapped before the end of its opening as not of the form', (testContext) => {
+  const given = fixture(testContext);
+  logEntry(
+    given,
+    '- 2026-11-22T10:00:00Z [OpenCode, openai/gpt-6.2-sol]',
+    `  as the reviewer, reviewed the unit at \`${given.reviewed}\` in full. Blocking findings: none.`,
+  );
+  assertRefused(given, /the last review of the unit's branch, at 2026-11-22T10:00:00Z, is not of the form/);
+});
+
+test('complete refuses a merge after the review, naming it, and passes a review after the merge', (testContext) => {
+  const given = { ...fixture(testContext), kind: 'feature' };
+  const { base, project } = given;
+  logEntry(given, reviewLine(given.reviewed));
+  git(base, project, 'checkout', '--quiet', '-b', 'side');
+  write(project, `changes/${UNIT}/notes.md`, 'notes\n');
+  commitAll(given, 'Side notes');
+  git(base, project, 'checkout', '--quiet', BRANCH);
+  logEntry(given, '- 2026-11-22T11:00:00Z [human] a note');
+  git(base, project, 'merge', '--quiet', '--no-ff', '-m', 'Merge the side', 'side');
+  assertRefused(
+    given,
+    new RegExp(
+      `include the merge commit ${shortHash(given, 'HEAD')}, and the command reads no merge: rebasing the branch on ` +
+        'the default branch, or another review, lets the command go on',
+    ),
+  );
+  given.named = shortHash(given, 'HEAD');
+  logEntry(given, laterReviewLine(given.named));
+  assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
+});
+
+test('complete finds a review commit that came in by a merge, and refuses the merge after it', (testContext) => {
+  const given = fixture(testContext);
+  const { base, project } = given;
+  git(base, project, 'checkout', '--quiet', '-b', `sandbox/${BRANCH}`);
+  const side = logEntry(given, reviewLine(given.reviewed));
+  git(base, project, 'checkout', '--quiet', BRANCH);
+  write(project, `changes/${UNIT}/plan.md`, '- [x] the work\n- [x] more\n');
+  commitAll(given, 'Plan on the host');
+  git(base, project, 'merge', '--quiet', '--no-ff', '-m', 'Merge the waiting commits', `sandbox/${BRANCH}`);
+  const result = assertRefused(given, new RegExp(`include the merge commit ${shortHash(given, 'HEAD')}, `));
+  assert.ok(!result.stderr.includes(shortHash(given, side)), result.stderr);
+});
+
+test('complete refuses a file changed after the review, under diff.relative', (testContext) => {
+  const given = fixture(testContext);
+  logEntry(given, reviewLine(given.reviewed));
+  write(given.project, 'top.txt', 'top\n');
+  commitAll(given, 'Top');
+  git(given.base, given.project, 'config', 'diff.relative', 'true');
+  assertRefused(given, /changed in the commits after [0-9a-f]+, which added the last review[^]*:\n- top\.txt\nThe/);
+});
+
+test('complete names both paths of a file renamed after the review', (testContext) => {
+  const given = fixture(testContext);
+  logEntry(given, reviewLine(given.reviewed));
+  git(given.base, given.project, 'mv', 'tracked.txt', 'moved.txt');
+  commitAll(given, 'Rename');
+  git(given.base, given.project, 'config', 'diff.renames', 'copies');
+  assertRefused(given, /:\n- moved\.txt\n- tracked\.txt\nThe work changed after the last review/);
+});
+
+test('complete runs no external diff and no textconv driver', (testContext) => {
+  const given = { ...fixture(testContext), kind: 'feature' };
+  const { base, project } = given;
+  const marker = join(base, 'marker');
+  const tool = join(base, 'mark.sh');
+  writeFileSync(tool, `#!/bin/sh\ntouch '${marker}'\ncat "$1"\n`);
+  chmodSync(tool, 0o755);
+  git(base, project, 'config', 'diff.external', tool);
+  git(base, project, 'config', 'diff.marked.textconv', tool);
+  writeFileSync(join(project, '.git', 'info', 'attributes'), '* diff=marked\n');
+  given.named = given.reviewed;
+  logEntry(given, reviewLine(given.named));
+  logEntry(given, '- 2026-11-22T11:00:00Z [human] a note');
+  assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
+  assert.equal(existsSync(marker), false);
 });
 
 test('complete leaves the refs, the index and files outside the unit as they were', (testContext) => {
@@ -651,35 +863,6 @@ test('complete is listed after cancel in the usage', () => {
   const cancel = lines.findIndex((line) => line.includes('agentrite cancel'));
   assert.equal(lines.indexOf('agentrite complete <unit>'), cancel + 1);
 });
-
-// Two commits whose object names share their first seven characters, found by trying messages until two do, and
-// written to the repository. Returns the shared characters.
-function twoCommitsWithOnePrefix({ base, project }) {
-  const tree = git(base, project, 'rev-parse', 'HEAD^{tree}').trim();
-  const parent = git(base, project, 'rev-parse', 'HEAD').trim();
-  const seen = new Map();
-  for (let count = 0; ; count += 1) {
-    const content =
-      `tree ${tree}\nparent ${parent}\nauthor A <a@example.com> 1700000000 +0000\n` +
-      `committer A <a@example.com> 1700000000 +0000\n\n${count}\n`;
-    const name = createHash('sha1').update(`commit ${Buffer.byteLength(content)}\0${content}`).digest('hex');
-    const earlier = seen.get(name.slice(0, 7));
-    if (earlier === undefined) {
-      seen.set(name.slice(0, 7), content);
-      continue;
-    }
-    for (const found of [earlier, content]) {
-      const written = spawnSync('git', ['hash-object', '-t', 'commit', '-w', '--stdin'], {
-        cwd: project,
-        encoding: 'utf-8',
-        input: found,
-        env: environment(base),
-      });
-      assert.equal(written.status, 0, written.stderr);
-    }
-    return name.slice(0, 7);
-  }
-}
 
 const REFUSALS = [
   ['no agentrite.json', (given) => rmSync(join(given.project, 'agentrite.json')), /agentrite\.json/],
@@ -800,23 +983,13 @@ const REFUSALS = [
     /the last review of the unit's branch, at 2026-11-22T11:00:00Z, is not of the form the command reads/,
   ],
   [
-    'a hash that names no commit',
-    (given) => logEntry(given, reviewLine('1234567')),
-    /names 1234567, which is no commit of the repository/,
-  ],
-  [
-    'a hash that names two commits',
-    (given) => logEntry(given, reviewLine(twoCommitsWithOnePrefix(given))),
-    /which names more than one commit/,
-  ],
-  [
     'a file outside the unit changed after the review',
     (given) => {
       logEntry(given, reviewLine(given.reviewed));
       write(given.project, 'tracked.txt', 'three\n');
       commitAll(given, 'More work');
     },
-    /differ between the last review[^]*- tracked\.txt\nThe work changed after the last review, so the reviewer reviews/,
+    /changed in the commits after [0-9a-f]+, which added the last review[^]*- tracked\.txt\nThe work changed after/,
   ],
   [
     'a merge after the review that brings in a file outside the unit',
@@ -830,7 +1003,7 @@ const REFUSALS = [
       logEntry(given, '- 2026-11-22T11:00:00Z [human] a note');
       git(base, project, 'merge', '--quiet', '--no-ff', '-m', 'Merge the side', 'side');
     },
-    /- brought\.txt/,
+    /include the merge commit [0-9a-f]+, and the command reads no merge/,
   ],
   [
     'a changed gitlink after the review, with submodules ignored by the configuration',
@@ -839,7 +1012,11 @@ const REFUSALS = [
       const link = (hash) => git(base, project, 'update-index', '--add', '--cacheinfo', `160000,${hash},vendor`);
       link('1'.repeat(40));
       git(base, project, 'commit', '--quiet', '-m', 'Add a gitlink');
-      logEntry(given, reviewLine(git(base, project, 'rev-parse', '--short=12', 'HEAD').trim()));
+      // The record alone, since adding every file would remove the gitlink, which has no directory.
+      const path = recordPath(given);
+      const named = git(base, project, 'rev-parse', '--short=12', 'HEAD').trim();
+      writeFileSync(path, `${readFileSync(path, 'utf-8')}${reviewLine(named)}\n`);
+      git(base, project, 'commit', '--quiet', '-m', 'Log', '--', `changes/${UNIT}/record.md`);
       link('2'.repeat(40));
       git(base, project, 'commit', '--quiet', '-m', 'Change the gitlink');
       git(base, project, 'config', 'diff.ignoreSubmodules', 'all');
