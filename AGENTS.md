@@ -78,6 +78,15 @@ In this repository `npx agentrite` runs the working tree's `agentrite`, not the 
 installed release's command as `npm run kit -- <command>`, with the arguments `npx agentrite <command>` takes. The
 rest is in "Commands" of [CONTRIBUTING.md](CONTRIBUTING.md#commands).
 
+This holds for a command given to `./sandbox.sh` too, whose working tree is the clone of the unit's branch, the code
+under change. The examples of `SANDBOX.md`, `ORCHESTRATOR.md` and `COMMANDS.md`, and the hints the orchestrator
+prints when a run stops, give `npx agentrite` as a project that installs the kit runs it. In this repository it is
+written `npm run kit --`, as in:
+
+```sh
+./sandbox.sh 0029 npm run kit -- orchestrate 0029 --resume --skip-permissions
+```
+
 ## Exit statuses
 
 Every command of the kit, and every command of this repository's own, follows "Exit statuses" of
