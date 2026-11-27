@@ -33,5 +33,11 @@ timestamp: 2026-11-27T13:24:19Z
   `.reviews/0123-move-to-opencode-2/spec-review-2026-11-27T150011Z.md`. Did not check role selection on resume, a
   real provider login or successful completion, terminal colours or bell, legacy data migration, or R14's full kit
   integration
+- 2026-11-27T15:08:16Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled the findings of the delta spec
+  review on the human's decisions: `F7` the resumed interactive session keeping its own role, model and effort recorded
+  as a limitation and stated in `COMMANDS.md`; `F8` the configuration of the start read as OpenCode reads it, refused
+  when it is no object, and the stale sentence of the decision on `--standalone` corrected; `F9` the check on the host
+  made with a scratch OpenCode 2 and scratch data; `F10` no promise and no refusal for the data of OpenCode 1, with its
+  conversion by OpenCode 2 added to "What was found"
 
 ## Amendments

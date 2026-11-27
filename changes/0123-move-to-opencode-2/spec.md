@@ -70,6 +70,9 @@ What the kit relies on and found changed:
   `<model>#high` there gave the variant `high`, and an unknown variant there fell back to the model's default without
   a word, where `opencode run` ends with an error for it. A `variant` of the agent in the configuration was not taken
 * A login is kept in the table `credential` of `opencode.db`, where OpenCode 1 kept it in `auth.json`
+* A session that the terminal client resumes keeps the agent and the model with its variant that it was saved with:
+  `default_agent` and `model` in the configuration of the start do not replace them. A session made at `#high` and
+  resumed with `#low` there went on at `high`. `opencode run` takes `--agent` and `--model` for a session it resumes
 * OpenCode 2 has no built-in agent `scout`. Its own agents are `build`, `plan`, `general` and `explore`, and the
   hidden `compaction`, `title` and `summary`, per https://opencode.ai/docs/agents/
 
@@ -88,7 +91,12 @@ What the kit relies on and found unchanged:
 * The local providers of the host in OpenCode 1's shape, `provider` with `npm` and `options.baseURL`, which unit 0106
   hands to the sandbox: OpenCode 2 listed the model of such a provider
 * OpenCode's data directory is `~/.local/share/opencode`, now holding `opencode.db`, `log`, `repos` and `snapshot`,
-  so the log directory of the sandbox keeps its sessions and its login as before
+  so a login and the sessions made under OpenCode 2 hold from one container of the sandbox into the next, as those
+  of OpenCode 1 did
+* OpenCode 2 converts a database of OpenCode 1 by itself, in the background and in batches while it runs, into its
+  own tables, and leaves the old ones as they were. A copy of the human's database, 373 sessions from 1.18.18 to
+  1.19.6, was converted whole in three short runs, with the ids and times of the messages kept and the token sums
+  equal
 * The step of the kit's default orchestrator that runs on OpenCode, the reviewer on `openai/gpt-6.2-sol` with the
   effort `high`, ran in the sandbox as `--model=openai/gpt-6.2-sol#high`, with calls of the shell, and exited 0
 * A commit that OpenCode made in that run, asked for by the prompt, held the message the prompt gave and no trailer,
@@ -128,7 +136,11 @@ Starting OpenCode:
    the configuration of the start, `OPENCODE_CONFIG_CONTENT`, as `default_agent` and `model`, beside `--auto` for
    `--skip-permissions` and `--prompt`, since the terminal client takes no `--agent` or `--model`. What
    `OPENCODE_CONFIG_CONTENT` already holds for the start is kept in it, as the bell's plugin in the sandbox, and
-   where a key is in both, the kit's role or model is the one given. A `--model` that already names
+   where a key is in both, the kit's role or model is the one given. That content is read as OpenCode reads it, with
+   comments and trailing commas, and a start whose `OPENCODE_CONFIG_CONTENT` is no JSON object once read so is
+   refused before OpenCode starts, with the status of "Exit statuses" of `COMMANDS.md` for a refusal and a message
+   that names the variable and what is wrong with it. Without `--model` the kit gives no `model`, and one that the
+   content holds stays. A `--model` that already names
    a variant after a `#`, given with `--effort`, is refused before OpenCode starts, with the status of "Exit
    statuses" of `COMMANDS.md` for a usage error, and a message that names both and says to give the effort in one of
    them only
@@ -167,8 +179,12 @@ The documents:
       so works through OpenCode's shared background server
     * "Adding a harness" of `CONTRIBUTING.md` says that a program a harness needs in the sandbox is a package of the
       image, which names no harness
+    * `COMMANDS.md` says that an interactive session of OpenCode that `agentrite run` resumes keeps the role, the
+      model and the effort it was saved with, whatever the run gives
 
-Verification, by the implementer, with OpenCode 2 in this repository's own sandbox, `./sandbox-dev.sh`:
+Verification, by the implementer, with OpenCode 2 in this repository's own sandbox, `./sandbox-dev.sh`, and on the
+host with OpenCode 2 installed in a scratch directory, with the home and the XDG directories of its runs pointed at a
+scratch directory, so that the developer's OpenCode and its data are left as they are:
 
 14. The implementation is checked, with a log directory of the sandbox of its own and not the developer's, and the
     checks recorded in `record.md` with the versions they ran with:
@@ -176,13 +192,14 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
       and an effort, whose step calls the shell and a tool of files, as the followed output shows them; one whose
       step is resumed with its session; one whose step makes a call that is refused, which ends the run, as the stop
       reports the call; and one with an unknown model, as the run reports the harness's error
-    * a step given `--effort` with a `--model` that names a variant, refused by requirement 5
+    * a step given `--effort` with a `--model` that names a variant, and a start whose `OPENCODE_CONFIG_CONTENT` is
+      no JSON object, each refused by requirement 5
     * the terminal client started by the kit in a role of the project's, with a model and an effort, and with
       `--skip-permissions`: that the session runs in that role and on that model and variant, as OpenCode's database
       records them, that `--prompt` is sent, its colours, the bell when a turn ends, and a login that holds into a new
       container
-    * the terminal client started by the kit on the host, in a role, with a model and an effort, as OpenCode's
-      database records them
+    * the terminal client started by the kit on the host, with the scratch OpenCode 2, in a role, with a model and
+      an effort, as OpenCode's database records them
     * a start refused by requirement 3, with a version of 1 given in `sandbox/compose.project.yml`
 
 ## Decisions
@@ -196,8 +213,9 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
 * **The release that holds this unit is a major one**, since a project on OpenCode 1 cannot use it
 * **`--standalone` at every start, on the host too.** In the sandbox the kit hands OpenCode its configuration, the
   bell's plugin and the local providers through the environment of the start, and only `--standalone` makes the
-  environment of each start hold, as "What was found" gives. On the host the kit hands nothing through the
-  environment, but without `--standalone` a step of the orchestrator would run in the developer's own background
+  environment of each start hold, as "What was found" gives. On the host the kit hands an interactive start its role
+  and its model through the environment, which holds only with `--standalone` as well. Without `--standalone` a
+  step of the orchestrator would also run in the developer's own background
   server, with the configuration that server loaded when it started, and a step the kit stops at its time limit
   might go on working in that server. That last was not checked. Passing it everywhere keeps one way of starting
   OpenCode. It costs the start of a server at each start, a matter of a moment, and the features of OpenCode 2 that
@@ -226,11 +244,14 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
   updating is off either way. The key is kept by OpenCode 2 for configurations written for 1 only, and a later release
   may drop it, which would turn updating back on in every sandbox without a word. The file is the kit's own, so
   moving it changes nothing for a project. Keeping `autoupdate` was weighed and declined by the human
-* **Nothing of OpenCode 1 carries over in the sandbox.** A login made under OpenCode 1 may or may not hold under 2,
-  which imports some older credentials into its database and writes none back to `auth.json`, and that was not
-  checked. The developer logs in again where it does not hold, as on a new project. Sessions of OpenCode 1 are not
-  resumed by the kit. A project that goes back to the release of the kit before this unit, after OpenCode 2 has run
-  in its sandbox, is not supported, and what OpenCode 1 makes of the data that OpenCode 2 left was not checked
+* **The kit makes no promise for the data of OpenCode 1, and refuses none of it.** What OpenCode 2 takes over of
+  it, it takes over by itself: it converted the sessions of a database of OpenCode 1, as "What was found" gives, and
+  it imports some older credentials into its database and writes none back to `auth.json`. Whether a login made
+  under OpenCode 1 holds under 2 was not checked, and the developer logs in again where it does not, as on a new
+  project. A session of OpenCode 1 may be resumed, and the kit neither checks nor refuses it. A project that goes
+  back to the release of the kit before this unit, after OpenCode 2 has run in its sandbox, is not supported, and
+  what OpenCode 1 makes of the data that OpenCode 2 left was not checked. What the sandbox keeps from one container
+  into the next under OpenCode 2 is unchanged
 * **The terminal client, given its role and model through its configuration.** OpenCode 2's terminal client takes
   no `--agent` or `--model`, and `opencode mini`, which takes both, refuses `--auto`, so that `--skip-permissions`
   could not hold in an interactive start, and it is a smaller client whose colours and bell were not checked. The
@@ -238,6 +259,14 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
   was weighed and declined by the human. A recorded limitation: an effort that the model does not have makes a
   headless start end with OpenCode's error, and an interactive one run at the model's default variant without a
   word, as "What was found" gives
+* **An interactive session that the kit resumes keeps its own role, model and effort.** OpenCode 2's terminal client
+  does not replace them, and the kit has no way to: a refusal of `--model` and `--effort` on such a resume was
+  weighed and declined by the human, since the role is given at every start and would still not hold. This is a
+  recorded limitation, which `COMMANDS.md` states. A headless resume is not limited, since `opencode run` takes
+  `--agent` and `--model`
+* **A configuration of the start that cannot be read is refused, and not replaced.** Replacing it with the kit's
+  own, with a warning, was weighed and declined by the human: it would drop what the developer put in it. Reading it
+  as OpenCode reads it is the one reading under which a value that OpenCode takes is not refused
 * **The bell rings when a turn fails too.** OpenCode 1's `session.idle` came at the end of every turn, whatever its
   end, and OpenCode 2 splits that end into two events, so the plugin rings on both
 
@@ -250,8 +279,8 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
 * Reading the host's local providers when the host's file is in OpenCode 2's shape. See "Beyond the request"
 * Permission rules of the kit's own for OpenCode, `external_directory` among them
 * Admitting `opencode.ai`, for OpenCode's own free models, in the sandbox
-* Carrying a login or a session of OpenCode 1 over to OpenCode 2, and going back to OpenCode 1 in a sandbox where
-  OpenCode 2 has run
+* A promise that a login or a session of OpenCode 1 holds under OpenCode 2, and going back to OpenCode 1 in a sandbox
+  where OpenCode 2 has run
 * The wait of `opencode run` on an open standard input, and the reach of the local model server from the sandbox on
   the human's host, which are the same under OpenCode 1
 * `CHANGELOG.md`, which is written at the release, as `AGENTS.md` gives
