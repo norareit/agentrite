@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-11-27T14:50:09Z
 ---
 
@@ -49,5 +49,6 @@ No other file changes. The documents of the kit keep `npx agentrite`, which is r
   The review is in `.reviews/0124-the-installed-kit-in-a-unit-run/review-2026-11-27T153804Z.md`. Independently ran
   `npm test`: 2046 passed, 0 failed, 34 skipped of 2080; `npm run check-changes` and `git diff --check` passed.
   Docker-dependent tests and actual Docker execution of the example could not be verified without Docker.
+- 2026-11-27T18:58:48Z [human] set the unit to implemented, on the review at `95abb8f94956`. The status is `implemented`
 
 ## Amendments
