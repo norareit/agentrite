@@ -51,5 +51,8 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   fetching the full history, or another review, as the recovery. F11: the limitation on a delta review's base now
   promises only the commit that added the entry and those after it. R10, R12 and R15 follow, and `process.md` stays at
   2562 words. The status is `approved`
+- 2026-11-27T14:53:14Z [Claude Code, anthropic/claude-opus-5-5] as the planner, wrote `plan.md` against `d77a689`,
+  with F9 to F11 settled in `spec.md`. Every requirement R1 to R16 has a task, and every task names the requirements
+  it delivers. The status is `approved`
 
 ## Amendments
