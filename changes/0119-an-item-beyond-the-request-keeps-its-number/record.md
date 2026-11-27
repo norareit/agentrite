@@ -90,5 +90,10 @@ timestamp: 2026-11-22T13:27:16Z
   `.reviews/0119-an-item-beyond-the-request-keeps-its-number/review-2026-11-27T135822Z.md`. Independently ran
   `npm test`: 2055 tests, 2021 passed, 34 skipped and none failed; the skipped checks were not verified.
   `npm run check-changes` and formatting checks passed. The status stays `in-progress`
+- 2026-11-27T14:02:39Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, on the human's decisions after the
+  orchestrator's run: the human accepted the correction of the keywords test into this unit, as the fix of `S1`, and
+  kept the 91 words that `roles/specifier.md` grew by. Added to the decision on the kind in `spec.md` that the unit
+  also corrects that test, and why. The human chose to leave the times of the implementer's entries as they are,
+  although three of them are later than the commits that hold them. The status stays `in-progress`
 
 ## Amendments

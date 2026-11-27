@@ -57,7 +57,9 @@ for `templates/changes/spec.md`.
   changed a rule of `standards.md` and 0070 one of `process.md`, both tasks. What there was to decide, the form of the
   line and where the rule goes, is decided here, so what is left is an edit whose description and diff say the same
   thing. `spec.md` is kept, as 0060 and 0118 kept theirs, for the reviewer to judge the work against. Its branch is
-  `task-0119-an-item-beyond-the-request-keeps-its-number`
+  `task-0119-an-item-beyond-the-request-keeps-its-number`. Besides the three files, the unit corrects the keywords
+  that `tests/package-documents.test.mjs` expects of `package.json`, which `b863835` on `master` changed without the
+  test, since R8 asks that `npm test` passes and the human accepted the correction into this unit
 * **A taken item leaves a line, rather than its number simply being skipped.** A gap in a numbered list cannot be
   written in Markdown, which numbers the items of a list in order whatever numbers the source gives, so a removed item
   would number the rest again as soon as the spec is read rendered. The line keeps the place and says where the item
