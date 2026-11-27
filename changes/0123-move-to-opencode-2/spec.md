@@ -137,19 +137,18 @@ Starting OpenCode:
    `--standalone`
 5. An effort is given to OpenCode with its model, as `<model>#<level>`, and nothing else carries it. Without `--effort`
    the model is given as `<model>`, as today. A headless start gives the model as the one argument `--model=` with it
-   joined. An interactive start, the full terminal client and not `opencode mini`, gives the role and the model in
-   the configuration of the start, `OPENCODE_CONFIG_CONTENT`, as `default_agent` and `model`, beside `--auto` for
+   joined. An interactive start, the full terminal client and not `opencode mini`, gives the role and the model in the
+   configuration of the start, `OPENCODE_CONFIG_CONTENT`, as `default_agent` and `model`, beside `--auto` for
    `--skip-permissions` and `--prompt`, since the terminal client takes no `--agent` or `--model`. What
-   `OPENCODE_CONFIG_CONTENT` already holds for the start is kept in it, as the bell's plugin in the sandbox, and
-   where a key is in both, the kit's role or model is the one given. That content is read as OpenCode reads it, with
-   comments and trailing commas, and an interactive start whose `OPENCODE_CONFIG_CONTENT` is no JSON object once
-   read so is refused before OpenCode starts, with the status of "Exit statuses" of `COMMANDS.md` for a refusal and a message
-   that names the variable and what is wrong with it. An empty `OPENCODE_CONFIG_CONTENT` is taken as one that is not
-   set. A headless start passes `OPENCODE_CONFIG_CONTENT` on as it is, and is not refused for it. Without `--model`
-   the kit gives no `model`, and one that the content holds stays. A `--model` that already names
-   a variant after a `#`, given with `--effort`, is refused before OpenCode starts, with the status of "Exit
-   statuses" of `COMMANDS.md` for a usage error, and a message that names both and says to give the effort in one of
-   them only
+   `OPENCODE_CONFIG_CONTENT` already holds for the start is kept in it, as the bell's plugin in the sandbox, and where a
+   key is in both, the kit's role or model is the one given. That content is read as OpenCode reads it, with comments
+   and trailing commas, and an interactive start whose `OPENCODE_CONFIG_CONTENT` is no JSON object once read so is
+   refused before OpenCode starts, with the status of "Exit statuses" of `COMMANDS.md` for a refusal and a message that
+   names the variable and what is wrong with it. An empty `OPENCODE_CONFIG_CONTENT` is taken as one that is not set. A
+   headless start passes `OPENCODE_CONFIG_CONTENT` on as it is, and is not refused for it. Without `--model` the kit
+   gives no `model`, and one that the content holds stays. A `--model` that already names a variant after a `#`, given
+   with `--effort`, is refused before OpenCode starts, with the status of "Exit statuses" of `COMMANDS.md` for a usage
+   error, and a message that names both and says to give the effort in one of them only
 6. The kit's names of OpenCode's own agents are those of OpenCode 2: `build`, `plan`, `general`, `explore`,
    `compaction`, `title` and `summary`
 
