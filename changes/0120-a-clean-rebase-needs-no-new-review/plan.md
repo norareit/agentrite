@@ -28,12 +28,13 @@ R10 allows outside R4 to R6. `reviewForm` does not change.
    the first call would print with `--parents` are rewritten to the path's history, and are not the ones R2 compares
    with. A commit at the boundary of a shallow clone is listed with no parent
 3. `git cat-file --batch-check=%(objectname)` given `<commit>:<prefix>changes/<directory>/record.md` for each listed
-   commit and each parent, and then `git cat-file --batch` for each distinct blob, gives the text of `record.md` at
-   each of them. A commit where the file does not exist is `missing`, and counts zero. `cat-file` applies no textconv
-   or filter without `--textconv` or `--filters`
+   commit and each parent names the blob of `record.md` at each of them, and `git cat-file blob` reads one blob at a
+   time, only when `addingCommit` asks for its count, so that one record is held at a time. A commit where the file
+   does not exist is `missing`, and counts zero. `cat-file` applies no textconv or filter without `--textconv` or
+   `--filters`
 
 `openingCount(text, opening)` counts the line starts followed by the opening, a line start being the start of the text
-or the position after a line feed. `addingCommit(listed, counts)` returns the first commit of `listed`, in its order,
+or the position after a line feed. `addingCommit(listed, countOf)` returns the first commit of `listed`, in its order,
 whose count is greater than that of each of its parents, a commit with no parent compared with zero. R3 shows that one
 is always found. The function throws when none is, with a message that says the history holds no commit that adds the
 entry, and a comment says that the refusal before it rules this out, so that it is no refusal of the command.
@@ -89,7 +90,7 @@ in a subdirectory is made: the change check refuses every such project before th
 
 - `scripts/agentrite-log-forms.mjs`: `firstLine` on each entry of `logEntries`
 - `scripts/agentrite-complete.mjs`: `reviewOpening`, `openingCount`, `addingCommit`, `reviewCommitRefusal`,
-  `mergeRefusal`, `changedAfterRefusal`, `parentsListed`, `batchContents`; the first-line check in `lastReview`;
+  `mergeRefusal`, `changedAfterRefusal`, `parentsListed`; the first-line check in `lastReview`;
   `commitsNamed` removed
 - `scripts/agentrite.mjs`: the git calls of the new step in place of `reviewedCommit` and `checkWorkReviewed`
 - `tests/agentrite-log-forms.test.mjs`: `firstLine` in the expected entries
@@ -174,6 +175,11 @@ in a subdirectory is made: the change check refuses every such project before th
   and that the documents of 0117 are (R11, R13)
 - [x] Log in `record.md` the `wc -w process.md` once the work is done, `2562` if the replacement keeps it (R14)
 - [x] Commit: `bugfix-0120 State the rule by the commits from the review on`
+- [x] For S1 of the review, add a unit test that `addingCommit` asks for no count past the commit it finds and its
+  parents, and a command test of a record whose versions after the review exceed a mebibyte together, which fails
+  with `ENOBUFS` on `4ba22ad`. Then give `addingCommit` a function that counts in place of a map, read each blob
+  alone with `git cat-file blob` and no bound on the output of one, when a count needs it, and remove
+  `batchContents` and its test (R7)
 
 ## Verification
 

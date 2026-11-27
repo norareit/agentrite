@@ -136,26 +136,6 @@ export function parentsListed(revListOutput) {
 }
 
 /**
- * @param {Buffer} batchOutput what `git cat-file --batch` printed for blobs that exist: for each, a line of its name,
- *   its type and its size in bytes, its content and a line feed
- * @returns {Map<string, string>} the content of each blob by its name, read as UTF-8
- */
-export function batchContents(batchOutput) {
-  /** @type {Map<string, string>} */
-  const contents = new Map();
-  let position = 0;
-  while (position < batchOutput.length) {
-    const headerEnd = batchOutput.indexOf(0x0a, position);
-    const [name, , size] = batchOutput.subarray(position, headerEnd).toString('utf-8').split(' ');
-    const start = headerEnd + 1;
-    const end = start + Number(size);
-    contents.set(name, batchOutput.subarray(start, end).toString('utf-8'));
-    position = end + 1;
-  }
-  return contents;
-}
-
-/**
  * @param {string} diffOutput what `git diff --no-renames --name-only -z` printed: the paths from the top of the
  *   repository, a renamed file by both of them
  * @param {string} prefix the path from the top of the repository to the project root
@@ -215,12 +195,11 @@ export function openingCount(text, opening) {
  * a commit with no parent compared with none.
  *
  * @param {{ commit: string, parents: string[] }[]} listed the commits that changed the record, newest first
- * @param {Map<string, number>} counts how often each commit and each parent holds the opening
+ * @param {(commit: string) => number} countOf how often a commit holds the opening, asked for no commit after the one
+ *   found and its parents
  * @returns {{ commit: string, parents: string[] }}
  */
-export function addingCommit(listed, counts) {
-  /** @param {string} commit */
-  const countOf = (commit) => counts.get(commit) ?? 0;
+export function addingCommit(listed, countOf) {
   const found = listed.find(({ commit, parents }) => {
     const parentCounts = parents.length === 0 ? [0] : parents.map(countOf);
     return parentCounts.every((count) => countOf(commit) > count);

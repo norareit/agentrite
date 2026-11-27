@@ -5,7 +5,6 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import {
   addingCommit,
-  batchContents,
   branchRefusal,
   changedAfterRefusal,
   COMPLETE_FORM,
@@ -115,22 +114,6 @@ test('parentsListed reads each commit and its parents, none for a commit at the 
   ]);
 });
 
-test('batchContents reads each blob by its size in bytes, a line feed and a multibyte character among them', () => {
-  const first = 'line one\nline twö\n';
-  const output = Buffer.concat([
-    Buffer.from(`aaa blob ${Buffer.byteLength(first)}\n${first}\n`),
-    Buffer.from('bbb blob 0\n\n'),
-  ]);
-  assert.deepEqual(
-    batchContents(output),
-    new Map([
-      ['aaa', first],
-      ['bbb', ''],
-    ]),
-  );
-  assert.deepEqual(batchContents(Buffer.alloc(0)), new Map());
-});
-
 test('filesOutside gives the paths that are not in the unit directory', () => {
   const unit = '0117-x';
   assert.deepEqual(filesOutside('changes/0117-x/plan.md\0changes/0117-x/record.md\0', '', unit), []);
@@ -222,6 +205,9 @@ test('openingCount reads the timestamp and who made the entry literally', () => 
   assert.equal(openingCount('- 2026-11-22T10x00:00Z [A.b [c] as the reviewer, reviewed\n', opening), 0);
 });
 
+// The counts as `addingCommit` asks for them, a commit that is not given holding the opening on no line.
+const countsOf = (counts) => (commit) => counts.get(commit) ?? 0;
+
 test('addingCommit gives the newest commit that holds the opening more often than each of its parents', () => {
   const counts = new Map([
     ['e', 1],
@@ -237,8 +223,28 @@ test('addingCommit gives the newest commit that holds the opening more often tha
     { commit: 'b', parents: ['a'] },
   ];
   // e edits the entry past its opening, d removes an earlier entry with the same opening, and c adds the entry.
-  assert.equal(addingCommit(listed, counts).commit, 'c');
-  assert.equal(addingCommit(listed.slice(3), counts).commit, 'b');
+  assert.equal(addingCommit(listed, countsOf(counts)).commit, 'c');
+  assert.equal(addingCommit(listed.slice(3), countsOf(counts)).commit, 'b');
+});
+
+test('addingCommit asks for the count of no commit past the one it finds and its parents', () => {
+  const counts = new Map([
+    ['c', 1],
+    ['b', 1],
+    ['a', 0],
+  ]);
+  const asked = new Set();
+  const listed = [
+    { commit: 'c', parents: ['b'] },
+    { commit: 'b', parents: ['a'] },
+    { commit: 'a', parents: ['root'] },
+  ];
+  const found = addingCommit(listed, (commit) => {
+    asked.add(commit);
+    return counts.get(commit) ?? 0;
+  });
+  assert.equal(found.commit, 'b');
+  assert.deepEqual([...asked].sort(), ['a', 'b', 'c']);
 });
 
 test('addingCommit passes over a merge that holds the entry by one parent, and takes the commit of that side', () => {
@@ -252,16 +258,16 @@ test('addingCommit passes over a merge that holds the entry by one parent, and t
     { commit: 'merge', parents: ['main', 'side'] },
     { commit: 'side', parents: ['start'] },
   ];
-  assert.deepEqual(addingCommit(listed, counts), { commit: 'side', parents: ['start'] });
+  assert.deepEqual(addingCommit(listed, countsOf(counts)), { commit: 'side', parents: ['start'] });
 });
 
 test('addingCommit takes a commit with no parent that holds the entry, and throws when no commit qualifies', () => {
-  assert.deepEqual(addingCommit([{ commit: 'root', parents: [] }], new Map([['root', 1]])), {
+  assert.deepEqual(addingCommit([{ commit: 'root', parents: [] }], countsOf(new Map([['root', 1]]))), {
     commit: 'root',
     parents: [],
   });
   assert.throws(
-    () => addingCommit([{ commit: 'b', parents: ['a'] }], new Map([['a', 1], ['b', 1]])),
+    () => addingCommit([{ commit: 'b', parents: ['a'] }], countsOf(new Map([['a', 1], ['b', 1]]))),
     { message: /the history holds no commit that adds the entry/ },
   );
 });
@@ -668,6 +674,18 @@ test('complete finds the commit of the review after an edit of its text past its
   logEntry(given, reviewLine(given.named));
   rewriteRecord(given, (text) => text.replace('in full.', 'in full, with the suites run.'));
   commitAll(given, 'Edit the review');
+  assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
+});
+
+test('complete passes a record whose versions after the review hold more than a mebibyte together', (t) => {
+  const given = { ...fixture(t), kind: 'feature' };
+  given.named = given.reviewed;
+  logEntry(given, reviewLine(given.named));
+  // Each version is under a mebibyte, and the versions together are several, as many entries over a long run make.
+  for (let version = 1; version <= 40; version += 1) {
+    rewriteRecord(given, (text) => text.replace('# A unit\n', `# A unit\n\n${'x'.repeat(10240)}\n`));
+    commitAll(given, `Grow the record ${version}`);
+  }
   assertCompleted(given, stateOf(given), runIn(given, [UNIT]));
 });
 

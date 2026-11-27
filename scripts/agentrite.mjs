@@ -46,7 +46,6 @@ import {
 } from './agentrite-cancel.mjs';
 import {
   addingCommit,
-  batchContents,
   branchRefusal,
   changedAfterRefusal,
   COMPLETE_FORM,
@@ -1517,15 +1516,14 @@ function checkChangeDocuments(root) {
 }
 
 /**
- * Runs `git` in `root` as `gitOutput` does, and returns its output as bytes.
+ * Runs `git` in `root` as `gitOutput` does, and returns its output as bytes, with no bound on their number.
  *
  * @param {string} root
  * @param {string[]} args
- * @param {string} input
  * @returns {Buffer}
  */
-function gitBytes(root, args, input) {
-  const result = spawnSync('git', args, { cwd: root, input });
+function gitBytes(root, args) {
+  const result = spawnSync('git', args, { cwd: root, maxBuffer: Infinity });
   if (result.error !== undefined) throw new Error(`git could not be run: ${result.error.message}`);
   if (result.status !== 0) throw new Error(`git could not be run: ${result.stderr.toString('utf-8').trim()}`);
   return result.stdout;
@@ -1559,12 +1557,22 @@ function reviewAddingCommit(root, record, opening) {
     ['cat-file', '--batch-check=%(objectname)'],
     commits.map((commit) => `${commit}:${record}\n`).join(''),
   ).split('\n');
-  const named = [...new Set(blobs.filter((line) => /^[0-9a-f]+$/.test(line)))];
-  const contents = batchContents(gitBytes(root, ['cat-file', '--batch'], named.map((blob) => `${blob}\n`).join('')));
-  const counts = new Map(
-    commits.map((commit, index) => [commit, openingCount(contents.get(blobs[index]) ?? '', opening)]),
-  );
-  return addingCommit(listed, counts);
+  const blobOf = new Map(commits.map((commit, index) => [commit, blobs[index]]));
+  /** @type {Map<string, number>} */
+  const counted = new Map();
+  // Each record is read alone and only when a count needs it, newest first, so that what is held at one time is one
+  // record, however long the history of the record is.
+  /** @param {string} commit */
+  const countOf = (commit) => {
+    const blob = blobOf.get(commit) ?? '';
+    if (!/^[0-9a-f]+$/.test(blob)) return 0;
+    if (!counted.has(blob)) {
+      const text = gitBytes(root, ['cat-file', 'blob', blob]).toString('utf-8');
+      counted.set(blob, openingCount(text, opening));
+    }
+    return counted.get(blob) ?? 0;
+  };
+  return addingCommit(listed, countOf);
 }
 
 /**
