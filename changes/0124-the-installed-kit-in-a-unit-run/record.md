@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-27T14:50:09Z
 ---
 
@@ -36,5 +36,7 @@ No other file changes. The documents of the kit keep `npx agentrite`, which is r
 - 2026-11-27T15:34:40Z [Claude Code, anthropic/claude-opus-5-5] as the planner, found that the task needs no plan: it is
   one addition to "The kit's command" in `AGENTS.md`, which the record describes in full and which fits the tree. The
   status stays `approved`
+- 2026-11-27T15:40:12Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work. The status is
+  `in-progress`
 
 ## Amendments
