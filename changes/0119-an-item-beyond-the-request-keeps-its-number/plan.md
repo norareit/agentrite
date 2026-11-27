@@ -2,12 +2,14 @@
 
 ## Approach
 
-The unit changes the text of one role file, one extra role file and one template, and nothing else. The tree is that
-of `f1b26ac`, the head of `master` the branch is cut from. The three files are as they were at `ed8c644`, where the
-spec measured them; only `process.md` changed since, and its sentence on `BTR<n>` is still the one R6 relies on.
+The unit changes the text of one role file, one extra role file and one template. Besides them it changes only the
+keywords that one test expects of `package.json`, added after review finding `S1`, since `b863835` on `master` left that
+test failing and R8 asks that `npm test` passes. The tree is that of `f1b26ac`, the head of `master` the branch is cut
+from. The three files are as they were at `ed8c644`, where the spec measured them; only `process.md` changed since, and
+its sentence on `BTR<n>` is still the one R6 relies on.
 
 The unit adds no logic, so it adds no unit test and no end-to-end test: no test of the suite reads the text of these
-three files. `npm test` is run to show that nothing else changed.
+three files. `npm test` is run to show that nothing else changed, and that the corrected test passes.
 
 The wording below is the plan's, so that the files grow by no more than the change needs. It is put in as written,
 wrapped at 120 characters.
@@ -45,6 +47,7 @@ unit that claims to be safe":
 - `roles/specifier.md`: the bullet on how the list of "Beyond the request" is kept
 - `templates/changes/spec.md`: the placeholder of "Beyond the request"
 - `extra-roles/spec-reviewer.md`: the bullet "Scope"
+- `tests/package-documents.test.mjs`: the keywords expected of `package.json`, after review finding `S1`
 - `changes/0119-an-item-beyond-the-request-keeps-its-number/record.md`: the word counts and the work done
 
 ## Tasks
