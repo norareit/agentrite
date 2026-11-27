@@ -3,13 +3,19 @@
   "version": "8.5.0",
   "description": "A kit for running coding agents by a fixed process",
   "keywords": [
-    "agents",
     "coding-agents",
+    "ai-agents",
+    "agentic-coding",
+    "agentic-software-engineering",
+    "software-engineering",
     "claude-code",
-    "opencode",
     "codex",
+    "opencode",
+    "spec-driven-development",
+    "code-review",
     "sandbox",
-    "process"
+    "developer-workflow",
+    "llm"
   ],
   "homepage": "https://agentrite.dev",
   "bugs": {
