@@ -74,5 +74,10 @@ timestamp: 2026-11-22T13:27:16Z
   `npm test` reports 2055 tests, 2021 passed, 34 skipped and none failed, and `npm run check-changes` exits 0, so R8
   holds and `S1` is fixed. The 34 skipped tests need Docker and were not run. Every box of `plan.md` is ticked. The
   status stays `in-progress`
+- 2026-11-27T13:53:35Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at `5d12270` as a delta
+  review from `4f1f9a6`. Returned `P1`. Blocking findings: none. The findings and verification of the correction of
+  `S1` are in `.reviews/0119-an-item-beyond-the-request-keeps-its-number/review-2026-11-27T135335Z.md`.
+  Independently ran `npm test`: 2055 tests, 2021 passed, 34 skipped and none failed; the skipped checks were not
+  verified. `npm run check-changes` and formatting checks passed. The status stays `in-progress`
 
 ## Amendments
