@@ -17,8 +17,8 @@ fresh clone of the rebased branch it refuses because the commit the review's ent
 
 Whether the last work was reviewed is read from the commits of the branch, and a rebase does not change the answer. The
 command passes a branch whose commits from the review on touch only the unit's own directory, whether the rebase came
-before or after `complete`, and in a fresh clone. It refuses a branch with a commit from the review on that touches
-anything else, and names the files.
+before or after `complete`, and in a fresh clone that holds the default branch or its `origin/` ref. It refuses a branch
+with a commit from the review on that touches anything else, and names the files.
 
 ## Steps to reproduce
 
@@ -58,22 +58,25 @@ outside the unit really changed after their last review.
 
 ### The command
 
-2. The commit that added the last review's entry is the newest commit reachable from the commit checked out that changes
-   how many times the unit's `record.md` holds the entry's opening. The opening is a line start followed by
+2. The commit that added the last review's entry is the newest commit reachable from the commit checked out at which the
+   unit's `record.md` holds the entry's opening more times than at each of its parents, a commit with no parent
+   counting as a parent that holds it none. The opening is a line start followed by
    `- <timestamp> [<who made it>] as the reviewer`, read literally. It is found under a new hash after a rebase, after
-   an edit of the entry's text past the opening, and whether or not the commit the entry names exists.
+   an edit of the entry's text past the opening, and whether or not the commit the entry names exists. A commit that
+   removes an entry is never that commit, and neither is a merge that holds the entry because one of its parents does.
+   The commits after it are those reachable from the commit checked out and not from it.
 3. When no such commit is found, the command refuses. The message names the entry by its timestamp, says that no commit
    of the branch was found to have added it, and says that a review in the form the command reads, as a delta review of
    the commit checked out, lets the command go on.
-4. When the commit that added the entry touches a file outside the unit's directory, the command refuses. The message
-   names those files, and says that the commit of the last review also holds other work, so that the reviewer reviews
-   it again.
-5. When a merge commit stands after the commit that added the entry, up to the commit checked out, the command refuses.
-   The message names the merge commit by its short hash, and says that rebasing the branch on the default branch, or
-   another review, lets the command go on.
-6. When a commit after the one that added the entry, up to the commit checked out, touches a file outside the unit's
-   directory, the command refuses. The message names those files, each once, and says that the work changed after the
-   last review, so that the reviewer reviews it again.
+4. When the commit that added the entry is a merge commit, the command refuses as R5 says. When it touches a file
+   outside the unit's directory, the command refuses. The message names those files and that commit by its short hash,
+   and says that the commit of the last review also holds other work, so that the reviewer reviews it again.
+5. When a merge commit stands after the commit that added the entry, the command refuses. The message names the merge
+   commit by its short hash, and says that rebasing the branch on the default branch, or another review, lets the
+   command go on.
+6. When a commit after the one that added the entry touches a file outside the unit's directory, the command refuses.
+   The message names those files, each once, and the commit that added the entry by its short hash, and says that the
+   work changed after the last review, so that the reviewer reviews it again.
 7. When none of R3 to R6 holds, this condition of the rule holds. Commits that touch only the unit's directory, its
    `record.md` and `plan.md` among it, do not count, and neither does an empty commit.
 8. The command no longer needs the commit the entry names to exist or to resolve. The refusals of a named commit that
@@ -95,7 +98,8 @@ outside the unit really changed after their last review.
 
 12. `COMMANDS.md` gives the refusals of R3 to R6 in the list of `complete`, in place of the two that go, and says that
     the command reads the commits from the one that added the last review's entry, and that the commit the entry names
-    need not exist.
+    need not exist. The row of `complete` in the table at the top of `COMMANDS.md` stays as it is, since what it says
+    the command does stays true.
 13. No other document changes for this unit unless it states the old comparison. `README.md`, `ORCHESTRATOR.md`,
     `SETUP.md` and `SANDBOX.md` were read for it and do not: they say that the last review saw the work as it stands,
     which stays true, and nothing about the order of completing and rebasing. No document gains a section on landing.
@@ -108,11 +112,13 @@ outside the unit really changed after their last review.
     * a clean rebase on a moved default branch before `complete` passes
     * a code commit after the review refuses, naming the file
     * commits after the review that touch only the unit's own documents pass
-    * a fresh clone of a rebased branch, which lacks the commit the entry names, passes
+    * a fresh clone of a rebased branch, which holds the default branch and lacks the commit the entry names, passes
     * an edit of the entry's text past its opening, in a later commit, leaves the commit that added it found
     * an entry for which no commit is found refuses
     * a review commit that also holds code refuses, naming the file
     * a merge commit after the review refuses, naming it, and a review after the merge passes
+    * a review commit that reaches the branch through a merge, as of commits waiting at `sandbox/<branch>`, is found as
+      the commit that added the entry, and the merge after it refuses
     * a gitlink changed after the review refuses under `diff.ignoreSubmodules=all`, and a file changed after the review
       refuses under `diff.relative=true`
     * a rename after the review names both paths
@@ -129,8 +135,11 @@ outside the unit really changed after their last review.
   timestamp, who made it and the role are what no such edit touches. The line start keeps a quotation of the opening
   inside another entry from counting, since a continuation line is indented. The role keeps an entry of another role by
   the same agent in the same second from being taken for it.
-* **Take the newest commit that changes the count.** With the entry present at the commit checked out, that is the
-  commit that added it, also when an earlier entry has the same opening.
+* **Take the newest commit that raises the count above each of its parents.** With the entry present at the commit
+  checked out, that is the commit that added it, also when an earlier entry has the same opening. Comparing with each
+  parent keeps a merge that brings the review commit in from its other side from being taken for it, so that the
+  review commit is found where it was made and the merge stands after it. A commit that only removes an entry lowers
+  the count and is not taken.
 * **A review commit that holds other work refuses.** The code in it cannot be told apart from the reviewed work, so
   passing would pass unreviewed code. This did not occur in units 0100 to 0119, so that the refusal costs nothing in
   the normal flow. A branch squashed into one commit is refused by this, and needs another review.
@@ -148,7 +157,9 @@ outside the unit really changed after their last review.
   and the rest of 0117 stands.
 * **`process.md` gains nothing for the edge cases.** Without text on merges, review commits with code or the identifying
   of the entry, nothing goes wrong at runtime: the command applies them and its messages say what to do. They are
-  settled here, which only the unit's workers read.
+  settled here, which only the unit's workers read. The refusal of a merge is the command's own and no condition of
+  `implemented`: a merge whose commits touch only the unit's directory meets the rule of R1, and the command refuses it
+  because it does not read a merge's sides, with a message that gives the recovery.
 * **The threat model is 0117's.** The command defends against a mistake, and not against an agent that writes a false
   entry or rewrites history to hide a commit. The content of the commits of the unit's branch stays outside what the
   kit defends against, and the human reviews the branch before landing it.
@@ -164,6 +175,14 @@ outside the unit really changed after their last review.
   commit found, so that earlier commits are taken as reviewed. Nothing in the kit edits an opening.
 * **A shallow clone can refuse a clean branch.** Its oldest commit appears to add the whole file, and so also every
   other file, and R4 refuses. Fetching the full history recovers from it.
+* **A clone without the default branch is refused by the change check.** `complete` runs the change check before it
+  reads the review, and the check needs a common ancestor with the default branch or its `origin/` ref, as a
+  `--single-branch` clone of the unit's branch lacks. This unit leaves the check as it is. Fetching the default branch
+  recovers from it.
+* **After a rebase, a delta review may lack its base.** The reviewer's role compares against the commit the last
+  review names, which a fresh clone of a rebased branch does not hold, and then asks rather than falling back to a
+  full review. The refusals of R4 and R6 name the commit that added the entry by its short hash, which the human can
+  give the reviewer as the base.
 
 ## Non-goals
 
