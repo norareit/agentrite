@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: in-progress
+status: implemented
 timestamp: 2026-11-23T00:03:55Z
 supersedes: 0117-set-a-unit-implemented-by-a-command
 ---
@@ -98,5 +98,6 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   `.reviews/0120-a-clean-rebase-needs-no-new-review/review-2026-11-27T151302Z.md`. `npm test` passed with 2046 passing
   and 34 Docker-dependent tests skipped; `npm run check-changes` passed. Did not reenact the regression on the
   pre-fix tree or test a record that exhausts process memory. The status stays `in-progress`
+- 2026-11-27T15:20:44Z [human] set the unit to implemented, on the review at `bc34526c9629`. The status is `implemented`
 
 ## Amendments
