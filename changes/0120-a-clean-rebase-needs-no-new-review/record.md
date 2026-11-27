@@ -1,6 +1,6 @@
 ---
 kind: bug
-status: draft
+status: approved
 timestamp: 2026-11-23T00:03:55Z
 supersedes: 0117-set-a-unit-implemented-by-a-command
 ---
@@ -36,5 +36,6 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   `record.md` at `c1b503e250c151f25ba4d6ce7f7daba26945e134` as a delta from `1383f201beec30a2720dd24f78a0c1b0c0b6f6db`.
   Findings F9 to F11 are in `.reviews/0120-a-clean-rebase-needs-no-new-review/spec-review-2026-11-27T142420Z.md`.
   Did not verify live harness behavior or run the proposed command, which is not yet implemented
+- 2026-11-27T14:28:22Z [human] approved the spec. The status is `approved`
 
 ## Amendments
