@@ -44,5 +44,12 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   for such an entry and the spec gives no behavior for it. R4 names the parent of the commit that added the entry,
   which a commit with no parent, as the oldest commit of a shallow clone, lacks, and the spec gives no message for
   it. The unit goes back to the specifier and the human. The status is `approved`
+- 2026-11-27T14:47:30Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, corrected `spec.md` for F9 to F11 of
+  the last spec review, as the human decided them after the planner stopped. F9: the opening of the reviewer's entry
+  must stand whole on its first line, and an entry wrapped inside it is refused as not of the form, so that R3 holds.
+  F10: when the commit that added the entry has no parent in the history held, the refusal of R4 says so and names
+  fetching the full history, or another review, as the recovery. F11: the limitation on a delta review's base now
+  promises only the commit that added the entry and those after it. R10, R12 and R15 follow, and `process.md` stays at
+  2562 words. The status is `approved`
 
 ## Amendments

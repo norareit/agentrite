@@ -65,15 +65,18 @@ outside the unit really changed after their last review.
    an edit of the entry's text past the opening, and whether or not the commit the entry names exists. A commit that
    removes an entry is never that commit, and neither is a merge that holds the entry because one of its parents does.
    The commits after it are those reachable from the commit checked out and not from it.
-3. Such a commit is always found, and the command has no refusal for its absence. The entry is in the `record.md` of
-   the commit checked out, since the command refuses a unit's directory that differs from that commit before it reads
-   the review. A commit that does not hold the entry more often than each of its parents has a parent that holds it,
-   and a commit with no parent holds it more often than none, so that following such parents back ends at a commit
-   that qualifies.
+3. Such a commit is always found, and the command has no refusal for its absence. The entry is in the `record.md` of the
+   commit checked out, since the command refuses a unit's directory that differs from that commit before it reads the
+   review, and its opening stands whole on the entry's first line, since the refusal of a last review not in the form
+   also refuses an entry whose first line does not hold the whole opening. A commit that does not hold the entry more
+   often than each of its parents has a parent that holds it, and a commit with no parent holds it more often than none,
+   so that following such parents back ends at a commit that qualifies.
 4. When the commit that added the entry is a merge commit, the command refuses as R5 says. When it touches a file
    outside the unit's directory, the command refuses. The message names those files, and says that the commit of the
    last review also holds other work, so that the reviewer reviews it again from the parent of that commit, which it
-   names by its short hash.
+   names by its short hash. When that commit has no parent in the history the repository holds, as the oldest commit
+   of a shallow clone, the message says so in place of naming a parent, and says that fetching the full history, or
+   another review, lets the command go on.
 5. When a merge commit stands after the commit that added the entry, the command refuses. The message names the merge
    commit by its short hash, and says that rebasing the branch on the default branch, or another review, lets the
    command go on.
@@ -93,8 +96,9 @@ outside the unit really changed after their last review.
     * no external diff and no textconv driver runs, for the search of R2 as for the reading of the files
     * in a project in a subdirectory of its repository, paths are compared from the top of the repository, as now
 10. The refusals of R4 to R6 stand in that order at the place of the two refusals R8 removes, after the refusal of a
-    last review not in the form and before that of a blocking finding still open. All else the command does, reads,
-    writes and refuses is unchanged. As before, a refusal writes and commits nothing and exits 1.
+    last review not in the form and before that of a blocking finding still open. Apart from the opening R3 requires on
+    the first line of the entry, all else the command does, reads, writes and refuses is unchanged. As before, a refusal
+    writes and commits nothing and exits 1.
 11. No role file and no file of `standards.md` changes, and the documents of 0117 stay as they are.
 
 ### The documents
@@ -102,7 +106,8 @@ outside the unit really changed after their last review.
 12. `COMMANDS.md` gives the refusals of R4 to R6 in the list of `complete`, in place of the two that go, and says that
     the command reads the commits from the one that added the last review's entry, and that the commit the entry names
     need not exist. The row of `complete` in the table at the top of `COMMANDS.md` stays as it is, since what it says
-    the command does stays true.
+    the command does stays true. The form of the reviewer's entry in `COMMANDS.md` says that its opening, up to and
+    including `as the reviewer`, stands on the entry's first line.
 13. No other document changes for this unit unless it states the old comparison. `README.md`, `ORCHESTRATOR.md`,
     `SETUP.md` and `SANDBOX.md` were read for it and do not: they say that the last review saw the work as it stands,
     which stays true, and nothing about the order of completing and rebasing. No document gains a section on landing.
@@ -117,7 +122,9 @@ outside the unit really changed after their last review.
     * commits after the review that touch only the unit's own documents, none of them a merge, pass
     * a fresh clone of a rebased branch, which holds the default branch and lacks the commit the entry names, passes
     * an edit of the entry's text past its opening, in a later commit, leaves the commit that added it found
-    * a review commit that also holds code refuses, naming the file
+    * a review commit that also holds code refuses, naming the file and its parent, and one with no parent in the
+      history held refuses, saying so
+    * a last review whose entry is wrapped before the end of its opening refuses as not of the form
     * a merge commit after the review refuses, naming it, and a review after the merge passes
     * a review commit that reaches the branch through a merge, as of commits waiting at `sandbox/<branch>`, is found as
       the commit that added the entry, and the merge after it refuses
@@ -142,6 +149,11 @@ outside the unit really changed after their last review.
   parent keeps a merge that brings the review commit in from its other side from being taken for it, so that the
   review commit is found where it was made and the merge stands after it. A commit that only removes an entry lowers
   the count and is not taken.
+* **The opening stands on the entry's first line.** The lookup of R2 reads lines as git stores them, and the parser of
+  the form joins an entry's lines first, so that an entry wrapped inside its opening would pass the form and never be
+  found. Requiring the opening on the first line costs nothing, since the opening is about 70 characters and no entry
+  written by the kit wraps inside it. Searching the history with each entry's lines joined was rejected as a second
+  parser for a shape nobody writes.
 * **A review commit that holds other work refuses.** The code in it cannot be told apart from the reviewed work, so
   passing would pass unreviewed code. This did not occur in units 0100 to 0119, so that the refusal costs nothing in
   the normal flow. A branch squashed into one commit is refused by this, and needs another review.
@@ -184,7 +196,9 @@ outside the unit really changed after their last review.
 * **After a rebase, a delta review may lack its base.** The reviewer's role compares against the commit the last
   review names, which a fresh clone of a rebased branch does not hold, and then asks rather than falling back to a
   full review. The refusal of R6 names the commit that added the entry by its short hash, and that of R4 the parent
-  of that commit, so that the human can give the reviewer a base whose diff holds all the work not yet reviewed.
+  of that commit, so that the human can give the reviewer a base whose diff holds the commit that added the entry and
+  the commits after it. A commit between the commit reviewed and the one that added the entry is not in that diff,
+  as the limitation above on such a commit says.
 
 ## Non-goals
 
