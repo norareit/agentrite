@@ -38,5 +38,11 @@ No other file changes. The documents of the kit keep `npx agentrite`, which is r
   status stays `approved`
 - 2026-11-27T15:40:12Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work. The status is
   `in-progress`
+- 2026-11-27T15:44:30Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, added to "The kit's command"
+  of `AGENTS.md` that the rule holds for a command given to `./sandbox.sh` too, and that the `npx agentrite` of the
+  examples of `SANDBOX.md`, `ORCHESTRATOR.md` and `COMMANDS.md` and of the orchestrator's hints is written `npm run
+  kit --` in this repository, with the record's example. No other file changed. On `7428803`, `npm test` reported 2046
+  passed, 0 failed and 34 skipped of 2080, `npm run check-changes` passed, and no line of `AGENTS.md` outside a table
+  is longer than 120 characters. The repository has no separate end-to-end suite. The status stays `in-progress`
 
 ## Amendments
