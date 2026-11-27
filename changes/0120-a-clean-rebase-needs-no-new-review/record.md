@@ -86,5 +86,12 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   and 34 Docker-dependent tests skipped; `npm run check-changes` passed. Did not reproduce the original 0117 trial,
   an actual shallow clone, a repository-subdirectory project or the aggregate-size failure through the full command;
   a read-only Git batch probe confirmed the output limit. The status stays `in-progress`
+- 2026-11-27T15:11:16Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, applied `S1` of the
+  review at `4ba22ad9f077`, accepted by the definition of the orchestrator: the command read every version of the
+  record in one output, which Node bounds at a mebibyte. It now reads each version alone with `git cat-file blob`,
+  only when `addingCommit` asks for its count, newest first, and `batchContents` is removed. The new command test of
+  versions after the review that exceed a mebibyte together failed with `ENOBUFS` on the code of `4ba22ad` and
+  passes on `8e16b6b`, where `npm test` passes, 2046 tests and none failing, and `npm run check-changes` passes. A
+  single version of the record longer than the memory of the process is not checked. The status is `in-progress`
 
 ## Amendments
