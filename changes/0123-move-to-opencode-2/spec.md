@@ -8,6 +8,8 @@ that earlier reasoning, so this unit starts from what was found on 2026-11-26 an
 
 The human decided that the kit moves to OpenCode 2 and stops supporting OpenCode 1, rather than supporting both, as
 "Decisions" gives. The human keeps the host on OpenCode 1.19.6 until a release of the kit holds this unit.
+This repository's own sandbox holds no version of OpenCode and takes the host's, so the host moves to OpenCode 2
+when this repository moves to that release, or its starts are refused by requirement 3.
 
 ### What OpenCode 2 is
 
@@ -80,6 +82,10 @@ What the kit relies on and found unchanged:
   hands to the sandbox: OpenCode 2 listed the model of such a provider
 * OpenCode's data directory is `~/.local/share/opencode`, now holding `opencode.db`, `log`, `repos` and `snapshot`,
   so the log directory of the sandbox keeps its sessions and its login as before
+* The step of the kit's default orchestrator that runs on OpenCode, the reviewer on `openai/gpt-6.2-sol` with the
+  effort `high`, ran in the sandbox as `--model=openai/gpt-6.2-sol#high`, with calls of the shell, and exited 0
+* A commit that OpenCode made in that run, asked for by the prompt, held the message the prompt gave and no trailer,
+  so the trailers that the commit check refuses are unchanged by OpenCode 2
 * The hosts OpenCode reaches in the sandbox are those the kit admits today, but for `github.com` for ripgrep. It
   still reaches `models.opencode.ai`. OpenCode's own free models are served from `opencode.ai`, which the kit does not
   admit, under OpenCode 1 either
@@ -133,9 +139,10 @@ The sandbox:
 
 The documents:
 
-13. The kit's documents describe OpenCode 2: no document gives `--variant`, `opencode-ai`, a plugin of OpenCode 1 or
-    a version of OpenCode 1 as what the kit uses, and the examples of "Holding a harness version" in `SANDBOX.md` give
-    a version of OpenCode 2
+13. The kit's documents and the help texts of its commands describe OpenCode 2: none gives `--variant`,
+    `opencode-ai`, a plugin of OpenCode 1 or a version of OpenCode 1 as what the kit uses, the usage of `agentrite run`
+    among them, and every example of a version of OpenCode in them gives a version of OpenCode 2, as those of
+    "Holding a harness version" in `SANDBOX.md` and the words of the label of the harness versions there
 
 Verification, by the implementer, with OpenCode 2 in this repository's own sandbox, `./sandbox-dev.sh`:
 
