@@ -62,20 +62,20 @@ unit that claims to be safe":
   its result in one line of `record.md` (R5)
 - [x] Confirm with `git diff f1b26ac -- process.md standards.md templates/changes/record.md` that the three files
   are unchanged (R6)
-- [ ] Log in `record.md` `wc -w` of `process.md`, `standards.md` and `roles/specifier.md` once the work is done. The
+- [x] Log in `record.md` `wc -w` of `process.md`, `standards.md` and `roles/specifier.md` once the work is done. The
   first two do not change; for `roles/specifier.md` the entry says that the added words are the rule of R1 and R2
   (R7)
 
 ## Verification
 
-- [ ] `awk 'length > 120 { print FILENAME ": " FNR }'` over the three changed files and `record.md` prints nothing
+- [x] `awk 'length > 120 { print FILENAME ": " FNR }'` over the three changed files and `record.md` prints nothing
   (R8)
-- [ ] `grep -nP '\x{2014}'`, a search for the em dash, over the three changed files and `record.md` prints nothing (R8)
+- [x] `grep -nP '\x{2014}'`, a search for the em dash, over the three changed files and `record.md` prints nothing (R8)
 - [ ] `npm test` passes (R8)
-- [ ] `npm run check-changes` exits 0, run after the work is committed (R8)
+- [x] `npm run check-changes` exits 0, run after the work is committed (R8)
 
 ## Commit Points
 
-- [ ] `task-0119` commit of the three changed files, with the entries of `record.md` for the word counts at `f1b26ac`
+- [x] `task-0119` commit of the three changed files, with the entries of `record.md` for the word counts at `f1b26ac`
   and for the search of R5
-- [ ] `task-0119` commit of `record.md` with the word counts once the work is done and the work's entry
+- [x] `task-0119` commit of `record.md` with the word counts once the work is done and the work's entry

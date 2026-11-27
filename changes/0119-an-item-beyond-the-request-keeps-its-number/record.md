@@ -41,5 +41,16 @@ timestamp: 2026-11-22T13:27:16Z
   also holds "item", "remov", "again", "taken", "declin" or "left out": no text, code or prompt says that a taken or a
   declined item is removed from the list or that the items are numbered again, so nothing else was changed (R5).
   `git diff f1b26ac -- process.md standards.md templates/changes/record.md` prints nothing (R6)
+- 2026-11-27T13:44:20Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, logged `wc -w` once the work is
+  done, on `8fe98b6`: `process.md` 2562 and `standards.md` 1205, unchanged, and `roles/specifier.md` 954, 91 words more
+  than the 863 at `f1b26ac`. The added words are the bullet that keeps the numbers of "Beyond the request", the rule of
+  R1 and R2 (R7)
+- 2026-11-27T13:44:50Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on `8fe98b6`, `awk` finds no line
+  over 120 characters and `grep -nP '\x{2014}'` finds no em dash in the three changed files and `record.md`, and
+  `npm run check-changes` exits 0. `npm test` reports 2055 tests, 2020 passed, 34 skipped and 1 failed: "package.json says
+  what the package is, where it lives and under which license", whose expected keywords `b863835` on `master` left
+  behind when it changed those of `package.json`. The branch changes neither `package.json` nor `tests/` since
+  `f1b26ac`, so the failure is on `master` as well, and R8, that `npm test` passes, does not hold. The test is outside
+  this unit and was not changed; the plan's box for `npm test` stays open. The status stays `in-progress`
 
 ## Amendments
