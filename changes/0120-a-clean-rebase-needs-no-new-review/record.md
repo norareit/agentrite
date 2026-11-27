@@ -32,5 +32,9 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   that the commit that added the entry is always found and why, and by dropping its test. F7 is corrected by having R4
   name the parent of the review commit as the base of the new review. F8 is corrected by limiting the pass of Expected
   behavior and R15 to commits that include no merge. `process.md` stays at 2562 words. The status is `draft`
+- 2026-11-27T14:24:51Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, on `master`, reviewed `spec.md` and
+  `record.md` at `c1b503e250c151f25ba4d6ce7f7daba26945e134` as a delta from `1383f201beec30a2720dd24f78a0c1b0c0b6f6db`.
+  Findings F9 to F11 are in `.reviews/0120-a-clean-rebase-needs-no-new-review/spec-review-2026-11-27T142420Z.md`.
+  Did not verify live harness behavior or run the proposed command, which is not yet implemented
 
 ## Amendments
