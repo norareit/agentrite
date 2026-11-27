@@ -122,8 +122,13 @@ Starting OpenCode:
 
 4. Every start of OpenCode that the kit makes, interactive and headless, on the host and in the sandbox, passes
    `--standalone`
-5. An effort is given to OpenCode with its model, as the one argument `--model=<model>#<level>`, and no other argument
-   carries it. Without `--effort` the model is given as `--model=<model>`, as today. A `--model` that already names
+5. An effort is given to OpenCode with its model, as `<model>#<level>`, and nothing else carries it. Without `--effort`
+   the model is given as `<model>`, as today. A headless start gives the model as the one argument `--model=` with it
+   joined. An interactive start, the full terminal client and not `opencode mini`, gives the role and the model in
+   the configuration of the start, `OPENCODE_CONFIG_CONTENT`, as `default_agent` and `model`, beside `--auto` for
+   `--skip-permissions` and `--prompt`, since the terminal client takes no `--agent` or `--model`. What
+   `OPENCODE_CONFIG_CONTENT` already holds for the start is kept in it, as the bell's plugin in the sandbox, and
+   where a key is in both, the kit's role or model is the one given. A `--model` that already names
    a variant after a `#`, given with `--effort`, is refused before OpenCode starts, with the status of "Exit
    statuses" of `COMMANDS.md` for a usage error, and a message that names both and says to give the effort in one of
    them only
@@ -172,8 +177,12 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
       step is resumed with its session; one whose step makes a call that is refused, which ends the run, as the stop
       reports the call; and one with an unknown model, as the run reports the harness's error
     * a step given `--effort` with a `--model` that names a variant, refused by requirement 5
-    * the terminal client started by the kit with `--prompt`, its colours, the bell when a turn ends, and a login
-      that holds into a new container
+    * the terminal client started by the kit in a role of the project's, with a model and an effort, and with
+      `--skip-permissions`: that the session runs in that role and on that model and variant, as OpenCode's database
+      records them, that `--prompt` is sent, its colours, the bell when a turn ends, and a login that holds into a new
+      container
+    * the terminal client started by the kit on the host, in a role, with a model and an effort, as OpenCode's
+      database records them
     * a start refused by requirement 3, with a version of 1 given in `sandbox/compose.project.yml`
 
 ## Decisions
@@ -222,6 +231,13 @@ Verification, by the implementer, with OpenCode 2 in this repository's own sandb
   checked. The developer logs in again where it does not hold, as on a new project. Sessions of OpenCode 1 are not
   resumed by the kit. A project that goes back to the release of the kit before this unit, after OpenCode 2 has run
   in its sandbox, is not supported, and what OpenCode 1 makes of the data that OpenCode 2 left was not checked
+* **The terminal client, given its role and model through its configuration.** OpenCode 2's terminal client takes
+  no `--agent` or `--model`, and `opencode mini`, which takes both, refuses `--auto`, so that `--skip-permissions`
+  could not hold in an interactive start, and it is a smaller client whose colours and bell were not checked. The
+  configuration of the start holds only for a start with `--standalone`, which requirement 4 gives. `opencode mini`
+  was weighed and declined by the human. A recorded limitation: an effort that the model does not have makes a
+  headless start end with OpenCode's error, and an interactive one run at the model's default variant without a
+  word, as "What was found" gives
 * **The bell rings when a turn fails too.** OpenCode 1's `session.idle` came at the end of every turn, whatever its
   end, and OpenCode 2 splits that end into two events, so the plugin rings on both
 

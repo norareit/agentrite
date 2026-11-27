@@ -25,5 +25,8 @@ timestamp: 2026-11-27T13:24:19Z
   requirement 13; `F5` nothing of OpenCode 1 carries over, and the checks run with a log directory of their own; `F6`
   the new key kept, with its reason corrected. `ripgrep` is a package of the image, and `BTR2` is left out. `F1` is
   open, with what the terminal client of OpenCode 2 takes added to "What was found"
+- 2026-11-27T14:54:41Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled `F1` on the human's decision:
+  the full terminal client, given its role, model and effort in the configuration of the start, in requirements 5 and 14
+  and a decision, with the silent fall-back of an unknown effort recorded as a limitation
 
 ## Amendments
