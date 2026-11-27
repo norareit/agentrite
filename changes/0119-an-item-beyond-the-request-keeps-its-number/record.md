@@ -1,6 +1,6 @@
 ---
 kind: task
-status: in-progress
+status: implemented
 timestamp: 2026-11-22T13:27:16Z
 ---
 
@@ -95,5 +95,6 @@ timestamp: 2026-11-22T13:27:16Z
   kept the 91 words that `roles/specifier.md` grew by. Added to the decision on the kind in `spec.md` that the unit
   also corrects that test, and why. The human chose to leave the times of the implementer's entries as they are,
   although three of them are later than the commits that hold them. The status stays `in-progress`
+- 2026-11-27T14:03:05Z [human] set the unit to implemented, on the review at `6ebbc16`. The status is `implemented`
 
 ## Amendments
