@@ -1,6 +1,6 @@
 ---
 kind: task
-status: draft
+status: approved
 timestamp: 2026-11-27T14:50:09Z
 ---
 
@@ -32,5 +32,6 @@ No other file changes. The documents of the kit keep `npx agentrite`, which is r
   run kit --` was meant. Numbered 0124: the highest number in `changes/` is 0123. Made it a task, since it is one
   sentence added to `AGENTS.md` and needs no decision. `AGENTS.md` is no file of the kit, so its words are not counted.
   The status is `draft`
+- 2026-11-27T14:50:34Z [human] approved the record. The status is `approved`
 
 ## Amendments
