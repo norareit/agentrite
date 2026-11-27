@@ -39,5 +39,9 @@ timestamp: 2026-11-27T13:24:19Z
   when it is no object, and the stale sentence of the decision on `--standalone` corrected; `F9` the check on the host
   made with a scratch OpenCode 2 and scratch data; `F10` no promise and no refusal for the data of OpenCode 1, with its
   conversion by OpenCode 2 added to "What was found"
+- 2026-11-27T15:11:32Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, reviewed `spec.md` and `record.md` at
+  `058dfd969f03` as a delta from `03d0e24e713e`. Returned `F11` in
+  `.reviews/0123-move-to-opencode-2/spec-review-2026-11-27T151108Z.md`. Did not repeat the 373-session migration,
+  interactive role selection, credential migration, or R14's full kit integration
 
 ## Amendments
