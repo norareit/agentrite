@@ -27,5 +27,10 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   `record.md` at `1383f201beec30a2720dd24f78a0c1b0c0b6f6db` as a delta from `f1b26ac1e5c6fcd79313fba8cff8a0b40d348ef1`.
   Findings F4, F7 and F8 are in `.reviews/0120-a-clean-rebase-needs-no-new-review/spec-review-2026-11-27T140237Z.md`.
   Did not verify live harness behavior or run the proposed command, which is not yet implemented
+- 2026-11-27T14:22:35Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled the findings of the delta spec
+  review with the human. F4 is corrected by replacing the refusal of R3, which no branch can reach, with the statement
+  that the commit that added the entry is always found and why, and by dropping its test. F7 is corrected by having R4
+  name the parent of the review commit as the base of the new review. F8 is corrected by limiting the pass of Expected
+  behavior and R15 to commits that include no merge. `process.md` stays at 2562 words. The status is `draft`
 
 ## Amendments
