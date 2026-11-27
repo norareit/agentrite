@@ -74,5 +74,11 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   `process.md` and the refusals of `complete` in `COMMANDS.md` by the commits from the review on. `wc -w process.md`
   prints `2562` once the work is done, as at `0b09add`. `git diff 0b09add` of `roles`, `extra-roles`,
   `standards.md`, `README.md`, `ORCHESTRATOR.md`, `SETUP.md`, `SANDBOX.md` and the documents of 0117 prints nothing
+- 2026-11-27T15:03:35Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, finished the plan.
+  `npm test` passes on `91ee197`, 2045 tests and none failing, and `npm run check-changes` passes on it. On a scratch
+  clone of this repository, with the steps to reproduce of `spec.md` and 0117 as the unit, `complete` of the working
+  tree passed after the rebase, and refused a commit touching `added.txt` after the review, naming it. Not checked: a
+  shallow clone, which the tests replace by a commit with no parent, and a project in a subdirectory, which the change
+  check refuses as logged above. The unit is ready for review. The status is `in-progress`
 
 ## Amendments
