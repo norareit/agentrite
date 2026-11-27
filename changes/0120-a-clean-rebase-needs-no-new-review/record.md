@@ -80,5 +80,11 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   tree passed after the rebase, and refused a commit touching `added.txt` after the review, naming it. Not checked: a
   shallow clone, which the tests replace by a commit with no parent, and a project in a subdirectory, which the change
   check refuses as logged above. The unit is ready for review. The status is `in-progress`
+- 2026-11-27T15:07:26Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at `4ba22ad9f077` in full.
+  Returned `S1`. Blocking findings: `S1`. The findings are in
+  `.reviews/0120-a-clean-rebase-needs-no-new-review/review-2026-11-27T150616Z.md`. `npm test` passed with 2045 passing
+  and 34 Docker-dependent tests skipped; `npm run check-changes` passed. Did not reproduce the original 0117 trial,
+  an actual shallow clone, a repository-subdirectory project or the aggregate-size failure through the full command;
+  a read-only Git batch probe confirmed the output limit. The status stays `in-progress`
 
 ## Amendments
