@@ -28,5 +28,10 @@ timestamp: 2026-11-27T13:24:19Z
 - 2026-11-27T14:54:41Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled `F1` on the human's decision:
   the full terminal client, given its role, model and effort in the configuration of the start, in requirements 5 and 14
   and a decision, with the silent fall-back of an unknown effort recorded as a limitation
+- 2026-11-27T15:00:47Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, reviewed `spec.md` and `record.md` at
+  `03d0e24e713e` as a delta from `0b09add5052c`. Returned `F7`, `F8`, `F9` and `F10` in
+  `.reviews/0123-move-to-opencode-2/spec-review-2026-11-27T150011Z.md`. Did not check role selection on resume, a
+  real provider login or successful completion, terminal colours or bell, legacy data migration, or R14's full kit
+  integration
 
 ## Amendments
