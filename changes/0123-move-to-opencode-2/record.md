@@ -48,5 +48,9 @@ timestamp: 2026-11-27T13:24:19Z
   only, and an empty one is taken as not set. Added, on the human's decisions, how `./sandbox-dev.sh` is given OpenCode
   2 for the checks, by a pin in the working copy that is not committed, and that this unit is merged last, after 0121
   and 0122
+- 2026-11-27T15:19:42Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, reviewed `spec.md` and `record.md` at
+  `412f265a0b7e` as a delta from `058dfd969f03`. No new findings. The review is in
+  `.reviews/0123-move-to-opencode-2/spec-review-2026-11-27T151917Z.md`. Did not run the OpenCode 2 sandbox build or
+  the integration checks of requirement 14
 
 ## Amendments
