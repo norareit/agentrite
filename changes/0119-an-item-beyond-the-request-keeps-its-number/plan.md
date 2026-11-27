@@ -49,18 +49,18 @@ unit that claims to be safe":
 
 ## Tasks
 
-- [ ] Log in `record.md` `wc -w` at `f1b26ac`, in the root of the repository, of `process.md` (2562) and
+- [x] Log in `record.md` `wc -w` at `f1b26ac`, in the root of the repository, of `process.md` (2562) and
   `standards.md` (1205), which R7 asks for, and of `roles/specifier.md` (863), which the unit changes and which
   "The length of the kit's instructions" of `AGENTS.md` counts among the kit's instructions (R7)
-- [ ] Add the bullet above to "Writing the spec" of `roles/specifier.md`, after the bullet that opens "Write as
+- [x] Add the bullet above to "Writing the spec" of `roles/specifier.md`, after the bullet that opens "Write as
   requirements only what the request needs" (R1, R2)
-- [ ] Replace the placeholder of "Beyond the request" in `templates/changes/spec.md` with the one above (R3)
-- [ ] Replace the bullet "Scope" of `extra-roles/spec-reviewer.md` with the one above (R4)
-- [ ] Search the repository outside `changes/`, `CHANGELOG.md` and `node_modules/`, the code and the prompts among
+- [x] Replace the placeholder of "Beyond the request" in `templates/changes/spec.md` with the one above (R3)
+- [x] Replace the bullet "Scope" of `extra-roles/spec-reviewer.md` with the one above (R4)
+- [x] Search the repository outside `changes/`, `CHANGELOG.md` and `node_modules/`, the code and the prompts among
   it, for "Beyond the request", `BTR` and "number", and confirm that nothing says that a taken or a declined item is
   removed from the list or that the items are numbered again. Change any text that does, and log the search and
   its result in one line of `record.md` (R5)
-- [ ] Confirm with `git diff f1b26ac -- process.md standards.md templates/changes/record.md` that the three files
+- [x] Confirm with `git diff f1b26ac -- process.md standards.md templates/changes/record.md` that the three files
   are unchanged (R6)
 - [ ] Log in `record.md` `wc -w` of `process.md`, `standards.md` and `roles/specifier.md` once the work is done. The
   first two do not change; for `roles/specifier.md` the entry says that the added words are the rule of R1 and R2

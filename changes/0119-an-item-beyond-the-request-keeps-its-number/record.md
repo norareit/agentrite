@@ -1,6 +1,6 @@
 ---
 kind: task
-status: approved
+status: in-progress
 timestamp: 2026-11-22T13:27:16Z
 ---
 
@@ -29,5 +29,17 @@ timestamp: 2026-11-22T13:27:16Z
   and still holds the sentence on `BTR<n>` that R6 relies on. The plan has the word counts of R7 logged at
   `f1b26ac`, where `process.md` now has 2562 words, and also counts `roles/specifier.md`, which `AGENTS.md` counts
   among the kit's instructions. The status stays `approved`
+- 2026-11-27T13:35:28Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, began the work on the unit's
+  branch, cut from `f1b26ac`, in round 1 of the orchestrator's repeat, with no review of the unit in `.reviews`. The
+  status is `in-progress`
+- 2026-11-27T13:36:10Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, logged `wc -w` at `f1b26ac`, in
+  the root of the repository: `process.md` 2562, `standards.md` 1205 and `roles/specifier.md` 863 (R7)
+- 2026-11-27T13:37:02Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, put the wording of the plan into
+  `roles/specifier.md`, `templates/changes/spec.md` and `extra-roles/spec-reviewer.md` (R1 to R4). Searched the
+  repository outside `changes/`, `CHANGELOG.md` and `node_modules/`, SVG files and `package-lock.json` left out, with
+  `git grep` for "beyond the request" and `BTR`, for "renumber" and "numbered again", and for "number" on a line that
+  also holds "item", "remov", "again", "taken", "declin" or "left out": no text, code or prompt says that a taken or a
+  declined item is removed from the list or that the items are numbered again, so nothing else was changed (R5).
+  `git diff f1b26ac -- process.md standards.md templates/changes/record.md` prints nothing (R6)
 
 ## Amendments

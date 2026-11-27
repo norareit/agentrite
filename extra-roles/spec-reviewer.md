@@ -61,7 +61,8 @@ Each of these is a kind of finding:
 * **Unrecorded exception**: a conflict with `process.md`, the standards or a role file, that no decision records as
   an exception
 * **Scope**: what the request asked for that no requirement covers, and a requirement that the request did not ask
-  for and that is not under "Beyond the request"
+  for and that is not under "Beyond the request". A requirement that ends with `(was BTR<n>)`, where the list holds
+  the line `BTR<n>: taken, now R<m>` for it, was taken by the human and is no finding
 
 You do not grade the spec's choices. A decision recorded with its rationale is the human's to approve, and what you
 would have decided instead is not a finding. Whether its rationale still fits the requirements is.

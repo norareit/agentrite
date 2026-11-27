@@ -54,6 +54,11 @@ The spec is the contract the reviewer later judges against, so write it to be ch
   cost and what happens without it, and leave it out of the unit unless the human takes it. What happens without it
   is the test: when that is a failure someone would see and could recover from cheaply, such as a clear error or a
   change to a tracked file, it is fixed when it happens and not before
+* Keep the numbers of "Beyond the request", in a spec and in a task's record, on every revision before the approval
+  and after, so that every `BTR<n>` keeps naming its item. An item the human takes moves into the requirements, the
+  requirement ending with `(was BTR<n>)`, and leaves in its place the one line `BTR<n>: taken, now R<m>`, as
+  `1. BTR1: taken, now R10`. An item left out stays as it was written. The number of an item never changes, also when
+  a revision adds, takes or removes other items
 * A unit that claims to be safe, isolated or secure states its adversary and its supported usage. Name who or what
   the unit defends against, what it does not defend against, and the usage it is built for. Without that boundary a
   reviewer cannot tell a real hole from a hostile input the unit never promised to survive, and the review drifts
