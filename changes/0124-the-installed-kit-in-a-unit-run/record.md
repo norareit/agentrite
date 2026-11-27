@@ -44,5 +44,10 @@ No other file changes. The documents of the kit keep `npx agentrite`, which is r
   kit --` in this repository, with the record's example. No other file changed. On `7428803`, `npm test` reported 2046
   passed, 0 failed and 34 skipped of 2080, `npm run check-changes` passed, and no line of `AGENTS.md` outside a table
   is longer than 120 characters. The repository has no separate end-to-end suite. The status stays `in-progress`
+- 2026-11-27T15:38:04Z [OpenCode, openai/gpt-6.1-sol] as the reviewer, reviewed the unit at `95abb8f94956` as a full
+  review against merge base `86c7b816c35f` with `origin/master`. Returned no findings. Blocking findings: none.
+  The review is in `.reviews/0124-the-installed-kit-in-a-unit-run/review-2026-11-27T153804Z.md`. Independently ran
+  `npm test`: 2046 passed, 0 failed, 34 skipped of 2080; `npm run check-changes` and `git diff --check` passed.
+  Docker-dependent tests and actual Docker execution of the example could not be verified without Docker.
 
 ## Amendments
