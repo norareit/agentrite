@@ -23,5 +23,9 @@ supersedes: 0117-set-a-unit-implemented-by-a-command
   defined, a fresh clone holds the default branch, and the row of `complete` in `COMMANDS.md` stays. F4 is accepted as a
   limitation, with R4 and R6 naming the commit that added the entry. F1 is declined, since the wording of R2 taken for
   F3 already keeps a removal from being taken. `process.md` stays at 2562 words. The status is `draft`
+- 2026-11-27T14:03:19Z [OpenCode, openai/gpt-6.2-sol] as the spec-reviewer, on `master`, reviewed `spec.md` and
+  `record.md` at `1383f201beec30a2720dd24f78a0c1b0c0b6f6db` as a delta from `f1b26ac1e5c6fcd79313fba8cff8a0b40d348ef1`.
+  Findings F4, F7 and F8 are in `.reviews/0120-a-clean-rebase-needs-no-new-review/spec-review-2026-11-27T140237Z.md`.
+  Did not verify live harness behavior or run the proposed command, which is not yet implemented
 
 ## Amendments
