@@ -33,5 +33,8 @@ No other file changes. The documents of the kit keep `npx agentrite`, which is r
   sentence added to `AGENTS.md` and needs no decision. `AGENTS.md` is no file of the kit, so its words are not counted.
   The status is `draft`
 - 2026-11-27T14:50:34Z [human] approved the record. The status is `approved`
+- 2026-11-27T15:34:40Z [Claude Code, anthropic/claude-opus-5-5] as the planner, found that the task needs no plan: it is
+  one addition to "The kit's command" in `AGENTS.md`, which the record describes in full and which fits the tree. The
+  status stays `approved`
 
 ## Amendments
