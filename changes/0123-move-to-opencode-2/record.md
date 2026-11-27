@@ -19,9 +19,9 @@ timestamp: 2026-11-27T13:24:19Z
 - 2026-11-27T14:38:28Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, checked the spec against "Adding a
   harness" of `CONTRIBUTING.md`, and added the help text of `agentrite run`, the label of the harness versions, the
   default orchestrator's OpenCode step, the commit trailers and the host's move with this repository
-- 2026-11-27T14:51:14Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled findings of the spec review on the
-  human's decisions: `F2` taken, the report checks of requirement 14 under `npx agentrite orchestrate`; `F3` taken, an
-  effort with a model that names a variant refused; `F4` taken, the login, its place and the direct commands in
+- 2026-11-27T14:51:14Z [Claude Code, anthropic/claude-opus-5-5] as the specifier, settled findings of the spec review on
+  the human's decisions: `F2` taken, the report checks of requirement 14 under `npx agentrite orchestrate`; `F3` taken,
+  an effort with a model that names a variant refused; `F4` taken, the login, its place and the direct commands in
   requirement 13; `F5` nothing of OpenCode 1 carries over, and the checks run with a log directory of their own; `F6`
   the new key kept, with its reason corrected. `ripgrep` is a package of the image, and `BTR2` is left out. `F1` is
   open, with what the terminal client of OpenCode 2 takes added to "What was found"
