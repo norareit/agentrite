@@ -1,6 +1,6 @@
 ---
 kind: feature
-status: draft
+status: approved
 timestamp: 2026-11-27T13:24:19Z
 ---
 
@@ -52,5 +52,6 @@ timestamp: 2026-11-27T13:24:19Z
   `412f265a0b7e` as a delta from `058dfd969f03`. No new findings. The review is in
   `.reviews/0123-move-to-opencode-2/spec-review-2026-11-27T151917Z.md`. Did not run the OpenCode 2 sandbox build or
   the integration checks of requirement 14
+- 2026-11-27T15:25:31Z [human] approved the spec. The status is `approved`
 
 ## Amendments
