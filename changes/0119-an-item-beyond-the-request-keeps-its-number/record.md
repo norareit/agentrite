@@ -48,9 +48,14 @@ timestamp: 2026-11-22T13:27:16Z
 - 2026-11-27T13:44:50Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on `8fe98b6`, `awk` finds no line
   over 120 characters and `grep -nP '\x{2014}'` finds no em dash in the three changed files and `record.md`, and
   `npm run check-changes` exits 0. `npm test` reports 2055 tests, 2020 passed, 34 skipped and 1 failed:
-  "package.json says what the package is, where it lives and under which license", whose expected keywords `b863835` on `master` left
-  behind when it changed those of `package.json`. The branch changes neither `package.json` nor `tests/` since
-  `f1b26ac`, so the failure is on `master` as well, and R8, that `npm test` passes, does not hold. The test is outside
-  this unit and was not changed; the plan's box for `npm test` stays open. The status stays `in-progress`
+  "package.json says what the package is, where it lives and under which license", whose expected keywords `b863835`
+  on `master` left behind when it changed those of `package.json`. The branch changes neither `package.json` nor
+  `tests/` since `f1b26ac`, so the failure is on `master` as well, and R8, that `npm test` passes, does not hold. The
+  test is outside this unit and was not changed; the plan's box for `npm test` stays open. The status stays
+  `in-progress`
+- 2026-11-27T13:49:30Z [Claude Code, anthropic/claude-sonnet-5-5] as the implementer, on `abfa33e`, which differs from
+  `8fe98b6` only in `record.md`, `npm run check-changes` exits 0 and `npm test` reports the same 2055 tests, 2020
+  passed, 34 skipped and the same 1 failed. This entry corrects the wrapping of the entry above, which the two commits
+  before it left over 120 characters. The status stays `in-progress`
 
 ## Amendments
